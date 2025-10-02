@@ -1,4 +1,7 @@
-# T1D Intelligent Assistant
+<img width="250" height="240" alt="image" src="https://github.com/user-attachments/assets/e7606687-dd6c-4db5-9da1-e6600370914f" />
+
+# DiaBeatThis 
+
 
 An open project to build an **intelligent assistant for people living with Type 1 Diabetes (T1D)** – supporting children, parents, and adults in daily glucose management.  
 The app combines **CGM data, meal history, activity context, and AI** to reduce stress, eliminate guesswork, and empower users with smarter insights.
