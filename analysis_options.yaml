@@ -10,8 +10,7 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
-  plugins:
-    - custom_lint
+  plugins
     - riverpod_lint
 linter:
 

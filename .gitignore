@@ -47,4 +47,16 @@ app.*.map.json
 # Coverage test report
 coverage/
 
+# Freezed / Json Serializable / Drift / Riverpod generated files
+# (wszystkie pliki generowane przez build_runner)
+*.freezed.dart
+*.g.dart
 *.gr.dart
+*.mocks.dart
+*.mapper.dart
+*.drift.dart
+*.dao.dart
+*.dto.dart.g.dart
+*.part.dart
+*.d
+*.reflectable.dart

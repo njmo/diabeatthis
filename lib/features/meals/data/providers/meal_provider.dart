@@ -1,0 +1,73 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../ingredients/data/drafts/ingredient_draft.dart';
+import '../../../portions/data/drafts/portion_draft.dart';
+import '../drafts/meal_draft.dart';
+
+part 'meal_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
+  @override
+  MealIngredientsDraft build() {
+    return MealIngredientsDraft(
+      ingredient: IngredientSelection.draft(
+        name: '',
+        carbsPer100g: 0,
+        fatPer100g: 0,
+        fiberPer100g: 0,
+        proteinPer100g: 0,
+      ),
+      ingredientPortion: IngredientPortionDraft(
+        portion: PortionSelection.draft(name: '', unitHint: ''),
+        amount: 0,
+      ),
+      amount: 0,
+    );
+  }
+
+  void setIngredient(IngredientSelection ingredient) =>
+      state = state.copyWith(ingredient: ingredient);
+  void setIngredientPortion(IngredientPortionDraft ingredientPortion) =>
+      state = state.copyWith(ingredientPortion: ingredientPortion);
+  void setAmount(int amount) => state = state.copyWith(amount: amount);
+}
+
+@riverpod
+class MealDraftNotifier extends _$MealDraftNotifier {
+  @override
+  MealDraft build() {
+    return MealDraft(
+      name: '',
+      carbs: 0,
+      glucose: 0,
+      insulin: 0,
+      mealIngredients: [],
+      createdAt: DateTime.now(),
+      plannedAt: DateTime.now(),
+      status: 'draft',
+    );
+  }
+
+  void setName(String name) => state = state.copyWith(name: name);
+  void setCarbs(int carbs) => state = state.copyWith(carbs: carbs);
+  void setGlucose(int glucose) => state = state.copyWith(glucose: glucose);
+  void setInsulin(double insulin) => state = state.copyWith(insulin: insulin);
+  void setCreatedAt(DateTime createdAt) =>
+      state = state.copyWith(createdAt: createdAt);
+  void setPlannedAt(DateTime plannedAt) =>
+      state = state.copyWith(plannedAt: plannedAt);
+  void setStatus(String status) => state = state.copyWith(status: status);
+  void removeMealIngredient(MealIngredientsDraft mealIngredient) =>
+      state = state.copyWith(
+        mealIngredients: state.mealIngredients
+            .where((element) => element != mealIngredient)
+            .toList(),
+      );
+  void addMealIngredient(MealIngredientsDraft mealIngredient) => state = state
+      .copyWith(mealIngredients: [...state.mealIngredients, mealIngredient]);
+  void addMealIngredients(List<MealIngredientsDraft> mealIngredients) =>
+      state = state.copyWith(
+        mealIngredients: [...state.mealIngredients, ...mealIngredients],
+      );
+}

@@ -1,0 +1,97 @@
+import 'ingredient.drift';
+import 'meal.drift';
+import 'portion.drift';
+
+CREATE TABLE meal_ingredients (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+
+  meal_id INTEGER NOT NULL
+    REFERENCES meal (id) ON DELETE CASCADE,
+
+  ingredient_id INTEGER NOT NULL
+    REFERENCES ingredient (id) ON DELETE RESTRICT,
+
+  portion_id INTEGER
+    REFERENCES portion (id) ON DELETE SET NULL,
+
+  amount REAL NOT NULL DEFAULT 1 CHECK (amount > 0),
+  grams_override REAL CHECK (grams_override > 0),
+
+  prep_method TEXT,
+  notes TEXT
+);
+
+mealIngredientsByMealId:
+  SELECT * FROM meal_ingredients
+  WHERE meal_id = :mealId
+  ORDER BY id ASC;
+
+mealIngredientsByIngredientId:
+  SELECT * FROM meal_ingredients
+  WHERE ingredient_id = :ingredientId
+  ORDER BY id ASC;
+
+mealIngredientsByPortionId:
+  SELECT * FROM meal_ingredients
+  WHERE portion_id = :portionId
+  ORDER BY id ASC;
+
+insertMealIngredient:
+  INSERT INTO meal_ingredients (
+    meal_id,
+    ingredient_id,
+    portion_id,
+    amount,
+    grams_override,
+    prep_method,
+    notes
+  ) VALUES (
+    :mealId,
+    :ingredientId,
+    :portionId,
+    :amount,
+    :gramsOverride,
+    :prepMethod,
+    :notes
+  );
+
+updateMealIngredient:
+  UPDATE meal_ingredients SET
+    meal_id       = :mealId,
+    ingredient_id = :ingredientId,
+    portion_id    = :portionId,
+    amount        = :amount,
+    grams_override= :gramsOverride,
+    prep_method   = :prepMethod,
+    notes         = :notes
+  WHERE id = :id;
+
+deleteMealIngredient:
+  DELETE FROM meal_ingredients
+  WHERE id = :id;
+
+deleteMealIngredientsByMealId:
+  DELETE FROM meal_ingredients
+  WHERE meal_id = :mealId;
+
+deleteMealIngredientsByIngredientId:
+  DELETE FROM meal_ingredients
+  WHERE ingredient_id = :ingredientId;
+
+deleteMealIngredientsByPortionId:
+  DELETE FROM meal_ingredients
+  WHERE portion_id = :portionId;
+
+deleteAllMealIngredients:
+  DELETE FROM meal_ingredients;
+
+countMealIngredients:
+  SELECT COUNT(*) AS count FROM meal_ingredients;
+
+countMealIngredientsByMealId:
+  SELECT COUNT(*) AS count FROM meal_ingredients
+  WHERE meal_id = :mealId;
+
+countMealIngredientsByIngredientId:
+  SELECT COUNT(*) AS count FROM meal_ingredients
+  WHERE ingredient_id = :ingredientId;

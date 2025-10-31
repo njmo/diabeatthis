@@ -1,0 +1,120 @@
+CREATE TABLE meal (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name TEXT,
+
+  nightscout_object_id TEXT UNIQUE,
+  planned_at DATETIME,
+  eaten_at DATETIME,
+
+  status TEXT NOT NULL DEFAULT 'planned',
+
+  insulin_total_units REAL DEFAULT 0 CHECK (insulin_total_units >= 0),
+  ww REAL CHECK (ww >= 0),
+  wbt REAL CHECK (wbt >= 0),
+  wait_time_min INTEGER CHECK (wait_time_min >= 0),
+
+  glucose INTEGER CHECK (glucose >= 0),
+  trend TEXT,
+
+  cob_g REAL CHECK (cob_g >= 0),
+  iob_u REAL CHECK (iob_u >= 0),
+
+  notes TEXT,
+
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+insertMeal:
+  INSERT INTO meal (
+    name,
+    planned_at,
+    eaten_at,
+    status,
+    insulin_total_units,
+    ww,
+    wbt,
+    wait_time_min,
+    glucose,
+    trend,
+    cob_g,
+    iob_u,
+    notes
+  ) VALUES (
+    :name,
+    :plannedAt,
+    :eatenAt,
+    :status,
+    :insulinTotalUnits,
+    :ww,
+    :wbt,
+    :waitTimeMin,
+    :glucose,
+    :trend,
+    :cobG,
+    :iobU,
+    :notes
+  );
+
+updateMeal:
+  UPDATE meal SET
+    name                = :name,
+    planned_at          = :plannedAt,
+    eaten_at            = :eatenAt,
+    status              = :status,
+    insulin_total_units = :insulinTotalUnits,
+    ww                  = :ww,
+    wbt                 = :wbt,
+    wait_time_min       = :waitTimeMin,
+    glucose             = :glucose,
+    trend               = :trend,
+    cob_g               = :cobG,
+    iob_u               = :iobU,
+    notes               = :notes,
+    updated_at          = CURRENT_TIMESTAMP
+  WHERE id = :id;
+
+deleteMeal:
+  DELETE FROM meal
+  WHERE id = :id;
+
+mealById:
+  SELECT * FROM meal
+  WHERE id = :id;
+
+mealsByStatus:
+  SELECT * FROM meal
+  WHERE status = :status
+  ORDER BY planned_at ASC;
+
+mealsPlannedBetween:
+  SELECT * FROM meal
+  WHERE planned_at BETWEEN :from AND :to
+  ORDER BY planned_at ASC;
+
+mealsEatenBetween:
+  SELECT * FROM meal
+  WHERE eaten_at BETWEEN :from AND :to
+  ORDER BY eaten_at ASC;
+
+countMeals:
+  SELECT COUNT(*) AS count FROM meal;
+
+countMealsByStatus:
+  SELECT COUNT(*) AS count FROM meal
+  WHERE status = :status;
+
+deleteAllMeals:
+  DELETE FROM meal;
+
+deleteMealsByStatus:
+  DELETE FROM meal
+  WHERE status = :status;
+
+deleteMealsEatenBefore:
+  DELETE FROM meal
+  WHERE eaten_at < :before;
+
+deleteMealsPlannedBefore:
+  DELETE FROM meal
+  WHERE planned_at < :before;

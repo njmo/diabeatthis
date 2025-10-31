@@ -1,0 +1,64 @@
+import 'ingredient.drift';
+import 'portion.drift';
+
+CREATE TABLE ingredient_portions (
+  ingredient_id INTEGER NOT NULL
+    REFERENCES ingredient (id) ON DELETE CASCADE,
+  portion_id INTEGER NOT NULL
+    REFERENCES portion (id) ON DELETE CASCADE,
+  grams_per_portion INT NOT NULL CHECK (grams_per_portion > 0),
+
+  PRIMARY KEY (ingredient_id, portion_id)
+);
+
+ingredientPortionsByIngredientId:
+  SELECT * FROM ingredient_portions
+  WHERE ingredient_id = :ingredientId;
+
+ingredientPortionsByPortionId:
+  SELECT * FROM ingredient_portions
+  WHERE portion_id = :portionId;
+
+insertIngredientPortion:
+  INSERT INTO ingredient_portions (
+    ingredient_id,
+    portion_id,
+    grams_per_portion
+  ) VALUES (
+    :ingredientId,
+    :portionId,
+    :gramsPerPortion
+  );
+
+updateIngredientPortion:
+  UPDATE ingredient_portions SET
+    grams_per_portion = :gramsPerPortion
+  WHERE ingredient_id = :ingredientId
+    AND portion_id = :portionId;
+
+deleteIngredientPortion:
+  DELETE FROM ingredient_portions
+  WHERE ingredient_id = :ingredientId
+    AND portion_id = :portionId;
+
+deleteIngredientPortionsByIngredientId:
+  DELETE FROM ingredient_portions
+  WHERE ingredient_id = :ingredientId;
+
+deleteIngredientPortionsByPortionId:
+  DELETE FROM ingredient_portions
+  WHERE portion_id = :portionId;
+
+deleteAllIngredientPortions:
+  DELETE FROM ingredient_portions;
+
+countIngredientPortions:
+  SELECT COUNT(*) AS count FROM ingredient_portions;
+
+countIngredientPortionsByIngredientId:
+  SELECT COUNT(*) AS count FROM ingredient_portions
+  WHERE ingredient_id = :ingredientId;
+
+countIngredientPortionsByPortionId:
+  SELECT COUNT(*) AS count FROM ingredient_portions
+  WHERE portion_id = :portionId;
