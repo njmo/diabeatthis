@@ -4,8 +4,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/forms.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
-import '../../../meals/data/providers/meal_provider.dart';
+import '../../../meals/data/providers/add_ingredients_provider.dart';
+import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../data/drafts/portion_draft.dart';
+import '../../data/drafts/portion_filter.dart';
 import '../../data/mappers/portion_draft_mapper.dart';
 import '../../data/providers/portion_provider.dart';
 import 'portion_form.dart';
@@ -16,75 +18,77 @@ class PortionSearch extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final query = useState('');
-    final portions = ref.watch(portionsByQueryProvider(query.value));
-    return AlertDialog(
-      content: SizedBox(
-        width: 100,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Column(
-              children: [
-                StringFormField(
-                  label: 'Nazwa',
-                  value: '',
-                  onChanged: (String asd) {},
-                  builder: (context, controller) {
-                    return TextFormField(
-                      autofocus: true,
-                      controller: controller,
-                      onChanged: (value) {
-                        query.value = value;
-                      },
-                      maxLength: 30,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Enter a title.';
-                        } else if (value.length > 20) {
-                          return 'Limit the title to 20 characters.';
-                        } else {
-                          return null;
-                        }
-                      },
-                      decoration: const InputDecoration(
-                        icon: Icon(Icons.search),
-                        labelText: 'Nazwa',
-                        border: OutlineInputBorder(),
-                      ),
-                    );
+    final valuePicked = useState(-1);
+    final filter = ref.watch(portionFilterProvider);
+    final portions = filter.map(
+      all: (_) => ref.watch(portionsProvider),
+      byQuery: (filter) => ref.watch(portionsByQueryProvider(query.value)),
+      byQueryForIngredient: (filter) => ref.watch(portionsByIngredientByQueryProvider(filter.ingredientId, query.value)),
+      allUnassignedForIngredient: (filter) => ref.watch(portionsNotInIngredientByQueryProvider(filter.ingredientId, query.value)),
+    );
+    print("Filter : $filter");
+    final draft = ref.watch(portionDraftProvider.notifier);
+    final formKey = ref.watch(mealIngredientFormKeyProvider);
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          Form(
+            key: formKey,
+            autovalidateMode: AutovalidateMode.always,
+            child: StringFormField(
+              label: 'Nazwa',
+              value: '',
+              onChanged: (value) {
+                query.value = value;
+              },
+              builder: (context, controller) {
+                return TextFormField(
+                  autofocus: true,
+                  controller: controller,
+                  maxLength: 30,
+                  validator: (value) {
+                    if(valuePicked.value < 0) {
+                      return '';
+                    }
+                    return null;
                   },
-                ),
-                portions.when(
-                  data: (data) {
-                    return SingleChildScrollView(
-                      child: ListView.builder(
-                        itemBuilder: (context, index) {
-                          if (data.isEmpty)
-                            return Text('No data');
-                          final portion = data[index];
-                          return ListTile(
-                            title: Text(portion.name),
-                            subtitle: Text(portion.unitHint),
-                            onTap: () {
-                              Navigator.of(context).pop(portion.toSelection());
-                            },
-                          );
-                        },
-                        itemCount: data.length,
-                        shrinkWrap: true,
-                      ),
-                    );
-                  },
-                  error: (error, stackTrace) => Text(error.toString()),
-                  loading: () => CircularProgressIndicator(),
-                ),
-              ],
+                  decoration: const InputDecoration(
+                    icon: Icon(Icons.search),
+                    labelText: 'Nazwa',
+                    border: OutlineInputBorder(),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+          portions.when(
+            data: (data) {
+              return SingleChildScrollView(
+                child: ListView.builder(
+                  itemBuilder: (context, index) {
+                    if (data.isEmpty) return Text('No data');
+                    final portion = data[index];
+                    return ListTile(
+                      title: Text(portion.name, style: TextStyle(fontWeight: (valuePicked.value == index) ? FontWeight.bold : FontWeight.normal)),
+                      subtitle: Text(portion.unitHint),
+                      onTap: () {
+                        draft.overrideDraft(portion.toSelection());
+                        valuePicked.value = index;
+                      },
+                    );
+                  },
+                  itemCount: data.length,
+                  shrinkWrap: true,
+                ),
+              );
+            },
+            error: (error, stackTrace) => Text(error.toString()),
+            loading: () => CircularProgressIndicator(),
+          ),
+        ],
       ),
-      actions: [TextButton(onPressed: () { Navigator.of(context).pop(); } , child: Text('Cancel'))],
     );
   }
 }

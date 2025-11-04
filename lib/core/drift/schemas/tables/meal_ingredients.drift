@@ -14,8 +14,8 @@ CREATE TABLE meal_ingredients (
   portion_id INTEGER
     REFERENCES portion (id) ON DELETE SET NULL,
 
-  amount REAL NOT NULL DEFAULT 1 CHECK (amount > 0),
-  grams_override REAL CHECK (grams_override > 0),
+  amount INTEGER NOT NULL DEFAULT 1 CHECK (amount > 0),
+  grams_override INTEGER CHECK (grams_override > 0),
 
   prep_method TEXT,
   notes TEXT

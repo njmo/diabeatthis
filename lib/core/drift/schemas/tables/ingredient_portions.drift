@@ -19,6 +19,12 @@ ingredientPortionsByPortionId:
   SELECT * FROM ingredient_portions
   WHERE portion_id = :portionId;
 
+amountIngredientPortion:
+  SELECT grams_per_portion
+  FROM ingredient_portions
+  WHERE ingredient_id = :ingredientId
+    AND portion_id = :portionId;
+
 insertIngredientPortion:
   INSERT INTO ingredient_portions (
     ingredient_id,

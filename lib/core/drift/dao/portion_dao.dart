@@ -7,19 +7,20 @@ part 'portion_dao.g.dart';
 class PortionDao extends DatabaseAccessor<DatabaseImpl> with _$PortionDaoMixin {
   PortionDao(super.db);
 
-  Future<List<PortionData>> getPortionsForIngredient(int ingredientId) {
+  Future<List<PortionData>> getPortionsForIngredientByQuery(int ingredientId, String queryStr) {
     final query = select(db.portion).join([
       innerJoin(
         db.ingredientPortions,
         db.ingredientPortions.portionId.equalsExp(portion.id),
       ),
     ])
-      ..where(db.ingredientPortions.ingredientId.equals(ingredientId));
+      ..where(db.ingredientPortions.ingredientId.equals(ingredientId))
+      ..where(db.portion.name.like('%$queryStr%'));
 
     return query.map((row) => row.readTable(db.portion)).get();
   }
 
-  Future<List<PortionData>> getUnassignedPortionsForIngredient(int ingredientId) {
+  Future<List<PortionData>> getUnassignedPortionsForIngredientByQuery(int ingredientId, String queryStr) {
     final query = select(db.portion).join([
       leftOuterJoin(
         db.ingredientPortions,
@@ -27,7 +28,8 @@ class PortionDao extends DatabaseAccessor<DatabaseImpl> with _$PortionDaoMixin {
         db.ingredientPortions.ingredientId.equals(ingredientId),
       ),
     ])
-      ..where(db.ingredientPortions.portionId.isNull());
+      ..where(db.ingredientPortions.portionId.isNull())
+      ..where(db.portion.name.like('%$queryStr%'));
 
     return query.map((row) => row.readTable(db.portion)).get();
   }

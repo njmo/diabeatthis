@@ -20,7 +20,7 @@ abstract class IngredientSelection with _$IngredientSelection
   }) = _IngredientSelectionDraft;
 
   const factory IngredientSelection.existing({
-    int? id,
+    required int id,
     required String name,
     required double carbsPer100g,
     required double fatPer100g,

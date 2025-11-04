@@ -6,7 +6,7 @@ part 'ingredient.g.dart';
 @freezed
 abstract class Ingredient with _$Ingredient {
   const factory Ingredient({
-    int? id,
+    required int id,
     required String name,
     required double carbsPer100g,
     required double fatPer100g,

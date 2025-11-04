@@ -9,7 +9,7 @@ extension MealMapper on MealDto {
       nightscoutObjectId: id,
       glucose: (glucose as num?)?.toInt() ?? 0,
       insulin: (bolusCalculatorResult?['totalInsulin'] as num?)?.toDouble() ?? 0,
-      carbs: (bolusCalculatorResult?['carbs'] as num?)?.toInt() ?? 0,
+      carbs: (bolusCalculatorResult?['carbs'] as num?)?.toInt() ?? 0, name: '',
     );
   }
 }

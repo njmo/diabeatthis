@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../meals/data/providers/meal_provider.dart';
+import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
 
 class MealIngredientsList extends ConsumerWidget {

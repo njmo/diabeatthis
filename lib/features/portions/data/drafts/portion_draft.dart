@@ -10,7 +10,7 @@ abstract class PortionSelection with _$PortionSelection
   const factory PortionSelection.draft({
     required String name,
     required String unitHint,
-  }) = _PortionSelectionNew;
+  }) = _PortionSelectionDraft;
 
   const factory PortionSelection.existing({
     required int id,

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/notifier_provider/simple_provider.dart';
+import '../../../meals/data/providers/meal_database_provider.dart';
 
 @RoutePage()
 class DashboardPage extends ConsumerWidget {
@@ -16,6 +17,7 @@ class DashboardPage extends ConsumerWidget {
     final age = ref.watch(ageProvider);
     final name = ref.watch(nameProvider);
     final number = ref.watch(numberProvider);
+    final meals = ref.watch(mealsStreamProvider);
 
     final human = ref.read(humanProvider.notifier);
 
@@ -53,7 +55,7 @@ class DashboardPage extends ConsumerWidget {
                   child: TextButton(
                     onPressed: () {
                       context.router.push(
-                        routes.TestRoute()
+                        routes.TestRoute(),
                       ); // ⬅️ użyj aliasu, unikniesz konfliktów nazw
                     },
                     child: Text('test'),
@@ -65,15 +67,30 @@ class DashboardPage extends ConsumerWidget {
                   onPressed: () {},
                   child: TextButton(
                     onPressed: () {
-                      context.router.push(
-                          routes.AddMealRoute()
-                      );
+                      context.router.push(routes.AddMealRoute());
                     },
                     child: Text('Add meal'),
                   ),
                 ),
               ),
             ],
+          ),
+          ListView.builder(
+            itemBuilder: (context, index) {
+              final meal = meals.asData?.value[index];
+              if (meal == null) {
+                return SizedBox.shrink();
+              }
+              return Card(
+                child: ListTile(
+                  title: Text('${meal.name} ma ${meal.carbs}'),
+                  subtitle: Text('Planowana data: ${meal.plannedAt}'),
+                ),
+              );
+            },
+            itemCount: meals.asData?.value.length ?? 0,
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
           ),
         ],
       ),

@@ -1,12 +1,13 @@
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart' as domain;
+import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 
 import '../../../../core/drift/mappers/portion_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../data/drafts/ingredient_draft.dart';
+import '../mappers/ingredient_draft_mapper.dart';
 
 part 'ingredient_provider.g.dart';
 
@@ -29,9 +30,58 @@ Future<List<domain.Ingredient>> ingredientsByQuery(
 }
 
 @riverpod
-Future<void> insertIngredient(Ref ref, domain.Ingredient ingredient) async {
+class IngredientPortionAmountDraftNotifier
+    extends _$IngredientPortionAmountDraftNotifier {
+  @override
+  int build() {
+    return 0;
+  }
+
+  void setAmount(String amount) => state = int.tryParse(amount) ?? 0;
+}
+
+@riverpod
+Future<domain.Ingredient> insertIngredient(
+  Ref ref,
+  IngredientSelection ingredient,
+) async {
+  return ingredient.map(
+    draft: (draft) async {
+      final db = ref.watch(databaseProvider);
+      final value = await db
+          .into(db.ingredient)
+          .insertReturningOrNull(ingredient.toCompanion());
+      if (value != null) {
+        return value.toDomain();
+      } else {
+        throw Exception('Could not insert ingredient');
+      }
+    },
+    existing: (existing) => existing.toDomain(),
+  );
+}
+
+@riverpod
+Future<void> insertIngredientPortion(
+  Ref ref,
+  domain.Ingredient ingredient,
+  domain.Portion portion,
+  int amount,
+) async {
   final db = ref.watch(databaseProvider);
-  await db.into(db.ingredient).insert(ingredient.toCompanion());
+  await db.insertIngredientPortion(ingredient.id, portion.id, amount);
+}
+
+@riverpod
+Future<int?> getAmountForPortionIngredient(
+  Ref ref,
+  domain.Ingredient ingredient,
+  domain.Portion portion,
+) async {
+  final db = ref.watch(databaseProvider);
+  return await db
+      .amountIngredientPortion(ingredient.id, portion.id)
+      .getSingleOrNull();
 }
 
 @riverpod
@@ -56,4 +106,5 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
   void setProteinPer100g(String value) =>
       state = state.copyWith(proteinPer100g: double.tryParse(value) ?? 0.0);
   void setName(String value) => state = state.copyWith(name: value);
+  void overrideDraft(IngredientSelection ingredient) => state = ingredient;
 }

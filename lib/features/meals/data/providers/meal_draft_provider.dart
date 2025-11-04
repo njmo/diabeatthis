@@ -4,9 +4,18 @@ import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../drafts/meal_draft.dart';
 
-part 'meal_provider.g.dart';
+part 'meal_draft_provider.g.dart';
 
-@Riverpod(keepAlive: true)
+@riverpod
+class MealIngredientAmountDraftNotifier extends _$MealIngredientAmountDraftNotifier {
+  @override
+  int build() {
+    return 0;
+  }
+  void setAmount(String amount) => state = int.tryParse(amount) ?? 0;
+}
+
+@riverpod
 class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
   @override
   MealIngredientsDraft build() {
@@ -28,13 +37,16 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
 
   void setIngredient(IngredientSelection ingredient) =>
       state = state.copyWith(ingredient: ingredient);
-  void setIngredientPortion(IngredientPortionDraft ingredientPortion) =>
-      state = state.copyWith(ingredientPortion: ingredientPortion);
+  void setIngredientPortion(PortionSelection portion) =>
+      state = state.copyWith(ingredientPortion: state.ingredientPortion.copyWith(portion: portion));
+  void setIngredientPortionAmount(int amount) =>
+      state = state.copyWith(ingredientPortion: state.ingredientPortion.copyWith(amount: amount));
   void setAmount(int amount) => state = state.copyWith(amount: amount);
 }
 
 @riverpod
 class MealDraftNotifier extends _$MealDraftNotifier {
+
   @override
   MealDraft build() {
     return MealDraft(

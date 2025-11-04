@@ -11,9 +11,10 @@ abstract class Meal with _$Meal implements Treatment {
 
   const factory Meal({
     required int id,
-    required int glucose,
-    required int carbs,
-    required double insulin,
+    required String name,
+    int? glucose,
+    int? carbs,
+    double? insulin,
     String? nightscoutObjectId,
     DateTime? dateHappened,
     DateTime? createdAt,
@@ -23,7 +24,7 @@ abstract class Meal with _$Meal implements Treatment {
   }) = _Meal;
 
   @override
-  String getParts() => "🍽️ ${carbs}g \n 💉${insulin.toStringAsFixed(2)}U";
+  String getParts() => "🍽️ ${carbs?.toStringAsFixed(2) ?? 0}g \n 💉${insulin?.toStringAsFixed(2)}U";
 
   @override
   IconData getIcon() => Icons.dinner_dining;

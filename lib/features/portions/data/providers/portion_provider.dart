@@ -6,6 +6,8 @@ import '../../../../core/drift/mappers/portion_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../drafts/portion_draft.dart';
+import '../drafts/portion_filter.dart';
+import '../mappers/portion_draft_mapper.dart';
 
 part 'portion_provider.g.dart';
 
@@ -30,35 +32,37 @@ Future<List<domain.Portion>> portionsByQuery(Ref ref, String query) async {
 }
 
 @riverpod
-Future<List<domain.Portion>> portionsByIngredient(
+Future<List<domain.Portion>> portionsByIngredientByQuery(
   Ref ref,
-  IngredientSelection ingredient,
+  int ingredientId,
+  String query,
 ) async {
   final db = ref.watch(databaseProvider);
-  final portions = await db.portionDao.getPortionsForIngredient(
-    ingredient.map(draft: (draft) => 0, existing: (existing) => existing.id!),
+  final portions = await db.portionDao.getPortionsForIngredientByQuery(
+    ingredientId,
+    query,
   );
   return portions.map((e) => e.toDomain()).toList();
 }
 
 @riverpod
-Future<List<domain.Portion>> portionsNotInIngredient(
+Future<List<domain.Portion>> portionsNotInIngredientByQuery(
   Ref ref,
-  IngredientSelection ingredient,
+  int ingredientId,
+  String query,
 ) async {
   final db = ref.watch(databaseProvider);
-  final portions = await db.portionDao.getUnassignedPortionsForIngredient(
-    ingredient.map(draft: (draft) => 0, existing: (existing) => existing.id!),
-  );
+  final portions = await db.portionDao
+      .getUnassignedPortionsForIngredientByQuery(ingredientId, query);
   return portions.map((e) => e.toDomain()).toList();
 }
 
 @riverpod
 Future<int?> gramsPerPortion(
-    Ref ref,
-    IngredientSelection ingredient,
-    PortionSelection portion,
-    ) async {
+  Ref ref,
+  IngredientSelection ingredient,
+  PortionSelection portion,
+) async {
   final db = ref.watch(databaseProvider);
   final grams = await db.portionDao.getGramsPerPortion(
     ingredient.map(draft: (draft) => 0, existing: (existing) => existing.id!),
@@ -68,9 +72,21 @@ Future<int?> gramsPerPortion(
 }
 
 @riverpod
-Future<void> insertPortion(Ref ref, domain.Portion portion) async {
-  final db = ref.watch(databaseProvider);
-  await db.into(db.portion).insert(portion.toCompanion());
+Future<domain.Portion> insertPortion(Ref ref, PortionSelection portion) async {
+  return portion.map(
+    draft: (e) async {
+      final db = ref.watch(databaseProvider);
+      final value = await db
+          .into(db.portion)
+          .insertReturningOrNull(portion.toCompanion());
+      if (value != null) {
+        return value.toDomain();
+      } else {
+        throw Exception('Could not insert ingredient');
+      }
+    },
+    existing: (e) => e.toDomain(),
+  );
 }
 
 @riverpod
@@ -82,4 +98,15 @@ class PortionDraft extends _$PortionDraft {
 
   void setUnitHint(String value) => state = state.copyWith(unitHint: value);
   void setName(String value) => state = state.copyWith(name: value);
+  void overrideDraft(PortionSelection portion) => state = portion;
+}
+
+@riverpod
+class PortionFilterNotifier extends _$PortionFilterNotifier {
+  @override
+  PortionFilter build() {
+    return const PortionFilter.all();
+  }
+
+  void setFilter(PortionFilter filter) => state = filter;
 }
