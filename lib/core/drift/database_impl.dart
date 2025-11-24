@@ -3,12 +3,13 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'dao/ingredient_dao.dart';
+import 'dao/meal_dao.dart';
 import 'dao/portion_dao.dart';
 import 'database.dart';
 
 part 'database_impl.g.dart';
 
-@DriftDatabase(include: {'schemas/schema.drift'}, daos: [IngredientDao, PortionDao])
+@DriftDatabase(include: {'schemas/schema.drift'}, daos: [IngredientDao, PortionDao, MealDao])
 class DatabaseImpl extends _$DatabaseImpl implements Database {
   DatabaseImpl([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
@@ -36,5 +37,4 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await customStatement('PRAGMA foreign_keys = ON');
     }
   }
-
 }

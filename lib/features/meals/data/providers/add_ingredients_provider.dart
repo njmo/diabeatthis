@@ -1,7 +1,9 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter/material.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
+import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/drafts/portion_filter.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import 'meal_draft_provider.dart';
@@ -31,6 +33,14 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   @override
   AddMealIngredientStage build() {
     return AddMealIngredientStage.ingredient_search;
+  }
+
+  void setOverride() {
+    final mealIngredientsDraft = ref.watch(
+      mealIngredientsDraftProvider.notifier,
+    );
+    mealIngredientsDraft.setIngredientPortion(PortionSelection.empty());
+    state = AddMealIngredientStage.amount_form;
   }
 
   void setStage(AddMealIngredientStage stage) => state = stage;
@@ -122,7 +132,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
           PortionFilter.allUnassignedForIngredient(
             ingredientId: ingredientDraft.map(
               draft: (draft) => 0,
-              existing: (existing) => existing.id!,
+              existing: (existing) => existing.id,
             ),
           ),
         );

@@ -24,7 +24,7 @@ extension IngredientDataIterableToDomain on Iterable<IngredientData> {
 extension DomainIngredientToCompanion on Ingredient {
   IngredientCompanion toCompanion() {
     return IngredientCompanion(
-      id: id != null ? d.Value(id!) : const d.Value.absent(),
+      id: d.Value(id),
       name: d.Value(name),
       carbsPer100g: d.Value(carbsPer100g),
       fatPer100g: d.Value(fatPer100g),

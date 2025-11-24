@@ -119,3 +119,7 @@ deleteMealsEatenBefore:
 deleteMealsPlannedBefore:
   DELETE FROM meal
   WHERE planned_at < :before;
+
+ deleteMealById:
+  DELETE FROM meal
+  WHERE id = :id;

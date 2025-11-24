@@ -26,7 +26,7 @@ amountIngredientPortion:
     AND portion_id = :portionId;
 
 insertIngredientPortion:
-  INSERT INTO ingredient_portions (
+  INSERT OR IGNORE INTO ingredient_portions (
     ingredient_id,
     portion_id,
     grams_per_portion

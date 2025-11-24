@@ -16,29 +16,25 @@ extension PortionSelectionMapper on domain.Portion {
 
 extension MealDraftToCompanion on PortionSelection {
   PortionCompanion toCompanion() {
-    final idValue = maybeWhen<d.Value<int>>(
-      existing: (id, name, unitHint) => d.Value(id),
-      orElse: () => const d.Value.absent(),
-    );
-
-    return PortionCompanion(
-      id: idValue,
-      name: d.Value(name),
-      unitHint: d.Value(unitHint),
+    return maybeMap(
+      draft: (e) => PortionCompanion(
+        name: d.Value(e.name),
+        unitHint: d.Value(e.unitHint),
+      ),
+      existing: (e) => PortionCompanion(
+        id: d.Value(e.id),
+        name: d.Value(e.name),
+        unitHint: d.Value(e.unitHint),
+      ),
+      orElse: () => throw Exception('Cannot convert to companion'),
     );
   }
 
   domain.Portion toDomain()
   {
-    final idValue = maybeMap<int>(
-      existing: (e) => e.id,
-      orElse: () => 0,
-    );
-
-    return domain.Portion(
-      id : idValue,
-      name: name,
-      unitHint: unitHint,
+    return maybeMap(
+      existing: (e) => domain.Portion(id: e.id, name: e.name, unitHint: e.unitHint),
+      orElse: () => throw Exception('Cannot convert to domain'),
     );
   }
 }

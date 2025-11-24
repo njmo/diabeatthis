@@ -9,6 +9,12 @@ import '../drafts/meal_draft.dart';
 import '../mapper/meal_draft_mapper.dart';
 
 part 'meal_database_provider.g.dart';
+@riverpod
+void updateMeal(Ref ref, domain.Meal meal, String status)
+{
+  final db = ref.watch(databaseProvider);
+  db.mealDao.updateMealStatus(meal.id, status);
+}
 
 @riverpod
 Stream<List<domain.Meal>> mealsStream(Ref ref) {
@@ -19,14 +25,28 @@ Stream<List<domain.Meal>> mealsStream(Ref ref) {
 }
 
 @riverpod
-Future<void> insertMealIngredient(Ref ref, domain.Ingredient ingredient, domain.Meal meal, domain.Portion portion, int amount) async {
+Future<void> removeMealById(Ref ref, domain.Meal meal) async
+{
+  final db = ref.watch(databaseProvider);
+  await db.deleteMealById(meal.id);
+}
+
+@riverpod
+Stream<List<domain.Meal>> mealsForTodayStream(Ref ref) {
+  final db = ref.watch(databaseProvider);
+  return db.mealDao.getAllMealForToday().map(
+        (e) => e.toDomainList(),
+  );
+}
+
+@riverpod
+Future<void> insertMealIngredient(Ref ref, domain.Ingredient ingredient, domain.Meal meal, domain.Portion? portion, int amount) async {
   final db = ref.watch(databaseProvider);
   await db.insertMealIngredient(
-    ingredient.id,
-    portion.id,
     meal.id,
+    ingredient.id,
+    portion?.id,
     amount,
-    null,
     null,
     null,
   );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../meals/data/providers/meal_draft_provider.dart';
+import '../../../portions/data/drafts/portion_draft.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
 
 class MealIngredientsList extends ConsumerWidget {
@@ -18,16 +19,24 @@ class MealIngredientsList extends ConsumerWidget {
           : ListView.builder(
               itemBuilder: (context, index) {
                 final draft = mealIngredientDrafts[index];
-                return ListTile(
-                  title: Text(draft.ingredient.name),
-                  subtitle: Text(
-                    '${draft.ingredientPortion.portion.name} : ${draft.amount}${draft.ingredientPortion.portion.unitHint}',
-                  ),
-                  trailing: IconButton(
-                    onPressed: () {
-                      mealDraft.removeMealIngredient(draft);
-                    },
-                    icon: const Icon(Icons.delete, size: 15),
+                final portionAmount = draft.ingredientPortion.amount;
+                final amount = draft.amount;
+                final subtitle = draft.ingredientPortion.portion.when(
+                  draft: (name, hint) => Text('$amount of $name : ${portionAmount * amount}$hint'),
+                  existing: (id, name, hint) => Text('$amount of $name : ${amount * portionAmount}$hint'),
+                  empty: () => Text('${amount}g'),
+                );
+
+                return Card(
+                  child: ListTile(
+                    title: Text(draft.ingredient.name),
+                    subtitle: subtitle,
+                    trailing: IconButton(
+                      onPressed: () {
+                        mealDraft.removeMealIngredient(draft);
+                      },
+                      icon: const Icon(Icons.delete, size: 15),
+                    ),
                   ),
                 );
               },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'router/app_router.dart';
 import 'router/observers/router_debug_observer.dart';
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
         ],
       ),
       theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF6750A4),
+        textTheme: GoogleFonts.nunitoSansTextTheme(),
         useMaterial3: true,
       ),
     );

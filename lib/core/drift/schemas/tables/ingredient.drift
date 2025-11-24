@@ -15,7 +15,8 @@ CREATE TABLE ingredient (
 searchIngredientsByName:
   SELECT * FROM ingredient
   WHERE name LIKE '%' || :q || '%'
-  ORDER BY name ASC;
+  ORDER BY name ASC
+  LIMIT :limit;
 
 searchIngredientsByExactName:
   SELECT * FROM ingredient

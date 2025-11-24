@@ -65,14 +65,18 @@ Future<int?> gramsPerPortion(
 ) async {
   final db = ref.watch(databaseProvider);
   final grams = await db.portionDao.getGramsPerPortion(
-    ingredient.map(draft: (draft) => 0, existing: (existing) => existing.id!),
-    portion.map(draft: (draft) => 0, existing: (existing) => existing.id),
+    ingredient.map(draft: (draft) => 0, existing: (existing) => existing.id),
+    portion.map(
+      draft: (draft) => 0,
+      existing: (existing) => existing.id,
+      empty: (_) => throw Exception('Cannot insert empty portion'),
+    ),
   );
   return grams;
 }
 
 @riverpod
-Future<domain.Portion> insertPortion(Ref ref, PortionSelection portion) async {
+Future<domain.Portion?> insertPortion(Ref ref, PortionSelection portion) async {
   return portion.map(
     draft: (e) async {
       final db = ref.watch(databaseProvider);
@@ -86,6 +90,7 @@ Future<domain.Portion> insertPortion(Ref ref, PortionSelection portion) async {
       }
     },
     existing: (e) => e.toDomain(),
+    empty: (_) => null,
   );
 }
 
@@ -96,8 +101,19 @@ class PortionDraft extends _$PortionDraft {
     return PortionSelection.draft(name: '', unitHint: '');
   }
 
-  void setUnitHint(String value) => state = state.copyWith(unitHint: value);
-  void setName(String value) => state = state.copyWith(name: value);
+  void setUnitHint(String value) {
+    state = state.maybeMap(
+      draft: (d) => d.copyWith(unitHint: value),
+      orElse: () => state,
+    );
+  }
+
+  void setName(String value) {
+    state = state.maybeMap(
+      draft: (d) => d.copyWith(name: value),
+      orElse: () => state,
+    );
+  }
   void overrideDraft(PortionSelection portion) => state = portion;
 }
 

@@ -15,7 +15,8 @@ class PortionDao extends DatabaseAccessor<DatabaseImpl> with _$PortionDaoMixin {
       ),
     ])
       ..where(db.ingredientPortions.ingredientId.equals(ingredientId))
-      ..where(db.portion.name.like('%$queryStr%'));
+      ..where(db.portion.name.like('%$queryStr%'))
+      ..limit(10);
 
     return query.map((row) => row.readTable(db.portion)).get();
   }
@@ -29,7 +30,8 @@ class PortionDao extends DatabaseAccessor<DatabaseImpl> with _$PortionDaoMixin {
       ),
     ])
       ..where(db.ingredientPortions.portionId.isNull())
-      ..where(db.portion.name.like('%$queryStr%'));
+      ..where(db.portion.name.like('%$queryStr%'))
+      ..limit(10);
 
     return query.map((row) => row.readTable(db.portion)).get();
   }

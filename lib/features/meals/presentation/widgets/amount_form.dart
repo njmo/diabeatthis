@@ -7,7 +7,7 @@ import '../../data/providers/add_ingredients_provider.dart';
 import '../../data/providers/meal_draft_provider.dart';
 
 class AmountForm extends HookConsumerWidget {
-  AmountForm({super.key});
+  const AmountForm({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

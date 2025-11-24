@@ -4,7 +4,6 @@ import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 
-import '../../../../core/drift/mappers/portion_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../data/drafts/ingredient_draft.dart';
 import '../mappers/ingredient_draft_mapper.dart';
@@ -25,7 +24,7 @@ Future<List<domain.Ingredient>> ingredientsByQuery(
   String query,
 ) async {
   final db = ref.watch(databaseProvider);
-  final ing = await db.ingredientDao.searchIngredientsByName(query).get();
+  final ing = await db.ingredientDao.searchIngredientsByName(query, 6).get();
   return ing.map((e) => e.toDomain()).toList();
 }
 
@@ -65,9 +64,12 @@ Future<domain.Ingredient> insertIngredient(
 Future<void> insertIngredientPortion(
   Ref ref,
   domain.Ingredient ingredient,
-  domain.Portion portion,
+  domain.Portion? portion,
   int amount,
 ) async {
+  if(portion == null) {
+    return;
+  }
   final db = ref.watch(databaseProvider);
   await db.insertIngredientPortion(ingredient.id, portion.id, amount);
 }

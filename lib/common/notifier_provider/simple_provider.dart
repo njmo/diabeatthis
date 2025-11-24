@@ -53,7 +53,7 @@ void numberReader(Ref ref) {
 class HumanNotifier extends _$HumanNotifier {
   @override
   Human build() {
-    return Human(name: 'John Doe', age: 30, num: 42);
+    return Human(name: 'Oliwier Kłonica', age: 8, num: 42);
   }
 
   void setAge(int age) => state = state.copyWith(age: age);

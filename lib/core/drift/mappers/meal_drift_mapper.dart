@@ -5,7 +5,7 @@ import '../entity/meal.dart';
 
 extension MealDataToDomain on MealData {
   Meal toDomain() =>
-      Meal(id: id, name: name, carbs: carbsCounted, plannedAt: DateTime.fromMillisecondsSinceEpoch(plannedAt));
+      Meal(id: id, name: name, carbs: carbsCounted, status: status, plannedAt: DateTime.fromMillisecondsSinceEpoch(plannedAt));
 }
 
 extension MealDataIterableToDomain on Iterable<MealData> {

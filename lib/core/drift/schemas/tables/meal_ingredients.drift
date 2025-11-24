@@ -15,7 +15,6 @@ CREATE TABLE meal_ingredients (
     REFERENCES portion (id) ON DELETE SET NULL,
 
   amount INTEGER NOT NULL DEFAULT 1 CHECK (amount > 0),
-  grams_override INTEGER CHECK (grams_override > 0),
 
   prep_method TEXT,
   notes TEXT
@@ -42,7 +41,6 @@ insertMealIngredient:
     ingredient_id,
     portion_id,
     amount,
-    grams_override,
     prep_method,
     notes
   ) VALUES (
@@ -50,7 +48,6 @@ insertMealIngredient:
     :ingredientId,
     :portionId,
     :amount,
-    :gramsOverride,
     :prepMethod,
     :notes
   );
@@ -61,7 +58,6 @@ updateMealIngredient:
     ingredient_id = :ingredientId,
     portion_id    = :portionId,
     amount        = :amount,
-    grams_override= :gramsOverride,
     prep_method   = :prepMethod,
     notes         = :notes
   WHERE id = :id;

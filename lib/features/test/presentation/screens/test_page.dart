@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/data/provider/nightscout_repository_provider.dart';
-import '../providers/device_status_provider.dart';
 
 @RoutePage()
 class TestPage extends ConsumerWidget {
@@ -13,7 +12,6 @@ class TestPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sensorAge = ref.watch(sensorAgeProvider);
     final canulaAge = ref.watch(canulaAgeProvider);
-    final deviceStatusStream = ref.watch(deviceStatusStreamProvider);
     final meals = ref.watch(mealsProvider);
 
     return Scaffold(
@@ -45,14 +43,6 @@ class TestPage extends ConsumerWidget {
                 loading: () => const CircularProgressIndicator(),
                 error: (error, _) => Text('Błąd: $error'),
               ),
-              deviceStatusStream.when(
-                data: (status) {
-                  return Text('Ostatni status urządzenia: ${status.date.toLocal().toIso8601String()}');
-                },
-                loading: () => const CircularProgressIndicator(),
-                error: (error, _) => Text('Błąd: $error'),
-              ),
-              const SizedBox(height: 15),
               meals.when(
                 data: (mealsList) {
                   return ListView.builder(itemBuilder: (context, index) {

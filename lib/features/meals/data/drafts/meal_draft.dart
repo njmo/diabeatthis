@@ -2,8 +2,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
-import '../../../portions/data/drafts/portion_draft.dart';
-
 
 part 'meal_draft.freezed.dart';
 

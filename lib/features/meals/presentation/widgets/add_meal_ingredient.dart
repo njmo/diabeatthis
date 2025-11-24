@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../ingredients/presentation/screens/ingredient_form.dart';
-import '../../../ingredients/presentation/screens/ingredient_portion_amount_form.dart';
-import '../../../ingredients/presentation/screens/ingredient_search.dart';
+import '../../../ingredients/presentation/widgets/ingredient_form.dart';
+import '../../../ingredients/presentation/widgets/ingredient_portion_amount_form.dart';
+import '../../../ingredients/presentation/widgets/ingredient_search.dart';
 import '../../../portions/data/providers/portion_provider.dart';
-import '../../../portions/presentation/screens/portion_form.dart';
-import '../../../portions/presentation/screens/portion_search.dart';
+import '../../../portions/presentation/widgets/portion_form.dart';
+import '../../../portions/presentation/widgets/portion_search.dart';
 import '../../data/providers/add_ingredients_provider.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import 'amount_form.dart';
@@ -126,6 +126,16 @@ class AddMealIngredient extends ConsumerWidget {
                         : Text('Next'),
                   ),
                 ),
+                addingStage != AddMealIngredientStage.defined_portions_search && addingStage != AddMealIngredientStage.portion_add_new_search
+                    ? SizedBox.shrink()
+                    : Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            addingStateNotifier.setOverride();
+                          },
+                          child: Text('Add by grams'),
+                        ),
+                      ),
                 addingStage != AddMealIngredientStage.summary
                     ? SizedBox.shrink()
                     : Expanded(
@@ -176,9 +186,7 @@ class AddMealIngredient extends ConsumerWidget {
         Align(
           alignment: Alignment.centerRight,
           child: IconButton(
-            onPressed: () {
-              f();
-            },
+            onPressed: () => f(),
             icon: icon,
           ),
         ),
