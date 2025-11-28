@@ -11,31 +11,31 @@ import '../repository/nightscout_repository_impl.dart';
 part 'nightscout_repository_provider.g.dart';
 
 @riverpod
-NightscoutRepository nightscoutRepository(Ref ref) {
-  final url = ref.watch(nightscoutUrlProvider);
-  return NightscoutRepositoryImpl(nightscoutUrl: url);
+Future<NightscoutRepository> nightscoutRepository(Ref ref) async {
+  final url = await ref.watch(nightscoutUrlProvider.future);
+  return NightscoutRepositoryImpl(nightscoutUrl: url!);
 }
 
 @riverpod
 Future<Duration?> sensorAge(Ref ref) async {
-  final repository = ref.watch(nightscoutRepositoryProvider);
+  final repository = await ref.watch(nightscoutRepositoryProvider.future);
   return await repository.getLatestSensorChangeAge();
 }
 
 @riverpod
 Future<Duration?> canulaAge(Ref ref) async {
-  final repository = ref.watch(nightscoutRepositoryProvider);
+  final repository = await ref.watch(nightscoutRepositoryProvider.future);
   return await repository.getLatestInsulinChangeAge();
 }
 
 @riverpod
 Future<DeviceStatus> deviceStatus(Ref ref) async {
-  final repository = ref.watch(nightscoutRepositoryProvider);
+  final repository = await ref.watch(nightscoutRepositoryProvider.future);
   return await repository.fetchLastDeviceStatus();
 }
 
 @riverpod
 Future<List<Meal>> meals(Ref ref) async {
-  final repository = ref.watch(nightscoutRepositoryProvider);
+  final repository = await ref.watch(nightscoutRepositoryProvider.future);
   return await repository.fetchMealsOnDay(DateTime.now());
 }

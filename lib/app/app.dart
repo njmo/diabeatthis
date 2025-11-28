@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import 'router/app_router.dart';
 import 'router/observers/router_debug_observer.dart';
+import 'router/providers/app_router_provider.dart';
 
-class MyApp extends StatelessWidget {
-  final AppRouter _router;
-  const MyApp({super.key, required AppRouter router}) : _router = router;
+class MyApp extends ConsumerWidget {
+  const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+
     return MaterialApp.router(
       title: 'Flutter + auto_route + Riverpod',
-      routerConfig: _router.config(
+      routerConfig: router.config(
         navigatorObservers: () => [
           AutoRouteDebugObserver()
         ],
