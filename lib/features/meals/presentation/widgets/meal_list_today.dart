@@ -25,7 +25,7 @@ class MealListToday extends ConsumerWidget {
                 final action = await showDialog<String?>(
                   barrierDismissible: true,
                   context: context,
-                  builder: (context) => MealStatusDialog(),
+                  builder: (context) => MealStatusDialog(meal: meal),
                 );
                 if (action != null) {
                   ref.read(updateMealProvider(meal, action));

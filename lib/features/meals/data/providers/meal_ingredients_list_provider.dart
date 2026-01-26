@@ -2,6 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/domain/model/ingredient.dart' as domain;
+import '../../../../core/drift/dao/ingredient_dao.dart';
+import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
+import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
@@ -15,6 +19,12 @@ part 'meal_ingredients_list_provider.freezed.dart';
 @riverpod
 List<MealIngredientsDraft> mealDraftIngredients(Ref ref) {
   return ref.watch(mealDraftProvider.select((h) => h.mealIngredients));
+}
+
+@riverpod
+Future<MealSummary?> mealMacronutrientsSummary(Ref ref, int mealId) async {
+  final db = ref.watch(databaseProvider);
+  return await db.ingredientDao.totalsForMeal(mealId);
 }
 
 @freezed
