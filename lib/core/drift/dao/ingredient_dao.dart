@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:drift/drift.dart';
 import '../database_impl.dart';
 
@@ -29,40 +31,46 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
   }
 
   Future<MealSummary?> totalsForMeal(int mealId) async {
-      final mi = db.mealIngredients;
-      final ing = ingredient;
-      final ip = db.ingredientPortions;
+    final mi = db.mealIngredients;
+    final ing = ingredient;
+    final ip = db.ingredientPortions;
 
-      final base = select(mi).join([
-        innerJoin(ing, ing.id.equalsExp(mi.ingredientId)),
-        leftOuterJoin(
-          ip,
-          ip.ingredientId.equalsExp(mi.ingredientId) &
-          ip.portionId.equalsExp(mi.portionId),
-        ),
-      ])
-        ..where(mi.mealId.equals(mealId));
+    final base = select(mi).join([
+      innerJoin(ing, ing.id.equalsExp(mi.ingredientId)),
+      leftOuterJoin(
+        ip,
+        ip.ingredientId.equalsExp(mi.ingredientId) &
+            ip.portionId.equalsExp(mi.portionId),
+      ),
+    ])..where(mi.mealId.equals(mealId));
 
-      final grams = mi.amount.cast<double>() * ip.gramsPerPortion.cast<double>();
+    final grams = CaseWhenExpression<double>(
+      cases: [CaseWhen(mi.portionId.isNull(), then: mi.amount.cast<double>())],
+      orElse: mi.amount.cast<double>() * ip.gramsPerPortion.cast<double>(),
+    );
 
-      final carbsG = (grams * ing.carbsPer100g / const Constant(100.0)).sum();
-      final proteinKcal =
-      (grams * ing.proteinPer100g / const Constant(100.0) * const Constant(4.0))
-          .sum();
-      final fatKcal =
-      (grams * ing.fatPer100g / const Constant(100.0) * const Constant(9.0)).sum();
+    final carbsG = (grams * ing.carbsPer100g / const Constant(100.0)).sum();
+    final proteinKcal =
+        (grams *
+                ing.proteinPer100g /
+                const Constant(100.0) *
+                const Constant(4.0))
+            .sum();
+    final fatKcal =
+        (grams * ing.fatPer100g / const Constant(100.0) * const Constant(9.0))
+            .sum();
 
-      final q = base
-        ..addColumns([mi.mealId, carbsG, proteinKcal, fatKcal])
-        ..groupBy([mi.mealId]);
+    final q = base
+      ..addColumns([mi.mealId, carbsG, proteinKcal, fatKcal])
+      ..groupBy([mi.mealId]);
 
-      final row = await q.getSingleOrNull();
-      if (row == null) return null;
+    final row = await q.getSingleOrNull();
+    if (row == null) return null;
 
-      return MealSummary(
-        carbsG: row.read(carbsG) ?? 0.0,
-        proteinKcal: row.read(proteinKcal) ?? 0.0,
-        fatKcal: row.read(fatKcal) ?? 0.0,
-      );
+    return MealSummary(
+      carbsG: row.read(carbsG) ?? 0.0,
+      proteinKcal: row.read(proteinKcal) ?? 0.0,
+      fatKcal: row.read(fatKcal) ?? 0.0,
+    );
   }
 }
