@@ -23,6 +23,40 @@ class MealDialogController extends _$MealDialogController {
     return s.copyWith(waitHint: "Ładowanie…");
   }
 
+  Future<void> scheduleEatNotification({
+    required FlutterLocalNotificationsPlugin plugin,
+    required int notificationId,
+    required int minutes,
+  }) async {
+    final plugin = ref.read(flutterLocalNotificationsPluginProvider);
+    final when = tz.TZDateTime.now(tz.local).add(Duration(minutes: minutes));
+
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'meal_wait_channel',
+        'Meal Wait Notifications',
+        channelDescription: 'Reminders that you can start eating',
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+    );
+
+    await plugin.zonedSchedule(
+      id: notificationId,
+      scheduledDate: when,
+      notificationDetails: details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      title: 'Możesz już jeść 🍽️',
+      body: 'Minęło $minutes minut od podania insuliny.',
+      // payload: 'mealId=$notificationId', // opcjonalnie
+    );
+  }
+
+  String waitTimeMessage(WaitSuggestion w) {
+    return "Odczekaj około ${w.recommendedMinutes} min "
+        "(zakres ${w.minMinutes}–${w.maxMinutes} min) przed rozpoczęciem posiłku.";
+  }
+
   int parseTick(String? tickRaw) {
     if (tickRaw == null) return 0;
     final cleaned = tickRaw.trim().replaceAll(',', '.');

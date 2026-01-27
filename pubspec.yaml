@@ -38,6 +38,8 @@ dependencies:
   riverpod_annotation: ^3.0.3
   freezed_annotation: ^3.1.0
   riverpod_generator: ^3.0.3
+  flutter_local_notifications: ^20.0.0
+  timezone: ^0.10.1
   google_fonts: ^6.1.0
   json_annotation: ^4.9.0 # for serilization of the class
   logger: ^2.3.0
