@@ -35,7 +35,7 @@ class AddMealIngredient extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             switch (addingStage) {
-              AddMealIngredientStage.ingredient_search =>
+              AddMealIngredientStage.ingredientSearch =>
                 _textWithSearchTransition(
                   'Ingredient search',
                   Icon(Icons.add_box),
@@ -43,7 +43,7 @@ class AddMealIngredient extends ConsumerWidget {
                     addingStateNotifier.toOppositeStage();
                   },
                 ),
-              AddMealIngredientStage.ingredient_form =>
+              AddMealIngredientStage.ingredientForm =>
                 _textWithSearchTransition(
                   'Ingredient form',
                   Icon(Icons.search),
@@ -51,7 +51,7 @@ class AddMealIngredient extends ConsumerWidget {
                     addingStateNotifier.toOppositeStage();
                   },
                 ),
-              AddMealIngredientStage.portion_add_new_search =>
+              AddMealIngredientStage.portionAddNewSearch =>
                 _textWithSearchTransition(
                   'Portion add new portion to ingredient',
                   Icon(Icons.add),
@@ -59,7 +59,7 @@ class AddMealIngredient extends ConsumerWidget {
                     addingStateNotifier.toOppositeStage();
                   },
                 ),
-              AddMealIngredientStage.defined_portions_search =>
+              AddMealIngredientStage.definedPortionsSearch =>
                 _textWithSearchTransition(
                   'Portion search existing portions',
                   Icon(Icons.add_box),
@@ -67,13 +67,13 @@ class AddMealIngredient extends ConsumerWidget {
                     addingStateNotifier.toOppositeStage();
                   },
                 ),
-              AddMealIngredientStage.amount_form => Text('Amount form'),
+              AddMealIngredientStage.amountForm => Text('Amount form'),
               AddMealIngredientStage.summary => Text('Summary'),
               AddMealIngredientStage.completed => throw UnimplementedError(),
-              AddMealIngredientStage.portion_specify_amount => Text(
+              AddMealIngredientStage.portionSpecifyAmount => Text(
                 'Ingredient amount in portion',
               ),
-              AddMealIngredientStage.portion_add_new_form =>
+              AddMealIngredientStage.portionAddNewForm =>
                 _textWithSearchTransition(
                   'Portion add new portion',
                   Icon(Icons.search),
@@ -87,19 +87,19 @@ class AddMealIngredient extends ConsumerWidget {
               switchInCurve: Curves.easeOut,
               switchOutCurve: Curves.easeIn,
               child: switch (addingStage) {
-                AddMealIngredientStage.ingredient_search => IngredientSearch(),
-                AddMealIngredientStage.ingredient_form => IngredientForm(),
-                AddMealIngredientStage.portion_add_new_search =>
+                AddMealIngredientStage.ingredientSearch => IngredientSearch(),
+                AddMealIngredientStage.ingredientForm => IngredientForm(),
+                AddMealIngredientStage.portionAddNewSearch =>
                   PortionSearch(),
-                AddMealIngredientStage.defined_portions_search =>
+                AddMealIngredientStage.definedPortionsSearch =>
                   PortionSearch(),
-                AddMealIngredientStage.amount_form => AmountForm(),
+                AddMealIngredientStage.amountForm => AmountForm(),
                 AddMealIngredientStage.summary => AddIngredientSummary(),
                 AddMealIngredientStage.completed => throw UnimplementedError(),
                 // TODO: Handle this case.
-                AddMealIngredientStage.portion_specify_amount =>
+                AddMealIngredientStage.portionSpecifyAmount =>
                   IngredientPortionAmountForm(),
-                AddMealIngredientStage.portion_add_new_form => PortionForm(),
+                AddMealIngredientStage.portionAddNewForm => PortionForm(),
               },
             ),
             Row(
@@ -126,7 +126,7 @@ class AddMealIngredient extends ConsumerWidget {
                         : Text('Next'),
                   ),
                 ),
-                addingStage != AddMealIngredientStage.defined_portions_search && addingStage != AddMealIngredientStage.portion_add_new_search
+                addingStage != AddMealIngredientStage.definedPortionsSearch && addingStage != AddMealIngredientStage.portionAddNewSearch
                     ? SizedBox.shrink()
                     : Expanded(
                         child: ElevatedButton(

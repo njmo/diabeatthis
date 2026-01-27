@@ -1,7 +1,8 @@
 import 'dart:collection';
 import 'dart:convert';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
-import 'package:riverpod/riverpod.dart';
 
 typedef ValueFormatter = String Function(Object? value);
 

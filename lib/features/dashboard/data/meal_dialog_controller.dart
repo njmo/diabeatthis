@@ -1,14 +1,12 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:timezone/timezone.dart' as tz;
+
 import '../../../app/router/providers/flutter_local_notifications_plugin_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
 import 'meal_dialog_state.dart';
 import 'providers/device_status_provider.dart';
 import 'utils/meal_advisor.dart';
-
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
 
 part 'meal_dialog_controller.g.dart';
 

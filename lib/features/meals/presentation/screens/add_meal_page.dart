@@ -5,7 +5,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/date_time_picker.dart';
 import '../../../../common/widgets/forms.dart';
-import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../data/providers/meal_database_provider.dart';

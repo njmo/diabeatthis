@@ -11,13 +11,13 @@ import 'meal_draft_provider.dart';
 part 'add_ingredients_provider.g.dart';
 
 enum AddMealIngredientStage {
-  ingredient_search,
-  ingredient_form,
-  portion_add_new_search,
-  portion_add_new_form,
-  portion_specify_amount,
-  defined_portions_search,
-  amount_form,
+  ingredientSearch,
+  ingredientForm,
+  portionAddNewSearch,
+  portionAddNewForm,
+  portionSpecifyAmount,
+  definedPortionsSearch,
+  amountForm,
   summary,
   completed,
 }
@@ -32,7 +32,7 @@ GlobalKey<FormState> mealIngredientFormKey(Ref ref)
 class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   @override
   AddMealIngredientStage build() {
-    return AddMealIngredientStage.ingredient_search;
+    return AddMealIngredientStage.ingredientSearch;
   }
 
   void setOverride() {
@@ -40,13 +40,13 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
       mealIngredientsDraftProvider.notifier,
     );
     mealIngredientsDraft.setIngredientPortion(PortionSelection.empty());
-    state = AddMealIngredientStage.amount_form;
+    state = AddMealIngredientStage.amountForm;
   }
 
   void setStage(AddMealIngredientStage stage) => state = stage;
   void nextStage() async {
     switch (state) {
-      case AddMealIngredientStage.ingredient_search:
+      case AddMealIngredientStage.ingredientSearch:
         final ingredientDraft = ref.read(ingredientDraftProvider);
         final mealIngredientsDraft = ref.watch(
           mealIngredientsDraftProvider.notifier,
@@ -62,9 +62,9 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
           ),
         );
 
-        state = AddMealIngredientStage.defined_portions_search;
+        state = AddMealIngredientStage.definedPortionsSearch;
         break;
-      case AddMealIngredientStage.ingredient_form:
+      case AddMealIngredientStage.ingredientForm:
         final ingredientDraft = ref.read(ingredientDraftProvider);
         final mealIngredientsDraft = ref.watch(
           mealIngredientsDraftProvider.notifier,
@@ -73,18 +73,18 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         final portionsFilter = ref.read(portionFilterProvider.notifier);
         portionsFilter.setFilter(PortionFilter.byQuery());
 
-        state = AddMealIngredientStage.portion_add_new_search;
+        state = AddMealIngredientStage.portionAddNewSearch;
         break;
-      case AddMealIngredientStage.portion_add_new_search:
-      case AddMealIngredientStage.portion_add_new_form:
+      case AddMealIngredientStage.portionAddNewSearch:
+      case AddMealIngredientStage.portionAddNewForm:
         final portionsDraft = ref.read(portionDraftProvider);
         final mealIngredientsDraft = ref.watch(
           mealIngredientsDraftProvider.notifier,
         );
         mealIngredientsDraft.setIngredientPortion(portionsDraft);
-        state = AddMealIngredientStage.portion_specify_amount;
+        state = AddMealIngredientStage.portionSpecifyAmount;
         break;
-      case AddMealIngredientStage.portion_specify_amount:
+      case AddMealIngredientStage.portionSpecifyAmount:
         final ingredientAmountInPortion = ref.read(
           ingredientPortionAmountDraftProvider,
         );
@@ -94,17 +94,17 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         mealIngredientsDraft.setIngredientPortionAmount(
           ingredientAmountInPortion,
         );
-        state = AddMealIngredientStage.amount_form;
+        state = AddMealIngredientStage.amountForm;
         break;
-      case AddMealIngredientStage.defined_portions_search:
+      case AddMealIngredientStage.definedPortionsSearch:
         final portionsDraft = ref.read(portionDraftProvider);
         final mealIngredientsDraft = ref.watch(
           mealIngredientsDraftProvider.notifier,
         );
         mealIngredientsDraft.setIngredientPortion(portionsDraft);
-        state = AddMealIngredientStage.amount_form;
+        state = AddMealIngredientStage.amountForm;
         break;
-      case AddMealIngredientStage.amount_form:
+      case AddMealIngredientStage.amountForm:
         final amountDraft = ref.read(mealIngredientAmountDraftProvider);
         final mealIngredientsDraft = ref.watch(
           mealIngredientsDraftProvider.notifier,
@@ -122,10 +122,10 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
 
   void toOppositeStage() {
     switch (state) {
-      case AddMealIngredientStage.ingredient_search:
-        state = AddMealIngredientStage.ingredient_form;
+      case AddMealIngredientStage.ingredientSearch:
+        state = AddMealIngredientStage.ingredientForm;
         break;
-      case AddMealIngredientStage.defined_portions_search:
+      case AddMealIngredientStage.definedPortionsSearch:
         final ingredientDraft = ref.read(ingredientDraftProvider);
         final portionsFilter = ref.read(portionFilterProvider.notifier);
         portionsFilter.setFilter(
@@ -136,21 +136,21 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
             ),
           ),
         );
-        state = AddMealIngredientStage.portion_add_new_search;
+        state = AddMealIngredientStage.portionAddNewSearch;
         break;
-      case AddMealIngredientStage.portion_add_new_form:
-        state = AddMealIngredientStage.portion_add_new_search;
+      case AddMealIngredientStage.portionAddNewForm:
+        state = AddMealIngredientStage.portionAddNewSearch;
         break;
-      case AddMealIngredientStage.ingredient_form:
-        state = AddMealIngredientStage.ingredient_search;
+      case AddMealIngredientStage.ingredientForm:
+        state = AddMealIngredientStage.ingredientSearch;
         break;
-      case AddMealIngredientStage.portion_add_new_search:
-        state = AddMealIngredientStage.portion_add_new_form;
+      case AddMealIngredientStage.portionAddNewSearch:
+        state = AddMealIngredientStage.portionAddNewForm;
         break;
-      case AddMealIngredientStage.amount_form:
+      case AddMealIngredientStage.amountForm:
       case AddMealIngredientStage.completed:
       case AddMealIngredientStage.summary:
-      case AddMealIngredientStage.portion_specify_amount:
+      case AddMealIngredientStage.portionSpecifyAmount:
         // TODO: Handle this case.
         throw UnimplementedError();
     }

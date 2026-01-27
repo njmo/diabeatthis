@@ -59,7 +59,7 @@ class MealAdvisor {
     required double mealCarbs,
     required double fatProteinExchanges,
   }) {
-    int lowRisk = 0;
+    var lowRisk = 0;
 
     if (bg < 90)
       lowRisk += 3;
