@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../dashboard/presentation/widgets/meal_status_dialog.dart';
 import '../../data/providers/meal_database_provider.dart';
 
@@ -10,6 +11,7 @@ class MealListToday extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final meals = ref.watch(mealsForTodayStreamProvider);
+    final parentModeEnabled = ref.watch(parentModeProvider);
 
     return SingleChildScrollView(
       child: Padding(
@@ -53,12 +55,6 @@ class MealListToday extends ConsumerWidget {
                         ),
                         const SizedBox(width: 10),
                         _buildListTile(
-                          '${meal.carbs}',
-                          Icons.restaurant,
-                          Theme.of(context).colorScheme,
-                        ),
-                        const SizedBox(width: 10),
-                        _buildListTile(
                           '${meal.status}',
                           Icons.note_rounded,
                           Theme.of(context).colorScheme,
@@ -66,13 +62,15 @@ class MealListToday extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  trailing: IconButton(
-                    onPressed: () {
-                      ref.read(removeMealByIdProvider(meal));
-                    },
-                    icon: Icon(Icons.remove_circle),
-                    iconSize: 20,
-                  ),
+                  trailing: (parentModeEnabled)
+                      ? IconButton(
+                          onPressed: () {
+                            ref.read(removeMealByIdProvider(meal));
+                          },
+                          icon: Icon(Icons.remove_circle),
+                          iconSize: 20,
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ),
             );

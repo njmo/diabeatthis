@@ -18,6 +18,7 @@ abstract class Meal with _$Meal implements Treatment {
     String? nightscoutObjectId,
     DateTime? dateHappened,
     DateTime? createdAt,
+    DateTime? updatedAt,
     DateTime? plannedAt,
     DateTime? eatenAt,
     String? status,

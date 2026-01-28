@@ -2,124 +2,35 @@ CREATE TABLE meal (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
 
-  nightscout_object_id TEXT UNIQUE,
   planned_at INTEGER NOT NULL,
-  eaten_at INTEGER,
 
   status TEXT NOT NULL DEFAULT 'planned',
 
-  insulin_total_units REAL DEFAULT 0 CHECK (insulin_total_units >= 0),
-  ww REAL CHECK (ww >= 0),
-  wbt REAL CHECK (wbt >= 0),
-  wait_time_min INTEGER CHECK (wait_time_min >= 0),
-
-  insulin INTEGER CHECK (insulin >= 0),
-  trend TEXT,
-
-  carbs_counted INTEGER CHECK (carbs_counted >= 0),
-  carbs_given INTEGER CHECK (carbs_given >= 0),
-
-  cob_g REAL CHECK (cob_g >= 0),
-  iob_u REAL CHECK (iob_u >= 0),
-
   notes TEXT,
+
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+  updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
 
   UNIQUE (name, planned_at)
 );
 
-insertMeal:
-  INSERT INTO meal (
-    name,
-    planned_at,
-    eaten_at,
-    status,
-    insulin_total_units,
-    ww,
-    wbt,
-    wait_time_min,
-    trend,
-    cob_g,
-    iob_u,
-    notes
-  ) VALUES (
-    :name,
-    :plannedAt,
-    :eatenAt,
-    :status,
-    :insulinTotalUnits,
-    :ww,
-    :wbt,
-    :waitTimeMin,
-    :trend,
-    :cobG,
-    :iobU,
-    :notes
-  );
-
-updateMeal:
-  UPDATE meal SET
-    name                = :name,
-    planned_at          = :plannedAt,
-    eaten_at            = :eatenAt,
-    status              = :status,
-    insulin_total_units = :insulinTotalUnits,
-    ww                  = :ww,
-    wbt                 = :wbt,
-    wait_time_min       = :waitTimeMin,
-    trend               = :trend,
-    cob_g               = :cobG,
-    iob_u               = :iobU,
-    notes               = :notes
-  WHERE id = :id;
+CREATE TRIGGER meal_set_updated_at
+AFTER UPDATE ON meal
+FOR EACH ROW
+WHEN
+  OLD.name IS NOT NEW.name OR
+  OLD.planned_at IS NOT NEW.planned_at OR
+  OLD.status IS NOT NEW.status OR
+  OLD.notes IS NOT NEW.notes
+BEGIN
+  UPDATE meal
+  SET updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000
+  WHERE id = OLD.id;
+END;
 
 allMeals:
   SELECT * FROM meal;
 
-deleteMeal:
-  DELETE FROM meal
-  WHERE id = :id;
-
-mealById:
-  SELECT * FROM meal
-  WHERE id = :id;
-
-mealsByStatus:
-  SELECT * FROM meal
-  WHERE status = :status
-  ORDER BY planned_at ASC;
-
-mealsPlannedBetween:
-  SELECT * FROM meal
-  WHERE planned_at BETWEEN :from AND :to
-  ORDER BY planned_at ASC;
-
-mealsEatenBetween:
-  SELECT * FROM meal
-  WHERE eaten_at BETWEEN :from AND :to
-  ORDER BY eaten_at ASC;
-
-countMeals:
-  SELECT COUNT(*) AS count FROM meal;
-
-countMealsByStatus:
-  SELECT COUNT(*) AS count FROM meal
-  WHERE status = :status;
-
-deleteAllMeals:
-  DELETE FROM meal;
-
-deleteMealsByStatus:
-  DELETE FROM meal
-  WHERE status = :status;
-
-deleteMealsEatenBefore:
-  DELETE FROM meal
-  WHERE eaten_at < :before;
-
-deleteMealsPlannedBefore:
-  DELETE FROM meal
-  WHERE planned_at < :before;
-
- deleteMealById:
+deleteMealById:
   DELETE FROM meal
   WHERE id = :id;

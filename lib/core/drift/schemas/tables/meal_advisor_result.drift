@@ -1,0 +1,23 @@
+import 'meal.drift';
+
+CREATE TABLE meal_advisor_result (
+  meal_id INTEGER NOT NULL PRIMARY KEY
+    REFERENCES meal(id) ON DELETE CASCADE,
+
+  result TEXT NOT NULL,
+  suggested_wait_time INTEGER NOT NULL,
+  accepted_wait_time INTEGER NOT NULL,
+  wait_time_ignored BOOL NOT NULL,
+
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+  updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000)
+);
+
+CREATE TRIGGER meal_advisor_result_set_updated_at
+AFTER UPDATE ON meal_advisor_result
+FOR EACH ROW
+BEGIN
+  UPDATE meal_advisor_result
+  SET updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000
+  WHERE meal_id = OLD.meal_id;
+END;

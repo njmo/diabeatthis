@@ -8,7 +8,6 @@ extension MealDraftToCompanion on MealDraft {
     return MealCompanion(
         name: d.Value(name),
         plannedAt: d.Value(plannedAt.millisecondsSinceEpoch),
-        carbsCounted: d.Value(carbs),
     );
   }
 }
