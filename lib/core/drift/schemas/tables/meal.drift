@@ -11,6 +11,8 @@ CREATE TABLE meal (
   created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
   updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
 
+  is_synced BOOL NOT NULL DEFAULT 0,
+
   UNIQUE (name, planned_at)
 );
 
@@ -25,8 +27,14 @@ WHEN
 BEGIN
   UPDATE meal
   SET updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000
+  SET is_synced = 0
   WHERE id = OLD.id;
 END;
+
+markMealsAsSynced:
+  UPDATE meal SET
+    is_synced = 1
+  WHERE id = :id;
 
 allMeals:
   SELECT * FROM meal;

@@ -9,6 +9,8 @@ CREATE TABLE meal_advisor_result (
   accepted_wait_time INTEGER NOT NULL,
   wait_time_ignored BOOL NOT NULL,
 
+  is_synced BOOL NOT NULL DEFAULT 0,
+
   created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
   updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000)
 );
@@ -19,5 +21,11 @@ FOR EACH ROW
 BEGIN
   UPDATE meal_advisor_result
   SET updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000
+  SET is_synced = 0
   WHERE meal_id = OLD.meal_id;
 END;
+
+markMealAdvisorResultAsSynced:
+  UPDATE meal_advisor_result SET
+    is_synced = 1
+    WHERE meal_id = :mealId;

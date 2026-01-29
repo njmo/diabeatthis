@@ -2,6 +2,7 @@ CREATE TABLE portion (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   unit_hint TEXT NOT NULL,
+  is_synced BOOL NOT NULL DEFAULT 0,
   UNIQUE (name, unit_hint)
 );
 
@@ -9,6 +10,10 @@ searchPortionsByName:
   SELECT * FROM portion
   WHERE name LIKE '%' || :q || '%'
   ORDER BY name ASC;
+
+markPortionsAsSynced:
+  UPDATE portion SET
+    is_synced = 1
 
 getAllPortions:
   SELECT * FROM portion

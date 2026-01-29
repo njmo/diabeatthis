@@ -9,62 +9,17 @@ CREATE TABLE ingredient (
   ig INTEGER CHECK (ig BETWEEN 0 AND 110),
   preparation TEXT,
   brand TEXT,
+
+  is_synced BOOL NOT NULL DEFAULT 0,
   UNIQUE (name, preparation, brand)
 );
+
+getAllIngredients:
+  SELECT * FROM ingredient
+  ORDER BY name ASC;
 
 searchIngredientsByName:
   SELECT * FROM ingredient
   WHERE name LIKE '%' || :q || '%'
   ORDER BY name ASC
   LIMIT :limit;
-
-searchIngredientsByExactName:
-  SELECT * FROM ingredient
-  WHERE name = :name;
-
-getAllIngredients:
-  SELECT * FROM ingredient
-  ORDER BY name ASC;
-
-countIngredients:
-  SELECT COUNT(*) AS count FROM ingredient;
-
-deleteAllIngredients:
-  DELETE FROM ingredient;
-
-ingredientById:
-  SELECT * FROM ingredient
-  WHERE id = :id;
-
-ingredientByIds:
-  SELECT * FROM ingredient
-  WHERE id IN :ids
-  ORDER BY name ASC;
-
-updateIngredient:
-  UPDATE ingredient SET
-    name = :name,
-    carbs_per_100g = :carbs,
-    fat_per_100g = :fat,
-    fiber_per_100g = :fiber,
-    protein_per_100g = :protein,
-    ig = :ig,
-    preparation = :prep,
-    brand = :brand
-  WHERE id = :id;
-
-deleteIngredient:
-  DELETE FROM ingredient
-  WHERE id = :id;
-
-insertIngredient:
-  INSERT INTO ingredient (
-    name,
-    carbs_per_100g,
-    fat_per_100g,
-    fiber_per_100g,
-    protein_per_100g,
-    ig,
-    preparation,
-    brand
-  ) VALUES (:name, :carbs, :fat, :fiber, :protein, :ig, :prep, :brand);
