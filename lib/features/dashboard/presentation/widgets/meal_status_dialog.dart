@@ -35,7 +35,7 @@ class MealStatusDialog extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.restaurant_outlined, size: 60),
-                          Text('Eat'),
+                          Text('Zjem'),
                         ],
                       ),
                     ),
@@ -57,7 +57,7 @@ class MealStatusDialog extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.no_meals, size: 60),
-                          Text('Skip'),
+                          Text('Pomijam'),
                         ],
                       ),
                     ),
@@ -66,22 +66,6 @@ class MealStatusDialog extends ConsumerWidget {
               ],
             ),
           );
-        case MealDialogStep.details:
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text("Dane posiłku"),
-              Text(
-                "Proste weglowodany ${s.carbsGrams.toStringAsFixed(0)}g",
-              ),
-              if (s.extendedCarbsGrams != 0) Text(
-                "Przedluzone weglowowany ${s.extendedCarbsGrams.toStringAsFixed(0)}g",
-              ),
-              const SizedBox(height: 12),
-            ],
-          );
-
         case MealDialogStep.confirm:
           return Column(
             mainAxisSize: MainAxisSize.min,
@@ -90,15 +74,13 @@ class MealStatusDialog extends ConsumerWidget {
               Text(
                 s.skipMeal
                     ? "Potwierdź pominięcie posiłku"
-                    : "Potwierdź posiłek",
+                    : "Potwierdź podanie insuliny",
               ),
               const SizedBox(height: 12),
               if (s.skipMeal)
                 const Text("Zapiszemy, że posiłek został pominięty.")
-              else
-                Text(
-                  "Stan: ${s.mealState}\nWęgle: ${s.carbsGrams.toStringAsFixed(0)} g\n${s.waitHint}",
-                ),
+              else if (s.advice.decision != null && s.advice.wait != null)
+                Text("Propozycja do wykonania: \n\n${c.mealAdviceString()}\n"),
             ],
           );
       }
@@ -108,17 +90,14 @@ class MealStatusDialog extends ConsumerWidget {
       switch (s.step) {
         case MealDialogStep.choose:
           return [const SizedBox.shrink()];
-        case MealDialogStep.details:
-          return [
-            TextButton(onPressed: c.back, child: const Text("Wstecz")),
-            TextButton(onPressed: c.next, child: const Text("Dalej")),
-          ];
         case MealDialogStep.confirm:
           return [
-            TextButton(onPressed: c.back, child: const Text("Wstecz")),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Anuluj"),
+            ),
             ElevatedButton(
               onPressed: () async {
-                await c.save();
                 if (context.mounted) {
                   if (s.skipMeal) {
                     Navigator.of(context).pop('skipped');
@@ -127,7 +106,7 @@ class MealStatusDialog extends ConsumerWidget {
                   }
                 }
               },
-              child: const Text("Zapisz"),
+              child: const Text("Podalem"),
             ),
           ];
       }

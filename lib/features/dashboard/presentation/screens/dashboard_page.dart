@@ -19,22 +19,32 @@ class DashboardPage extends ConsumerWidget {
     final parentModeEnabled = ref.watch(parentModeProvider);
 
     return Scaffold(
-
-      appBar: AppBar(title: const Text('Dashboard'), actions: <Widget>[
-        IconButton(
-          icon: Icon(Icons.person_pin, color: parentModeEnabled?Colors.green:Colors.amber,),
-          onPressed: () {
-            parentModeController.toggleParentMode();
-          },
-        )
-      ],),
-      floatingActionButton: const DashboardFAB(),
+      appBar: AppBar(
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(
+              Icons.person_pin,
+              color: parentModeEnabled ? Colors.green : Colors.amber,
+            ),
+            onPressed: () {
+              parentModeController.toggleParentMode();
+            },
+          ),
+        ],
+      ),
+      floatingActionButton: (parentModeEnabled)
+          ? const DashboardFAB()
+          : const SizedBox.shrink(),
       body: Column(
         children: [
-          Text('Welcome $name!'),
+          Text('Witaj $name!'),
           NightscoutPanel(),
           const SizedBox(height: 8),
-          Text('Planned meals',textAlign: TextAlign.left, style: TextStyle(fontSize: 20,),),
+          Text(
+            'Zaplanowane posiłki',
+            textAlign: TextAlign.left,
+            style: TextStyle(fontSize: 20),
+          ),
           MealListToday(),
         ],
       ),

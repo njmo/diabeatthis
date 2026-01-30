@@ -67,7 +67,7 @@ Future<void> insertIngredientPortion(
   domain.Portion? portion,
   int amount,
 ) async {
-  if(portion == null) {
+  if (portion == null) {
     return;
   }
   final db = ref.watch(databaseProvider);
@@ -109,4 +109,21 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
       state = state.copyWith(proteinPer100g: double.tryParse(value) ?? 0.0);
   void setName(String value) => state = state.copyWith(name: value);
   void overrideDraft(IngredientSelection ingredient) => state = ingredient;
+
+  String getName() => state.map(draft: (d) => d.name, existing: (e) => e.name);
+  String getCarbsPer100g() => state
+      .map(draft: (d) => d.carbsPer100g, existing: (e) => e.carbsPer100g)
+      .toStringAsFixed(0);
+
+  String getFatPer100g() => state
+      .map(draft: (d) => d.fatPer100g, existing: (e) => e.fatPer100g)
+      .toStringAsFixed(0);
+
+  String getFiberPer100g() => state
+      .map(draft: (d) => d.fiberPer100g, existing: (e) => e.fiberPer100g)
+      .toStringAsFixed(0);
+
+  String getProteinPer100g() => state
+      .map(draft: (d) => d.proteinPer100g, existing: (e) => e.proteinPer100g)
+      .toStringAsFixed(0);
 }

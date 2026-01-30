@@ -25,7 +25,7 @@ class PortionForm extends HookConsumerWidget {
                   children: [
                     StringFormField(
                       label: 'Nazwa',
-                      value: '',
+                      value: draft.getName(),
                       onChanged: draft.setName,
                       builder: (context, controller) {
                         return TextFormField(
@@ -46,7 +46,7 @@ class PortionForm extends HookConsumerWidget {
                     ),
                     StringFormField(
                       label: 'Jednostka',
-                      value: '',
+                      value: draft.getUnitHint(),
                       onChanged: draft.setUnitHint,
                       builder: (context, controller) {
                         return TextFormField(

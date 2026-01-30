@@ -6,10 +6,11 @@ enum MealDecision {
 }
 
 class MealAdvice {
-  final MealDecision decision;
+  final MealDecision? decision;
   final WaitSuggestion? wait;
 
   MealAdvice(this.decision, this.wait);
+  MealAdvice.empty() : decision = null, wait = null;
 }
 
 class WaitSuggestion {

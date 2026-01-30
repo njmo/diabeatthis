@@ -1,46 +1,43 @@
-enum MealDialogStep { choose, details, confirm }
+import 'utils/meal_advisor.dart';
+
+enum MealDialogStep { choose, confirm }
 
 class MealDialogState {
   final MealDialogStep step;
   final bool skipMeal;
-  final String mealState;
   final double carbsGrams;
   final double extendedCarbsGrams;
-  final String waitHint;
+  final MealAdvice advice;
 
   const MealDialogState({
     required this.step,
     required this.skipMeal,
-    required this.mealState,
+    required this.advice,
     required this.carbsGrams,
     required this.extendedCarbsGrams,
-    required this.waitHint,
   });
 
   MealDialogState copyWith({
     MealDialogStep? step,
     bool? skipMeal,
-    String? mealState,
+    MealAdvice? advice,
     double? carbsGrams,
     double? extendedCarbsGrams,
-    String? waitHint,
   }) {
     return MealDialogState(
       step: step ?? this.step,
       skipMeal: skipMeal ?? this.skipMeal,
-      mealState: mealState ?? this.mealState,
+      advice: advice ?? this.advice,
       carbsGrams: carbsGrams ?? this.carbsGrams,
-      waitHint: waitHint ?? this.waitHint,
       extendedCarbsGrams: extendedCarbsGrams ?? this.extendedCarbsGrams,
     );
   }
 
-  static MealDialogState initial() => const MealDialogState(
+  static MealDialogState initial() => MealDialogState(
     step: MealDialogStep.choose,
     skipMeal: false,
-    mealState: "Przed posiłkiem",
     carbsGrams: 0,
     extendedCarbsGrams: 0,
-    waitHint: "",
+    advice: MealAdvice.empty(),
   );
 }

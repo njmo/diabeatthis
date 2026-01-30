@@ -23,15 +23,16 @@ enum AddMealIngredientStage {
 }
 
 @riverpod
-GlobalKey<FormState> mealIngredientFormKey(Ref ref)
-{
+GlobalKey<FormState> mealIngredientFormKey(Ref ref) {
   return GlobalKey<FormState>();
 }
 
 @riverpod
 class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
+  late AddMealIngredientStage prev;
   @override
   AddMealIngredientStage build() {
+    prev = AddMealIngredientStage.ingredientSearch;
     return AddMealIngredientStage.ingredientSearch;
   }
 
@@ -45,6 +46,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
 
   void setStage(AddMealIngredientStage stage) => state = stage;
   void nextStage() async {
+    prev = state;
     switch (state) {
       case AddMealIngredientStage.ingredientSearch:
         final ingredientDraft = ref.read(ingredientDraftProvider);
@@ -121,6 +123,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   }
 
   void toOppositeStage() {
+    prev = state;
     switch (state) {
       case AddMealIngredientStage.ingredientSearch:
         state = AddMealIngredientStage.ingredientForm;
@@ -156,8 +159,11 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     }
   }
 
-  bool validateStage()
-  {
+  bool validateStage() {
     return false;
+  }
+
+  void back() {
+    state = prev;
   }
 }

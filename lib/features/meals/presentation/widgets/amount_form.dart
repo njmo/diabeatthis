@@ -26,7 +26,7 @@ class AmountForm extends HookConsumerWidget {
             children: [
               StringFormField(
                 label: 'Ilość porcji',
-                value: '',
+                value: mealIngredientDraft.getAmount(),
                 onChanged: mealIngredientDraft.setAmount,
                 builder: (context, controller) {
                   return TextFormField(

@@ -114,6 +114,19 @@ class PortionDraft extends _$PortionDraft {
       orElse: () => state,
     );
   }
+
+  String getName() => state.map(
+    draft: (d) => d.name,
+    existing: (e) => e.name,
+    empty: (_) => '',
+  );
+
+  String getUnitHint() => state.map(
+    draft: (d) => d.unitHint,
+    existing: (e) => e.unitHint,
+    empty: (_) => '',
+  );
+
   void overrideDraft(PortionSelection portion) => state = portion;
 }
 

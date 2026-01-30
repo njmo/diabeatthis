@@ -39,33 +39,25 @@ class AddMealIngredient extends ConsumerWidget {
                 _textWithSearchTransition(
                   'Ingredient search',
                   Icon(Icons.add_box),
-                  () {
-                    addingStateNotifier.toOppositeStage();
-                  },
+                  addingStateNotifier,
                 ),
               AddMealIngredientStage.ingredientForm =>
                 _textWithSearchTransition(
                   'Ingredient form',
                   Icon(Icons.search),
-                  () {
-                    addingStateNotifier.toOppositeStage();
-                  },
+                  addingStateNotifier,
                 ),
               AddMealIngredientStage.portionAddNewSearch =>
                 _textWithSearchTransition(
                   'Portion add new portion to ingredient',
                   Icon(Icons.add),
-                  () {
-                    addingStateNotifier.toOppositeStage();
-                  },
+                  addingStateNotifier,
                 ),
               AddMealIngredientStage.definedPortionsSearch =>
                 _textWithSearchTransition(
                   'Portion search existing portions',
                   Icon(Icons.add_box),
-                  () {
-                    addingStateNotifier.toOppositeStage();
-                  },
+                  addingStateNotifier,
                 ),
               AddMealIngredientStage.amountForm => Text('Amount form'),
               AddMealIngredientStage.summary => Text('Summary'),
@@ -77,9 +69,7 @@ class AddMealIngredient extends ConsumerWidget {
                 _textWithSearchTransition(
                   'Portion add new portion',
                   Icon(Icons.search),
-                  () {
-                    addingStateNotifier.toOppositeStage();
-                  },
+                  addingStateNotifier,
                 ),
             },
             AnimatedSwitcher(
@@ -89,10 +79,8 @@ class AddMealIngredient extends ConsumerWidget {
               child: switch (addingStage) {
                 AddMealIngredientStage.ingredientSearch => IngredientSearch(),
                 AddMealIngredientStage.ingredientForm => IngredientForm(),
-                AddMealIngredientStage.portionAddNewSearch =>
-                  PortionSearch(),
-                AddMealIngredientStage.definedPortionsSearch =>
-                  PortionSearch(),
+                AddMealIngredientStage.portionAddNewSearch => PortionSearch(),
+                AddMealIngredientStage.definedPortionsSearch => PortionSearch(),
                 AddMealIngredientStage.amountForm => AmountForm(),
                 AddMealIngredientStage.summary => AddIngredientSummary(),
                 AddMealIngredientStage.completed => throw UnimplementedError(),
@@ -126,7 +114,9 @@ class AddMealIngredient extends ConsumerWidget {
                         : Text('Next'),
                   ),
                 ),
-                addingStage != AddMealIngredientStage.definedPortionsSearch && addingStage != AddMealIngredientStage.portionAddNewSearch
+                addingStage != AddMealIngredientStage.definedPortionsSearch &&
+                        addingStage !=
+                            AddMealIngredientStage.portionAddNewSearch
                     ? SizedBox.shrink()
                     : Expanded(
                         child: ElevatedButton(
@@ -179,14 +169,25 @@ class AddMealIngredient extends ConsumerWidget {
     );
   }
 
-  Widget _textWithSearchTransition(String text, Icon icon, Function f) {
+  Widget _textWithSearchTransition(
+    String text,
+    Icon icon,
+    AddMealIngredientStageNotifier notifier,
+  ) {
     return Row(
       children: [
+        Align(
+          alignment: Alignment.topLeft,
+          child: IconButton(
+            onPressed: () => notifier.back(),
+            icon: Icon(Icons.arrow_back),
+          ),
+        ),
         Expanded(child: Text(text)),
         Align(
           alignment: Alignment.centerRight,
           child: IconButton(
-            onPressed: () => f(),
+            onPressed: () => notifier.toOppositeStage(),
             icon: icon,
           ),
         ),

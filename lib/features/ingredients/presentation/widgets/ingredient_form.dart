@@ -24,14 +24,16 @@ class IngredientForm extends HookConsumerWidget {
           children: <Widget>[
             StringFormField(
               label: 'Nazwa',
-              value: '',
+              value: draft.getName(),
               onChanged: draft.setName,
               builder: (context, controller) {
                 return TextFormField(
                   controller: controller,
                   maxLength: 30,
                   validator: (value) {
-                    if ((value == null) || (value.isEmpty) || (value.length < 5)) {
+                    if ((value == null) ||
+                        (value.isEmpty) ||
+                        (value.length < 5)) {
                       return '';
                     }
                     return null;
@@ -48,7 +50,7 @@ class IngredientForm extends HookConsumerWidget {
                 Expanded(
                   child: StringFormField(
                     label: 'Ilość węglowodanów na 100g',
-                    value: '',
+                    value: draft.getCarbsPer100g(),
                     onChanged: draft.setCarbsPer100g,
                     builder: (context, controller) {
                       return TextFormField(
@@ -76,7 +78,7 @@ class IngredientForm extends HookConsumerWidget {
                 Expanded(
                   child: StringFormField(
                     label: 'Ilość tłuszczu na 100g',
-                    value: '',
+                    value: draft.getFatPer100g(),
                     onChanged: draft.setFatPer100g,
                     builder: (context, controller) {
                       return TextFormField(
@@ -107,7 +109,7 @@ class IngredientForm extends HookConsumerWidget {
                 Expanded(
                   child: StringFormField(
                     label: 'Ilość białka na 100g',
-                    value: '',
+                    value: draft.getProteinPer100g(),
                     onChanged: draft.setProteinPer100g,
                     builder: (context, controller) {
                       return TextFormField(
@@ -135,7 +137,7 @@ class IngredientForm extends HookConsumerWidget {
                 Expanded(
                   child: StringFormField(
                     label: 'Ilość błonnika na 100g',
-                    value: '',
+                    value: draft.getFiberPer100g(),
                     onChanged: draft.setFiberPer100g,
                     builder: (context, controller) {
                       return TextFormField(
