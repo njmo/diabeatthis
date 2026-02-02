@@ -73,9 +73,9 @@ class MealDialogController extends _$MealDialogController {
   String? mealAdviceString() {
     switch (state.advice.decision) {
       case MealDecision.eatNowBolusLater:
-        return "Jedz teraz, insulinę podaj później";
+        return "Jedz teraz, insulinę podaj po jedzeniu w kalkulatorze ${state.carbsGrams}g";
       case MealDecision.bolusAndEatNow:
-        return "Podaj insulinę i jedz";
+        return "Podaj insulinę insulinę w kalkulatorze ${state.carbsGrams}g i jedz";
       case MealDecision.bolusWaitThenEat:
         return "1. Pierw podaj insulinę w kalkulatorze ${state.carbsGrams}g,\n2. ${waitTimeMessage(state.advice.wait!)}i jedz";
       case MealDecision.eatSnackFirst:

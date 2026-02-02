@@ -79,7 +79,7 @@ class MealStatusDialog extends ConsumerWidget {
               const SizedBox(height: 12),
               if (s.skipMeal)
                 const Text("Zapiszemy, że posiłek został pominięty.")
-              else if (s.advice.decision != null && s.advice.wait != null)
+              else if (s.advice.decision != null)
                 Text("Propozycja do wykonania: \n\n${c.mealAdviceString()}\n"),
             ],
           );

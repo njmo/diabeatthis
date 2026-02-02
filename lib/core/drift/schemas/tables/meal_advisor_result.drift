@@ -21,8 +21,15 @@ FOR EACH ROW
 BEGIN
   UPDATE meal_advisor_result
   SET updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000
-  SET is_synced = 0
   WHERE meal_id = OLD.meal_id;
+END;
+
+CREATE TRIGGER meal_advisor_result_any_change_marks_unsynced
+AFTER UPDATE ON meal_advisor_result
+FOR EACH ROW
+WHEN NEW.is_synced <> 0
+BEGIN
+  UPDATE meal_advisor_result SET is_synced = 0 WHERE meal_id = NEW.meal_id;
 END;
 
 markMealAdvisorResultAsSynced:

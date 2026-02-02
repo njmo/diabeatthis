@@ -16,19 +16,41 @@ CREATE TABLE meal (
   UNIQUE (name, planned_at)
 );
 
+CREATE TABLE meal_status_history (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  meal_id INTEGER NOT NULL
+    REFERENCES meal (id) ON DELETE CASCADE,
+  status TEXT NOT NULL,
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+  FOREIGN KEY(meal_id) REFERENCES meal(id),
+  UNIQUE (meal_id, status)
+);
+
 CREATE TRIGGER meal_set_updated_at
 AFTER UPDATE ON meal
 FOR EACH ROW
-WHEN
-  OLD.name IS NOT NEW.name OR
-  OLD.planned_at IS NOT NEW.planned_at OR
-  OLD.status IS NOT NEW.status OR
-  OLD.notes IS NOT NEW.notes
+WHEN NEW.updated_at = OLD.updated_at
 BEGIN
   UPDATE meal
-  SET updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000
-  SET is_synced = 0
-  WHERE id = OLD.id;
+  SET updated_at = (CAST(strftime('%s','now') AS INTEGER) * 1000)
+  WHERE id = NEW.id;
+END;
+
+CREATE TRIGGER meal_status_changed
+BEFORE UPDATE OF status ON meal
+FOR EACH ROW
+WHEN OLD.status IS NOT NEW.status
+BEGIN
+  INSERT INTO meal_status_history (meal_id, status)
+  VALUES (NEW.id, NEW.status);
+END;
+
+CREATE TRIGGER meal_any_change_marks_unsynced
+AFTER UPDATE ON meal
+FOR EACH ROW
+WHEN NEW.is_synced <> 0
+BEGIN
+  UPDATE meal SET is_synced = 0 WHERE id = NEW.id;
 END;
 
 markMealsAsSynced:
