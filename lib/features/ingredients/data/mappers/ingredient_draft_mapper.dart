@@ -13,6 +13,7 @@ extension IngredientDraftMapper on domain.Ingredient {
       fatPer100g: fatPer100g,
       proteinPer100g: proteinPer100g,
       fiberPer100g: fiberPer100g,
+      nutritionConfidence: nutritionConfidence,
     );
   }
 }
@@ -36,6 +37,7 @@ extension IngredientSelectionToCompanion on IngredientSelection {
       fatPer100g: d.Value(fatPer100g),
       proteinPer100g: d.Value(proteinPer100g),
       fiberPer100g: d.Value(fiberPer100g),
+      nutritionConfidence: d.Value(nutritionConfidence),
     );
   }
 
@@ -53,6 +55,7 @@ extension IngredientSelectionToCompanion on IngredientSelection {
       fatPer100g: fatPer100g,
       proteinPer100g: proteinPer100g,
       fiberPer100g: fiberPer100g,
+      nutritionConfidence: nutritionConfidence,
     );
   }
 }

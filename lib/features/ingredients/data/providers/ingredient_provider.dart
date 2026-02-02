@@ -5,6 +5,7 @@ import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 
 import '../../../../core/drift/providers/database_provider.dart';
+import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/drafts/ingredient_draft.dart';
 import '../mappers/ingredient_draft_mapper.dart';
 
@@ -96,6 +97,7 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
       fatPer100g: 0,
       fiberPer100g: 0,
       proteinPer100g: 0,
+      nutritionConfidence: 0,
     );
   }
 
@@ -108,6 +110,8 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
   void setProteinPer100g(String value) =>
       state = state.copyWith(proteinPer100g: double.tryParse(value) ?? 0.0);
   void setName(String value) => state = state.copyWith(name: value);
+  void setNutritionConfidence(ConfidenceLevel value) =>
+      state = state.copyWith(nutritionConfidence: value.toDouble01());
   void overrideDraft(IngredientSelection ingredient) => state = ingredient;
 
   String getName() => state.map(draft: (d) => d.name, existing: (e) => e.name);
@@ -126,4 +130,9 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
   String getProteinPer100g() => state
       .map(draft: (d) => d.proteinPer100g, existing: (e) => e.proteinPer100g)
       .toStringAsFixed(0);
+
+  ConfidenceLevel getNutritionConfidence() => state.map(
+        draft: (d) => ConfidenceLevelX.fromDouble01(d.nutritionConfidence),
+        existing: (e) => e.nutritionConfidence as ConfidenceLevel,
+      );
 }

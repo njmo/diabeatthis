@@ -5,13 +5,17 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/widgets/forms.dart';
 import '../../data/providers/add_ingredients_provider.dart';
 import '../../data/providers/meal_draft_provider.dart';
+import 'confidence_slider.dart';
 
 class AmountForm extends HookConsumerWidget {
   const AmountForm({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mealIngredientDraft = ref.watch(mealIngredientAmountDraftProvider.notifier);
+    final mealIngredientAmountDraft = ref.read(mealIngredientAmountDraftProvider.notifier);
+    final mealIngredientAmountDraftState = ref.watch(mealIngredientAmountDraftProvider);
+    final mealIngredientConfidenceDraft = ref.read(mealIngredientConfidenceDraftProvider.notifier);
+    final mealIngredientConfidenceDraftState = ref.watch(mealIngredientConfidenceDraftProvider);
     final formKey = ref.watch(mealIngredientFormKeyProvider);
 
     return SingleChildScrollView(
@@ -26,8 +30,8 @@ class AmountForm extends HookConsumerWidget {
             children: [
               StringFormField(
                 label: 'Ilość porcji',
-                value: mealIngredientDraft.getAmount(),
-                onChanged: mealIngredientDraft.setAmount,
+                value: mealIngredientAmountDraftState.toStringAsFixed(0),
+                onChanged: mealIngredientAmountDraft.setAmount,
                 builder: (context, controller) {
                   return TextFormField(
                     controller: controller,
@@ -47,6 +51,11 @@ class AmountForm extends HookConsumerWidget {
                   );
                 },
               ),
+              const SizedBox(height: 16),
+              ConfidenceSlider(
+                value: mealIngredientConfidenceDraftState,
+                onChanged: mealIngredientConfidenceDraft.setConfidence,
+              )
             ],
           ),
         ),

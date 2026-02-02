@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/forms.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
+import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/providers/ingredient_provider.dart';
 
 class IngredientForm extends HookConsumerWidget {
@@ -11,7 +12,8 @@ class IngredientForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final draft = ref.watch(ingredientDraftProvider.notifier);
+    final draft = ref.read(ingredientDraftProvider.notifier);
+    final state = ref.watch(ingredientDraftProvider);
     final formKey = ref.watch(mealIngredientFormKeyProvider);
 
     return SingleChildScrollView(
@@ -45,6 +47,12 @@ class IngredientForm extends HookConsumerWidget {
                 );
               },
             ),
+            const SizedBox(height: 16),
+            ConfidenceSlider(
+              value: ConfidenceLevelX.fromDouble01(state.nutritionConfidence),
+              onChanged: draft.setNutritionConfidence,
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(

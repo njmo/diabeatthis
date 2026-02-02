@@ -7,6 +7,7 @@ CREATE TABLE ingredient (
   protein_per_100g REAL NOT NULL CHECK (protein_per_100g >= 0),
   calories_kcal_per_100g REAL GENERATED ALWAYS AS ((protein_per_100g*4 + carbs_per_100g*4 + fat_per_100g*9)) STORED,
   ig INTEGER CHECK (ig BETWEEN 0 AND 110),
+  nutrition_confidence REAL NOT NULL CHECK (nutrition_confidence >= 0 AND nutrition_confidence <= 1),
   preparation TEXT,
   brand TEXT,
 

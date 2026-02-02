@@ -14,6 +14,7 @@ extension IngredientDataToDomain on IngredientData {
     caloriesKcalPer100g: caloriesKcalPer100g,
     preparation: preparation,
     brand: brand,
+    nutritionConfidence: nutritionConfidence,
   );
 }
 
@@ -32,6 +33,7 @@ extension DomainIngredientToCompanion on Ingredient {
       proteinPer100g: d.Value(proteinPer100g),
       preparation: d.Value(preparation),
       brand: d.Value(brand),
+      nutritionConfidence: d.Value(nutritionConfidence),
     );
   }
 }

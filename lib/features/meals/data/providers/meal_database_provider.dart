@@ -40,7 +40,7 @@ Stream<List<domain.Meal>> mealsForTodayStream(Ref ref) {
 }
 
 @riverpod
-Future<void> insertMealIngredient(Ref ref, domain.Ingredient ingredient, domain.Meal meal, domain.Portion? portion, int amount) async {
+Future<void> insertMealIngredient(Ref ref, domain.Ingredient ingredient, domain.Meal meal, domain.Portion? portion, int amount, double nutritionConfidence) async {
   final db = ref.watch(databaseProvider);
   await db.insertMealIngredient(
     meal.id,
@@ -48,6 +48,7 @@ Future<void> insertMealIngredient(Ref ref, domain.Ingredient ingredient, domain.
     portion?.id,
     amount,
     null,
+    nutritionConfidence,
     null,
   );
 }

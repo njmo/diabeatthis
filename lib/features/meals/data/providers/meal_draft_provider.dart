@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
+import '../../presentation/widgets/confidence_slider.dart';
 import '../drafts/meal_draft.dart';
 
 part 'meal_draft_provider.g.dart';
@@ -19,6 +20,19 @@ class MealIngredientAmountDraftNotifier
 }
 
 @riverpod
+class MealIngredientConfidenceDraftNotifier
+    extends _$MealIngredientConfidenceDraftNotifier {
+  @override
+  ConfidenceLevel build() {
+    return ConfidenceLevel.high;
+  }
+
+  ConfidenceLevel getConfidence() => state;
+  void setConfidence(ConfidenceLevel confidence) =>
+      state = confidence;
+}
+
+@riverpod
 class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
   @override
   MealIngredientsDraft build() {
@@ -29,12 +43,14 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
         fatPer100g: 0,
         fiberPer100g: 0,
         proteinPer100g: 0,
+        nutritionConfidence: 0,
       ),
       ingredientPortion: IngredientPortionDraft(
         portion: PortionSelection.draft(name: '', unitHint: ''),
         amount: 0,
       ),
       amount: 0,
+      quantityConfidence: 0,
     );
   }
 
@@ -47,6 +63,9 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
     ingredientPortion: state.ingredientPortion.copyWith(amount: amount),
   );
   void setAmount(int amount) => state = state.copyWith(amount: amount);
+  void setQuantityConfidence(ConfidenceLevel confidence) => state = state.copyWith(
+    quantityConfidence: confidence.toDouble01(),
+  );
 }
 
 @riverpod

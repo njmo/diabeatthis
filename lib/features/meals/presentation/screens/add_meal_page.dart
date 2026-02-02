@@ -155,6 +155,7 @@ class AddMealPage extends HookConsumerWidget {
                                   meal,
                                   portion,
                                   mealIngredient.amount,
+                                  mealIngredient.quantityConfidence,
                                 ).future,
                               );
                               print("Added meal ingredient");

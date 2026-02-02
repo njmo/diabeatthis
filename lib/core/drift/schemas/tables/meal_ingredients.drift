@@ -16,6 +16,8 @@ CREATE TABLE meal_ingredients (
 
   is_synced BOOL NOT NULL DEFAULT 0,
 
+  quantity_confidence REAL NOT NULL CHECK (quantity_confidence >= 0 AND quantity_confidence <= 1),
+
   prep_method TEXT,
   notes TEXT
 );
@@ -27,6 +29,7 @@ insertMealIngredient:
     portion_id,
     amount,
     prep_method,
+    quantity_confidence,
     notes
   ) VALUES (
     :mealId,
@@ -34,5 +37,6 @@ insertMealIngredient:
     :portionId,
     :amount,
     :prepMethod,
+    :quantityConfidence,
     :notes
   );

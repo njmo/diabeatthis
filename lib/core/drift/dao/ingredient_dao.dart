@@ -7,11 +7,17 @@ class MealSummary {
   final double carbsG;
   final double proteinKcal;
   final double fatKcal;
+  final double fatGrams;
+  final double proteinGrams;
+  final double fiberGrams;
 
   MealSummary({
     required this.carbsG,
     required this.proteinKcal,
     required this.fatKcal,
+    required this.fatGrams,
+    required this.proteinGrams,
+    required this.fiberGrams,
   });
 }
 
@@ -48,6 +54,7 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     );
 
     final carbsG = (grams * ing.carbsPer100g / const Constant(100.0)).sum();
+    final fiberG = (grams * ing.fiberPer100g / const Constant(100.0)).sum();
     final proteinKcal =
         (grams *
                 ing.proteinPer100g /
@@ -69,6 +76,9 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
       carbsG: row.read(carbsG) ?? 0.0,
       proteinKcal: row.read(proteinKcal) ?? 0.0,
       fatKcal: row.read(fatKcal) ?? 0.0,
+      fatGrams: row.read(ing.fatPer100g) ?? 0.0,
+      proteinGrams: row.read(ing.proteinPer100g) ?? 0.0,
+      fiberGrams: row.read(ing.fiberPer100g) ?? 0.0,
     );
   }
 }

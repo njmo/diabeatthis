@@ -12,6 +12,7 @@ abstract class MealIngredientsDraft with _$MealIngredientsDraft
     required IngredientSelection ingredient,
     required IngredientPortionDraft ingredientPortion,
     required int amount,
+    required double quantityConfidence,
   }) = _MealIngredientsDraft;
 }
 

@@ -35,7 +35,9 @@ class MealDialogController extends _$MealDialogController {
 
   Future<MealAdvice?> _getAdvice(
     double carbs,
-    double fatProteinExchanges,
+    double fatGrams,
+    double proteinGrams,
+    double fiberGrams,
   ) async {
     final deviceStatusStream = await ref.read(
       deviceStatusStreamProvider.future,
@@ -45,9 +47,11 @@ class MealDialogController extends _$MealDialogController {
       bg: deviceStatusStream.bg,
       iob: deviceStatusStream.iob,
       cob: deviceStatusStream.cob,
-      trend: parseTick(deviceStatusStream.tick),
+      trend: (parseTick(deviceStatusStream.tick) / 5).round(),
       mealCarbs: carbs,
-      fatProteinExchanges: fatProteinExchanges,
+      fatGrams: fatGrams,
+      proteinGrams: proteinGrams,
+      fiberGrams: fiberGrams,
     );
   }
 
@@ -55,18 +59,19 @@ class MealDialogController extends _$MealDialogController {
     final mealStatus = await ref.read(
       mealMacronutrientsSummaryProvider(mealId).future,
     );
+
     final carbs = mealStatus?.carbsG ?? 0;
-    final fatProteinExchanges = (mealStatus!.fatKcal + mealStatus.proteinKcal) / 10.0;
+    final fatProteinExchanges = mealStatus?.proteinGrams ?? 0;
+    final fatGrams = mealStatus?.fatGrams ?? 0;
+    final fiberGrams = mealStatus?.fiberGrams ?? 0;
+    final proteinGrams = mealStatus?.proteinGrams ?? 0;
 
     state = state.copyWith(
       skipMeal: false,
       step: MealDialogStep.confirm,
       carbsGrams: carbs,
       extendedCarbsGrams: fatProteinExchanges,
-      advice: await _getAdvice(
-        carbs,
-        fatProteinExchanges,
-      ),
+      advice: await _getAdvice(carbs, proteinGrams, fatGrams, fiberGrams),
     );
   }
 
@@ -78,8 +83,6 @@ class MealDialogController extends _$MealDialogController {
         return "Podaj insulinę insulinę w kalkulatorze ${state.carbsGrams}g i jedz";
       case MealDecision.bolusWaitThenEat:
         return "1. Pierw podaj insulinę w kalkulatorze ${state.carbsGrams}g,\n2. ${waitTimeMessage(state.advice.wait!)}i jedz";
-      case MealDecision.eatSnackFirst:
-        return "Najpierw mała przekąska";
       case null:
         // TODO: Handle this case.
         throw UnimplementedError();
