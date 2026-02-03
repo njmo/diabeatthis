@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../data/meal_dialog_controller.dart';
 import '../../data/meal_dialog_state.dart';
+import '../../data/utils/meal_advisor.dart';
 
 class MealStatusDialog extends ConsumerWidget {
   final Meal meal;
@@ -10,8 +11,8 @@ class MealStatusDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final s = ref.watch(mealDialogControllerProvider(meal.id));
-    final c = ref.read(mealDialogControllerProvider(meal.id).notifier);
+    final s = ref.watch(mealDialogControllerProvider(meal.id, getStep()));
+    final c = ref.read(mealDialogControllerProvider(meal.id, getStep()).notifier);
 
     Widget content() {
       switch (s.step) {
@@ -83,6 +84,24 @@ class MealStatusDialog extends ConsumerWidget {
                 Text("Propozycja do wykonania: \n\n${c.mealAdviceString()}\n"),
             ],
           );
+        case MealDialogStep.confirmEaten:
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [Text('Potwierdź że posiłek został zjedzony')],
+          );
+        case MealDialogStep.confirmEating:
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [Text('Potwierdź że zacząłeś jeść')],
+          );
+        case MealDialogStep.confirmBolusedAfterEating:
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [Text('Potwierdź że podałeś insuline po zjedzeniu')],
+          );
       }
     }
 
@@ -102,11 +121,57 @@ class MealStatusDialog extends ConsumerWidget {
                   if (s.skipMeal) {
                     Navigator.of(context).pop('skipped');
                   } else {
-                    Navigator.of(context).pop('eaten');
+                    Navigator.of(context).pop(s.advice.decision!.status);
                   }
                 }
               },
               child: const Text("Podalem"),
+            ),
+          ];
+        case MealDialogStep.confirmEaten:
+          return [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Anuluj"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (context.mounted) {
+                  Navigator.of(context).pop('eaten');
+                };
+              },
+              child: const Text("Zjadłem"),
+            ),
+          ];
+
+        case MealDialogStep.confirmEating:
+          return [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Anuluj"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (context.mounted) {
+                  Navigator.of(context).pop('eating');
+                };
+              },
+              child: const Text("Jem"),
+            ),
+          ];
+        case MealDialogStep.confirmBolusedAfterEating:
+          return [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Anuluj"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (context.mounted) {
+                  Navigator.of(context).pop('eaten-bolused');
+                };
+              },
+              child: const Text("Podałem insuline"),
             ),
           ];
       }
@@ -117,5 +182,19 @@ class MealStatusDialog extends ConsumerWidget {
       content: content(),
       actions: actions(),
     );
+  }
+
+  MealDialogStep getStep() {
+    switch (meal.status) {
+      case 'bolused-waiting':
+        return MealDialogStep.confirmEating;
+      case 'eating-then-bolus':
+        return MealDialogStep.confirmBolusedAfterEating;
+      case 'waited-eating':
+      case 'bolused-eating':
+        return MealDialogStep.confirmEaten;
+      default:
+        return MealDialogStep.choose;
+    }
   }
 }

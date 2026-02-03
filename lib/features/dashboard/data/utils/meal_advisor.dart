@@ -13,6 +13,14 @@ enum MealDecision {
   bolusWaitThenEat,
 }
 
+extension MealDecisionX on MealDecision {
+  String get status => switch (this) {
+    MealDecision.eatNowBolusLater => 'eating-then-bolus',
+    MealDecision.bolusAndEatNow => 'bolused-eating',
+    MealDecision.bolusWaitThenEat => 'bolused-waiting',
+  };
+}
+
 class MealAdvice {
   final MealDecision? decision;
   final WaitSuggestion? wait;

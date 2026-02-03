@@ -24,6 +24,9 @@ class MealListToday extends ConsumerWidget {
             }
             return InkWell(
               onTap: () async {
+                if(meal.status == 'eaten' || meal.status == 'skipped' || meal.status == 'eaten-bolused') {
+                  return;
+                }
                 final action = await showDialog<String?>(
                   barrierDismissible: true,
                   context: context,

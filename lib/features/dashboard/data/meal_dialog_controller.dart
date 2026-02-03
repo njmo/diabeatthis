@@ -15,9 +15,9 @@ class MealDialogController extends _$MealDialogController {
   late final int mealId;
 
   @override
-  MealDialogState build(int mealId) {
+  MealDialogState build(int mealId, MealDialogStep initialStep) {
     this.mealId = mealId;
-    return MealDialogState.initial();
+    return MealDialogState.initial(initialStep);
   }
 
   String waitTimeMessage(WaitSuggestion w) {
