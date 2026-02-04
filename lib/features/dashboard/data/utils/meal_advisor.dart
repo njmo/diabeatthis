@@ -26,9 +26,7 @@ class MealAdvice {
   final WaitSuggestion? wait;
 
   MealAdvice(this.decision, this.wait);
-  MealAdvice.empty()
-      : decision = null,
-        wait = null;
+  MealAdvice.empty() : decision = null, wait = null;
 }
 
 class WaitSuggestion {
@@ -104,7 +102,8 @@ class MealAdvisorConfig {
 class MealAdvisor {
   final MealAdvisorConfig config;
 
-  MealAdvisor({MealAdvisorConfig? config}) : config = config ?? const MealAdvisorConfig();
+  MealAdvisor({MealAdvisorConfig? config})
+    : config = config ?? const MealAdvisorConfig();
 
   MealAdvice getMealAdvice({
     required int bg,
@@ -123,12 +122,7 @@ class MealAdvisor {
       fiberG: fiberGrams,
     );
 
-    final ttl = calculateTtlMinutes(
-      bg: bg,
-      trend: trend,
-      iob: iob,
-      cob: cob,
-    );
+    final ttl = calculateTtlMinutes(bg: bg, trend: trend, iob: iob, cob: cob);
 
     final decision = decide(
       bg: bg,
@@ -162,11 +156,18 @@ class MealAdvisor {
     // slightly for extremely low-carb meals (start effect is less noticeable).
     double base = config.tafBaseMin;
 
-    if (carbsG < 10) base += 3; // tiny carb amount tends to have weaker/less noticeable start
+    if (carbsG < 10)
+      base += 3; // tiny carb amount tends to have weaker/less noticeable start
 
     double df = (fatG * config.fatMinPerGram).clamp(0.0, config.fatCapMin);
-    double dp = (proteinG * config.proteinMinPerGram).clamp(0.0, config.proteinCapMin);
-    double dfi = (fiberG * config.fiberMinPerGram).clamp(0.0, config.fiberCapMin);
+    double dp = (proteinG * config.proteinMinPerGram).clamp(
+      0.0,
+      config.proteinCapMin,
+    );
+    double dfi = (fiberG * config.fiberMinPerGram).clamp(
+      0.0,
+      config.fiberCapMin,
+    );
 
     final taf = (base + df + dp + dfi).round();
     return taf.clamp(config.minTafMin, config.maxTafMin);
@@ -231,7 +232,8 @@ class MealAdvisor {
     // 3) Comfortable zone: meal will start well before low.
     // Now classic logic: if BG high and not dropping, consider waiting after bolus.
     final bgHigh = bg >= config.highBgThreshold;
-    final notDropping = trend >= 0; // raw trend (you can swap to trendEff if you prefer)
+    final notDropping =
+        trend >= 0; // raw trend (you can swap to trendEff if you prefer)
 
     if (bgHigh && notDropping) {
       return MealDecision.bolusWaitThenEat;
@@ -255,21 +257,22 @@ class MealAdvisor {
     double wait = 0.4 * cushion; // heuristic
 
     // BG correction (higher BG -> slightly longer wait)
-    if (bg >= 180) wait += 3;
-    else if (bg >= 150) wait += 2;
-    else if (bg >= 140) wait += 1;
+    if (bg >= 180)
+      wait += 3;
+    else if (bg >= 150)
+      wait += 2;
+    else if (bg >= 140)
+      wait += 1;
 
     // Trend correction
-    if (trend >= 10) wait += 2;
-    else if (trend >= 5) wait += 1;
+    if (trend >= 10)
+      wait += 2;
+    else if (trend >= 5)
+      wait += 1;
 
     // Clamp into 5–15 minutes like your earlier design.
     final rec = wait.round().clamp(5, 15);
 
-    return WaitSuggestion(
-      rec,
-      (rec - 5).clamp(0, 15),
-      (rec + 5).clamp(5, 20),
-    );
+    return WaitSuggestion(rec, (rec - 5).clamp(0, 15), (rec + 5).clamp(5, 20));
   }
 }

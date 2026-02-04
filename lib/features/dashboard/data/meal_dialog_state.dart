@@ -1,6 +1,12 @@
 import 'utils/meal_advisor.dart';
 
-enum MealDialogStep { choose, confirm, confirmEaten, confirmEating, confirmBolusedAfterEating }
+enum MealDialogStep {
+  choose,
+  confirm,
+  confirmEaten,
+  confirmEating,
+  confirmBolusedAfterEating,
+}
 
 class MealDialogState {
   final MealDialogStep step;

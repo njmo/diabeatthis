@@ -24,7 +24,9 @@ class MealListToday extends ConsumerWidget {
             }
             return InkWell(
               onTap: () async {
-                if(meal.status == 'eaten' || meal.status == 'skipped' || meal.status == 'eaten-bolused') {
+                if (meal.status == 'eaten' ||
+                    meal.status == 'skipped' ||
+                    meal.status == 'eaten-bolused') {
                   return;
                 }
                 final action = await showDialog<String?>(
@@ -58,7 +60,7 @@ class MealListToday extends ConsumerWidget {
                         ),
                         const SizedBox(width: 10),
                         _buildListTile(
-                          '${meal.status}',
+                          _toMealStatus(meal.status),
                           Icons.note_rounded,
                           Theme.of(context).colorScheme,
                         ),
@@ -108,6 +110,24 @@ class MealListToday extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _toMealStatus(String? status) {
+    switch (status) {
+      case 'eaten':
+      case 'eaten-bolused':
+        return 'Zjedzony';
+      case 'skipped':
+        return 'Pominięty';
+      case 'waited-eating':
+      case 'bolused-eating':
+      case 'eating':
+        return 'W trakcie jedzenia';
+      case 'bolused-waiting':
+        return 'Oczekuje na zjedzenie';
+      default:
+        return 'Zaplanowany';
+    }
   }
 
   String _shortTime(DateTime? dt) {

@@ -12,7 +12,9 @@ class MealStatusDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(mealDialogControllerProvider(meal.id, getStep()));
-    final c = ref.read(mealDialogControllerProvider(meal.id, getStep()).notifier);
+    final c = ref.read(
+      mealDialogControllerProvider(meal.id, getStep()).notifier,
+    );
 
     Widget content() {
       switch (s.step) {
@@ -125,7 +127,7 @@ class MealStatusDialog extends ConsumerWidget {
                   }
                 }
               },
-              child: const Text("Podalem"),
+              child: Text(_buttonText(s.advice.decision!.status)),
             ),
           ];
         case MealDialogStep.confirmEaten:
@@ -138,7 +140,8 @@ class MealStatusDialog extends ConsumerWidget {
               onPressed: () async {
                 if (context.mounted) {
                   Navigator.of(context).pop('eaten');
-                };
+                }
+                ;
               },
               child: const Text("Zjadłem"),
             ),
@@ -154,7 +157,7 @@ class MealStatusDialog extends ConsumerWidget {
               onPressed: () async {
                 if (context.mounted) {
                   Navigator.of(context).pop('eating');
-                };
+                }
               },
               child: const Text("Jem"),
             ),
@@ -169,7 +172,8 @@ class MealStatusDialog extends ConsumerWidget {
               onPressed: () async {
                 if (context.mounted) {
                   Navigator.of(context).pop('eaten-bolused');
-                };
+                }
+                ;
               },
               child: const Text("Podałem insuline"),
             ),
@@ -184,6 +188,18 @@ class MealStatusDialog extends ConsumerWidget {
     );
   }
 
+  String _buttonText(String? status) {
+    switch (status) {
+      case 'eating-then-bolus':
+        return "Zaczynam jeść";
+      case 'bolused-eating':
+        return "Podaje bolusa";
+      case 'bolused-waiting':
+        return "Podaje bolusa i czekam";
+    }
+    return '';
+  }
+
   MealDialogStep getStep() {
     switch (meal.status) {
       case 'bolused-waiting':
@@ -192,6 +208,7 @@ class MealStatusDialog extends ConsumerWidget {
         return MealDialogStep.confirmBolusedAfterEating;
       case 'waited-eating':
       case 'bolused-eating':
+      case 'eating':
         return MealDialogStep.confirmEaten;
       default:
         return MealDialogStep.choose;
