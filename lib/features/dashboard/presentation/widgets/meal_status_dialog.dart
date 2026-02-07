@@ -74,12 +74,7 @@ class MealStatusDialog extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                s.skipMeal
-                    ? "Potwierdź pominięcie posiłku"
-                    : "Potwierdź podanie insuliny",
-              ),
-              const SizedBox(height: 12),
+              if(s.skipMeal) const Text("Potwierdź pominięcie posiłku"),
               if (s.skipMeal)
                 const Text("Zapiszemy, że posiłek został pominięty.")
               else if (s.advice.decision != null)

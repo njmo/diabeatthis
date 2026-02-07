@@ -122,6 +122,7 @@ class MealListToday extends ConsumerWidget {
       case 'waited-eating':
       case 'bolused-eating':
       case 'eating':
+      case 'eating-then-bolus':
         return 'W trakcie jedzenia';
       case 'bolused-waiting':
         return 'Oczekuje na zjedzenie';
