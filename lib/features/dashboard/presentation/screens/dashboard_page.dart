@@ -35,18 +35,22 @@ class DashboardPage extends ConsumerWidget {
       floatingActionButton: (parentModeEnabled)
           ? const DashboardFAB()
           : const SizedBox.shrink(),
-      body: Column(
-        children: [
-          Text('Witaj $name!'),
-          NightscoutPanel(),
-          const SizedBox(height: 8),
-          Text(
-            'Zaplanowane posiłki',
-            textAlign: TextAlign.left,
-            style: TextStyle(fontSize: 20),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Text('Witaj $name!'),
+              NightscoutPanel(),
+              const SizedBox(height: 8),
+              Text(
+                'Zaplanowane posiłki',
+                textAlign: TextAlign.left,
+                style: TextStyle(fontSize: 20),
+              ),
+              MealListToday(),
+            ],
           ),
-          MealListToday(),
-        ],
+        ),
       ),
     );
   }
