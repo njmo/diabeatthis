@@ -19,8 +19,15 @@ class PortionSearch extends HookConsumerWidget {
     final portions = filter.map(
       all: (_) => ref.watch(portionsProvider),
       byQuery: (filter) => ref.watch(portionsByQueryProvider(query.value)),
-      byQueryForIngredient: (filter) => ref.watch(portionsByIngredientByQueryProvider(filter.ingredientId, query.value)),
-      allUnassignedForIngredient: (filter) => ref.watch(portionsNotInIngredientByQueryProvider(filter.ingredientId, query.value)),
+      byQueryForIngredient: (filter) => ref.watch(
+        portionsByIngredientByQueryProvider(filter.ingredientId, query.value),
+      ),
+      allUnassignedForIngredient: (filter) => ref.watch(
+        portionsNotInIngredientByQueryProvider(
+          filter.ingredientId,
+          query.value,
+        ),
+      ),
     );
     print("Filter : $filter");
     final draft = ref.watch(portionDraftProvider.notifier);
@@ -45,7 +52,7 @@ class PortionSearch extends HookConsumerWidget {
                   controller: controller,
                   maxLength: 30,
                   validator: (value) {
-                    if(valuePicked.value < 0) {
+                    if (valuePicked.value < 0) {
                       return '';
                     }
                     return null;
@@ -61,22 +68,32 @@ class PortionSearch extends HookConsumerWidget {
           ),
           portions.when(
             data: (data) {
-              return SingleChildScrollView(
-                child: ListView.builder(
-                  itemBuilder: (context, index) {
-                    if (data.isEmpty) return Text('No data');
-                    final portion = data[index];
-                    return ListTile(
-                      title: Text(portion.name, style: TextStyle(fontWeight: (valuePicked.value == index) ? FontWeight.bold : FontWeight.normal)),
-                      subtitle: Text(portion.unitHint),
-                      onTap: () {
-                        draft.overrideDraft(portion.toSelection());
-                        valuePicked.value = index;
-                      },
-                    );
-                  },
-                  itemCount: data.length,
-                  shrinkWrap: true,
+              return SizedBox(
+                height: 200,
+                child: SafeArea(
+                  child: ListView.builder(
+                    itemBuilder: (context, index) {
+                      if (data.isEmpty) return Text('No data');
+                      final portion = data[index];
+                      return ListTile(
+                        title: Text(
+                          portion.name,
+                          style: TextStyle(
+                            fontWeight: (valuePicked.value == index)
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        subtitle: Text(portion.unitHint),
+                        onTap: () {
+                          draft.overrideDraft(portion.toSelection());
+                          valuePicked.value = index;
+                        },
+                      );
+                    },
+                    itemCount: data.length,
+                    shrinkWrap: true,
+                  ),
                 ),
               );
             },

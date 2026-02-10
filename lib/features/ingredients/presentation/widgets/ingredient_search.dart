@@ -53,29 +53,37 @@ class IngredientSearch extends HookConsumerWidget {
             ),
           ),
           SizedBox(height: 16),
-          SingleChildScrollView(
-            child: ListView.builder(
-              itemBuilder: (context, index) {
-                final ingredient = ingredients.asData?.value[index];
-                if (ingredient == null) {
-                  return SizedBox.shrink();
-                }
-                return Card(
-                  child: ListTile(
-                    title: Text(ingredient.name, style: TextStyle(fontWeight: (valuePicked.value == index) ? FontWeight.bold : FontWeight.normal),),
-                    subtitle: Text(
-                      'Kalorie: ${ingredient.caloriesKcalPer100g} kcal',
+          SizedBox(
+            height: 200,
+              child: ListView.builder(
+                itemBuilder: (context, index) {
+                  final ingredient = ingredients.asData?.value[index];
+                  if (ingredient == null) {
+                    return SizedBox.shrink();
+                  }
+                  return Card(
+                    child: ListTile(
+                      title: Text(
+                        ingredient.name,
+                        style: TextStyle(
+                          fontWeight: (valuePicked.value == index)
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Kalorie: ${ingredient.caloriesKcalPer100g} kcal',
+                      ),
+                      onTap: () {
+                        draft.overrideDraft(ingredient.toSelection());
+                        valuePicked.value = index;
+                      },
                     ),
-                    onTap: () {
-                      draft.overrideDraft(ingredient.toSelection());
-                      valuePicked.value = index;
-                    },
-                  ),
-                );
-              },
-              itemCount: ingredients.asData?.value.length ?? 0,
-              shrinkWrap: true,
-            ),
+                  );
+                },
+                itemCount: ingredients.asData?.value.length ?? 0,
+                shrinkWrap: true,
+              ),
           ),
         ],
       ),
