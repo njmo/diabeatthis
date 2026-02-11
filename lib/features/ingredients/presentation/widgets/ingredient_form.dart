@@ -46,6 +46,28 @@ class IngredientForm extends HookConsumerWidget {
                   ),
                 );
               },
+            ),StringFormField(
+              label: 'Producent',
+              value: draft.getBrand(),
+              onChanged: draft.setBrand,
+              builder: (context, controller) {
+                return TextFormField(
+                  controller: controller,
+                  maxLength: 30,
+                  validator: (value) {
+                    if ((value == null) ||
+                        (value.isEmpty) ||
+                        (value.length < 5)) {
+                      return '';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Brand',
+                    border: OutlineInputBorder(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
             ConfidenceSlider(

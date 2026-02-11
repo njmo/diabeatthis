@@ -36,6 +36,8 @@ extension IngredientSelectionToCompanion on IngredientSelection {
       carbsPer100g: d.Value(carbsPer100g),
       fatPer100g: d.Value(fatPer100g),
       proteinPer100g: d.Value(proteinPer100g),
+      brand: d.Value(brand ?? ''),
+      preparation: d.Value(preparation ?? ''),
       fiberPer100g: d.Value(fiberPer100g),
       nutritionConfidence: d.Value(nutritionConfidence),
     );
@@ -55,6 +57,8 @@ extension IngredientSelectionToCompanion on IngredientSelection {
       fatPer100g: fatPer100g,
       proteinPer100g: proteinPer100g,
       fiberPer100g: fiberPer100g,
+      brand: brand ?? '',
+      preparation: preparation ?? '',
       nutritionConfidence: nutritionConfidence,
     );
   }

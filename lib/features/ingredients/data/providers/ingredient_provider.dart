@@ -135,4 +135,7 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
         draft: (d) => ConfidenceLevelX.fromDouble01(d.nutritionConfidence),
         existing: (e) => e.nutritionConfidence as ConfidenceLevel,
       );
+
+  String? getBrand() => state.map(draft: (d) => d.brand, existing: (e) => e.brand);
+  void setBrand(String value) => state = state.copyWith(brand: value);
 }

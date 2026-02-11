@@ -115,14 +115,10 @@ class MealStatusDialog extends ConsumerWidget {
             ElevatedButton(
               onPressed: () async {
                 if (context.mounted) {
-                  if (s.skipMeal) {
-                    Navigator.of(context).pop('skipped');
-                  } else {
-                    Navigator.of(context).pop(s.advice.decision!.status);
-                  }
+                    Navigator.of(context).pop(s.skipMeal ? 'skipped' : s.advice.decision!.status);
                 }
               },
-              child: Text(_buttonText(s.advice.decision!.status)),
+              child: Text(_buttonText(s.advice.decision?.status)),
             ),
           ];
         case MealDialogStep.confirmEaten:
@@ -192,7 +188,7 @@ class MealStatusDialog extends ConsumerWidget {
       case 'bolused-waiting':
         return "Podaje bolusa i czekam";
     }
-    return '';
+    return 'Potwierdzam';
   }
 
   MealDialogStep getStep() {
