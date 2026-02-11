@@ -14,7 +14,7 @@ class AddIngredientSummary extends HookConsumerWidget {
     final unitHint = mealIngredientsDraft.ingredientPortion.portion.map(
       draft: (e) => e.unitHint,
       existing: (e) => e.unitHint,
-      empty: (_) => 'grams',
+      empty: (_) => mealIngredientsDraft.ingredient.isReference ? 'porcje' : 'gramy',
     );
 
     return SingleChildScrollView(

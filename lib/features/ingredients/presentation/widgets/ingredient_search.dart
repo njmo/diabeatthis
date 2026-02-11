@@ -55,35 +55,36 @@ class IngredientSearch extends HookConsumerWidget {
           SizedBox(height: 16),
           SizedBox(
             height: 200,
-              child: ListView.builder(
-                itemBuilder: (context, index) {
-                  final ingredient = ingredients.asData?.value[index];
-                  if (ingredient == null) {
-                    return SizedBox.shrink();
-                  }
-                  return Card(
-                    child: ListTile(
-                      title: Text(
-                        ingredient.name,
-                        style: TextStyle(
-                          fontWeight: (valuePicked.value == index)
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
+            child: ListView.builder(
+              itemBuilder: (context, index) {
+                final ingredient = ingredients.asData?.value[index];
+                if (ingredient == null) {
+                  return SizedBox.shrink();
+                }
+                return Card(
+                  child: ListTile(
+                    title: Text(
+                      ingredient.name,
+                      style: TextStyle(
+                        fontWeight: (valuePicked.value == index)
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
-                      subtitle: Text(
-                        'Kalorie: ${ingredient.caloriesKcalPer100g} kcal',
-                      ),
-                      onTap: () {
-                        draft.overrideDraft(ingredient.toSelection());
-                        valuePicked.value = index;
-                      },
                     ),
-                  );
-                },
-                itemCount: ingredients.asData?.value.length ?? 0,
-                shrinkWrap: true,
-              ),
+                    subtitle: Text(
+                      'Kalorie: ${ingredient.caloriesKcalPer100g} kcal',
+                    ),
+                    trailing: ingredient.isReference ? const Icon(Icons.dinner_dining) : null,
+                    onTap: () {
+                      draft.overrideDraft(ingredient.toSelection());
+                      valuePicked.value = index;
+                    },
+                  ),
+                );
+              },
+              itemCount: ingredients.asData?.value.length ?? 0,
+              shrinkWrap: true,
+            ),
           ),
         ],
       ),

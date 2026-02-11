@@ -15,6 +15,7 @@ extension IngredientDataToDomain on IngredientData {
     preparation: preparation,
     brand: brand,
     nutritionConfidence: nutritionConfidence,
+    isReference: isReference == 1,
   );
 }
 

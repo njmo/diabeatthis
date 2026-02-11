@@ -98,6 +98,7 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
       fiberPer100g: 0,
       proteinPer100g: 0,
       nutritionConfidence: 0,
+      isReference: false,
     );
   }
 
@@ -138,4 +139,6 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
 
   String? getBrand() => state.map(draft: (d) => d.brand, existing: (e) => e.brand);
   void setBrand(String value) => state = state.copyWith(brand: value);
+
+  void setIsReference(bool value) => state = state.copyWith(isReference: value);
 }

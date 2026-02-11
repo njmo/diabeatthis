@@ -54,17 +54,21 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
           mealIngredientsDraftProvider.notifier,
         );
         mealIngredientsDraft.setIngredient(ingredientDraft);
-        final portionsFilter = ref.read(portionFilterProvider.notifier);
-        portionsFilter.setFilter(
-          PortionFilter.byQueryForIngredient(
-            ingredientId: ingredientDraft.map(
-              draft: (draft) => 0,
-              existing: (existing) => existing.id,
+        if (ingredientDraft.isReference) {
+          state = AddMealIngredientStage.amountForm;
+        } else {
+          final portionsFilter = ref.read(portionFilterProvider.notifier);
+          portionsFilter.setFilter(
+            PortionFilter.byQueryForIngredient(
+              ingredientId: ingredientDraft.map(
+                draft: (draft) => 0,
+                existing: (existing) => existing.id,
+              ),
             ),
-          ),
-        );
+          );
 
-        state = AddMealIngredientStage.definedPortionsSearch;
+          state = AddMealIngredientStage.definedPortionsSearch;
+        }
         break;
       case AddMealIngredientStage.ingredientForm:
         final ingredientDraft = ref.read(ingredientDraftProvider);
@@ -72,10 +76,14 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
           mealIngredientsDraftProvider.notifier,
         );
         mealIngredientsDraft.setIngredient(ingredientDraft);
-        final portionsFilter = ref.read(portionFilterProvider.notifier);
-        portionsFilter.setFilter(PortionFilter.byQuery());
+        if (ingredientDraft.isReference) {
+          state = AddMealIngredientStage.amountForm;
+        } else {
+          final portionsFilter = ref.read(portionFilterProvider.notifier);
+          portionsFilter.setFilter(PortionFilter.byQuery());
 
-        state = AddMealIngredientStage.portionAddNewSearch;
+          state = AddMealIngredientStage.portionAddNewSearch;
+        }
         break;
       case AddMealIngredientStage.portionAddNewSearch:
       case AddMealIngredientStage.portionAddNewForm:

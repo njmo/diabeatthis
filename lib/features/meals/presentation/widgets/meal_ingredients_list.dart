@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -22,23 +23,36 @@ class MealIngredientsList extends ConsumerWidget {
                 final draft = mealIngredientDrafts[index];
                 var portionAmount = draft.ingredientPortion.amount;
                 final amount = draft.amount;
-                if(portionAmount == 0)
-                  {
-                    portionAmount = ref.watch(
+                if (!draft.ingredient.isReference && portionAmount == 0) {
+                  portionAmount = ref
+                      .watch(
                         gramsPerPortionProvider(
                           draft.ingredient,
                           draft.ingredientPortion.portion,
-                        )).when(data: (value) => value!, error: (error, stackTrace) => 0, loading: () => 0);
-                  }
+                        ),
+                      )
+                      .when(
+                        data: (value) => value!,
+                        error: (error, stackTrace) => 0,
+                        loading: () => 0,
+                      );
+                }
 
                 final subtitle = draft.ingredientPortion.portion.when(
-                  draft: (name, hint) => Text('$amount of $name : ${portionAmount * amount}$hint'),
-                  existing: (id, name, hint) { if(portionAmount == 0) {
-                    return CircularProgressIndicator();
-                  } else {
-                    return Text('$amount of $name : ${amount * portionAmount}$hint');
-                  }},
-                  empty: () => Text('${amount}g'),
+                  draft: (name, hint) =>
+                      Text('$amount of $name : ${portionAmount * amount}$hint'),
+                  existing: (id, name, hint) {
+                    if (portionAmount == 0) {
+                      return CircularProgressIndicator();
+                    } else {
+                      return Text(
+                        '$amount of $name : ${amount * portionAmount}$hint',
+                      );
+                    }
+                  },
+                  empty: () => draft.ingredient.isReference
+                      ? Text('${amount} referencyjne porcje')
+                      : Text('${amount}g'),
                 );
 
                 return Card(

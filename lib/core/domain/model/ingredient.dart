@@ -13,6 +13,7 @@ abstract class Ingredient with _$Ingredient {
     required double fiberPer100g,
     required double proteinPer100g,
     required double nutritionConfidence,
+    required bool isReference,
     double? caloriesKcalPer100g,
     int? ig,
     String? preparation,

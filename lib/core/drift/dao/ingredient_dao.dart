@@ -49,7 +49,16 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     ])..where(mi.mealId.equals(mealId));
 
     final grams = CaseWhenExpression<double>(
-      cases: [CaseWhen(mi.portionId.isNull(), then: mi.amount.cast<double>())],
+      cases: [
+        CaseWhen(
+          ing.isReference.equals(1),
+          then: mi.amount.cast<double>() * const Constant(100.0),
+        ),
+        CaseWhen(
+          mi.portionId.isNull(),
+          then: mi.amount.cast<double>(),
+        ),
+      ],
       orElse: mi.amount.cast<double>() * ip.gramsPerPortion.cast<double>(),
     );
 

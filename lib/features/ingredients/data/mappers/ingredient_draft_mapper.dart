@@ -14,6 +14,9 @@ extension IngredientDraftMapper on domain.Ingredient {
       proteinPer100g: proteinPer100g,
       fiberPer100g: fiberPer100g,
       nutritionConfidence: nutritionConfidence,
+      brand: brand,
+      preparation: preparation,
+      isReference: isReference,
     );
   }
 }
@@ -40,6 +43,7 @@ extension IngredientSelectionToCompanion on IngredientSelection {
       preparation: d.Value(preparation ?? ''),
       fiberPer100g: d.Value(fiberPer100g),
       nutritionConfidence: d.Value(nutritionConfidence),
+      isReference: d.Value(isReference ? 1: 0),
     );
   }
 
@@ -60,6 +64,7 @@ extension IngredientSelectionToCompanion on IngredientSelection {
       brand: brand ?? '',
       preparation: preparation ?? '',
       nutritionConfidence: nutritionConfidence,
+      isReference: isReference,
     );
   }
 }

@@ -6,6 +6,7 @@ import '../../../../common/widgets/forms.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/providers/ingredient_provider.dart';
+import 'reference_ingredient_checkbox.dart';
 
 class IngredientForm extends HookConsumerWidget {
   const IngredientForm({super.key});
@@ -24,6 +25,8 @@ class IngredientForm extends HookConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            ReferenceIngredientCheckbox(),
+            const SizedBox(height: 16),
             StringFormField(
               label: 'Nazwa',
               value: draft.getName(),

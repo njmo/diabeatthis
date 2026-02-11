@@ -44,6 +44,7 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
         fiberPer100g: 0,
         proteinPer100g: 0,
         nutritionConfidence: 0,
+        isReference: false,
       ),
       ingredientPortion: IngredientPortionDraft(
         portion: PortionSelection.draft(name: '', unitHint: ''),
