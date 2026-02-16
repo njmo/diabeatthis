@@ -13,7 +13,7 @@ searchPortionsByName:
 
 markPortionsAsSynced:
   UPDATE portion SET
-    is_synced = 1
+    is_synced = 1;
 
 getAllPortions:
   SELECT * FROM portion
