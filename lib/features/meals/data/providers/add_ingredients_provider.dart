@@ -55,6 +55,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         );
         mealIngredientsDraft.setIngredient(ingredientDraft);
         if (ingredientDraft.isReference) {
+          mealIngredientsDraft.setIngredientPortion(PortionSelection.empty());
           state = AddMealIngredientStage.amountForm;
         } else {
           final portionsFilter = ref.read(portionFilterProvider.notifier);
