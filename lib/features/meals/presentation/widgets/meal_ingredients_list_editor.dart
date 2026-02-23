@@ -3,6 +3,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
+import '../../data/drafts/meal_draft.dart';
+import '../../data/providers/meal_draft_provider.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
 import 'add_meal_ingredient.dart';
 import 'meal_ingredients_list.dart';
@@ -34,12 +36,15 @@ class MealIngredientsListEditor extends ConsumerWidget {
                     const Spacer(),
                     InkWell(
                       onTap: () async {
-                        await showModalBottomSheet<IngredientSelection>(
+                        final mealIngredient = await showModalBottomSheet<MealIngredientsDraft>(
                           context: context,
                           useRootNavigator: false,
                           isScrollControlled: true,
                           builder: (_) => AddMealIngredient(),
                         );
+                        if (mealIngredient != null) {
+                          ref.read(mealDraftProvider.notifier).addMealIngredient(mealIngredient);
+                        }
                       },
                       child: const Icon(Icons.add_box, size: 20),
                     ),

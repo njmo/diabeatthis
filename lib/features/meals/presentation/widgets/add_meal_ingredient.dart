@@ -22,11 +22,6 @@ class AddMealIngredient extends ConsumerWidget {
       addMealIngredientStageProvider.notifier,
     );
 
-    if (addingStage == AddMealIngredientStage.completed) {
-      Navigator.of(context).pop();
-      return const SizedBox.shrink();
-    }
-
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
@@ -66,7 +61,6 @@ class AddMealIngredient extends ConsumerWidget {
                 ),
               AddMealIngredientStage.amountForm => Text('Amount form'),
               AddMealIngredientStage.summary => Text('Summary'),
-              AddMealIngredientStage.completed => throw UnimplementedError(),
               AddMealIngredientStage.portionSpecifyAmount => Text(
                 'Ingredient amount in portion',
               ),
@@ -88,8 +82,6 @@ class AddMealIngredient extends ConsumerWidget {
                 AddMealIngredientStage.definedPortionsSearch => PortionSearch(),
                 AddMealIngredientStage.amountForm => AmountForm(),
                 AddMealIngredientStage.summary => AddIngredientSummary(),
-                AddMealIngredientStage.completed => throw UnimplementedError(),
-                // TODO: Handle this case.
                 AddMealIngredientStage.portionSpecifyAmount =>
                   IngredientPortionAmountForm(),
                 AddMealIngredientStage.portionAddNewForm => PortionForm(),
@@ -101,11 +93,7 @@ class AddMealIngredient extends ConsumerWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       if (addingStage == AddMealIngredientStage.summary) {
-                        final mealDraft = ref.read(mealDraftProvider.notifier);
-                        mealDraft.addMealIngredient(
-                          ref.read(mealIngredientsDraftProvider),
-                        );
-                        addingStateNotifier.nextStage();
+                        Navigator.of(context).pop(ref.read(mealIngredientsDraftProvider));
                       } else {
                         final formKey = ref.read(mealIngredientFormKeyProvider);
                         if (formKey.currentState!.validate()) {

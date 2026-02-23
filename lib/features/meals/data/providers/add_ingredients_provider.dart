@@ -19,7 +19,6 @@ enum AddMealIngredientStage {
   definedPortionsSearch,
   amountForm,
   summary,
-  completed,
 }
 
 @riverpod
@@ -124,9 +123,6 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         state = AddMealIngredientStage.summary;
         break;
       case AddMealIngredientStage.summary:
-        state = AddMealIngredientStage.completed;
-        break;
-      case AddMealIngredientStage.completed:
         throw UnimplementedError();
     }
   }
@@ -136,6 +132,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     switch (state) {
       case AddMealIngredientStage.ingredientSearch:
         state = AddMealIngredientStage.ingredientForm;
+        ref.invalidate(ingredientDraftProvider);
         break;
       case AddMealIngredientStage.definedPortionsSearch:
         final ingredientDraft = ref.read(ingredientDraftProvider);
@@ -152,15 +149,16 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         break;
       case AddMealIngredientStage.portionAddNewForm:
         state = AddMealIngredientStage.portionAddNewSearch;
+        ref.invalidate(portionDraftProvider);
         break;
       case AddMealIngredientStage.ingredientForm:
         state = AddMealIngredientStage.ingredientSearch;
         break;
       case AddMealIngredientStage.portionAddNewSearch:
+        ref.invalidate(portionDraftProvider);
         state = AddMealIngredientStage.portionAddNewForm;
         break;
       case AddMealIngredientStage.amountForm:
-      case AddMealIngredientStage.completed:
       case AddMealIngredientStage.summary:
       case AddMealIngredientStage.portionSpecifyAmount:
         // TODO: Handle this case.

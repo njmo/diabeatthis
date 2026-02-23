@@ -28,8 +28,7 @@ class MealIngredientConfidenceDraftNotifier
   }
 
   ConfidenceLevel getConfidence() => state;
-  void setConfidence(ConfidenceLevel confidence) =>
-      state = confidence;
+  void setConfidence(ConfidenceLevel confidence) => state = confidence;
 }
 
 @riverpod
@@ -64,9 +63,8 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
     ingredientPortion: state.ingredientPortion.copyWith(amount: amount),
   );
   void setAmount(int amount) => state = state.copyWith(amount: amount);
-  void setQuantityConfidence(ConfidenceLevel confidence) => state = state.copyWith(
-    quantityConfidence: confidence.toDouble01(),
-  );
+  void setQuantityConfidence(ConfidenceLevel confidence) =>
+      state = state.copyWith(quantityConfidence: confidence.toDouble01());
 }
 
 @riverpod
