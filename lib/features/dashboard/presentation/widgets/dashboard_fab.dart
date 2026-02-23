@@ -1,14 +1,21 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../meals/data/drafts/meal_draft.dart';
+import '../../../meals/data/providers/meal_database_provider.dart';
+import '../../../meals/data/providers/meal_draft_provider.dart';
+import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
+import '../../data/providers/meal_add_provider.dart';
+import 'meal_status_dialog.dart';
 
-class DashboardFAB extends HookWidget {
+class DashboardFAB extends HookConsumerWidget {
   const DashboardFAB({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     var open = useState(false);
 
     return Column(
@@ -25,7 +32,33 @@ class DashboardFAB extends HookWidget {
             open.value = false;
           }),
           const SizedBox(height: 8),
-          _buildOption(Icons.restaurant, 'Add meal', () {
+          _buildOption(Icons.bakery_dining_rounded, 'Eat simple', () async {
+            final mealIngredient = await showModalBottomSheet<MealIngredientsDraft>(
+              context: context,
+              useRootNavigator: false,
+              isScrollControlled: true,
+              builder: (_) => AddMealIngredient(),
+            );
+            if (mealIngredient != null) {
+              final draft = ref.watch(mealDraftProvider.notifier);
+              draft.addMealIngredient(mealIngredient);
+              draft.setName("QM: ${mealIngredient.ingredient.name}");
+              final addedMeal = ref.watch(mealAddProvider.notifier).addMeal(ref.read(mealDraftProvider));
+              addedMeal.then((meal) async{
+                final action = await showDialog<String?>(
+                  barrierDismissible: true,
+                  context: context,
+                  builder: (context) => MealStatusDialog(meal: meal),
+                );
+                if (action != null) {
+                  ref.read(updateMealProvider(meal, action));
+                }
+              });
+            }
+            open.value = false;
+          }),
+          const SizedBox(height: 8),
+          _buildOption(Icons.restaurant, 'Plan meal', () {
             context.router.push(routes.AddMealRoute());
             open.value = false;
           }),

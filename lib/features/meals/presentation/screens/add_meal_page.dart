@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/date_time_picker.dart';
 import '../../../../common/widgets/forms.dart';
+import '../../../dashboard/data/providers/meal_add_provider.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../data/providers/meal_database_provider.dart';
@@ -108,58 +109,8 @@ class AddMealPage extends HookConsumerWidget {
                         InkWell(
                           child: const Text('Add all'),
                           onTap: () async {
-                            final calculatedCarbs = await ref.read(
-                              calculatedMacronutrientsProvider.future,
-                            );
-                            ref
-                                .read(mealDraftProvider.notifier)
-                                .setCarbs(calculatedCarbs.carbsTotal);
-
                             final updatedDraft = ref.read(mealDraftProvider);
-                            final mealIngredientDrafts = ref.read(
-                              mealDraftIngredientsProvider,
-                            );
-
-                            print(
-                              'Adding ${updatedDraft.name} with carbs ${updatedDraft.carbs} calculated $calculatedCarbs',
-                            );
-                            final meal = await ref.read(
-                              insertMealProvider(updatedDraft).future,
-                            );
-                            print("Added ${meal.name}");
-                            for (final mealIngredient in mealIngredientDrafts) {
-                              final ingredient = await ref.read(
-                                insertIngredientProvider(
-                                  mealIngredient.ingredient,
-                                ).future,
-                              );
-                              print("Added ${(ingredient).name}");
-                              final portion = await ref.read(
-                                insertPortionProvider(
-                                  mealIngredient.ingredientPortion.portion,
-                                ).future,
-                              );
-
-                              print("Added ${portion?.name ?? 'no portion'}");
-                              print("Adding ingredient portion relation");
-                              await ref.read(
-                                insertIngredientPortionProvider(
-                                  ingredient,
-                                  portion,
-                                  mealIngredient.ingredientPortion.amount,
-                                ).future,
-                              );
-                              await ref.read(
-                                insertMealIngredientProvider(
-                                  ingredient,
-                                  meal,
-                                  portion,
-                                  mealIngredient.amount,
-                                  mealIngredient.quantityConfidence,
-                                ).future,
-                              );
-                              print("Added meal ingredient");
-                            }
+                            ref.watch(mealAddProvider.notifier).addMeal(updatedDraft);
                             context.router.pop();
                           },
                         ),
