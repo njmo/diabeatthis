@@ -38,7 +38,7 @@ class IngredientForm extends HookConsumerWidget {
                   validator: (value) {
                     if ((value == null) ||
                         (value.isEmpty) ||
-                        (value.length < 5)) {
+                        (value.length < 2)) {
                       return '';
                     }
                     return null;
@@ -60,7 +60,7 @@ class IngredientForm extends HookConsumerWidget {
                   validator: (value) {
                     if ((value == null) ||
                         (value.isEmpty) ||
-                        (value.length < 5)) {
+                        (value.length < 2)) {
                       return '';
                     }
                     return null;

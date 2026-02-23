@@ -26,6 +26,16 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     );
   }
 
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) async {
+      await m.createAll();
+    },
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
+
   Future<void> deleteEverything() async {
     await customStatement('PRAGMA foreign_keys = OFF');
     try {

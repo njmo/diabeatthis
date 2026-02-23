@@ -32,9 +32,7 @@ class DashboardPage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: (parentModeEnabled)
-          ? const DashboardFAB()
-          : const SizedBox.shrink(),
+      floatingActionButton: const DashboardFAB(),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
