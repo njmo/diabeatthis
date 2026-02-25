@@ -2,7 +2,7 @@ import 'package:auto_route/auto_route.dart';
 
 import '../../features/dashboard/presentation/screens/dashboard_page.dart';
 import '../../features/meals/presentation/screens/add_meal_page.dart';
-import '../../features/nightscout_setup/presentation/screens/nightscout_setup_page.dart';
+import '../../features/settings/presentation/screens/settings_page.dart';
 import '../../features/test/presentation/screens/test_page.dart';
 import 'guards/nightscout_config_guard.dart';
 
@@ -20,7 +20,7 @@ class AppRouter extends RootStackRouter {
   List<AutoRoute> get routes => [
     AutoRoute(page: DashboardRoute.page, path: '/', guards: [guard]),
     AutoRoute(page: TestRoute.page),
-    AutoRoute(page: NightscoutSetupRoute.page),
+    AutoRoute(page: SettingsRoute.page, path: '/settings'),
     AutoRoute(page: AddMealRoute.page),
   ];
 

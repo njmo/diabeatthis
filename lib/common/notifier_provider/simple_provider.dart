@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/data/provider/shared_prefs_provider.dart';
+
 part 'simple_provider.g.dart';
 part 'simple_provider.freezed.dart';
 
@@ -65,9 +67,14 @@ class HumanNotifier extends _$HumanNotifier {
 int age(Ref ref) {
   return ref.watch(humanProvider.select((h) => h.age));
 }
+
+const _childNameKey = 'main-user-name';
+
 @riverpod
-String name(Ref ref) {
-  return ref.watch(humanProvider.select((h) => h.name));
+Future<String?> name(Ref ref) async{
+  //return ref.watch(humanProvider.select((h) => h.name));
+  final prefs = await ref.watch(sharedPrefsProvider.future);
+  return prefs.getString(_childNameKey);
 }
 @riverpod
 int number(Ref ref) {

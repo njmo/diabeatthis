@@ -30,6 +30,12 @@ class DashboardPage extends ConsumerWidget {
               parentModeController.toggleParentMode();
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              context.router.pushPath('/settings');
+            },
+          ),
         ],
       ),
       floatingActionButton: const DashboardFAB(),
@@ -37,7 +43,7 @@ class DashboardPage extends ConsumerWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Text('Witaj $name!'),
+              Text('Witaj ${name.asData?.value ?? 'Name' }!'),
               NightscoutPanel(),
               const SizedBox(height: 8),
               Text(

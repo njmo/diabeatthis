@@ -28,7 +28,7 @@ class NightscoutGuard extends AutoRouteGuard {
     if (url != null && url.isNotEmpty) {
       resolver.next(true);
     } else {
-      router.navigate(NamedRoute('NightscoutSetupRoute'));
+      router.navigate(NamedRoute('SettingsRoute'));
     }
   }
 }
