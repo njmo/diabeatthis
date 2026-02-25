@@ -3,6 +3,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../domain/model/device_status.dart';
+import '../../domain/model/glucose.dart';
 import '../../domain/model/meal.dart';
 import '../../domain/repository/nightscout_repository.dart';
 import '../../nightscout/providers/nightscout_url_provider.dart';
@@ -38,4 +39,10 @@ Future<DeviceStatus> deviceStatus(Ref ref) async {
 Future<List<Meal>> meals(Ref ref) async {
   final repository = await ref.watch(nightscoutRepositoryProvider.future);
   return await repository.fetchMealsOnDay(DateTime.now());
+}
+
+@riverpod
+Future<List<Glucose>> glucoseWithLimit(Ref ref, int limit) async {
+  final repository = await ref.watch(nightscoutRepositoryProvider.future);
+  return await repository.fetchLastGlucoseWithLimit(limit);
 }

@@ -103,7 +103,19 @@ class NightscoutRepositoryImpl implements NightscoutRepository {
       'find[date][\$lt]': r.endUtc.millisecondsSinceEpoch.toString(),
       'count': '288',
     };
-    final url = _buildUri('/api/v1/model.json', qp);
+    final url = _buildUri('/api/v1/entries.json', qp);
+    final data = await service.fetchNightscoutData(url);
+
+    return (data as List)
+        .map((e) => GlucoseDto.fromJson(e).toDomain())
+        .toList();
+  }
+  @override
+  Future<List<Glucose>> fetchLastGlucoseWithLimit(int limit) async {
+    final qp = {
+      'count': limit.toStringAsFixed(0),
+    };
+    final url = _buildUri('/api/v1/entries.json', qp.cast<String, String>());
     final data = await service.fetchNightscoutData(url);
 
     return (data as List)

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/data/provider/nightscout_repository_provider.dart';
 import '../../data/providers/device_status_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 
 import '../../data/utils/nightscout_utils.dart';
+import 'glucose_custom_painter.dart';
 
 class NightscoutPanel extends ConsumerWidget {
   const NightscoutPanel({super.key});
@@ -75,9 +77,11 @@ class NightscoutPanel extends ConsumerWidget {
                           Icon(trendIcon, size: 66, color: bgColor),
                         ],
                       ),
-
-                      const SizedBox(height: 12),
-
+                      SizedBox(
+                        width: 160,
+                        height: 50,
+                        child: GlucoseMiniChart(),
+                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,

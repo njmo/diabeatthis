@@ -12,6 +12,7 @@ abstract class NightscoutRepository {
   Future<List<Treatment>> fetchTreatmentsAfter(DateTime after);
   Future<List<Glucose>> fetchGlucoseOnDay(DateTime day);
   Future<List<Glucose>> fetchGlucoseAfter(DateTime after);
+  Future<List<Glucose>> fetchLastGlucoseWithLimit(int limit);
   Future<DeviceStatus> fetchLastDeviceStatus();
   Future<Duration?> getLatestSensorChangeAge();
   Future<Duration?> getLatestInsulinChangeAge();
