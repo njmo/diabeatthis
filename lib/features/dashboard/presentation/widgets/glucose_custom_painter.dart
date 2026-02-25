@@ -15,7 +15,7 @@ class GlucoseMiniChart extends ConsumerWidget {
       data: (glucose) {
         return RepaintBoundary(
           child: CustomPaint(
-            painter: _SlimGlucoseMiniChartPainter(glucose),
+            painter: _SlimGlucoseMiniChartPainter(glucose.reversed.toList()),
             size: Size.infinite,
           ),
         );
@@ -27,7 +27,7 @@ class GlucoseMiniChart extends ConsumerWidget {
 }
 
 class _SlimGlucoseMiniChartPainter extends CustomPainter {
-  final List<Glucose>? values;
+  final List<Glucose> values;
 
   _SlimGlucoseMiniChartPainter(this.values);
 
@@ -40,7 +40,7 @@ class _SlimGlucoseMiniChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final valuesList = values;
-    if (valuesList == null || valuesList.isEmpty) return;
+    if (valuesList.isEmpty) return;
 
     final data = valuesList.length <= 10
         ? valuesList
@@ -95,9 +95,9 @@ class _SlimGlucoseMiniChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SlimGlucoseMiniChartPainter oldDelegate) {
-    if (oldDelegate.values!.length != values!.length) return true;
-    for (var i = 0; i < values!.length; i++) {
-      if (oldDelegate!.values![i] != values![i]) return true;
+    if (oldDelegate.values.length != values.length) return true;
+    for (var i = 0; i < values.length; i++) {
+      if (oldDelegate.values[i] != values[i]) return true;
     }
     return false;
   }
