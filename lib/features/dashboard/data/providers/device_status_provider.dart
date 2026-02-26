@@ -35,6 +35,7 @@ Stream<DeviceStatus> deviceStatusStream(Ref ref) async* {
       final current = await ref.read(deviceStatusProvider.future);
       if (current.date != last.date) {
         last = current;
+        ref.invalidate(glucoseWithLimitProvider);
         yield current;
         frequent = false;
         continue;

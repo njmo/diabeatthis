@@ -66,7 +66,9 @@ class SettingsPage extends HookConsumerWidget {
                     onPressed: () async {
                       formKey.currentState?.save();
                       ref.invalidate(sharedPrefsProvider);
-                      context.router.pop();
+                      if (context.mounted) {
+                        context.router.replace(NamedRoute('DashboardRoute'));
+                      }
                     },
                     child: const Text('Zapisz i przejdź dalej'),
                   ),
