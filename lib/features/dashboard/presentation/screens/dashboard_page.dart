@@ -6,6 +6,7 @@ import '../../../../common/notifier_provider/simple_provider.dart';
 import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../meals/presentation/widgets/meal_list_today.dart';
 import '../widgets/dashboard_fab.dart';
+import '../widgets/kid_fab.dart';
 import '../widgets/nightscout_dashboard.dart';
 
 @RoutePage()
@@ -38,7 +39,7 @@ class DashboardPage extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: const DashboardFAB(),
+      floatingActionButton: parentModeEnabled ? const DashboardFAB() : const KidFAB(),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(

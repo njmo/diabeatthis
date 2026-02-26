@@ -33,32 +33,6 @@ class DashboardFAB extends HookConsumerWidget {
             open.value = false;
           }),
           const SizedBox(height: 8),
-          _buildOption(Icons.bakery_dining_rounded, 'Eat simple', () async {
-            final mealIngredient = await showModalBottomSheet<MealIngredientsDraft>(
-              context: context,
-              useRootNavigator: false,
-              isScrollControlled: true,
-              builder: (_) => AddMealIngredient(),
-            );
-            if (mealIngredient != null) {
-              final draft = ref.watch(mealDraftProvider.notifier);
-              draft.addMealIngredient(mealIngredient);
-              draft.setName("QM: ${mealIngredient.ingredient.name}");
-              final addedMeal = ref.watch(mealAddProvider.notifier).addMeal(ref.read(mealDraftProvider));
-              addedMeal.then((meal) async{
-                final action = await showDialog<String?>(
-                  barrierDismissible: true,
-                  context: context,
-                  builder: (context) => MealStatusDialog(meal: meal),
-                );
-                if (action != null) {
-                  ref.read(updateMealProvider(meal, action));
-                }
-              });
-            }
-            open.value = false;
-          }),
-          const SizedBox(height: 8),
           _buildOption(Icons.restaurant, 'Plan meal', () {
             context.router.push(routes.AddMealRoute());
             open.value = false;
