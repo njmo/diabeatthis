@@ -5,6 +5,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../core/data/provider/parent_controller_provider.dart';
+import '../../../../core/domain/model/activity.dart';
+import '../../../activity/data/providers/activity_provider.dart';
+import '../../../activity/presentation/widgets/activity_form.dart';
+import '../../../activity/presentation/widgets/activity_picker_dialog.dart';
+import '../../../activity/presentation/widgets/activity_search.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
@@ -28,8 +33,21 @@ class DashboardFAB extends HookConsumerWidget {
             open.value = false;
           }),
           const SizedBox(height: 8),
-          _buildOption(Icons.sports_gymnastics, 'Add activity', () {
-            context.router.push(routes.TestRoute());
+          _buildOption(Icons.sports, 'Start activity', () async {
+            final activity = await showDialog<Activity?>(
+              barrierDismissible: true,
+              context: context,
+              builder: (context) => ActivityPickerDialog(),
+            );
+            if (activity != null) {
+              activity.when(
+                existing: (id, name) =>
+                    print('Starting existing id: $id, name: $name'),
+                draft: (name) => {
+                  ref.read(insertActivityProvider(Activity.draft(name: name))),
+                },
+              );
+            }
             open.value = false;
           }),
           const SizedBox(height: 8),
@@ -58,7 +76,10 @@ class DashboardFAB extends HookConsumerWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: const [
             BoxShadow(
-                color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+              color: Colors.black26,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
         child: Row(

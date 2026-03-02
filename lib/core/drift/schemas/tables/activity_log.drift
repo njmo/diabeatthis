@@ -1,0 +1,40 @@
+import 'activity.drift';
+
+CREATE TABLE activity_log (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+
+  activity_id INTEGER NOT NULL
+    REFERENCES activity (id) ON DELETE CASCADE,
+
+  is_synced BOOL NOT NULL DEFAULT 0,
+
+  started_at INTEGER NOT NULL,
+  ended_at INTEGER,
+  intensity TEXT,
+
+  notes TEXT,
+
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+  updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000)
+);
+
+CREATE TRIGGER activity_log_set_updated_at
+AFTER UPDATE ON activity_log
+FOR EACH ROW
+BEGIN
+  UPDATE activity_log
+  SET updated_at = CAST(strftime('%s','now') AS INTEGER) * 1000
+  WHERE id = OLD.id;
+END;
+
+CREATE TRIGGER activity_log_any_change_marks_unsynced
+AFTER UPDATE ON activity_log
+FOR EACH ROW
+WHEN NEW.is_synced <> 0
+BEGIN
+  UPDATE activity_log SET is_synced = 0 WHERE id = NEW.id;
+END;
+
+CREATE UNIQUE INDEX uq_activity_open_session
+ON activity_log(activity_id)
+WHERE ended_at IS NULL;

@@ -1,0 +1,23 @@
+CREATE TABLE activity (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+
+  name TEXT NOT NULL,
+
+  is_synced BOOL NOT NULL DEFAULT 0,
+
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000)
+);
+
+CREATE TRIGGER activity_any_change_marks_unsynced
+AFTER UPDATE ON activity
+FOR EACH ROW
+WHEN NEW.is_synced <> 0
+BEGIN
+  UPDATE activity SET is_synced = 0 WHERE id = NEW.id;
+END;
+
+searchActivitiesByName:
+  SELECT * FROM activity
+  WHERE name LIKE '%' || :q || '%'
+  ORDER BY name ASC
+  LIMIT :limit;
