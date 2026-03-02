@@ -12,3 +12,10 @@ void insertAdvice(Ref ref, domain.Meal meal, MealAdvice advice)
   final db = ref.watch(databaseProvider);
   db.mealAdvisorResultDao.insertMealAdvisorResult(meal.id, advice);
 }
+
+@riverpod
+Future<MealAdvice?> getMealAdvice(Ref ref, domain.Meal meal)
+async {
+  final db = ref.watch(databaseProvider);
+  return await db.mealAdvisorResultDao.getMealAdvisorResult(meal.id);
+}

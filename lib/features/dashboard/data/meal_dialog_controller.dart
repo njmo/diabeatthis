@@ -102,19 +102,20 @@ class MealDialogController extends _$MealDialogController {
   }
 
   Future<void> scheduleEatNotification({
-    required FlutterLocalNotificationsPlugin plugin,
     required int notificationId,
     required int minutes,
   }) async {
     final plugin = ref.read(flutterLocalNotificationsPluginProvider);
     final when = tz.TZDateTime.now(tz.local).add(Duration(minutes: minutes));
 
+    print("SCHEDULING NOTIFICATION ON ${when.toIso8601String()}");
+
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
-        'meal_wait_channel',
+        'meal_wait_channel_v2', // ZMIEŃ ID kanału żeby uniknąć “starego” kanału
         'Meal Wait Notifications',
         channelDescription: 'Reminders that you can start eating',
-        importance: Importance.high,
+        importance: Importance.max,
         priority: Priority.high,
       ),
     );
@@ -123,10 +124,12 @@ class MealDialogController extends _$MealDialogController {
       id: notificationId,
       scheduledDate: when,
       notificationDetails: details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // DIAG
       title: 'Możesz już jeść 🍽️',
       body: 'Minęło $minutes minut od podania insuliny.',
-      // payload: 'mealId=$notificationId', // opcjonalnie
     );
+
+    final pending = await plugin.pendingNotificationRequests();
+    print('Pending IDs: ${pending.map((p) => p.id).toList()}');
   }
 }

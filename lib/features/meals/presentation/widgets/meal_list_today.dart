@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../dashboard/presentation/widgets/meal_status_dialog.dart';
+import '../../../dashboard/presentation/widgets/trailing_wait_after_bolus_status.dart';
 import '../../data/providers/meal_database_provider.dart';
 
 class MealListToday extends ConsumerWidget {
@@ -10,7 +11,7 @@ class MealListToday extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final meals = ref.watch(mealsForTodayStreamProvider);
+    final meals = ref.watch(plannedMealsForTodayStreamProvider);
     final parentModeEnabled = ref.watch(parentModeProvider);
 
     return Padding(
@@ -21,6 +22,7 @@ class MealListToday extends ConsumerWidget {
               if (meal == null) {
                 return SizedBox.shrink();
               }
+
               return InkWell(
                 onTap: () async {
                   if (meal.status == 'eaten' ||
@@ -77,7 +79,7 @@ class MealListToday extends ConsumerWidget {
                             icon: Icon(Icons.remove_circle),
                             iconSize: 20,
                           )
-                        : const SizedBox.shrink(),
+                        : (meal.status == 'bolused-waiting') ? TrailingWaitAfterBolusStatus(meal: meal) : const SizedBox.shrink(),
                   ),
                 ),
               );

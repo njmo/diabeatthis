@@ -12,12 +12,22 @@ void updateMealStatus(int id, String status) async {
         .write(MealCompanion(status: Value(status)));
   }
 
-
   Stream<List<MealData>> getAllMealForToday()
   {
     final now = DateTime.now();
     final query = select(db.meal)
       ..where((tbl) => tbl.plannedAt.isBiggerThanValue(DateTime(now.year, now.month, now.day , 0, 0, 0).millisecondsSinceEpoch))
+      ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)]);
+    return query.watch();
+  }
+
+  Stream<List<MealData>> getAllPlannedMealForToday()
+  {
+    final now = DateTime.now();
+    final query = select(db.meal)
+      ..where((tbl) => tbl.plannedAt.isBiggerThanValue(DateTime(now.year, now.month, now.day , 0, 0, 0).millisecondsSinceEpoch))
+      ..where((tbl) => tbl.status.contains('eaten').not())
+      ..where((tbl) => tbl.status.equals('skipped').not())
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)]);
     return query.watch();
   }

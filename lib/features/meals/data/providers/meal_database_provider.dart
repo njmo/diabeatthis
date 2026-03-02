@@ -40,6 +40,14 @@ Stream<List<domain.Meal>> mealsForTodayStream(Ref ref) {
 }
 
 @riverpod
+Stream<List<domain.Meal>> plannedMealsForTodayStream(Ref ref) {
+  final db = ref.watch(databaseProvider);
+  return db.mealDao.getAllPlannedMealForToday().map(
+        (e) => e.toDomainList(),
+  );
+}
+
+@riverpod
 Future<void> insertMealIngredient(Ref ref, domain.Ingredient ingredient, domain.Meal meal, domain.Portion? portion, int amount, double nutritionConfidence) async {
   final db = ref.watch(databaseProvider);
   await db.insertMealIngredient(

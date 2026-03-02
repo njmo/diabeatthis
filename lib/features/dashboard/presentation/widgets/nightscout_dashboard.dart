@@ -53,11 +53,24 @@ class NightscoutPanel extends ConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        formatAgo(lastUpdate),
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            formatAgo(lastUpdate),
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          if (oldReading)
+                            IconButton(
+                              icon: Icon(Icons.refresh),
+                              onPressed: () {
+                                ref.invalidate(deviceStatusStreamProvider);
+                                ref.invalidate(glucoseWithLimitProvider);
+                              },
+                            ),
+                        ],
                       ),
                       Row(
                         mainAxisSize: MainAxisSize.min,

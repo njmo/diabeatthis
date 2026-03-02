@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../app/router/providers/flutter_local_notifications_plugin_provider.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../data/meal_dialog_controller.dart';
 import '../../data/meal_dialog_state.dart';
@@ -119,6 +120,10 @@ class MealStatusDialog extends ConsumerWidget {
                   if(!s.skipMeal)
                     {
                       ref.read(insertAdviceProvider(meal, s.advice));
+                      if(s.advice.wait != null) {
+                        c.scheduleEatNotification(notificationId: meal.id,
+                            minutes: s.advice.wait!.recommendedMinutes);
+                      }
                     }
                     Navigator.of(context).pop(s.skipMeal ? 'skipped' : s.advice.decision!.status);
                 }
