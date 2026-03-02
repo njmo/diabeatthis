@@ -35,6 +35,6 @@ BEGIN
   UPDATE activity_log SET is_synced = 0 WHERE id = NEW.id;
 END;
 
-CREATE UNIQUE INDEX uq_activity_open_session
-ON activity_log(activity_id)
+CREATE UNIQUE INDEX uq_only_one_open_session
+ON activity_log(1)
 WHERE ended_at IS NULL;
