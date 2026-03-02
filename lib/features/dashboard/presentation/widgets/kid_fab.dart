@@ -85,19 +85,18 @@ class KidFAB extends HookConsumerWidget {
                 final draft = ref.watch(mealDraftProvider.notifier);
                 draft.addMealIngredient(mealIngredient);
                 draft.setName("QM: ${mealIngredient.ingredient.name}");
-                final addedMeal = ref
+                final addedMeal = await ref
                     .watch(mealAddProvider.notifier)
                     .addMeal(ref.read(mealDraftProvider));
-                addedMeal.then((meal) async {
+
                   final action = await showDialog<String?>(
                     barrierDismissible: true,
                     context: context,
-                    builder: (context) => MealStatusDialog(meal: meal),
+                    builder: (context) => MealStatusDialog(meal: addedMeal),
                   );
                   if (action != null) {
-                    ref.read(updateMealProvider(meal, action));
+                    ref.read(updateMealProvider(addedMeal, action));
                   }
-                });
               }
               open.value = false;
             },

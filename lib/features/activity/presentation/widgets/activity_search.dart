@@ -17,48 +17,54 @@ class ActivitySearch extends HookConsumerWidget {
     final draft = ref.watch(activityDraftProvider.notifier);
     final formKey = ref.watch(mealIngredientFormKeyProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Form(
-            key: formKey,
-            autovalidateMode: AutovalidateMode.always,
-            child: StringFormField(
-              label: 'Nazwa',
-              value: '',
-              onChanged: (value) {
-                query.value = value;
-              },
-              builder: (context, controller) {
-                return TextFormField(
-                  autofocus: true,
-                  controller: controller,
-                  maxLength: 30,
-                  validator: (value) {
-                    if (valuePicked.value < 0) {
-                      return '';
-                    }
-                    return null;
-                  },
-                  decoration: const InputDecoration(
-                    icon: Icon(Icons.search),
-                    labelText: 'Nazwa',
-                    border: OutlineInputBorder(),
-                  ),
-                );
-              },
+    return ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Form(
+              key: formKey,
+              autovalidateMode: AutovalidateMode.always,
+              child: StringFormField(
+                label: 'Nazwa',
+                value: '',
+                onChanged: (value) => query.value = value,
+                builder: (context, controller) {
+                  return TextFormField(
+                    autofocus: true,
+                    controller: controller,
+                    maxLength: 30,
+                    validator: (value) {
+                      if (valuePicked.value < 0) return '';
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      icon: Icon(Icons.search),
+                      labelText: 'Nazwa',
+                      border: OutlineInputBorder(),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-          activities.when(
-            data: (data) {
-              return SizedBox(
-                height: 200,
-                child: SafeArea(
+            const SizedBox(height: 8),
+            activities.when(
+              data: (data) {
+                if (data.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text('Brak wyników'),
+                  );
+                }
+                return Flexible(
                   child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                    itemCount: data.length,
                     itemBuilder: (context, index) {
-                      if (data.isEmpty) return Text('No data');
                       final activity = data[index];
                       return ListTile(
                         title: Text(
@@ -75,16 +81,17 @@ class ActivitySearch extends HookConsumerWidget {
                         },
                       );
                     },
-                    itemCount: data.length,
                   ),
-                ),
-              );
-            },
-            error: (error, stackTrace) => Text(error.toString()),
-            loading: () => CircularProgressIndicator(),
-          ),
-        ],
-      ),
+                );
+              },
+              error: (error, _) => Text(error.toString()),
+              loading: () => const Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          ],
+        ),
     );
   }
 }

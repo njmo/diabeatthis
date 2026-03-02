@@ -36,14 +36,11 @@ class ActivityPickerDialog extends ConsumerWidget {
           ),
         ],
       ),
-      content: SizedBox(
-        width: 250,
-        child: switch (state) {
+      content: switch (state) {
           ActivityDialogStep.search => const ActivitySearch(),
           ActivityDialogStep.add => const ActivityForm(),
           ActivityDialogStep.confirm => const Text('Start'),
         },
-      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
