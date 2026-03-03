@@ -15,10 +15,12 @@ class ActivityPickerDialog extends ConsumerWidget {
 
     return AlertDialog(
       title: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           switch (state) {
             ActivityDialogStep.search => const Text('Wybierz aktywnosc'),
-            ActivityDialogStep.add => const Text('Nowa aktywnosc'),
+            ActivityDialogStep.add => const Text('Utwórz aktywność'),
             ActivityDialogStep.confirm => const Text('Potwierdz aktywnosc'),
           },
           Align(

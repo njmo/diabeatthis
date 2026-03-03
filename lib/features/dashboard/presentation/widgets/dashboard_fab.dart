@@ -33,24 +33,6 @@ class DashboardFAB extends HookConsumerWidget {
             open.value = false;
           }),
           const SizedBox(height: 8),
-          _buildOption(Icons.sports, 'Start activity', () async {
-            final activity = await showDialog<Activity?>(
-              barrierDismissible: true,
-              context: context,
-              builder: (context) => ActivityPickerDialog(),
-            );
-            if (activity != null) {
-              activity.when(
-                existing: (id, name) =>
-                    print('Starting existing id: $id, name: $name'),
-                draft: (name) => {
-                  ref.read(insertActivityProvider(Activity.draft(name: name))),
-                },
-              );
-            }
-            open.value = false;
-          }),
-          const SizedBox(height: 8),
           _buildOption(Icons.restaurant, 'Plan meal', () {
             context.router.push(routes.AddMealRoute());
             open.value = false;

@@ -32,40 +32,30 @@ class KidFAB extends HookConsumerWidget {
               builder: (context) => ActivityPickerDialog(),
             );
             if (activity != null) {
-              activity.when(
-                existing: (id, name) {
-                  print('Starting existing id: $id, name: $name');
-                  ref.read(
+              final c = ref.read(activityControllerProvider.notifier);
+              final act = await c.saveActivity(activity);
+
+              if (act == null) {
+                showActivityAddFailedDialog(context);
+                return;
+              }
+
+              await act.whenOrNull(existing: (id, name, pre, post) async {
+                print('Starting activity: $id $name');
+                try {
+                  await ref.read(
                     insertActivityLogProvider(
                       ActivityLog.draft(
                         activityId: id,
                         startedAt: DateTime.now(),
                       ),
-                    ),
+                    ).future,
                   );
                   ref.invalidate(getPendingActivityProvider);
-                },
-                draft: (name) async {
-                  print('Adding draft: $name');
-                  final act = await ref.read(
-                    insertActivityProvider(Activity.draft(name: name)).future,
-                  );
-                  final id = act?.whenOrNull(existing: (id, name) => id);
-                  print('Draft added with id: $id and name: ${act?.name}');
-                  if (id != null) {
-                    ref.read(
-                      insertActivityLogProvider(
-                        ActivityLog.draft(
-                          activityId: id,
-                          startedAt: DateTime.now(),
-                        ),
-                      )
-                    );
-                    print('Activity log added');
-                    ref.invalidate(getPendingActivityProvider);
-                  }
-                },
-              );
+                } catch (e) {
+                  showActivityInProgressDialog(context);
+                }
+              });
             }
             open.value = false;
           }),
@@ -89,14 +79,14 @@ class KidFAB extends HookConsumerWidget {
                     .watch(mealAddProvider.notifier)
                     .addMeal(ref.read(mealDraftProvider));
 
-                  final action = await showDialog<String?>(
-                    barrierDismissible: true,
-                    context: context,
-                    builder: (context) => MealStatusDialog(meal: addedMeal),
-                  );
-                  if (action != null) {
-                    ref.read(updateMealProvider(addedMeal, action));
-                  }
+                final action = await showDialog<String?>(
+                  barrierDismissible: true,
+                  context: context,
+                  builder: (context) => MealStatusDialog(meal: addedMeal),
+                );
+                if (action != null) {
+                  ref.read(updateMealProvider(addedMeal, action));
+                }
               }
               open.value = false;
             },
@@ -137,6 +127,35 @@ class KidFAB extends HookConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> showActivityInProgressDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Aktywność w toku'),
+          content: const Text(
+            'Jedna aktywność jest już w trakcie.\n\n'
+            'Nie można rozpocząć nowej, dopóki obecna nie zostanie zakończona.',
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> showActivityAddFailedDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Problem z dodaniem aktywnosci'),
+          content: const Text(
+            'Taka aktywnosc juz istnieje, wybierz ja z listy',
+          ),
+        );
+      },
     );
   }
 }

@@ -16,7 +16,12 @@ extension ActivityLogDataToDomain on ActivityLogData {
 }
 
 extension ActivityDataToDomain on ActivityData {
-  Activity toDomain() => Activity.existing(id: id, name: name);
+  Activity toDomain() => Activity.existing(
+    id: id,
+    name: name,
+    percentagePre: percentagePre,
+    percentagePost: percentagePost,
+  );
 }
 
 extension ActivityDataIterableToDomain on Iterable<ActivityData> {
@@ -41,7 +46,7 @@ extension ActivityLogToCompanion on ActivityLog {
       endedAt: map(
         draft: (_) => d.Value<int>.absent(),
         existing: (e) => d.Value(e.endedAt!.millisecondsSinceEpoch),
-        view: (e) => d.Value(e.endedAt!.millisecondsSinceEpoch)
+        view: (e) => d.Value(e.endedAt!.millisecondsSinceEpoch),
       ),
     );
   }
@@ -52,7 +57,29 @@ extension ActivityToCompanion on Activity {
     final id = map(
       draft: (_) => d.Value<int>.absent(),
       existing: (e) => d.Value(e.id),
+      empty: (_) => d.Value<int>.absent(),
     );
-    return ActivityCompanion(id: id, name: d.Value(name!));
+    final percentagePre = map(
+      draft: (e) => d.Value(e.percentagePre),
+      existing: (e) => d.Value(e.percentagePre),
+      empty: (_) => throw StateError("Can't get percentage pre"),
+    );
+    final percentagePost = map(
+      draft: (e) => d.Value(e.percentagePost),
+      existing: (e) => d.Value(e.percentagePost),
+      empty: (_) => throw StateError("Can't get percentage post"),
+    );
+    final name = map(
+      draft: (e) => d.Value(e.name),
+      existing: (e) => d.Value(e.name),
+      empty: (_) => throw StateError("Can't get name"),
+    );
+
+    return ActivityCompanion(
+      id: id,
+      name: name,
+      percentagePre: percentagePre,
+      percentagePost: percentagePost,
+    );
   }
 }

@@ -11,13 +11,84 @@ part 'activity_provider.g.dart';
 class ActivityDraftNotifier extends _$ActivityDraftNotifier {
   @override
   Activity build() {
-    return Activity.draft();
+    return Activity.empty();
   }
 
-  void setName(String value) => state = state.copyWith(name: value);
-  String? getName() => state.name;
+  void setName(String value) {
+    state = state.map(
+      existing: (a) => a.copyWith(name: value),
+      draft: (a) => a.copyWith(name: value),
+      empty: (_) =>
+          Activity.draft(name: value, percentagePre: 0, percentagePost: 0),
+    );
+  }
+
+  void setPercentagePre(String value) {
+    state = state.map(
+      existing: (a) => a.copyWith(percentagePre: int.tryParse(value) ?? 0),
+      draft: (a) => a.copyWith(percentagePre: int.tryParse(value) ?? 0),
+      empty: (_) => Activity.draft(
+        name: '',
+        percentagePre: int.tryParse(value) ?? 0,
+        percentagePost: 0,
+      ),
+    );
+  }
+
+  void setPercentagePost(String value) {
+    state = state.map(
+      existing: (a) => a.copyWith(percentagePost: int.tryParse(value) ?? 0),
+      draft: (a) => a.copyWith(percentagePost: int.tryParse(value) ?? 0),
+      empty: (_) => Activity.draft(
+        name: '',
+        percentagePre: 0,
+        percentagePost: int.tryParse(value) ?? 0,
+      ),
+    );
+  }
+
+  String? getName() => state.map(
+    existing: (a) => a.name,
+    draft: (a) => a.name,
+    empty: (_) => '',
+  );
+
+  int? getPercentagePre() => state.map(
+    existing: (a) => a.percentagePre,
+    draft: (a) => a.percentagePre,
+    empty: (_) => 0,
+  );
+
+  int? getPercentagePost() => state.map(
+    existing: (a) => a.percentagePost,
+    draft: (a) => a.percentagePost,
+    empty: (_) => 0,
+  );
 
   void overrideDraft(Activity activity) => state = activity;
+}
+
+@riverpod
+class ActivityControllerNotifier extends _$ActivityControllerNotifier {
+  @override
+  void build() {
+    return;
+  }
+
+  Future<Activity?> saveActivity(Activity act) async {
+    final db = ref.watch(databaseProvider);
+    final isDraft = act.maybeWhen(
+      draft: (_, __, ___) => true,
+      orElse: () => false,
+    );
+    if (isDraft) {
+      final value = await db.activityDao.insertActivity(act.toCompanion());
+      if (value == null) return null;
+      return value.toDomain();
+    } else {
+      return act;
+    }
+  }
 }
 
 @riverpod
@@ -25,14 +96,6 @@ Future<List<Activity>> activitiesByQuery(Ref ref, String query) async {
   final db = ref.watch(databaseProvider);
   final act = await db.activityDao.searchActivitiesByName(query, 6).get();
   return act.map((e) => e.toDomain()).toList();
-}
-
-@riverpod
-Future<Activity?> insertActivity(Ref ref, Activity activity) async {
-  final db = ref.watch(databaseProvider);
-  final value = await db.activityDao.insertActivity(activity.toCompanion());
-  if (value == null) return null;
-  return value.toDomain();
 }
 
 @riverpod
@@ -49,7 +112,8 @@ Future<void> stopActivity(Ref ref, ActivityLog activityLog) async {
   final updated = activityLog.map(
     existing: (a) => a.copyWith(endedAt: DateTime.now()),
     view: (a) => a.copyWith(endedAt: DateTime.now()),
-    draft: (a) => throw StateError('Nie można zakończyć draftu – brak id i endedAt'),
+    draft: (a) =>
+        throw StateError('Nie można zakończyć draftu – brak id i endedAt'),
   );
   await db.activityDao.updateActivityLog(updated.toCompanion());
 }
@@ -59,7 +123,6 @@ Future<ActivityLog?> getPendingActivity(Ref ref) async {
   final db = ref.watch(databaseProvider);
   final value = await db.activityDao.getActiveActivityLog();
   print(value);
-  if (value == null) return null;
 
   final activity = await db.activityDao.getActivityById(value.activityId);
   return ActivityLog.view(

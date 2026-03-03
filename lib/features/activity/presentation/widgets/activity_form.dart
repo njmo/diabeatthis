@@ -13,20 +13,40 @@ class ActivityForm extends HookConsumerWidget {
     final formKey = ref.watch(mealIngredientFormKeyProvider);
     final activityDraft = ref.watch(activityDraftProvider.notifier);
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.25,
+      width: MediaQuery.of(context).size.width * 0.8,
         child: Form(
           key: formKey,
           autovalidateMode: AutovalidateMode.always,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: [StringFormField(
+              label: 'Nazwa aktywnosci',
+              value: activityDraft.getName(),
+              onChanged: activityDraft.setName,
+              builder: (context, controller) {
+                return TextFormField(
+                  controller: controller,
+                  maxLength: 30,
+                  validator: (value) {
+                    if ((value == null) || (value.isEmpty) || (value.length < 4)) {
+                      return '';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Nazwa aktywnosci',
+                    border: OutlineInputBorder(),
+                  ),
+                );
+              },
+            ),
               StringFormField(
-                label: 'Nazwa aktywnosci',
-                value: '',
-                onChanged: activityDraft.setName,
+                label: 'Procent 1.5h po wysilku',
+                value: activityDraft.getPercentagePost().toString() ?? '',
+                onChanged: activityDraft.setPercentagePost,
                 builder: (context, controller) {
                   return TextFormField(
                     controller: controller,
@@ -38,7 +58,28 @@ class ActivityForm extends HookConsumerWidget {
                       return null;
                     },
                     decoration: const InputDecoration(
-                      labelText: 'Nazwa',
+                      labelText: 'Procent przed wysilkiem',
+                      border: OutlineInputBorder(),
+                    ),
+                  );
+                },
+              ),
+              StringFormField(
+                label: 'Procent 1.5h przed wysilkiem',
+                value: activityDraft.getPercentagePre().toString(),
+                onChanged: activityDraft.setPercentagePre,
+                builder: (context, controller) {
+                  return TextFormField(
+                    controller: controller,
+                    maxLength: 30,
+                    validator: (value) {
+                      if ((value == null) || (value.isEmpty) || (value.length < 4)) {
+                        return '';
+                      }
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Procent po wysilku',
                       border: OutlineInputBorder(),
                     ),
                   );
@@ -47,7 +88,6 @@ class ActivityForm extends HookConsumerWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

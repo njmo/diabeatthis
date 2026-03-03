@@ -1,7 +1,9 @@
 CREATE TABLE activity (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 
-  name TEXT NOT NULL,
+  name TEXT NOT NULL UNIQUE,
+  percentage_pre INTEGER NOT NULL CHECK (percentage_pre >= 0 AND percentage_pre <= 100),
+  percentage_post INTEGER NOT NULL CHECK (percentage_post >= 0 AND percentage_post <= 100),
 
   is_synced BOOL NOT NULL DEFAULT 0,
 
