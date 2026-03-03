@@ -18,7 +18,7 @@ class KidFAB extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    var open = useState(false);
+    final open = useState(false);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -33,29 +33,39 @@ class KidFAB extends HookConsumerWidget {
             );
             if (activity != null) {
               final c = ref.read(activityControllerProvider.notifier);
-              final act = await c.saveActivity(activity);
-
-              if (act == null) {
-                showActivityAddFailedDialog(context);
+              Activity? act;
+              try {
+                act = await c.saveActivity(activity);
+                if (act == null) {
+                  throw Exception('Something went wrong with adding activity');
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  showActivityAddFailedDialog(context);
+                }
                 return;
               }
 
-              await act.whenOrNull(existing: (id, name, pre, post) async {
-                print('Starting activity: $id $name');
-                try {
-                  await ref.read(
-                    insertActivityLogProvider(
-                      ActivityLog.draft(
-                        activityId: id,
-                        startedAt: DateTime.now(),
-                      ),
-                    ).future,
-                  );
-                  ref.invalidate(getPendingActivityProvider);
-                } catch (e) {
-                  showActivityInProgressDialog(context);
-                }
-              });
+              await act.whenOrNull(
+                existing: (id, name, pre, post) async {
+                  print('Starting activity: $id $name');
+                  try {
+                    await ref.read(
+                      insertActivityLogProvider(
+                        ActivityLog.draft(
+                          activityId: id,
+                          startedAt: DateTime.now(),
+                        ),
+                      ).future,
+                    );
+                    ref.invalidate(getPendingActivityProvider);
+                  } catch (e) {
+                    if (context.mounted) {
+                      showActivityInProgressDialog(context);
+                    }
+                  }
+                },
+              );
             }
             open.value = false;
           }),
@@ -78,6 +88,10 @@ class KidFAB extends HookConsumerWidget {
                 final addedMeal = await ref
                     .watch(mealAddProvider.notifier)
                     .addMeal(ref.read(mealDraftProvider));
+
+                if (!context.mounted) {
+                  return;
+                }
 
                 final action = await showDialog<String?>(
                   barrierDismissible: true,
@@ -152,7 +166,8 @@ class KidFAB extends HookConsumerWidget {
         return AlertDialog(
           title: const Text('Problem z dodaniem aktywnosci'),
           content: const Text(
-            'Taka aktywnosc juz istnieje, wybierz ja z listy',
+            'Taka aktywnosc juz istnieje lub parametry nie sa podane prawidlowo.\n'
+            'pamietaj pre i post musza byc <100 i >0',
           ),
         );
       },
