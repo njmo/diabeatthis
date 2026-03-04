@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../domain/model/device_status.dart';
 import '../../domain/model/glucose.dart';
 import '../../domain/model/meal.dart';
+import '../../domain/model/temporary_target.dart';
 import '../../domain/repository/nightscout_repository.dart';
 import '../../nightscout/providers/nightscout_url_provider.dart';
 import '../repository/nightscout_repository_impl.dart';
@@ -33,6 +34,12 @@ Future<Duration?> canulaAge(Ref ref) async {
 Future<DeviceStatus> deviceStatus(Ref ref) async {
   final repository = await ref.watch(nightscoutRepositoryProvider.future);
   return await repository.fetchLastDeviceStatus();
+}
+
+@riverpod
+Future<TemporaryTarget> temporaryTarget(Ref ref) async {
+  final repository = await ref.watch(nightscoutRepositoryProvider.future);
+  return await repository.fetchLastTemporaryTarget();
 }
 
 @riverpod

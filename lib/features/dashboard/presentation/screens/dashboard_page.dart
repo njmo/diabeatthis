@@ -11,6 +11,7 @@ import '../../data/providers/time_now_provider.dart';
 import '../widgets/dashboard_fab.dart';
 import '../widgets/kid_fab.dart';
 import '../widgets/nightscout_dashboard.dart';
+import '../widgets/temporary_target_icon.dart';
 
 @RoutePage()
 class DashboardPage extends ConsumerWidget {
@@ -82,6 +83,7 @@ class DashboardPage extends ConsumerWidget {
                     },
                   ) ??
                   const SizedBox.shrink(),
+              TemporaryTargetIcon(),
               const SizedBox(height: 8),
               Text(
                 'Zaplanowane posiłki',

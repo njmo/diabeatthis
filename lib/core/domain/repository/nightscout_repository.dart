@@ -1,6 +1,7 @@
 import '../model/device_status.dart';
 import '../model/glucose.dart';
 import '../model/meal.dart';
+import '../model/temporary_target.dart';
 import '../model/treatment_base.dart';
 
 abstract class NightscoutRepository {
@@ -14,6 +15,7 @@ abstract class NightscoutRepository {
   Future<List<Glucose>> fetchGlucoseAfter(DateTime after);
   Future<List<Glucose>> fetchLastGlucoseWithLimit(int limit);
   Future<DeviceStatus> fetchLastDeviceStatus();
+  Future<TemporaryTarget> fetchLastTemporaryTarget();
   Future<Duration?> getLatestSensorChangeAge();
   Future<Duration?> getLatestInsulinChangeAge();
 }

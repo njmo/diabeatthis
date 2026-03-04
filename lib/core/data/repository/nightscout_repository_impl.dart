@@ -1,16 +1,19 @@
 import '../../domain/model/device_status.dart';
 import '../../domain/model/glucose.dart';
 import '../../domain/model/meal.dart';
+import '../../domain/model/temporary_target.dart';
 import '../../domain/model/treatment_base.dart';
 import '../../domain/repository/nightscout_repository.dart';
 
 import '../../nightscout/dto/device_status_dto.dart';
 import '../../nightscout/dto/glucose_dto.dart';
 import '../../nightscout/dto/meal_dto.dart';
+import '../../nightscout/dto/temporary_target_dto.dart';
 import '../../nightscout/helpers/treatments_factory.dart';
 import '../../nightscout/mappers/device_status_mapper.dart';
 import '../../nightscout/mappers/glucose_mapper.dart';
 import '../../nightscout/mappers/meal_mapper.dart';
+import '../../nightscout/mappers/temporary_target_mapper.dart';
 import '../../nightscout/services/nightscout_service.dart';
 
 class NightscoutRepositoryImpl implements NightscoutRepository {
@@ -79,6 +82,17 @@ class NightscoutRepositoryImpl implements NightscoutRepository {
     final url = _buildUri('/api/v1/treatments.json', qp);
     final data = await service.fetchNightscoutData(url);
     return (data as List).map((e) => MealDto.fromJson(e).toDomain()).toList();
+  }
+
+  @override
+  Future<TemporaryTarget> fetchLastTemporaryTarget() async {
+    final qp = {
+      'find[eventType]': 'Temporary Target', 'count': '1'
+    };
+    final url = _buildUri('/api/v1/treatments.json', qp);
+    final data = await service.fetchNightscoutData(url);
+    final dto = TemporaryTargetDto.fromJson(data.first);
+    return dto.toDomain();
   }
 
   @override
