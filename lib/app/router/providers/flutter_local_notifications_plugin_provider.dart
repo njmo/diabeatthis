@@ -3,6 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../handlers/notification_response_handler.dart';
+
 part 'flutter_local_notifications_plugin_provider.g.dart';
 
 @Riverpod(keepAlive: true)
@@ -34,6 +36,13 @@ Future<void> notificationsInit(Ref ref) async {
   );
 
   await plugin.initialize(settings: initSettings);
+
+  // catch app launch notification.
+  final launch = await plugin.getNotificationAppLaunchDetails();
+  final resp = launch?.notificationResponse;
+  if (resp != null) {
+    onDidReceiveNotificationResponse(resp);
+  }
 
   final android = plugin.resolvePlatformSpecificImplementation<
       AndroidFlutterLocalNotificationsPlugin>();

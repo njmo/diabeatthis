@@ -2,11 +2,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'router/observers/riverpod_debug_observer.dart';
+import 'app_container.dart';
 
 typedef BootstrapBuilder = FutureOr<Widget> Function();
-
 Future<void> bootstrap(BootstrapBuilder builder) async {
   // Optional: make zone errors fatal. Must be the first statement.
   BindingBase.debugZoneErrorsAreFatal = true;
@@ -26,9 +24,7 @@ Future<void> bootstrap(BootstrapBuilder builder) async {
 
       final app = await builder();
       runApp(
-        ProviderScope(observers: [
-          RiverpodDebugObserver()
-        ], child: app),
+        UncontrolledProviderScope(container: appContainer, child: app),
       ); // Same zone ✅
     },
     (Object error, StackTrace stack) {
