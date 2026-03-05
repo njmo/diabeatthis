@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -102,7 +104,6 @@ class MealDialogController extends _$MealDialogController {
   }
 
   Future<void> scheduleEatNotification({
-    required int notificationId,
     required int minutes,
   }) async {
     final plugin = ref.read(flutterLocalNotificationsPluginProvider);
@@ -112,21 +113,44 @@ class MealDialogController extends _$MealDialogController {
 
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
-        'meal_wait_channel_v2', // ZMIEŃ ID kanału żeby uniknąć “starego” kanału
+        'meal_wait_channel_v2',
         'Meal Wait Notifications',
         channelDescription: 'Reminders that you can start eating',
         importance: Importance.max,
         priority: Priority.high,
+        visibility: NotificationVisibility.public,
+        category: AndroidNotificationCategory.reminder,
+        actions: <AndroidNotificationAction>[
+          AndroidNotificationAction(
+            'meal_yes',
+            'Zaczynam jeść ✅',
+            showsUserInterface: false,
+            cancelNotification: true,
+          ),
+          AndroidNotificationAction(
+            'meal_not_yet',
+            'Jeszcze nie',
+            showsUserInterface: false,
+            cancelNotification: true,
+          ),
+        ],
       ),
     );
+
+    final payload = jsonEncode({
+      'mealId': mealId,
+    });
+
+    final notificationId = mealId.hashCode & 0x7fffffff;
 
     await plugin.zonedSchedule(
       id: notificationId,
       scheduledDate: when,
       notificationDetails: details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // DIAG
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       title: 'Możesz już jeść 🍽️',
       body: 'Minęło $minutes minut od podania insuliny.',
+      payload: payload
     );
 
     final pending = await plugin.pendingNotificationRequests();

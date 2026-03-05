@@ -35,25 +35,25 @@ class MealStatusDialog extends ConsumerWidget {
                     ),
                     child: InkWell(
                       onTap: c.chooseEat,
-                      child: Column(
+                        child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.restaurant_outlined, size: 60),
-                          Text('Zjem'),
+                        Icon(Icons.restaurant_outlined, size: 60),
+                        Text('Zjem'),
                         ],
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 20),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsetsGeometry.all(10),
-                    decoration: BoxDecoration(
+                      ),
+                      ),
+                      SizedBox(width: 20),
+                      Expanded(
+                      child: Container(
+                        padding: EdgeInsetsGeometry.all(10),
+                        decoration: BoxDecoration(
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.all(Radius.circular(15)),
-                      color: Colors.white70,
+                        color: Colors.white70,
                     ),
                     child: InkWell(
                       onTap: c.chooseSkip,
@@ -121,8 +121,7 @@ class MealStatusDialog extends ConsumerWidget {
                     {
                       ref.read(insertAdviceProvider(meal, s.advice));
                       if(s.advice.wait != null) {
-                        c.scheduleEatNotification(notificationId: meal.id,
-                            minutes: s.advice.wait!.recommendedMinutes);
+                        c.scheduleEatNotification(minutes: s.advice.wait!.recommendedMinutes);
                       }
                     }
                     Navigator.of(context).pop(s.skipMeal ? 'skipped' : s.advice.decision!.status);

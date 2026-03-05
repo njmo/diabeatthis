@@ -22,6 +22,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     return driftDatabase(
       name: 'my_database',
       native: const DriftNativeOptions(
+        shareAcrossIsolates: true,
         databaseDirectory: getApplicationSupportDirectory,
       ),
     );

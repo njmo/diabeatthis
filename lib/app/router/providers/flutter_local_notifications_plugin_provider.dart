@@ -35,7 +35,7 @@ Future<void> notificationsInit(Ref ref) async {
     iOS: iosInit,
   );
 
-  await plugin.initialize(settings: initSettings);
+  await plugin.initialize(settings: initSettings, onDidReceiveNotificationResponse: onDidReceiveNotificationResponse, onDidReceiveBackgroundNotificationResponse: onDidReceiveBackgroundNotificationResponse);
 
   // catch app launch notification.
   final launch = await plugin.getNotificationAppLaunchDetails();

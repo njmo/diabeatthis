@@ -17,6 +17,13 @@ void updateMeal(Ref ref, domain.Meal meal, String status)
 }
 
 @riverpod
+void updateMealById(Ref ref, int mealId, String status)
+{
+  final db = ref.watch(databaseProvider);
+  db.mealDao.updateMealStatus(mealId, status);
+}
+
+@riverpod
 Stream<List<domain.Meal>> mealsStream(Ref ref) {
   final db = ref.watch(databaseProvider);
   return db.allMeals().watch().map(
