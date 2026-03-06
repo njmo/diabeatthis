@@ -1,0 +1,26 @@
+import 'ingredient.drift';
+import 'meal_template.drift';
+import 'portion.drift';
+
+CREATE TABLE meal_template_ingredients (
+  meal_template_id INTEGER NOT NULL
+    REFERENCES meal_template (id) ON DELETE CASCADE,
+
+  ingredient_id INTEGER NOT NULL
+    REFERENCES ingredient (id) ON DELETE RESTRICT,
+
+  portion_id INTEGER
+    REFERENCES portion (id) ON DELETE SET NULL,
+
+  default_amount INTEGER,
+  is_optional BOOL NOT NULL DEFAULT 0,
+
+  is_synced BOOL NOT NULL DEFAULT 0,
+
+  quantity_confidence REAL NOT NULL CHECK (quantity_confidence >= 0 AND quantity_confidence <= 1),
+
+  prep_method TEXT,
+  notes TEXT,
+
+  PRIMARY KEY (meal_template_id, ingredient_id)
+);

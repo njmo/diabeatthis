@@ -34,52 +34,39 @@ extension ActivityLogDataIterableToDomain on Iterable<ActivityLogData> {
 
 extension ActivityLogToCompanion on ActivityLog {
   ActivityLogCompanion toCompanion() {
-    final id = map(
-      draft: (_) => d.Value<int>.absent(),
-      existing: (e) => d.Value(e.id),
-      view: (e) => d.Value(e.id),
-    );
-    return ActivityLogCompanion(
-      id: id,
-      activityId: d.Value(activityId),
-      startedAt: d.Value(startedAt.millisecondsSinceEpoch),
-      endedAt: map(
-        draft: (_) => d.Value<int>.absent(),
-        existing: (e) => d.Value(e.endedAt!.millisecondsSinceEpoch),
-        view: (e) => d.Value(e.endedAt!.millisecondsSinceEpoch),
+    return map(
+      draft: (e) => ActivityLogCompanion(
+        id: d.Value<int>.absent(),
+        activityId: d.Value(e.activityId),
+        startedAt: d.Value(e.startedAt.millisecondsSinceEpoch),
       ),
+      existing: (e) => ActivityLogCompanion(
+        id: d.Value(e.id),
+        activityId: d.Value(e.activityId),
+        startedAt: d.Value(e.startedAt.millisecondsSinceEpoch),
+        endedAt: d.Value(e.endedAt!.millisecondsSinceEpoch),
+      ),
+      view: (e) => throw StateError("View should not be pushed"),
     );
   }
 }
 
 extension ActivityToCompanion on Activity {
   ActivityCompanion toCompanion() {
-    final id = map(
-      draft: (_) => d.Value<int>.absent(),
-      existing: (e) => d.Value(e.id),
-      empty: (_) => d.Value<int>.absent(),
-    );
-    final percentagePre = map(
-      draft: (e) => d.Value(e.percentagePre),
-      existing: (e) => d.Value(e.percentagePre),
-      empty: (_) => throw StateError("Can't get percentage pre"),
-    );
-    final percentagePost = map(
-      draft: (e) => d.Value(e.percentagePost),
-      existing: (e) => d.Value(e.percentagePost),
-      empty: (_) => throw StateError("Can't get percentage post"),
-    );
-    final name = map(
-      draft: (e) => d.Value(e.name),
-      existing: (e) => d.Value(e.name),
-      empty: (_) => throw StateError("Can't get name"),
-    );
-
-    return ActivityCompanion(
-      id: id,
-      name: name,
-      percentagePre: percentagePre,
-      percentagePost: percentagePost,
+    return map(
+      draft: (e) => ActivityCompanion(
+        id: d.Value<int>.absent(),
+        name: d.Value(e.name),
+        percentagePre: d.Value(e.percentagePre),
+        percentagePost: d.Value(e.percentagePost),
+      ),
+      existing: (e) => ActivityCompanion(
+        id: d.Value(e.id),
+        name: d.Value(e.name),
+        percentagePre: d.Value(e.percentagePre),
+        percentagePost: d.Value(e.percentagePost),
+      ),
+      empty: (_) => throw StateError("Empty should not be pushed"),
     );
   }
 }

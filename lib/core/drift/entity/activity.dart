@@ -1,2 +1,2 @@
 export '../database_impl.dart'
-    show ActivityData, ActivityCompanion, ActivityLogData, ActivityLogCompanion;
+    show ActivityCompanion, ActivityData, ActivityLogCompanion, ActivityLogData;

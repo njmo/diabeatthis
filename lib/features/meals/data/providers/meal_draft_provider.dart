@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../presentation/widgets/confidence_slider.dart';
@@ -36,7 +37,7 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
   @override
   MealIngredientsDraft build() {
     return MealIngredientsDraft(
-      ingredient: IngredientSelection.draft(
+      ingredient: domain.Ingredient.draft(
         name: '',
         carbsPer100g: 0,
         fatPer100g: 0,
@@ -45,7 +46,7 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
         nutritionConfidence: 0,
         isReference: false,
       ),
-      ingredientPortion: IngredientPortionDraft(
+      ingredientPortion: IngredientPortion(
         portion: PortionSelection.draft(name: '', unitHint: ''),
         amount: 0,
       ),
@@ -54,7 +55,7 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
     );
   }
 
-  void setIngredient(IngredientSelection ingredient) =>
+  void setIngredient(domain.Ingredient ingredient) =>
       state = state.copyWith(ingredient: ingredient);
   void setIngredientPortion(PortionSelection portion) => state = state.copyWith(
     ingredientPortion: state.ingredientPortion.copyWith(portion: portion),

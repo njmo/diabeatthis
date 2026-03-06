@@ -57,9 +57,10 @@ Stream<List<domain.Meal>> plannedMealsForTodayStream(Ref ref) {
 @riverpod
 Future<void> insertMealIngredient(Ref ref, domain.Ingredient ingredient, domain.Meal meal, domain.Portion? portion, int amount, double nutritionConfidence) async {
   final db = ref.watch(databaseProvider);
+  final ingredientId = ingredient.map(existing: (e) => e.id, draft: (_) => throw Exception('Cannot get id for draft'));
   await db.insertMealIngredient(
     meal.id,
-    ingredient.id,
+    ingredientId,
     portion?.id,
     amount,
     null,

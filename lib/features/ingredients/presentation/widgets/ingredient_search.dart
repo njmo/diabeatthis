@@ -4,7 +4,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/forms.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
-import '../../data/mappers/ingredient_draft_mapper.dart';
 import '../../data/providers/ingredient_provider.dart';
 
 class IngredientSearch extends HookConsumerWidget {
@@ -76,7 +75,7 @@ class IngredientSearch extends HookConsumerWidget {
                     ),
                     trailing: ingredient.isReference ? const Icon(Icons.dinner_dining) : null,
                     onTap: () {
-                      draft.overrideDraft(ingredient.toSelection());
+                      draft.overrideDraft(ingredient);
                       valuePicked.value = index;
                     },
                   ),

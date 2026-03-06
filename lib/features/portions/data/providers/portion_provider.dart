@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/domain/model/ingredient.dart';
 import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/portion_drift_mapper.dart';
 
@@ -60,12 +61,16 @@ Future<List<domain.Portion>> portionsNotInIngredientByQuery(
 @riverpod
 Future<int?> gramsPerPortion(
   Ref ref,
-  IngredientSelection ingredient,
+  Ingredient ingredient,
   PortionSelection portion,
 ) async {
   final db = ref.watch(databaseProvider);
+  final ingredientId = ingredient.map(
+    draft: (draft) => 0,
+    existing: (existing) => existing.id,
+  );
   final grams = await db.portionDao.getGramsPerPortion(
-    ingredient.map(draft: (draft) => 0, existing: (existing) => existing.id),
+    ingredientId,
     portion.map(
       draft: (draft) => 0,
       existing: (existing) => existing.id,

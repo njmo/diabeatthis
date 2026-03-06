@@ -6,8 +6,6 @@ import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
-import '../../data/drafts/ingredient_draft.dart';
-import '../mappers/ingredient_draft_mapper.dart';
 
 part 'ingredient_provider.g.dart';
 
@@ -43,7 +41,7 @@ class IngredientPortionAmountDraftNotifier
 @riverpod
 Future<domain.Ingredient> insertIngredient(
   Ref ref,
-  IngredientSelection ingredient,
+  domain.Ingredient ingredient,
 ) async {
   return ingredient.map(
     draft: (draft) async {
@@ -57,7 +55,7 @@ Future<domain.Ingredient> insertIngredient(
         throw Exception('Could not insert ingredient');
       }
     },
-    existing: (existing) => existing.toDomain(),
+    existing: (existing) => existing,
   );
 }
 
@@ -72,7 +70,8 @@ Future<void> insertIngredientPortion(
     return;
   }
   final db = ref.watch(databaseProvider);
-  await db.insertIngredientPortion(ingredient.id, portion.id, amount);
+  final ingredientId = ingredient.map(existing: (e) => e.id, draft: (_) => throw Exception('Cannot get id for draft'));
+  await db.insertIngredientPortion(ingredientId, portion.id, amount);
 }
 
 @riverpod
@@ -82,16 +81,17 @@ Future<int?> getAmountForPortionIngredient(
   domain.Portion portion,
 ) async {
   final db = ref.watch(databaseProvider);
+  final ingredientId = ingredient.map(existing: (e) => e.id, draft: (_) => throw Exception('Cannot get id for draft'));
   return await db
-      .amountIngredientPortion(ingredient.id, portion.id)
+      .amountIngredientPortion(ingredientId, portion.id)
       .getSingleOrNull();
 }
 
 @riverpod
 class IngredientDraftNotifier extends _$IngredientDraftNotifier {
   @override
-  IngredientSelection build() {
-    return IngredientSelection.draft(
+  domain.Ingredient build() {
+    return domain.Ingredient.draft(
       name: '',
       carbsPer100g: 0,
       fatPer100g: 0,
@@ -113,7 +113,7 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
   void setName(String value) => state = state.copyWith(name: value);
   void setNutritionConfidence(ConfidenceLevel value) =>
       state = state.copyWith(nutritionConfidence: value.toDouble01());
-  void overrideDraft(IngredientSelection ingredient) => state = ingredient;
+  void overrideDraft(domain.Ingredient ingredient) => state = ingredient;
 
   String getName() => state.map(draft: (d) => d.name, existing: (e) => e.name);
   String getCarbsPer100g() => state

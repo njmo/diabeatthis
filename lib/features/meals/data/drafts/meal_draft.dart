@@ -1,6 +1,7 @@
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../core/domain/model/ingredient.dart';
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 
 part 'meal_draft.freezed.dart';
@@ -9,8 +10,8 @@ part 'meal_draft.freezed.dart';
 abstract class MealIngredientsDraft with _$MealIngredientsDraft
 {
   const factory MealIngredientsDraft( {
-    required IngredientSelection ingredient,
-    required IngredientPortionDraft ingredientPortion,
+    required Ingredient ingredient,
+    required IngredientPortion ingredientPortion,
     required int amount,
     required double quantityConfidence,
   }) = _MealIngredientsDraft;

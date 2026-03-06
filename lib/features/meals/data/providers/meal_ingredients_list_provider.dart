@@ -4,7 +4,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/drift/dao/ingredient_dao.dart';
 import '../../../../core/drift/providers/database_provider.dart';
-import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/mappers/portion_draft_mapper.dart';
@@ -54,7 +53,7 @@ Future<Macronutrients> calculatedMacronutrients(Ref ref) async {
     if (isEmpty) {
       portionAmount = 1;
     } else if (portionAmount == 0) {
-      final ingredientDomain = mi.ingredient.toDomain();
+      final ingredientDomain = mi.ingredient;
       final portionDomain = mi.ingredientPortion.portion.toDomain();
 
       final fetched = await ref.read(
