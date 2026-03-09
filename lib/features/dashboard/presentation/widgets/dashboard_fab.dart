@@ -4,25 +4,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
-import '../../../../core/data/provider/parent_controller_provider.dart';
-import '../../../../core/domain/model/activity.dart';
-import '../../../activity/data/providers/activity_provider.dart';
-import '../../../activity/presentation/widgets/activity_form.dart';
-import '../../../activity/presentation/widgets/activity_picker_dialog.dart';
-import '../../../activity/presentation/widgets/activity_search.dart';
-import '../../../meals/data/drafts/meal_draft.dart';
-import '../../../meals/data/providers/meal_database_provider.dart';
-import '../../../meals/data/providers/meal_draft_provider.dart';
-import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
-import '../../data/providers/meal_add_provider.dart';
-import 'meal_status_dialog.dart';
 
 class DashboardFAB extends HookConsumerWidget {
   const DashboardFAB({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    var open = useState(false);
+    final open = useState(false);
 
     return Column(
       mainAxisSize: MainAxisSize.min,

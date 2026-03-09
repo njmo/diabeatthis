@@ -93,7 +93,9 @@ class AddMealIngredient extends ConsumerWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       if (addingStage == AddMealIngredientStage.summary) {
-                        Navigator.of(context).pop(ref.read(mealIngredientsDraftProvider));
+                        Navigator.of(
+                          context,
+                        ).pop(ref.read(mealIngredientsDraftProvider));
                       } else {
                         final formKey = ref.read(mealIngredientFormKeyProvider);
                         if (formKey.currentState!.validate()) {
@@ -148,7 +150,9 @@ class AddMealIngredient extends ConsumerWidget {
                               ),
                             );
                             if (result == true) {
-                              Navigator.of(context).pop();
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                              }
                             }
                           },
                           child: Text('Discard'),

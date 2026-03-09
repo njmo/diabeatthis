@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../app/router/providers/flutter_local_notifications_plugin_provider.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../data/meal_dialog_controller.dart';
 import '../../data/meal_dialog_state.dart';
@@ -141,7 +140,6 @@ class MealStatusDialog extends ConsumerWidget {
                 if (context.mounted) {
                   Navigator.of(context).pop('eaten');
                 }
-                ;
               },
               child: const Text("Zjadłem"),
             ),
@@ -173,7 +171,6 @@ class MealStatusDialog extends ConsumerWidget {
                 if (context.mounted) {
                   Navigator.of(context).pop('eaten-bolused');
                 }
-                ;
               },
               child: const Text("Podałem insuline"),
             ),

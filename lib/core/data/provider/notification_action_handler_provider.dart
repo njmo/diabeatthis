@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -21,9 +22,11 @@ class NotificationActionHandler extends _$NotificationActionHandler {
     final mealId = data['mealId'];
     if (mealId == null) return;
 
-    print(
+    if (kDebugMode) {
+      print(
       "RECEIVED NOTIFICATION DATA: Meal ID: $mealId action_id ${actionId ?? 'null'}",
     );
+    }
     if (actionId == 'meal_yes') {
       ref.read(updateMealByIdProvider(mealId, 'eating'));
     }

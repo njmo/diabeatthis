@@ -156,17 +156,17 @@ class MealAdvisor {
   }) {
     // Base time (mostly about "normal carbs"). You can optionally adjust base
     // slightly for extremely low-carb meals (start effect is less noticeable).
-    double base = config.tafBaseMin;
+    var base = config.tafBaseMin;
 
-    if (carbsG < 10)
+    if (carbsG < 10) {
       base += 3; // tiny carb amount tends to have weaker/less noticeable start
-
-    double df = (fatG * config.fatMinPerGram).clamp(0.0, config.fatCapMin);
-    double dp = (proteinG * config.proteinMinPerGram).clamp(
+    }
+    final df = (fatG * config.fatMinPerGram).clamp(0.0, config.fatCapMin);
+    final dp = (proteinG * config.proteinMinPerGram).clamp(
       0.0,
       config.proteinCapMin,
     );
-    double dfi = (fiberG * config.fiberMinPerGram).clamp(
+    final dfi = (fiberG * config.fiberMinPerGram).clamp(
       0.0,
       config.fiberCapMin,
     );
@@ -256,22 +256,23 @@ class MealAdvisor {
     final cushion = (ttlMinutes - tafMinutes).clamp(0, config.maxTtlMin);
 
     // Start from proportional cushion (but capped by our 5–15 gameplay window).
-    double wait = 0.4 * cushion; // heuristic
+    var wait = 0.4 * cushion; // heuristic
 
     // BG correction (higher BG -> slightly longer wait)
-    if (bg >= 180)
+    if (bg >= 180) {
       wait += 3;
-    else if (bg >= 150)
+    } else if (bg >= 150) {
       wait += 2;
-    else if (bg >= 140)
+    } else if (bg >= 140) {
       wait += 1;
+    }
 
     // Trend correction
-    if (trend >= 10)
+    if (trend >= 10) {
       wait += 2;
-    else if (trend >= 5)
+    } else if (trend >= 5) {
       wait += 1;
-
+    }
     // Clamp into 5–15 minutes like your earlier design.
     final rec = wait.round().clamp(5, 15);
 

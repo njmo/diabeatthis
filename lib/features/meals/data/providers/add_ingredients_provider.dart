@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart';
-import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/drafts/portion_filter.dart';

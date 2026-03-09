@@ -45,7 +45,7 @@ class ActivityForm extends HookConsumerWidget {
             ),
               StringFormField(
                 label: 'Procent 1.5h po wysilku',
-                value: activityDraft.getPercentagePost().toString() ?? '',
+                value: activityDraft.getPercentagePost().toString(),
                 onChanged: activityDraft.setPercentagePost,
                 builder: (context, controller) {
                   return TextFormField(

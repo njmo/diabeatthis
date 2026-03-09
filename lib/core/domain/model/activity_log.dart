@@ -1,4 +1,3 @@
-import 'package:diabeatthis/core/domain/model/activity.dart' as domain;
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'activity_log.freezed.dart';

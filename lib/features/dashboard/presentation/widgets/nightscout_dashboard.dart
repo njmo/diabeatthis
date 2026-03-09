@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/data/provider/nightscout_repository_provider.dart';
 import '../../data/providers/device_status_provider.dart';
-import '../../data/providers/temporary_target_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 
 import '../../data/utils/nightscout_utils.dart';
@@ -16,7 +15,6 @@ class NightscoutPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final deviceStatusStream = ref.watch(deviceStatusStreamProvider);
-    final temporaryTargetStream = ref.watch(temporaryTargetStreamProvider);
     final timeNowStream = ref.watch(timeNowProvider);
 
     final theme = Theme.of(context);

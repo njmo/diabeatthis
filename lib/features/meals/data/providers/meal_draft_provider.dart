@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart' as domain;
-import '../../../ingredients/data/drafts/ingredient_draft.dart';
+import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../presentation/widgets/confidence_slider.dart';
 import '../drafts/meal_draft.dart';
@@ -46,7 +46,7 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
         nutritionConfidence: 0,
         isReference: false,
       ),
-      ingredientPortion: IngredientPortion(
+      ingredientPortion: IngredientPortionDraft(
         portion: PortionSelection.draft(name: '', unitHint: ''),
         amount: 0,
       ),

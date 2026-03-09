@@ -5,7 +5,6 @@ import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/portion_drift_mapper.dart';
 
 import '../../../../core/drift/providers/database_provider.dart';
-import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../drafts/portion_draft.dart';
 import '../drafts/portion_filter.dart';
 import '../mappers/portion_draft_mapper.dart';

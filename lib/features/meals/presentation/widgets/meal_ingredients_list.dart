@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -51,7 +50,7 @@ class MealIngredientsList extends ConsumerWidget {
                     }
                   },
                   empty: () => draft.ingredient.isReference
-                      ? Text('${amount} referencyjne porcje')
+                      ? Text('$amount referencyjne porcje')
                       : Text('${amount}g'),
                 );
 

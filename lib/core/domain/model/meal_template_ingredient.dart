@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../features/ingredients/data/drafts/ingredient_draft.dart';
+import '../../../features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import 'ingredient.dart';
 import 'meal_template.dart';
 
@@ -22,7 +22,7 @@ abstract class MealTemplateIngredient with _$MealTemplateIngredient {
   }) = _MealTemplateIngredientExisting;
 
   const factory MealTemplateIngredient.draft({
-    required IngredientPortion ingredientPortion,
+    required IngredientPortionDraft ingredientPortion,
     required int mealTemplateId,
     required int ingredientId,
     required int defaultAmount,
@@ -37,7 +37,7 @@ abstract class MealTemplateIngredient with _$MealTemplateIngredient {
   const factory MealTemplateIngredient.view({
     required MealTemplate mealTemplate,
     required Ingredient mealIngredient,
-    required IngredientPortion ingredientPortion,
+    required IngredientPortionDraft ingredientPortion,
     required int defaultAmount,
     required bool isSynced,
     required double quantityConfidence,
