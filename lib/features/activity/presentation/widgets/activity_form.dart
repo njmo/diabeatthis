@@ -14,7 +14,6 @@ class ActivityForm extends HookConsumerWidget {
     final activityDraft = ref.watch(activityDraftProvider.notifier);
 
     return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.25,
       width: MediaQuery.of(context).size.width * 0.8,
         child: Form(
           key: formKey,

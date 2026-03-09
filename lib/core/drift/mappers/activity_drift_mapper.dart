@@ -46,7 +46,12 @@ extension ActivityLogToCompanion on ActivityLog {
         startedAt: d.Value(e.startedAt.millisecondsSinceEpoch),
         endedAt: d.Value(e.endedAt!.millisecondsSinceEpoch),
       ),
-      view: (e) => throw StateError("View should not be pushed"),
+      view: (e) => ActivityLogCompanion(
+        id: d.Value(e.id),
+        activityId: d.Value(e.activityId),
+        startedAt: d.Value(e.startedAt.millisecondsSinceEpoch),
+        endedAt: d.Value(e.endedAt!.millisecondsSinceEpoch),
+      ),
     );
   }
 }
