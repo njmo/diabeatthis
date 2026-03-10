@@ -32,6 +32,8 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
     Future.microtask(() async {
       await ref.read(localNotificationsControllerProvider).init();
+      await _foregroundBridge.init();
+
       final enabled = ref.read(monitorServiceEnabledProvider);
       if (enabled) {
         await _foregroundBridge.startMonitoring();

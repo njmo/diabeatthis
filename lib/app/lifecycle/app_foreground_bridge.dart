@@ -6,6 +6,10 @@ class AppForegroundBridge {
 
   final ForegroundServiceController controller;
 
+  Future<void> init() async {
+    await controller.init();
+  }
+
   void attach(void Function(Object data) onData) {
     FlutterForegroundTask.addTaskDataCallback(onData);
   }

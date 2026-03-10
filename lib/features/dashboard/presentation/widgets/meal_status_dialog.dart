@@ -33,7 +33,11 @@ class MealStatusDialog extends ConsumerWidget {
                       color: Colors.white70,
                     ),
                     child: InkWell(
-                      onTap: c.chooseEat,
+                      onTap: () {
+
+                        c.scheduleEatNotification(minutes: 1);
+                        Navigator.of(context).pop();
+                      },
                         child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
@@ -119,6 +123,7 @@ class MealStatusDialog extends ConsumerWidget {
                   if(!s.skipMeal)
                     {
                       ref.read(insertAdviceProvider(meal, s.advice));
+
                       if(s.advice.wait != null) {
                         c.scheduleEatNotification(minutes: s.advice.wait!.recommendedMinutes);
                       }
