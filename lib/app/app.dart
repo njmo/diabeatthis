@@ -52,6 +52,11 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     ref.read(appLifecycleProvider.notifier).setState(state);
+    print('sending ${state.toString()}');
+    _foregroundBridge.sendDataToTask({
+      'event' : 'app_lifecycle_change',
+      'data' : { 'state' : state.index },
+    });
   }
 
   @override

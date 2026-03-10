@@ -1,7 +1,13 @@
 // The callback function should always be a top-level or static function.
+import 'dart:ui';
+
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
+import '../../app/providers/app_lifecycle_state_provider.dart';
+
 class MyTaskHandler extends TaskHandler {
+  bool isUiRunning = false;
+
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     await FlutterForegroundTask.updateService(
@@ -13,7 +19,7 @@ class MyTaskHandler extends TaskHandler {
   @override
   Future<void> onRepeatEvent(DateTime timestamp) async {
     await FlutterForegroundTask.updateService(
-      notificationTitle: 'Monitoring aktywny',
+      notificationTitle: 'Monitoring aktywny $isUiRunning',
       notificationText: 'Ostatni sync: ${DateTime.now()}',
     );
   }
@@ -27,6 +33,13 @@ class MyTaskHandler extends TaskHandler {
   // Called when data is sent using `FlutterForegroundTask.sendDataToTask`.
   @override
   void onReceiveData(Object data) {
+    if (data is Map<String, dynamic>) {
+      if (data['event'] == 'app_lifecycle_change') {
+        final stateIndex = data['data']['state'] as int;
+        final state = AppLifecycleState.values[stateIndex];
+        isUiRunning = state == AppLifecycleState.resumed || state == AppLifecycleState.inactive;
+      }
+    }
     print('onReceiveData: $data');
   }
 
