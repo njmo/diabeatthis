@@ -13,7 +13,7 @@ void _initForegroundTask() {
       channelId: 'foreground',
       channelName: 'Foreground Service Notification',
       channelDescription:
-      'This notification appears when the foreground service is running.',
+      'This notification appears when the foreground controllers is running.',
       onlyAlertOnce: true,
     ),
     iosNotificationOptions: const IOSNotificationOptions(
@@ -31,7 +31,7 @@ void _initForegroundTask() {
 }
 
 Future<void> _checkAndRequestPermissions() async {
-  // Android 13+, you need to allow notification permission to display foreground service notification.
+  // Android 13+, you need to allow notification permission to display foreground controllers notification.
   //
   // iOS: If you need notification, ask for permission.
   final notificationPermission =
@@ -41,16 +41,16 @@ Future<void> _checkAndRequestPermissions() async {
   }
 
   if (Platform.isAndroid) {
-    // Android 12+, there are restrictions on starting a foreground service.
+    // Android 12+, there are restrictions on starting a foreground controllers.
     //
-    // To restart the service on device reboot or unexpected problem, you need to allow below permission.
+    // To restart the controllers on device reboot or unexpected problem, you need to allow below permission.
     if (!await FlutterForegroundTask.isIgnoringBatteryOptimizations) {
       // This function requires `android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` permission.
       await FlutterForegroundTask.requestIgnoreBatteryOptimization();
     }
 
     // Use this utility only if you provide services that require long-term survival,
-    // such as exact alarm service, healthcare service, or Bluetooth communication.
+    // such as exact alarm controllers, healthcare controllers, or Bluetooth communication.
     //
     // This utility requires the "android.permission.SCHEDULE_EXACT_ALARM" permission.
     // Using this permission may make app distribution difficult due to Google policy.

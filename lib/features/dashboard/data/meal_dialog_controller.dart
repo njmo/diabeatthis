@@ -4,7 +4,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../../core/notifications/domain/events/eat_now_event_notification.dart';
 import '../../../core/notifications/providers/local_notifications_controller_provider.dart';
+import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
 import 'meal_dialog_state.dart';
 import 'providers/device_status_provider.dart';
@@ -104,57 +106,28 @@ class MealDialogController extends _$MealDialogController {
   }
 
   Future<void> scheduleEatNotification({required int minutes}) async {
-    final localNotificationsPluginController = ref.read(
-      localNotificationsControllerProvider,
+    final notificationsPluginController = ref.read(
+      notificationsControllerUiProvider,
     );
-    final when = tz.TZDateTime.now(tz.local).add(Duration(minutes: minutes));
+    final when = Duration(minutes: minutes);
 
-    print("SCHEDULING NOTIFICATION ON ${when.toIso8601String()}");
+    print("SCHEDULING NOTIFICATION IN ${when.toString()}");
 
-    const details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'meal_wait_channel_v2',
-        'Meal Wait Notifications',
-        channelDescription: 'Reminders that you can start eating',
-        importance: Importance.max,
-        priority: Priority.high,
-        visibility: NotificationVisibility.public,
-        category: AndroidNotificationCategory.reminder,
-        actions: <AndroidNotificationAction>[
-          AndroidNotificationAction(
-            'meal_yes',
-            'Zaczynam jeść ✅',
-            showsUserInterface: false,
-            cancelNotification: true,
-          ),
-          AndroidNotificationAction(
-            'meal_not_yet',
-            'Jeszcze nie',
-            showsUserInterface: false,
-            cancelNotification: true,
-          ),
-        ],
-      ),
-      iOS: DarwinNotificationDetails(
-        categoryIdentifier: 'meal_category',
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      ),
-    );
+    try
+    {
+      final event = EatNowEventNotification(
+        mealId: mealId,
+        minutes: minutes,
+      );
 
-    final payload = jsonEncode({'mealId': mealId});
+      await notificationsPluginController.schedule(event, when);
 
-    final notificationId = mealId.hashCode & 0x7fffffff;
-
-    final pending = await localNotificationsPluginController.showLater(
-      id: notificationId,
-      title: 'Możesz już jeść 🍽️',
-      body: 'Minęło $minutes minut od podania insuliny.',
-      when: when,
-      details: details,
-      payload: payload,
-    );
-    print('Pending IDs: ${pending.map((p) => p.id).toList()}');
+      final pending = await notificationsPluginController.pending;
+      print('Pending IDs: $pending');
+    }
+    catch (e)
+    {
+      print('NJMO ERROR: $e');
+    }
   }
 }

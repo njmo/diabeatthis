@@ -55,7 +55,7 @@ class MealStatusDialog extends ConsumerWidget {
                       color: Colors.white70,
                     ),
                     child: InkWell(
-                      onTap: c.chooseSkip,
+                      onTap: c.chooseEat,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,

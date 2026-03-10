@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../core/data/provider/monitor_service_enabled_provider.dart';
-import '../core/notifications/providers/local_notifications_controller_provider.dart';
+import '../core/notifications/providers/notifications_controller_provider.dart';
 import 'lifecycle/app_foreground_bridge.dart';
 import 'providers/app_lifecycle_state_provider.dart';
 import 'router/observers/router_debug_observer.dart';
@@ -31,7 +31,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     _foregroundBridge.attach(_onReceiveTaskData);
 
     Future.microtask(() async {
-      await ref.read(localNotificationsControllerProvider).init();
+      await ref.read(notificationsControllerUiProvider).init();
       await _foregroundBridge.init();
 
       final enabled = ref.read(monitorServiceEnabledProvider);

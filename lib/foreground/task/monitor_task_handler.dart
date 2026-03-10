@@ -1,9 +1,6 @@
-// The callback function should always be a top-level or static function.
 import 'dart:ui';
 
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-
-import '../../app/providers/app_lifecycle_state_provider.dart';
 
 class MyTaskHandler extends TaskHandler {
   bool isUiRunning = false;

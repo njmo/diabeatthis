@@ -2,7 +2,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../definitions/notification_definition_catalog_impl.dart';
 import '../handlers/notification_response_handler.dart';
+import '../mappers/darwin_notification_category_mapper.dart';
 
 Future<void> init(FlutterLocalNotificationsPlugin plugin) async {
   tz.initializeTimeZones();
@@ -14,15 +16,9 @@ Future<void> init(FlutterLocalNotificationsPlugin plugin) async {
     requestAlertPermission: true,
     requestBadgePermission: true,
     requestSoundPermission: true,
-    notificationCategories: [
-      DarwinNotificationCategory(
-        'meal_category',
-        actions: [
-          DarwinNotificationAction.plain('meal_yes', 'Zaczynam jeść ✅'),
-          DarwinNotificationAction.plain('meal_not_yet', 'Jeszcze nie'),
-        ],
-      ),
-    ],
+    notificationCategories: DarwinNotificationCategoryMapper().mapDefinitions(
+      NotificationDefinitionCatalogImpl().all,
+    ),
   );
 
   final initSettings = InitializationSettings(
@@ -33,13 +29,16 @@ Future<void> init(FlutterLocalNotificationsPlugin plugin) async {
   await plugin.initialize(
     onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
     onDidReceiveBackgroundNotificationResponse:
-    onDidReceiveBackgroundNotificationResponse, settings: initSettings,
+        onDidReceiveBackgroundNotificationResponse,
+    settings: initSettings,
   );
 }
 
 Future<void> requestPermissions(FlutterLocalNotificationsPlugin plugin) async {
-  final android = plugin.resolvePlatformSpecificImplementation<
-      AndroidFlutterLocalNotificationsPlugin>();
+  final android = plugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
 
   await android?.requestNotificationsPermission();
 

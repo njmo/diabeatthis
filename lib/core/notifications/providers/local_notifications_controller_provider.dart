@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../service/local_notifications_controller.dart';
+import '../controllers/local_notifications_controller.dart';
 import 'local_notifications_plugin_provider.dart';
 
 part 'local_notifications_controller_provider.g.dart';

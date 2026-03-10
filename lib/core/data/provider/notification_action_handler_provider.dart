@@ -30,6 +30,7 @@ class NotificationActionHandler extends _$NotificationActionHandler {
     if (actionId == 'meal_yes') {
       ref.read(updateMealByIdProvider(mealId, 'eating'));
     }
+    // TODO: if null reschedule on foreground same notification
   }
 
   Future<void> handleBackground(NotificationResponse response) async {
