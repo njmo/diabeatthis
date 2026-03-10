@@ -33,30 +33,26 @@ class MealStatusDialog extends ConsumerWidget {
                       color: Colors.white70,
                     ),
                     child: InkWell(
-                      onTap: () {
-
-                        c.scheduleEatNotification(minutes: 1);
-                        Navigator.of(context).pop();
-                      },
-                        child: Column(
+                      onTap: c.chooseEat,
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                        Icon(Icons.restaurant_outlined, size: 60),
-                        Text('Zjem'),
+                          Icon(Icons.restaurant_outlined, size: 60),
+                          Text('Zjem'),
                         ],
-                        ),
                       ),
-                      ),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                      child: Container(
-                        padding: EdgeInsetsGeometry.all(10),
-                        decoration: BoxDecoration(
+                    ),
+                  ),
+                ),
+                SizedBox(width: 20),
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsetsGeometry.all(10),
+                    decoration: BoxDecoration(
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.all(Radius.circular(15)),
-                        color: Colors.white70,
+                      color: Colors.white70,
                     ),
                     child: InkWell(
                       onTap: c.chooseSkip,
@@ -79,7 +75,7 @@ class MealStatusDialog extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if(s.skipMeal) const Text("Potwierdź pominięcie posiłku"),
+              if (s.skipMeal) const Text("Potwierdź pominięcie posiłku"),
               if (s.skipMeal)
                 const Text("Zapiszemy, że posiłek został pominięty.")
               else if (s.advice.decision != null)
@@ -120,15 +116,18 @@ class MealStatusDialog extends ConsumerWidget {
             ElevatedButton(
               onPressed: () async {
                 if (context.mounted) {
-                  if(!s.skipMeal)
-                    {
-                      ref.read(insertAdviceProvider(meal, s.advice));
+                  if (!s.skipMeal) {
+                    ref.read(insertAdviceProvider(meal, s.advice));
 
-                      if(s.advice.wait != null) {
-                        c.scheduleEatNotification(minutes: s.advice.wait!.recommendedMinutes);
-                      }
+                    if (s.advice.wait != null) {
+                      c.scheduleEatNotification(
+                        minutes: s.advice.wait!.recommendedMinutes,
+                      );
                     }
-                    Navigator.of(context).pop(s.skipMeal ? 'skipped' : s.advice.decision!.status);
+                  }
+                  Navigator.of(
+                    context,
+                  ).pop(s.skipMeal ? 'skipped' : s.advice.decision!.status);
                 }
               },
               child: Text(_buttonText(s.advice.decision?.status)),

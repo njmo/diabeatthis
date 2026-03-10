@@ -4,8 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart' as tz;
 
-import '../../../core/local_notifications/providers/local_notifications_controller_provider.dart';
-import '../../../core/local_notifications/providers/local_notifications_plugin_provider.dart';
+import '../../../core/notifications/providers/local_notifications_controller_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
 import 'meal_dialog_state.dart';
 import 'providers/device_status_provider.dart';
@@ -105,7 +104,9 @@ class MealDialogController extends _$MealDialogController {
   }
 
   Future<void> scheduleEatNotification({required int minutes}) async {
-    final localNotificationsPluginController = ref.read(localNotificationsControllerProvider);
+    final localNotificationsPluginController = ref.read(
+      localNotificationsControllerProvider,
+    );
     final when = tz.TZDateTime.now(tz.local).add(Duration(minutes: minutes));
 
     print("SCHEDULING NOTIFICATION ON ${when.toIso8601String()}");

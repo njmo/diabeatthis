@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../core/data/provider/monitor_service_enabled_provider.dart';
-import '../core/local_notifications/providers/local_notifications_controller_provider.dart';
+import '../core/notifications/providers/local_notifications_controller_provider.dart';
 import 'lifecycle/app_foreground_bridge.dart';
 import 'providers/app_lifecycle_state_provider.dart';
 import 'router/observers/router_debug_observer.dart';
@@ -38,7 +38,6 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       if (enabled) {
         await _foregroundBridge.startMonitoring();
       }
-
     });
   }
 
@@ -54,8 +53,8 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     ref.read(appLifecycleProvider.notifier).setState(state);
     print('sending ${state.toString()}');
     _foregroundBridge.sendDataToTask({
-      'event' : 'app_lifecycle_change',
-      'data' : { 'state' : state.index },
+      'event': 'app_lifecycle_change',
+      'data': {'state': state.index},
     });
   }
 
@@ -68,9 +67,9 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         navigatorObservers: () => [AutoRouteDebugObserver()],
       ),
       theme: ThemeData(
-      textTheme: GoogleFonts.nunitoSansTextTheme(),
-      useMaterial3: true,
-    ),
+        textTheme: GoogleFonts.nunitoSansTextTheme(),
+        useMaterial3: true,
+      ),
     );
   }
 }

@@ -6,8 +6,7 @@ import '../guards/nightscout_config_guard.dart';
 part 'app_router_provider.g.dart';
 
 @riverpod
-AppRouter appRouter(Ref ref)
-{
+AppRouter appRouter(Ref ref) {
   final guard = NightscoutGuard(ref);
   final appRouter = AppRouter(guard);
   return appRouter;
