@@ -9,13 +9,23 @@ Future<void> init(FlutterLocalNotificationsPlugin plugin) async {
   tz.setLocalLocation(tz.getLocation('Europe/Warsaw'));
 
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const iosInit = DarwinInitializationSettings(
+
+  final iosInit = DarwinInitializationSettings(
     requestAlertPermission: true,
     requestBadgePermission: true,
     requestSoundPermission: true,
+    notificationCategories: [
+      DarwinNotificationCategory(
+        'meal_category',
+        actions: [
+          DarwinNotificationAction.plain('meal_yes', 'Zaczynam jeść ✅'),
+          DarwinNotificationAction.plain('meal_not_yet', 'Jeszcze nie'),
+        ],
+      ),
+    ],
   );
 
-  const initSettings = InitializationSettings(
+  final initSettings = InitializationSettings(
     android: androidInit,
     iOS: iosInit,
   );

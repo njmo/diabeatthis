@@ -2,8 +2,6 @@ import Flutter
 import UIKit
 import flutter_local_notifications
 
-#import <flutter_foreground_task/FlutterForegroundTaskPlugin.h>
-
 @main
 @objc class AppDelegate: FlutterAppDelegate {
   override func application(

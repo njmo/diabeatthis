@@ -135,6 +135,12 @@ class MealDialogController extends _$MealDialogController {
           ),
         ],
       ),
+      iOS: DarwinNotificationDetails(
+        categoryIdentifier: 'meal_category',
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
 
     final payload = jsonEncode({'mealId': mealId});
