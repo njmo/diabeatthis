@@ -4,7 +4,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart' as tz;
 
-import '../../../app/router/providers/flutter_local_notifications_plugin_provider.dart';
+import '../../../core/local_notifications/providers/local_notifications_controller_provider.dart';
+import '../../../core/local_notifications/providers/local_notifications_plugin_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
 import 'meal_dialog_state.dart';
 import 'providers/device_status_provider.dart';
@@ -103,10 +104,8 @@ class MealDialogController extends _$MealDialogController {
     }
   }
 
-  Future<void> scheduleEatNotification({
-    required int minutes,
-  }) async {
-    final plugin = ref.read(flutterLocalNotificationsPluginProvider);
+  Future<void> scheduleEatNotification({required int minutes}) async {
+    final localNotificationsPluginController = ref.read(localNotificationsControllerProvider);
     final when = tz.TZDateTime.now(tz.local).add(Duration(minutes: minutes));
 
     print("SCHEDULING NOTIFICATION ON ${when.toIso8601String()}");
@@ -137,23 +136,19 @@ class MealDialogController extends _$MealDialogController {
       ),
     );
 
-    final payload = jsonEncode({
-      'mealId': mealId,
-    });
+    final payload = jsonEncode({'mealId': mealId});
 
     final notificationId = mealId.hashCode & 0x7fffffff;
 
-    await plugin.zonedSchedule(
+    final pending = await localNotificationsPluginController.show(
       id: notificationId,
-      scheduledDate: when,
-      notificationDetails: details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       title: 'Możesz już jeść 🍽️',
       body: 'Minęło $minutes minut od podania insuliny.',
-      payload: payload
+      when: when,
+      details: details,
+      notificationId: notificationId,
+      payload: payload,
     );
-
-    final pending = await plugin.pendingNotificationRequests();
     print('Pending IDs: ${pending.map((p) => p.id).toList()}');
   }
 }

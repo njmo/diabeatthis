@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../ui_features/meals/data/providers/meal_database_provider.dart';
+import '../../../features/meals/data/providers/meal_database_provider.dart';
 
 part 'notification_action_handler_provider.g.dart';
 

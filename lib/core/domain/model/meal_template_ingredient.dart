@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../ui_features/ingredients/data/drafts/ingredient_portion_draft.dart';
+import '../../../features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import 'ingredient.dart';
 import 'meal_template.dart';
 

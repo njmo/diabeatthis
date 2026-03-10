@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import '../../core/data/provider/notification_action_handler_provider.dart';
-import '../app_container.dart';
+import '../../data/provider/notification_action_handler_provider.dart';
+import '../../../app/app_container.dart';
 
 @pragma('vm:entry-point')
 void onDidReceiveNotificationResponse(NotificationResponse response) {

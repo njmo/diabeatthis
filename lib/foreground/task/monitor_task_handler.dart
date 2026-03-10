@@ -1,11 +1,6 @@
 // The callback function should always be a top-level or static function.
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
-@pragma('vm:entry-point')
-void startCallback() {
-  FlutterForegroundTask.setTaskHandler(MyTaskHandler());
-}
-
 class MyTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
@@ -23,7 +18,7 @@ class MyTaskHandler extends TaskHandler {
     );
   }
 
-  // Called when the task is destroyed.
+  // Called when the handlers is destroyed.
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
     print('onDestroy(isTimeout: $isTimeout)');

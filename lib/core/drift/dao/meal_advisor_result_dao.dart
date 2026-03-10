@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import '../../../ui_features/dashboard/data/utils/meal_advisor.dart';
+import '../../../features/dashboard/data/utils/meal_advisor.dart';
 import '../database_impl.dart';
 
 part 'meal_advisor_result_dao.g.dart';

@@ -1,9 +1,9 @@
 import 'package:auto_route/auto_route.dart';
 
-import '../../ui_features/dashboard/presentation/screens/dashboard_page.dart';
-import '../../ui_features/meals/presentation/screens/add_meal_page.dart';
-import '../../ui_features/settings/presentation/screens/settings_page.dart';
-import '../../ui_features/test/presentation/screens/test_page.dart';
+import '../../features/dashboard/presentation/screens/dashboard_page.dart';
+import '../../features/meals/presentation/screens/add_meal_page.dart';
+import '../../features/settings/presentation/screens/settings_page.dart';
+import '../../features/test/presentation/screens/test_page.dart';
 import 'guards/nightscout_config_guard.dart';
 
 part 'app_router.gr.dart';

@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
-Future<void> init() async{
+Future<void> initForegroundPlugin() async{
   await _checkAndRequestPermissions();
   _initForegroundTask();
 }
@@ -10,7 +10,7 @@ Future<void> init() async{
 void _initForegroundTask() {
   FlutterForegroundTask.init(
     androidNotificationOptions: AndroidNotificationOptions(
-      channelId: 'foreground_service',
+      channelId: 'foreground',
       channelName: 'Foreground Service Notification',
       channelDescription:
       'This notification appears when the foreground service is running.',
