@@ -12,7 +12,7 @@
 
 import 'package:flutter_test/flutter_test.dart';
 
-import '../features/dashboard/data/utils/meal_advisor.dart';
+import '../ui_features/dashboard/data/utils/meal_advisor.dart';
 
 class MealTestCase {
   final String name;
