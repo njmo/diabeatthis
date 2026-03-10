@@ -147,13 +147,12 @@ class MealDialogController extends _$MealDialogController {
 
     final notificationId = mealId.hashCode & 0x7fffffff;
 
-    final pending = await localNotificationsPluginController.show(
+    final pending = await localNotificationsPluginController.showLater(
       id: notificationId,
       title: 'Możesz już jeść 🍽️',
       body: 'Minęło $minutes minut od podania insuliny.',
       when: when,
       details: details,
-      notificationId: notificationId,
       payload: payload,
     );
     print('Pending IDs: ${pending.map((p) => p.id).toList()}');

@@ -25,17 +25,33 @@ class LocalNotificationsController {
     }
   }
 
-  Future<List<PendingNotificationRequest>> show({
+  Future<void> showNow({
+    required int id,
+    required String title,
+    required String body,
+    required NotificationDetails details,
+    String? payload,
+  })
+  {
+    return _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: details,
+      payload: payload,
+    );
+  }
+
+  Future<List<PendingNotificationRequest>> showLater({
     required int id,
     required String title,
     required String body,
     required TZDateTime when,
     required NotificationDetails details,
-    required int notificationId,
     String? payload,
   }) async {
     await _plugin.zonedSchedule(
-        id: notificationId,
+        id: id,
         scheduledDate: when,
         notificationDetails: details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
