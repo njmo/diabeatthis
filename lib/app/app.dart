@@ -5,6 +5,9 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../core/data/provider/monitor_service_enabled_provider.dart';
 import '../core/notifications/providers/notifications_controller_provider.dart';
+import '../foreground/event/app_event.dart';
+import '../common/task_events/app_event_payload.dart';
+import '../common/task_events/payloads/app_lifecycle_payload.dart';
 import 'lifecycle/app_foreground_bridge.dart';
 import 'providers/app_lifecycle_state_provider.dart';
 import 'router/observers/router_debug_observer.dart';
@@ -60,10 +63,9 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     ref.read(appLifecycleProvider.notifier).setState(state);
     print('sending ${state.toString()}');
-    _foregroundBridge.sendDataToTask({
-      'event': 'app_lifecycle_change',
-      'data': {'state': state.index},
-    });
+
+    final AppEventPayload payload = AppLifecyclePayload(state: state.index);
+    _foregroundBridge.sendDataToTask(payload.toEventJson());
   }
 
   @override

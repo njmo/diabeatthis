@@ -8,6 +8,7 @@ typedef ValueFormatter = String Function(Object? value);
 
 final class RiverpodDebugObserver extends ProviderObserver {
   RiverpodDebugObserver({
+    this.env = 'ui',
     Logger? logger,
     this.includeNames,
     this.excludeNames,
@@ -32,6 +33,7 @@ final class RiverpodDebugObserver extends ProviderObserver {
   final bool prettyAsyncValue;
   final int maxValueLength;
   final bool trackDurations;
+  String env;
 
   final LogFormat format;
   final ValueFormatter? valueFormatter;
@@ -138,6 +140,7 @@ final class RiverpodDebugObserver extends ProviderObserver {
 
     if (format == LogFormat.jsonl) {
       final map = <String, Object?>{
+        'env': env,
         'ts': ts,
         'event': event, // add/update/dispose
         'provider': provider,
@@ -150,6 +153,7 @@ final class RiverpodDebugObserver extends ProviderObserver {
     } else {
       // key=value (łatwe do grepowania i czytelne)
       final parts = <String>[
+        'env=$env',
         'ts=$ts',
         'event=$event',
         'provider=$provider',

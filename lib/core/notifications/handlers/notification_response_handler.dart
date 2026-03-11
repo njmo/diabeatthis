@@ -7,7 +7,7 @@ import '../../../app/app_container.dart';
 @pragma('vm:entry-point')
 void onDidReceiveNotificationResponse(NotificationResponse response) {
   debugPrint(
-    'BG RESPONSE: actionId=${response.actionId} payload=${response.payload}',
+    'BG RESPONSE: actionId=${response.actionId} payloads=${response.payload}',
   );
 
   appContainer
@@ -18,7 +18,7 @@ void onDidReceiveNotificationResponse(NotificationResponse response) {
 @pragma('vm:entry-point')
 void onDidReceiveBackgroundNotificationResponse(NotificationResponse response) {
   debugPrint(
-    'BG BACKGROUND RESPONSE: actionId=${response.actionId} payload=${response.payload}',
+    'BG BACKGROUND RESPONSE: actionId=${response.actionId} payloads=${response.payload}',
   );
 
   appContainer
