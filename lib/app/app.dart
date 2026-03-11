@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../core/data/provider/monitor_service_enabled_provider.dart';
 import '../core/notifications/providers/notifications_controller_provider.dart';
@@ -23,6 +24,12 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     // ref to handle
   }
 
+  Future<void> prepareApp() async {
+    await Permission.activityRecognition.request();
+    await Permission.ignoreBatteryOptimizations.request();
+    await Permission.notification.request();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +38,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     _foregroundBridge.attach(_onReceiveTaskData);
 
     Future.microtask(() async {
+      await prepareApp();
       await ref.read(notificationsControllerUiProvider).init();
       await _foregroundBridge.init();
 
