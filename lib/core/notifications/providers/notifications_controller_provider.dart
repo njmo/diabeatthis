@@ -9,14 +9,20 @@ part 'notifications_controller_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 NotificationsController notificationsControllerUi(Ref ref) {
-  final notificationsController = NotificationsControllerImpl(ref, InAppNotificationsController());
+  final notificationsController = NotificationsControllerImpl(
+    ref,
+    InAppNotificationsController(),
+  );
 
   return notificationsController;
 }
 
 @Riverpod(keepAlive: true)
 NotificationsController notificationsControllerForeground(Ref ref) {
-  final notificationsController = NotificationsControllerImpl(ref, ForegroundTaskNotificationController());
+  final notificationsController = NotificationsControllerImpl(
+    ref,
+    ForegroundTaskNotificationController(ref),
+  );
 
   return notificationsController;
 }

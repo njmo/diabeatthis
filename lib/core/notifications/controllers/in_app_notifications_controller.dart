@@ -6,7 +6,9 @@ class InAppNotificationsController implements NotificationsController{
 
   Future<void> init() async {}
 
-  Future<void> show(NotificationEvent event) async {}
+  Future<void> show(NotificationEvent event) async {
+    print("IN APP NOTIFICATION: ${event.title}, ${event.toPayload().toString()}");
+  }
 
   @override
   Future<void> cancel(int id) {

@@ -113,20 +113,14 @@ class MealDialogController extends _$MealDialogController {
 
     print("SCHEDULING NOTIFICATION IN ${when.toString()}");
 
-    try
-    {
-      final event = EatNowEventNotification(
-        mealId: mealId,
-        minutes: minutes,
-      );
+    try {
+      final event = EatNowNotificationEvent(mealId: mealId, minutes: minutes);
 
       await notificationsPluginController.schedule(event, when);
 
       final pending = await notificationsPluginController.pending;
       print('Pending IDs: $pending');
-    }
-    catch (e)
-    {
+    } catch (e) {
       print('NJMO ERROR: $e');
     }
   }

@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../app_event_payload.dart';
+import '../../app_event_payload.dart';
 
 part 'app_lifecycle_payload.freezed.dart';
 part 'app_lifecycle_payload.g.dart';

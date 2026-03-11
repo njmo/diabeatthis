@@ -15,7 +15,7 @@ Future<void> bootstrap(BootstrapBuilder builder) async {
       // Ensure binding inside the same zone as runApp ✅
       WidgetsFlutterBinding.ensureInitialized();
 
-      // Also set error handlers inside this zone
+      // Also set error app inside this zone
       FlutterError.onError = (FlutterErrorDetails details) {
         FlutterError.presentError(details);
         // send to crash reporter if you like

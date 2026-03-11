@@ -1,13 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../common/events/app_event_payload.dart';
+import '../common/events/payloads/app/app_lifecycle_payload.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
 import '../core/notifications/providers/notifications_controller_provider.dart';
-import '../foreground/event/app_event.dart';
-import '../common/task_events/app_event_payload.dart';
-import '../common/task_events/payloads/app_lifecycle_payload.dart';
+import 'event/task/task_event_handler.dart';
 import 'lifecycle/app_foreground_bridge.dart';
 import 'providers/app_lifecycle_state_provider.dart';
 import 'router/observers/router_debug_observer.dart';
@@ -22,9 +24,14 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   final AppForegroundBridge _foregroundBridge = AppForegroundBridge();
+  late TaskEventHandler? _taskEventHandler;
 
   void _onReceiveTaskData(Object data) {
-    // ref to handle
+    if (data is String) {
+      final map = jsonDecode(data) as Map<String, dynamic>;
+      _taskEventHandler!.handle(map);
+    }
+    print('onReceiveData: $data');
   }
 
   Future<void> prepareApp() async {
@@ -39,6 +46,8 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     _foregroundBridge.attach(_onReceiveTaskData);
+
+    _taskEventHandler = TaskEventHandler(ref);
 
     Future.microtask(() async {
       await prepareApp();
@@ -65,7 +74,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     print('sending ${state.toString()}');
 
     final AppEventPayload payload = AppLifecyclePayload(state: state.index);
-    _foregroundBridge.sendDataToTask(payload.toEventJson());
+    _foregroundBridge.sendDataToTask(payload.toAppEventJson());
   }
 
   @override

@@ -1,19 +1,25 @@
+import 'dart:convert';
+
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers/app_lifecycle_state_provider.dart';
 import '../../app/router/observers/riverpod_debug_observer.dart';
-import '../event/handlers/task_event_handler.dart';
+import '../../core/notifications/domain/events/eat_now_event_notification.dart';
+import '../../core/notifications/providers/notifications_controller_provider.dart';
+import '../event/app/app_event_handler.dart';
 
 class MyTaskHandler extends TaskHandler {
   bool isUiRunning = false;
   ProviderContainer? _container;
+  AppEventHandler? _appEventHandler;
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     _container = ProviderContainer(
       observers: [RiverpodDebugObserver(env: 'fg')],
     );
+    _appEventHandler = AppEventHandler(_container!);
 
     await FlutterForegroundTask.updateService(
       notificationTitle: 'Monitoring aktywny',
@@ -39,9 +45,9 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   void onReceiveData(Object data) {
-    final uiEventHandler = TaskEventHandler(_container!);
-    if (data is Map<String, dynamic>) {
-      uiEventHandler.handle(data);
+    if (data is String) {
+      final map = jsonDecode(data) as Map<String, dynamic>;
+      _appEventHandler!.handle(map);
     }
     print('onReceiveData: $data');
   }
