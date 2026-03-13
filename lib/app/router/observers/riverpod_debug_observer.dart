@@ -8,7 +8,7 @@ typedef ValueFormatter = String Function(Object? value);
 
 final class RiverpodDebugObserver extends ProviderObserver {
   RiverpodDebugObserver({
-    this.env = 'task',
+    this.env = 'router',
     Logger? logger,
     this.includeNames,
     this.excludeNames,

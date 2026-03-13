@@ -5,12 +5,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../common/events/app_event_payload.dart';
-import '../common/events/payloads/app/app_lifecycle_payload.dart';
+import '../common/events/data/app_event_data.dart';
+import '../common/events/data/app/lifecycle_state_event.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
 import '../core/notifications/providers/notifications_controller_provider.dart';
 import 'event/task/task_event_handler.dart';
 import 'lifecycle/app_foreground_bridge.dart';
+import 'providers/app_event_router_provider.dart';
 import 'providers/app_lifecycle_state_provider.dart';
 import 'router/observers/router_debug_observer.dart';
 import 'router/providers/app_router_provider.dart';
@@ -73,8 +74,8 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     ref.read(appLifecycleProvider.notifier).setState(state);
     print('sending ${state.toString()}');
 
-    final AppEventPayload payload = AppLifecyclePayload(state: state.index);
-    _foregroundBridge.sendDataToTask(payload.toAppEventJson());
+    final AppEventData payload = LifecycleStateEvent.changed(state: state.index);
+    ref.read(appEventRouterProvider).send(payload);
   }
 
   @override

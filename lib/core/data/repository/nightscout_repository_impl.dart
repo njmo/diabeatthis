@@ -143,7 +143,7 @@ class NightscoutRepositoryImpl implements NightscoutRepository {
       'find[date][\$gte]': after.millisecondsSinceEpoch.toString(),
       'count': '288',
     };
-    final url = _buildUri('/api/v1/model.json', qp);
+    final url = _buildUri('/api/v1/base.json', qp);
     final data = await service.fetchNightscoutData(url);
 
     return (data as List)

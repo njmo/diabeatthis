@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../common/events/payloads/task/task_in_app_notification_payload.dart';
+import '../../../common/events/data/task/task_in_app_notification_payload.dart';
 import '../../../common/events/task_event_payload.dart';
 
 part 'task_event.freezed.dart';
@@ -24,7 +24,7 @@ sealed class TaskEvent with _$TaskEvent {
     return switch (payload) {
       final TaskInAppNotificationPayload p => TaskEvent.taskInAppNotification(data: p),
       _ => throw UnsupportedError(
-        'Unsupported payloads type: ${payload.runtimeType}',
+        'Unsupported data type: ${payload.runtimeType}',
       ),
     };
   }

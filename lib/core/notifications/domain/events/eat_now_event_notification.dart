@@ -12,6 +12,9 @@ class EatNowNotificationEvent implements NotificationEvent {
   NotificationEventType get type => NotificationEventType.eatNow;
 
   @override
+  String get notificationResponseEvent => 'eat_now_response';
+
+  @override
   NotificationKey get key => NotificationKey(type: type, entityId: mealId);
 
   @override
@@ -21,7 +24,13 @@ class EatNowNotificationEvent implements NotificationEvent {
   String get body => 'Minęło $minutes minut od podania insuliny.';
 
   @override
-  Map<String, Object?> toPayload() => {'mealId': mealId, 'minutes': minutes};
+  Map<String, Object?> toPayload() => {
+    'response_event_type': notificationResponseEvent,
+    'action_data': {'mealId': mealId},
+  };
+
+  @override
+  Map<String, Object?> toJson() => {'mealId': mealId, 'minutes': minutes};
 
   factory EatNowNotificationEvent.fromPayload(Map<String, dynamic> json) {
     return EatNowNotificationEvent(

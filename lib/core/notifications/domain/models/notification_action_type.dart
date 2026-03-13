@@ -1,15 +1,15 @@
 enum NotificationActionType {
-  mealYes,
-  mealNotYet,
+  eating,
+  dismiss,
 }
 
 extension NotificationActionTypeExtension on NotificationActionType {
   String toDarwinString() {
     switch (this) {
-      case NotificationActionType.mealYes:
-        return 'meal_yes';
-      case NotificationActionType.mealNotYet:
-        return 'meal_not_yet';
+      case NotificationActionType.eating:
+        return 'eating';
+      case NotificationActionType.dismiss:
+        return 'dismiss';
     }
   }
 }

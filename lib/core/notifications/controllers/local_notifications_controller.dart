@@ -11,7 +11,7 @@ import '../handlers/notification_response_handler.dart';
 import '../mappers/android_notification_details_mapper.dart';
 import '../mappers/darwin_notification_details_mapper.dart';
 
-class LocalNotificationsController implements NotificationsController{
+class LocalNotificationsController implements NotificationsController {
   LocalNotificationsController(this._plugin)
     : _idFactory = HashNotificationIdFactory();
 

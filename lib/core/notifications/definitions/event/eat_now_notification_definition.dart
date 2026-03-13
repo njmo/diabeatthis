@@ -6,10 +6,10 @@ import '../../domain/models/notification_event_type.dart';
 
 const mealReadyNotificationDefinition = NotificationDefinition(
   type: NotificationEventType.eatNow,
-  categoryId: 'meal_category',
+  categoryId: 'eat_now',
   actions: <NotificationActionDef>[
-    NotificationActionDef(type: NotificationActionType.mealYes, label: 'Zaczynam jeść ✅'),
-    NotificationActionDef(type: NotificationActionType.mealNotYet, label: 'Jeszcze nie'),
+    NotificationActionDef(type: NotificationActionType.eating, label: 'Zaczynam jeść ✅'),
+    NotificationActionDef(type: NotificationActionType.dismiss, label: 'Jeszcze nie'),
   ],
   channelType: NotificationChannelType.meal,
 );

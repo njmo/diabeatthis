@@ -1,7 +1,7 @@
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../bootstrap/foreground_plugin_init.dart';
-import '../task/foreground_start_callback.dart';
+import '../bootstrap/foreground_start_callback.dart';
 
 class ForegroundServiceController {
   Future<void> init() async {
