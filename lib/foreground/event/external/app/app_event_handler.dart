@@ -1,15 +1,15 @@
-import '../../../runtime/event_dispatcher.dart';
+import '../../../runtime/workflow_scheduler.dart';
 import 'app_event.dart';
 
 class AppEventHandler {
-  final EventDispatcher _dispatcher;
+  final WorkflowScheduler _workflowScheduler;
 
-  AppEventHandler(this._dispatcher);
+  AppEventHandler(this._workflowScheduler);
 
   void handle(AppEvent event) {
     event.when(
       appLifecycleState: (final data) {
-        _dispatcher.dispatch(data);
+        _workflowScheduler.emitEvent(data);
       },
     );
   }

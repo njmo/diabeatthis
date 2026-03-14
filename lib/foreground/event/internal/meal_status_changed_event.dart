@@ -36,6 +36,11 @@ sealed class MealStatusChangedEvent with _$MealStatusChangedEvent implements For
     required int mealId,
   }) = MealBolusedEatingEvent;
 
+  const factory MealStatusChangedEvent.eatenBolused({
+    required int mealId,
+  }) = MealFinishedEatingBolusedEvent;
+
+
   factory MealStatusChangedEvent.fromJson(Map<String, dynamic> json) =>
       _$MealStatusChangedEventFromJson(json);
 }

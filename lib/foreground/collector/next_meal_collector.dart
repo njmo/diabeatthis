@@ -4,6 +4,7 @@ import '../../core/drift/database_impl.dart';
 import '../../core/drift/providers/database_provider.dart';
 import '../event/internal/meal_event.dart';
 import '../runtime/event_dispatcher.dart';
+import '../runtime/workflow_scheduler.dart';
 import 'foreground_collector.dart';
 
 final watchNearestMealStatusProvider =
@@ -15,13 +16,14 @@ StreamProvider<MealData?>((ref) {
 
 class NextMealCollector extends ForegroundCollector {
   final ProviderContainer _container;
+  final WorkflowScheduler _scheduler;
 
   late final ProviderSubscription _subscription;
 
-  bool _changeDetected = false;
-  MealData? _history;
+  NextMealCollector(this._container, this._scheduler);
 
-  NextMealCollector(this._container) {
+  @override
+  void start(){
     _subscription = _container.listen<AsyncValue<MealData?>>(
       watchNearestMealStatusProvider,
           (previous, next) {
@@ -29,9 +31,7 @@ class NextMealCollector extends ForegroundCollector {
           print("Nearest meal from database $data");
           if (data == null) return;
           print("Detected change in from database for nearest meal ${data.id} status : ${data.status} at ${DateTime.fromMillisecondsSinceEpoch(data.plannedAt).toIso8601String()}");
-
-          _changeDetected = true;
-          _history = data;
+          _scheduler.emitEvent(NextMealEvent(data.id, DateTime.fromMillisecondsSinceEpoch(data.plannedAt)));
         });
       },
       fireImmediately: true,
@@ -39,19 +39,7 @@ class NextMealCollector extends ForegroundCollector {
   }
 
   @override
-  Future<void> collect(EventDispatcher dispatcher) async {
-    if (!_changeDetected) return;
-
-    _changeDetected = false;
-
-    final history = _history;
-    if (history == null) return;
-
-    print('Detected new next meal $history');
-    dispatcher.dispatch(NextMealEvent(history.id));
-  }
-
-  void dispose() {
+  Future<void> dispose() async {
     _subscription.close();
   }
 }

@@ -9,11 +9,11 @@ class ExternalEventHandler {
   final AppEventHandler _appEventHandler;
   final NotificationResponseEventHandler _notificationResponseEventHandler;
 
-  ExternalEventHandler(container, dispatcher)
-    : _appEventHandler = AppEventHandler(dispatcher),
+  ExternalEventHandler(container, scheduler)
+    : _appEventHandler = AppEventHandler(scheduler),
       _notificationResponseEventHandler = NotificationResponseEventHandler(
         container,
-        dispatcher,
+        scheduler,
       );
 
   void handle(Map<String, dynamic> event) {

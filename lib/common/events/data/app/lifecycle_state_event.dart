@@ -12,7 +12,7 @@ abstract class LifecycleStateEvent
 
   const factory LifecycleStateEvent.changed({
     required int state,
-  }) = _LifecycleStateEventChanged;
+  }) = LifecycleStateEventChanged;
 
   factory LifecycleStateEvent.fromJson(Map<String, dynamic> json) =>
       _$LifecycleStateEventFromJson(json);

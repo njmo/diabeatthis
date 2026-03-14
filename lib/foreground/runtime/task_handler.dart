@@ -8,20 +8,16 @@ import '../collector/foreground_collector.dart';
 import '../collector/meal_status_collector.dart';
 import '../collector/next_meal_collector.dart';
 import '../event/external/external_event_handler.dart';
-import '../task/base/task_context.dart';
 import '../task/tasks/meal_monitor_task.dart';
 import '../task/tasks/service_status_updater_task.dart';
-import 'event_dispatcher.dart';
-import 'task_scheduler.dart';
+import 'workflow_scheduler.dart';
 
 class MyTaskHandler extends TaskHandler {
   bool isUiRunning = false;
 
   ProviderContainer? _container;
   ExternalEventHandler? _externalEventHandler;
-  EventDispatcher? _dispatcher;
-  TaskScheduler? _taskScheduler;
-  TaskContext? _taskContext;
+  WorkflowScheduler? _taskScheduler;
   List<ForegroundCollector>? _collectors;
 
   @override
@@ -30,24 +26,29 @@ class MyTaskHandler extends TaskHandler {
       observers: [RiverpodDebugObserver(env: 'fg')],
     );
 
-    _dispatcher = EventDispatcher();
-
-    _externalEventHandler = ExternalEventHandler(_container!, _dispatcher!);
-
-    _taskContext = TaskContext(
-      container: _container!,
-      dispatcher: _dispatcher!,
-    );
-
-    _taskScheduler = TaskScheduler(
-      context: _taskContext!,
-      tasks: [MealMonitorTask(), ServiceStatusUpdaterTask()],
+    _taskScheduler = WorkflowScheduler(
+      tasks: [
+        MealMonitorTask(),
+        ServiceStatusUpdaterTask(),
+      ],
     );
 
     _collectors = [
-      MealStatusCollector(_container!),
-      NextMealCollector(_container!),
+      MealStatusCollector(
+        _container!,
+        _taskScheduler!,
+      ),
+      NextMealCollector(
+        _container!,
+        _taskScheduler!,
+      ),
     ];
+
+    for (final collector in _collectors!) {
+      collector.start();
+    }
+
+    _externalEventHandler = ExternalEventHandler(_container!, _taskScheduler!);
 
     await FlutterForegroundTask.updateService(
       notificationTitle: 'Monitoring aktywny',
@@ -57,30 +58,7 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   Future<void> onRepeatEvent(DateTime timestamp) async {
-    for (final collector in _collectors!) {
-      try {
-        await collector.collect(_dispatcher!);
-      } catch (e, st) {
-        print('Error in collector.collect(): $e\n$st');
-      }
-    }
-
-    while (_dispatcher!.hasPendingEvents) {
-      final event = _dispatcher!.tryDequeue();
-      if (event == null) break;
-
-      try {
-        await _taskScheduler!.handleEvent(event);
-      } catch (e, st) {
-        print('Error in scheduler.handleEvent($event): $e\n$st');
-      }
-    }
-
-    try {
-      await _taskScheduler!.tick();
-    } catch (e, st) {
-      print('Error in scheduler.tick(): $e\n$st');
-    }
+    // do nothing now
   }
 
   @override
@@ -88,9 +66,7 @@ class MyTaskHandler extends TaskHandler {
     _container?.dispose();
     _container = null;
     _externalEventHandler = null;
-    _dispatcher = null;
     _taskScheduler = null;
-    _taskContext = null;
 
     print('onDestroy(isTimeout: $isTimeout)');
   }
