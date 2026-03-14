@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'notification/notification_response_event.dart';
 import 'app/app_event.dart';
+import 'notification/notification_response_event.dart';
 
 part 'external_event.freezed.dart';
 part 'external_event.g.dart';

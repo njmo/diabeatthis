@@ -52,16 +52,9 @@ class MealStatusCollector extends ForegroundCollector {
     final history = _history;
     if (history == null) return;
 
-    print('Collecting meal status history $history');
-
-    if(history.status == 'eating') {
-      print('Eating meal ${history.mealId}');
-      dispatcher.dispatch(MealStatusChangedEvent.startedEating(mealId: history.mealId));
-    }
-    if(history.status == 'eaten') {
-      print('Eaten meal ${history.mealId}');
-      dispatcher.dispatch(MealStatusChangedEvent.finishedEating(mealId: history.mealId));
-    }
+    print('Collecting meal status history for ${history.mealId} status : ${history.status}');
+    final event = MealStatusChangedEvent.fromJson({'kind' : history.status, 'mealId' : history.mealId});
+    dispatcher.dispatch(event);
   }
 
   void dispose() {

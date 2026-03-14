@@ -7,25 +7,54 @@ part 'meal_dao.g.dart';
 class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   MealDao(super.db);
 
-void updateMealStatus(int id, String status) async {
-    await (update(db.meal)..where((t) => t.id.equals(id)))
-        .write(MealCompanion(status: Value(status)));
+  void updateMealStatus(int id, String status) async {
+    await (update(db.meal)..where((t) => t.id.equals(id))).write(
+      MealCompanion(status: Value(status)),
+    );
   }
 
-  Stream<List<MealData>> getAllMealForToday()
-  {
+  Stream<List<MealData>> getAllMealForToday() {
     final now = DateTime.now();
+    final todayMillisecondsSinceEpoch = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).millisecondsSinceEpoch;
     final query = select(db.meal)
-      ..where((tbl) => tbl.plannedAt.isBiggerThanValue(DateTime(now.year, now.month, now.day , 0, 0, 0).millisecondsSinceEpoch))
+      ..where(
+        (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
+      )
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)]);
     return query.watch();
   }
 
-  Stream<List<MealData>> getAllPlannedMealForToday()
-  {
+  Stream<MealData> getNearestMeal() {
     final now = DateTime.now();
+    final todayMillisecondsSinceEpoch = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).millisecondsSinceEpoch;
     final query = select(db.meal)
-      ..where((tbl) => tbl.plannedAt.isBiggerThanValue(DateTime(now.year, now.month, now.day , 0, 0, 0).millisecondsSinceEpoch))
+      ..where(
+        (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
+      )
+      ..where((tbl) => tbl.status.equals('planned'))
+      ..orderBy([(m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.asc)]);
+    return query.watchSingle();
+  }
+
+  Stream<List<MealData>> getAllPlannedMealForToday() {
+    final now = DateTime.now();
+    final todayMillisecondsSinceEpoch = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).millisecondsSinceEpoch;
+    final query = select(db.meal)
+      ..where(
+        (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
+      )
       ..where((tbl) => tbl.status.contains('eaten').not())
       ..where((tbl) => tbl.status.equals('skipped').not())
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)]);

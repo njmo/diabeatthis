@@ -17,13 +17,29 @@ class MealMonitorTask extends ForegroundTask {
   Future<void> onEvent(ForegroundEvent event, TaskContext context) async {
     if (event is MealStatusChangedEvent) {
       event.when(
-        startedEating: (mealId) {
+        eating: (mealId) {
           print('MealMonitorTask: started eating meal $mealId');
           _activeMealId = mealId;
         },
-        finishedEating: (mealId) {
+        eaten: (mealId) {
           print('MealMonitorTask: finished eating meal $mealId');
           _activeMealId = null;
+        },
+        skipped: (mealId) {
+          print('MealMonitorTask: skipped meal $mealId');
+          _activeMealId = null;
+        },
+        eatingThenBolus: (mealId) {
+          print('MealMonitorTask: eating then bolus meal $mealId');
+          _activeMealId = mealId;
+        },
+        bolusedWaiting: (mealId) {
+          print('MealMonitorTask: bolused waiting meal $mealId');
+          _activeMealId = mealId;
+        },
+        bolusedEating: (mealId) {
+          print('MealMonitorTask: bolused eating meal $mealId');
+          _activeMealId = mealId;
         },
       );
     }

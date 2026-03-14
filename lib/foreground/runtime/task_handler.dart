@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/router/observers/riverpod_debug_observer.dart';
 import '../collector/foreground_collector.dart';
 import '../collector/meal_status_collector.dart';
+import '../collector/next_meal_collector.dart';
 import '../event/external/external_event_handler.dart';
 import '../task/base/task_context.dart';
 import '../task/tasks/meal_monitor_task.dart';
@@ -43,7 +44,10 @@ class MyTaskHandler extends TaskHandler {
       tasks: [MealMonitorTask(), ServiceStatusUpdaterTask()],
     );
 
-    _collectors = [MealStatusCollector(_container!)];
+    _collectors = [
+      MealStatusCollector(_container!),
+      NextMealCollector(_container!),
+    ];
 
     await FlutterForegroundTask.updateService(
       notificationTitle: 'Monitoring aktywny',

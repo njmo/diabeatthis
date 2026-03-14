@@ -6,6 +6,7 @@ class EventDispatcher {
   final Queue<ForegroundEvent> _queue = Queue<ForegroundEvent>();
 
   void dispatch(ForegroundEvent event) {
+    print('Dispatching event ${event.runtimeType}');
     _queue.addLast(event);
   }
 
