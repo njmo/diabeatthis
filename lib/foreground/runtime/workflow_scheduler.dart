@@ -1,71 +1,27 @@
 import 'dart:async';
+import 'dart:collection';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../event/model/foreground_event.dart';
-import '../task/base/task_context.dart';
+import '../task/base/runtime_context.dart';
 import '../task/base/workflow_task.dart';
+import 'runtime_input.dart';
+import 'runtime_waiter.dart';
 import 'task_cancellation.dart';
 import 'task_cancelled_exception.dart';
-
-class _EventWaiter<T extends ForegroundEvent> {
-  final Type eventType;
-  final bool Function(T event)? predicate;
-  final Completer<T> completer;
-
-  _EventWaiter({
-    required this.eventType,
-    required this.predicate,
-    required this.completer,
-  });
-}
-
-class _SignalWaiter {
-  final String signalKey;
-  final Completer<void> completer;
-
-  _SignalWaiter({
-    required this.signalKey,
-    required this.completer,
-  });
-}
+import 'wait_handle.dart';
 
 class WorkflowScheduler {
-  final List<_EventWaiter<dynamic>> _eventWaiters = [];
-  final List<_SignalWaiter> _signalWaiters = [];
+  final List<RuntimeWaiter> _waiters = [];
   final List<TaskCancellation> _cancellations = [];
   final List<Future<void>> _taskFutures = [];
+  final Queue<RuntimeInput> _pendingInputs = Queue<RuntimeInput>();
 
   bool _isDisposed = false;
+  bool _flushScheduled = false;
 
-  late final TaskContext _baseContext;
-
-  WorkflowScheduler({
-    required List<WorkflowTask> tasks,
-  }) {
-    _baseContext = TaskContext(
-      cancellation: TaskCancellation(),
-      waitForEvent: _waitForEventInternal,
-      waitForSignal: _waitForSignalInternal,
-      emitEvent: emitEvent,
-      emitSignal: emitSignal,
-    );
-
-    for (final task in tasks) {
-      _startTask(task);
-    }
-  }
-
-  void _startTask(WorkflowTask task) {
-    final cancellation = TaskCancellation();
-    _cancellations.add(cancellation);
-
-    final context = TaskContext(
-      cancellation: cancellation,
-      waitForEvent: _waitForEventInternal,
-      waitForSignal: _waitForSignalInternal,
-      emitEvent: emitEvent,
-      emitSignal: emitSignal,
-    );
-
+  void startTask(WorkflowTask task, RuntimeContext context) {
     final future = task.run(context).catchError((error, stackTrace) {
       if (error is TaskCancelledException) {
         context.log('Task ${task.name} cancelled');
@@ -78,73 +34,119 @@ class WorkflowScheduler {
     _taskFutures.add(future);
   }
 
-  Future<T> _waitForEventInternal<T extends ForegroundEvent>({
+  RuntimeContext buildRuntimeContext(ProviderContainer container) {
+    final cancellation = TaskCancellation();
+    _cancellations.add(cancellation);
+
+    return RuntimeContext(
+      cancellation: cancellation,
+      emitEvent: emitEvent,
+      emitSignal: emitSignal,
+      eventWaitFactory: _createEventWaitHandle,
+      signalWaitFactory: _createSignalWaitHandle,
+      container: container,
+    );
+  }
+
+  WaitHandle<T> _createEventWaitHandle<T extends ForegroundEvent>({
     bool Function(T event)? predicate,
   }) {
     if (_isDisposed) {
-      return Future<T>.error(const TaskCancelledException());
+      return WaitHandle<T>(
+        future: Future<T>.error(const TaskCancelledException()),
+        cancel: () {},
+      );
     }
 
     final completer = Completer<T>();
-    final waiter = _EventWaiter<T>(
+    late final EventWaiter<T> waiter;
+
+    waiter = EventWaiter<T>(
       eventType: T,
       predicate: predicate,
       completer: completer,
+      onDone: _removeWaiter,
     );
 
-    _eventWaiters.add(waiter);
-    return completer.future;
+    _waiters.add(waiter);
+
+    return WaitHandle<T>(
+      future: completer.future,
+      cancel: () {
+        waiter.cancel(const TaskCancelledException(), StackTrace.current);
+      },
+    );
   }
 
-  Future<void> _waitForSignalInternal(String signalKey) {
+  WaitHandle<void> _createSignalWaitHandle(String signalKey) {
     if (_isDisposed) {
-      return Future<void>.error(const TaskCancelledException());
+      return WaitHandle<void>(
+        future: Future<void>.error(const TaskCancelledException()),
+        cancel: () {},
+      );
     }
 
     final completer = Completer<void>();
-    final waiter = _SignalWaiter(
+    late final SignalWaiter waiter;
+
+    waiter = SignalWaiter(
       signalKey: signalKey,
       completer: completer,
+      onDone: _removeWaiter,
     );
 
-    _signalWaiters.add(waiter);
-    return completer.future;
+    _waiters.add(waiter);
+
+    return WaitHandle<void>(
+      future: completer.future,
+      cancel: () {
+        waiter.cancel(const TaskCancelledException(), StackTrace.current);
+      },
+    );
   }
 
-  Future<void> emitEvent(ForegroundEvent event) async {
+  void _removeWaiter(RuntimeWaiter waiter) {
+    _waiters.remove(waiter);
+  }
+
+  void emitEvent(ForegroundEvent event) {
     if (_isDisposed) return;
 
-    final waiters = List<_EventWaiter<dynamic>>.from(_eventWaiters);
+    _pendingInputs.addLast(RuntimeEventInput(event));
+    _ensureFlushScheduled();
+  }
 
-    for (final waiter in waiters) {
-      if (event.runtimeType != waiter.eventType) continue;
+  void emitSignal(String signalKey) {
+    if (_isDisposed) return;
 
-      final predicate = waiter.predicate;
-      final typedEvent = event;
+    _pendingInputs.addLast(RuntimeSignalInput(signalKey));
+    _ensureFlushScheduled();
+  }
 
-      if (predicate != null && !predicate(typedEvent)) {
-        continue;
-      }
+  void _ensureFlushScheduled() {
+    if (_flushScheduled) return;
 
-      if (!waiter.completer.isCompleted) {
-        waiter.completer.complete(typedEvent);
-      }
-      _eventWaiters.remove(waiter);
+    _flushScheduled = true;
+    scheduleMicrotask(_flush);
+  }
+
+  void _flush() {
+    _flushScheduled = false;
+
+    while (_pendingInputs.isNotEmpty) {
+      final input = _pendingInputs.removeFirst();
+      _deliverInput(input);
     }
   }
 
-  Future<void> emitSignal(String signalKey) async {
-    if (_isDisposed) return;
+  void _deliverInput(RuntimeInput input) {
+    final snapshot = List<RuntimeWaiter>.from(_waiters);
 
-    final waiters = List<_SignalWaiter>.from(_signalWaiters);
+    for (final waiter in snapshot) {
+      if (waiter.isCompleted) continue;
+      if (!waiter.matches(input)) continue;
 
-    for (final waiter in waiters) {
-      if (waiter.signalKey != signalKey) continue;
-
-      if (!waiter.completer.isCompleted) {
-        waiter.completer.complete();
-      }
-      _signalWaiters.remove(waiter);
+      waiter.complete(input);
     }
   }
 
@@ -156,20 +158,26 @@ class WorkflowScheduler {
       cancellation.cancel();
     }
 
-    for (final waiter in _eventWaiters) {
-      if (!waiter.completer.isCompleted) {
-        waiter.completer.completeError(const TaskCancelledException());
-      }
-    }
-    _eventWaiters.clear();
+    final error = const TaskCancelledException();
+    final stack = StackTrace.current;
 
-    for (final waiter in _signalWaiters) {
-      if (!waiter.completer.isCompleted) {
-        waiter.completer.completeError(const TaskCancelledException());
-      }
+    for (final waiter in List<RuntimeWaiter>.from(_waiters)) {
+      waiter.cancel(error, stack);
     }
-    _signalWaiters.clear();
+
+    _waiters.clear();
+    _pendingInputs.clear();
 
     await Future.wait(_taskFutures, eagerError: false);
+  }
+
+  void debugPrintState() {
+    print('--- WORKFLOW SCHEDULER ---');
+    print('waiters: ${_waiters.length}');
+    print('pendingInputs: ${_pendingInputs.length}');
+    print('taskFutures: ${_taskFutures.length}');
+    print('disposed: $_isDisposed');
+    print('flushScheduled: $_flushScheduled');
+    print('--------------------------');
   }
 }

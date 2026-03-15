@@ -5,6 +5,7 @@ import '../../core/drift/providers/database_provider.dart';
 import '../event/internal/meal_event.dart';
 import '../runtime/event_dispatcher.dart';
 import '../runtime/workflow_scheduler.dart';
+import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
 final watchNearestMealStatusProvider =
@@ -15,23 +16,20 @@ StreamProvider<MealData?>((ref) {
 });
 
 class NextMealCollector extends ForegroundCollector {
-  final ProviderContainer _container;
-  final WorkflowScheduler _scheduler;
-
   late final ProviderSubscription _subscription;
 
-  NextMealCollector(this._container, this._scheduler);
+  NextMealCollector();
 
   @override
-  void start(){
-    _subscription = _container.listen<AsyncValue<MealData?>>(
+  void start(CollectorContext context){
+    _subscription = context.container.listen<AsyncValue<MealData?>>(
       watchNearestMealStatusProvider,
           (previous, next) {
         next.whenData((data) {
           print("Nearest meal from database $data");
           if (data == null) return;
           print("Detected change in from database for nearest meal ${data.id} status : ${data.status} at ${DateTime.fromMillisecondsSinceEpoch(data.plannedAt).toIso8601String()}");
-          _scheduler.emitEvent(NextMealEvent(data.id, DateTime.fromMillisecondsSinceEpoch(data.plannedAt)));
+          context.emitEvent(NextMealEvent(data.id, DateTime.fromMillisecondsSinceEpoch(data.plannedAt)));
         });
       },
       fireImmediately: true,

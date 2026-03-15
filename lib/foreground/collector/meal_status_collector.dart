@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/drift/database_impl.dart';
 import '../../core/drift/providers/database_provider.dart';
 import '../event/internal/meal_status_changed_event.dart';
-import '../runtime/workflow_scheduler.dart';
+import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
 final watchLatestMealStatusHistoryProvider =
@@ -19,20 +19,18 @@ final watchLatestMealStatusHistoryProvider =
     });
 
 class MealStatusCollector extends ForegroundCollector {
-  final ProviderContainer _container;
-  final WorkflowScheduler _scheduler;
 
   late final ProviderSubscription _subscription;
 
-  MealStatusCollector(this._container, this._scheduler);
+  MealStatusCollector();
 
   Future<void> dispose() async{
     _subscription.close();
   }
 
   @override
-  void start() {
-    _subscription = _container.listen<AsyncValue<MealStatusHistoryData?>>(
+  void start(CollectorContext context) {
+    _subscription = context.container.listen<AsyncValue<MealStatusHistoryData?>>(
       watchLatestMealStatusHistoryProvider,
           (previous, next) {
         next.whenData((data) {
@@ -40,7 +38,7 @@ class MealStatusCollector extends ForegroundCollector {
           if (data == null) return;
           print("Detected change in from database for meal ${data.mealId} status : ${data.status}");
           final event = MealStatusChangedEvent.fromJson({'kind' : data.status, 'mealId' : data.mealId});
-          _scheduler.emitEvent(event);
+          context.emitEvent(event);
         });
       },
       fireImmediately: true,

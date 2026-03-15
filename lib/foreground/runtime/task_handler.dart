@@ -8,6 +8,7 @@ import '../collector/foreground_collector.dart';
 import '../collector/meal_status_collector.dart';
 import '../collector/next_meal_collector.dart';
 import '../event/external/external_event_handler.dart';
+import '../task/base/collector_context.dart';
 import '../task/tasks/meal_monitor_task.dart';
 import '../task/tasks/service_status_updater_task.dart';
 import 'workflow_scheduler.dart';
@@ -26,29 +27,23 @@ class MyTaskHandler extends TaskHandler {
       observers: [RiverpodDebugObserver(env: 'fg')],
     );
 
-    _taskScheduler = WorkflowScheduler(
-      tasks: [
-        MealMonitorTask(),
-        ServiceStatusUpdaterTask(),
-      ],
-    );
+    _taskScheduler = WorkflowScheduler();
 
-    _collectors = [
-      MealStatusCollector(
-        _container!,
-        _taskScheduler!,
-      ),
-      NextMealCollector(
-        _container!,
-        _taskScheduler!,
-      ),
-    ];
+    final runtimeContext = _taskScheduler!.buildRuntimeContext(_container!);
 
-    for (final collector in _collectors!) {
-      collector.start();
+    final tasks = [MealMonitorTask(), ServiceStatusUpdaterTask()];
+    for (final task in tasks) {
+      _taskScheduler!.startTask(task, runtimeContext);
     }
 
-    _externalEventHandler = ExternalEventHandler(_container!, _taskScheduler!);
+    final collectorContext = CollectorContext.fromRuntimeContext(runtimeContext);
+
+    _collectors = [MealStatusCollector(), NextMealCollector()];
+    for (final collector in _collectors!) {
+      collector.start(collectorContext);
+    }
+
+    _externalEventHandler = ExternalEventHandler(runtimeContext);
 
     await FlutterForegroundTask.updateService(
       notificationTitle: 'Monitoring aktywny',
@@ -58,7 +53,9 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   Future<void> onRepeatEvent(DateTime timestamp) async {
-    // do nothing now
+    if (_taskScheduler == null) return;
+
+    _taskScheduler!.debugPrintState();
   }
 
   @override
