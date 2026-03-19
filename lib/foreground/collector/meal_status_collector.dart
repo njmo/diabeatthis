@@ -37,8 +37,11 @@ class MealStatusCollector extends ForegroundCollector {
           print("Receiver from database $data");
           if (data == null) return;
           print("Detected change in from database for meal ${data.mealId} status : ${data.status}");
-          final event = MealStatusChangedEvent.fromJson({'kind' : data.status, 'mealId' : data.mealId});
-          context.emitEvent(event);
+          if (data.status != 'planned') {
+            final event = MealStatusChangedEvent.fromJson({'kind' : data.status, 'mealId' : data.mealId});
+            print("Emitting event ${event.runtimeType}");
+            context.emitEvent(event);
+          }
         });
       },
       fireImmediately: true,

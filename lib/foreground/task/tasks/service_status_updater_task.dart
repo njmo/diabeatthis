@@ -9,11 +9,12 @@ import '../base/workflow_task.dart';
 class ServiceStatusUpdaterTask extends WorkflowTask {
   @override
   Future<void> run(RuntimeContext context) async {
-    while (true) {
+    while(true) {
       final event = await context.waitForEvent<LifecycleStateEventChanged>();
 
       await FlutterForegroundTask.updateService(
-        notificationTitle: 'Monitoring aktywny ${AppLifecycleState.values[event.state]}',
+        notificationTitle:
+        'Monitoring aktywny ${AppLifecycleState.values[event.state]}',
         notificationText: 'Ostatna zmiana: ${DateTime.now()}',
       );
     }

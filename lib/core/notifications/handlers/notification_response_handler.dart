@@ -15,10 +15,14 @@ void onDidReceiveNotificationResponse(NotificationResponse response) {
   try {
     final data = response.payload ?? '{}';
     final action = response.actionId ?? 'empty';
+    final input = response.input;
 
     final dataJson = jsonDecode(data) as Map<String, dynamic>;
     final responseEventType = dataJson['response_event_type'] as String;
     final actionData = dataJson['action_data'] as Map<String, dynamic>;
+    if (input != null) {
+      actionData['input'] = input;
+    }
 
     json = {
       'external_event': 'notification_event',

@@ -1,3 +1,4 @@
 enum NotificationChannelType {
   meal,
+  target,
 }

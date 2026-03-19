@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../../core/notifications/domain/events/eat_now_event_notification.dart';
+import '../../../core/notifications/domain/events/meal_suggestion_notification.dart';
 import '../../../core/notifications/providers/local_notifications_controller_provider.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';

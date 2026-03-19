@@ -10,41 +10,72 @@ import 'runtime_input.dart';
 import 'runtime_waiter.dart';
 import 'task_cancellation.dart';
 import 'task_cancelled_exception.dart';
+import 'task_interrupt_controller.dart';
 import 'wait_handle.dart';
+
+class _TaskRuntime {
+  final WorkflowTask task;
+  final TaskCancellation cancellation;
+  final TaskInterruptController interruptController;
+  final Future<void> future;
+
+  _TaskRuntime({
+    required this.task,
+    required this.cancellation,
+    required this.interruptController,
+    required this.future,
+  });
+}
 
 class WorkflowScheduler {
   final List<RuntimeWaiter> _waiters = [];
-  final List<TaskCancellation> _cancellations = [];
-  final List<Future<void>> _taskFutures = [];
+  final List<_TaskRuntime> _taskRuntimes = [];
   final Queue<RuntimeInput> _pendingInputs = Queue<RuntimeInput>();
 
   bool _isDisposed = false;
   bool _flushScheduled = false;
 
-  void startTask(WorkflowTask task, RuntimeContext context) {
-    final future = task.run(context).catchError((error, stackTrace) {
-      if (error is TaskCancelledException) {
-        context.log('Task ${task.name} cancelled');
-        return;
-      }
-
-      context.log('Task ${task.name} failed: $error\n$stackTrace');
-    });
-
-    _taskFutures.add(future);
-  }
-
-  RuntimeContext buildRuntimeContext(ProviderContainer container) {
+  RuntimeContext createContext(ProviderContainer container) {
     final cancellation = TaskCancellation();
-    _cancellations.add(cancellation);
+    final interruptController = TaskInterruptController();
 
     return RuntimeContext(
       cancellation: cancellation,
+      interruptController: interruptController,
       emitEvent: emitEvent,
       emitSignal: emitSignal,
       eventWaitFactory: _createEventWaitHandle,
       signalWaitFactory: _createSignalWaitHandle,
       container: container,
+    );
+  }
+
+  void debugPrintState() {
+    print('--- WORKFLOW SCHEDULER ---');
+    print('waiters: ${_waiters.length}');
+    print('pendingInputs: ${_pendingInputs.length}');
+    print('disposed: $_isDisposed');
+    print('flushScheduled: $_flushScheduled');
+    print('--------------------------');
+  }
+
+  void startTask(WorkflowTask task, RuntimeContext context) {
+    final taskRuntime = context.overrideControllers(
+      cancellation: TaskCancellation(),
+      interruptController: TaskInterruptController(),
+    );
+    final future = task.run(taskRuntime).catchError((error, stackTrace) {
+      if (error is TaskCancelledException) return;
+      context.log('Task ${task.name} failed: $error\n$stackTrace');
+    });
+
+    _taskRuntimes.add(
+      _TaskRuntime(
+        task: task,
+        cancellation: taskRuntime.cancellation,
+        interruptController: taskRuntime.interruptController,
+        future: future,
+      ),
     );
   }
 
@@ -72,9 +103,8 @@ class WorkflowScheduler {
 
     return WaitHandle<T>(
       future: completer.future,
-      cancel: () {
-        waiter.cancel(const TaskCancelledException(), StackTrace.current);
-      },
+      cancel: () =>
+          waiter.cancel(const TaskCancelledException(), StackTrace.current),
     );
   }
 
@@ -99,9 +129,8 @@ class WorkflowScheduler {
 
     return WaitHandle<void>(
       future: completer.future,
-      cancel: () {
-        waiter.cancel(const TaskCancelledException(), StackTrace.current);
-      },
+      cancel: () =>
+          waiter.cancel(const TaskCancelledException(), StackTrace.current),
     );
   }
 
@@ -111,14 +140,12 @@ class WorkflowScheduler {
 
   void emitEvent(ForegroundEvent event) {
     if (_isDisposed) return;
-
     _pendingInputs.addLast(RuntimeEventInput(event));
     _ensureFlushScheduled();
   }
 
   void emitSignal(String signalKey) {
     if (_isDisposed) return;
-
     _pendingInputs.addLast(RuntimeSignalInput(signalKey));
     _ensureFlushScheduled();
   }
@@ -140,6 +167,23 @@ class WorkflowScheduler {
   }
 
   void _deliverInput(RuntimeInput input) {
+    if (input is RuntimeEventInput) {
+      final event = input.event;
+
+      for (final runtime in _taskRuntimes.where((r) => r.task.interruptable)) {
+        final interruptableTask = runtime.task as InterruptableWorkflowTask;
+        final shouldInterrupt =
+            interruptableTask.interruptableEventsMatcher.any(
+              (matcher) => matcher(event),
+            ) &&
+            interruptableTask.shouldInterrupt(event);
+
+        if (shouldInterrupt) {
+          runtime.interruptController.interrupt(event);
+        }
+      }
+    }
+
     final snapshot = List<RuntimeWaiter>.from(_waiters);
 
     for (final waiter in snapshot) {
@@ -154,8 +198,8 @@ class WorkflowScheduler {
     if (_isDisposed) return;
     _isDisposed = true;
 
-    for (final cancellation in _cancellations) {
-      cancellation.cancel();
+    for (final runtime in _taskRuntimes) {
+      runtime.cancellation.cancel();
     }
 
     final error = const TaskCancelledException();
@@ -168,16 +212,6 @@ class WorkflowScheduler {
     _waiters.clear();
     _pendingInputs.clear();
 
-    await Future.wait(_taskFutures, eagerError: false);
-  }
-
-  void debugPrintState() {
-    print('--- WORKFLOW SCHEDULER ---');
-    print('waiters: ${_waiters.length}');
-    print('pendingInputs: ${_pendingInputs.length}');
-    print('taskFutures: ${_taskFutures.length}');
-    print('disposed: $_isDisposed');
-    print('flushScheduled: $_flushScheduled');
-    print('--------------------------');
+    await Future.wait(_taskRuntimes.map((r) => r.future), eagerError: false);
   }
 }

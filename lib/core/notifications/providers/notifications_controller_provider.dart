@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../application/notifications_controller.dart';
+import '../base/notifications_controller.dart';
 import '../controllers/foreground_task_notification_controller.dart';
 import '../controllers/in_app_notifications_controller.dart';
 import '../controllers/notifications_controller_impl.dart';

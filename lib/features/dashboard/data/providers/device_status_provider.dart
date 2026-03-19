@@ -40,7 +40,9 @@ Stream<DeviceStatus> deviceStatusStream(Ref ref) async* {
 
     try {
       final current = await ref.read(deviceStatusProvider.future);
-      if (current.date != last.date) {
+      // TODO: temporary fix for duplicates
+      final timeDifference = current.date.difference(last.date);
+      if (timeDifference.inMinutes > 1) {
         last = current;
         ref.invalidate(glucoseWithLimitProvider);
         yield current;

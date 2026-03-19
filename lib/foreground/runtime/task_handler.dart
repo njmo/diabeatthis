@@ -4,12 +4,15 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/router/observers/riverpod_debug_observer.dart';
+import '../collector/blood_sugar_collector.dart';
+import '../collector/device_status_collector.dart';
 import '../collector/foreground_collector.dart';
 import '../collector/meal_status_collector.dart';
 import '../collector/next_meal_collector.dart';
+import '../collector/treatments_collector.dart';
 import '../event/external/external_event_handler.dart';
 import '../task/base/collector_context.dart';
-import '../task/tasks/meal_monitor_task.dart';
+import '../task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import '../task/tasks/service_status_updater_task.dart';
 import 'workflow_scheduler.dart';
 
@@ -24,23 +27,31 @@ class MyTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     _container = ProviderContainer(
-      observers: [RiverpodDebugObserver(env: 'fg')],
+      // observers: [RiverpodDebugObserver(env: 'fg')],
     );
 
     _taskScheduler = WorkflowScheduler();
 
-    final runtimeContext = _taskScheduler!.buildRuntimeContext(_container!);
+    final runtimeContext = _taskScheduler!.createContext(_container!);
+
+    final collectorContext = CollectorContext.fromRuntimeContext(
+      runtimeContext,
+    );
+
+    _collectors = [
+      DeviceStatusCollector(),
+      BloodSugarCollector(),
+      MealStatusCollector(),
+      NextMealCollector(),
+      TreatmentsCollector(),
+    ];
+    for (final collector in _collectors!) {
+      collector.start(collectorContext);
+    }
 
     final tasks = [MealMonitorTask(), ServiceStatusUpdaterTask()];
     for (final task in tasks) {
       _taskScheduler!.startTask(task, runtimeContext);
-    }
-
-    final collectorContext = CollectorContext.fromRuntimeContext(runtimeContext);
-
-    _collectors = [MealStatusCollector(), NextMealCollector()];
-    for (final collector in _collectors!) {
-      collector.start(collectorContext);
     }
 
     _externalEventHandler = ExternalEventHandler(runtimeContext);
@@ -53,9 +64,9 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   Future<void> onRepeatEvent(DateTime timestamp) async {
-    if (_taskScheduler == null) return;
-
-    _taskScheduler!.debugPrintState();
+    // if (_taskScheduler == null) return;
+    //
+    // _taskScheduler!.debugPrintState();
   }
 
   @override

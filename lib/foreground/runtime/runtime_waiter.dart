@@ -34,10 +34,9 @@ class EventWaiter<T extends ForegroundEvent> extends RuntimeWaiter {
     if (input is! RuntimeEventInput) return false;
 
     final event = input.event;
-    if (event.runtimeType != eventType) return false;
+    if (event is! T) return false;
 
-    final typedEvent = event as T;
-    if (predicate != null && !predicate!(typedEvent)) return false;
+    if (predicate != null && !predicate!(event)) return false;
 
     return true;
   }

@@ -12,7 +12,7 @@ final watchNearestMealStatusProvider =
 StreamProvider<MealData?>((ref) {
   final db = ref.read(databaseProvider);
 
-  return db.mealDao.getNearestMeal();
+  return db.mealDao.getNearestMealStream();
 });
 
 class NextMealCollector extends ForegroundCollector {

@@ -8,8 +8,8 @@ const mealReadyNotificationDefinition = NotificationDefinition(
   type: NotificationEventType.eatNow,
   categoryId: 'eat_now',
   actions: <NotificationActionDef>[
-    NotificationActionDef(type: NotificationActionType.eating, label: 'Zaczynam jeść ✅'),
-    NotificationActionDef(type: NotificationActionType.dismiss, label: 'Jeszcze nie'),
+    NotificationActionDef.plain(type: NotificationActionType.eating, label: 'Zaczynam jeść ✅'),
+    NotificationActionDef.plain(type: NotificationActionType.dismiss, label: 'Jeszcze nie'),
   ],
   channelType: NotificationChannelType.meal,
 );

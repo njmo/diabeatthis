@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers/app_lifecycle_state_provider.dart';
-import '../application/notifications_controller.dart';
+import '../base/notifications_controller.dart';
 import '../domain/models/notification_event.dart';
 import '../providers/local_notifications_plugin_provider.dart';
 import 'in_app_notifications_controller.dart';
@@ -29,7 +29,8 @@ class NotificationsControllerImpl implements NotificationsController {
   Future<void> show(NotificationEvent event) async {
     final appLifecycleState = _ref.read(appLifecycleProvider);
 
-    if (appLifecycleState == AppLifecycleState.resumed) {
+    // TODO: temporarily disable in app notifications
+    if (false && appLifecycleState == AppLifecycleState.resumed) {
       await _inAppController.show(event);
     } else {
       await _localController.show(event);

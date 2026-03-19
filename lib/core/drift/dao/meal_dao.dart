@@ -28,7 +28,12 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.watch();
   }
 
-  Stream<MealData> getNearestMeal() {
+  Future<MealData?> getMealById(int id) async {
+    final query = select(db.meal)..where((tbl) => tbl.id.equals(id));
+    return query.getSingleOrNull();
+  }
+
+  Future<MealData?> getNearestMeal() async {
     final now = DateTime.now();
     final todayMillisecondsSinceEpoch = DateTime(
       now.year,
@@ -37,7 +42,19 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     ).millisecondsSinceEpoch;
     final query = select(db.meal)
       ..where(
-        (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
+            (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
+      )
+      ..where((tbl) => tbl.status.equals('planned'))
+      ..orderBy([(m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.asc)])
+      ..limit(1);
+    return query.getSingleOrNull();
+  }
+
+  Stream<MealData> getNearestMealStream() {
+    final now = DateTime.now();
+    final query = select(db.meal)
+      ..where(
+        (tbl) => tbl.plannedAt.isBiggerThanValue(now.millisecondsSinceEpoch),
       )
       ..where((tbl) => tbl.status.equals('planned'))
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.asc)]);

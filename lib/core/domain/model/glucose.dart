@@ -9,23 +9,6 @@ abstract class Glucose with _$Glucose{
     required DateTime date,
     required int sgv,
     required String direction,
+    int? tick,
   }) = _Glucose;
 }
-
-/*
-
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'date': date,
-      'svg': sgv,
-      'direction': direction,
-    };
-  }
-
-  factory Glucose.fromJson(Map<String, dynamic> map) => Glucose(
-      date: (map['date'] as num).toInt(),
-      sgv: (map['sgv'] as num).toInt(),
-      direction: map['direction']);
- */

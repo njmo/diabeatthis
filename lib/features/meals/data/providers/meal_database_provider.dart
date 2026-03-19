@@ -9,6 +9,7 @@ import '../../../../core/drift/mappers/meal_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../drafts/meal_draft.dart';
 import '../mapper/meal_draft_mapper.dart';
+import 'meal_database_provider.dart';
 
 part 'meal_database_provider.g.dart';
 
@@ -71,6 +72,21 @@ Future<void> insertMealIngredient(
     nutritionConfidence,
     null,
   );
+}
+
+@riverpod
+Future<domain.Meal?> getMealById(Ref ref, int id) async {
+  final db = ref.read(databaseProvider);
+  final meal = await db.mealDao.getMealById(id);
+  return meal?.toDomain();
+}
+
+@riverpod
+Future<domain.Meal?> getNearestMeal(Ref ref)
+async {
+  final db = ref.read(databaseProvider);
+  final meal = await db.mealDao.getNearestMeal();
+  return meal?.toDomain();
 }
 
 @riverpod

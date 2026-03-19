@@ -1,4 +1,4 @@
-import '../application/notifications_controller.dart';
+import '../base/notifications_controller.dart';
 import '../domain/models/notification_event.dart';
 
 class InAppNotificationsController implements NotificationsController{

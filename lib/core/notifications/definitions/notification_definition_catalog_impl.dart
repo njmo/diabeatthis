@@ -1,11 +1,15 @@
-import '../application/notification_definition_catalog.dart';
+import '../base/notification_definition_catalog.dart';
 import '../domain/models/notification_definition.dart';
 import '../domain/models/notification_event_type.dart';
 import 'event/eat_now_notification_definition.dart';
+import 'event/meal_suggestion_notification_definition.dart';
+import 'event/temp_target_notification_definition.dart';
 
 class NotificationDefinitionCatalogImpl implements NotificationDefinitionCatalog {
   static const _definitions = [
     mealReadyNotificationDefinition,
+    tempTargetNotificationDefinition,
+    mealSuggestionNotificationDefinition
   ];
 
   @override

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-import '../application/notifications_controller.dart';
+import '../base/notifications_controller.dart';
 import '../bootstrap/local_notifications_bootstrap.dart' as bootstrap;
 
 import '../domain/models/hash_notification_id_factory.dart';

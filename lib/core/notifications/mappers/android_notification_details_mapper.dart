@@ -1,7 +1,7 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import '../application/notification_channel_definition_catalog.dart';
-import '../application/notification_definition_catalog.dart';
+import '../base/notification_channel_definition_catalog.dart';
+import '../base/notification_definition_catalog.dart';
 import '../definitions/notification_channel_catalog_impl.dart';
 import '../definitions/notification_definition_catalog_impl.dart';
 import '../domain/models/notification_event.dart';
