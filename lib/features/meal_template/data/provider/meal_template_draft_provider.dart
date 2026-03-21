@@ -3,14 +3,15 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
-import '../../presentation/widgets/confidence_slider.dart';
-import '../drafts/meal_draft.dart';
+import '../../../meals/presentation/widgets/confidence_slider.dart';
+import '../../../meals/data/drafts/meal_draft.dart';
+import '../drafts/template_meal_draft.dart';
 
-part 'meal_draft_provider.g.dart';
+part 'meal_template_draft_provider.g.dart';
 
 @riverpod
-class MealIngredientAmountDraftNotifier
-    extends _$MealIngredientAmountDraftNotifier {
+class MealTemplateIngredientAmountDraftNotifier
+    extends _$MealTemplateIngredientAmountDraftNotifier {
   @override
   int build() {
     return 0;
@@ -21,8 +22,8 @@ class MealIngredientAmountDraftNotifier
 }
 
 @riverpod
-class MealIngredientConfidenceDraftNotifier
-    extends _$MealIngredientConfidenceDraftNotifier {
+class MealTemplateIngredientConfidenceDraftNotifier
+    extends _$MealTemplateIngredientConfidenceDraftNotifier {
   @override
   ConfidenceLevel build() {
     return ConfidenceLevel.high;
@@ -33,10 +34,11 @@ class MealIngredientConfidenceDraftNotifier
 }
 
 @riverpod
-class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
+class MealTemplateIngredientsDraftNotifier
+    extends _$MealTemplateIngredientsDraftNotifier {
   @override
-  MealIngredientsDraft build() {
-    return MealIngredientsDraft(
+  MealTemplateIngredientsDraft build() {
+    return MealTemplateIngredientsDraft(
       ingredient: domain.Ingredient.draft(
         name: '',
         carbsPer100g: 0,
@@ -50,8 +52,11 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
         portion: PortionSelection.draft(name: '', unitHint: ''),
         amount: 0,
       ),
-      amount: 0,
+      defaultAmount: 0,
       quantityConfidence: 0,
+      isOptional: false,
+      prepMethod: '',
+      notes: '',
     );
   }
 
@@ -63,39 +68,41 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
   void setIngredientPortionAmount(int amount) => state = state.copyWith(
     ingredientPortion: state.ingredientPortion.copyWith(amount: amount),
   );
-  void setAmount(int amount) => state = state.copyWith(amount: amount);
+  void setDefaultAmount(int amount) => state = state.copyWith(defaultAmount: amount);
   void setQuantityConfidence(ConfidenceLevel confidence) =>
       state = state.copyWith(quantityConfidence: confidence.toDouble01());
+  void setPrepMethod(String prepMethod) => state = state.copyWith(prepMethod: prepMethod);
+  void setNotes(String notes) => state = state.copyWith(notes: notes);
+  void setIsOptional(bool isOptional) => state = state.copyWith(isOptional: isOptional);
 }
 
 @riverpod
-class MealDraftNotifier extends _$MealDraftNotifier {
+class MealTemplateDraftNotifier extends _$MealTemplateDraftNotifier {
   @override
-  MealDraft build() {
-    return MealDraft(
+  MealTemplateDraft build() {
+    return MealTemplateDraft(
       name: '',
       mealIngredients: [],
-      plannedAt: DateTime.now(),
-      status: 'draft',
+      notes: '',
+      isFavorite: false,
     );
   }
 
   void setName(String name) => state = state.copyWith(name: name);
-  void setPlannedAt(DateTime plannedAt) {
-    print("Srtting planned at to ${plannedAt.toIso8601String()}");
-    state = state.copyWith(plannedAt: plannedAt);
-  }
-  void setStatus(String status) => state = state.copyWith(status: status);
-  void removeMealIngredient(MealIngredientsDraft mealIngredient) =>
+
+  void removeMealTemplateIngredient(MealTemplateIngredientsDraft mealIngredient) =>
       state = state.copyWith(
         mealIngredients: state.mealIngredients
             .where((element) => element != mealIngredient)
             .toList(),
       );
-  void addMealIngredient(MealIngredientsDraft mealIngredient) => state = state
+  void addMealTemplateIngredient(MealTemplateIngredientsDraft mealIngredient) => state = state
       .copyWith(mealIngredients: [...state.mealIngredients, mealIngredient]);
-  void addMealIngredients(List<MealIngredientsDraft> mealIngredients) =>
+  void addMealTemplateIngredients(List<MealTemplateIngredientsDraft> mealIngredients) =>
       state = state.copyWith(
         mealIngredients: [...state.mealIngredients, ...mealIngredients],
       );
+  void setNotes(String notes) => state = state.copyWith(notes: notes);
+  void setIsFavorite(bool isFavorite) => state = state.copyWith(isFavorite: isFavorite);
+  void setCreatedFromMealId(int createdFromMealId) => state = state.copyWith(createdFromMealId: createdFromMealId);
 }

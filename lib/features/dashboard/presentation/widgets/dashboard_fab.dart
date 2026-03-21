@@ -25,6 +25,11 @@ class DashboardFAB extends HookConsumerWidget {
             context.router.push(routes.AddMealRoute());
             open.value = false;
           }),
+          const SizedBox(height: 8),
+          _buildOption(Icons.restaurant, 'Add template meal', () {
+            context.router.push(routes.AddMealTemplateRoute());
+            open.value = false;
+          }),
           const SizedBox(height: 16),
         ],
         FloatingActionButton(

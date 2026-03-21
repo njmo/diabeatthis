@@ -22,6 +22,8 @@ abstract class Meal with _$Meal implements Treatment {
     DateTime? plannedAt,
     DateTime? eatenAt,
     String? status,
+    String? notes,
+    int? mealTemplateId,
   }) = _Meal;
 
   @override

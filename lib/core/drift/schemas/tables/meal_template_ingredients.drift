@@ -24,3 +24,16 @@ CREATE TABLE meal_template_ingredients (
 
   PRIMARY KEY (meal_template_id, ingredient_id)
 );
+
+insertMealTemplateIngredient:
+    INSERT INTO meal_template_ingredients (
+      meal_template_id,
+      ingredient_id,
+      portion_id,
+      default_amount,
+      is_optional,
+      quantity_confidence,
+      prep_method,
+      notes,
+      is_synced
+    ) VALUES ( :mealTemplateId, :ingredientId, :portionId, :defaultAmount, :isOptional, :quantityConfidence, :prepMethod, :notes , :isSynced);

@@ -1,13 +1,17 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/meal.dart';
+import '../../../../core/domain/model/meal_template.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
 import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../portions/data/providers/portion_provider.dart';
+import '../drafts/template_meal_draft.dart';
+import 'meal_template_database_provider.dart';
+import 'meal_template_ingredients_list_provider.dart';
 
-part 'meal_add_provider.g.dart';
+part 'meal_template_add_provider.g.dart';
 
 enum MealStatus
 {
@@ -17,24 +21,24 @@ enum MealStatus
 }
 
 @riverpod
-class MealAddNotifier extends _$MealAddNotifier {
+class MealTemplateAddNotifier extends _$MealTemplateAddNotifier {
   @override
   void build() {
   }
 
-  Future<Meal> addMeal(MealDraft updatedDraft) async
+  Future<MealTemplate> addMealTemplate(MealTemplateDraft updatedDraft) async
   {
-    final mealIngredientDrafts = ref.read(
-      mealDraftIngredientsProvider,
+    final mealTemplateIngredientDrafts = ref.read(
+      mealTemplateDraftIngredientsProvider,
     );
 
     print(
-      'Adding ${updatedDraft.name}');
+        'Adding ${updatedDraft.name}');
     final meal = await ref.read(
-      insertMealProvider(updatedDraft).future,
+      insertMealTemplateProvider(updatedDraft).future,
     );
     print("Added ${meal.name}");
-    for (final mealIngredient in mealIngredientDrafts) {
+    for (final mealIngredient in mealTemplateIngredientDrafts) {
       final ingredient = await ref.read(
         insertIngredientProvider(
           mealIngredient.ingredient,
@@ -57,12 +61,13 @@ class MealAddNotifier extends _$MealAddNotifier {
         ).future,
       );
       await ref.read(
-        insertMealIngredientProvider(
+        insertMealTemplateIngredientProvider(
           ingredient,
           meal,
           portion,
-          mealIngredient.amount,
+          mealIngredient.defaultAmount,
           mealIngredient.quantityConfidence,
+          mealIngredient.isOptional,
         ).future,
       );
       print("Added meal ingredient");

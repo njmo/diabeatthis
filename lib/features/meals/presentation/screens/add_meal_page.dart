@@ -4,7 +4,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/date_time_picker.dart';
-import '../../../../common/widgets/forms.dart';
 import '../../../dashboard/data/providers/meal_add_provider.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import '../widgets/meal_ingredients_list_editor.dart';
@@ -16,8 +15,8 @@ class AddMealPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final formKey = useState(GlobalKey<FormState>());
-    final draft = ref.watch(mealDraftProvider);
-    final mealDraft = ref.watch(mealDraftProvider.notifier);
+    final mealDraft = ref.read(mealDraftProvider.notifier);
+    final dateController = TextEditingController();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Add Meal Page')),
@@ -33,81 +32,77 @@ class AddMealPage extends HookConsumerWidget {
                     autovalidateMode: AutovalidateMode.always,
                     child: Column(
                       children: [
-                        StringFormField(
-                          label: 'Nazwa',
-                          value: '',
-                          onChanged: mealDraft.setName,
-                          builder: (context, controller) {
-                            return TextFormField(
-                              controller: controller,
-                              maxLength: 30,
-                              validator: (value) {
-                                if ((value == null) ||
-                                    (value.isEmpty) ||
-                                    (value.length < 5)) {
-                                  return '';
-                                }
-                                return null;
-                              },
-                              decoration: const InputDecoration(
-                                labelText: 'Nazwa',
-                                border: OutlineInputBorder(),
+                        TextFormField(
+                          maxLength: 30,
+                          validator: (value) {
+                            if ((value == null) ||
+                                (value.isEmpty) ||
+                                (value.length < 5)) {
+                              return '';
+                            }
+                            return null;
+                          },
+                          onSaved: (value) {
+                            print("saving value $value");
+                            mealDraft.setName(value!);
+                          },
+                          decoration: const InputDecoration(
+                            labelText: 'Nazwa',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        TextFormField(
+                          focusNode: _DisabledFocusNode(),
+                          onSaved: (value) {
+                            print("saving value $value");
+                            mealDraft.setPlannedAt(DateTime.parse(value!));
+                          },
+                          controller: dateController,
+                          maxLength: 50,
+                          onChanged: (value) {
+                            print("changed value $value");
+                          },
+                          onTap: () async {
+                            final selectedDateTime = await showDateTimePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime.now().subtract(
+                                const Duration(days: 1),
+                              ),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 5),
                               ),
                             );
-                          },
-                        ),
-                        StringFormField(
-                          label: 'Planned Date',
-                          value: draft.plannedAt.toIso8601String(),
-                          onChanged: (value) {
-                            if (value.isNotEmpty) {
-                              final date = DateTime.tryParse(value);
-                              if (date != null) {
-                                mealDraft.setPlannedAt(DateTime.parse(value));
-                              }
+                            if (selectedDateTime != null) {
+                              dateController.text = selectedDateTime.toIso8601String();
                             }
                           },
-                          builder: (context, controller) {
-                            return TextFormField(
-                              focusNode: _DisabledFocusNode(),
-                              controller: controller,
-                              maxLength: 50,
-                              onTap: () async {
-                                final selectedDateTime = await showDateTimePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime.now().subtract(
-                                    const Duration(days: 1),
-                                  ),
-                                  lastDate: DateTime.now().add(
-                                    const Duration(days: 5),
-                                  ),
-                                );
-                                if (selectedDateTime != null) {
-                                  mealDraft.setPlannedAt(selectedDateTime);
-                                }
-                              },
-                              validator: (value) {
-                                if ((value == null) || (value.isEmpty)) {
-                                  return '';
-                                }
-                                return null;
-                              },
-                              decoration: const InputDecoration(
-                                icon: Icon(Icons.calendar_today_rounded),
-                                labelText: 'Planned Date',
-                                border: OutlineInputBorder(),
-                              ),
-                            );
+                          validator: (value) {
+                            if ((value == null) || (value.isEmpty)) {
+                              return '';
+                            }
+                            return null;
                           },
+                          decoration: const InputDecoration(
+                            icon: Icon(Icons.calendar_today_rounded),
+                            labelText: 'Planned Date',
+                            border: OutlineInputBorder(),
+                          ),
                         ),
-                        SingleChildScrollView(child: MealIngredientsListEditor()),
+                        SingleChildScrollView(
+                          child: MealIngredientsListEditor(),
+                        ),
                         InkWell(
                           child: const Text('Add all'),
                           onTap: () async {
-                            final updatedDraft = ref.read(mealDraftProvider);
-                            ref.watch(mealAddProvider.notifier).addMeal(updatedDraft);
-                            context.router.pop();
+                            if (formKey.value.currentState!.validate()) {
+                              formKey.value.currentState!.save();
+                              final updatedDraft = ref.read(mealDraftProvider);
+                              ref
+                                  .watch(mealAddProvider.notifier)
+                                  .addMeal(updatedDraft);
+                              context.router.pop();
+                            }
                           },
                         ),
                       ],

@@ -1,15 +1,12 @@
-import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../../core/domain/model/portion.dart' as domain;
-import '../../../../core/drift/database_impl.dart';
 import '../../../../core/drift/mappers/meal_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../drafts/meal_draft.dart';
-import '../mapper/meal_draft_mapper.dart';
-import 'meal_database_provider.dart';
+import '../mapper/meal_draft_drift_mapper.dart';
 
 part 'meal_database_provider.g.dart';
 

@@ -29,3 +29,6 @@ WHEN
 BEGIN
   SELECT RAISE(ABORT, 'Only is_favorite can be updated in meal_template');
 END;
+
+allMealTemplates:
+  SELECT * FROM meal_template;

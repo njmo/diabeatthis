@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_container.dart';
@@ -23,6 +24,10 @@ Future<void> bootstrap(BootstrapBuilder builder) async {
 
       // Initialize communication port
       FlutterForegroundTask.initCommunicationPort();
+
+      if (kDebugMode) {
+        debugRepaintRainbowEnabled = true;
+      }
 
       // Do any other init that might touch bindings here (Firebase, etc.)
 

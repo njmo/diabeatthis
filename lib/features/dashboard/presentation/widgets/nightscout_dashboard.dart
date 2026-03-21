@@ -7,6 +7,7 @@ import '../../data/providers/device_status_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 
 import '../../data/utils/nightscout_utils.dart';
+import 'device_status_dashboard.dart';
 import 'glucose_custom_painter.dart';
 
 class NightscoutPanel extends ConsumerWidget {
@@ -34,16 +35,8 @@ class NightscoutPanel extends ConsumerWidget {
                 final lastUpdate = timeNowStream
                     .whenData((data) => data.difference(status.date))
                     .value;
-                final bg = status.bg;
-                final tick = parseTick(status.tick);
 
                 final oldReading = lastUpdate!.inMinutes > 10;
-                final bgColor = (oldReading)
-                    ? Colors.black
-                    : getColorForValue(bg);
-                final trendIcon = iconForDirection(directionForTick(tick));
-
-                final sign = tick > 0 ? '+' : '';
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(
@@ -56,15 +49,17 @@ class NightscoutPanel extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            formatAgo(lastUpdate),
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                          RepaintBoundary(
+                            child: Text(
+                              formatAgo(lastUpdate),
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ),
                           if (oldReading)
                             IconButton(
-                              icon: Icon(Icons.refresh),
+                              icon: const Icon(Icons.refresh),
                               onPressed: () {
                                 ref.invalidate(deviceStatusStreamProvider);
                                 ref.invalidate(glucoseWithLimitProvider);
@@ -72,65 +67,7 @@ class NightscoutPanel extends ConsumerWidget {
                             ),
                         ],
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            '$bg',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.nunito(
-                              fontSize: 86,
-                              fontWeight: FontWeight.w700,
-                              color: bgColor,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Icon(trendIcon, size: 66, color: bgColor),
-                        ],
-                      ),
-                      SizedBox(
-                        width: 160,
-                        height: 50,
-                        child: GlucoseMiniChart(),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Chip(
-                            label: Text(
-                              '$sign$tick mg/dl',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          Chip(
-                            avatar: Icon(
-                              Icons.bakery_dining,
-                              color: theme.colorScheme.onSurfaceVariant,
-                              size: 20,
-                            ),
-                            label: Text(
-                              '${status.cob.toStringAsFixed(2)}g',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          Chip(
-                            avatar: Icon(
-                              Icons.vaccines,
-                              color: theme.colorScheme.onSurfaceVariant,
-                              size: 20,
-                            ),
-                            label: Text(
-                              '${status.iob.toStringAsFixed(2)}U',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        ],
-                      ),
+                      DeviceStatusDashboard(deviceStatus: status),
                     ],
                   ),
                 );
