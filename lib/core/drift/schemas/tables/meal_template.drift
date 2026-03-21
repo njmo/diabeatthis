@@ -1,5 +1,3 @@
-import 'meal.drift';
-
 CREATE TABLE meal_template (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
@@ -10,7 +8,7 @@ CREATE TABLE meal_template (
   updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
 
   is_favorite BOOL NOT NULL DEFAULT 0,
-  created_from_meal_id INTEGER DEFAULT NULL REFERENCES meal (id) ON DELETE SET NULL,
+  created_from_meal_id INTEGER DEFAULT NULL,
 
   is_synced BOOL NOT NULL DEFAULT 0,
 

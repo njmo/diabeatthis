@@ -1,5 +1,5 @@
 import 'ingredient.drift';
-import 'meal_template.drift';
+import 'meal.drift';
 import 'portion.drift';
 
 CREATE TABLE meal_template_ingredients (
