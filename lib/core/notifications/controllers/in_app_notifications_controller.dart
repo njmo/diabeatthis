@@ -4,8 +4,10 @@ import '../domain/models/notification_event.dart';
 class InAppNotificationsController implements NotificationsController{
   InAppNotificationsController();
 
+  @override
   Future<void> init() async {}
 
+  @override
   Future<void> show(NotificationEvent event) async {
     print("IN APP NOTIFICATION: ${event.title}, ${event.toPayload().toString()}");
   }

@@ -24,7 +24,6 @@ class DeviceStatusDashboard extends ConsumerWidget {
     final tick = parseTick(deviceStatus.tick);
     final bgColor = (oldReading) ? Colors.black : getColorForValue(bg);
     final trendIcon = iconForDirection(directionForTick(tick));
-    final theme = Theme.of(context);
 
     final sign = tick > 0 ? '+' : '';
 

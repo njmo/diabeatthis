@@ -6,7 +6,7 @@ extension TreatMapper on TreatDto {
 
     return Treat(
       id: 0,
-      dateHappened: DateTime.parse(created_at).toLocal(),
+      dateHappened: DateTime.parse(createdAt).toLocal(),
       carbs: (carbs as num?)?.toInt() ?? 0,
     );
   }

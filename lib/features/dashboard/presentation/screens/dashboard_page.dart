@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../../app/providers/app_lifecycle_state_provider.dart';
 import '../../../../common/notifier_provider/simple_provider.dart';
 import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../../core/domain/model/activity_log.dart';

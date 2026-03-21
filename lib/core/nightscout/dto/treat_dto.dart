@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-
+// ignore_for_file: invalid_annotation_target
 part 'treat_dto.freezed.dart';
 part 'treat_dto.g.dart';
 
@@ -7,7 +7,7 @@ part 'treat_dto.g.dart';
 abstract class TreatDto with _$TreatDto {
 
   const factory TreatDto({
-    required String created_at,
+    @JsonKey(name: 'created_at') required String createdAt,
     required int carbs,
   }) = _TreatDto;
 

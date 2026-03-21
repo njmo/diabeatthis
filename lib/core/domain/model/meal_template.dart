@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'meal_template_ingredient.dart';
 
 part 'meal_template.freezed.dart';
 

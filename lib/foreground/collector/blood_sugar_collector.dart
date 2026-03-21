@@ -46,7 +46,7 @@ final watchNearestBloodSugarProvider = StreamProvider<Glucose?>((ref) async* {
     lastReadingDate = glucose.date;
 
     // sleep until next reading available
-    print("waiting ${readingAgeInMinutes}");
+    print("waiting $readingAgeInMinutes");
     if (readingAgeInMinutes < 5) {
       final remainingDurationToFife = Duration(minutes: 5) - readingAge;
       await Future.delayed(remainingDurationToFife);

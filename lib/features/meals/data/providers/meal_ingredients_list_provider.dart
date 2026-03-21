@@ -44,7 +44,7 @@ Future<Macronutrients> calculatedMacronutrients(Ref ref) async {
   var proteinTotal = 0;
 
   for (final mi in ingredients) {
-    var isReference = mi.ingredient.isReference;
+    final isReference = mi.ingredient.isReference;
     var portionAmount = mi.ingredientPortion.amount;
     final isEmpty = mi.ingredientPortion.portion.maybeMap(
       orElse: () => false,

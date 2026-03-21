@@ -2,9 +2,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
-import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
-import '../../../meals/data/drafts/meal_draft.dart';
+import '../../../portions/data/drafts/portion_draft.dart';
 import '../drafts/template_meal_draft.dart';
 
 part 'meal_template_draft_provider.g.dart';

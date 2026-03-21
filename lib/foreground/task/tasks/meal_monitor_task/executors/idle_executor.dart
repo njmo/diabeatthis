@@ -1,6 +1,5 @@
 import '../../../../event/internal/meal_event.dart';
 import '../../../../event/internal/meal_status_changed_event.dart';
-import '../../../../event/model/foreground_event.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
 import 'meal_monitor_state_executor.dart';

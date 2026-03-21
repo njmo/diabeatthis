@@ -6,7 +6,6 @@ import '../../../app/providers/app_lifecycle_state_provider.dart';
 import '../base/notifications_controller.dart';
 import '../domain/models/notification_event.dart';
 import '../providers/local_notifications_plugin_provider.dart';
-import 'in_app_notifications_controller.dart';
 import 'local_notifications_controller.dart';
 
 class NotificationsControllerImpl implements NotificationsController {
@@ -30,7 +29,7 @@ class NotificationsControllerImpl implements NotificationsController {
     final appLifecycleState = _ref.read(appLifecycleProvider);
 
     // TODO: temporarily disable in app notifications
-    if (false && appLifecycleState == AppLifecycleState.resumed) {
+    if (appLifecycleState == AppLifecycleState.resumed) {
       await _inAppController.show(event);
     } else {
       await _localController.show(event);

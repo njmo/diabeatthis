@@ -9,8 +9,10 @@ class ForegroundTaskNotificationController implements NotificationsController{
   final Ref _ref;
   ForegroundTaskNotificationController(this._ref);
 
+  @override
   Future<void> init() async {}
 
+  @override
   Future<void> show(NotificationEvent event) async {
     final payload = TaskInAppNotificationPayload(type: event.type, data: event.toJson());
     _ref.read(taskEventRouterProvider).send(payload);

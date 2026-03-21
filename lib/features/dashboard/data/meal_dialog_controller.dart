@@ -14,8 +14,8 @@ class MealDialogController extends _$MealDialogController {
   late final int mealId;
 
   @override
-  MealDialogState build(int mealId, MealDialogStep initialStep) {
-    this.mealId = mealId;
+  MealDialogState build(int mId, MealDialogStep initialStep) {
+    mealId = mId;
     return MealDialogState.initial(initialStep);
   }
 

@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-
+// ignore_for_file: invalid_annotation_target
 part 'correction_bolus_dto.freezed.dart';
 part 'correction_bolus_dto.g.dart';
 
@@ -7,7 +7,7 @@ part 'correction_bolus_dto.g.dart';
 abstract class CorrectionBolusDto with _$CorrectionBolusDto {
 
   const factory CorrectionBolusDto({
-    required String created_at,
+    @JsonKey(name: 'created_at') required String createdAt,
     required double insulin,
   }) = _CorrectionBolusDto;
 

@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-
+// ignore_for_file: invalid_annotation_target
 part 'temporary_target_dto.freezed.dart';
 part 'temporary_target_dto.g.dart';
 
@@ -7,7 +7,7 @@ part 'temporary_target_dto.g.dart';
 abstract class TemporaryTargetDto with _$TemporaryTargetDto {
 
   const factory TemporaryTargetDto({
-    required String created_at,
+    @JsonKey(name: 'created_at') required String createdAt,
     required int durationInMilliseconds,
     required int duration,
     required int targetBottom,

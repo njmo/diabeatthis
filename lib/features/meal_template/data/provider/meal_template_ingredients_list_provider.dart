@@ -1,11 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/drift/dao/ingredient_dao.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
-import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/mappers/portion_draft_mapper.dart';
@@ -34,7 +32,7 @@ Future<Macronutrients> calculatedTemplateMacronutrients(Ref ref) async {
   var proteinTotal = 0;
 
   for (final mi in ingredients) {
-    var isReference = mi.ingredient.isReference;
+    final isReference = mi.ingredient.isReference;
     var portionAmount = mi.ingredientPortion.amount;
     final isEmpty = mi.ingredientPortion.portion.maybeMap(
       orElse: () => false,

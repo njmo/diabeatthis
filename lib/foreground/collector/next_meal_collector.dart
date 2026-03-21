@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/drift/database_impl.dart';
 import '../../core/drift/providers/database_provider.dart';
 import '../event/internal/meal_event.dart';
-import '../runtime/event_dispatcher.dart';
-import '../runtime/workflow_scheduler.dart';
 import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 

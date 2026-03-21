@@ -2,11 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
-import '../../../meals/data/drafts/meal_draft.dart';
-import '../../../meals/data/providers/meal_draft_provider.dart';
-import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
-import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
-import '../../../meals/presentation/widgets/meal_ingredients_list.dart';
 import '../../data/drafts/template_meal_draft.dart';
 import '../../data/provider/meal_template_draft_provider.dart';
 import '../../data/provider/meal_template_ingredients_list_provider.dart';

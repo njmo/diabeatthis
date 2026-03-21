@@ -8,7 +8,7 @@ extension DeviceStatusMapper on DeviceStatusDto {
 
     return DeviceStatus(
       id: 0,
-      date: DateTime.parse(created_at).toLocal(),
+      date: DateTime.parse(createdAt).toLocal(),
       iob: (suggested['IOB'] as num?)?.toDouble() ?? 0,
       cob: (suggested['COB'] as num?)?.toDouble() ?? 0,
       tick: (suggested['tick'] as String?) ?? '',

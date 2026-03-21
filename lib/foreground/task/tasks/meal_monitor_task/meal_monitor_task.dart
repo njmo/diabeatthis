@@ -1,16 +1,10 @@
 import 'dart:async';
 
-import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/meal.dart';
-import '../../../../core/notifications/domain/events/eat_now_event_notification.dart';
-import '../../../../core/notifications/domain/events/temp_target_notification.dart';
-import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../features/meals/data/providers/meal_database_provider.dart';
-import '../../../event/internal/data_available_event.dart';
 import '../../../event/internal/meal_event.dart';
 import '../../../event/internal/meal_status_changed_event.dart';
 import '../../../event/model/foreground_event.dart';
-import '../../../providers/blood_sugar_value_provider.dart';
 import '../../base/runtime_context.dart';
 import '../../base/workflow_task.dart';
 import 'executors/detect_finished_eating_executor.dart';

@@ -1,11 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/meal_template.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
-import '../../../meals/data/drafts/meal_draft.dart';
-import '../../../meals/data/providers/meal_database_provider.dart';
-import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../drafts/template_meal_draft.dart';
 import 'meal_template_database_provider.dart';

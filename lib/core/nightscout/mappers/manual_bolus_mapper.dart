@@ -6,7 +6,7 @@ extension ManualBolusMapper on ManualBolusDto {
 
     return ManualBolus(
       id: 0,
-      dateHappened: DateTime.parse(created_at).toLocal(),
+      dateHappened: DateTime.parse(createdAt).toLocal(),
       insulin: (insulin as num?)?.toDouble() ?? 0,
     );
   }

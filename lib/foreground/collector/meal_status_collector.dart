@@ -24,6 +24,7 @@ class MealStatusCollector extends ForegroundCollector {
 
   MealStatusCollector();
 
+  @override
   Future<void> dispose() async{
     _subscription.close();
   }

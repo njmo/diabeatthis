@@ -10,9 +10,9 @@
 // Jeśli masz trend w mg/dL na 5 minut, przelicz przed wywołaniem:
 //   trendPerMin = (trendPer5Min / 5).round()
 
+import 'package:diabeatthis/features/dashboard/data/utils/meal_advisor.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../features/dashboard/data/utils/meal_advisor.dart';
 
 class MealTestCase {
   final String name;

@@ -63,7 +63,7 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     );
 
     final carbsG = (grams * ing.carbsPer100g / const Constant(100.0)).sum();
-    final fiberG = (grams * ing.fiberPer100g / const Constant(100.0)).sum();
+    // final fiberG = (grams * ing.fiberPer100g / const Constant(100.0)).sum();
     final proteinKcal =
         (grams *
                 ing.proteinPer100g /

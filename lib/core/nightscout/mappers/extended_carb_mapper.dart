@@ -6,7 +6,7 @@ extension ExtendedCarbMapper on ExtendedCarbDto {
 
     return ExtendedCarb(
       id: 0,
-      dateHappened: DateTime.parse(created_at).toLocal(),
+      dateHappened: DateTime.parse(createdAt).toLocal(),
       carbs: (carbs as num?)?.toInt() ?? 0,
       duration: (duration as num?)?.toInt() ?? 0,
     );

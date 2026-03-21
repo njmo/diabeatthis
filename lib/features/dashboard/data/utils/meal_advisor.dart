@@ -24,11 +24,11 @@ extension MealDecisionX on MealDecision {
 class MealAdvice {
   final MealDecision? decision;
   final WaitSuggestion? wait;
-  final DateTime? created_at;
+  final DateTime? createdAt;
 
-  MealAdvice(this.decision, this.wait) : created_at = null;
-  MealAdvice.full(this.decision, this.wait, this.created_at);
-  MealAdvice.empty() : decision = null, wait = null, created_at = null;
+  MealAdvice(this.decision, this.wait) : createdAt = null;
+  MealAdvice.full(this.decision, this.wait, this.createdAt);
+  MealAdvice.empty() : decision = null, wait = null, createdAt = null;
 }
 
 class WaitSuggestion {
