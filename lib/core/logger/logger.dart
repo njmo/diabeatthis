@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:developer' as dev;
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:path_provider/path_provider.dart';
 
@@ -17,7 +16,6 @@ class LogEntry {
   final LogLevel level;
   final String tag;
   final String message;
-  final String isolate;
   final String? error;
   final String? stackTrace;
 
@@ -26,7 +24,6 @@ class LogEntry {
     required this.level,
     required this.tag,
     required this.message,
-    required this.isolate,
     this.error,
     this.stackTrace,
   });
@@ -34,7 +31,6 @@ class LogEntry {
   String toLine() {
     final b = StringBuffer()
       ..write('[${time.toIso8601String()}] ')
-      ..write('[iso:$isolate] ')
       ..write('[${level.name}] ')
       ..write('[$tag] ')
       ..write(message);
@@ -131,7 +127,6 @@ class Log {
       level: level,
       tag: tag,
       message: message,
-      isolate: Isolate.current.hashCode.toString(),
       error: error?.toString(),
       stackTrace: stackTrace?.toString(),
     );
