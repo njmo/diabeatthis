@@ -1,10 +1,11 @@
+import '../../../../../core/logger/logger.dart';
 import '../../../../event/internal/meal_event.dart';
 import '../../../../event/internal/meal_status_changed_event.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
 import 'meal_monitor_state_executor.dart';
 
-class MealMonitorStateIdle extends MealMonitorStateExecutor {
+class MealMonitorStateIdle extends MealMonitorStateExecutor with Logging {
   MealMonitorStateIdle();
 
   @override
@@ -21,7 +22,7 @@ class MealMonitorStateIdle extends MealMonitorStateExecutor {
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
-    print("MealMonitorStateIdle cleanup");
+    logI("MealMonitorStateIdle cleanup");
     return Future.value();
   }
 
@@ -30,7 +31,7 @@ class MealMonitorStateIdle extends MealMonitorStateExecutor {
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
-    print("MealMonitorStateIdle");
+    logI("MealMonitorStateIdle");
     await runtimeContext.waitForDuration(Duration(minutes: 30));
     return this;
   }

@@ -1,9 +1,10 @@
+import '../../../../../core/logger/logger.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
 import 'idle_executor.dart';
 import 'meal_monitor_state_executor.dart';
 
-class FinalizeMealExecutor extends MealMonitorStateExecutor {
+class FinalizeMealExecutor extends MealMonitorStateExecutor with Logging {
   FinalizeMealExecutor();
 
   @override
@@ -11,7 +12,7 @@ class FinalizeMealExecutor extends MealMonitorStateExecutor {
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
-    print("FinalizeMealExecutor cleanup");
+    logI("FinalizeMealExecutor cleanup");
   }
 
   @override
@@ -19,7 +20,7 @@ class FinalizeMealExecutor extends MealMonitorStateExecutor {
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
-    print("FinalizeMealExecutor");
+    logI("FinalizeMealExecutor");
     mealMonitorContext.activeMeal = null;
 
     return MealMonitorStateIdle();

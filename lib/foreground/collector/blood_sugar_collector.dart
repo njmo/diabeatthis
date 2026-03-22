@@ -2,12 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/provider/nightscout_repository_provider.dart';
 import '../../core/domain/model/glucose.dart';
+import '../../core/logger/logger.dart';
 import '../event/internal/data_available_event.dart';
 import '../providers/blood_sugar_value_provider.dart';
 import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
-final watchNearestBloodSugarProvider = StreamProvider<Glucose?>((ref) async* {
+final watchNearestBloodSugarProvider = StreamProvider<Glucose?>((ref) async*{
   int? lastID;
   int? lastValue;
   DateTime? lastReadingDate;
@@ -46,7 +47,6 @@ final watchNearestBloodSugarProvider = StreamProvider<Glucose?>((ref) async* {
     lastReadingDate = glucose.date;
 
     // sleep until next reading available
-    print("waiting $readingAgeInMinutes");
     if (readingAgeInMinutes < 5) {
       final remainingDurationToFife = Duration(minutes: 5) - readingAge;
       await Future.delayed(remainingDurationToFife);
@@ -69,9 +69,9 @@ class BloodSugarCollector extends ForegroundCollector {
       watchNearestBloodSugarProvider,
       (previous, next) {
         next.whenData((data) {
-          print("Glucose reading available $data");
+          logI("Glucose reading available $data");
           if (data == null) return;
-          print(
+          logI(
             "Detected change in glucose reading ${data.id} at ${data.date.toIso8601String()} with value ${data.sgv} and tick ${data.tick}",
           );
           context.emitEvent(

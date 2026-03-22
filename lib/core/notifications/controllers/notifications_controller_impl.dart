@@ -29,7 +29,7 @@ class NotificationsControllerImpl implements NotificationsController {
     final appLifecycleState = _ref.read(appLifecycleProvider);
 
     // TODO: temporarily disable in app notifications
-    if (appLifecycleState == AppLifecycleState.resumed) {
+    if (false && appLifecycleState == AppLifecycleState.resumed) {
       await _inAppController.show(event);
     } else {
       await _localController.show(event);

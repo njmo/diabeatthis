@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../../core/domain/model/device_status.dart';
 import '../../../../../core/drift/dao/ingredient_dao.dart';
@@ -19,7 +21,7 @@ import '../meal_monitor_context.dart';
 import 'detect_finished_eating_executor.dart';
 import 'idle_executor.dart';
 import 'meal_monitor_state_executor.dart';
-import 'wait_after_bolus_executor.dart';
+import 'bolus_then_wait_executor.dart';
 
 enum PathDecision {
   waitUntilMealMonitorWindow,
@@ -36,7 +38,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     ForegroundEvent event,
     MealMonitorContext mealMonitorContext,
   ) {
-    print("MonitorUntilMeal shouldInterrupt ${event.runtimeType}");
+    logI("MonitorUntilMeal shouldInterrupt ${event.runtimeType}");
     switch (event) {
       case MealSkippedEvent():
         if (mealMonitorContext.activeMeal!.id != event.mealId) {
@@ -57,7 +59,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
-    print("WaitUntilEatingExecutor cleanup");
+    logI("WaitUntilEatingExecutor cleanup");
   }
 
   Future<DeviceStatus> getOrWaitForNextAvailableDeviceStatus(
@@ -66,7 +68,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
   ) {
     final deviceStatus = context.container.read(deviceStatusValueProvider);
     if (deviceStatus != null) {
-      print("device status available from beginning");
+      logI("device status available from beginning");
       return Future.value(deviceStatus);
     }
     return waitForNextAvailableDeviceStatus(context, maxMinutes);
@@ -76,7 +78,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     RuntimeContext context,
     int maxMinutes,
   ) async {
-    print("waiting for device status");
+    logI("waiting for device status");
     final event = await context
         .waitForEventWithTimeout<DataAvailableEvent<DeviceStatus>>(
           Duration(minutes: maxMinutes),
@@ -143,7 +145,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       timeToMeal.inMinutes,
     );
 
-    print(
+    logI(
       "Blood sugar value: ${deviceStatus.bg} read at ${deviceStatus.date.toIso8601String()}",
     );
     return alignToNextCgmReading(mealPlannedAt, deviceStatus.date);
@@ -171,16 +173,16 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
-    print("WaitUntilEatingExecutor");
+    logI("WaitUntilEatingExecutor");
 
     if (mealMonitorContext.activeMeal == null) {
-      print("No meal to monitor");
+      logI("No meal to monitor");
       return MealMonitorStateIdle();
     }
     final mealPlannedAt = mealMonitorContext.activeMeal!.plannedAt!;
     final timeToMeal = mealPlannedAt.difference(DateTime.now());
-    print("Meal planned at ${mealPlannedAt.toIso8601String()}");
-    print("Time to meal ${timeToMeal.inMinutes}");
+    logI("Meal planned at ${mealPlannedAt.toIso8601String()}");
+    logI("Time to meal ${timeToMeal.inMinutes}");
 
     DeviceStatus? deviceStatus;
 
@@ -192,17 +194,17 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
         mealPlannedAt,
       );
     } catch (e) {
-      print("Problem normalizing meal time");
+      logI("Problem normalizing meal time");
       return MealMonitorStateIdle();
     }
 
     final timeToMealNormalized = normalizedMealTime.difference(DateTime.now());
-    print("Normalized meal planned at ${normalizedMealTime.toIso8601String()}");
-    print("Time to meal ${timeToMealNormalized.inMinutes}");
+    logI("Normalized meal planned at ${normalizedMealTime.toIso8601String()}");
+    logI("Time to meal ${timeToMealNormalized.inMinutes}");
 
     final mealAdvisorBuffer = 5;
     if (timeToMealNormalized.inMinutes < mealAdvisorBuffer) {
-      print("User probably added new meal manually using quick method");
+      logI("User probably added new meal manually using quick method");
       // will wait for user further actions.
       return MealMonitorStateIdle();
     }
@@ -212,44 +214,44 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       final timeToMeal = normalizedMealTime.difference(now);
       final pathDecision = detectPathDecision(timeToMeal);
       final maxWaitMinutes = minutesTillNextPath(timeToMeal);
-      print("Time now ${now.toIso8601String()}");
-      print("Path decision: $pathDecision");
-      print("Max wait minutes: $maxWaitMinutes");
-      print("Time to meal: ${timeToMeal.inMinutes}");
+      logI("Time now ${now.toIso8601String()}");
+      logI("Path decision: $pathDecision");
+      logI("Max wait minutes: $maxWaitMinutes");
+      logI("Time to meal: ${timeToMeal.inMinutes}");
 
       try {
         switch (pathDecision) {
           case PathDecision.abort:
-            print("No path decision available going to idle state");
+            logI("No path decision available going to idle state");
             return MealMonitorStateIdle();
           case PathDecision.waitUntilMealMonitorWindow:
-            print(
+            logI(
               "Duration till meal ${timeToMeal.inMinutes} waiting for monitoring window",
             );
             await runtimeContext.waitForDuration(
               Duration(minutes: maxWaitMinutes),
             );
           case PathDecision.temporaryTargetSuggestion:
-            print(
+            logI(
               "Duration till meal ${timeToMeal.inMinutes} waiting for glucose",
             );
             final deviceStatus = await getOrWaitForNextAvailableDeviceStatus(
               runtimeContext,
               maxWaitMinutes,
             );
-            print("Blood sugar value: ${deviceStatus.bg}");
+            logI("Blood sugar value: ${deviceStatus.bg}");
             if (deviceStatus.bg > 100) {
-              print("showing temp target suggestion notification");
+              logI("showing temp target suggestion notification");
               showTempTargetNotification(runtimeContext);
 
-              print("showing notification done sleeping till next path");
+              logI("showing notification done sleeping till next path");
               await runtimeContext.waitForDuration(
                 Duration(minutes: maxWaitMinutes),
               );
             }
             break;
           case PathDecision.mealAdvisor:
-            print("building macro status");
+            logI("building macro status");
             // build meal macronutrient status
             final mealStatus = await runtimeContext.container.read(
               mealMacronutrientsSummaryProvider(
@@ -258,7 +260,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             );
 
             if (mealStatus == null) {
-              print("Problem gathering meal macronutrients status");
+              logI("Problem gathering meal macronutrients status");
               // notify to use phone
               return MealMonitorStateIdle();
             }
@@ -269,31 +271,31 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
 
             var iterationsLeft = (timeToMeal.inMinutes / 5).floor() + 2;
             do {
-              print("iterationsLeft $iterationsLeft");
+              logI("iterationsLeft $iterationsLeft");
               deviceStatus = runtimeContext.container.read(
                 deviceStatusValueProvider,
               );
               if (deviceStatus != null) {
-                print(
+                logI(
                   'deviceStatus: $iterationsLeft date ${deviceStatus.date.toIso8601String()} now ${DateTime.now().toIso8601String()} meal planned at ${mealPlannedAt.toIso8601String()}',
                 );
                 advice = getMealAdvice(mealStatus, deviceStatus);
 
                 final iterationsRemaining = iterationsLeft - 1;
                 final minutesLeft = iterationsRemaining * 5;
-                print("iterations remaining $iterationsRemaining");
-                print("minutes left $minutesLeft");
+                logI("iterations remaining $iterationsRemaining");
+                logI("minutes left $minutesLeft");
 
                 switch (advice.decision!) {
                   case MealDecision.eatNowBolusLater:
-                    print("Meal advice: ${advice.decision.toString()}");
+                    logI("Meal advice: ${advice.decision.toString()}");
                     nextExecutor = DetectFinishedEatingExecutor(
                       shouldBolus: true,
                       grams: mealStatus.carbsG.round(),
                     );
                     break;
                   case MealDecision.bolusAndEatNow:
-                    print("Meal advice: ${advice.decision.toString()}");
+                    logI("Meal advice: ${advice.decision.toString()}");
                     // need to store meal information for notification
                     // wait more time to return right before meal
                     nextExecutor = DetectFinishedEatingExecutor(
@@ -301,14 +303,14 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     );
                     break;
                   case MealDecision.bolusWaitThenEat:
-                    print("Meal advice: ${advice.decision.toString()}");
-                    print(
+                    logI("Meal advice: ${advice.decision.toString()}");
+                    logI(
                       "recommended waiting for ${advice.wait!.recommendedMinutes} minutes",
                     );
-                    print("min waiting for ${advice.wait!.minMinutes} minutes");
-                    print("max waiting for ${advice.wait!.maxMinutes} minutes");
+                    logI("min waiting for ${advice.wait!.minMinutes} minutes");
+                    logI("max waiting for ${advice.wait!.maxMinutes} minutes");
                     if (advice.wait!.recommendedMinutes == minutesLeft) {
-                      nextExecutor = WaitAfterBolusExecutor(
+                      nextExecutor = BolusThenWaitExecutor(
                         recommendedMinutes: advice.wait!.recommendedMinutes,
                       );
                       shouldAbort = true;
@@ -325,7 +327,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 );
               } catch (e) {
                 deviceStatus = null;
-                print("No device status available for 6 minutes");
+                logI("No device status available for 6 minutes");
               }
             } while (--iterationsLeft > 0);
 
@@ -333,7 +335,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             // if advice is null means we don't have advice available
             // but we don't want to show advice when device status is old
             if (advice == null || deviceStatus == null) {
-              print("No advice available going to idle state");
+              logI("No advice available going to idle state");
               return MealMonitorStateIdle();
             }
 
@@ -354,26 +356,29 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 .waitForEvent<MealSuggestionResponseEvent>();
             // if no response but device status came, recalculate
             var retry = false;
-            print("Received response from user");
+            logI("Received response from user");
             response.when(
               agree: (e) {
                 final decisionStatus = advice!.decision!.status;
-                print("Used agreed meal");
-                runtimeContext.container.read(
-                  updateMealProvider(
-                    mealMonitorContext.activeMeal!,
-                    decisionStatus,
-                  ),
-                );
+                logI("User agreed meal, decision: $decisionStatus");
+                if (advice.decision == MealDecision.eatNowBolusLater) {
+                  runtimeContext.container.read(
+                    updateMealProvider(
+                      mealMonitorContext.activeMeal!,
+                      decisionStatus,
+                    ),
+                  );
+                }
               },
               skip: (_) {
-                print("Used dismissed meal, clicked on notification");
+                logI("User dismissed meal, clicked on notification");
                 runtimeContext.container.read(
                   updateMealProvider(mealMonitorContext.activeMeal!, 'skipped'),
                 );
+                nextExecutor = MealMonitorStateIdle();
               },
               snooze: (_, input) {
-                print("Snooze input: $input");
+                logI("Snooze input: $input");
                 final minutes = int.parse(input);
                 normalizedMealTime = alignToNextCgmReading(
                   normalizedMealTime.add(Duration(minutes: minutes)),
@@ -382,12 +387,13 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 retry = true;
               },
               empty: (_) {
-                print("No action from user, clicked on notification");
+                logI("No action from user, clicked on notification he will continue in-app");
+                nextExecutor = MealMonitorStateIdle();
               },
             );
 
             if (retry) {
-              print(
+              logI(
                 "Retrying with new meal planned at ${normalizedMealTime.toIso8601String()}",
               );
               continue;
@@ -396,7 +402,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             return nextExecutor;
         }
       } on WaitTimeoutException catch (_) {
-        print("Problem reading data, moving to next step");
+        logI("Problem reading data, moving to next step");
         continue;
       }
     }

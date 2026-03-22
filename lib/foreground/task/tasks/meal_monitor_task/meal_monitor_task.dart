@@ -1,22 +1,23 @@
 import 'dart:async';
 
 import '../../../../core/domain/model/meal.dart';
+import '../../../../core/logger/logger.dart';
 import '../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../event/internal/meal_event.dart';
 import '../../../event/internal/meal_status_changed_event.dart';
 import '../../../event/model/foreground_event.dart';
 import '../../base/runtime_context.dart';
 import '../../base/workflow_task.dart';
+import 'executors/bolus_then_wait_executor.dart';
 import 'executors/detect_finished_eating_executor.dart';
 import 'executors/finalize_meal_executor.dart';
 import 'executors/idle_executor.dart';
 import 'executors/meal_monitor_state_executor.dart';
 import 'executors/monitor_until_meal.dart';
-import 'executors/wait_after_bolus_executor.dart';
 import 'meal_monitor_context.dart';
 import 'meal_monitor_transition.dart';
 
-class MealMonitorTask extends InterruptableWorkflowTask {
+class MealMonitorTask extends InterruptableWorkflowTask with Logging {
   @override
   List<bool Function(ForegroundEvent)> get interruptableEventsMatcher => [
         (e) => e is NextMealEvent,
@@ -25,7 +26,7 @@ class MealMonitorTask extends InterruptableWorkflowTask {
 
   @override
   bool shouldInterrupt(ForegroundEvent event) {
-    print("MealMonitorTask shouldInterrupt ${event.runtimeType}");
+    logI("MealMonitorTask shouldInterrupt ${event.runtimeType}");
     if (_state.interuptableEvents.contains(event.runtimeType)) {
       return _state.shouldInterrupt(event, _activeMealExecutorContext);
     }
@@ -50,7 +51,7 @@ class MealMonitorTask extends InterruptableWorkflowTask {
       eatingThenBolus: (MealEatingThenBolus value) =>
           DetectFinishedEatingExecutor(shouldBolus: true),
       bolusedWaiting: (MealBolusedWaitingEvent value) =>
-          WaitAfterBolusExecutor(),
+          BolusThenWaitExecutor(),
       bolusedEating: (MealBolusedEatingEvent value) =>
           DetectFinishedEatingExecutor(shouldBolus: false),
       eatenBolused: (MealFinishedEatingBolusedEvent value) =>
@@ -78,7 +79,7 @@ class MealMonitorTask extends InterruptableWorkflowTask {
         nextMealExecutorContext == null) {
       return;
     }
-    print("Transition to ${nextExecutor.runtimeType}");
+    logI("Transition to ${nextExecutor.runtimeType}");
     if (nextMealExecutorContext != null) {
       _state.cleanup(context, _activeMealExecutorContext);
       _activeMealExecutorContext = nextMealExecutorContext;
@@ -103,7 +104,7 @@ class MealMonitorTask extends InterruptableWorkflowTask {
     RuntimeContext context, {
     ForegroundEvent? interruptedEvent,
   }) async {
-    print("MealMonitorTask runLoop ${interruptedEvent.runtimeType}");
+    logI("MealMonitorTask runLoop ${interruptedEvent.runtimeType}");
 
     MealMonitorTransition? mealMonitorTransition;
 

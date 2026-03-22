@@ -35,12 +35,12 @@ class MealStatusCollector extends ForegroundCollector {
       watchLatestMealStatusHistoryProvider,
           (previous, next) {
         next.whenData((data) {
-          print("Receiver from database $data");
+          logI("Receiver from database $data");
           if (data == null) return;
-          print("Detected change in from database for meal ${data.mealId} status : ${data.status}");
+          logI("Detected change in from database for meal ${data.mealId} status : ${data.status}");
           if (data.status != 'planned') {
             final event = MealStatusChangedEvent.fromJson({'kind' : data.status, 'mealId' : data.mealId});
-            print("Emitting event ${event.runtimeType}");
+            logI("Emitting event ${event.runtimeType}");
             context.emitEvent(event);
           }
         });

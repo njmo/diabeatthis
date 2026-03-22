@@ -2,6 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../app/providers/app_event_router_provider.dart';
+import '../../../../common/events/data/app/dump_logs_event.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 
 const _nightscoutUrlKey = 'nightscout_url';
@@ -61,6 +63,12 @@ class SettingsPage extends HookConsumerWidget {
                     },
                   ),
                   const SizedBox(height: 24),
+                  FilledButton(onPressed: () {
+                    final nowString = DateTime.now().toIso8601String();
+                    final fileName = 'logs-$nowString.txt';
+                    final payload = DumpLogsEvent.saveToFile(name: fileName);
+                    ref.read(appEventRouterProvider).send(payload);
+                  }, child: const Text('Zbierz logi')),
                   FilledButton(
                     onPressed: () async {
                       formKey.currentState?.save();

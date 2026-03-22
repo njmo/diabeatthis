@@ -24,9 +24,9 @@ class NextMealCollector extends ForegroundCollector {
       watchNearestMealStatusProvider,
           (previous, next) {
         next.whenData((data) {
-          print("Nearest meal from database $data");
+          logI("Nearest meal from database $data");
           if (data == null) return;
-          print("Detected change in from database for nearest meal ${data.id} status : ${data.status} at ${DateTime.fromMillisecondsSinceEpoch(data.plannedAt).toIso8601String()}");
+          logI("Detected change in from database for nearest meal ${data.id} status : ${data.status} at ${DateTime.fromMillisecondsSinceEpoch(data.plannedAt).toIso8601String()}");
           context.emitEvent(NextMealEvent(data.id, DateTime.fromMillisecondsSinceEpoch(data.plannedAt)));
         });
       },

@@ -33,9 +33,9 @@ class TreatmentsCollector extends ForegroundCollector {
       watchNewTreatmentsProvider,
           (previous, next) {
         next.whenData((data) {
-          print("New treatment reading available $data");
+          logI("New treatment reading available $data");
           if (data == null) return;
-          print(
+          logI(
             "Detected change in treatment reading ${data.id} at ${data.dateHappened?.toIso8601String()}",
           );
           context.emitEvent(

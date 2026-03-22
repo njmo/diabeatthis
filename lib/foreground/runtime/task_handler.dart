@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/logger/logger.dart';
 import '../collector/blood_sugar_collector.dart';
 import '../collector/device_status_collector.dart';
 import '../collector/foreground_collector.dart';
@@ -28,6 +29,8 @@ class MyTaskHandler extends TaskHandler {
     _container = ProviderContainer(
       // observers: [RiverpodDebugObserver(env: 'fg')],
     );
+
+    LogRuntimeConfig.configure(enableBuffer: true, capacity: 20000);
 
     _taskScheduler = WorkflowScheduler();
 

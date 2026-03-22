@@ -17,8 +17,8 @@ class DeviceStatusCollector extends ForegroundCollector {
       deviceStatusStreamProvider,
           (previous, next) {
         next.whenData((data) {
-          print("Device status reading available $data");
-          print(
+          logI("Device status reading available $data");
+          logI(
             "Detected change in device status reading ${data.id} at ${data.date.toIso8601String()} with value ${data.bg} and tick ${data.tick}",
           );
           context.emitEvent(DataAvailableEvent<DeviceStatus>(data));
