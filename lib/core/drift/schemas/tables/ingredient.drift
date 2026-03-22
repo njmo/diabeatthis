@@ -12,10 +12,65 @@ CREATE TABLE ingredient (
   brand TEXT,
   is_reference INTEGER NOT NULL DEFAULT 0,
 
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+  updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+
   is_synced BOOL NOT NULL DEFAULT 0,
   UNIQUE (name, preparation, brand),
   CHECK (is_reference IN (0, 1))
 );
+
+CREATE TABLE ingredient_status_history (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  ingredient_id INTEGER NOT NULL
+    REFERENCES ingredient (id) ON DELETE CASCADE,
+  carbs_per_100g REAL NOT NULL CHECK (carbs_per_100g >= 0),
+  fat_per_100g REAL NOT NULL CHECK (fat_per_100g >= 0),
+  fiber_per_100g REAL NOT NULL CHECK (fiber_per_100g >= 0),
+  protein_per_100g REAL NOT NULL CHECK (protein_per_100g >= 0),
+  nutrition_confidence REAL NOT NULL CHECK (nutrition_confidence >= 0 AND nutrition_confidence <= 1),
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+  FOREIGN KEY(ingredient_id) REFERENCES ingredient(id)
+);
+
+CREATE TRIGGER ingredient_nutrition_changed
+AFTER UPDATE OF carbs_per_100g, fat_per_100g, fiber_per_100g, protein_per_100g, nutrition_confidence
+ON ingredient
+FOR EACH ROW
+WHEN
+  OLD.carbs_per_100g IS NOT NEW.carbs_per_100g OR
+  OLD.fat_per_100g IS NOT NEW.fat_per_100g OR
+  OLD.fiber_per_100g IS NOT NEW.fiber_per_100g OR
+  OLD.protein_per_100g IS NOT NEW.protein_per_100g OR
+  OLD.nutrition_confidence IS NOT NEW.nutrition_confidence
+BEGIN
+  INSERT INTO ingredient_status_history (
+    ingredient_id,
+    carbs_per_100g,
+    fat_per_100g,
+    fiber_per_100g,
+    protein_per_100g,
+    nutrition_confidence
+  )
+  VALUES (
+    NEW.id,
+    NEW.carbs_per_100g,
+    NEW.fat_per_100g,
+    NEW.fiber_per_100g,
+    NEW.protein_per_100g,
+    NEW.nutrition_confidence
+  );
+END;
+
+CREATE TRIGGER ingredient_set_updated_at
+AFTER UPDATE ON ingredient
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+  UPDATE ingredient
+  SET updated_at = (CAST(strftime('%s','now') AS INTEGER) * 1000)
+  WHERE id = NEW.id;
+END;
 
 getAllIngredients:
   SELECT * FROM ingredient
