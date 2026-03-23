@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart' as domain;
@@ -75,7 +76,7 @@ class MealDraftNotifier extends _$MealDraftNotifier {
     return MealDraft(
       name: '',
       mealIngredients: [],
-      plannedAt: DateTime.now(),
+      plannedAt: clock.now(),
       status: 'draft',
     );
   }

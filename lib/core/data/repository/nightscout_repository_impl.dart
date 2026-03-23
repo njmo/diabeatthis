@@ -1,3 +1,5 @@
+import 'package:clock/clock.dart';
+
 import '../../domain/model/device_status.dart';
 import '../../domain/model/glucose.dart';
 import '../../domain/model/meal.dart';
@@ -163,7 +165,7 @@ class NightscoutRepositoryImpl implements NightscoutRepository {
   @override
   Future<Duration?> getLatestSensorChangeAge() async {
     final qp = {
-      'find[created_at][\$lt]': DateTime.now().toUtc().toIso8601String(),
+      'find[created_at][\$lt]': clock.now().toUtc().toIso8601String(),
       'find[eventType]': 'Sensor Change',
       'count': '1',
     };
@@ -171,13 +173,13 @@ class NightscoutRepositoryImpl implements NightscoutRepository {
     final list = await service.fetchNightscoutData(url) as List;
     if (list.isEmpty) return null;
     final created = DateTime.parse(list.first['created_at']).toUtc();
-    return DateTime.now().toUtc().difference(created);
+    return clock.now().toUtc().difference(created);
   }
 
   @override
   Future<Duration?> getLatestInsulinChangeAge() async {
     final qp = {
-      'find[created_at][\$lt]': DateTime.now().toUtc().toIso8601String(),
+      'find[created_at][\$lt]': clock.now().toUtc().toIso8601String(),
       'find[eventType]': 'Insulin Change',
       'count': '1',
     };
@@ -185,6 +187,6 @@ class NightscoutRepositoryImpl implements NightscoutRepository {
     final list = await service.fetchNightscoutData(url) as List;
     if (list.isEmpty) return null;
     final created = DateTime.parse(list.first['created_at']).toUtc();
-    return DateTime.now().toUtc().difference(created);
+    return clock.now().toUtc().difference(created);
   }
 }

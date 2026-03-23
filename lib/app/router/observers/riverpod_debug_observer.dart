@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
 
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 
@@ -84,7 +85,7 @@ final class RiverpodDebugObserver extends ProviderObserver {
 
   int? _deltaMs(ProviderObserverContext ctx) {
     if (!trackDurations) return null;
-    final now = DateTime.now();
+    final now = clock.now();
     final prev = _lastChange[ctx.provider];
     _lastChange[ctx.provider] = now;
     if (prev == null) return null;
@@ -136,7 +137,7 @@ final class RiverpodDebugObserver extends ProviderObserver {
     String? previous,
     String? next,
   }) {
-    final ts = DateTime.now().toIso8601String();
+    final ts = clock.now().toIso8601String();
 
     if (format == LogFormat.jsonl) {
       final map = <String, Object?>{

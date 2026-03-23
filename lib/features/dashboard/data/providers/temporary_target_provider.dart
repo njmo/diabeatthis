@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../app/providers/app_lifecycle_state_provider.dart';
@@ -9,7 +10,7 @@ import '../../../../core/domain/model/temporary_target.dart';
 part 'temporary_target_provider.g.dart';
 
 bool isActive(TemporaryTarget t) =>
-    DateTime.now().isBefore(t.createdAt.add(Duration(minutes: t.duration)));
+    clock.now().isBefore(t.createdAt.add(Duration(minutes: t.duration)));
 
 @Riverpod(keepAlive: false)
 Stream<TemporaryTarget> temporaryTargetStream(Ref ref) async* {

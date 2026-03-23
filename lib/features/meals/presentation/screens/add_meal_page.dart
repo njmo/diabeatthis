@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -65,11 +66,11 @@ class AddMealPage extends HookConsumerWidget {
                           onTap: () async {
                             final selectedDateTime = await showDateTimePicker(
                               context: context,
-                              initialDate: DateTime.now(),
-                              firstDate: DateTime.now().subtract(
+                              initialDate: clock.now(),
+                              firstDate: clock.now().subtract(
                                 const Duration(days: 1),
                               ),
-                              lastDate: DateTime.now().add(
+                              lastDate: clock.now().add(
                                 const Duration(days: 5),
                               ),
                             );

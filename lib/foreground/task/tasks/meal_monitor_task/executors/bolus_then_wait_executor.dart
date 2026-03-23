@@ -1,3 +1,5 @@
+import 'package:clock/clock.dart';
+
 import '../../../../../common/events/data/notification/eat_now_response_event.dart';
 import '../../../../../core/data/provider/nightscout_repository_provider.dart';
 import '../../../../../core/domain/model/meal.dart';
@@ -90,7 +92,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
           }
           break;
         }
-        final sleepDuration = Duration(minutes:5) - deviceStatus.date.difference(DateTime.now());
+        final sleepDuration = Duration(minutes:5) - deviceStatus.date.difference(clock.now());
         runtimeContext.waitForDuration(sleepDuration);
       }
     }

@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/activity.dart';
@@ -110,8 +111,8 @@ Future<ActivityLog> insertActivityLog(Ref ref, ActivityLog activityLog) async {
 Future<void> stopActivity(Ref ref, ActivityLog activityLog) async {
   final db = ref.watch(databaseProvider);
   final updated = activityLog.map(
-    existing: (a) => a.copyWith(endedAt: DateTime.now()),
-    view: (a) => a.copyWith(endedAt: DateTime.now()),
+    existing: (a) => a.copyWith(endedAt: clock.now()),
+    view: (a) => a.copyWith(endedAt: clock.now()),
     draft: (a) =>
         throw StateError('Nie można zakończyć draftu – brak id i endedAt'),
   );

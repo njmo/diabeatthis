@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/providers/temporary_target_provider.dart';
@@ -17,8 +18,8 @@ class TemporaryTargetIcon extends ConsumerWidget {
       data: (target) {
         final now = nowAsync.when(
           data: (data) => data,
-          error: (_, _) => DateTime.now(),
-          loading: () => DateTime.now(),
+          error: (_, _) => clock.now(),
+          loading: () => clock.now(),
         );
         final elapsed = now.difference(target.createdAt).inMinutes;
         final clampedElapsed = elapsed.clamp(0, target.duration);

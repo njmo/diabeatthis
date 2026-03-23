@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:clock/clock.dart';
+
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../../core/domain/model/device_status.dart';
 import '../../../../../core/drift/dao/ingredient_dao.dart';
@@ -180,7 +182,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       return MealMonitorStateIdle();
     }
     final mealPlannedAt = mealMonitorContext.activeMeal!.plannedAt!;
-    final timeToMeal = mealPlannedAt.difference(DateTime.now());
+    final timeToMeal = mealPlannedAt.difference(clock.now());
     logI("Meal planned at ${mealPlannedAt.toIso8601String()}");
     logI("Time to meal ${timeToMeal.inMinutes}");
 
@@ -198,7 +200,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       return MealMonitorStateIdle();
     }
 
-    final timeToMealNormalized = normalizedMealTime.difference(DateTime.now());
+    final timeToMealNormalized = normalizedMealTime.difference(clock.now());
     logI("Normalized meal planned at ${normalizedMealTime.toIso8601String()}");
     logI("Time to meal ${timeToMealNormalized.inMinutes}");
 
@@ -210,7 +212,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     }
 
     while (true) {
-      final now = DateTime.now();
+      final now = clock.now();
       final timeToMeal = normalizedMealTime.difference(now);
       final pathDecision = detectPathDecision(timeToMeal);
       final maxWaitMinutes = minutesTillNextPath(timeToMeal);
@@ -277,7 +279,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               );
               if (deviceStatus != null) {
                 logI(
-                  'deviceStatus: $iterationsLeft date ${deviceStatus.date.toIso8601String()} now ${DateTime.now().toIso8601String()} meal planned at ${mealPlannedAt.toIso8601String()}',
+                  'deviceStatus: $iterationsLeft date ${deviceStatus.date.toIso8601String()} now ${clock.now().toIso8601String()} meal planned at ${mealPlannedAt.toIso8601String()}',
                 );
                 advice = getMealAdvice(mealStatus, deviceStatus);
 

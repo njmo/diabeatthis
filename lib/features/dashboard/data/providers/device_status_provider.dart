@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../app/providers/app_lifecycle_state_provider.dart';
@@ -30,7 +31,7 @@ Stream<DeviceStatus> deviceStatusStream(Ref ref) async* {
   while (ref.read(appLifecycleProvider) == AppLifecycleState.resumed) {
     if (!frequent) {
       const longWaitDifference = Duration(minutes: 4, seconds: 50);
-      final lastReadDifference = DateTime.now().difference(last.date);
+      final lastReadDifference = clock.now().difference(last.date);
       if (lastReadDifference < longWaitDifference) {
         final timeUntilFrequentReads = longWaitDifference - lastReadDifference;
         await Future.delayed(timeUntilFrequentReads);

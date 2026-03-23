@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:clock/clock.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../../../common/events/data/app/lifecycle_state_event.dart';
@@ -15,7 +16,7 @@ class ServiceStatusUpdaterTask extends WorkflowTask {
       await FlutterForegroundTask.updateService(
         notificationTitle:
         'Monitoring aktywny ${AppLifecycleState.values[event.state]}',
-        notificationText: 'Ostatna zmiana: ${DateTime.now()}',
+        notificationText: 'Ostatna zmiana: ${clock.now()}',
       );
     }
   }

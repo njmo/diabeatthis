@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -64,7 +65,7 @@ class SettingsPage extends HookConsumerWidget {
                   ),
                   const SizedBox(height: 24),
                   FilledButton(onPressed: () {
-                    final nowString = DateTime.now().toIso8601String();
+                    final nowString = clock.now().toIso8601String();
                     final fileName = 'logs-$nowString.txt';
                     final payload = DumpLogsEvent.saveToFile(name: fileName);
                     ref.read(appEventRouterProvider).send(payload);

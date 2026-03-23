@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/provider/nightscout_repository_provider.dart';
@@ -7,7 +8,7 @@ import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
 final watchNewTreatmentsProvider = StreamProvider<Treatment?>((ref) async* {
-  var lastReadingDate = DateTime.now();
+  var lastReadingDate = clock.now();
 
   while (true) {
     final treatments = await ref.read(treatmentsAfterProvider(lastReadingDate).future);
@@ -20,7 +21,7 @@ final watchNewTreatmentsProvider = StreamProvider<Treatment?>((ref) async* {
       yield treatment;
     }
 
-    lastReadingDate = treatments.last.dateHappened ?? DateTime.now();
+    lastReadingDate = treatments.last.dateHappened ?? clock.now();
   }
 });
 

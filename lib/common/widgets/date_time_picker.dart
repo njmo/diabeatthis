@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 
 Future<DateTime?> showDateTimePicker({
@@ -6,7 +7,7 @@ Future<DateTime?> showDateTimePicker({
   DateTime? firstDate,
   DateTime? lastDate,
 }) async {
-  initialDate ??= DateTime.now();
+  initialDate ??= clock.now();
   firstDate ??= initialDate.subtract(const Duration(days: 365 * 100));
   lastDate ??= firstDate.add(const Duration(days: 365 * 200));
 

@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:developer' as dev;
 import 'dart:io';
 
+import 'package:clock/clock.dart';
 import 'package:path_provider/path_provider.dart';
 
 enum LogLevel {
@@ -123,7 +124,7 @@ class Log {
         StackTrace? stackTrace,
       }) {
     final entry = LogEntry(
-      time: DateTime.now(),
+      time: clock.now(),
       level: level,
       tag: tag,
       message: message,

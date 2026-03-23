@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../event/model/foreground_event.dart';
@@ -136,7 +137,7 @@ class RuntimeContext {
   }
 
   Future<void> waitUntil(DateTime at) {
-    final now = DateTime.now();
+    final now = clock.now();
     final delay = at.isAfter(now) ? at.difference(now) : Duration.zero;
     return waitForDuration(delay);
   }

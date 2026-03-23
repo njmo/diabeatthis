@@ -1,5 +1,6 @@
 //  Provides NightscoutRepository and related data such as sensor age, cannula age, and device status.
 
+import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../domain/model/device_status.dart';
@@ -46,7 +47,7 @@ Future<TemporaryTarget> temporaryTarget(Ref ref) async {
 @riverpod
 Future<List<Meal>> meals(Ref ref) async {
   final repository = await ref.watch(nightscoutRepositoryProvider.future);
-  return await repository.fetchMealsOnDay(DateTime.now());
+  return await repository.fetchMealsOnDay(clock.now());
 }
 
 @riverpod

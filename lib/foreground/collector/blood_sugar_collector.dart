@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/provider/nightscout_repository_provider.dart';
@@ -29,7 +30,7 @@ final watchNearestBloodSugarProvider = StreamProvider<Glucose?>((ref) async*{
     }
 
     final glucose = glucoseReadings.first;
-    final now = DateTime.now();
+    final now = clock.now();
     final readingAge = now.difference(glucose.date);
     final readingAgeInMinutes = readingAge.inMinutes;
     final spaceBetweenReadings = lastReadingDate == null

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/domain/model/glucose.dart';
@@ -20,7 +21,7 @@ class BloodSugarValueNotifier extends _$BloodSugarValueNotifier {
   }
 
   void update(Glucose value) {
-    final now = DateTime.now();
+    final now = clock.now();
     final readingAge = now.difference(value.date);
 
     if (readingAge.inMinutes >= 6) {

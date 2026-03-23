@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import '../database_impl.dart';
 
@@ -14,7 +15,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   }
 
   Stream<List<MealData>> getAllMealForToday() {
-    final now = DateTime.now();
+    final now = clock.now();
     final todayMillisecondsSinceEpoch = DateTime(
       now.year,
       now.month,
@@ -34,7 +35,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   }
 
   Future<MealData?> getNearestMeal() async {
-    final now = DateTime.now();
+    final now = clock.now();
     final todayMillisecondsSinceEpoch = DateTime(
       now.year,
       now.month,
@@ -51,7 +52,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   }
 
   Stream<MealData> getNearestMealStream() {
-    final now = DateTime.now();
+    final now = clock.now();
     final query = select(db.meal)
       ..where(
         (tbl) => tbl.plannedAt.isBiggerThanValue(now.millisecondsSinceEpoch),
@@ -62,7 +63,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   }
 
   Stream<List<MealData>> getAllPlannedMealForToday() {
-    final now = DateTime.now();
+    final now = clock.now();
     final todayMillisecondsSinceEpoch = DateTime(
       now.year,
       now.month,

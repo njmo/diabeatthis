@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
+
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../../features/meals/data/providers/meal_database_provider.dart';
@@ -184,7 +186,7 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
           break;
         }
 
-        if(nextMeal.plannedAt!.isAfter(DateTime.now())) {
+        if(nextMeal.plannedAt!.isAfter(clock.now())) {
           // map status to proper event
           final mealStateEvent = MealStatusChangedEvent.fromMealStatus(nextMeal);
           final nextExecutor = _mealStatusChangedEventToExecutor(
