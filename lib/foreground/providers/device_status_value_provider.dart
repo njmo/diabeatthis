@@ -4,11 +4,12 @@ import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/domain/model/device_status.dart';
+import '../../core/logger/logger.dart';
 
 part 'device_status_value_provider.g.dart';
 
 @Riverpod(keepAlive: true)
-class DeviceStatusValueNotifier extends _$DeviceStatusValueNotifier {
+class DeviceStatusValueNotifier extends _$DeviceStatusValueNotifier  with Logging {
   Timer? _expiryTimer;
 
   @override
@@ -36,6 +37,7 @@ class DeviceStatusValueNotifier extends _$DeviceStatusValueNotifier {
     final remaining = const Duration(minutes: 6) - readingAge;
 
     _expiryTimer = Timer(remaining, () {
+      logI("Device status expired");
       state = null;
     });
   }

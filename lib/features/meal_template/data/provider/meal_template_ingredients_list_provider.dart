@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/drift/dao/ingredient_dao.dart';
+import '../../../../core/domain/model/meal_summary.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
@@ -15,12 +15,6 @@ part 'meal_template_ingredients_list_provider.g.dart';
 @riverpod
 List<MealTemplateIngredientsDraft> mealTemplateDraftIngredients(Ref ref) {
   return ref.watch(mealTemplateDraftProvider.select((h) => h.mealIngredients));
-}
-
-@riverpod
-Future<MealSummary?> mealMacronutrientsSummary(Ref ref, int mealId) async {
-  final db = ref.watch(databaseProvider);
-  return await db.ingredientDao.totalsForMeal(mealId);
 }
 
 @riverpod

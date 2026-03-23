@@ -40,6 +40,9 @@ jobs:
         run: flutter analyze
         continue-on-error: true
 
+      - name: Test
+        run: flutter test
+
       - name: Build APK
         run: flutter build apk --release --split-per-abi
 

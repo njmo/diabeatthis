@@ -23,6 +23,8 @@ class FinalizeMealExecutor extends MealMonitorStateExecutor with Logging {
     logI("FinalizeMealExecutor");
     mealMonitorContext.activeMeal = null;
 
+    await runtimeContext.waitForDuration(Duration(minutes: 5));
+
     return MealMonitorStateIdle();
   }
 }

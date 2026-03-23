@@ -1,9 +1,12 @@
+import 'package:flutter/cupertino.dart';
+
 import '../models/notification_event.dart';
 import '../models/notification_event_type.dart';
 import '../models/notification_key.dart';
 
 class TempTargetNotificationEvent implements NotificationEvent {
   TempTargetNotificationEvent({required this.tempTargetString});
+  
 
   final String tempTargetString;
 

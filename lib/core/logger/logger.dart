@@ -3,14 +3,10 @@ import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:clock/clock.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:path_provider/path_provider.dart';
 
-enum LogLevel {
-  debug,
-  info,
-  warning,
-  error,
-}
+enum LogLevel { debug, info, warning, error }
 
 class LogEntry {
   final DateTime time;
@@ -49,12 +45,11 @@ class LogRuntimeConfig {
 
   static bool bufferEnabled = false;
   static int maxEntries = 500;
+  static bool isUnitTestEnv = false;
 
-  static void configure({
-    required bool enableBuffer,
-    int? capacity,
-  }) {
+  static void configure({required bool enableBuffer, int? capacity, bool? isUnitTest}) {
     bufferEnabled = enableBuffer;
+    if(isUnitTest != null) isUnitTestEnv = isUnitTest;
     if (capacity != null) {
       maxEntries = capacity;
       LogBuffer.instance.resize(capacity);
@@ -102,27 +97,21 @@ class Log {
   }
 
   static void e(
-      String tag,
-      String msg, {
-        Object? error,
-        StackTrace? stackTrace,
-      }) {
-    _log(
-      LogLevel.error,
-      tag,
-      msg,
-      error: error,
-      stackTrace: stackTrace,
-    );
+    String tag,
+    String msg, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    _log(LogLevel.error, tag, msg, error: error, stackTrace: stackTrace);
   }
 
   static void _log(
-      LogLevel level,
-      String tag,
-      String message, {
-        Object? error,
-        StackTrace? stackTrace,
-      }) {
+    LogLevel level,
+    String tag,
+    String message, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
     final entry = LogEntry(
       time: clock.now(),
       level: level,
@@ -134,13 +123,18 @@ class Log {
 
     // 1. Debug logging do DevTools / logcat
     assert(() {
-      dev.log(
-        entry.toLine(),
-        name: tag,
-        level: _toDevLevel(level),
-        error: error,
-        stackTrace: stackTrace,
-      );
+
+      if (LogRuntimeConfig.isUnitTestEnv) print(entry.toLine());
+      else {
+        dev.log(
+          entry.toLine(),
+          name: tag,
+          level: _toDevLevel(level),
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
+
       return true;
     }());
 
@@ -175,17 +169,8 @@ mixin Logging {
   void logI(String message) => Log.i(logTag, message);
   void logW(String message) => Log.w(logTag, message);
 
-  void logE(
-      String message, {
-        Object? error,
-        StackTrace? stackTrace,
-      }) {
-    Log.e(
-      logTag,
-      message,
-      error: error,
-      stackTrace: stackTrace,
-    );
+  void logE(String message, {Object? error, StackTrace? stackTrace}) {
+    Log.e(logTag, message, error: error, stackTrace: stackTrace);
   }
 }
 

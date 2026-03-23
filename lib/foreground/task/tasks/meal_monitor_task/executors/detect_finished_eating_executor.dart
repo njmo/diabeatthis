@@ -51,7 +51,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor with Logging
       );
     }
 
-    runtimeContext.waitForDuration(Duration(minutes: 5));
+    await runtimeContext.waitForDuration(Duration(minutes: 5));
 
     logI ("Finished eating");
 

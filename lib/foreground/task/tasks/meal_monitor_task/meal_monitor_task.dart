@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:clock/clock.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
@@ -25,6 +26,9 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
         (e) => e is NextMealEvent,
         (e) => e is MealStatusChangedEvent,
   ];
+
+  @visibleForTesting
+  MealMonitorStateExecutor get state => _state;
 
   @override
   bool shouldInterrupt(ForegroundEvent event) {
@@ -178,6 +182,7 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
         // and act accordingly.
         final nextMeal = await checkForNextMeal(context);
         if (nextMeal == null) {
+          logI("No meal to monitor, wait for NextMealEvent and sleep.");
           // no meal to monitor, wait for NextMealEvent and sleep.
           mealMonitorTransition = MealMonitorTransition(
             MealMonitorContext(),

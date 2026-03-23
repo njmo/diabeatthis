@@ -1,10 +1,8 @@
-import 'dart:math';
-
 import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../../core/domain/model/device_status.dart';
-import '../../../../../core/drift/dao/ingredient_dao.dart';
+import '../../../../../core/domain/model/meal_summary.dart';
 import '../../../../../core/notifications/domain/events/meal_suggestion_notification.dart';
 import '../../../../../core/notifications/domain/events/temp_target_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -20,10 +18,10 @@ import '../../../../providers/device_status_value_provider.dart';
 import '../../../../runtime/wait_handle.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
+import 'bolus_then_wait_executor.dart';
 import 'detect_finished_eating_executor.dart';
 import 'idle_executor.dart';
 import 'meal_monitor_state_executor.dart';
-import 'bolus_then_wait_executor.dart';
 
 enum PathDecision {
   waitUntilMealMonitorWindow,
@@ -80,7 +78,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     RuntimeContext context,
     int maxMinutes,
   ) async {
-    logI("waiting for device status");
+    logI("waiting for device status for $maxMinutes minutes");
     final event = await context
         .waitForEventWithTimeout<DataAvailableEvent<DeviceStatus>>(
           Duration(minutes: maxMinutes),
@@ -135,6 +133,16 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       return timeToMeal.inMinutes - 15;
     }
     return timeToMeal.inMinutes;
+  }
+
+  Future<MealSummary?> getMealSummary(
+    RuntimeContext context,
+    int mealId,
+  ) async {
+    final mealSummary = await context.container.read(
+      mealMacronutrientsSummaryProvider(mealId).future,
+    );
+    return mealSummary;
   }
 
   Future<DateTime> normalizeMealTime(
@@ -242,24 +250,38 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               maxWaitMinutes,
             );
             logI("Blood sugar value: ${deviceStatus.bg}");
+            var notificationShown = false;
             if (deviceStatus.bg > 100) {
               logI("showing temp target suggestion notification");
               showTempTargetNotification(runtimeContext);
 
               logI("showing notification done sleeping till next path");
+              notificationShown = true;
+            }
+            if (maxWaitMinutes > 5 && !notificationShown) {
+              logI("sleeping till next readaing");
+              await runtimeContext.waitForDuration(
+                Duration(minutes: maxWaitMinutes - 5),
+              );
+            } else {
+              logI("sleeping till next path");
               await runtimeContext.waitForDuration(
                 Duration(minutes: maxWaitMinutes),
               );
             }
+            await runtimeContext.waitForDuration(
+              Duration(minutes: maxWaitMinutes),
+            );
             break;
           case PathDecision.mealAdvisor:
-            logI("building macro status");
-            // build meal macronutrient status
-            final mealStatus = await runtimeContext.container.read(
-              mealMacronutrientsSummaryProvider(
-                mealMonitorContext.activeMeal!.id,
-              ).future,
+            logI("building macro status ${mealMonitorContext.activeMeal!.id}");
+
+            final mealStatus = await getMealSummary(
+              runtimeContext,
+              mealMonitorContext.activeMeal!.id,
             );
+
+            logI("after macro status await");
 
             if (mealStatus == null) {
               logI("Problem gathering meal macronutrients status");
@@ -320,7 +342,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     break;
                 }
               }
-              if (shouldAbort) break;
+              if (shouldAbort || iterationsLeft == 1) break;
 
               try {
                 deviceStatus = await waitForNextAvailableDeviceStatus(
@@ -332,6 +354,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 logI("No device status available for 6 minutes");
               }
             } while (--iterationsLeft > 0);
+
+            logI("Ended loop");
 
             // if device status is null means device status is old
             // if advice is null means we don't have advice available
@@ -354,6 +378,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               ),
             );
 
+            logI("Waiting for user response");
             final response = await runtimeContext
                 .waitForEvent<MealSuggestionResponseEvent>();
             // if no response but device status came, recalculate
@@ -389,7 +414,9 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 retry = true;
               },
               empty: (_) {
-                logI("No action from user, clicked on notification he will continue in-app");
+                logI(
+                  "No action from user, clicked on notification he will continue in-app",
+                );
                 nextExecutor = MealMonitorStateIdle();
               },
             );
