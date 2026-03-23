@@ -1,12 +1,15 @@
 import 'package:clock/clock.dart';
+import 'package:diabeatthis/common/events/data/notification/eat_now_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/meal_suggestion_response_event.dart';
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_summary.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
+import 'package:diabeatthis/core/notifications/domain/events/eat_now_event_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_suggestion_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/temp_target_notification.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
+import 'package:diabeatthis/features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/utils/meal_advisor.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_database_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
@@ -351,6 +354,214 @@ void main() {
           final (m, s) = calls.single;
           expect(m.id, 1);
           expect(s, 'eating-then-bolus');
+
+          expect(task.state, isA<DetectFinishedEatingExecutor>());
+        });
+      });
+    });
+    test('wait for bolus 15 min', () {
+      fakeAsync((async) {
+        final start = DateTime(2026, 3, 23, 12, 0);
+        final calls = <(Meal, String)>{};
+        withFakeClock(async, start, () {
+          final testMeal = Meal(
+            id: 1,
+            name: 'asd',
+            plannedAt: clock.now().add(Duration(minutes: 15)),
+          );
+          final container = ProviderContainer(
+            parent: parentContainer,
+            overrides: [
+              getNearestMealProvider.overrideWithValue(AsyncData(null)),
+              getMealByIdProvider(1).overrideWithValue(AsyncData(testMeal)),
+              getMealAdviceProvider(testMeal).overrideWithValue(
+                AsyncData(
+                  MealAdvice(
+                    MealDecision.bolusWaitThenEat,
+                    WaitSuggestion(15, 5, 10),
+                  ),
+                ),
+              ),
+              updateMealProvider.overrideWith((ref, args) async {
+                final (meal, status) = args;
+                calls.add((meal, status));
+              }),
+            ],
+          );
+          final harness = FakeRuntimeHarness(container: container);
+          final task = MealMonitorTask();
+
+          task.run(harness.runtimeContext);
+          _settle(async);
+
+          var lastReadingDate = clock.now().subtract(Duration(minutes: 2));
+
+          final deviceStatus = DeviceStatus(
+            bg: 118,
+            iob: 10,
+            cob: 10,
+            id: 0,
+            date: lastReadingDate,
+            tick: '+0',
+          );
+          emitDeviceStatus(harness, task, container, deviceStatus);
+          container
+              .read(deviceStatusValueProvider.notifier)
+              .update(deviceStatus);
+          _settle(async);
+
+          expect(task.state, isA<MealMonitorStateIdle>());
+
+          harness.dispatchEventToTask(task, MealBolusedWaitingEvent(mealId: 1));
+          _settle(async);
+
+          harness.dispatchEventToTask(
+            task,
+            TreatmentAvailableEvent<Meal>(testMeal),
+          );
+          _settle(async);
+
+          expect(calls, hasLength(1));
+          final (m, s) = calls.single;
+          expect(m.id, 1);
+          expect(s, 'bolused-waiting');
+          calls.remove((m,s));
+
+          for (var i = 0; i < 3; i++) {
+            lastReadingDate = lastReadingDate.add(Duration(minutes: 5));
+            emitDeviceStatus(
+              harness,
+              task,
+              container,
+              DeviceStatus(
+                bg: 120 + i * 4,
+                iob: 10,
+                cob: 10,
+                id: 0,
+                date: lastReadingDate,
+                tick: '',
+              ),
+            );
+            async.elapse(Duration(minutes: 5));
+          }
+
+          expect(fakeNotifications.shownEvents, hasLength(1));
+          final event = fakeNotifications.lastShownEvent;
+          expect(event, isA<EatNowNotificationEvent>());
+          final eventTyped = event as EatNowNotificationEvent;
+          expect(eventTyped.mealId, 1);
+          expect(eventTyped.minutes, 0);
+
+          harness.dispatchEventToTask(task, EatNowResponseEvent.eating(mealId: 1));
+          _settle(async);
+
+          expect(calls, hasLength(1));
+          final (ma, sa) = calls.single;
+          expect(ma.id, 1);
+          expect(sa, 'eating');
+
+          expect(task.state, isA<DetectFinishedEatingExecutor>());
+        });
+      });
+    });
+    test('wait for bolus 5 min big drop', () {
+      fakeAsync((async) {
+        final start = DateTime(2026, 3, 23, 12, 0);
+        final calls = <(Meal, String)>{};
+        withFakeClock(async, start, () {
+          final testMeal = Meal(
+            id: 1,
+            name: 'asd',
+            plannedAt: clock.now().add(Duration(minutes: 15)),
+          );
+          final container = ProviderContainer(
+            parent: parentContainer,
+            overrides: [
+              getNearestMealProvider.overrideWithValue(AsyncData(null)),
+              getMealByIdProvider(1).overrideWithValue(AsyncData(testMeal)),
+              getMealAdviceProvider(testMeal).overrideWithValue(
+                AsyncData(
+                  MealAdvice(
+                    MealDecision.bolusWaitThenEat,
+                    WaitSuggestion(15, 5, 10),
+                  ),
+                ),
+              ),
+              updateMealProvider.overrideWith((ref, args) async {
+                final (meal, status) = args;
+                calls.add((meal, status));
+              }),
+            ],
+          );
+          final harness = FakeRuntimeHarness(container: container);
+          final task = MealMonitorTask();
+
+          task.run(harness.runtimeContext);
+          _settle(async);
+
+          var lastReadingDate = clock.now().subtract(Duration(minutes: 2));
+
+          final deviceStatus = DeviceStatus(
+            bg: 118,
+            iob: 10,
+            cob: 10,
+            id: 0,
+            date: lastReadingDate,
+            tick: '+0',
+          );
+          emitDeviceStatus(harness, task, container, deviceStatus);
+          container
+              .read(deviceStatusValueProvider.notifier)
+              .update(deviceStatus);
+          _settle(async);
+
+          expect(task.state, isA<MealMonitorStateIdle>());
+
+          harness.dispatchEventToTask(task, MealBolusedWaitingEvent(mealId: 1));
+          _settle(async);
+
+          harness.dispatchEventToTask(
+            task,
+            TreatmentAvailableEvent<Meal>(testMeal),
+          );
+          _settle(async);
+
+          expect(calls, hasLength(1));
+          final (m, s) = calls.single;
+          expect(m.id, 1);
+          expect(s, 'bolused-waiting');
+          calls.remove((m,s));
+
+            lastReadingDate = lastReadingDate.add(Duration(minutes: 5));
+            emitDeviceStatus(
+              harness,
+              task,
+              container,
+              DeviceStatus(
+                bg: 105,
+                iob: 10,
+                cob: 10,
+                id: 0,
+                date: lastReadingDate,
+                tick: '-13',
+              ),
+            );
+            async.elapse(Duration(minutes: 5));
+
+          expect(fakeNotifications.shownEvents, hasLength(1));
+          final event = fakeNotifications.lastShownEvent;
+          expect(event, isA<EatNowNotificationEvent>());
+          final eventTyped = event as EatNowNotificationEvent;
+          expect(eventTyped.mealId, 1);
+          expect(eventTyped.minutes, 0);
+
+          harness.dispatchEventToTask(task, EatNowResponseEvent.eating(mealId: 1));
+          _settle(async);
+
+          expect(calls, hasLength(1));
+          final (ma, sa) = calls.single;
+          expect(ma.id, 1);
+          expect(sa, 'eating');
 
           expect(task.state, isA<DetectFinishedEatingExecutor>());
         });

@@ -17,7 +17,7 @@ import 'idle_executor.dart';
 import 'meal_monitor_state_executor.dart';
 
 class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
-  late final int? recommendedMinutes;
+  int? recommendedMinutes;
 
   BolusThenWaitExecutor({this.recommendedMinutes});
 
@@ -36,6 +36,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
     MealMonitorContext mealMonitorContext,
   ) async {
     logI("MealMonitorStateWaitAfterBolus");
+    logI("Meal scheduled on ${mealMonitorContext.activeMeal!.plannedAt}");
     final notificationProvider = runtimeContext.container.read(
       notificationsControllerForegroundProvider,
     );
@@ -43,7 +44,8 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
 
     // it means that user manually went through starting the meal earlier than
     // planned.
-    if (recommendedMinutes != null) {
+    if (recommendedMinutes == null) {
+      logI("User manually went through starting the meal earlier than planned");
       final mealAdvice = await runtimeContext.container.read(
         getMealAdviceProvider(mealMonitorContext.activeMeal!).future,
       );
@@ -71,14 +73,17 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
     );
 
     logI("Calculator response available");
-    final waitIterations = 3;
+    final waitIterations = recommendedMinutes! ~/ 5;
+    logI("Waiting for $waitIterations iterations before showing eat now");
     for (var i = 0; i < waitIterations; i++) {
       final deviceStatus = runtimeContext.container.read(
         deviceStatusValueProvider,
       );
       if (deviceStatus == null) {
-        logI("Problem gathering blood sugar value, waiting 5 minutes for next reading");
-        runtimeContext.waitForDuration(Duration(minutes: 5));
+        logI(
+          "Problem gathering blood sugar value, waiting 5 minutes for next reading",
+        );
+        await runtimeContext.waitForDuration(Duration(minutes: 5));
       } else {
         final tick = int.tryParse(deviceStatus.tick) ?? 0;
         logI(
@@ -92,12 +97,18 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
           }
           break;
         }
-        final sleepDuration = Duration(minutes:5) - deviceStatus.date.difference(clock.now());
-        runtimeContext.waitForDuration(sleepDuration);
+        final deviceStatusDuration = clock.now().difference(deviceStatus.date);
+        final sleepDuration =
+            Duration(minutes: 5) - deviceStatusDuration;
+        logI(
+          "Waiting for ${sleepDuration.inMinutes} $deviceStatusDuration minutes before next reading",
+        );
+        await runtimeContext.waitForDuration(sleepDuration);
+        logI("wait end ");
       }
     }
 
-    logI("Finished waiting for calculator use");
+    logI("Showing notification");
 
     notificationProvider.show(
       EatNowNotificationEvent(
@@ -105,6 +116,8 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
         minutes: 0,
       ),
     );
+
+    logI("Waiting for response");
     final response = await runtimeContext
         .waitForEventWithTimeoutOrNull<EatNowResponseEvent>(
           Duration(minutes: 10),
@@ -127,11 +140,13 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
         return MealMonitorStateIdle();
       },
       empty: (_) {
-        logI("User manually clicked on notification, he will probably continue in-app");
+        logI(
+          "User manually clicked on notification, he will probably continue in-app",
+        );
         return MealMonitorStateIdle();
       },
     );
 
-    return DetectFinishedEatingExecutor(shouldBolus: false);
+    return DetectFinishedEatingExecutor(shouldBolus: false, bolusWaited: true);
   }
 }

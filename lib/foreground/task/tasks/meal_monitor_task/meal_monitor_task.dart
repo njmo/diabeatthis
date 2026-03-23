@@ -57,7 +57,7 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
       eatingThenBolus: (MealEatingThenBolus value) =>
           DetectFinishedEatingExecutor(shouldBolus: true),
       bolusedWaiting: (MealBolusedWaitingEvent value) =>
-          BolusThenWaitExecutor(),
+          BolusThenWaitExecutor(recommendedMinutes: null),
       bolusedEating: (MealBolusedEatingEvent value) =>
           DetectFinishedEatingExecutor(shouldBolus: false),
       eatenBolused: (MealFinishedEatingBolusedEvent value) =>
