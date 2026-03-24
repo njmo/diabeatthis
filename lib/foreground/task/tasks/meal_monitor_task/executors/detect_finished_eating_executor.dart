@@ -57,6 +57,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
             return MealMonitorStateIdle();
           }
           grams = mealSummary.carbsG.round();
+          logI("Meal summary available with $grams grams of carbs");
         }
       }
       else {
