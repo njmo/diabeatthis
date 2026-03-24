@@ -86,12 +86,12 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     return event.data;
   }
 
-  void showTempTargetNotification(RuntimeContext context) {
+  void showTempTargetNotification(RuntimeContext context, int mealId) {
     final notificationProvider = context.container.read(
       notificationsControllerForegroundProvider,
     );
     notificationProvider.show(
-      TempTargetNotificationEvent(tempTargetString: 'Meal'),
+      TempTargetNotificationEvent(tempTargetString: 'Meal', mealId: mealId),
     );
   }
 
@@ -253,25 +253,25 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             var notificationShown = false;
             if (deviceStatus.bg > 100) {
               logI("showing temp target suggestion notification");
-              showTempTargetNotification(runtimeContext);
+              showTempTargetNotification(
+                runtimeContext,
+                mealMonitorContext.activeMeal!.id,
+              );
 
               logI("showing notification done sleeping till next path");
               notificationShown = true;
             }
             if (maxWaitMinutes > 5 && !notificationShown) {
-              logI("sleeping till next readaing");
+              logI("sleeping till next readaing for ${maxWaitMinutes - 5}");
               await runtimeContext.waitForDuration(
                 Duration(minutes: maxWaitMinutes - 5),
               );
             } else {
-              logI("sleeping till next path");
+              logI("sleeping till next path for $maxWaitMinutes");
               await runtimeContext.waitForDuration(
                 Duration(minutes: maxWaitMinutes),
               );
             }
-            await runtimeContext.waitForDuration(
-              Duration(minutes: maxWaitMinutes),
-            );
             break;
           case PathDecision.mealAdvisor:
             logI("building macro status ${mealMonitorContext.activeMeal!.id}");
@@ -311,6 +311,9 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 logI("minutes left $minutesLeft");
 
                 switch (advice.decision!) {
+                  case MealDecision.bolus:
+                    logE("decision is bolus, this should never happen");
+                    throw Exception("decision is bolus, this should never happen");
                   case MealDecision.eatNowBolusLater:
                     logI("Meal advice: ${advice.decision.toString()}");
                     nextExecutor = DetectFinishedEatingExecutor(
@@ -333,7 +336,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     );
                     logI("min waiting for ${advice.wait!.minMinutes} minutes");
                     logI("max waiting for ${advice.wait!.maxMinutes} minutes");
-                    if (advice.wait!.recommendedMinutes == minutesLeft) {
+                    if (advice.wait!.recommendedMinutes >= minutesLeft) {
                       nextExecutor = BolusThenWaitExecutor(
                         recommendedMinutes: advice.wait!.recommendedMinutes,
                       );

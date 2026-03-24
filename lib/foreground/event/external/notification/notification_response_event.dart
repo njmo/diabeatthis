@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../common/events/data/notification/eat_now_response_event.dart';
+import '../../../../common/events/data/notification/finished_eating_response_event.dart';
 import '../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../common/events/data/notification/temp_target_response_event.dart';
 
@@ -25,6 +26,10 @@ sealed class NotificationResponseEvent with _$NotificationResponseEvent {
   const factory NotificationResponseEvent.mealSuggestionResponse({
     required MealSuggestionResponseEvent data,
   }) = NotificationMealSuggestionResponseEvent;
+
+  const factory NotificationResponseEvent.finishedEatingResponse({
+    required FinishedEatingResponseEvent data,
+  }) = NotificationFinishedEatingResponseEvent;
 
   factory NotificationResponseEvent.fromJson(Map<String, dynamic> json) =>
       _$NotificationResponseEventFromJson(json);

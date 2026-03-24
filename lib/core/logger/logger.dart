@@ -125,7 +125,7 @@ class Log {
     assert(() {
 
       if (kDebugMode) {
-        if (LogRuntimeConfig.isUnitTestEnv) print(entry.toLine());
+        print(entry.toLine());
       }
       else {
         dev.log(

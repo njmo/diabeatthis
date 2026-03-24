@@ -17,11 +17,12 @@ final watchNewTreatmentsProvider = StreamProvider<Treatment?>((ref) async* {
       continue;
     }
 
-    for(final treatment in treatments) {
+    for(final treatment in treatments.reversed) {
       yield treatment;
     }
 
-    lastReadingDate = treatments.last.dateHappened ?? clock.now();
+    lastReadingDate = treatments.first.dateHappened ?? clock.now();
+    lastReadingDate = lastReadingDate.add(Duration(seconds: 5));
   }
 });
 

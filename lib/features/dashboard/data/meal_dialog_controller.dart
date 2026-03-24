@@ -84,7 +84,8 @@ class MealDialogController extends _$MealDialogController with Logging {
       case MealDecision.bolusWaitThenEat:
         return "1. Pierw podaj insulinę w kalkulatorze ${state.carbsGrams}g,\n2. ${waitTimeMessage(state.advice.wait!)}i jedz";
       case null:
-        // TODO: Handle this case.
+        throw UnimplementedError();
+      case MealDecision.bolus:
         throw UnimplementedError();
     }
   }

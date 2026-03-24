@@ -11,6 +11,7 @@ enum MealDecision {
   eatNowBolusLater, // in this version: "eat now, no bolus now; log carbs"
   bolusAndEatNow,
   bolusWaitThenEat,
+  bolus,
 }
 
 extension MealDecisionX on MealDecision {
@@ -18,6 +19,8 @@ extension MealDecisionX on MealDecision {
     MealDecision.eatNowBolusLater => 'eating-then-bolus',
     MealDecision.bolusAndEatNow => 'bolused-eating',
     MealDecision.bolusWaitThenEat => 'bolused-waiting',
+    // TODO: Handle this case.
+    MealDecision.bolus => throw UnimplementedError(),
   };
 }
 

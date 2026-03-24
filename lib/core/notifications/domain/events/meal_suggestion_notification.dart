@@ -37,6 +37,8 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
         return 'Podaj insuline na $carbs g odnośnie posiłku i jedz teraz';
       case MealDecision.bolusWaitThenEat:
         return 'Podaj insuline na $carbs g odnośnie posiłku i czekaj $minutes minut przed jedzeniem';
+      case MealDecision.bolus:
+        return 'Podaj insuline na $carbs g odnośnie zjedzonego posiłku';
     }
   }
 
@@ -54,7 +56,9 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
     'decision': decision.index,
   };
 
-  factory MealSuggestionNotificationEvent.fromPayload(Map<String, dynamic> json) {
+  factory MealSuggestionNotificationEvent.fromPayload(
+    Map<String, dynamic> json,
+  ) {
     return MealSuggestionNotificationEvent(
       mealId: json['mealId'] as int,
       minutes: json['minutes'] as int,

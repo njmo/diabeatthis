@@ -25,10 +25,10 @@ class NotificationsControllerImpl implements NotificationsController {
   }
 
   @override
-  Future<void> show(NotificationEvent event) async {
+  Future<void> show(NotificationEvent event, {bool temporary = false}) async {
     final appLifecycleState = _ref.read(appLifecycleProvider);
 
-    if (appLifecycleState == AppLifecycleState.resumed) {
+    if (temporary && appLifecycleState == AppLifecycleState.resumed) {
       await _inAppController.show(event);
     } else {
       await _localController.show(event);

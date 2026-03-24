@@ -1,5 +1,6 @@
 import '../../domain/model/treatment_base.dart';
 
+import '../../logger/logger.dart';
 import '../dto/correction_bolus_dto.dart';
 import '../dto/extended_carb_dto.dart';
 import '../dto/manual_bolus_dto.dart';
@@ -11,7 +12,7 @@ import '../mappers/manual_bolus_mapper.dart';
 import '../mappers/meal_mapper.dart';
 import '../mappers/treat_mapper.dart';
 
-class TreatmentFactory {
+class TreatmentFactory with Logging {
   bool ignoreNextBolus = false;
 
   List<Treatment> parseTreatments(List<dynamic> treatments) {

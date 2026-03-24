@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/router/observers/riverpod_debug_observer.dart';
 import '../../core/logger/logger.dart';
 import '../collector/blood_sugar_collector.dart';
 import '../collector/device_status_collector.dart';
@@ -27,7 +29,9 @@ class MyTaskHandler extends TaskHandler with Logging {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     _container = ProviderContainer(
-      // observers: [RiverpodDebugObserver(env: 'fg')],
+        observers: [
+          if (kDebugMode) RiverpodDebugObserver(env: 'fg')
+        ],
     );
 
     LogRuntimeConfig.configure(enableBuffer: true, capacity: 20000);

@@ -1,4 +1,5 @@
 import '../../../../common/events/data/notification/eat_now_response_event.dart';
+import '../../../../common/events/data/notification/finished_eating_response_event.dart';
 import '../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../common/events/data/notification/temp_target_response_event.dart';
 import '../../../../core/logger/logger.dart';
@@ -17,11 +18,14 @@ class NotificationResponseEventHandler with Logging {
         ),
         orElse: () => context.emitEvent(data),
       ),
-      tempTargetResponse: (TempTargetResponseEvent data) => context.emitEvent(data),
+      tempTargetResponse: (TempTargetResponseEvent data) =>
+          context.emitEvent(data),
       mealSuggestionResponse: (MealSuggestionResponseEvent data) {
         logI('${data.runtimeType}');
         context.emitEvent(data);
       },
+      finishedEatingResponse: (FinishedEatingResponseEvent data) =>
+          context.emitEvent(data),
     );
   }
 }

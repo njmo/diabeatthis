@@ -3,10 +3,13 @@ import '../models/notification_event_type.dart';
 import '../models/notification_key.dart';
 
 class TempTargetNotificationEvent implements NotificationEvent {
-  TempTargetNotificationEvent({required this.tempTargetString});
-  
+  TempTargetNotificationEvent({
+    required this.tempTargetString,
+    required this.mealId,
+  });
 
   final String tempTargetString;
+  final int mealId;
 
   @override
   NotificationEventType get type => NotificationEventType.tempTarget;
@@ -26,15 +29,19 @@ class TempTargetNotificationEvent implements NotificationEvent {
   @override
   Map<String, Object?> toPayload() => {
     'response_event_type': notificationResponseEvent,
-    'action_data': {'tempTargetString': tempTargetString},
+    'action_data': {'mealId': mealId, 'tempTargetString': tempTargetString},
   };
 
   @override
-  Map<String, Object?> toJson() => {'tempTargetString': tempTargetString};
+  Map<String, Object?> toJson() => {
+    'tempTargetString': tempTargetString,
+    'mealId': mealId.toString(),
+  };
 
   factory TempTargetNotificationEvent.fromPayload(Map<String, dynamic> json) {
     return TempTargetNotificationEvent(
       tempTargetString: json['tempTargetString'] as String,
+      mealId: int.parse(json['mealId'] as String),
     );
   }
 }

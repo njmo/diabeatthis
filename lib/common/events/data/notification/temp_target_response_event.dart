@@ -12,11 +12,23 @@ sealed class TempTargetResponseEvent
   const TempTargetResponseEvent._();
 
   const factory TempTargetResponseEvent.agree({
+    required int mealId,
     required String tempTargetString,
   }) = _TempTargetResponseAgreeEvent;
 
+  const factory TempTargetResponseEvent.dismiss({
+    required int mealId,
+    required String tempTargetString,
+  }) = _TempTargetResponseDismissEvent;
+
+  const factory TempTargetResponseEvent.skip({
+    required int mealId,
+    required String tempTargetString,
+  }) = _TempTargetResponseSkipEvent;
+
   const factory TempTargetResponseEvent.empty({
     required int mealId,
+    required String tempTargetString,
   }) = _TempTargetResponseEmptyEvent;
 
   factory TempTargetResponseEvent.fromJson(Map<String, dynamic> json) =>

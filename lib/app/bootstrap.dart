@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/logger/logger.dart';
 import 'app_container.dart';
 
 typedef BootstrapBuilder = FutureOr<Widget> Function();
@@ -24,6 +25,8 @@ Future<void> bootstrap(BootstrapBuilder builder) async {
 
       // Initialize communication port
       FlutterForegroundTask.initCommunicationPort();
+
+      LogRuntimeConfig.configure(enableBuffer: true, capacity: 20000);
 
       if (kDebugMode) {
         debugRepaintRainbowEnabled = true;

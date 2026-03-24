@@ -7,6 +7,7 @@ import '../../domain/model/temporary_target.dart';
 import '../../domain/model/treatment_base.dart';
 import '../../domain/repository/nightscout_repository.dart';
 
+import '../../logger/logger.dart';
 import '../../nightscout/dto/device_status_dto.dart';
 import '../../nightscout/dto/glucose_dto.dart';
 import '../../nightscout/dto/meal_dto.dart';
@@ -18,7 +19,7 @@ import '../../nightscout/mappers/meal_mapper.dart';
 import '../../nightscout/mappers/temporary_target_mapper.dart';
 import '../../nightscout/services/nightscout_service.dart';
 
-class NightscoutRepositoryImpl implements NightscoutRepository {
+class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
   final String nightscoutUrl;
   final NightscoutService service;
   final TreatmentFactory treatmentFactory = TreatmentFactory();
@@ -78,7 +79,7 @@ class NightscoutRepositoryImpl implements NightscoutRepository {
   @override
   Future<List<Meal>> fetchMealsAfter(DateTime after) async {
     final qp = {
-      'find[created_at][\$gte]': after.toIso8601String(),
+      'find[created_at][\$gte]': after.toUtc().toIso8601String(),
       'find[eventType]': 'Bolus Wizard',
     };
     final url = _buildUri('/api/v1/treatments.json', qp);
@@ -100,7 +101,7 @@ class NightscoutRepositoryImpl implements NightscoutRepository {
   @override
   Future<List<Treatment>> fetchTreatmentsAfter(DateTime after) async {
     final qp = {
-      'find[created_at][\$gte]': after.toIso8601String(),
+      'find[created_at][\$gte]': after.toUtc().toIso8601String(),
       'find[\$or][0][eventType]': 'Meal Bolus',
       'find[\$or][1][eventType]': 'Bolus Wizard',
       'find[\$or][2][eventType]': 'Correction Bolus',

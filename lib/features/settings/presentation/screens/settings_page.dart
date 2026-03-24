@@ -2,10 +2,12 @@ import 'package:auto_route/auto_route.dart';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/providers/app_event_router_provider.dart';
 import '../../../../common/events/data/app/dump_logs_event.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
+import '../../../../core/logger/logger.dart';
 
 const _nightscoutUrlKey = 'nightscout_url';
 const _childNameKey = 'main-user-name';
@@ -64,12 +66,35 @@ class SettingsPage extends HookConsumerWidget {
                     },
                   ),
                   const SizedBox(height: 24),
-                  FilledButton(onPressed: () {
-                    final nowString = clock.now().toIso8601String();
-                    final fileName = 'logs-$nowString.txt';
-                    final payload = DumpLogsEvent.saveToFile(name: fileName);
-                    ref.read(appEventRouterProvider).send(payload);
-                  }, child: const Text('Zbierz logi')),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      FilledButton(
+                        onPressed: () async {
+                          final nowString = clock.now().toIso8601String();
+                          final fileName = 'logs-$nowString-ui.txt';
+                          final file = await LogFileWriter.writeLogs(Log.bufferedLogs, fileName);
+                          SharePlus.instance.share(
+                            ShareParams(files: [XFile(file.path)]),
+                          );
+                        },
+                        child: const Text('Zbierz logi z ui'),
+                      ),
+                      const SizedBox(width: 10),
+                      FilledButton(
+                        onPressed: () {
+                          final nowString = clock.now().toIso8601String();
+                          final fileName = 'logs-$nowString-fg.txt';
+                          final payload = DumpLogsEvent.saveToFile(name: fileName);
+                          ref.read(appEventRouterProvider).send(payload);
+                        },
+                        child: const Text('Zbierz logi z tła'),
+                      ),
+]
+                  ),
+
+                  const SizedBox(height: 24),
                   FilledButton(
                     onPressed: () async {
                       formKey.currentState?.save();

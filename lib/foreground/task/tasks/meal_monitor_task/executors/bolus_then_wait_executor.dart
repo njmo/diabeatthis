@@ -7,7 +7,9 @@ import '../../../../../core/notifications/domain/events/eat_now_event_notificati
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../../features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import '../../../../../features/meals/data/providers/meal_database_provider.dart';
+import '../../../../event/internal/meal_status_changed_event.dart';
 import '../../../../event/internal/treatment_available_event.dart';
+import '../../../../event/model/foreground_event.dart';
 import '../../../../providers/device_status_value_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
@@ -19,6 +21,19 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
   int? recommendedMinutes;
 
   BolusThenWaitExecutor({this.recommendedMinutes});
+
+  @override
+  bool shouldInterrupt(
+      ForegroundEvent event,
+      MealMonitorContext mealMonitorContext,
+      ) {
+    logI("BolusThenWaitExecutor shouldInterrupt ${event.runtimeType}");
+    switch (event) {
+      case MealStartedEatingEvent():
+        return true;
+    }
+    return false;
+  }
 
   @override
   Future<void> cleanup(
@@ -131,7 +146,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       eating: (_) {
         logI("Used agreed meal");
         runtimeContext.container.read(
-          updateMealProvider(mealMonitorContext.activeMeal!, 'eating'),
+          updateMealProvider(mealMonitorContext.activeMeal!, 'waited-eating'),
         );
       },
       dismiss: (_) {
