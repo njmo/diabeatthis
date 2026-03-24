@@ -8,7 +8,7 @@ import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
 final watchLatestMealStatusHistoryProvider =
-    StreamProvider<MealStatusHistoryData?>((ref) {
+    StreamProvider.autoDispose<MealStatusHistoryData?>((ref) {
       final db = ref.read(databaseProvider);
 
       final query = db.select(db.mealStatusHistory)

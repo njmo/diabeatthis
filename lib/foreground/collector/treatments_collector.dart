@@ -7,10 +7,15 @@ import '../event/internal/treatment_available_event.dart';
 import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
-final watchNewTreatmentsProvider = StreamProvider<Treatment?>((ref) async* {
+final watchNewTreatmentsProvider = StreamProvider.autoDispose<Treatment?>((ref) async* {
+  var disposed = false;
+  ref.onDispose(() {
+    disposed = true;
+  });
+
   var lastReadingDate = clock.now();
 
-  while (true) {
+  while (!disposed) {
     final treatments = await ref.read(treatmentsAfterProvider(lastReadingDate).future);
     if (treatments.isEmpty) {
       await Future.delayed(const Duration(seconds: 30));

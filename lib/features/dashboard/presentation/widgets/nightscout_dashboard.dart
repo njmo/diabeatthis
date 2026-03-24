@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/data/provider/nightscout_repository_provider.dart';
-import '../../data/providers/device_status_provider.dart';
+import '../../../../foreground/providers/device_status_value_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 
 import '../../data/utils/nightscout_utils.dart';
@@ -13,8 +12,14 @@ class NightscoutPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final deviceStatusStream = ref.watch(deviceStatusStreamProvider);
+    final deviceStatusValue = ref.watch(deviceStatusValueProvider);
     final timeNowStream = ref.watch(timeNowProvider);
+
+    if (deviceStatusValue == null) return const CircularProgressIndicator();
+
+    final lastUpdate = timeNowStream
+        .whenData((data) => data.difference(deviceStatusValue.date))
+        .value;
 
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
@@ -28,50 +33,27 @@ class NightscoutPanel extends ConsumerWidget {
         ),
         child: Column(
           children: [
-            deviceStatusStream.when(
-              data: (status) {
-                final lastUpdate = timeNowStream
-                    .whenData((data) => data.difference(status.date))
-                    .value;
-
-                final oldReading = lastUpdate!.inMinutes > 10;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          RepaintBoundary(
-                            child: Text(
-                              formatAgo(lastUpdate),
-                              style: textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
+                      RepaintBoundary(
+                        child: Text(
+                          formatAgo(lastUpdate ?? Duration.zero),
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                          if (oldReading)
-                            IconButton(
-                              icon: const Icon(Icons.refresh),
-                              onPressed: () {
-                                ref.invalidate(deviceStatusStreamProvider);
-                                ref.invalidate(glucoseWithLimitProvider);
-                              },
-                            ),
-                        ],
+                        ),
                       ),
-                      DeviceStatusDashboard(deviceStatus: status),
                     ],
                   ),
-                );
-              },
-              loading: () => const CircularProgressIndicator(),
-              error: (error, _) => Text('Błąd: $error'),
+                  DeviceStatusDashboard(deviceStatus: deviceStatusValue),
+                ],
+              ),
             ),
           ],
         ),

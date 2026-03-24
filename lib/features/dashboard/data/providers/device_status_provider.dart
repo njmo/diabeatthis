@@ -19,6 +19,11 @@ part 'device_status_provider.g.dart';
 
 @Riverpod(keepAlive: false)
 Stream<DeviceStatus> deviceStatusStream(Ref ref) async* {
+  var disposed = false;
+  ref.onDispose(() {
+    disposed = true;
+  });
+
   final appLifecycleState = ref.watch(appLifecycleProvider);
   if (appLifecycleState != AppLifecycleState.resumed) {
     return;
@@ -28,7 +33,7 @@ Stream<DeviceStatus> deviceStatusStream(Ref ref) async* {
   yield last;
 
   var frequent = false;
-  while (ref.read(appLifecycleProvider) == AppLifecycleState.resumed) {
+  while (!disposed && ref.read(appLifecycleProvider) == AppLifecycleState.resumed) {
     if (!frequent) {
       const longWaitDifference = Duration(minutes: 4, seconds: 50);
       final lastReadDifference = clock.now().difference(last.date);
@@ -45,7 +50,6 @@ Stream<DeviceStatus> deviceStatusStream(Ref ref) async* {
       final timeDifference = current.date.difference(last.date);
       if (timeDifference.inMinutes > 1) {
         last = current;
-        ref.invalidate(glucoseWithLimitProvider);
         yield current;
         frequent = false;
         continue;

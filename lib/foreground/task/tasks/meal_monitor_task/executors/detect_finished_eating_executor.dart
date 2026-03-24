@@ -48,9 +48,13 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
         // if below passes it means that user manually went
         // through starting the meal earlier than planned.
         if (grams == null) {
-          logI("User manually went through starting the meal earlier than planned");
+          logI(
+            "User manually went through starting the meal earlier than planned",
+          );
           final mealSummary = await runtimeContext.container.read(
-            mealMacronutrientsSummaryProvider(mealMonitorContext.activeMeal!.id).future,
+            mealMacronutrientsSummaryProvider(
+              mealMonitorContext.activeMeal!.id,
+            ).future,
           );
           if (mealSummary == null) {
             logI("Problem gathering meal advice, going to idle state");
@@ -59,8 +63,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           grams = mealSummary.carbsG.round();
           logI("Meal summary available with $grams grams of carbs");
         }
-      }
-      else {
+      } else {
         logI("Should not bolus");
         logI("Waiting for calculator use before moving to next step");
         final calculatorResponse = await runtimeContext

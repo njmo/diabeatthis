@@ -3,9 +3,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/eat_now_event_notification.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../../foreground/providers/device_status_value_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
 import 'meal_dialog_state.dart';
-import 'providers/device_status_provider.dart';
 import 'utils/meal_advisor.dart';
 
 part 'meal_dialog_controller.g.dart';
@@ -39,15 +39,14 @@ class MealDialogController extends _$MealDialogController with Logging {
     double proteinGrams,
     double fiberGrams,
   ) async {
-    final deviceStatusStream = await ref.read(
-      deviceStatusStreamProvider.future,
-    );
+    final deviceStatusValue = ref.read(deviceStatusValueProvider);
+    if (deviceStatusValue == null) return null;
 
     return MealAdvisor().getMealAdvice(
-      bg: deviceStatusStream.bg,
-      iob: deviceStatusStream.iob,
-      cob: deviceStatusStream.cob,
-      trend: (parseTick(deviceStatusStream.tick) / 5).round(),
+      bg: deviceStatusValue.bg,
+      iob: deviceStatusValue.iob,
+      cob: deviceStatusValue.cob,
+      trend: (parseTick(deviceStatusValue.tick) / 5).round(),
       mealCarbs: carbs,
       fatGrams: fatGrams,
       proteinGrams: proteinGrams,

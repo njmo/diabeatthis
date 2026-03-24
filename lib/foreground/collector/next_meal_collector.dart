@@ -7,7 +7,7 @@ import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
 final watchNearestMealStatusProvider =
-StreamProvider<MealData?>((ref) {
+StreamProvider.autoDispose<MealData?>((ref) {
   final db = ref.read(databaseProvider);
 
   return db.mealDao.getNearestMealStream();

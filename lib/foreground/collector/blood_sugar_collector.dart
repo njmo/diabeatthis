@@ -1,14 +1,26 @@
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../core/data/provider/nightscout_repository_provider.dart';
 import '../../core/domain/model/glucose.dart';
+import '../../core/logger/logger.dart';
 import '../event/internal/data_available_event.dart';
 import '../providers/blood_sugar_value_provider.dart';
+import '../providers/task_event_router_provider.dart';
 import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
-final watchNearestBloodSugarProvider = StreamProvider<Glucose?>((ref) async*{
+final watchNearestBloodSugarProvider = StreamProvider.autoDispose<Glucose?>((
+  ref,
+) async* {
+  Log.i("watchNearestBloodSugarProvider", "start");
+  var disposed = false;
+
+  ref.onDispose(() {
+    disposed = true;
+  });
+
   int? lastID;
   int? lastValue;
   DateTime? lastReadingDate;
@@ -21,7 +33,7 @@ final watchNearestBloodSugarProvider = StreamProvider<Glucose?>((ref) async*{
     lastReadingDate = glucoseReadings[1].date;
   }
 
-  while (true) {
+  while (!disposed) {
     if (glucoseReadings.isEmpty) {
       glucoseReadings = await ref.read(glucoseWithLimitProvider(1).future);
       await Future.delayed(Duration(seconds: 10));
@@ -65,6 +77,7 @@ class BloodSugarCollector extends ForegroundCollector {
 
   @override
   void start(CollectorContext context) {
+    logI("Starting blood sugar collector");
     _subscription = context.container.listen<AsyncValue<Glucose?>>(
       watchNearestBloodSugarProvider,
       (previous, next) {
@@ -74,9 +87,10 @@ class BloodSugarCollector extends ForegroundCollector {
           logI(
             "Detected change in glucose reading ${data.id} at ${data.date.toIso8601String()} with value ${data.sgv} and tick ${data.tick}",
           );
-          context.emitEvent(
-            DataAvailableEvent<Glucose>(data),
-          );
+          context.emitEvent(DataAvailableEvent<Glucose>(data));
+          final payload = TaskGlucoseSynchronization(data: data);
+          context.container.read(taskEventRouterProvider).send(payload);
+
           context.container.read(bloodSugarValueProvider.notifier).update(data);
         });
       },

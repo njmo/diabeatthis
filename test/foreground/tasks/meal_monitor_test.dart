@@ -881,7 +881,6 @@ void main() {
         });
       });
     });
-
     test('user manualy eat then bolus', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
@@ -970,7 +969,6 @@ void main() {
         });
       });
     });
-
     test('user manualy bolus then eat', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);

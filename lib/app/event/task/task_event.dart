@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../common/events/data/task/task_in_app_notification_payload.dart';
 import '../../../common/events/task_event_payload.dart';
 
@@ -17,12 +18,17 @@ sealed class TaskEvent with _$TaskEvent {
     required TaskInAppNotificationPayload data,
   }) = TaskInAppNotificationEvent;
 
+  const factory TaskEvent.taskDataSynchronization({
+    required TaskDataSynchronizationPayload data,
+  }) = TaskDataSynchronizationEvent;
+
   factory TaskEvent.fromJson(Map<String, dynamic> json) =>
       _$TaskEventFromJson(json);
 
   factory TaskEvent.fromPayload(TaskEventPayload payload) {
     return switch (payload) {
       final TaskInAppNotificationPayload p => TaskEvent.taskInAppNotification(data: p),
+      final TaskDataSynchronizationPayload p => TaskEvent.taskDataSynchronization(data: p),
       _ => throw UnsupportedError(
         'Unsupported data type: ${payload.runtimeType}',
       ),
