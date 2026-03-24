@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart' as domain;
+import '../../../../core/logger/logger.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../presentation/widgets/confidence_slider.dart';
@@ -70,7 +71,7 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
 }
 
 @riverpod
-class MealDraftNotifier extends _$MealDraftNotifier {
+class MealDraftNotifier extends _$MealDraftNotifier with Logging {
   @override
   MealDraft build() {
     return MealDraft(
@@ -83,7 +84,7 @@ class MealDraftNotifier extends _$MealDraftNotifier {
 
   void setName(String name) => state = state.copyWith(name: name);
   void setPlannedAt(DateTime plannedAt) {
-    print("Srtting planned at to ${plannedAt.toIso8601String()}");
+    logI("Srtting planned at to ${plannedAt.toIso8601String()}");
     state = state.copyWith(plannedAt: plannedAt);
   }
   void setStatus(String status) => state = state.copyWith(status: status);

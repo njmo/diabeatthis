@@ -1,12 +1,13 @@
 import 'dart:collection';
 
+import '../../core/logger/logger.dart';
 import '../event/model/foreground_event.dart';
 
-class EventDispatcher {
+class EventDispatcher with Logging {
   final Queue<ForegroundEvent> _queue = Queue<ForegroundEvent>();
 
   void dispatch(ForegroundEvent event) {
-    print('Dispatching event ${event.runtimeType}');
+    logI('Dispatching event ${event.runtimeType}');
     _queue.addLast(event);
   }
 

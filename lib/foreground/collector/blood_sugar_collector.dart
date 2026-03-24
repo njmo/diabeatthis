@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/provider/nightscout_repository_provider.dart';
 import '../../core/domain/model/glucose.dart';
-import '../../core/logger/logger.dart';
 import '../event/internal/data_available_event.dart';
 import '../providers/blood_sugar_value_provider.dart';
 import '../task/base/collector_context.dart';

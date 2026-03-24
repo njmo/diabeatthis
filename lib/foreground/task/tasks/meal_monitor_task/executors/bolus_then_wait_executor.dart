@@ -1,7 +1,6 @@
 import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/eat_now_response_event.dart';
-import '../../../../../core/data/provider/nightscout_repository_provider.dart';
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/domain/events/eat_now_event_notification.dart';
@@ -26,7 +25,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) {
-    print("MealMonitorStateWaitAfterBolus cleanup");
+    logI("MealMonitorStateWaitAfterBolus cleanup");
     return Future.value();
   }
 

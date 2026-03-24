@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../core/logger/logger.dart';
 import '../../data/provider/meal_template_add_provider.dart';
 import '../../data/provider/meal_template_draft_provider.dart';
 import '../widgets/meal_template_ingredients_list_editor.dart';
 
 @RoutePage()
-class AddMealTemplatePage extends HookConsumerWidget {
+class AddMealTemplatePage extends HookConsumerWidget with Logging {
   const AddMealTemplatePage({super.key});
 
   @override
@@ -41,7 +42,7 @@ class AddMealTemplatePage extends HookConsumerWidget {
                             return null;
                           },
                           onSaved: (value) {
-                            print("saving value $value");
+                            logI("saving value $value");
                             mealDraft.setName(value!);
                           },
                           decoration: const InputDecoration(

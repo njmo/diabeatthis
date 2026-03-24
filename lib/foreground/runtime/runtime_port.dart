@@ -1,9 +1,10 @@
+import '../../core/logger/logger.dart';
 import '../event/model/foreground_event.dart';
 
 typedef EmitEventFn = void Function(ForegroundEvent event);
 typedef EmitSignalFn = void Function(String signalKey);
 
-abstract class RuntimePort {
+abstract class RuntimePort with Logging {
   final EmitEventFn emitEvent;
   final EmitSignalFn emitSignal;
 
@@ -13,6 +14,6 @@ abstract class RuntimePort {
   });
 
   void log(String message) {
-    print('[RuntimePort] $message');
+    logI(message);
   }
 }

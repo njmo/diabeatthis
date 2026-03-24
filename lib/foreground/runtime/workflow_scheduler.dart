@@ -3,6 +3,7 @@ import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/logger/logger.dart';
 import '../event/model/foreground_event.dart';
 import '../task/base/runtime_context.dart';
 import '../task/base/workflow_task.dart';
@@ -27,7 +28,7 @@ class _TaskRuntime {
   });
 }
 
-class WorkflowScheduler {
+class WorkflowScheduler with Logging {
   final List<RuntimeWaiter> _waiters = [];
   final List<_TaskRuntime> _taskRuntimes = [];
   final Queue<RuntimeInput> _pendingInputs = Queue<RuntimeInput>();
@@ -51,12 +52,12 @@ class WorkflowScheduler {
   }
 
   void debugPrintState() {
-    print('--- WORKFLOW SCHEDULER ---');
-    print('waiters: ${_waiters.length}');
-    print('pendingInputs: ${_pendingInputs.length}');
-    print('disposed: $_isDisposed');
-    print('flushScheduled: $_flushScheduled');
-    print('--------------------------');
+    logI('--- WORKFLOW SCHEDULER ---');
+    logI('waiters: ${_waiters.length}');
+    logI('pendingInputs: ${_pendingInputs.length}');
+    logI('disposed: $_isDisposed');
+    logI('flushScheduled: $_flushScheduled');
+    logI('--------------------------');
   }
 
   void startTask(WorkflowTask task, RuntimeContext context) {
@@ -66,7 +67,7 @@ class WorkflowScheduler {
     );
     final future = task.run(taskRuntime).catchError((error, stackTrace) {
       if (error is TaskCancelledException) return;
-      context.log('Task ${task.name} failed: $error\n$stackTrace');
+      logE('Task ${task.name} failed: $error\n$stackTrace');
     });
 
     _taskRuntimes.add(

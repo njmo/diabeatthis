@@ -1,9 +1,9 @@
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/foreground/providers/blood_sugar_value_provider.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fake_async/fake_async.dart';
 
 void main() {
   test('clears stale glucose after timer expiry', () {

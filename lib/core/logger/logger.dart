@@ -3,7 +3,7 @@ import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:clock/clock.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 enum LogLevel { debug, info, warning, error }
@@ -124,7 +124,9 @@ class Log {
     // 1. Debug logging do DevTools / logcat
     assert(() {
 
-      if (LogRuntimeConfig.isUnitTestEnv) print(entry.toLine());
+      if (kDebugMode) {
+        if (LogRuntimeConfig.isUnitTestEnv) print(entry.toLine());
+      }
       else {
         dev.log(
           entry.toLine(),

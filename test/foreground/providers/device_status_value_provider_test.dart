@@ -1,9 +1,9 @@
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/foreground/providers/device_status_value_provider.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:fake_async/fake_async.dart';
 
 void main() {
   test('clears stale device status after timer expiry', () {

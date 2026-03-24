@@ -16,7 +16,7 @@ import '../task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import '../task/tasks/service_status_updater_task.dart';
 import 'workflow_scheduler.dart';
 
-class MyTaskHandler extends TaskHandler {
+class MyTaskHandler extends TaskHandler with Logging {
   bool isUiRunning = false;
 
   ProviderContainer? _container;
@@ -78,12 +78,12 @@ class MyTaskHandler extends TaskHandler {
     _externalEventHandler = null;
     _taskScheduler = null;
 
-    print('onDestroy(isTimeout: $isTimeout)');
+    logI('onDestroy(isTimeout: $isTimeout)');
   }
 
   @override
   void onReceiveData(Object data) {
-    print('onReceiveData: $data');
+    logI('onReceiveData: $data');
 
     final handler = _externalEventHandler;
     if (handler == null) return;
@@ -95,24 +95,24 @@ class MyTaskHandler extends TaskHandler {
         return;
       }
 
-      print('Unsupported data type: ${data.runtimeType}');
+      logW('Unsupported data type: ${data.runtimeType}');
     } catch (e, st) {
-      print('Error handling data: $e\n$st');
+      logE('Error handling data: $e\n$st');
     }
   }
 
   @override
   void onNotificationButtonPressed(String id) {
-    print('onNotificationButtonPressed: $id');
+    logI('onNotificationButtonPressed: $id');
   }
 
   @override
   void onNotificationPressed() {
-    print('onNotificationPressed');
+    logI('onNotificationPressed');
   }
 
   @override
   void onNotificationDismissed() {
-    print('onNotificationDismissed');
+    logI('onNotificationDismissed');
   }
 }

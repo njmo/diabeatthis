@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/notification_event_factory.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import 'task_event.dart';
 
-class TaskEventHandler {
+class TaskEventHandler with Logging {
   final WidgetRef _ref;
 
   TaskEventHandler(this._ref);
@@ -15,7 +16,7 @@ class TaskEventHandler {
     switch(appEvent)
     {
       case TaskInAppNotificationEvent(data: final payload):
-        print('Showing notification: $payload');
+        logI('Showing notification: $payload');
 
         final event = NotificationEventFactory()
             .fromPayload(payload.type, payload.data);

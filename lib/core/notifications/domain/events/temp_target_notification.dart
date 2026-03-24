@@ -1,5 +1,3 @@
-import 'package:flutter/cupertino.dart';
-
 import '../models/notification_event.dart';
 import '../models/notification_event_type.dart';
 import '../models/notification_key.dart';

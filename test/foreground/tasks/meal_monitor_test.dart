@@ -23,6 +23,7 @@ import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/id
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/meal_monitor_state_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import 'package:fake_async/fake_async.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -333,7 +334,7 @@ void main() {
               ),
             );
             async.elapse(Duration(minutes: 5));
-            print("Time now ${clock.now().toIso8601String()}");
+            debugPrint("Time now ${clock.now().toIso8601String()}");
           }
 
           expect(fakeNotifications.shownEvents, hasLength(1));

@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/eat_now_event_notification.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
@@ -10,7 +11,7 @@ import 'utils/meal_advisor.dart';
 part 'meal_dialog_controller.g.dart';
 
 @riverpod
-class MealDialogController extends _$MealDialogController {
+class MealDialogController extends _$MealDialogController with Logging {
   late final int mealId;
 
   @override
@@ -106,7 +107,7 @@ class MealDialogController extends _$MealDialogController {
     );
     final when = Duration(minutes: minutes);
 
-    print("SCHEDULING NOTIFICATION IN ${when.toString()}");
+    logI("SCHEDULING NOTIFICATION IN ${when.toString()}");
 
     try {
       final event = EatNowNotificationEvent(mealId: mealId, minutes: minutes);
@@ -114,9 +115,9 @@ class MealDialogController extends _$MealDialogController {
       await notificationsPluginController.schedule(event, when);
 
       final pending = await notificationsPluginController.pending;
-      print('Pending IDs: $pending');
+      logI('Pending IDs: $pending');
     } catch (e) {
-      print('NJMO ERROR: $e');
+      logE('Error scheduling notification: $e');
     }
   }
 }

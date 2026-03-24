@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/domain/model/meal_summary.dart';
-import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';

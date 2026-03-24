@@ -3,12 +3,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/forms.dart';
+import '../../../../core/logger/logger.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/drafts/portion_filter.dart';
 import '../../data/mappers/portion_draft_mapper.dart';
 import '../../data/providers/portion_provider.dart';
 
-class PortionSearch extends HookConsumerWidget {
+class PortionSearch extends HookConsumerWidget with Logging {
   const PortionSearch({super.key});
 
   @override
@@ -29,7 +30,7 @@ class PortionSearch extends HookConsumerWidget {
         ),
       ),
     );
-    print("Filter : $filter");
+    logI("Filter : $filter");
     final draft = ref.watch(portionDraftProvider.notifier);
     final formKey = ref.watch(mealIngredientFormKeyProvider);
 

@@ -5,12 +5,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/date_time_picker.dart';
+import '../../../../core/logger/logger.dart';
 import '../../../dashboard/data/providers/meal_add_provider.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import '../widgets/meal_ingredients_list_editor.dart';
 
 @RoutePage()
-class AddMealPage extends HookConsumerWidget {
+class AddMealPage extends HookConsumerWidget with Logging {
   const AddMealPage({super.key});
 
   @override
@@ -44,7 +45,7 @@ class AddMealPage extends HookConsumerWidget {
                             return null;
                           },
                           onSaved: (value) {
-                            print("saving value $value");
+                            logI("saving value $value");
                             mealDraft.setName(value!);
                           },
                           decoration: const InputDecoration(
@@ -55,13 +56,13 @@ class AddMealPage extends HookConsumerWidget {
                         TextFormField(
                           focusNode: _DisabledFocusNode(),
                           onSaved: (value) {
-                            print("saving value $value");
+                            logI("saving value $value");
                             mealDraft.setPlannedAt(DateTime.parse(value!));
                           },
                           controller: dateController,
                           maxLength: 50,
                           onChanged: (value) {
-                            print("changed value $value");
+                            logI("changed value $value");
                           },
                           onTap: () async {
                             final selectedDateTime = await showDateTimePicker(

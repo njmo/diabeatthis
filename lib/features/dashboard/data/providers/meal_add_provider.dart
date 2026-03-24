@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/meal.dart';
+import '../../../../core/logger/logger.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
@@ -17,7 +18,7 @@ enum MealStatus
 }
 
 @riverpod
-class MealAddNotifier extends _$MealAddNotifier {
+class MealAddNotifier extends _$MealAddNotifier with Logging {
   @override
   void build() {
   }
@@ -28,27 +29,27 @@ class MealAddNotifier extends _$MealAddNotifier {
       mealDraftIngredientsProvider,
     );
 
-    print(
+    logI(
       'Adding ${updatedDraft.name}');
     final meal = await ref.read(
       insertMealProvider(updatedDraft).future,
     );
-    print("Added ${meal.name}");
+    logI("Added ${meal.name}");
     for (final mealIngredient in mealIngredientDrafts) {
       final ingredient = await ref.read(
         insertIngredientProvider(
           mealIngredient.ingredient,
         ).future,
       );
-      print("Added ${(ingredient).name}");
+      logI("Added ${(ingredient).name}");
       final portion = await ref.read(
         insertPortionProvider(
           mealIngredient.ingredientPortion.portion,
         ).future,
       );
 
-      print("Added ${portion?.name ?? 'no portion'}");
-      print("Adding ingredient portion relation");
+      logI("Added ${portion?.name ?? 'no portion'}");
+      logI("Adding ingredient portion relation");
       await ref.read(
         insertIngredientPortionProvider(
           ingredient,
@@ -65,7 +66,7 @@ class MealAddNotifier extends _$MealAddNotifier {
           mealIngredient.quantityConfidence,
         ).future,
       );
-      print("Added meal ingredient");
+      logI("Added meal ingredient");
     }
     return meal;
   }

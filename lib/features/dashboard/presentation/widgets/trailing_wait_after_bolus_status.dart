@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/domain/model/meal.dart';
+import '../../../../core/logger/logger.dart';
 import '../../data/providers/meal_advisor_result_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 
 
-class TrailingWaitAfterBolusStatus extends HookConsumerWidget {
+class TrailingWaitAfterBolusStatus extends HookConsumerWidget with Logging {
   final Meal meal;
   const TrailingWaitAfterBolusStatus({super.key, required this.meal});
 
@@ -29,8 +30,8 @@ class TrailingWaitAfterBolusStatus extends HookConsumerWidget {
     final recommendedMinutes =
         mealAdvice.asData?.value?.wait!.recommendedMinutes;
 
-    print('timeDifference: $timeDifference');
-    print('recommendedMinutes: $recommendedMinutes');
+    logI('timeDifference: $timeDifference');
+    logI('recommendedMinutes: $recommendedMinutes');
 
     final minutesLeft = (recommendedMinutes ?? 0) + timeDifference.inMinutes;
     return Text(

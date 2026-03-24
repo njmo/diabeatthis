@@ -1,7 +1,8 @@
+import '../../logger/logger.dart';
 import '../base/notifications_controller.dart';
 import '../domain/models/notification_event.dart';
 
-class InAppNotificationsController implements NotificationsController{
+class InAppNotificationsController with Logging implements NotificationsController {
   InAppNotificationsController();
 
   @override
@@ -9,7 +10,7 @@ class InAppNotificationsController implements NotificationsController{
 
   @override
   Future<void> show(NotificationEvent event) async {
-    print("IN APP NOTIFICATION: ${event.title}, ${event.toPayload().toString()}");
+    logI("IN APP NOTIFICATION: ${event.title}, ${event.toPayload().toString()}");
   }
 
   @override

@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/domain/model/activity.dart';
 import '../../../../core/domain/model/activity_log.dart';
+import '../../../../core/logger/logger.dart';
 import '../../../activity/data/providers/activity_provider.dart';
 import '../../../activity/presentation/widgets/activity_picker_dialog.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
@@ -14,7 +15,7 @@ import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../data/providers/meal_add_provider.dart';
 import 'meal_status_dialog.dart';
 
-class KidFAB extends HookConsumerWidget {
+class KidFAB extends HookConsumerWidget with Logging {
   const KidFAB({super.key});
 
   @override
@@ -49,7 +50,7 @@ class KidFAB extends HookConsumerWidget {
 
               await act.whenOrNull(
                 existing: (id, name, pre, post) async {
-                  print('Starting activity: $id $name');
+                  logI('Starting activity: $id $name');
                   try {
                     await ref.read(
                       insertActivityLogProvider(

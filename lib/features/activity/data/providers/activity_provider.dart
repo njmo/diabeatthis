@@ -5,6 +5,7 @@ import '../../../../core/domain/model/activity.dart';
 import '../../../../core/domain/model/activity_log.dart';
 import '../../../../core/drift/mappers/activity_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
+import '../../../../core/logger/logger.dart';
 
 part 'activity_provider.g.dart';
 
@@ -123,7 +124,7 @@ Future<void> stopActivity(Ref ref, ActivityLog activityLog) async {
 Future<ActivityLog?> getPendingActivity(Ref ref) async {
   final db = ref.watch(databaseProvider);
   final value = await db.activityDao.getActiveActivityLog();
-  print(value);
+  Log.i('getPendingActivityProvider', 'value: $value');
 
   final activity = await db.activityDao.getActivityById(value.activityId);
   return ActivityLog.view(

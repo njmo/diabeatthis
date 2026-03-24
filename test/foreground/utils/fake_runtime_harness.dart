@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:diabeatthis/foreground/event/model/foreground_event.dart';
 import 'package:diabeatthis/foreground/runtime/runtime_input.dart';
 import 'package:diabeatthis/foreground/runtime/runtime_waiter.dart';
@@ -11,6 +9,8 @@ import 'package:diabeatthis/foreground/runtime/task_interrupt_controller.dart';
 import 'package:diabeatthis/foreground/runtime/wait_handle.dart';
 import 'package:diabeatthis/foreground/task/base/runtime_context.dart';
 import 'package:diabeatthis/foreground/task/base/workflow_task.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class FakeRuntimeHarness {
   final ProviderContainer container;
@@ -58,10 +58,10 @@ class FakeRuntimeHarness {
   int get activeWaitersCount => _waiters.length;
 
   void debugPrintState() {
-    print('--- FAKE RUNTIME HARNESS ---');
-    print('waiters: ${_waiters.length}');
-    print('cancelled: ${cancellation.isCancelled}');
-    print('----------------------------');
+    debugPrint('--- FAKE RUNTIME HARNESS ---');
+    debugPrint('waiters: ${_waiters.length}');
+    debugPrint('cancelled: ${cancellation.isCancelled}');
+    debugPrint('----------------------------');
   }
 
   void dispatchEvent(ForegroundEvent event) {

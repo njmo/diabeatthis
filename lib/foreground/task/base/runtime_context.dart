@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/logger/logger.dart';
 import '../../event/model/foreground_event.dart';
 import '../../runtime/task_cancellation.dart';
 import '../../runtime/task_cancelled_exception.dart';
@@ -20,7 +21,7 @@ typedef EventWaitFactory =
 
 typedef SignalWaitFactory = WaitHandle<void> Function(String signalKey);
 
-class RuntimeContext {
+class RuntimeContext with Logging {
   final TaskCancellation cancellation;
   final TaskInterruptController interruptController;
   final EmitEventFn emitEvent;
@@ -175,7 +176,7 @@ class RuntimeContext {
   }
 
   void log(String message) {
-    print('[RuntimeContext] $message');
+    logI('[RuntimeContext] $message');
   }
 }
 

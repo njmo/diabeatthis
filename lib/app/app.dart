@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../common/events/data/app/lifecycle_state_event.dart';
 import '../common/events/data/app_event_data.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
+import '../core/logger/logger.dart';
 import '../core/notifications/providers/notifications_controller_provider.dart';
 import 'event/task/task_event_handler.dart';
 import 'lifecycle/app_foreground_bridge.dart';
@@ -23,7 +24,7 @@ class MyApp extends ConsumerStatefulWidget {
   ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver, Logging{
   final AppForegroundBridge _foregroundBridge = AppForegroundBridge();
   late TaskEventHandler? _taskEventHandler;
 
@@ -32,7 +33,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       final map = jsonDecode(data) as Map<String, dynamic>;
       _taskEventHandler!.handle(map);
     }
-    print('onReceiveData: $data');
+    logI('onReceiveData: $data');
   }
 
   Future<void> prepareApp() async {
@@ -72,7 +73,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     ref.read(appLifecycleProvider.notifier).setState(state);
-    print('sending ${state.toString()}');
+    logI('sending ${state.toString()}');
 
     final AppEventData payload = LifecycleStateEvent.changed(state: state.index);
     ref.read(appEventRouterProvider).send(payload);
