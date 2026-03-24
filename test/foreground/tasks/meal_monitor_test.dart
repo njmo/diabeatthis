@@ -712,7 +712,7 @@ void main() {
           expect(fakeNotifications.shownEvents, hasLength(1));
           var event = fakeNotifications.lastShownEvent;
           expect(event, isA<EatNowNotificationEvent>());
-          var eventTyped = event as EatNowNotificationEvent;
+          final eventTyped = event as EatNowNotificationEvent;
           expect(eventTyped.mealId, 1);
           expect(eventTyped.minutes, 0);
 

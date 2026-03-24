@@ -7,6 +7,7 @@ import '../../../../../core/notifications/domain/events/meal_suggestion_notifica
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
 import '../../../../../features/meals/data/providers/meal_database_provider.dart';
+import '../../../../../features/meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../../event/internal/treatment_available_event.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
@@ -18,7 +19,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     with Logging {
   final bool shouldBolus;
   final bool? bolusWaited;
-  final int? grams;
+  int? grams;
 
   DetectFinishedEatingExecutor({
     required this.shouldBolus,
@@ -42,7 +43,23 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     logI("DetectFinishedEatingExecutor");
 
     if (bolusWaited == null) {
-      if (shouldBolus == false) {
+      if (shouldBolus) {
+        logI("Checking if needed data is present");
+        // if below passes it means that user manually went
+        // through starting the meal earlier than planned.
+        if (grams == null) {
+          logI("User manually went through starting the meal earlier than planned");
+          final mealSummary = await runtimeContext.container.read(
+            mealMacronutrientsSummaryProvider(mealMonitorContext.activeMeal!.id).future,
+          );
+          if (mealSummary == null) {
+            logI("Problem gathering meal advice, going to idle state");
+            return MealMonitorStateIdle();
+          }
+          grams = mealSummary.carbsG.round();
+        }
+      }
+      else {
         logI("Should not bolus");
         logI("Waiting for calculator use before moving to next step");
         final calculatorResponse = await runtimeContext
