@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../common/events/data/app/execute_command_event.dart';
 import '../common/events/data/app/lifecycle_state_event.dart';
 import '../common/events/data/app_event_data.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
@@ -24,7 +25,8 @@ class MyApp extends ConsumerStatefulWidget {
   ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver, Logging{
+class _MyAppState extends ConsumerState<MyApp>
+    with WidgetsBindingObserver, Logging {
   final AppForegroundBridge _foregroundBridge = AppForegroundBridge();
   late TaskEventHandler? _taskEventHandler;
 
@@ -58,7 +60,13 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver, Logg
 
       final enabled = ref.read(monitorServiceEnabledProvider);
       if (enabled) {
-        await _foregroundBridge.startMonitoring();
+        final isServiceRunning = await _foregroundBridge.isServiceRunning();
+        if (!isServiceRunning) {
+          await _foregroundBridge.startMonitoring();
+        } else {
+          logI("Foreground task is running, requesting data sync");
+          sendSyncCommand();
+        }
       }
     });
   }
@@ -70,13 +78,25 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver, Logg
     super.dispose();
   }
 
+  void sendSyncCommand() {
+    final appEventRouter = ref.read(appEventRouterProvider);
+    final syncCommand = ExecuteCommandEvent.syncData(data: []);
+    appEventRouter.send(syncCommand);
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    final appEventRouter = ref.read(appEventRouterProvider);
     ref.read(appLifecycleProvider.notifier).setState(state);
     logI('sending ${state.toString()}');
+    if (state == AppLifecycleState.resumed) {
+      sendSyncCommand();
+    }
 
-    final AppEventData payload = LifecycleStateEvent.changed(state: state.index);
-    ref.read(appEventRouterProvider).send(payload);
+    final AppEventData payload = LifecycleStateEvent.changed(
+      state: state.index,
+    );
+    appEventRouter.send(payload);
   }
 
   @override

@@ -18,10 +18,11 @@ class AppForegroundBridge {
     FlutterForegroundTask.removeTaskDataCallback(onData);
   }
 
+  Future<bool> isServiceRunning() async {
+    return controller.isRunning();
+  }
+
   Future<void> startMonitoring() async {
-    final isRunning = await controller.isRunning();
-    if (!isRunning) {
-      await controller.startMonitoring();
-    }
+    await controller.startMonitoring();
   }
 }

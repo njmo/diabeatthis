@@ -79,15 +79,33 @@ class RuntimeContext with Logging {
   Future<T> waitForEventWithTimeout<T extends ForegroundEvent>(
     Duration duration, {
     bool Function(T event)? predicate,
-  }) {
-    return eventWait<T>(predicate: predicate).timeout(duration).future;
+  }) async {
+    cancellation.throwIfCancelled();
+
+    final handle = eventWait<T>(predicate: predicate);
+
+    try {
+      return await interruptController.race(handle.timeout(duration).future);
+    } finally {
+      await handle.cancel();
+    }
   }
 
   Future<T?> waitForEventWithTimeoutOrNull<T extends ForegroundEvent>(
     Duration duration, {
     bool Function(T event)? predicate,
-  }) {
-    return eventWait<T>(predicate: predicate).timeoutOrNull(duration).future;
+  }) async {
+    cancellation.throwIfCancelled();
+
+    final handle = eventWait<T>(predicate: predicate);
+
+    try {
+      return await interruptController.race(
+        handle.timeoutOrNull(duration).future,
+      );
+    } finally {
+      await handle.cancel();
+    }
   }
 
   WaitHandle<T> eventWait<T extends ForegroundEvent>({

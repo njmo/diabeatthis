@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../foreground/providers/device_status_value_provider.dart';
+import '../../data/providers/device_status_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 
 import '../../data/utils/nightscout_utils.dart';
@@ -12,7 +12,7 @@ class NightscoutPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final deviceStatusValue = ref.watch(deviceStatusValueProvider);
+    final deviceStatusValue = ref.watch(deviceStatusUiProvider);
     final timeNowStream = ref.watch(timeNowProvider);
 
     if (deviceStatusValue == null) return const CircularProgressIndicator();

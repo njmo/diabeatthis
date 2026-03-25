@@ -34,6 +34,16 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
   MonitorUntilMeal();
 
   @override
+  List<Type> get interuptableEvents => [
+    MealStartedEatingEvent,
+    MealBolusedEatingEvent,
+    MealBolusedWaitingEvent,
+    MealSkippedEvent,
+    MealEatingThenBolus,
+    NextMealEvent,
+  ];
+
+  @override
   bool shouldInterrupt(
     ForegroundEvent event,
     MealMonitorContext mealMonitorContext,
@@ -203,7 +213,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
         timeToMeal,
         mealPlannedAt,
       );
-    } catch (e) {
+    } on WaitTimeoutException catch (_) {
       logI("Problem normalizing meal time");
       return MealMonitorStateIdle();
     }
@@ -350,11 +360,11 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               try {
                 deviceStatus = await waitForNextAvailableDeviceStatus(
                   runtimeContext,
-                  6,
+                  7,
                 );
-              } catch (e) {
+              } on WaitTimeoutException catch (_)  {
                 deviceStatus = null;
-                logI("No device status available for 6 minutes");
+                logI("No device status available for 7 minutes");
               }
             } while (--iterationsLeft > 0);
 

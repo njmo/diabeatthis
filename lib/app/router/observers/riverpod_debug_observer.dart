@@ -3,14 +3,14 @@ import 'dart:convert';
 
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logger/logger.dart';
+
+import '../../../core/logger/logger.dart';
 
 typedef ValueFormatter = String Function(Object? value);
 
-final class RiverpodDebugObserver extends ProviderObserver {
+final class RiverpodDebugObserver extends ProviderObserver with Logging {
   RiverpodDebugObserver({
     this.env = 'router',
-    Logger? logger,
     this.includeNames,
     this.excludeNames,
     this.prettyAsyncValue = true,
@@ -18,14 +18,7 @@ final class RiverpodDebugObserver extends ProviderObserver {
     this.trackDurations = true,
     this.format = LogFormat.jsonl, // ← JSON lines domyślnie
     this.valueFormatter,
-  }) : _logger = logger ??
-      Logger(
-        printer: SimplePrinter( // prosty, jednolinijkowy output
-          printTime: true,
-        ),
-      );
-
-  final Logger _logger;
+  });
 
   /// Filtry po nazwie providera (exact string lub RegExp)
   final List<Pattern>? includeNames;
@@ -99,7 +92,7 @@ final class RiverpodDebugObserver extends ProviderObserver {
     final delta = _deltaMs(ctx);
     final val = _fmtValue(value);
 
-    _logger.i(_line(
+    logI(_line(
       event: 'add',
       provider: name,
       deltaMs: delta,
@@ -111,7 +104,7 @@ final class RiverpodDebugObserver extends ProviderObserver {
     final name = _providerName(ctx);
     final delta = _deltaMs(ctx);
 
-    _logger.d(_line(
+    logD(_line(
       event: 'update',
       provider: name,
       deltaMs: delta,
@@ -122,7 +115,7 @@ final class RiverpodDebugObserver extends ProviderObserver {
 
   void _logDispose(ProviderObserverContext ctx) {
     final name = _providerName(ctx);
-    _logger.w(_line(
+    logW(_line(
       event: 'dispose',
       provider: name,
     ));
@@ -137,12 +130,10 @@ final class RiverpodDebugObserver extends ProviderObserver {
     String? previous,
     String? next,
   }) {
-    final ts = clock.now().toIso8601String();
 
     if (format == LogFormat.jsonl) {
       final map = <String, Object?>{
         'env': env,
-        'ts': ts,
         'event': event, // add/update/dispose
         'provider': provider,
         if (deltaMs != null) 'delta_ms': deltaMs,
@@ -155,7 +146,6 @@ final class RiverpodDebugObserver extends ProviderObserver {
       // key=value (łatwe do grepowania i czytelne)
       final parts = <String>[
         'env=$env',
-        'ts=$ts',
         'event=$event',
         'provider=$provider',
         if (deltaMs != null) 'delta_ms=$deltaMs',

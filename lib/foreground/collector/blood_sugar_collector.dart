@@ -21,14 +21,12 @@ final watchNearestBloodSugarProvider = StreamProvider.autoDispose<Glucose?>((
     disposed = true;
   });
 
-  int? lastID;
   int? lastValue;
   DateTime? lastReadingDate;
 
   // build history
   var glucoseReadings = await ref.read(glucoseWithLimitProvider(2).future);
   if (glucoseReadings.length == 2) {
-    lastID = glucoseReadings[1].id;
     lastValue = glucoseReadings[1].sgv;
     lastReadingDate = glucoseReadings[1].date;
   }
@@ -43,29 +41,28 @@ final watchNearestBloodSugarProvider = StreamProvider.autoDispose<Glucose?>((
     final glucose = glucoseReadings.first;
     final now = clock.now();
     final readingAge = now.difference(glucose.date);
-    final readingAgeInMinutes = readingAge.inMinutes;
     final spaceBetweenReadings = lastReadingDate == null
         ? Duration.zero
         : glucose.date.difference(lastReadingDate);
 
     // fill tick value only when reading is fresh and 2 consecutive readings are available
     if (spaceBetweenReadings.inMinutes <= 6 &&
-        readingAgeInMinutes < 10 &&
+        readingAge < Duration(minutes: 10) &&
         lastValue != null) {
       yield glucose.copyWith(tick: glucose.sgv - lastValue);
     }
-    lastID = glucose.id;
     lastValue = glucose.sgv;
     lastReadingDate = glucose.date;
 
     // sleep until next reading available
-    if (readingAgeInMinutes < 5) {
+    if (readingAge < Duration(minutes: 5)) {
       final remainingDurationToFife = Duration(minutes: 5) - readingAge;
       await Future.delayed(remainingDurationToFife);
     }
 
     // read until new glucose is available
-    while (glucoseReadings.isNotEmpty && lastID == glucoseReadings.first.id) {
+    while (glucoseReadings.isNotEmpty &&
+        glucoseReadings.first.date == lastReadingDate) {
       glucoseReadings = await ref.read(glucoseWithLimitProvider(1).future);
       await Future.delayed(Duration(seconds: 10));
     }

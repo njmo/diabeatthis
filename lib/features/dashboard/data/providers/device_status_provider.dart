@@ -1,10 +1,8 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../app/providers/app_lifecycle_state_provider.dart';
 import '../../../../core/data/provider/nightscout_repository_provider.dart';
 import '../../../../core/domain/model/device_status.dart';
 
@@ -17,6 +15,18 @@ part 'device_status_provider.g.dart';
   The checking frequency adjusts based on whether a new status was found recently.
 */
 
+@Riverpod(keepAlive: true)
+class DeviceStatusUiNotifier extends _$DeviceStatusUiNotifier {
+  @override
+  DeviceStatus? build() {
+    return null;
+  }
+
+  void update(DeviceStatus value) {
+    state = value;
+  }
+}
+
 @Riverpod(keepAlive: false)
 Stream<DeviceStatus> deviceStatusStream(Ref ref) async* {
   var disposed = false;
@@ -24,16 +34,11 @@ Stream<DeviceStatus> deviceStatusStream(Ref ref) async* {
     disposed = true;
   });
 
-  final appLifecycleState = ref.watch(appLifecycleProvider);
-  if (appLifecycleState != AppLifecycleState.resumed) {
-    return;
-  }
-
   var last = await ref.read(deviceStatusProvider.future);
   yield last;
 
   var frequent = false;
-  while (!disposed && ref.read(appLifecycleProvider) == AppLifecycleState.resumed) {
+  while (!disposed) {
     if (!frequent) {
       const longWaitDifference = Duration(minutes: 4, seconds: 50);
       final lastReadDifference = clock.now().difference(last.date);
@@ -48,7 +53,7 @@ Stream<DeviceStatus> deviceStatusStream(Ref ref) async* {
       final current = await ref.read(deviceStatusProvider.future);
       // TODO: temporary fix for duplicates
       final timeDifference = current.date.difference(last.date);
-      if (timeDifference.inMinutes > 1) {
+      if (timeDifference > Duration(minutes: 1)) {
         last = current;
         yield current;
         frequent = false;

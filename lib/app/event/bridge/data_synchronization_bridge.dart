@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../core/data/provider/nightscout_repository_provider.dart';
 import '../../../core/logger/logger.dart';
+import '../../../features/dashboard/data/providers/device_status_provider.dart';
 import '../../../foreground/providers/blood_sugar_value_provider.dart';
-import '../../../foreground/providers/device_status_value_provider.dart';
 
 class DataSynchronizationBridge with Logging {
   final WidgetRef _ref;
@@ -19,7 +19,7 @@ class DataSynchronizationBridge with Logging {
       },
       deviceStatus: (data) {
         logI("Received device status event");
-        _ref.read(deviceStatusValueProvider.notifier).update(data);
+        _ref.read(deviceStatusUiProvider.notifier).update(data);
         _ref.invalidate(glucoseWithLimitProvider);
       },
     );

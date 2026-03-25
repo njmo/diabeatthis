@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/provider/nightscout_repository_provider.dart';
 import '../../core/domain/model/treatment_base.dart';
+import '../../core/logger/logger.dart';
 import '../event/internal/treatment_available_event.dart';
 import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
@@ -16,7 +17,14 @@ final watchNewTreatmentsProvider = StreamProvider.autoDispose<Treatment?>((ref) 
   var lastReadingDate = clock.now();
 
   while (!disposed) {
-    final treatments = await ref.read(treatmentsAfterProvider(lastReadingDate).future);
+    var treatments = List.empty();
+    try {
+      treatments = await ref.read(treatmentsAfterProvider(lastReadingDate).future);
+    }
+    catch (e) {
+      Log.i("watchNewTreatmentsProvider", "Error fetching treatments $e");
+    }
+
     if (treatments.isEmpty) {
       await Future.delayed(const Duration(seconds: 30));
       continue;

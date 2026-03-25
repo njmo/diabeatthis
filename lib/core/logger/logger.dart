@@ -123,7 +123,6 @@ class Log {
 
     // 1. Debug logging do DevTools / logcat
     assert(() {
-
       if (kDebugMode) {
         print(entry.toLine());
       }
