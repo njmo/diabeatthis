@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'device_status_provider.dart';
+import 'device_status_ui_provider.dart';
 import 'time_now_provider.dart';
 
 part 'old_reading_provider.g.dart';

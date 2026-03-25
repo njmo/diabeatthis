@@ -1,13 +1,3 @@
-import 'dart:async';
-
-import 'package:clock/clock.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-import '../../../../core/data/provider/nightscout_repository_provider.dart';
-import '../../../../core/domain/model/device_status.dart';
-
-part 'device_status_provider.g.dart';
-
 /*
   Provides a stream of DeviceStatus updates from Nightscout.
   Initially yields the last known DeviceStatus, then periodically checks for updates.
@@ -15,17 +5,13 @@ part 'device_status_provider.g.dart';
   The checking frequency adjusts based on whether a new status was found recently.
 */
 
-@Riverpod(keepAlive: true)
-class DeviceStatusUiNotifier extends _$DeviceStatusUiNotifier {
-  @override
-  DeviceStatus? build() {
-    return null;
-  }
+import 'package:clock/clock.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-  void update(DeviceStatus value) {
-    state = value;
-  }
-}
+import '../../core/data/provider/nightscout_repository_provider.dart';
+import '../../core/domain/model/device_status.dart';
+
+part 'device_status_stream_provider.g.dart';
 
 @Riverpod(keepAlive: false)
 Stream<DeviceStatus> deviceStatusStream(Ref ref) async* {

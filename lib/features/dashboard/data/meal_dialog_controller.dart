@@ -5,7 +5,7 @@ import '../../../core/notifications/domain/events/eat_now_event_notification.dar
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
 import 'meal_dialog_state.dart';
-import 'providers/device_status_provider.dart';
+import 'providers/device_status_ui_provider.dart';
 import 'utils/meal_advisor.dart';
 
 part 'meal_dialog_controller.g.dart';

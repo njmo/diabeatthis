@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../core/data/provider/nightscout_repository_provider.dart';
 import '../../../core/logger/logger.dart';
-import '../../../features/dashboard/data/providers/device_status_provider.dart';
+import '../../../features/dashboard/data/providers/device_status_ui_provider.dart';
 import '../../../foreground/providers/blood_sugar_value_provider.dart';
 
 class DataSynchronizationBridge with Logging {

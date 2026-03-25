@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../core/domain/model/device_status.dart';
-import '../../features/dashboard/data/providers/device_status_provider.dart';
 import '../event/internal/data_available_event.dart';
+import '../providers/device_status_stream_provider.dart';
 import '../providers/device_status_value_provider.dart';
 import '../providers/task_event_router_provider.dart';
 import '../task/base/collector_context.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/providers/device_status_provider.dart';
+import '../../data/providers/device_status_ui_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 
 import '../../data/utils/nightscout_utils.dart';
