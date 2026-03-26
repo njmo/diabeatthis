@@ -133,7 +133,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
 
     logI("triggered by user: $triggeredByUser, wait ended: $waitEnded");
     if(!triggeredByUser || waitEnded) {
-      logI("Waiting time shortened due to the conditions, showing notification");
+      logI("Waiting time shortened due to the condition $waitEnded or triggered by user $triggeredByUser, showing notification");
       notificationProvider.show(
         EatNowNotificationEvent(
           mealId: mealMonitorContext.activeMeal!.id,
