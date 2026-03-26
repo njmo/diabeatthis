@@ -55,6 +55,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       notificationsControllerForegroundProvider,
     );
     var triggeredByUser = false;
+    var waitEnded = false;
 
     // it means that user manually went through starting the meal earlier than
     // planned.
@@ -109,8 +110,16 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
             logI("Cancelling scheduled notifications");
             notificationProvider.cancelAll();
           }
+          waitEnded = true;
           break;
         }
+
+        if(i == waitIterations - 1) {
+          logI("Last iteration, ignoring wait");
+          break;
+        }
+
+        logI("Waiting 5 minutes before next reading");
         final deviceStatusDuration = clock.now().difference(deviceStatus.date);
         final sleepDuration =
             Duration(minutes: 5) - deviceStatusDuration;
@@ -122,14 +131,16 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       }
     }
 
-    logI("Showing notification");
-
-    notificationProvider.show(
-      EatNowNotificationEvent(
-        mealId: mealMonitorContext.activeMeal!.id,
-        minutes: 0,
-      ),
-    );
+    logI("triggered by user: $triggeredByUser, wait ended: $waitEnded");
+    if(!triggeredByUser || waitEnded) {
+      logI("Waiting time shortened due to the conditions, showing notification");
+      notificationProvider.show(
+        EatNowNotificationEvent(
+          mealId: mealMonitorContext.activeMeal!.id,
+          minutes: 0,
+        ),
+      );
+    }
 
     logI("Waiting for response");
     final response = await runtimeContext
