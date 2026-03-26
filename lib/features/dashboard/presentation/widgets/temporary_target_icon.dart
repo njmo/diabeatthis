@@ -14,7 +14,7 @@ class TemporaryTargetIcon extends ConsumerWidget {
 
     return targetAsync.when(
       loading: () => const Text('Ładowanie...'),
-      error: (e, _) => Text('Błąd: $e'),
+      error: (e, _) => SizedBox.shrink(),
       data: (target) {
         final now = nowAsync.when(
           data: (data) => data,

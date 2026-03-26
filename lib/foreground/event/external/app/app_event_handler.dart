@@ -2,7 +2,9 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../common/events/data/task/task_data_synchronization_payload.dart';
+import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../../core/nightscout/providers/nightscout_url_provider.dart';
 import '../../../providers/blood_sugar_value_provider.dart';
 import '../../../providers/device_status_value_provider.dart';
 import '../../../providers/task_event_router_provider.dart';
@@ -23,22 +25,40 @@ class AppEventHandler with Logging {
       },
       executeCommand: (final command) {
         logI("Received execute command event");
-        command.when(syncData: (final data) {
-          logI("Received sync data command");
-          final router = runtimeContext.container.read(taskEventRouterProvider);
-          final glucose = runtimeContext.container.read(bloodSugarValueProvider);
-          logI("Sending glucose data $glucose");
-          if (glucose != null) {
-            final payload = TaskGlucoseSynchronization(data: glucose);
-            router.send(payload);
-          }
-          final deviceStatus = runtimeContext.container.read(deviceStatusValueProvider);
-          logI("Sending device status data $deviceStatus");
-          if (deviceStatus != null) {
-            final payload = TaskDeviceStatusSynchronization(data: deviceStatus);
-            router.send(payload);
-          }
-        });
+        command.when(
+          syncData: (final data) {
+            logI("Received sync data command");
+            final router = runtimeContext.container.read(
+              taskEventRouterProvider,
+            );
+            final glucose = runtimeContext.container.read(
+              bloodSugarValueProvider,
+            );
+            logI("Sending glucose data $glucose");
+            if (glucose != null) {
+              final payload = TaskGlucoseSynchronization(data: glucose);
+              router.send(payload);
+            }
+            final deviceStatus = runtimeContext.container.read(
+              deviceStatusValueProvider,
+            );
+            logI("Sending device status data $deviceStatus");
+            if (deviceStatus != null) {
+              final payload = TaskDeviceStatusSynchronization(
+                data: deviceStatus,
+              );
+              router.send(payload);
+            }
+          },
+          syncSettings: (Map<String, String> data) async {
+            logI("Received sync settings command, reloading shared prefs");
+            final sharedPrefs = await runtimeContext.container.read(
+              sharedPrefsProvider.future,
+            );
+            sharedPrefs.reload();
+            runtimeContext.container.invalidate(nightscoutUrlProvider);
+          },
+        );
       },
     );
   }

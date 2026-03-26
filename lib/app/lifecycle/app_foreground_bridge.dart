@@ -18,6 +18,10 @@ class AppForegroundBridge {
     FlutterForegroundTask.removeTaskDataCallback(onData);
   }
 
+  Future<void> restartService() async {
+    await FlutterForegroundTask.restartService();
+  }
+
   Future<bool> isServiceRunning() async {
     return controller.isRunning();
   }

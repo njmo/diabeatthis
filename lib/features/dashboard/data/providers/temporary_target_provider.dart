@@ -19,13 +19,13 @@ Stream<TemporaryTarget> temporaryTargetStream(Ref ref) async* {
     return;
   }
 
-  var last = await ref.read(temporaryTargetProvider.future);
+  var last = await ref.watch(temporaryTargetProvider.future);
   var wasActive = isActive(last);
   yield last;
 
-  while (ref.read(appLifecycleProvider) == AppLifecycleState.resumed) {
+  while (ref.watch(appLifecycleProvider) == AppLifecycleState.resumed) {
     try {
-      final current = await ref.read(temporaryTargetProvider.future);
+      final current = await ref.watch(temporaryTargetProvider.future);
 
       final entryChanged = current.createdAt != last.createdAt;
       final durationChanged = current.duration != last.duration;
@@ -44,7 +44,8 @@ Stream<TemporaryTarget> temporaryTargetStream(Ref ref) async* {
       } else {
         wasActive = nowActive;
       }
-    } catch (_) {}
+    } catch (_) {
+    }
 
     await Future.delayed(const Duration(seconds: 5));
   }

@@ -14,6 +14,11 @@ abstract class ExecuteCommandEvent
     required List<String> data,
   }) = ExecuteCommandEventSyncData;
 
+  const factory ExecuteCommandEvent.syncSettings({
+    required Map<String, String> data,
+  }) = ExecuteCommandEventSyncSettings;
+
+
   factory ExecuteCommandEvent.fromJson(Map<String, dynamic> json) =>
       _$ExecuteCommandEventFromJson(json);
 

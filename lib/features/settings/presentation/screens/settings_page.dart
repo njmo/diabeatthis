@@ -1,31 +1,109 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/providers/app_event_router_provider.dart';
 import '../../../../common/events/data/app/dump_logs_event.dart';
+import '../../../../common/events/data/app/execute_command_event.dart';
+import '../../../../core/data/provider/nightscout_repository_provider.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
+import '../../../../core/data/repository/nightscout_repository_impl.dart';
 import '../../../../core/logger/logger.dart';
 
 const _nightscoutUrlKey = 'nightscout_url';
 const _childNameKey = 'main-user-name';
 
 @RoutePage()
-class SettingsPage extends HookConsumerWidget {
+class SettingsPage extends HookConsumerWidget with Logging {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final prefsAsync = ref.watch(sharedPrefsProvider);
-    final formKey = GlobalKey<FormState>();
+
+    final formKey = useMemoized(GlobalKey<FormState>.new);
+    final urlController = useTextEditingController();
+    final childNameController = useTextEditingController();
+
+    final initialized = useState(false);
+    final isSaving = useState(false);
+    final submitError = useState<String?>(null);
 
     return prefsAsync.when(
       loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(body: Center(child: Text('Błąd: $e'))),
       data: (prefs) {
+        if (!initialized.value) {
+          urlController.text = prefs.getString(_nightscoutUrlKey) ?? '';
+          childNameController.text = prefs.getString(_childNameKey) ?? '';
+          initialized.value = true;
+        }
+
+        Future<void> handleSave() async {
+          FocusScope.of(context).unfocus();
+          submitError.value = null;
+
+          final isValid = formKey.currentState?.validate() ?? false;
+          if (!isValid) return;
+
+          final newUrl = urlController.text.trim();
+          logI('newUrl: $newUrl');
+          final newChildName = childNameController.text.trim();
+
+          final oldUrl = prefs.getString(_nightscoutUrlKey)?.trim() ?? '';
+          logI('oldUrl: $oldUrl');
+          final oldChildName = prefs.getString(_childNameKey)?.trim() ?? '';
+
+          final urlChanged = newUrl != oldUrl;
+          final childNameChanged = newChildName != oldChildName;
+
+          isSaving.value = true;
+
+          try {
+            if (urlChanged) {
+              final repo = NightscoutRepositoryImpl(nightscoutUrl: newUrl);
+              await repo.fetchLastGlucoseWithLimit(1);
+            }
+
+            if (urlChanged) {
+              await prefs.setString(_nightscoutUrlKey, newUrl);
+            }
+
+            if (childNameChanged) {
+              await prefs.setString(_childNameKey, newChildName);
+            }
+
+            if (urlChanged || childNameChanged) {
+              ref.invalidate(sharedPrefsProvider);
+              ref.invalidate(nightscoutRepositoryProvider);
+            }
+
+            if (urlChanged) {
+              logI("restart service");
+                FlutterForegroundTask.restartService();
+            }
+
+            ref
+                .read(appEventRouterProvider)
+                .send(ExecuteCommandEvent.syncSettings(data: {}));
+
+            if (context.mounted) {
+              context.router.replace(NamedRoute('DashboardRoute'));
+            }
+          } catch (e, st) {
+            logE('Błąd podczas zapisu ustawień Nightscout $e, $st');
+            submitError.value =
+            'Problem z połączeniem. Sprawdź adres Nightscout.';
+          } finally {
+            isSaving.value = false;
+          }
+        }
+
         return Scaffold(
           appBar: AppBar(title: const Text('Quick settings')),
           body: Padding(
@@ -33,49 +111,74 @@ class SettingsPage extends HookConsumerWidget {
             child: Form(
               key: formKey,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
                     'Podaj adres swojego Nightscout. Bez niego nie możemy pobrać danych.',
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    initialValue: prefs.getString(_nightscoutUrlKey) ?? '',
+                    controller: urlController,
                     decoration: const InputDecoration(
                       labelText: 'Nightscout URL',
                       hintText: 'https://twoj-nightscout.com',
                     ),
                     keyboardType: TextInputType.url,
-                    onSaved: (value) async {
-                      if (value!.isEmpty) return;
+                    autocorrect: false,
+                    validator: (value) {
+                      final text = value?.trim() ?? '';
 
-                      await prefs.setString(_nightscoutUrlKey, value);
+                      if (text.isEmpty) {
+                        return 'Podaj adres Nightscout';
+                      }
+
+                      final uri = Uri.tryParse(text);
+                      if (uri == null ||
+                          !uri.hasScheme ||
+                          (uri.scheme != 'http' && uri.scheme != 'https') ||
+                          uri.host.isEmpty) {
+                        return 'Podaj poprawny adres URL';
+                      }
+
+                      return null;
+                    },
+                    onChanged: (_) {
+                      if (submitError.value != null) {
+                        submitError.value = null;
+                      }
                     },
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    initialValue: prefs.getString(_childNameKey) ?? '',
+                    controller: childNameController,
                     decoration: const InputDecoration(
-                      labelText: 'Imie dziecka',
+                      labelText: 'Imię dziecka',
                       hintText: 'Oliwier',
                     ),
-                    keyboardType: TextInputType.url,
-                    onSaved: (value) async {
-                      if (value!.isEmpty) return;
-
-                      await prefs.setString(_childNameKey, value);
-                    },
+                    textCapitalization: TextCapitalization.words,
                   ),
+                  if (submitError.value != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      submitError.value!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       FilledButton(
                         onPressed: () async {
                           final nowString = clock.now().toIso8601String();
                           final fileName = 'logs-$nowString-ui.txt';
-                          final file = await LogFileWriter.writeLogs(Log.bufferedLogs, fileName);
-                          SharePlus.instance.share(
+                          final file = await LogFileWriter.writeLogs(
+                            Log.bufferedLogs,
+                            fileName,
+                          );
+                          await SharePlus.instance.share(
                             ShareParams(files: [XFile(file.path)]),
                           );
                         },
@@ -86,24 +189,25 @@ class SettingsPage extends HookConsumerWidget {
                         onPressed: () {
                           final nowString = clock.now().toIso8601String();
                           final fileName = 'logs-$nowString-fg.txt';
-                          final payload = DumpLogsEvent.saveToFile(name: fileName);
+                          final payload = DumpLogsEvent.saveToFile(
+                            name: fileName,
+                          );
                           ref.read(appEventRouterProvider).send(payload);
                         },
                         child: const Text('Zbierz logi z tła'),
                       ),
-]
+                    ],
                   ),
-
                   const SizedBox(height: 24),
                   FilledButton(
-                    onPressed: () async {
-                      formKey.currentState?.save();
-                      ref.invalidate(sharedPrefsProvider);
-                      if (context.mounted) {
-                        context.router.replace(NamedRoute('DashboardRoute'));
-                      }
-                    },
-                    child: const Text('Zapisz i przejdź dalej'),
+                    onPressed: isSaving.value ? null : handleSave,
+                    child: isSaving.value
+                        ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                        : const Text('Zapisz i przejdź dalej'),
                   ),
                 ],
               ),
