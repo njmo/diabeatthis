@@ -60,12 +60,6 @@ class AddMealPage extends HookConsumerWidget with Logging {
                         const SizedBox(height: 8),
                         CopiedMealFormField(
                           picker: showCopiedMealPicker,
-                          validator: (value) {
-                            if (value == null) {
-                              return 'Wybierz źródło kopiowania';
-                            }
-                            return null;
-                          },
                           onPicked: (value) async {
                             if (value is CopiedMealFromTemplate) {
                               final ing = await ref.read(
