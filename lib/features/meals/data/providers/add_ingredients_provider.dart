@@ -35,6 +35,14 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     return AddMealIngredientStage.ingredientSearch;
   }
 
+  void modifyIngredientStage(bool isReference) {
+    if (isReference) {
+      state = AddMealIngredientStage.amountForm;
+      return;
+    }
+    state = AddMealIngredientStage.portionAddNewSearch;
+  }
+
   void setOverride() {
     final mealIngredientsDraft = ref.watch(
       mealIngredientsDraftProvider.notifier,

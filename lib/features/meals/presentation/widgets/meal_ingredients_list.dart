@@ -4,7 +4,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/providers/portion_provider.dart';
+import '../../data/drafts/meal_draft.dart';
+import '../../data/providers/add_ingredients_provider.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
+import 'add_meal_ingredient.dart';
 
 class MealIngredientsList extends ConsumerWidget {
   const MealIngredientsList({super.key});
@@ -58,11 +61,41 @@ class MealIngredientsList extends ConsumerWidget {
                   child: ListTile(
                     title: Text(draft.ingredient.name),
                     subtitle: subtitle,
-                    trailing: IconButton(
-                      onPressed: () {
-                        mealDraft.removeMealIngredient(draft);
-                      },
-                      icon: const Icon(Icons.delete, size: 15),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            mealDraft.removeMealIngredient(draft);
+                          },
+                          icon: const Icon(Icons.delete, size: 15),
+                        ),
+                        IconButton(
+                          onPressed: () async {
+                            final addingStateNotifier = ref.watch(
+                              addMealIngredientStageProvider.notifier,
+                            );
+                            final mealIngredientDraft = ref.watch(
+                              mealIngredientsDraftProvider.notifier,
+                            );
+                            mealIngredientDraft.overrideMealIngredient(draft);
+                            addingStateNotifier.modifyIngredientStage(draft.ingredient.isReference);
+
+                            final mealIngredient =
+                                await showModalBottomSheet<MealIngredientsDraft>(
+                              context: context,
+                              useRootNavigator: false,
+                              isScrollControlled: true,
+                              builder: (_) => AddMealIngredient(),
+                            );
+                            if (mealIngredient != null) {
+                              mealDraft.removeMealIngredient(draft);
+                              mealDraft.addMealIngredient(mealIngredient);
+                            }
+                          },
+                          icon: const Icon(Icons.edit, size: 15),
+                        ),
+                      ],
                     ),
                   ),
                 );

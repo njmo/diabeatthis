@@ -57,6 +57,9 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
     );
   }
 
+  void overrideMealIngredient(MealIngredientsDraft mealIngredient) =>
+      state = mealIngredient;
+
   void setIngredient(domain.Ingredient ingredient) =>
       state = state.copyWith(ingredient: ingredient);
   void setIngredientPortion(PortionSelection portion) => state = state.copyWith(
