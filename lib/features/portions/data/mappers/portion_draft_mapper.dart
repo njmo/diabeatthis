@@ -14,6 +14,16 @@ extension PortionSelectionMapper on domain.Portion {
   }
 }
 
+extension PortionDataToPortionSelectionMapper on PortionData {
+  PortionSelection toSelection() {
+    return PortionSelection.existing(
+      id: id,
+      name: name,
+      unitHint: unitHint,
+    );
+  }
+}
+
 extension MealDraftToCompanion on PortionSelection {
   PortionCompanion toCompanion() {
     return maybeMap(

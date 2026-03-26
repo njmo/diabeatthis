@@ -6,14 +6,30 @@ import 'dao/activity_dao.dart';
 import 'dao/ingredient_dao.dart';
 import 'dao/meal_advisor_result_dao.dart';
 import 'dao/meal_dao.dart';
+import 'dao/meal_ingredients_dao.dart';
+import 'dao/meal_template_dao.dart';
+import 'dao/meal_template_ingredients_dao.dart';
 import 'dao/portion_dao.dart';
 import 'database.dart';
 
 part 'database_impl.g.dart';
 
-@DriftDatabase(include: {'schemas/schema.drift'}, daos: [IngredientDao, PortionDao, MealDao, MealAdvisorResultDao, ActivityDao])
+@DriftDatabase(
+  include: {'schemas/schema.drift'},
+  daos: [
+    IngredientDao,
+    PortionDao,
+    MealDao,
+    MealAdvisorResultDao,
+    ActivityDao,
+    MealTemplateDao,
+    MealIngredientsDao,
+    MealTemplateIngredientsDao,
+  ],
+)
 class DatabaseImpl extends _$DatabaseImpl implements Database {
-  DatabaseImpl([QueryExecutor? executor]) : super(executor ?? _openConnection());
+  DatabaseImpl([QueryExecutor? executor])
+    : super(executor ?? _openConnection());
 
   @override
   int get schemaVersion => 1;

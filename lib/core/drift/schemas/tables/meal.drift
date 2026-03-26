@@ -8,6 +8,7 @@ CREATE TABLE meal (
 
   status TEXT NOT NULL DEFAULT 'planned',
   meal_template_id INTEGER DEFAULT NULL REFERENCES meal_template (id) ON DELETE SET NULL,
+  based_on_meal_id INTEGER DEFAULT NULL REFERENCES meal (id) ON DELETE SET NULL,
 
   notes TEXT,
 

@@ -3,7 +3,9 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/meal_summary.dart';
+import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
+import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/mappers/portion_draft_mapper.dart';
@@ -16,6 +18,51 @@ part 'meal_ingredients_list_provider.freezed.dart';
 @riverpod
 List<MealIngredientsDraft> mealDraftIngredients(Ref ref) {
   return ref.watch(mealDraftProvider.select((h) => h.mealIngredients));
+}
+
+@riverpod
+Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMeal(Ref ref, int mealId) async {
+  final db = ref.read(databaseProvider);
+  final mealIngredients = await db.mealIngredientsDao.getMealIngredientsForMeal(mealId);
+  final list = <MealIngredientsDraft>[];
+  for(final mealIngredient in mealIngredients) {
+    final ingredient = await db.ingredientDao.getIngredientById(mealIngredient.ingredientId);
+    if(ingredient.isReference == 1) {
+      list.add(MealIngredientsDraft(
+        ingredient: ingredient.toDomain(),
+        ingredientPortion: IngredientPortionDraft(
+          portion: PortionSelection.empty(),
+          amount: 100,
+        ),
+        amount: mealIngredient.amount,
+        quantityConfidence: mealIngredient.quantityConfidence,
+      ));
+      continue;
+    }
+    IngredientPortionDraft ingredientPortion;
+    final portionId = mealIngredient.portionId;
+    if(portionId != null) {
+      final gramsPerPortion = await db.portionDao.getGramsPerPortion(ingredient.id, portionId);
+      final portion = await db.portionDao.getPortionById(portionId);
+      ingredientPortion = IngredientPortionDraft(
+        portion: portion.toSelection(),
+        amount: gramsPerPortion ?? 1,
+      );
+    }
+    else {
+      ingredientPortion = IngredientPortionDraft(
+        portion: PortionSelection.empty(),
+        amount: 1);
+    }
+
+    list.add(MealIngredientsDraft(
+      ingredient: ingredient.toDomain(),
+      ingredientPortion: ingredientPortion,
+      amount: mealIngredient.amount,
+      quantityConfidence: mealIngredient.quantityConfidence,
+    ));
+  }
+  return list;
 }
 
 @riverpod

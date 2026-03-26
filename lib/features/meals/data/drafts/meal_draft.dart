@@ -24,5 +24,6 @@ abstract class MealDraft with _$MealDraft {
     required String status,
     String? notes,
     int? mealTemplateId,
+    int? basedOnMealId,
   }) = _MealDraft;
 }

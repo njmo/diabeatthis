@@ -36,6 +36,12 @@ class PortionDao extends DatabaseAccessor<DatabaseImpl> with _$PortionDaoMixin {
     return query.map((row) => row.readTable(db.portion)).get();
   }
 
+  Future<PortionData> getPortionById(int id) {
+    final query = select(db.portion)..where((tbl) => tbl.id.equals(id));
+
+    return query.getSingle();
+  }
+
   Future<int?> getGramsPerPortion(int ingredientId, int portionId) async {
     final query = select(db.ingredientPortions)
       ..where((tbl) =>

@@ -17,6 +17,12 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     return query.map((row) => row.readTable(db.ingredient)).get();
   }
 
+  Future<IngredientData> getIngredientById(int id) {
+    final query = select(db.ingredient)..where((tbl) => tbl.id.equals(id));
+
+    return query.getSingle();
+  }
+
   Future<MealSummary?> totalsForMeal(int mealId) async {
     final mi = db.mealIngredients;
     final ing = ingredient;

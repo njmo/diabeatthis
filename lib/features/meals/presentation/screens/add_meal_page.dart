@@ -7,7 +7,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/widgets/date_time_picker.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../dashboard/data/providers/meal_add_provider.dart';
+import '../../../meal_template/data/provider/meal_template_ingredients_list_provider.dart';
+import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/meal_draft_provider.dart';
+import '../../data/providers/meal_ingredients_list_provider.dart';
+import '../widgets/copied_meal_form_field.dart';
+import '../widgets/copied_meal_picker.dart';
 import '../widgets/meal_ingredients_list_editor.dart';
 
 @RoutePage()
@@ -31,7 +36,6 @@ class AddMealPage extends HookConsumerWidget with Logging {
                 child: SafeArea(
                   child: Form(
                     key: formKey.value,
-                    autovalidateMode: AutovalidateMode.always,
                     child: Column(
                       children: [
                         TextFormField(
@@ -40,7 +44,7 @@ class AddMealPage extends HookConsumerWidget with Logging {
                             if ((value == null) ||
                                 (value.isEmpty) ||
                                 (value.length < 5)) {
-                              return '';
+                              return 'Wpisz nazwe posiłku';
                             }
                             return null;
                           },
@@ -53,6 +57,53 @@ class AddMealPage extends HookConsumerWidget with Logging {
                             border: OutlineInputBorder(),
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        CopiedMealFormField(
+                          picker: showCopiedMealPicker,
+                          validator: (value) {
+                            if (value == null) {
+                              return 'Wybierz źródło kopiowania';
+                            }
+                            return null;
+                          },
+                          onPicked: (value) async {
+                            if (value is CopiedMealFromTemplate) {
+                              final ing = await ref.read(
+                                getMealIngredientsDraftForMealTemplateProvider(
+                                  value.id,
+                                ).future,
+                              );
+                              mealDraft.clearMealIngredients();
+                              mealDraft.addMealIngredients(ing);
+                            } else if (value is CopiedMealFromMeal) {
+                              final ing = await ref.read(
+                                getMealIngredientsDraftForMealProvider(
+                                  value.id,
+                                ).future,
+                              );
+                              mealDraft.clearMealIngredients();
+                              mealDraft.addMealIngredients(ing);
+                            }
+                          },
+                          onSaved: (value) {
+                            if (value?.copiedFromMealId != null ||
+                                value?.copiedFromTemplateId != null) {
+                              mealDraft.setBasedOnMealId(
+                                value!.copiedFromMealId,
+                              );
+                              mealDraft.setMealTemplateId(
+                                value.copiedFromTemplateId,
+                              );
+                            } else {
+                              if (value is CopiedMealFromTemplate) {
+                                mealDraft.setMealTemplateId(value.id);
+                              } else if (value is CopiedMealFromMeal) {
+                                mealDraft.setBasedOnMealId(value.id);
+                              }
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 8),
                         TextFormField(
                           focusNode: _DisabledFocusNode(),
                           onSaved: (value) {
@@ -60,7 +111,6 @@ class AddMealPage extends HookConsumerWidget with Logging {
                             mealDraft.setPlannedAt(DateTime.parse(value!));
                           },
                           controller: dateController,
-                          maxLength: 50,
                           onChanged: (value) {
                             logI("changed value $value");
                           },
@@ -76,12 +126,13 @@ class AddMealPage extends HookConsumerWidget with Logging {
                               ),
                             );
                             if (selectedDateTime != null) {
-                              dateController.text = selectedDateTime.toIso8601String();
+                              dateController.text = selectedDateTime
+                                  .toIso8601String();
                             }
                           },
                           validator: (value) {
                             if ((value == null) || (value.isEmpty)) {
-                              return '';
+                              return 'Wybierz date';
                             }
                             return null;
                           },
@@ -91,6 +142,7 @@ class AddMealPage extends HookConsumerWidget with Logging {
                             border: OutlineInputBorder(),
                           ),
                         ),
+                        const SizedBox(height: 8),
                         SingleChildScrollView(
                           child: MealIngredientsListEditor(),
                         ),
@@ -116,6 +168,15 @@ class AddMealPage extends HookConsumerWidget with Logging {
           ),
         ),
       ),
+    );
+  }
+
+  Future<CopiedMealType?> showCopiedMealPicker(BuildContext context) {
+    return showModalBottomSheet<CopiedMealType>(
+      useRootNavigator: false,
+      isScrollControlled: true,
+      context: context,
+      builder: (context) => const CopiedMealPicker(),
     );
   }
 }

@@ -23,8 +23,7 @@ class AddMealTemplateIngredient extends ConsumerWidget {
       addMealTemplateIngredientStageProvider.notifier,
     );
 
-    return SafeArea(
-      child: Padding(
+    return Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
           left: 16,
@@ -163,7 +162,6 @@ class AddMealTemplateIngredient extends ConsumerWidget {
             ),
           ],
         ),
-      ),
     );
   }
 

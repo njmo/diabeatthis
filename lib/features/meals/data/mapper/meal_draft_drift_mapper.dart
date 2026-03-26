@@ -8,6 +8,8 @@ extension MealDraftToCompanion on MealDraft {
     return MealCompanion(
         name: d.Value(name),
         plannedAt: d.Value(plannedAt.millisecondsSinceEpoch),
+        mealTemplateId: d.Value(mealTemplateId),
+        basedOnMealId: d.Value(basedOnMealId),
     );
   }
 }

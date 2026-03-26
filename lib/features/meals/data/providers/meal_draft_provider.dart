@@ -87,6 +87,10 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
     logI("Srtting planned at to ${plannedAt.toIso8601String()}");
     state = state.copyWith(plannedAt: plannedAt);
   }
+  void setBasedOnMealId(int? basedOnMealId) =>
+      state = state.copyWith(basedOnMealId: basedOnMealId);
+  void setMealTemplateId(int? mealTemplateId) =>
+      state = state.copyWith(mealTemplateId: mealTemplateId);
   void setStatus(String status) => state = state.copyWith(status: status);
   void removeMealIngredient(MealIngredientsDraft mealIngredient) =>
       state = state.copyWith(
@@ -100,4 +104,7 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
       state = state.copyWith(
         mealIngredients: [...state.mealIngredients, ...mealIngredients],
       );
+  void clearMealIngredients() => state = state.copyWith(mealIngredients: []);
+  void setMealIngredients(List<MealIngredientsDraft> mealIngredients) =>
+      state = state.copyWith(mealIngredients: mealIngredients);
 }

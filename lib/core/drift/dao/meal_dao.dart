@@ -78,4 +78,13 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)]);
     return query.watch();
   }
+
+  Future<List<MealData>> searchMealsByName(String queryString) {
+    final query = select(db.meal)
+      ..where((tbl) => tbl.name.like('%$queryString%'))
+      ..orderBy([(m) => OrderingTerm(expression: m.updatedAt)])
+      ..limit(10);
+
+    return query.get();
+  }
 }

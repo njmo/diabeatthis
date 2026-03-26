@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logger/logger.dart';
@@ -28,9 +27,11 @@ Future<void> bootstrap(BootstrapBuilder builder) async {
 
       LogRuntimeConfig.configure(enableBuffer: true, capacity: 20000);
 
+      /*
       if (kDebugMode) {
         debugRepaintRainbowEnabled = true;
       }
+      */
 
       // Do any other init that might touch bindings here (Firebase, etc.)
 
