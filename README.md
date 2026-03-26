@@ -1,4 +1,4 @@
-<img width="250" height="240" alt="image" src="https://github.com/user-attachments/assets/e7606687-dd6c-4db5-9da1-e6600370914f" />
+<img width="192" height="192" alt="ic_launcher" src="https://github.com/user-attachments/assets/7d646654-523c-46f8-8c5d-ea2bf8f5a282" />
 
 # DiaBeatThis 
 
