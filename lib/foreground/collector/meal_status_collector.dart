@@ -13,19 +13,22 @@ final watchLatestMealStatusHistoryProvider =
 
       final query = db.select(db.mealStatusHistory)
         ..orderBy([(t) => OrderingTerm.desc(t.id)])
+        ..where((t) => t.status.isNotValue('planned'))
+        ..where((t) => t.status.isNotValue('eaten'))
+        ..where((t) => t.status.isNotValue('eaten-bolused'))
+        ..where((t) => t.status.isNotValue('skipped'))
         ..limit(1);
 
       return query.watchSingleOrNull();
     });
 
 class MealStatusCollector extends ForegroundCollector {
-
   late final ProviderSubscription _subscription;
 
   MealStatusCollector();
 
   @override
-  Future<void> dispose() async{
+  Future<void> dispose() async {
     _subscription.close();
   }
 
@@ -33,16 +36,19 @@ class MealStatusCollector extends ForegroundCollector {
   void start(CollectorContext context) {
     _subscription = context.container.listen<AsyncValue<MealStatusHistoryData?>>(
       watchLatestMealStatusHistoryProvider,
-          (previous, next) {
+      (previous, next) {
         next.whenData((data) {
           logI("Receiver from database $data");
           if (data == null) return;
-          logI("Detected change in from database for meal ${data.mealId} status : ${data.status}");
-          if (data.status != 'planned') {
-            final event = MealStatusChangedEvent.fromJson({'kind' : data.status, 'mealId' : data.mealId});
-            logI("Emitting event ${event.runtimeType}");
-            context.emitEvent(event);
-          }
+          logI(
+            "Detected change in from database for meal ${data.mealId} status : ${data.status}",
+          );
+          final event = MealStatusChangedEvent.fromJson({
+            'kind': data.status,
+            'mealId': data.mealId,
+          });
+          logI("Emitting event ${event.runtimeType}");
+          context.emitEvent(event);
         });
       },
       fireImmediately: true,

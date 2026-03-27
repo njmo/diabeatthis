@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import '../database_impl.dart';
@@ -15,7 +17,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   }
 
   Stream<List<MealData>> getAllMealForToday() {
-    final now = clock.now();
+    final now = clock.now().toUtc();
     final todayMillisecondsSinceEpoch = DateTime(
       now.year,
       now.month,
@@ -35,35 +37,52 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   }
 
   Future<MealData?> getNearestMeal() async {
-    final now = clock.now();
-    final todayMillisecondsSinceEpoch = DateTime(
-      now.year,
-      now.month,
-      now.day,
-    ).millisecondsSinceEpoch;
+    final now = clock.now().toUtc();
+    final todayMillisecondsSinceEpoch = now.millisecondsSinceEpoch;
     final query = select(db.meal)
       ..where(
-            (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
+        (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
       )
       ..where((tbl) => tbl.status.equals('planned'))
-      ..orderBy([(m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.asc)])
+      ..orderBy([
+        (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.asc),
+      ])
       ..limit(1);
     return query.getSingleOrNull();
   }
 
-  Stream<MealData> getNearestMealStream() {
-    final now = clock.now();
-    final query = select(db.meal)
-      ..where(
-        (tbl) => tbl.plannedAt.isBiggerThanValue(now.millisecondsSinceEpoch),
-      )
-      ..where((tbl) => tbl.status.equals('planned'))
-      ..orderBy([(m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.asc)]);
-    return query.watchSingle();
+  Stream<MealData?> getNearestMealStream() async* {
+    Stream<void> mealChangeTrigger() {
+      return (select(db.meal)..limit(1)).watch().map((_) {});
+    }
+
+    while (true) {
+      final current = await getNearestMeal();
+      yield current;
+
+      if (current == null) {
+        await mealChangeTrigger().first;
+        continue;
+      }
+
+      final waitDuration = DateTime.fromMillisecondsSinceEpoch(
+        current.plannedAt,
+      ).difference(clock.now().toUtc());
+
+      if (waitDuration <= Duration.zero) {
+        continue;
+      }
+
+      try {
+        await mealChangeTrigger().timeout(waitDuration).first;
+      } on TimeoutException {
+        continue;
+      }
+    }
   }
 
   Stream<List<MealData>> getAllPlannedMealForToday() {
-    final now = clock.now();
+    final now = clock.now().toUtc();
     final todayMillisecondsSinceEpoch = DateTime(
       now.year,
       now.month,

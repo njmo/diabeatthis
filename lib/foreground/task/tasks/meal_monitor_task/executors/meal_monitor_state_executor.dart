@@ -8,7 +8,15 @@ import '../meal_monitor_context.dart';
 abstract class MealMonitorStateExecutor with Logging {
   String get name => runtimeType.toString();
 
-  List<Type> get interuptableEvents => [MealStatusChangedEvent, NextMealEvent];
+  List<Type> get interruptableEvents => [
+    MealStartedEatingEvent,
+    MealEatingThenBolus,
+    MealBolusedEatingEvent,
+    MealBolusedWaitingEvent,
+    MealBolusedEatingEvent,
+    MealSkippedEvent,
+    NextMealEvent,
+  ];
 
   // For example to check whether event applies to current active meal
   // to avoid situation that event skipped for some random meal will

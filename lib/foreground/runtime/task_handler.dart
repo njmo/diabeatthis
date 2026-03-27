@@ -47,8 +47,8 @@ class MyTaskHandler extends TaskHandler with Logging {
     _collectors = [
       DeviceStatusCollector(),
       BloodSugarCollector(),
-      MealStatusCollector(),
       NextMealCollector(),
+      MealStatusCollector(),
       TreatmentsCollector(),
     ];
     for (final collector in _collectors!) {

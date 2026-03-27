@@ -1,8 +1,8 @@
 import '../../../../../core/logger/logger.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
-import 'idle_executor.dart';
 import 'meal_monitor_state_executor.dart';
+import 'new_meal_check_executor.dart';
 
 class FinalizeMealExecutor extends MealMonitorStateExecutor with Logging {
   FinalizeMealExecutor();
@@ -23,8 +23,6 @@ class FinalizeMealExecutor extends MealMonitorStateExecutor with Logging {
     logI("FinalizeMealExecutor");
     mealMonitorContext.activeMeal = null;
 
-    await runtimeContext.waitForDuration(Duration(minutes: 5));
-
-    return MealMonitorStateIdle();
+    return NewMealCheckExecutor();
   }
 }

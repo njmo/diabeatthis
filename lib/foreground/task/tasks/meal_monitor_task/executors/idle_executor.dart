@@ -9,7 +9,7 @@ class MealMonitorStateIdle extends MealMonitorStateExecutor with Logging {
   MealMonitorStateIdle();
 
   @override
-  List<Type> get interuptableEvents => [
+  List<Type> get interruptableEvents => [
     MealStartedEatingEvent,
     MealBolusedEatingEvent,
     MealBolusedWaitingEvent,
@@ -32,7 +32,7 @@ class MealMonitorStateIdle extends MealMonitorStateExecutor with Logging {
     MealMonitorContext mealMonitorContext,
   ) async {
     logI("MealMonitorStateIdle");
-    await runtimeContext.waitForDuration(Duration(minutes: 30));
+    await runtimeContext.waitForDuration(Duration(minutes: 15));
     return this;
   }
 }

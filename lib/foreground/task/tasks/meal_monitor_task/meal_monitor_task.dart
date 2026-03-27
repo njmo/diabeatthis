@@ -1,9 +1,7 @@
 import 'dart:async';
 
-import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 
-import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../event/internal/meal_event.dart';
@@ -11,12 +9,11 @@ import '../../../event/internal/meal_status_changed_event.dart';
 import '../../../event/model/foreground_event.dart';
 import '../../base/runtime_context.dart';
 import '../../base/workflow_task.dart';
-import 'executors/bolus_then_wait_executor.dart';
-import 'executors/detect_finished_eating_executor.dart';
-import 'executors/finalize_meal_executor.dart';
 import 'executors/idle_executor.dart';
 import 'executors/meal_monitor_state_executor.dart';
 import 'executors/monitor_until_meal.dart';
+import 'executors/new_meal_check_executor.dart';
+import 'helpers/meal_status_to_executor_mapper.dart';
 import 'meal_monitor_context.dart';
 import 'meal_monitor_transition.dart';
 
@@ -33,42 +30,10 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
   @override
   bool shouldInterrupt(ForegroundEvent event) {
     logI("MealMonitorTask shouldInterrupt ${event.runtimeType}");
-    if (_state.interuptableEvents.contains(event.runtimeType)) {
+    if (_state.interruptableEvents.contains(event.runtimeType)) {
       return _state.shouldInterrupt(event, _activeMealExecutorContext);
     }
     return false;
-  }
-
-  MealMonitorStateExecutor? _mealStatusChangedEventToExecutor(
-    MealStatusChangedEvent event,
-    bool eventForActiveMeal,
-  ) {
-    return event.map(
-      eating: (MealStartedEatingEvent value) =>
-          DetectFinishedEatingExecutor(shouldBolus: false),
-      eaten: (MealFinishedEatingEvent value) => FinalizeMealExecutor(),
-      skipped: (MealSkippedEvent value) {
-        if (eventForActiveMeal) {
-          return MealMonitorStateIdle();
-        }
-        // ignore this transition
-        return null;
-      },
-      eatingThenBolus: (MealEatingThenBolus value) =>
-          DetectFinishedEatingExecutor(shouldBolus: true),
-      bolusedWaiting: (MealBolusedWaitingEvent value) =>
-          BolusThenWaitExecutor(recommendedMinutes: null),
-      bolusedEating: (MealBolusedEatingEvent value) =>
-          DetectFinishedEatingExecutor(shouldBolus: false),
-      eatenBolused: (MealFinishedEatingBolusedEvent value) =>
-          FinalizeMealExecutor(),
-      planned: (MealPlannedEvent value) => MonitorUntilMeal(),
-    );
-  }
-
-  Future<Meal?> checkForNextMeal(RuntimeContext context) async {
-    final meal = await context.container.read(getNearestMealProvider.future);
-    return meal;
   }
 
   MealMonitorStateExecutor _state = MealMonitorStateIdle();
@@ -163,7 +128,7 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
         // pick next state based on interrupted event type
         // user may decide to eat another meal or skip current meal
         // we need to act accordingly.
-        final nextExecutor = _mealStatusChangedEventToExecutor(
+        final nextExecutor = mealStatusChangedEventToExecutor(
           interruptedEvent,
           eventForActiveMeal,
         );
@@ -180,32 +145,10 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
         // first time, since we were not waiting for NextMealEvent before,
         // we need to manually check if we there is something to monitor
         // and act accordingly.
-        final nextMeal = await checkForNextMeal(context);
-        if (nextMeal == null) {
-          logI("No meal to monitor, wait for NextMealEvent and sleep.");
-          // no meal to monitor, wait for NextMealEvent and sleep.
-          mealMonitorTransition = MealMonitorTransition(
-            MealMonitorContext(),
-            MealMonitorStateIdle(),
-          );
-          break;
-        }
-
-        if(nextMeal.plannedAt!.isAfter(clock.now())) {
-          // map status to proper event
-          final mealStateEvent = MealStatusChangedEvent.fromMealStatus(nextMeal);
-          final nextExecutor = _mealStatusChangedEventToExecutor(
-            mealStateEvent,
-            true,
-          );
-
-        if (nextExecutor != null) {
-          mealMonitorTransition = MealMonitorTransition(
-            MealMonitorContext(activeMeal: nextMeal),
-            nextExecutor,
-          );
-        }
-        }
+        mealMonitorTransition = MealMonitorTransition(
+          MealMonitorContext(),
+          NewMealCheckExecutor(),
+        );
     }
 
     if (mealMonitorTransition != null) {

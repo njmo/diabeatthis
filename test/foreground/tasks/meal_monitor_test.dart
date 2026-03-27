@@ -21,7 +21,6 @@ import 'package:diabeatthis/foreground/event/internal/treatment_available_event.
 import 'package:diabeatthis/foreground/providers/device_status_value_provider.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/bolus_then_wait_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/detect_finished_eating_executor.dart';
-import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/finalize_meal_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/idle_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/meal_monitor_state_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/monitor_until_meal.dart';
@@ -79,7 +78,7 @@ void main() {
   LogRuntimeConfig.configure(isUnitTest: true, enableBuffer: false);
 
   group("MealMonitorTask tests", () {
-    test('task reacts to emitted events', () {
+    test('manual meal start shows finished eating notification and returns to idle after confirmation', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         withFakeClock(async, start, () {
@@ -107,12 +106,24 @@ void main() {
 
           async.elapse(const Duration(minutes: 21));
 
+          expect(fakeNotifications.shownEvents, hasLength(1));
+          final event = fakeNotifications.lastShownEvent;
+          expect(event, isA<FinishedEatingNotificationEvent>());
+          final eventTyped = event as FinishedEatingNotificationEvent;
+          expect(eventTyped.mealId, 1);
+
+          harness.dispatchEventToTask(
+            task,
+            FinishedEatingResponseEvent.agree(mealId: 1),
+          );
+          _settle(async);
+
           expect(fakeNotifications.shownEvents, hasLength(0));
           expect(task.state, isA<MealMonitorStateIdle>());
         });
       });
     });
-    test('task reacts to emitted as', () {
+    test('manual meal start marks meal as eaten after finished eating confirmation', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         withFakeClock(async, start, () {
@@ -141,34 +152,35 @@ void main() {
           harness.dispatchEventToTask(task, MealStartedEatingEvent(mealId: 1));
           _settle(async);
 
-          expect(task.state, isNot(isA<MealMonitorStateIdle>()));
+          expect(task.state, isA<DetectFinishedEatingExecutor>());
 
-          final treatmentsMeal = Meal(
-            id: 1,
-            name: 'asd',
-            plannedAt: clock.now(),
-          );
+          async.elapse(const Duration(minutes: 10));
+
+          expect(fakeNotifications.shownEvents, hasLength(1));
+          final event = fakeNotifications.lastShownEvent;
+          expect(event, isA<FinishedEatingNotificationEvent>());
+          final eventTyped = event as FinishedEatingNotificationEvent;
+          expect(eventTyped.mealId, 1);
 
           harness.dispatchEventToTask(
             task,
-            TreatmentAvailableEvent<Meal>(treatmentsMeal),
+            FinishedEatingResponseEvent.agree(mealId: 1),
           );
-
           _settle(async);
-          expect(calls, hasLength(1));
 
-          final (meal, status) = calls.single;
-          expect(meal.id, 1);
-          expect(status, 'bolused-eating');
-          calls.remove((meal, status));
+          expect(calls, hasLength(1));
+          final (m, s) = calls.single;
+          expect(m.id, 1);
+          expect(s, 'eaten');
+          calls.remove((m, s));
 
           expect(fakeNotifications.shownEvents, hasLength(0));
           expect(calls, hasLength(0));
-          expect(task.state, isA<DetectFinishedEatingExecutor>());
+          expect(task.state, isA<MealMonitorStateIdle>());
         });
       });
     });
-    test('Temp target suggested when more than 26 minutes and bg > 120', () {
+    test('shows temp target suggestion when planned meal is 26 minutes away and device status is already available', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         withFakeClock(async, start, () {
@@ -220,7 +232,7 @@ void main() {
       });
     });
     test(
-      'Temp target suggested when more than 26 minutes and bg > 120 waiting for device status',
+      'shows temp target suggestion after device status arrives for a meal planned 26 minutes ahead',
       () {
         fakeAsync((async) {
           final start = DateTime(2026, 3, 23, 12, 0);
@@ -284,7 +296,7 @@ void main() {
         });
       },
     );
-    test('Meal advisor only 20 minutes left', () {
+    test('shows eat now bolus later suggestion 20 minutes before meal and moves to finished eating flow after acceptance', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         withFakeClock(async, start, () {
@@ -373,7 +385,7 @@ void main() {
         });
       });
     });
-    test('wait for bolus 15 min, manually by user', () {
+    test('manual bolus waiting flow marks meal as waited eating after eat now confirmation', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         final calls = <(Meal, String)>{};
@@ -390,9 +402,10 @@ void main() {
               getMealByIdProvider(1).overrideWithValue(AsyncData(testMeal)),
               getMealAdviceProvider(testMeal).overrideWithValue(
                 AsyncData(
-                  MealAdvice(
+                  MealAdvice.full(
                     MealDecision.bolusWaitThenEat,
                     WaitSuggestion(15, 5, 10),
+                    clock.now()
                   ),
                 ),
               ),
@@ -434,12 +447,6 @@ void main() {
             TreatmentAvailableEvent<Meal>(testMeal),
           );
           _settle(async);
-
-          expect(calls, hasLength(1));
-          final (m, s) = calls.single;
-          expect(m.id, 1);
-          expect(s, 'bolused-waiting');
-          calls.remove((m, s));
 
           for (var i = 0; i < 3; i++) {
             lastReadingDate = lastReadingDate.add(Duration(minutes: 5));
@@ -477,7 +484,7 @@ void main() {
         });
       });
     });
-    test('wait for bolus 15 min, manually by user', () {
+    test('manual bolus waiting flow repeats waited eating transition after eat now confirmation', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         final calls = <(Meal, String)>{};
@@ -494,9 +501,10 @@ void main() {
               getMealByIdProvider(1).overrideWithValue(AsyncData(testMeal)),
               getMealAdviceProvider(testMeal).overrideWithValue(
                 AsyncData(
-                  MealAdvice(
+                  MealAdvice.full(
                     MealDecision.bolusWaitThenEat,
                     WaitSuggestion(15, 5, 10),
+                    clock.now()
                   ),
                 ),
               ),
@@ -538,12 +546,6 @@ void main() {
             TreatmentAvailableEvent<Meal>(testMeal),
           );
           _settle(async);
-
-          expect(calls, hasLength(1));
-          final (m, s) = calls.single;
-          expect(m.id, 1);
-          expect(s, 'bolused-waiting');
-          calls.remove((m, s));
 
           for (var i = 0; i < 3; i++) {
             lastReadingDate = lastReadingDate.add(Duration(minutes: 5));
@@ -581,7 +583,7 @@ void main() {
         });
       });
     });
-    test('wait for bolus 15 min, manually by user, shortened due to conditions', () {
+    test('shortens bolus waiting flow and shows eat now notification when glucose drops quickly', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         final calls = <(Meal, String)>{};
@@ -598,9 +600,10 @@ void main() {
               getMealByIdProvider(1).overrideWithValue(AsyncData(testMeal)),
               getMealAdviceProvider(testMeal).overrideWithValue(
                 AsyncData(
-                  MealAdvice(
+                  MealAdvice.full(
                     MealDecision.bolusWaitThenEat,
                     WaitSuggestion(15, 5, 10),
+                    clock.now()
                   ),
                 ),
               ),
@@ -642,12 +645,6 @@ void main() {
             TreatmentAvailableEvent<Meal>(testMeal),
           );
           _settle(async);
-
-          expect(calls, hasLength(1));
-          final (m, s) = calls.single;
-          expect(m.id, 1);
-          expect(s, 'bolused-waiting');
-          calls.remove((m, s));
 
           for (var i = 0; i < 3; i++) {
             lastReadingDate = lastReadingDate.add(Duration(minutes: 5));
@@ -692,7 +689,7 @@ void main() {
         });
       });
     });
-    test('Meal advisor only 20 minutes left, bolus wait', () {
+    test('shows bolus wait suggestion 20 minutes before meal and then transitions through bolus waiting to finished eating flow', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         withFakeClock(async, start, () {
@@ -829,7 +826,7 @@ void main() {
         });
       });
     });
-    test('wait for bolus 5 min big drop', () {
+    test('shows eat now notification after first bolus wait reading when glucose drops sharply', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         final calls = <(Meal, String)>{};
@@ -846,9 +843,10 @@ void main() {
               getMealByIdProvider(1).overrideWithValue(AsyncData(testMeal)),
               getMealAdviceProvider(testMeal).overrideWithValue(
                 AsyncData(
-                  MealAdvice(
+                  MealAdvice.full(
                     MealDecision.bolusWaitThenEat,
                     WaitSuggestion(15, 5, 10),
+                    clock.now()
                   ),
                 ),
               ),
@@ -890,12 +888,6 @@ void main() {
             TreatmentAvailableEvent<Meal>(testMeal),
           );
           _settle(async);
-
-          expect(calls, hasLength(1));
-          final (m, s) = calls.single;
-          expect(m.id, 1);
-          expect(s, 'bolused-waiting');
-          calls.remove((m, s));
 
           lastReadingDate = lastReadingDate.add(Duration(minutes: 5));
           emitDeviceStatus(
@@ -938,7 +930,7 @@ void main() {
         });
       });
     });
-    test('task reacts to emitted events', () {
+    test('manual meal start transitions task from idle to detect finished eating executor', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         withFakeClock(async, start, () {
@@ -962,15 +954,11 @@ void main() {
           harness.dispatchEventToTask(task, MealStartedEatingEvent(mealId: 1));
           _settle(async);
 
-          expect(task.state, isNot(isA<MealMonitorStateIdle>()));
-
-          async.elapse(const Duration(minutes: 21));
-
-          expect(task.state, isA<MealMonitorStateIdle>());
+          expect(task.state, isA<DetectFinishedEatingExecutor>());
         });
       });
     });
-    test('wait for bolus 15 min then wait for finish', () {
+    test('manual bolus waiting flow ends with finished eating confirmation and meal marked as eaten', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         final calls = <(Meal, String)>{};
@@ -987,9 +975,10 @@ void main() {
               getMealByIdProvider(1).overrideWithValue(AsyncData(testMeal)),
               getMealAdviceProvider(testMeal).overrideWithValue(
                 AsyncData(
-                  MealAdvice(
+                  MealAdvice.full(
                     MealDecision.bolusWaitThenEat,
                     WaitSuggestion(15, 5, 10),
+                    clock.now()
                   ),
                 ),
               ),
@@ -1031,12 +1020,6 @@ void main() {
             TreatmentAvailableEvent<Meal>(testMeal),
           );
           _settle(async);
-
-          expect(calls, hasLength(1));
-          final (m, s) = calls.single;
-          expect(m.id, 1);
-          expect(s, 'bolused-waiting');
-          calls.remove((m, s));
 
           for (var i = 0; i < 3; i++) {
             lastReadingDate = lastReadingDate.add(Duration(minutes: 5));
@@ -1090,11 +1073,11 @@ void main() {
 
           expect(fakeNotifications.shownEvents, hasLength(0));
           expect(calls, hasLength(0));
-          expect(task.state, isA<FinalizeMealExecutor>());
+          expect(task.state, isA<MealMonitorStateIdle>());
         });
       });
     });
-    test('Meal advisor eat then bolus', () {
+    test('shows eat now bolus later suggestion and transitions to detect finished eating after acceptance', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         withFakeClock(async, start, () {
@@ -1217,7 +1200,7 @@ void main() {
 
           expect(fakeNotifications.shownEvents, hasLength(0));
           expect(calls, hasLength(0));
-          expect(task.state, isA<FinalizeMealExecutor>());
+          expect(task.state, isA<MealMonitorStateIdle>());
         });
       });
     });
@@ -1305,7 +1288,7 @@ void main() {
 
           expect(fakeNotifications.shownEvents, hasLength(0));
           expect(calls, hasLength(0));
-          expect(task.state, isA<FinalizeMealExecutor>());
+          expect(task.state, isA<MealMonitorStateIdle>());
         });
       });
     });
@@ -1374,12 +1357,12 @@ void main() {
 
           expect(fakeNotifications.shownEvents, hasLength(0));
           expect(calls, hasLength(0));
-          expect(task.state, isA<FinalizeMealExecutor>());
+          expect(task.state, isA<MealMonitorStateIdle>());
         });
       });
     });
 
-    test('wait for bolus 5 min big drop', () {
+    test('wait for bolus 5 min big drop, user manually selects from ui', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         final calls = <(Meal, String)>{};
@@ -1396,9 +1379,10 @@ void main() {
               getMealByIdProvider(1).overrideWithValue(AsyncData(testMeal)),
               getMealAdviceProvider(testMeal).overrideWithValue(
                 AsyncData(
-                  MealAdvice(
+                  MealAdvice.full(
                     MealDecision.bolusWaitThenEat,
                     WaitSuggestion(15, 5, 10),
+                    clock.now()
                   ),
                 ),
               ),
@@ -1440,12 +1424,6 @@ void main() {
             TreatmentAvailableEvent<Meal>(testMeal),
           );
           _settle(async);
-
-          expect(calls, hasLength(1));
-          final (m, s) = calls.single;
-          expect(m.id, 1);
-          expect(s, 'bolused-waiting');
-          calls.remove((m, s));
 
           lastReadingDate = lastReadingDate.add(Duration(minutes: 5));
           emitDeviceStatus(

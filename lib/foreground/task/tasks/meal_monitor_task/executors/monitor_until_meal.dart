@@ -34,7 +34,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
   MonitorUntilMeal();
 
   @override
-  List<Type> get interuptableEvents => [
+  List<Type> get interruptableEvents => [
     MealStartedEatingEvent,
     MealBolusedEatingEvent,
     MealBolusedWaitingEvent,
