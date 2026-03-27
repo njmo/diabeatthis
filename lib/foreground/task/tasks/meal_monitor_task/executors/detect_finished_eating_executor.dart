@@ -8,7 +8,6 @@ import '../../../../../core/notifications/providers/notifications_controller_pro
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
 import '../../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../../../features/meals/data/providers/meal_ingredients_list_provider.dart';
-import '../../../../event/internal/meal_event.dart';
 import '../../../../event/internal/meal_status_changed_event.dart';
 import '../../../../event/internal/treatment_available_event.dart';
 import '../../../base/runtime_context.dart';
@@ -32,7 +31,6 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
   @override
   List<Type> get interruptableEvents => [
     MealFinishedEatingEvent,
-    NextMealEvent,
   ];
 
   @override
