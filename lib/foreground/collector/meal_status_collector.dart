@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -14,9 +15,6 @@ final watchLatestMealStatusHistoryProvider =
       final query = db.select(db.mealStatusHistory)
         ..orderBy([(t) => OrderingTerm.desc(t.id)])
         ..where((t) => t.status.isNotValue('planned'))
-        ..where((t) => t.status.isNotValue('eaten'))
-        ..where((t) => t.status.isNotValue('eaten-bolused'))
-        ..where((t) => t.status.isNotValue('skipped'))
         ..limit(1);
 
       return query.watchSingleOrNull();
@@ -40,6 +38,11 @@ class MealStatusCollector extends ForegroundCollector {
         next.whenData((data) {
           logI("Receiver from database $data");
           if (data == null) return;
+          if (['eaten', 'eaten-bolused', 'skipped'].contains(data.status) &&
+              data.createdAt < clock.now().millisecondsSinceEpoch) {
+            logI("This data is not meaningful if it is older than now");
+            return;
+          }
           logI(
             "Detected change in from database for meal ${data.mealId} status : ${data.status}",
           );
