@@ -24,7 +24,7 @@ class TrailingWaitAfterBolusStatus extends HookConsumerWidget with Logging {
       return const SizedBox.shrink();
     }
 
-    final timeStarted = mealAdvice.asData?.value!.createdAt!;
+    final timeStarted = mealAdvice.asData?.value!.createdAt;
     final timeNowDate = timeNow.asData!.value;
     final timeDifference = timeStarted!.difference(timeNowDate);
     final recommendedMinutes =

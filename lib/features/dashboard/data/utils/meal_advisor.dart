@@ -7,6 +7,8 @@
 //   convert before calling (e.g., trendPerMin = (trendPer5Min / 5).round()).
 // - This is a simulation heuristic, not medical advice.
 
+import 'package:clock/clock.dart';
+
 enum MealDecision {
   eatNowBolusLater, // in this version: "eat now, no bolus now; log carbs"
   bolusAndEatNow,
@@ -27,11 +29,11 @@ extension MealDecisionX on MealDecision {
 class MealAdvice {
   final MealDecision? decision;
   final WaitSuggestion? wait;
-  final DateTime? createdAt;
+  final DateTime createdAt;
 
-  MealAdvice(this.decision, this.wait) : createdAt = null;
+  MealAdvice(this.decision, this.wait) : createdAt = clock.now();
   MealAdvice.full(this.decision, this.wait, this.createdAt);
-  MealAdvice.empty() : decision = null, wait = null, createdAt = null;
+  MealAdvice.empty() : decision = null, wait = null, createdAt = clock.now();
 }
 
 class WaitSuggestion {

@@ -22,9 +22,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
   BolusThenWaitExecutor({this.recommendedMinutes});
 
   @override
-  List<Type> get interruptableEvents => [
-    MealStartedEatingEvent,
-  ];
+  List<Type> get interruptableEvents => [MealStartedEatingEvent];
 
   @override
   Future<void> cleanup(
@@ -60,7 +58,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
         return MealMonitorStateIdle();
       }
       //time passed from advice
-      final timePassed = mealAdvice.createdAt!.difference(clock.now());
+      final timePassed = mealAdvice.createdAt.difference(clock.now());
       final recommendedWait = mealAdvice.wait!.recommendedMinutes;
 
       logI("Time passed from advice: ${timePassed.inMinutes} minutes");
@@ -110,6 +108,15 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
             logI("Cancelling scheduled notifications");
             notificationProvider.cancelAll();
           }
+
+          final finalWaitTime = recommendedMinutes! - (i * 5);
+          logI("Updating final wait time to $finalWaitTime");
+          runtimeContext.container.read(
+            updateFinalWaitTimeProvider(
+              mealMonitorContext.activeMeal!,
+              finalWaitTime,
+            ),
+          );
           waitEnded = true;
           break;
         }

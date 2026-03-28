@@ -6,6 +6,7 @@ import '../../../../../core/domain/model/meal_summary.dart';
 import '../../../../../core/notifications/domain/events/meal_suggestion_notification.dart';
 import '../../../../../core/notifications/domain/events/temp_target_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../../../../features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
 import '../../../../../features/dashboard/data/utils/nightscout_utils.dart';
 import '../../../../../features/meals/data/providers/meal_database_provider.dart';
@@ -323,7 +324,9 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 switch (advice.decision!) {
                   case MealDecision.bolus:
                     logE("decision is bolus, this should never happen");
-                    throw Exception("decision is bolus, this should never happen");
+                    throw Exception(
+                      "decision is bolus, this should never happen",
+                    );
                   case MealDecision.eatNowBolusLater:
                     logI("Meal advice: ${advice.decision.toString()}");
                     nextExecutor = DetectFinishedEatingExecutor(
@@ -362,7 +365,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                   runtimeContext,
                   7,
                 );
-              } on WaitTimeoutException catch (_)  {
+              } on WaitTimeoutException catch (_) {
                 deviceStatus = null;
                 logI("No device status available for 7 minutes");
               }
@@ -406,6 +409,12 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     updateMealProvider(
                       mealMonitorContext.activeMeal!,
                       decisionStatus,
+                    ),
+                  );
+                  runtimeContext.container.read(
+                    insertAdviceProvider(
+                      mealMonitorContext.activeMeal!,
+                      advice,
                     ),
                   );
                 }

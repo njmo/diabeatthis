@@ -14,6 +14,12 @@ void insertAdvice(Ref ref, domain.Meal meal, MealAdvice advice)
 }
 
 @riverpod
+void updateFinalWaitTime(Ref ref, domain.Meal meal, int finalWaitTime) {
+  final db = ref.watch(databaseProvider);
+  db.mealAdvisorResultDao.updateAdvisorResultFinalWaitTime(meal.id, finalWaitTime);
+}
+
+@riverpod
 Future<MealAdvice?> getMealAdvice(Ref ref, domain.Meal meal)
 async {
   final db = ref.watch(databaseProvider);

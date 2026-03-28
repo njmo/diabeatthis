@@ -16,7 +16,7 @@ class MealAdvisorResultDao extends DatabaseAccessor<DatabaseImpl>
     if (result != null) {
       return MealAdvice.full(
         MealDecision.bolusWaitThenEat,
-        WaitSuggestion(result.suggestedWaitTime, 0, 0),
+        WaitSuggestion(result.initialWaitTime, 0, 0),
         DateTime.fromMillisecondsSinceEpoch(result.createdAt),
       );
     } else {
@@ -24,12 +24,18 @@ class MealAdvisorResultDao extends DatabaseAccessor<DatabaseImpl>
     }
   }
 
+  void updateAdvisorResultFinalWaitTime(int mealId, int finalWaitTime) async {
+    await (update(db.mealAdvisorResult)..where((t) => t.mealId.equals(mealId))).write(
+      MealAdvisorResultCompanion(finalWaitTime: Value(finalWaitTime)),
+    );
+  }
+
   Future<int> insertMealAdvisorResult(int mealId, MealAdvice advice) {
     final adviceResult = MealAdvisorResultCompanion(
       mealId: Value(mealId),
       result: Value(advice.decision!.status),
-      acceptedWaitTime: Value(advice.wait?.recommendedMinutes ?? 0),
-      suggestedWaitTime: Value(advice.wait?.recommendedMinutes ?? 0),
+      finalWaitTime: Value(advice.wait?.recommendedMinutes ?? 0),
+      initialWaitTime: Value(advice.wait?.recommendedMinutes ?? 0),
       waitTimeIgnored: Value(advice.wait == null),
     );
     return into(db.mealAdvisorResult).insert(adviceResult);
