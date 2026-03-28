@@ -90,6 +90,7 @@ class _MyAppState extends ConsumerState<MyApp>
     ref.read(appLifecycleProvider.notifier).setState(state);
     logI('sending ${state.toString()}');
     if (state == AppLifecycleState.resumed) {
+      logI("App resumed, requesting data sync");
       sendSyncCommand();
     }
 
