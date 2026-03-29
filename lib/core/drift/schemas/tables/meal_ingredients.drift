@@ -3,6 +3,7 @@ import 'meal.drift';
 import 'portion.drift';
 
 CREATE TABLE meal_ingredients (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   meal_id INTEGER NOT NULL
     REFERENCES meal (id) ON DELETE CASCADE,
 
@@ -14,13 +15,38 @@ CREATE TABLE meal_ingredients (
 
   amount INTEGER NOT NULL DEFAULT 1 CHECK (amount > 0),
 
+  entry_type TEXT NOT NULL DEFAULT 'planned' CHECK (entry_type IN ('planned', 'extra')),
+  consumed_amount REAL,
+  consumed_confidence REAL NULL CHECK (consumed_confidence >= 0 AND consumed_confidence <= 1),
+
   is_synced BOOL NOT NULL DEFAULT 0,
 
   quantity_confidence REAL NOT NULL CHECK (quantity_confidence >= 0 AND quantity_confidence <= 1),
 
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+  updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+
   prep_method TEXT,
   notes TEXT
 );
+
+CREATE TRIGGER meal_ingredients_summary_set_updated_at
+AFTER UPDATE ON meal_ingredients
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+  UPDATE meal_ingredients
+  SET updated_at = (CAST(strftime('%s','now') AS INTEGER) * 1000)
+  WHERE id = NEW.id;
+END;
+
+CREATE TRIGGER meal_ingredients_any_change_marks_unsynced
+AFTER UPDATE ON meal_ingredients
+FOR EACH ROW
+WHEN NEW.is_synced <> 0
+BEGIN
+  UPDATE meal_ingredients SET is_synced = 0 WHERE id = NEW.id;
+END;
 
 insertMealIngredient:
   INSERT INTO meal_ingredients (

@@ -5,6 +5,7 @@ CREATE TABLE meal (
   name TEXT NOT NULL,
 
   planned_at INTEGER NOT NULL,
+  summarized_at INTEGER,
 
   status TEXT NOT NULL DEFAULT 'planned',
   meal_template_id INTEGER DEFAULT NULL REFERENCES meal_template (id) ON DELETE SET NULL,

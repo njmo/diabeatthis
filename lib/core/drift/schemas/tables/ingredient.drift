@@ -8,7 +8,6 @@ CREATE TABLE ingredient (
   calories_kcal_per_100g REAL GENERATED ALWAYS AS ((protein_per_100g*4 + carbs_per_100g*4 + fat_per_100g*9)) STORED,
   ig INTEGER CHECK (ig BETWEEN 0 AND 110),
   nutrition_confidence REAL NOT NULL CHECK (nutrition_confidence >= 0 AND nutrition_confidence <= 1),
-  preparation TEXT,
   brand TEXT,
   is_reference INTEGER NOT NULL DEFAULT 0,
 
@@ -16,7 +15,7 @@ CREATE TABLE ingredient (
   updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
 
   is_synced BOOL NOT NULL DEFAULT 0,
-  UNIQUE (name, preparation, brand),
+  UNIQUE (name, brand),
   CHECK (is_reference IN (0, 1))
 );
 
@@ -60,6 +59,14 @@ BEGIN
     NEW.protein_per_100g,
     NEW.nutrition_confidence
   );
+END;
+
+CREATE TRIGGER ingredient_any_change_marks_unsynced
+AFTER UPDATE ON ingredient
+FOR EACH ROW
+WHEN NEW.is_synced <> 0
+BEGIN
+  UPDATE ingredient SET is_synced = 0 WHERE id = NEW.id;
 END;
 
 CREATE TRIGGER ingredient_set_updated_at

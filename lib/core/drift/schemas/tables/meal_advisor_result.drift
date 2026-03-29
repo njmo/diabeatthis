@@ -8,6 +8,7 @@ CREATE TABLE meal_advisor_result (
   initial_wait_time INTEGER NOT NULL,
   final_wait_time INTEGER NOT NULL,
   wait_time_ignored BOOL NOT NULL,
+  decision_reason TEXT,
 
   version INTEGER NOT NULL DEFAULT 1,
 
