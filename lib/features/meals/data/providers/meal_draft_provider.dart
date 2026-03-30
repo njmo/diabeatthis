@@ -27,7 +27,7 @@ class MealIngredientConfidenceDraftNotifier
     extends _$MealIngredientConfidenceDraftNotifier {
   @override
   ConfidenceLevel build() {
-    return ConfidenceLevel.high;
+    return ConfidenceLevel.medium;
   }
 
   ConfidenceLevel getConfidence() => state;
@@ -45,7 +45,7 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
         fatPer100g: 0,
         fiberPer100g: 0,
         proteinPer100g: 0,
-        nutritionConfidence: 0,
+        nutritionConfidence: 0.25,
         isReference: false,
       ),
       ingredientPortion: IngredientPortionDraft(
@@ -53,7 +53,7 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
         amount: 0,
       ),
       amount: 0,
-      quantityConfidence: 0,
+      quantityConfidence: 0.50,
     );
   }
 

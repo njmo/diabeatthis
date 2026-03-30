@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/model/meal.dart';
+import '../../../../core/logger/logger.dart';
 import '../../data/meal_dialog_controller.dart';
 import '../../data/meal_dialog_state.dart';
 import '../../data/providers/meal_advisor_result_provider.dart';
+import '../../data/providers/meal_snapshot_controller_provider.dart';
 import '../../data/utils/meal_advisor.dart';
 
-class MealStatusDialog extends ConsumerWidget {
+class MealStatusDialog extends ConsumerWidget with Logging {
   final Meal meal;
   const MealStatusDialog({required this.meal, super.key});
 
@@ -119,15 +121,28 @@ class MealStatusDialog extends ConsumerWidget {
                   if (!s.skipMeal) {
                     ref.read(insertAdviceProvider(meal, s.advice));
 
+                    try {
+                      final mealSummaryController = ref.read(
+                        mealSnapshotControllerProvider,
+                      );
+                      await mealSummaryController.createPlannedSnapshot(
+                        meal.id,
+                      );
+                    } catch (e) {
+                      logE("Error creating snapshot for meal: $e");
+                    }
+
                     if (s.advice.wait != null) {
                       c.scheduleEatNotification(
                         minutes: s.advice.wait!.recommendedMinutes,
                       );
                     }
                   }
-                  Navigator.of(
-                    context,
-                  ).pop(s.skipMeal ? 'skipped' : s.advice.decision!.status);
+                  if (context.mounted) {
+                    Navigator.of(
+                      context,
+                    ).pop(s.skipMeal ? 'skipped' : s.advice.decision!.status);
+                  }
                 }
               },
               child: Text(_buttonText(s.advice.decision?.status)),

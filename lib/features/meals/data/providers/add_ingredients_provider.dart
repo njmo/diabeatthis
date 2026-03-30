@@ -125,9 +125,11 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         break;
       case AddMealIngredientStage.amountForm:
         final amountDraft = ref.read(mealIngredientAmountDraftProvider);
+        final quantityConfidence = ref.read(mealIngredientConfidenceDraftProvider);
         final mealIngredientsDraft = ref.watch(
           mealIngredientsDraftProvider.notifier,
         );
+        mealIngredientsDraft.setQuantityConfidence(quantityConfidence);
         mealIngredientsDraft.setAmount(amountDraft);
         state = AddMealIngredientStage.summary;
         break;

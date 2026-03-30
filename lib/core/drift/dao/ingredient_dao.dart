@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import '../../domain/model/meal_summary.dart';
+import '../../domain/model/meal_macro_summary.dart';
 import '../database_impl.dart';
 
 part 'ingredient_dao.g.dart';
@@ -23,7 +23,7 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     return query.getSingle();
   }
 
-  Future<MealSummary?> totalsForMeal(int mealId) async {
+  Future<MealMacroSummary?> totalsForMeal(int mealId) async {
     final mi = db.mealIngredients;
     final ing = ingredient;
     final ip = db.ingredientPortions;
@@ -51,32 +51,25 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
       orElse: mi.amount.cast<double>() * ip.gramsPerPortion.cast<double>(),
     );
 
+    final totalGrams = grams.sum();
     final carbsG = (grams * ing.carbsPer100g / const Constant(100.0)).sum();
-    // final fiberG = (grams * ing.fiberPer100g / const Constant(100.0)).sum();
-    final proteinKcal =
-        (grams *
-                ing.proteinPer100g /
-                const Constant(100.0) *
-                const Constant(4.0))
-            .sum();
-    final fatKcal =
-        (grams * ing.fatPer100g / const Constant(100.0) * const Constant(9.0))
-            .sum();
+    final fiberG = (grams * ing.fiberPer100g / const Constant(100.0)).sum();
+    final proteinG = (grams * ing.proteinPer100g / const Constant(100.0)).sum();
+    final fatG = (grams * ing.fatPer100g / const Constant(100.0)).sum();
 
     final q = base
-      ..addColumns([mi.mealId, carbsG, proteinKcal, fatKcal])
+      ..addColumns([mi.mealId, carbsG, fiberG, proteinG, fatG, totalGrams])
       ..groupBy([mi.mealId]);
 
     final row = await q.getSingleOrNull();
     if (row == null) return null;
 
-    return MealSummary(
-      carbsG: row.read(carbsG) ?? 0.0,
-      proteinKcal: row.read(proteinKcal) ?? 0.0,
-      fatKcal: row.read(fatKcal) ?? 0.0,
-      fatGrams: row.read(ing.fatPer100g) ?? 0.0,
-      proteinGrams: row.read(ing.proteinPer100g) ?? 0.0,
-      fiberGrams: row.read(ing.fiberPer100g) ?? 0.0,
+    return MealMacroSummary(
+      carbsGrams: row.read(carbsG) ?? 0.0,
+      fatGrams: row.read(fatG) ?? 0.0,
+      proteinGrams: row.read(proteinG) ?? 0.0,
+      fiberGrams: row.read(fiberG) ?? 0.0,
+      totalGrams: row.read(totalGrams) ?? 0.0,
     );
   }
 }

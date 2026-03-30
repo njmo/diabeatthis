@@ -4,7 +4,7 @@ import 'package:diabeatthis/common/events/data/notification/finished_eating_resp
 import 'package:diabeatthis/common/events/data/notification/meal_suggestion_response_event.dart';
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
-import 'package:diabeatthis/core/domain/model/meal_summary.dart';
+import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
 import 'package:diabeatthis/core/notifications/domain/events/eat_now_event_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/finished_eating_event_notification.dart';
@@ -306,13 +306,12 @@ void main() {
             overrides: [
               mealMacronutrientsSummaryProvider(1).overrideWithValue(
                 AsyncData(
-                  MealSummary(
-                    carbsG: 10,
-                    proteinKcal: 10,
-                    fatKcal: 10,
+                  MealMacroSummary(
+                    carbsGrams: 10,
                     fatGrams: 10,
                     proteinGrams: 10,
-                    fiberGrams: 10,
+                    fiberGrams: 0,
+                    totalGrams: 50,
                   ),
                 ),
               ),
@@ -699,13 +698,12 @@ void main() {
             overrides: [
               mealMacronutrientsSummaryProvider(1).overrideWithValue(
                 AsyncData(
-                  MealSummary(
-                    carbsG: 10,
-                    proteinKcal: 10,
-                    fatKcal: 10,
+                  MealMacroSummary(
                     fatGrams: 10,
                     proteinGrams: 10,
-                    fiberGrams: 10,
+                    fiberGrams: 0,
+                    carbsGrams: 10,
+                    totalGrams: 50,
                   ),
                 ),
               ),
@@ -1087,13 +1085,12 @@ void main() {
             overrides: [
               mealMacronutrientsSummaryProvider(1).overrideWithValue(
                 AsyncData(
-                  MealSummary(
-                    carbsG: 10,
-                    proteinKcal: 10,
-                    fatKcal: 10,
+                  MealMacroSummary(
                     fatGrams: 10,
                     proteinGrams: 10,
-                    fiberGrams: 10,
+                    fiberGrams: 0,
+                    carbsGrams: 10,
+                    totalGrams: 50,
                   ),
                 ),
               ),
@@ -1218,13 +1215,12 @@ void main() {
               ),
               mealMacronutrientsSummaryProvider(1).overrideWithValue(
                 AsyncData(
-                  MealSummary(
-                    carbsG: 10,
-                    proteinKcal: 10,
-                    fatKcal: 10,
+                  MealMacroSummary(
                     fatGrams: 10,
                     proteinGrams: 10,
-                    fiberGrams: 10,
+                    fiberGrams: 0,
+                    carbsGrams: 10,
+                    totalGrams: 50,
                   ),
                 ),
               ),
@@ -1476,13 +1472,12 @@ void main() {
             overrides: [
               mealMacronutrientsSummaryProvider(1).overrideWithValue(
                 AsyncData(
-                  MealSummary(
-                    carbsG: 10,
-                    proteinKcal: 10,
-                    fatKcal: 10,
+                  MealMacroSummary(
                     fatGrams: 10,
                     proteinGrams: 10,
                     fiberGrams: 10,
+                    carbsGrams: 10,
+                    totalGrams: 50,
                   ),
                 ),
               ),

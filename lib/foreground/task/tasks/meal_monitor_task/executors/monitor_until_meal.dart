@@ -2,7 +2,7 @@ import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../../core/domain/model/device_status.dart';
-import '../../../../../core/domain/model/meal_summary.dart';
+import '../../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../../core/notifications/domain/events/meal_suggestion_notification.dart';
 import '../../../../../core/notifications/domain/events/temp_target_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -146,7 +146,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     return timeToMeal.inMinutes;
   }
 
-  Future<MealSummary?> getMealSummary(
+  Future<MealMacroSummary?> getMealSummary(
     RuntimeContext context,
     int mealId,
   ) async {
@@ -172,8 +172,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     return alignToNextCgmReading(mealPlannedAt, deviceStatus.date);
   }
 
-  MealAdvice getMealAdvice(MealSummary mealStatus, DeviceStatus deviceStatus) {
-    final carbs = mealStatus.carbsG;
+  MealAdvice getMealAdvice(MealMacroSummary mealStatus, DeviceStatus deviceStatus) {
+    final carbs = mealStatus.netCarbsGrams;
     final fatGrams = mealStatus.fatGrams;
     final fiberGrams = mealStatus.fiberGrams;
     final proteinGrams = mealStatus.proteinGrams;
@@ -331,7 +331,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     logI("Meal advice: ${advice.decision.toString()}");
                     nextExecutor = DetectFinishedEatingExecutor(
                       shouldBolus: true,
-                      grams: mealStatus.carbsG.round(),
+                      grams: mealStatus.netCarbsGrams.round(),
                     );
                     break;
                   case MealDecision.bolusAndEatNow:
@@ -390,7 +390,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 mealId: mealMonitorContext.activeMeal!.id,
                 minutes: advice.wait?.recommendedMinutes ?? 0,
                 decision: advice.decision!,
-                carbs: mealStatus.carbsG.round(),
+                carbs: mealStatus.netCarbsGrams.round(),
               ),
             );
 

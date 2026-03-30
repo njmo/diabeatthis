@@ -5,5 +5,5 @@ import 'tables/meal_ingredients.drift';
 import 'tables/meal_advisor_result.drift';
 import 'tables/activity.drift';
 import 'tables/activity_log.drift';
-import 'tables/meal_summary.drift';
+import 'tables/meal_snapshot.drift';
 import 'tables/meal_template_ingredients.drift';

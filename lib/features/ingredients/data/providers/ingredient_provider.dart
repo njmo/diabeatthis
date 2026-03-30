@@ -97,7 +97,7 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
       fatPer100g: 0,
       fiberPer100g: 0,
       proteinPer100g: 0,
-      nutritionConfidence: 0,
+      nutritionConfidence: 0.25,
       isReference: false,
     );
   }

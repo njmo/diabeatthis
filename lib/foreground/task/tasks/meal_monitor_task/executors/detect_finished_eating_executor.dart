@@ -66,7 +66,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
             logI("Problem gathering meal advice, going to idle state");
             return MealMonitorStateIdle();
           }
-          grams = mealSummary.carbsG.round();
+          grams = mealSummary.netCarbsGrams.round();
           logI("Meal summary available with $grams grams of carbs");
         }
       } else {

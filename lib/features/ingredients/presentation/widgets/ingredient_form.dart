@@ -49,7 +49,8 @@ class IngredientForm extends HookConsumerWidget {
                   ),
                 );
               },
-            ),StringFormField(
+            ),
+            StringFormField(
               label: 'Producent',
               value: draft.getBrand(),
               onChanged: draft.setBrand,

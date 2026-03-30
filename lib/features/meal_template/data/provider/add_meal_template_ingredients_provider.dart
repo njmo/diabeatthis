@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
+import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/drafts/portion_filter.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -76,6 +77,7 @@ class AddMealTemplateIngredientStageNotifier extends _$AddMealTemplateIngredient
           mealTemplateIngredientsDraftProvider.notifier,
         );
         mealIngredientsDraft.setIngredient(ingredientDraft);
+        //
         if (ingredientDraft.isReference) {
           state = AddMealTemplateIngredientStage.amountForm;
           mealIngredientsDraft.setIngredientPortion(PortionSelection.empty());
@@ -120,6 +122,8 @@ class AddMealTemplateIngredientStageNotifier extends _$AddMealTemplateIngredient
         final mealIngredientsDraft = ref.watch(
           mealTemplateIngredientsDraftProvider.notifier,
         );
+        final confidence = ref.read(mealIngredientConfidenceDraftProvider);
+        mealIngredientsDraft.setQuantityConfidence(confidence);
         mealIngredientsDraft.setDefaultAmount(amountDraft);
         state = AddMealTemplateIngredientStage.summary;
         break;

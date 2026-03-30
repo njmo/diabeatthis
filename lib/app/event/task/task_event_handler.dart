@@ -13,6 +13,7 @@ class TaskEventHandler with Logging {
   TaskEventHandler(this._ref) : synchronizationDataBridge = DataSynchronizationBridge(_ref);
 
   void handle(Map<String, dynamic> event) {
+    logI('Received event: $event');
     final appEvent = TaskEvent.fromJson(event);
 
     switch(appEvent)

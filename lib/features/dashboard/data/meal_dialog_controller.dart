@@ -59,7 +59,7 @@ class MealDialogController extends _$MealDialogController with Logging {
       mealMacronutrientsSummaryProvider(mealId).future,
     );
 
-    final carbs = mealStatus?.carbsG ?? 0;
+    final carbs = mealStatus?.netCarbsGrams ?? 0;
     final fatProteinExchanges = mealStatus?.proteinGrams ?? 0;
     final fatGrams = mealStatus?.fatGrams ?? 0;
     final fiberGrams = mealStatus?.fiberGrams ?? 0;

@@ -12,6 +12,7 @@ class DataSynchronizationBridge with Logging {
   DataSynchronizationBridge(this._ref);
 
   void handle(TaskDataSynchronizationPayload event) {
+    logI("Received data synchronization event $event");
     event.when(
       glucose: (data) {
         logI("Received glucose event");

@@ -5,7 +5,7 @@ CREATE TABLE meal_snapshot (
   meal_id INTEGER NOT NULL
     REFERENCES meal(id) ON DELETE CASCADE,
 
-  summary_type TEXT NOT NULL CHECK (summary_type IN (
+  snapshot_type TEXT NOT NULL CHECK (snapshot_type IN (
     'planned',
     'consumed'
   )),
@@ -19,6 +19,7 @@ CREATE TABLE meal_snapshot (
   total_calories_kcal REAL NOT NULL CHECK (total_calories_kcal >= 0),
 
   ingredients_count INTEGER NOT NULL DEFAULT 0 CHECK (ingredients_count >= 0),
+
   avg_quantity_confidence REAL CHECK (
     avg_quantity_confidence IS NULL OR
     (avg_quantity_confidence >= 0 AND avg_quantity_confidence <= 1)
@@ -31,13 +32,35 @@ CREATE TABLE meal_snapshot (
     carb_weighted_quantity_confidence IS NULL OR
     (carb_weighted_quantity_confidence >= 0 AND carb_weighted_quantity_confidence <= 1)
   ),
+  wbt_weighted_quantity_confidence REAL CHECK (
+      wbt_weighted_quantity_confidence IS NULL OR
+      (wbt_weighted_quantity_confidence >= 0 AND wbt_weighted_quantity_confidence <= 1)
+  ),
+
+  carb_weighted_nutrition_confidence REAL CHECK (
+    carb_weighted_nutrition_confidence IS NULL OR
+    (carb_weighted_nutrition_confidence >= 0 AND carb_weighted_nutrition_confidence <= 1)
+  ),
+  wbt_weighted_nutrition_confidence REAL CHECK (
+      wbt_weighted_nutrition_confidence IS NULL OR
+      (wbt_weighted_nutrition_confidence >= 0 AND wbt_weighted_nutrition_confidence <= 1)
+  ),
+
+  carb_weighted_effective_confidence REAL CHECK (
+    carb_weighted_effective_confidence IS NULL OR
+    (carb_weighted_effective_confidence >= 0 AND carb_weighted_effective_confidence <= 1)
+  ),
+  wbt_weighted_effective_confidence REAL CHECK (
+      wbt_weighted_effective_confidence IS NULL OR
+      (wbt_weighted_effective_confidence >= 0 AND wbt_weighted_effective_confidence <= 1)
+  ),
 
   created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
   updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
 
   is_synced BOOL NOT NULL DEFAULT 0,
 
-  UNIQUE (meal_id, summary_type)
+  UNIQUE (meal_id, snapshot_type)
 );
 
 CREATE TRIGGER meal_snapshot_set_updated_at
