@@ -17,9 +17,10 @@ void updateMeal(Ref ref, domain.Meal meal, String status) {
 }
 
 @riverpod
-void updateMealById(Ref ref, int mealId, String status) {
+Future<void> updateMealById(Ref ref, int mealId, String status) async {
+  print('updateMealById $mealId $status');
   final db = ref.watch(databaseProvider);
-  db.mealDao.updateMealStatus(mealId, status);
+  await db.mealDao.updateMealStatus(mealId, status);
 }
 
 @riverpod
@@ -52,7 +53,7 @@ Future<void> insertMealIngredient(
   domain.Ingredient ingredient,
   domain.Meal meal,
   domain.Portion? portion,
-  int amount,
+  double amount,
   double nutritionConfidence,
 ) async {
   final db = ref.watch(databaseProvider);
@@ -67,6 +68,33 @@ Future<void> insertMealIngredient(
     amount,
     null,
     nutritionConfidence,
+    null,
+  );
+}
+
+@riverpod
+Future<void> insertExtraMealIngredient(
+    Ref ref,
+    domain.Ingredient ingredient,
+    int mealId,
+    domain.Portion? portion,
+    double consumedAmount,
+    double consumedQuantityConfidence,
+    ) async {
+  final db = ref.watch(databaseProvider);
+  final ingredientId = ingredient.map(
+    existing: (e) => e.id,
+    draft: (_) => throw Exception('Cannot get id for draft'),
+  );
+  await db.insertExtraMealIngredient(
+    mealId,
+    ingredientId,
+    portion?.id,
+    0,
+    null,
+    consumedAmount,
+    consumedQuantityConfidence,
+    consumedQuantityConfidence,
     null,
   );
 }

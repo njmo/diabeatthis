@@ -12,7 +12,7 @@ CREATE TABLE meal_template_ingredients (
   portion_id INTEGER
     REFERENCES portion (id) ON DELETE SET NULL,
 
-  default_amount INTEGER,
+  default_amount REAL,
   is_optional BOOL NOT NULL DEFAULT 0,
 
   is_synced BOOL NOT NULL DEFAULT 0,

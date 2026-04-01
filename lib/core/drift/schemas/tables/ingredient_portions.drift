@@ -6,7 +6,7 @@ CREATE TABLE ingredient_portions (
     REFERENCES ingredient (id) ON DELETE CASCADE,
   portion_id INTEGER NOT NULL
     REFERENCES portion (id) ON DELETE CASCADE,
-  grams_per_portion INT NOT NULL CHECK (grams_per_portion > 0),
+  grams_per_portion REAL NOT NULL CHECK (grams_per_portion > 0),
 
   is_synced BOOL NOT NULL DEFAULT 0,
 

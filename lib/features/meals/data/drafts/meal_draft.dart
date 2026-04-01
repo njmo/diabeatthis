@@ -8,10 +8,14 @@ part 'meal_draft.freezed.dart';
 @freezed
 abstract class MealIngredientsDraft with _$MealIngredientsDraft {
   const factory MealIngredientsDraft({
+    int? mealIngredientId,
     required Ingredient ingredient,
     required IngredientPortionDraft ingredientPortion,
-    required int amount,
+    required double amount,
     required double quantityConfidence,
+    required String entryType,
+    required double? consumedAmount,
+    required double? consumedConfidence,
   }) = _MealIngredientsDraft;
 }
 

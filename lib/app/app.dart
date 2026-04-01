@@ -35,7 +35,6 @@ class _MyAppState extends ConsumerState<MyApp>
       final map = jsonDecode(data) as Map<String, dynamic>;
       _taskEventHandler!.handle(map);
     }
-    logI('onReceiveData: $data');
   }
 
   Future<void> prepareApp() async {
@@ -79,6 +78,9 @@ class _MyAppState extends ConsumerState<MyApp>
   }
 
   void sendSyncCommand() {
+    // Initialize communication port
+    _foregroundBridge.reInitCommunicationPort();
+
     final appEventRouter = ref.read(appEventRouterProvider);
     final syncCommand = ExecuteCommandEvent.syncData(data: []);
     appEventRouter.send(syncCommand);

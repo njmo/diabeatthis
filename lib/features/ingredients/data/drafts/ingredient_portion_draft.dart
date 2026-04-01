@@ -9,6 +9,6 @@ abstract class IngredientPortionDraft with _$IngredientPortionDraft
 {
   const factory IngredientPortionDraft( {
     required PortionSelection portion,
-    required int amount,
+    required double amount,
   }) = _IngredientPortionDraft;
 }

@@ -1,7 +1,8 @@
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import '../../core/logger/logger.dart';
 import '../../foreground/service/foreground_service_controller.dart';
 
-class AppForegroundBridge {
+class AppForegroundBridge with Logging {
   AppForegroundBridge() : controller = ForegroundServiceController();
 
   final ForegroundServiceController controller;
@@ -16,6 +17,10 @@ class AppForegroundBridge {
 
   void detach(void Function(Object data) onData) {
     FlutterForegroundTask.removeTaskDataCallback(onData);
+  }
+
+  void reInitCommunicationPort() {
+    FlutterForegroundTask.initCommunicationPort();
   }
 
   Future<void> restartService() async {

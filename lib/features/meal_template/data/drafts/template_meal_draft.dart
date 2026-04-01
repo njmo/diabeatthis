@@ -10,7 +10,7 @@ abstract class MealTemplateIngredientsDraft with _$MealTemplateIngredientsDraft 
   const factory MealTemplateIngredientsDraft({
     required Ingredient ingredient,
     required IngredientPortionDraft ingredientPortion,
-    required int defaultAmount,
+    required double defaultAmount,
     required bool isOptional,
     required double quantityConfidence,
     required String prepMethod,

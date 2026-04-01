@@ -21,48 +21,77 @@ List<MealIngredientsDraft> mealDraftIngredients(Ref ref) {
 }
 
 @riverpod
-Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMeal(Ref ref, int mealId) async {
+Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMeal(
+  Ref ref,
+  int mealId,
+) async {
   final db = ref.read(databaseProvider);
-  final mealIngredients = await db.mealIngredientsDao.getMealIngredientsForMeal(mealId);
+  final mealIngredients = await db.mealIngredientsDao.getMealIngredientsForMeal(
+    mealId,
+  );
   final list = <MealIngredientsDraft>[];
-  for(final mealIngredient in mealIngredients) {
-    final ingredient = await db.ingredientDao.getIngredientById(mealIngredient.ingredientId);
-    if(ingredient.isReference == 1) {
-      list.add(MealIngredientsDraft(
-        ingredient: ingredient.toDomain(),
-        ingredientPortion: IngredientPortionDraft(
-          portion: PortionSelection.empty(),
-          amount: 100,
+  for (final mealIngredient in mealIngredients) {
+    final ingredient = await db.ingredientDao.getIngredientById(
+      mealIngredient.ingredientId,
+    );
+    if (ingredient.isReference == 1) {
+      list.add(
+        MealIngredientsDraft(
+          mealIngredientId: mealIngredient.id,
+          ingredient: ingredient.toDomain(),
+          ingredientPortion: IngredientPortionDraft(
+            portion: PortionSelection.empty(),
+            amount: 100,
+          ),
+          amount: mealIngredient.amount,
+          quantityConfidence: mealIngredient.quantityConfidence,
+          entryType: mealIngredient.entryType,
+          consumedAmount: mealIngredient.consumedAmount,
+          consumedConfidence: mealIngredient.consumedConfidence,
         ),
-        amount: mealIngredient.amount,
-        quantityConfidence: mealIngredient.quantityConfidence,
-      ));
+      );
       continue;
     }
     IngredientPortionDraft ingredientPortion;
     final portionId = mealIngredient.portionId;
-    if(portionId != null) {
-      final gramsPerPortion = await db.portionDao.getGramsPerPortion(ingredient.id, portionId);
+    if (portionId != null) {
+      final gramsPerPortion = await db.portionDao.getGramsPerPortion(
+        ingredient.id,
+        portionId,
+      );
       final portion = await db.portionDao.getPortionById(portionId);
       ingredientPortion = IngredientPortionDraft(
         portion: portion.toSelection(),
         amount: gramsPerPortion ?? 1,
       );
-    }
-    else {
+    } else {
       ingredientPortion = IngredientPortionDraft(
         portion: PortionSelection.empty(),
-        amount: 1);
+        amount: 1,
+      );
     }
 
-    list.add(MealIngredientsDraft(
-      ingredient: ingredient.toDomain(),
-      ingredientPortion: ingredientPortion,
-      amount: mealIngredient.amount,
-      quantityConfidence: mealIngredient.quantityConfidence,
-    ));
+    list.add(
+      MealIngredientsDraft(
+        mealIngredientId: mealIngredient.id,
+        ingredient: ingredient.toDomain(),
+        ingredientPortion: ingredientPortion,
+        amount: mealIngredient.amount,
+        quantityConfidence: mealIngredient.quantityConfidence,
+        entryType: mealIngredient.entryType,
+        consumedAmount: mealIngredient.consumedAmount,
+        consumedConfidence: mealIngredient.consumedConfidence,
+      ),
+    );
   }
   return list;
+}
+
+@riverpod
+Future<MealMacroSummary?> mealMacronutrientsConsumedSummary(Ref ref, int mealId) async {
+  final db = ref.read(databaseProvider);
+  final mealStatus = await db.ingredientDao.totalsForMealConsumed(mealId);
+  return mealStatus;
 }
 
 @riverpod

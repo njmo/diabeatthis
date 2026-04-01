@@ -3,10 +3,16 @@ import 'dart:convert';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../../../common/events/task_event_payload.dart';
+import '../../../core/logger/logger.dart';
 
-class TaskEventRouter {
+class TaskEventRouter with Logging {
   void send(TaskEventPayload payload) {
-    final json = jsonEncode(payload.toTaskEventJson());
-    FlutterForegroundTask.sendDataToMain(json);
+    try {
+      logI("Sending task event: $payload");
+      final json = jsonEncode(payload.toTaskEventJson());
+      FlutterForegroundTask.sendDataToMain(json);
+    } catch (e) {
+      logE("Error sending task event: $e");
+    }
   }
 }

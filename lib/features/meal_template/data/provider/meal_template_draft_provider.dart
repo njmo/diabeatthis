@@ -12,11 +12,11 @@ part 'meal_template_draft_provider.g.dart';
 class MealTemplateIngredientAmountDraftNotifier
     extends _$MealTemplateIngredientAmountDraftNotifier {
   @override
-  int build() {
+  double build() {
     return 0;
   }
 
-  void setAmount(String amount) => state = int.tryParse(amount) ?? 0;
+  void setAmount(String amount) => state = double.tryParse(amount) ?? 0;
   String getAmount() => state.toString();
 }
 
@@ -64,10 +64,10 @@ class MealTemplateIngredientsDraftNotifier
   void setIngredientPortion(PortionSelection portion) => state = state.copyWith(
     ingredientPortion: state.ingredientPortion.copyWith(portion: portion),
   );
-  void setIngredientPortionAmount(int amount) => state = state.copyWith(
+  void setIngredientPortionAmount(double amount) => state = state.copyWith(
     ingredientPortion: state.ingredientPortion.copyWith(amount: amount),
   );
-  void setDefaultAmount(int amount) => state = state.copyWith(defaultAmount: amount);
+  void setDefaultAmount(double amount) => state = state.copyWith(defaultAmount: amount);
   void setQuantityConfidence(ConfidenceLevel confidence) =>
       state = state.copyWith(quantityConfidence: confidence.toDouble01());
   void setPrepMethod(String prepMethod) => state = state.copyWith(prepMethod: prepMethod);

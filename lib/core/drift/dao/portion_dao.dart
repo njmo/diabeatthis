@@ -42,7 +42,7 @@ class PortionDao extends DatabaseAccessor<DatabaseImpl> with _$PortionDaoMixin {
     return query.getSingle();
   }
 
-  Future<int?> getGramsPerPortion(int ingredientId, int portionId) async {
+  Future<double?> getGramsPerPortion(int ingredientId, int portionId) async {
     final query = select(db.ingredientPortions)
       ..where((tbl) =>
       tbl.ingredientId.equals(ingredientId) &

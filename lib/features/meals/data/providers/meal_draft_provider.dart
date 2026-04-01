@@ -14,11 +14,11 @@ part 'meal_draft_provider.g.dart';
 class MealIngredientAmountDraftNotifier
     extends _$MealIngredientAmountDraftNotifier {
   @override
-  int build() {
+  double build() {
     return 0;
   }
 
-  void setAmount(String amount) => state = int.tryParse(amount) ?? 0;
+  void setAmount(String amount) => state = double.tryParse(amount) ?? 0;
   String getAmount() => state.toString();
 }
 
@@ -54,6 +54,9 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
       ),
       amount: 0,
       quantityConfidence: 0.50,
+      entryType: 'planned',
+      consumedAmount: 0,
+      consumedConfidence: 0,
     );
   }
 
@@ -65,10 +68,10 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
   void setIngredientPortion(PortionSelection portion) => state = state.copyWith(
     ingredientPortion: state.ingredientPortion.copyWith(portion: portion),
   );
-  void setIngredientPortionAmount(int amount) => state = state.copyWith(
+  void setIngredientPortionAmount(double amount) => state = state.copyWith(
     ingredientPortion: state.ingredientPortion.copyWith(amount: amount),
   );
-  void setAmount(int amount) => state = state.copyWith(amount: amount);
+  void setAmount(double amount) => state = state.copyWith(amount: amount);
   void setQuantityConfidence(ConfidenceLevel confidence) =>
       state = state.copyWith(quantityConfidence: confidence.toDouble01());
 }
@@ -90,6 +93,7 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
     logI("Srtting planned at to ${plannedAt.toIso8601String()}");
     state = state.copyWith(plannedAt: plannedAt);
   }
+
   void setBasedOnMealId(int? basedOnMealId) =>
       state = state.copyWith(basedOnMealId: basedOnMealId);
   void setMealTemplateId(int? mealTemplateId) =>

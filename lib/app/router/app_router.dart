@@ -1,6 +1,8 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../features/dashboard/presentation/screens/dashboard_page.dart';
+import '../../features/meal_summary/presentation/screens/meal_summary_page.dart';
 import '../../features/meal_template/presentation/screens/add_meal_template_page.dart';
 import '../../features/meals/presentation/screens/add_meal_page.dart';
 import '../../features/settings/presentation/screens/settings_page.dart';
@@ -24,6 +26,7 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: SettingsRoute.page, path: '/settings'),
     AutoRoute(page: AddMealRoute.page),
     AutoRoute(page: AddMealTemplateRoute.page),
+    AutoRoute(page: MealSummaryRoute.page, path: '/meal-summary/:mealId'),
   ];
 
   @override

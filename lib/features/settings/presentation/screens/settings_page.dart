@@ -84,8 +84,13 @@ class SettingsPage extends HookConsumerWidget with Logging {
             }
 
             if (urlChanged) {
-              logI("restart service");
+              if(oldUrl.isEmpty) {
+                logI("start service");
+              }
+              else {
+                logI("restart service");
                 FlutterForegroundTask.restartService();
+              }
             }
 
             ref

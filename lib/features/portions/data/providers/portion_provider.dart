@@ -58,7 +58,7 @@ Future<List<domain.Portion>> portionsNotInIngredientByQuery(
 }
 
 @riverpod
-Future<int?> gramsPerPortion(
+Future<double?> gramsPerPortion(
   Ref ref,
   Ingredient ingredient,
   PortionSelection portion,

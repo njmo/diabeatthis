@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../utils/meal_summary_controller.dart';
+import '../utils/meal_snapshot_controller.dart';
 
 part 'meal_snapshot_controller_provider.g.dart';
 

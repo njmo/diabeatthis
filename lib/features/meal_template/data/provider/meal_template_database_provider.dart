@@ -34,7 +34,7 @@ Future<void> insertMealTemplateIngredient(
   domain.Ingredient ingredient,
   domain.MealTemplate meal,
   domain.Portion? portion,
-  int amount,
+  double amount,
   double nutritionConfidence,
     bool isOptional,
 ) async {

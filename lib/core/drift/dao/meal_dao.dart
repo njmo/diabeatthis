@@ -10,7 +10,7 @@ part 'meal_dao.g.dart';
 class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   MealDao(super.db);
 
-  void updateMealStatus(int id, String status) async {
+  Future<void> updateMealStatus(int id, String status) async {
     await (update(db.meal)..where((t) => t.id.equals(id))).write(
       MealCompanion(status: Value(status)),
     );
@@ -92,8 +92,8 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       ..where(
         (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
       )
-      ..where((tbl) => tbl.status.contains('eaten').not())
       ..where((tbl) => tbl.status.equals('skipped').not())
+      ..where((tbl) => tbl.status.equals('summarized').not())
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)]);
     return query.watch();
   }

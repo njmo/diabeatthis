@@ -31,11 +31,11 @@ Future<List<domain.Ingredient>> ingredientsByQuery(
 class IngredientPortionAmountDraftNotifier
     extends _$IngredientPortionAmountDraftNotifier {
   @override
-  int build() {
+  double build() {
     return 0;
   }
 
-  void setAmount(String amount) => state = int.tryParse(amount) ?? 0;
+  void setAmount(String amount) => state = double.tryParse(amount) ?? 0;
 }
 
 @riverpod
@@ -64,7 +64,7 @@ Future<void> insertIngredientPortion(
   Ref ref,
   domain.Ingredient ingredient,
   domain.Portion? portion,
-  int amount,
+  double amount,
 ) async {
   if (portion == null) {
     return;
@@ -75,7 +75,7 @@ Future<void> insertIngredientPortion(
 }
 
 @riverpod
-Future<int?> getAmountForPortionIngredient(
+Future<double?> getAmountForPortionIngredient(
   Ref ref,
   domain.Ingredient ingredient,
   domain.Portion portion,

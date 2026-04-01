@@ -71,7 +71,7 @@ class IngredientSearch extends HookConsumerWidget {
                       ),
                     ),
                     subtitle: Text(
-                      'Kalorie: ${ingredient.caloriesKcalPer100g} kcal',
+                      'Kalorie: ${ingredient.kcalPer100g} kcal',
                     ),
                     trailing: ingredient.isReference ? const Icon(Icons.dinner_dining) : null,
                     onTap: () {

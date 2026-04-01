@@ -1,6 +1,8 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../app/router/app_router.dart' as routes;
 import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../dashboard/presentation/widgets/meal_status_dialog.dart';
 import '../../../dashboard/presentation/widgets/trailing_wait_after_bolus_status.dart';
@@ -15,80 +17,78 @@ class MealListToday extends ConsumerWidget {
     final parentModeEnabled = ref.watch(parentModeProvider);
 
     return Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: ListView.builder(
-            itemBuilder: (context, index) {
-              final meal = meals.asData?.value[index];
-              if (meal == null) {
-                return SizedBox.shrink();
-              }
+      padding: const EdgeInsets.all(20.0),
+      child: ListView.builder(
+        itemBuilder: (context, index) {
+          final meal = meals.asData?.value[index];
+          if (meal == null) {
+            return SizedBox.shrink();
+          }
 
-              return InkWell(
-                onTap: () async {
-                  if (meal.status == 'eaten' ||
-                      meal.status == 'skipped' ||
-                      meal.status == 'eaten-bolused') {
-                    return;
-                  }
-                  final action = await showDialog<String?>(
-                    barrierDismissible: true,
-                    context: context,
-                    builder: (context) => MealStatusDialog(meal: meal),
-                  );
-                  if (action != null) {
-                    ref.read(updateMealProvider(meal, action));
-                  }
-                },
-                child: Card(
-                  elevation: 2,
-                  shadowColor: Colors.black12,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: ListTile(
-                    title: Text(
-                      meal.name,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w400,
+          return InkWell(
+            onTap: () async {
+              if (meal.status == 'eaten' || meal.status == 'eaten-bolused') {
+                context.router.push(routes.MealSummaryRoute(mealId: meal.id));
+                return;
+              }
+              final action = await showDialog<String?>(
+                barrierDismissible: true,
+                context: context,
+                builder: (context) => MealStatusDialog(meal: meal),
+              );
+              if (action != null) {
+                ref.read(updateMealProvider(meal, action));
+              }
+            },
+            child: Card(
+              elevation: 2,
+              shadowColor: Colors.black12,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: ListTile(
+                title: Text(
+                  meal.name,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
+                ),
+                subtitle: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    children: [
+                      _buildListTile(
+                        _shortTime(meal.plannedAt!),
+                        Icons.access_time,
+                        Theme.of(context).colorScheme,
                       ),
-                    ),
-                    subtitle: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: [
-                          _buildListTile(
-                            _shortTime(meal.plannedAt!),
-                            Icons.access_time,
-                            Theme.of(context).colorScheme,
-                          ),
-                          const SizedBox(width: 10),
-                          _buildListTile(
-                            _toMealStatus(meal.status),
-                            Icons.note_rounded,
-                            Theme.of(context).colorScheme,
-                          ),
-                        ],
+                      const SizedBox(width: 10),
+                      _buildListTile(
+                        _toMealStatus(meal.status),
+                        Icons.note_rounded,
+                        Theme.of(context).colorScheme,
                       ),
-                    ),
-                    trailing: (parentModeEnabled)
-                        ? IconButton(
-                            onPressed: () {
-                              ref.read(removeMealByIdProvider(meal));
-                            },
-                            icon: Icon(Icons.remove_circle),
-                            iconSize: 20,
-                          )
-                        : (meal.status == 'bolused-waiting') ? TrailingWaitAfterBolusStatus(meal: meal) : const SizedBox.shrink(),
+                    ],
                   ),
                 ),
-              );
-            },
-            itemCount: meals.asData?.value.length ?? 0,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-          ),
-      );
+                trailing: (parentModeEnabled)
+                    ? IconButton(
+                        onPressed: () {
+                          ref.read(removeMealByIdProvider(meal));
+                        },
+                        icon: Icon(Icons.remove_circle),
+                        iconSize: 20,
+                      )
+                    : (meal.status == 'bolused-waiting')
+                    ? TrailingWaitAfterBolusStatus(meal: meal)
+                    : const SizedBox.shrink(),
+              ),
+            ),
+          );
+        },
+        itemCount: meals.asData?.value.length ?? 0,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+      ),
+    );
   }
 
   Widget _buildListTile(String text, IconData icon, ColorScheme scheme) {

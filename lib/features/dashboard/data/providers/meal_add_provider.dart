@@ -17,7 +17,7 @@ enum MealStatus
   added
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 class MealAddNotifier extends _$MealAddNotifier with Logging {
   @override
   void build() {
