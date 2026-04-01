@@ -82,6 +82,7 @@ void main() {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
         withFakeClock(async, start, () {
+          final calls = <(Meal, String)>{};
           final container = ProviderContainer(
             parent: parentContainer,
             overrides: [
@@ -89,6 +90,10 @@ void main() {
               getMealByIdProvider(1).overrideWithValue(
                 AsyncData(Meal(id: 1, name: 'asd', plannedAt: clock.now())),
               ),
+              updateMealProvider.overrideWith((ref, args) async {
+                final (meal, status) = args;
+                calls.add((meal, status));
+              }),
             ],
           );
           final harness = FakeRuntimeHarness(container: container);
@@ -118,7 +123,14 @@ void main() {
           );
           _settle(async);
 
+          expect(calls, hasLength(1));
+          final (m, s) = calls.single;
+          expect(m.id, 1);
+          expect(s, 'eaten');
+          calls.remove((m, s));
+
           expect(fakeNotifications.shownEvents, hasLength(0));
+          expect(calls, hasLength(0));
           expect(task.state, isA<MealMonitorStateIdle>());
         });
       });
