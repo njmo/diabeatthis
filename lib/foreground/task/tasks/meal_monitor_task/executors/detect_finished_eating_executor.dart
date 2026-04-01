@@ -29,9 +29,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
   });
 
   @override
-  List<Type> get interruptableEvents => [
-    MealFinishedEatingEvent,
-  ];
+  List<Type> get interruptableEvents => [MealFinishedEatingEvent];
 
   @override
   Future<void> cleanup(
@@ -46,7 +44,9 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
-    logI("DetectFinishedEatingExecutor bolusWaited $bolusWaited shouldBolus $shouldBolus");
+    logI(
+      "DetectFinishedEatingExecutor bolusWaited $bolusWaited shouldBolus $shouldBolus",
+    );
 
     if (bolusWaited == null) {
       if (shouldBolus) {
@@ -83,8 +83,8 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
         }
 
         logI("Calculator response available");
-        runtimeContext.container.read(
-          updateMealProvider(mealMonitorContext.activeMeal!, 'bolused-eating'),
+        await runtimeContext.container.read(
+          updateMealProvider(mealMonitorContext.activeMeal!, 'bolused-eating').future,
         );
       }
     }
@@ -166,8 +166,8 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       logI("Finished eating, bolus already given");
     }
 
-    runtimeContext.container.read(
-      updateMealProvider(mealMonitorContext.activeMeal!, mealStatus),
+    await runtimeContext.container.read(
+      updateMealProvider(mealMonitorContext.activeMeal!, mealStatus).future,
     );
     logI("Meal marked as $mealStatus");
 

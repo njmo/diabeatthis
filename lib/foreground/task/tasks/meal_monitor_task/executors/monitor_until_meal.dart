@@ -172,7 +172,10 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     return alignToNextCgmReading(mealPlannedAt, deviceStatus.date);
   }
 
-  MealAdvice getMealAdvice(MealMacroSummary mealStatus, DeviceStatus deviceStatus) {
+  MealAdvice getMealAdvice(
+    MealMacroSummary mealStatus,
+    DeviceStatus deviceStatus,
+  ) {
     final carbs = mealStatus.netCarbsGrams;
     final fatGrams = mealStatus.fatGrams;
     final fiberGrams = mealStatus.fiberGrams;
@@ -400,16 +403,16 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             // if no response but device status came, recalculate
             var retry = false;
             logI("Received response from user");
-            response.when(
-              agree: (e) {
+            await response.when(
+              agree: (e) async {
                 final decisionStatus = advice!.decision!.status;
                 logI("User agreed meal, decision: $decisionStatus");
                 if (advice.decision == MealDecision.eatNowBolusLater) {
-                  runtimeContext.container.read(
+                  await runtimeContext.container.read(
                     updateMealProvider(
                       mealMonitorContext.activeMeal!,
                       decisionStatus,
-                    ),
+                    ).future,
                   );
                   runtimeContext.container.read(
                     insertAdviceProvider(
@@ -419,10 +422,10 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                   );
                 }
               },
-              skip: (_) {
+              skip: (_) async {
                 logI("User dismissed meal, clicked on notification");
-                runtimeContext.container.read(
-                  updateMealProvider(mealMonitorContext.activeMeal!, 'skipped'),
+                await runtimeContext.container.read(
+                  updateMealProvider(mealMonitorContext.activeMeal!, 'skipped').future,
                 );
                 nextExecutor = MealMonitorStateIdle();
               },

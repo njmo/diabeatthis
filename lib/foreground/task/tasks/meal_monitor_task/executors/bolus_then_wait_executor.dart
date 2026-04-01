@@ -80,8 +80,8 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
     }
 
     if (!triggeredByUser) {
-      runtimeContext.container.read(
-        updateMealProvider(mealMonitorContext.activeMeal!, 'bolused-waiting'),
+      await runtimeContext.container.read(
+        updateMealProvider(mealMonitorContext.activeMeal!, 'bolused-waiting').future,
       );
     }
 
@@ -162,10 +162,10 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
 
     logI("Received response from user");
     response.when(
-      eating: (_) {
+      eating: (_) async {
         logI("Used agreed meal");
-        runtimeContext.container.read(
-          updateMealProvider(mealMonitorContext.activeMeal!, 'waited-eating'),
+        await runtimeContext.container.read(
+          updateMealProvider(mealMonitorContext.activeMeal!, 'waited-eating').future,
         );
       },
       dismiss: (_) {

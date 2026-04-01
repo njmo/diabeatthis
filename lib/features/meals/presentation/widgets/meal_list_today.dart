@@ -37,7 +37,7 @@ class MealListToday extends ConsumerWidget {
                 builder: (context) => MealStatusDialog(meal: meal),
               );
               if (action != null) {
-                ref.read(updateMealProvider(meal, action));
+                await ref.read(updateMealProvider(meal, action).future);
               }
             },
             child: Card(

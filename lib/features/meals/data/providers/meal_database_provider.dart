@@ -11,14 +11,13 @@ import '../mapper/meal_draft_drift_mapper.dart';
 part 'meal_database_provider.g.dart';
 
 @riverpod
-void updateMeal(Ref ref, domain.Meal meal, String status) {
+Future<void> updateMeal(Ref ref, domain.Meal meal, String status) async {
   final db = ref.watch(databaseProvider);
-  db.mealDao.updateMealStatus(meal.id, status);
+  await db.mealDao.updateMealStatus(meal.id, status);
 }
 
 @riverpod
 Future<void> updateMealById(Ref ref, int mealId, String status) async {
-  print('updateMealById $mealId $status');
   final db = ref.watch(databaseProvider);
   await db.mealDao.updateMealStatus(mealId, status);
 }

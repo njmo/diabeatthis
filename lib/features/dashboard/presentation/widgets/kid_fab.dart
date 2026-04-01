@@ -101,7 +101,7 @@ class KidFAB extends HookConsumerWidget with Logging {
                   builder: (context) => MealStatusDialog(meal: addedMeal),
                 );
                 if (action != null) {
-                  ref.read(updateMealProvider(addedMeal, action));
+                  await ref.read(updateMealProvider(addedMeal, action).future);
                 }
               }
               open.value = false;
