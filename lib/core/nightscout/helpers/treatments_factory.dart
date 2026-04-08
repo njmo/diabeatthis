@@ -26,7 +26,7 @@ class TreatmentFactory with Logging {
     );
 
     if (item != null) {
-      list.remove(item);
+      treatments.remove(item);
       list.add(TemporaryTargetDto.fromJson(item).toDomain());
     }
 
