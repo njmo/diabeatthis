@@ -99,6 +99,17 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
   }
 
   @override
+  Future<TemporaryTarget> fetchLastTemporaryTargetById(String id) async {
+    final qp = {
+      'find[_id]': id, 'count': '1'
+    };
+    final url = _buildUri('/api/v1/treatments.json', qp);
+    final data = await service.fetchNightscoutData(url);
+    final dto = TemporaryTargetDto.fromJson(data.first);
+    return dto.toDomain();
+  }
+
+  @override
   Future<List<Treatment>> fetchTreatmentsAfter(DateTime after) async {
     final qp = {
       'find[created_at][\$gte]': after.toUtc().toIso8601String(),
@@ -106,6 +117,7 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
       'find[\$or][1][eventType]': 'Bolus Wizard',
       'find[\$or][2][eventType]': 'Correction Bolus',
       'find[\$or][3][eventType]': 'Carb Correction',
+      'find[\$or][4][eventType]': 'Temporary Target',
     };
     final url = _buildUri('/api/v1/treatments.json', qp);
     final data = await service.fetchNightscoutData(url);

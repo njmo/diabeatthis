@@ -119,7 +119,7 @@ class MealListToday extends ConsumerWidget {
     switch (status) {
       case 'eaten':
       case 'eaten-bolused':
-        return 'Zjedzony';
+        return 'Zjedzony z podanym bolusem';
       case 'skipped':
         return 'Pominięty';
       case 'waited-eating':

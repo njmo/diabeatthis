@@ -8,7 +8,7 @@ import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../activity/data/providers/activity_provider.dart';
 import '../../../activity/presentation/widgets/activity_picker_dialog.dart';
-import '../../data/providers/temporary_target_provider.dart';
+import '../../data/providers/temporary_target_ui_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 
 class DashboardStatusCard extends ConsumerWidget with Logging {
@@ -23,7 +23,9 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
   bool _isMealTarget(TemporaryTarget target) =>
       target.targetTop == mealTargetValue;
 
-  bool _isTargetExpired(TemporaryTarget target, DateTime now) {
+  bool _isTargetExpired(TemporaryTarget? target, DateTime now) {
+    if (target == null) return true;
+
     final elapsed = now.difference(target.createdAt).inMinutes;
     return elapsed >= target.duration;
   }
@@ -42,7 +44,7 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pendingActivityAsync = ref.watch(getPendingActivityProvider);
-    final targetAsync = ref.watch(temporaryTargetStreamProvider);
+    final targetUi = ref.watch(temporaryTargetUiProvider);
     final nowAsync = ref.watch(timeNowProvider);
 
     final now = nowAsync.when(
@@ -51,26 +53,12 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
       loading: () => clock.now(),
     );
 
+    final target = _isTargetExpired(targetUi, now) ? null : targetUi;
+
     final pendingActivity = pendingActivityAsync.whenOrNull(data: (d) => d);
 
-    final target = targetAsync.whenOrNull(
-      data: (t) {
-        if (_isTargetExpired(t, now)) return null;
-        return t;
-      },
-    );
-
-    if (pendingActivityAsync.isLoading && targetAsync.isLoading) {
-      return const _StatusInfoCard(
-        icon: Icons.hourglass_top_rounded,
-        title: 'Ładowanie statusu...',
-        subtitle: null,
-        trailing: SizedBox(
-          width: 18,
-          height: 18,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      );
+    if (pendingActivityAsync.isLoading) {
+      return const SizedBox.shrink();
     }
 
     if (target != null &&

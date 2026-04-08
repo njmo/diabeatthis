@@ -24,14 +24,4 @@ sealed class TaskEvent with _$TaskEvent {
 
   factory TaskEvent.fromJson(Map<String, dynamic> json) =>
       _$TaskEventFromJson(json);
-
-  factory TaskEvent.fromPayload(TaskEventPayload payload) {
-    return switch (payload) {
-      final TaskInAppNotificationPayload p => TaskEvent.taskInAppNotification(data: p),
-      final TaskDataSynchronizationPayload p => TaskEvent.taskDataSynchronization(data: p),
-      _ => throw UnsupportedError(
-        'Unsupported data type: ${payload.runtimeType}',
-      ),
-    };
-  }
 }

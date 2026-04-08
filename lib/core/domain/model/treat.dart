@@ -11,25 +11,9 @@ abstract class Treat with _$Treat implements Treatment {
 
   const factory Treat({
     required int id,
-    required DateTime dateHappened,
+    required DateTime createdAt,
     required int carbs,
   }) = _Treat;
-
-  /*
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'date': date.toIso8601String(),
-      'carbs': carbs,
-    };
-  }
-
-  factory Treat.fromJson(Map<String, dynamic> json) => Treat(
-    date: DateTime.parse(json['created_at']),
-    carbs: json['carbs'],
-  );
-   */
 
   @override
   String getParts() => "🍽️ ${carbs}g";

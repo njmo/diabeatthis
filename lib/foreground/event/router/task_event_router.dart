@@ -8,11 +8,11 @@ import '../../../core/logger/logger.dart';
 class TaskEventRouter with Logging {
   void send(TaskEventPayload payload) {
     try {
-      logI("Sending task event: $payload");
+      logI("Sending task event payload: $payload");
       final json = jsonEncode(payload.toTaskEventJson());
       FlutterForegroundTask.sendDataToMain(json);
     } catch (e) {
-      logE("Error sending task event: $e");
+      logE("Error sending task event payload: $e");
     }
   }
 }

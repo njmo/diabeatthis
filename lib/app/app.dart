@@ -10,10 +10,14 @@ import '../common/events/data/app/lifecycle_state_event.dart';
 import '../common/events/data/app_event_data.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
 import '../core/logger/logger.dart';
+import '../core/nightscout/providers/nightscout_url_provider.dart';
 import '../core/notifications/providers/notifications_controller_provider.dart';
+import '../features/dashboard/data/providers/blood_sugar_readings_list_provider.dart';
+import '../features/dashboard/data/providers/device_status_ui_provider.dart';
 import 'event/task/task_event_handler.dart';
 import 'lifecycle/app_foreground_bridge.dart';
 import 'providers/app_event_router_provider.dart';
+import 'providers/app_foreground_bridge_provider.dart';
 import 'providers/app_lifecycle_state_provider.dart';
 import 'router/observers/router_debug_observer.dart';
 import 'router/providers/app_router_provider.dart';
@@ -27,7 +31,7 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp>
     with WidgetsBindingObserver, Logging {
-  final AppForegroundBridge _foregroundBridge = AppForegroundBridge();
+  late AppForegroundBridge _foregroundBridge;
   late TaskEventHandler? _taskEventHandler;
 
   void _onReceiveTaskData(Object data) {
@@ -48,9 +52,12 @@ class _MyAppState extends ConsumerState<MyApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    _foregroundBridge = ref.read(appForegroundBridgeProvider);
+
     _foregroundBridge.attach(_onReceiveTaskData);
 
     _taskEventHandler = TaskEventHandler(ref);
+
 
     Future.microtask(() async {
       await prepareApp();
@@ -61,7 +68,20 @@ class _MyAppState extends ConsumerState<MyApp>
       if (enabled) {
         final isServiceRunning = await _foregroundBridge.isServiceRunning();
         if (!isServiceRunning) {
-          await _foregroundBridge.startMonitoring();
+          final isNightscoutUrlConfigured =
+              (await ref.read(nightscoutUrlProvider.future) != null);
+          if (isNightscoutUrlConfigured) {
+            logI(
+              "Starting foreground service, nightscout url configured properly",
+            );
+            await _foregroundBridge.startMonitoring();
+            await Future.delayed(Duration(seconds: 1));
+            sendSyncCommand();
+          } else {
+            logI(
+              "Not starting foreground service, nightscout url not configured",
+            );
+          }
         } else {
           logI("Foreground task is running, requesting data sync");
           sendSyncCommand();
@@ -82,8 +102,18 @@ class _MyAppState extends ConsumerState<MyApp>
     _foregroundBridge.reInitCommunicationPort();
 
     final appEventRouter = ref.read(appEventRouterProvider);
-    final syncCommand = ExecuteCommandEvent.syncData(data: []);
-    appEventRouter.send(syncCommand);
+    final bloodSugarReadings = ref.read(bloodSugarReadingsListProvider.notifier);
+    final deviceStatusProvider = ref.read(deviceStatusUiProvider.notifier);
+    final syncList = [
+      if(bloodSugarReadings.syncNeeded()) 'glucose_list',
+      if(deviceStatusProvider.isUpdateNeeded()) 'device_status',
+      'temporary_target'
+    ];
+    if (syncList.isNotEmpty) {
+      logI("Sending sync command with $syncList");
+      final syncCommand = ExecuteCommandEvent.syncData(data: syncList);
+      appEventRouter.send(syncCommand);
+    }
   }
 
   @override

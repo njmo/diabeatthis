@@ -3,10 +3,10 @@ import 'package:flutter/cupertino.dart';
 abstract class Treatment
 {
   final int? id;
-  final DateTime? dateHappened;
+  final DateTime? createdAt;
 
   const Treatment({this.id,
-    this.dateHappened,});
+    this.createdAt,});
 
   String getParts();
   IconData getIcon();

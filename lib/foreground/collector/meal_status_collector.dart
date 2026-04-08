@@ -1,4 +1,3 @@
-import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,11 +37,6 @@ class MealStatusCollector extends ForegroundCollector {
         next.whenData((data) {
           logI("Receiver from database $data");
           if (data == null) return;
-          if (['eaten', 'eaten-bolused', 'skipped'].contains(data.status) &&
-              data.createdAt < clock.now().millisecondsSinceEpoch) {
-            logI("This data is not meaningful if it is older than now");
-            return;
-          }
           logI(
             "Detected change in from database for meal ${data.mealId} status : ${data.status}",
           );

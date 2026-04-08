@@ -6,6 +6,7 @@ import '../../core/domain/model/correction_bolus.dart';
 import '../../core/domain/model/extended_carb.dart';
 import '../../core/domain/model/manual_bolus.dart';
 import '../../core/domain/model/meal.dart';
+import '../../core/domain/model/temporary_target.dart';
 import '../../core/domain/model/treat.dart';
 import '../../core/domain/model/treatment_base.dart';
 import '../../core/logger/logger.dart';
@@ -22,6 +23,13 @@ final watchNewTreatmentsProvider = StreamProvider.autoDispose<Treatment?>((
   });
 
   var lastReadingDate = clock.now();
+
+  // check for already active temp target
+  final target = await ref.read(temporaryTargetProvider.future);
+  if(target.createdAt.add(Duration(minutes: target.duration)).isAfter(lastReadingDate)) {
+    Log.i("watchNewTreatmentsProvider", "Found active temp target");
+    yield target;
+  }
 
   while (!disposed) {
     var treatments = List.empty();
@@ -42,7 +50,7 @@ final watchNewTreatmentsProvider = StreamProvider.autoDispose<Treatment?>((
       yield treatment;
     }
 
-    lastReadingDate = treatments.first.dateHappened ?? clock.now();
+    lastReadingDate = treatments.first.createdAt ?? clock.now();
     lastReadingDate = lastReadingDate.add(Duration(seconds: 5));
   }
 });
@@ -59,7 +67,7 @@ class TreatmentsCollector extends ForegroundCollector {
           logI("New treatment reading available $data");
           if (data == null) return;
           logI(
-            "Detected change in treatment reading ${data.id} at ${data.dateHappened?.toIso8601String()}",
+            "Detected change in treatment reading ${data.id} at ${data.createdAt?.toIso8601String()}",
           );
 
           switch (data) {
@@ -83,7 +91,10 @@ class TreatmentsCollector extends ForegroundCollector {
               logI("Manual bolus treatment");
               context.emitEvent(TreatmentAvailableEvent<ManualBolus>(data));
               break;
-
+            case TemporaryTarget():
+              logI("Temporary target treatment");
+              context.emitEvent(TreatmentAvailableEvent<TemporaryTarget>(data));
+              break;
             default:
               logI("Unknown treatment");
           }

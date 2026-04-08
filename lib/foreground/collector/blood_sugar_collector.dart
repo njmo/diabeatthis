@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/providers/app_lifecycle_state_provider.dart';
 import '../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../core/data/provider/nightscout_repository_provider.dart';
 import '../../core/domain/model/glucose.dart';
@@ -8,6 +11,7 @@ import '../../core/logger/logger.dart';
 import '../event/internal/data_available_event.dart';
 import '../providers/blood_sugar_value_provider.dart';
 import '../providers/task_event_router_provider.dart';
+import '../synchronization/synchronization_cache_controller.dart';
 import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
@@ -85,8 +89,16 @@ class BloodSugarCollector extends ForegroundCollector {
             "Detected change in glucose reading ${data.id} at ${data.date.toIso8601String()} with value ${data.sgv} and tick ${data.tick}",
           );
           context.emitEvent(DataAvailableEvent<Glucose>(data));
-          final payload = TaskGlucoseSynchronization(data: data);
-          context.container.read(taskEventRouterProvider).send(payload);
+          if (context.container.read(appLifecycleProvider) ==
+              AppLifecycleState.resumed) {
+            final payload = TaskGlucoseSynchronization(data: data);
+            context.container.read(taskEventRouterProvider).send(payload);
+          }
+
+          final cache = context.container.read(
+            synchronizationCacheControllerProvider,
+          );
+          cache.cacheGlucose(data);
 
           context.container.read(bloodSugarValueProvider.notifier).update(data);
         });

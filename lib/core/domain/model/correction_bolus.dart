@@ -11,7 +11,7 @@ abstract class CorrectionBolus with _$CorrectionBolus implements Treatment {
 
   const factory CorrectionBolus({
     required int id,
-    required DateTime dateHappened,
+    required DateTime createdAt,
     required double insulin
   }) = _CorrectionBolus;
 

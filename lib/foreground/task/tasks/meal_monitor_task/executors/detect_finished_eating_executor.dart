@@ -10,6 +10,7 @@ import '../../../../../features/meals/data/providers/meal_database_provider.dart
 import '../../../../../features/meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../../event/internal/meal_status_changed_event.dart';
 import '../../../../event/internal/treatment_available_event.dart';
+import '../../../../event/model/foreground_event.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
 import 'finalize_meal_executor.dart';
@@ -29,7 +30,25 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
   });
 
   @override
-  List<Type> get interruptableEvents => [MealFinishedEatingEvent];
+  List<Type> get interruptableEvents => [
+    MealFinishedEatingEvent,
+    MealFinishedEatingBolusedEvent,
+  ];
+
+  @override
+  bool shouldInterrupt(
+    ForegroundEvent event,
+    MealMonitorContext mealMonitorContext,
+  ) {
+    logI("DetectFinishedEatingExecutor shouldInterrupt ${event.runtimeType}");
+    if (event is MealFinishedEatingEvent) {
+      return event.mealId == mealMonitorContext.activeMeal!.id;
+    }
+    if (event is MealFinishedEatingBolusedEvent) {
+      return event.mealId == mealMonitorContext.activeMeal!.id;
+    }
+    return true;
+  }
 
   @override
   Future<void> cleanup(
@@ -84,7 +103,10 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
 
         logI("Calculator response available");
         await runtimeContext.container.read(
-          updateMealProvider(mealMonitorContext.activeMeal!, 'bolused-eating').future,
+          updateMealProvider(
+            mealMonitorContext.activeMeal!,
+            'bolused-eating',
+          ).future,
         );
       }
     }
@@ -92,9 +114,11 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     final notificationProvider = runtimeContext.container.read(
       notificationsControllerForegroundProvider,
     );
-
+    // jezeli zacznie jesc to przez te 10 minut mozna monitorowac cukier i zerknac
+    // czy czasem nie lepiej juz podac sobie insuline jak teraz gdzie jadl i mial 101
+    // mozna bylo dac powiadomienie juz zeby dal sobie insuline
     logI("Waiting for user to end his meal");
-    await runtimeContext.waitForDuration(Duration(minutes: 10));
+    await runtimeContext.waitForDuration(Duration(minutes: 5));
     logI("Ended waiting for user to end his meal");
 
     var shouldContinue = true;
@@ -161,7 +185,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       await runtimeContext.waitForEvent<TreatmentAvailableEvent<Meal>>();
       logI("Calculator response available, marking meal as bolused eaten");
 
-      mealStatus = 'bolused-eaten';
+      mealStatus = 'eaten-bolused';
     } else {
       logI("Finished eating, bolus already given");
     }

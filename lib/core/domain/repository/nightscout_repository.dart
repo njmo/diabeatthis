@@ -16,6 +16,7 @@ abstract class NightscoutRepository {
   Future<List<Glucose>> fetchLastGlucoseWithLimit(int limit);
   Future<DeviceStatus> fetchLastDeviceStatus();
   Future<TemporaryTarget> fetchLastTemporaryTarget();
+  Future<TemporaryTarget> fetchLastTemporaryTargetById(String id);
   Future<Duration?> getLatestSensorChangeAge();
   Future<Duration?> getLatestInsulinChangeAge();
 }

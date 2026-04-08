@@ -8,6 +8,7 @@ abstract class TemporaryTargetDto with _$TemporaryTargetDto {
 
   const factory TemporaryTargetDto({
     @JsonKey(name: 'created_at') required String createdAt,
+    @JsonKey(name: '_id')  required String nightscoutId,
     required int durationInMilliseconds,
     required int duration,
     required int targetBottom,

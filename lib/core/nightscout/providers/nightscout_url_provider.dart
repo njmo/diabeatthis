@@ -8,6 +8,6 @@ const _nightscoutUrlKey = 'nightscout_url';
 
 @Riverpod(keepAlive: true)
 Future<String?> nightscoutUrl(Ref ref) async {
-  final prefs = await ref.read(sharedPrefsProvider.future);
+  final prefs = await ref.watch(sharedPrefsProvider.future);
   return prefs.getString(_nightscoutUrlKey);
 }

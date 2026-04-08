@@ -1204,7 +1204,7 @@ void main() {
           expect(calls, hasLength(1));
           final (maa, saa) = calls.single;
           expect(maa.id, 1);
-          expect(saa, 'bolused-eaten');
+          expect(saa, 'eaten-bolused');
           calls.remove((maa, saa));
 
           expect(fakeNotifications.shownEvents, hasLength(0));
@@ -1291,7 +1291,7 @@ void main() {
           expect(calls, hasLength(1));
           final (maa, saa) = calls.single;
           expect(maa.id, 1);
-          expect(saa, 'bolused-eaten');
+          expect(saa, 'eaten-bolused');
           calls.remove((maa, saa));
 
           expect(fakeNotifications.shownEvents, hasLength(0));

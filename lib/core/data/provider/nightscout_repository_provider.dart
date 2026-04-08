@@ -45,6 +45,12 @@ Future<TemporaryTarget> temporaryTarget(Ref ref) async {
 }
 
 @riverpod
+Future<TemporaryTarget> temporaryTargetById(Ref ref, String id) async {
+  final repository = await ref.watch(nightscoutRepositoryProvider.future);
+  return await repository.fetchLastTemporaryTargetById(id);
+}
+
+@riverpod
 Future<List<Meal>> meals(Ref ref) async {
   final repository = await ref.watch(nightscoutRepositoryProvider.future);
   return await repository.fetchMealsOnDay(clock.now());

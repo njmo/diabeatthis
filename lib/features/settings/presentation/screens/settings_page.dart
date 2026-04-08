@@ -1,12 +1,12 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/providers/app_event_router_provider.dart';
+import '../../../../app/providers/app_foreground_bridge_provider.dart';
 import '../../../../common/events/data/app/dump_logs_event.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../core/data/provider/nightscout_repository_provider.dart';
@@ -35,7 +35,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
 
     return prefsAsync.when(
       loading: () =>
-      const Scaffold(body: Center(child: CircularProgressIndicator())),
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(body: Center(child: Text('Błąd: $e'))),
       data: (prefs) {
         if (!initialized.value) {
@@ -84,18 +84,22 @@ class SettingsPage extends HookConsumerWidget with Logging {
             }
 
             if (urlChanged) {
-              if(oldUrl.isEmpty) {
-                logI("start service");
-              }
-              else {
-                logI("restart service");
-                FlutterForegroundTask.restartService();
-              }
-            }
+              final foregroundBridge = ref.read(appForegroundBridgeProvider);
 
-            ref
-                .read(appEventRouterProvider)
-                .send(ExecuteCommandEvent.syncSettings(data: {}));
+              if (oldUrl.isEmpty) {
+                logI("starting service");
+                foregroundBridge.startMonitoring();
+              } else {
+                logI("restarting service");
+                foregroundBridge.restartService();
+              }
+
+              await Future.delayed(Duration(seconds: 4));
+
+              ref
+                  .read(appEventRouterProvider)
+                  .send(ExecuteCommandEvent.syncData(data: []));
+            }
 
             if (context.mounted) {
               context.router.replace(NamedRoute('DashboardRoute'));
@@ -103,7 +107,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
           } catch (e, st) {
             logE('Błąd podczas zapisu ustawień Nightscout $e, $st');
             submitError.value =
-            'Problem z połączeniem. Sprawdź adres Nightscout.';
+                'Problem z połączeniem. Sprawdź adres Nightscout.';
           } finally {
             isSaving.value = false;
           }
@@ -208,10 +212,10 @@ class SettingsPage extends HookConsumerWidget with Logging {
                     onPressed: isSaving.value ? null : handleSave,
                     child: isSaving.value
                         ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Text('Zapisz i przejdź dalej'),
                   ),
                 ],

@@ -11,7 +11,7 @@ abstract class ExtendedCarb with _$ExtendedCarb implements Treatment {
 
   const factory ExtendedCarb({
     required int id,
-    required DateTime dateHappened,
+    required DateTime createdAt,
     required int carbs,
     required int duration,
   }) = _ExtendedCarb;

@@ -5,7 +5,7 @@ extension MealMapper on MealDto {
   Meal toDomain({int? localId}) {
     return Meal(
       id: 0,
-      dateHappened: DateTime.parse(createdAt).toLocal(),
+      createdAt: DateTime.parse(createdAt).toLocal(),
       nightscoutObjectId: id,
       glucose: (glucose as num?)?.toInt() ?? 0,
       insulin: (bolusCalculatorResult?['totalInsulin'] as num?)?.toDouble() ?? 0,

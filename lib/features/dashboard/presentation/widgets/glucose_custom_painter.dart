@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/data/provider/nightscout_repository_provider.dart';
 import '../../../../core/domain/model/glucose.dart';
+import '../../data/providers/blood_sugar_readings_list_provider.dart';
 
 class GlucoseMiniChart extends ConsumerWidget {
   const GlucoseMiniChart({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final glucose = ref.watch(glucoseWithLimitProvider(10));
+    final glucose = ref.watch(bloodSugarReadingsListProvider);
 
     return glucose.when(
       data: (glucose) {

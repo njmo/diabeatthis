@@ -13,9 +13,11 @@ import '../collector/meal_status_collector.dart';
 import '../collector/next_meal_collector.dart';
 import '../collector/treatments_collector.dart';
 import '../event/external/external_event_handler.dart';
+import '../synchronization/synchronization_cache_controller.dart';
 import '../task/base/collector_context.dart';
 import '../task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import '../task/tasks/service_status_updater_task.dart';
+import '../task/tasks/temp_target_monitor_task.dart';
 import 'workflow_scheduler.dart';
 
 class MyTaskHandler extends TaskHandler with Logging {
@@ -29,12 +31,14 @@ class MyTaskHandler extends TaskHandler with Logging {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     _container = ProviderContainer(
-        observers: [
-          if (kDebugMode) RiverpodDebugObserver(env: 'fg')
-        ],
+      observers: [if (kDebugMode) RiverpodDebugObserver(env: 'fg')],
     );
 
     LogRuntimeConfig.configure(enableBuffer: true, capacity: 20000);
+
+    await _container!
+        .read(synchronizationCacheControllerProvider)
+        .init(_container!);
 
     _taskScheduler = WorkflowScheduler();
 
@@ -43,6 +47,15 @@ class MyTaskHandler extends TaskHandler with Logging {
     final collectorContext = CollectorContext.fromRuntimeContext(
       runtimeContext,
     );
+
+    final tasks = [
+      MealMonitorTask(),
+      ServiceStatusUpdaterTask(),
+      TempTargetMonitorTask(),
+    ];
+    for (final task in tasks) {
+      _taskScheduler!.startTask(task, runtimeContext);
+    }
 
     _collectors = [
       DeviceStatusCollector(),
@@ -53,11 +66,6 @@ class MyTaskHandler extends TaskHandler with Logging {
     ];
     for (final collector in _collectors!) {
       collector.start(collectorContext);
-    }
-
-    final tasks = [MealMonitorTask(), ServiceStatusUpdaterTask()];
-    for (final task in tasks) {
-      _taskScheduler!.startTask(task, runtimeContext);
     }
 
     _externalEventHandler = ExternalEventHandler(runtimeContext);

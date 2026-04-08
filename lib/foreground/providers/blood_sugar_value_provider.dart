@@ -21,6 +21,7 @@ class BloodSugarValueNotifier extends _$BloodSugarValueNotifier {
   }
 
   void update(Glucose value) {
+
     final now = clock.now();
     final readingAge = now.difference(value.date);
 

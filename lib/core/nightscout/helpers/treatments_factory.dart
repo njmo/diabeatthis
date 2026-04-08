@@ -5,11 +5,13 @@ import '../dto/correction_bolus_dto.dart';
 import '../dto/extended_carb_dto.dart';
 import '../dto/manual_bolus_dto.dart';
 import '../dto/meal_dto.dart';
+import '../dto/temporary_target_dto.dart';
 import '../dto/treat_dto.dart';
 import '../mappers/correction_bolus_mapper.dart';
 import '../mappers/extended_carb_mapper.dart';
 import '../mappers/manual_bolus_mapper.dart';
 import '../mappers/meal_mapper.dart';
+import '../mappers/temporary_target_mapper.dart';
 import '../mappers/treat_mapper.dart';
 
 class TreatmentFactory with Logging {
@@ -17,6 +19,17 @@ class TreatmentFactory with Logging {
 
   List<Treatment> parseTreatments(List<dynamic> treatments) {
     final list = <Treatment>[];
+
+    final item = treatments.firstWhere(
+          (e) => e['eventType'] == 'Temporary Target',
+      orElse: () => null,
+    );
+
+    if (item != null) {
+      list.remove(item);
+      list.add(TemporaryTargetDto.fromJson(item).toDomain());
+    }
+
     for (var i = 0; i < treatments.length; i++) {
       final t = treatments[i];
 
