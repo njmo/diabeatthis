@@ -77,7 +77,7 @@ class ActivityControllerNotifier extends _$ActivityControllerNotifier {
     return;
   }
 
-  Future<Activity?> saveActivity(Activity act) async {
+  Future<Activity?> saveActivity(Activity act, [DateTime? date]) async {
     final db = ref.watch(databaseProvider);
     final isDraft = act.maybeWhen(
       draft: (_, __, ___) => true,
@@ -117,7 +117,11 @@ Future<void> stopActivity(Ref ref, ActivityLog activityLog) async {
     draft: (a) =>
         throw StateError('Nie można zakończyć draftu – brak id i endedAt'),
   );
-  await db.activityDao.updateActivityLog(updated.toCompanion());
+  if(activityLog.startedAt.isBefore(clock.now())) {
+    await db.activityDao.removeActivityLog(updated.toCompanion());
+  } else {
+    await db.activityDao.updateActivityLog(updated.toCompanion());
+  }
 }
 
 @riverpod

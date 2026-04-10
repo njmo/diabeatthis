@@ -44,7 +44,7 @@ class TempTargetMonitorTask extends WorkflowTask with Logging {
               final payload = TaskTargetSynchronization(data: current);
               context.container.read(taskEventRouterProvider).send(payload);
             }
-            cache.cacheTarget(last);
+            cache.cacheTarget(current);
             break;
           }
         } catch (_) {}

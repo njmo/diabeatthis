@@ -35,9 +35,26 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
     return elapsed.clamp(0, target.duration);
   }
 
-  bool _isActivityLinkedToTarget(dynamic pendingActivity, TemporaryTarget target) {
-    if (pendingActivity == null) return false;
+  int _activityElapsedMinutes(DateTime startedAt, DateTime now) {
+    final minutes = now.difference(startedAt).inMinutes;
+    return minutes < 0 ? 0 : minutes;
+  }
 
+  int _minutesUntil(DateTime startedAt, DateTime now) {
+    final minutes = startedAt.difference(now).inMinutes;
+    return minutes < 0 ? 0 : minutes;
+  }
+
+  bool _isActivityPlanned(dynamic pendingActivity, DateTime now) {
+    if (pendingActivity == null) return false;
+    return pendingActivity.startedAt.isAfter(now);
+  }
+
+  bool _isActivityLinkedToTarget(
+      dynamic pendingActivity,
+      TemporaryTarget target,
+      ) {
+    if (pendingActivity == null) return false;
     return pendingActivity.startedAt == target.createdAt;
   }
 
@@ -53,144 +70,180 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
       loading: () => clock.now(),
     );
 
-    final target = _isTargetExpired(targetUi, now) ? null : targetUi;
-
-    final pendingActivity = pendingActivityAsync.whenOrNull(data: (d) => d);
-
     if (pendingActivityAsync.isLoading) {
       return const SizedBox.shrink();
     }
 
-    if (target != null &&
+    final target = _isTargetExpired(targetUi, now) ? null : targetUi;
+    final pendingActivity = pendingActivityAsync.whenOrNull(data: (d) => d);
+
+    final isActivityPlanned = _isActivityPlanned(pendingActivity, now);
+    final isActivityInProgress =
+        pendingActivity != null && !isActivityPlanned;
+    final isActivityTargetActive =
+        target != null && _isActivityTarget(target);
+    final isMealTargetActive = target != null && _isMealTarget(target);
+    final isLinkedToActivityTarget = target != null &&
         _isActivityTarget(target) &&
-        _isActivityLinkedToTarget(pendingActivity, target)) {
-      final targetMinutes = _elapsedMinutes(target, now);
-      final activityMinutes = now.difference(pendingActivity!.startedAt).inMinutes;
-      final activityName =
+        _isActivityLinkedToTarget(pendingActivity, target);
+
+    final cards = <Widget>[];
+
+    if (isActivityInProgress && isLinkedToActivityTarget) {
+      final targetMinutes = _elapsedMinutes(target, now);final activityName =
           pendingActivity.whenOrNull(view: (_, name, _, _, _) => name) ??
               'Aktywność';
 
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: _StatusInfoCard(
-          icon: Icons.directions_run_rounded,
-          title: 'Aktywność w toku',
-          subtitle:
-          '$activityName • target $activityTargetValue mg/dl • '
-              '$activityMinutes min ($targetMinutes/${target.duration} min targetu)',
-          trailing: IconButton(
-            tooltip: 'Zakończ aktywność',
-            icon: const Icon(Icons.stop_circle_outlined),
-            onPressed: () async {
-              await ref.read(stopActivityProvider(pendingActivity).future);
-              ref.invalidate(getPendingActivityProvider);
-            },
+      cards.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: _StatusInfoCard(
+            icon: Icons.directions_run_rounded,
+            title: 'Aktywność w toku',
+            subtitle:
+            '$activityName • trwa ${_activityElapsedMinutes(pendingActivity.startedAt, now)} min '
+                '• target $activityTargetValue mg/dl '
+                '• target: $targetMinutes/${target.duration} min',
+            trailing: IconButton(
+              tooltip: 'Zakończ aktywność',
+              icon: const Icon(Icons.stop_circle_outlined),
+              onPressed: () async {
+                await ref.read(stopActivityProvider(pendingActivity).future);
+                ref.invalidate(getPendingActivityProvider);
+              },
+            ),
           ),
         ),
       );
-    }
+    } else {
+      if (isActivityTargetActive) {
+        final targetMinutes = _elapsedMinutes(target, now);
 
-    if (target != null && _isActivityTarget(target)) {
-      final minutes = _elapsedMinutes(target, now);
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: _StatusInfoCard(
+              icon: Icons.track_changes_rounded,
+              title: 'Target aktywności aktywny',
+              subtitle:
+              '$activityTargetValue mg/dl • $targetMinutes/${target.duration} min',
+              trailing: (!isActivityPlanned && pendingActivity == null)
+                  ? FilledButton.icon(
+                onPressed: () async {
+                  final activity = await showDialog<Activity?>(
+                    barrierDismissible: true,
+                    context: context,
+                    builder: (context) => const ActivityPickerDialog(),
+                  );
 
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: _StatusInfoCard(
-          icon: Icons.track_changes_rounded,
-          title: 'Target aktywności aktywny',
-          subtitle: '$activityTargetValue mg/dl • $minutes/${target.duration} min',
-          trailing: FilledButton.icon(
-            onPressed: () async {
-              final activity = await showDialog<Activity?>(
-                barrierDismissible: true,
-                context: context,
-                builder: (context) => const ActivityPickerDialog(),
-              );
+                  if (activity == null) return;
 
-              if (activity == null) return;
+                  final controller =
+                  ref.read(activityControllerProvider.notifier);
 
-              final controller = ref.read(activityControllerProvider.notifier);
-
-              Activity? act;
-              try {
-                act = await controller.saveActivity(activity);
-                if (act == null) {
-                  throw Exception('Something went wrong with adding activity');
-                }
-              } catch (e, st) {
-                logE('Błąd dodawania aktywności $e, $st');
-                if (context.mounted) {
-                  await showActivityAddFailedDialog(context);
-                }
-                return;
-              }
-
-              await act.whenOrNull(
-                existing: (id, name, pre, post) async {
-                  logI('Starting activity: $id $name');
+                  Activity? act;
                   try {
-                    await ref.read(
-                      insertActivityLogProvider(
-                        ActivityLog.draft(
-                          activityId: id,
-                          startedAt: target.createdAt,
-                        ),
-                      ).future,
-                    );
-                    ref.invalidate(getPendingActivityProvider);
-                  } catch (_) {
-                    if (context.mounted) {
-                      await showActivityInProgressDialog(context);
+                    act = await controller.saveActivity(activity);
+                    if (act == null) {
+                      throw Exception(
+                        'Something went wrong with adding activity',
+                      );
                     }
+                  } catch (e, st) {
+                    logE('Błąd dodawania aktywności $e, $st');
+                    if (context.mounted) {
+                      await showActivityAddFailedDialog(context);
+                    }
+                    return;
                   }
+
+                  await act.whenOrNull(
+                    existing: (id, name, pre, post) async {
+                      logI('Starting activity: $id $name');
+                      try {
+                        await ref.read(
+                          insertActivityLogProvider(
+                            ActivityLog.draft(
+                              activityId: id,
+                              startedAt: target.createdAt,
+                            ),
+                          ).future,
+                        );
+                        ref.invalidate(getPendingActivityProvider);
+                      } catch (_) {
+                        if (context.mounted) {
+                          await showActivityInProgressDialog(context);
+                        }
+                      }
+                    },
+                  );
                 },
-              );
-            },
-            icon: const Icon(Icons.app_registration),
-            label: const Text('Podepnij aktywność'),
+                icon: const Icon(Icons.app_registration),
+                label: const Text('Podepnij aktywność'),
+              )
+                  : null,
+            ),
           ),
-        ),
-      );
-    }
+        );
+      }
 
-    if (target != null && _isMealTarget(target)) {
-      final minutes = _elapsedMinutes(target, now);
+      if (isMealTargetActive) {
+        final minutes = _elapsedMinutes(target, now);
 
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: _StatusInfoCard(
-          icon: Icons.restaurant_rounded,
-          title: 'Meal target aktywny',
-          subtitle: '$mealTargetValue mg/dl • $minutes/${target.duration} min',
-        ),
-      );
-    }
-
-    if (pendingActivity != null) {
-      final minutes = now.difference(pendingActivity.startedAt).inMinutes;
-      final activityName =
-          pendingActivity.whenOrNull(view: (_, name, _, _, _) => name) ??
-              'Aktywność';
-
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: _StatusInfoCard(
-          icon: Icons.directions_run_rounded,
-          title: 'Aktywność w toku',
-          subtitle: '$activityName • $minutes min',
-          trailing: IconButton(
-            tooltip: 'Zakończ aktywność',
-            icon: const Icon(Icons.stop_circle_outlined),
-            onPressed: () async {
-              await ref.read(stopActivityProvider(pendingActivity).future);
-              ref.invalidate(getPendingActivityProvider);
-            },
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: _StatusInfoCard(
+              icon: Icons.restaurant_rounded,
+              title: 'Meal target aktywny',
+              subtitle: '$mealTargetValue mg/dl • $minutes/${target.duration} min',
+            ),
           ),
-        ),
-      );
+        );
+      }
+
+      if (pendingActivity != null) {
+        final activityName =
+            pendingActivity.whenOrNull(view: (_, name, _, _, _) => name) ??
+                'Aktywność';
+
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: _StatusInfoCard(
+              icon: Icons.directions_run_rounded,
+              title: isActivityPlanned
+                  ? 'Zaplanowana aktywność'
+                  : 'Aktywność w toku',
+              subtitle: isActivityPlanned
+                  ? '$activityName • start za ${_minutesUntil(pendingActivity.startedAt, now)} min'
+                  : '$activityName • trwa ${_activityElapsedMinutes(pendingActivity.startedAt, now)} min',
+              trailing: IconButton(
+                tooltip: 'Zakończ aktywność',
+                icon: const Icon(Icons.stop_circle_outlined),
+                onPressed: () async {
+                  await ref.read(stopActivityProvider(pendingActivity).future);
+                  ref.invalidate(getPendingActivityProvider);
+                },
+              ),
+            ),
+          ),
+        );
+      }
     }
 
-    return const SizedBox.shrink();
+    if (cards.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      children: [
+        for (var i = 0; i < cards.length; i++) ...[
+          cards[i],
+          if (i != cards.length - 1) const SizedBox(height: 8),
+        ],
+      ],
+    );
   }
 
   Future<void> showActivityInProgressDialog(BuildContext context) {
@@ -245,9 +298,7 @@ class _StatusInfoCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: BorderSide(
-          color: theme.colorScheme.outlineVariant,
-        ),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -260,20 +311,14 @@ class _StatusInfoCard extends StatelessWidget {
                 color: theme.colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: theme.colorScheme.onPrimaryContainer,
-              ),
+              child: Icon(icon, color: theme.colorScheme.onPrimaryContainer),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.titleMedium,
-                  ),
+                  Text(title, style: theme.textTheme.titleMedium),
                   if (subtitle != null) ...[
                     const SizedBox(height: 4),
                     Text(
@@ -286,10 +331,7 @@ class _StatusInfoCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (trailing != null) ...[
-              const SizedBox(width: 12),
-              trailing!,
-            ],
+            if (trailing != null) ...[const SizedBox(width: 12), trailing!],
           ],
         ),
       ),

@@ -27,4 +27,8 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
   Future<void> updateActivityLog(ActivityLogCompanion activityLog) async {
     await into(db.activityLog).insertOnConflictUpdate(activityLog);
   }
+
+  Future<void> removeActivityLog(ActivityLogCompanion companion) async {
+    await (delete(db.activityLog)..where((tbl) => tbl.id.equals(companion.id.value))).go();
+  }
 }
