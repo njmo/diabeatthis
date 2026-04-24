@@ -5,6 +5,8 @@ import '../app_event_data.dart';
 part 'execute_command_event.freezed.dart';
 part 'execute_command_event.g.dart';
 
+// ignore_for_file: invalid_annotation_target
+
 @Freezed(unionKey: 'command', unionValueCase: FreezedUnionCase.snake)
 abstract class ExecuteCommandEvent
     with _$ExecuteCommandEvent, AppEventData implements ForegroundEvent {
@@ -18,6 +20,10 @@ abstract class ExecuteCommandEvent
     required Map<String, String> data,
   }) = ExecuteCommandEventSyncSettings;
 
+  const factory ExecuteCommandEvent.collectTick({
+    required String reason,
+    @JsonKey(name: 'alarm_id') required int alarmId,
+  }) = ExecuteCommandEventCollectTick;
 
   factory ExecuteCommandEvent.fromJson(Map<String, dynamic> json) =>
       _$ExecuteCommandEventFromJson(json);

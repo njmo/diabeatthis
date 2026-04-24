@@ -57,6 +57,7 @@ dependencies:
   share_plus: ^12.0.1
   clock: ^1.1.2
   circular_buffer: ^0.12.0
+  android_alarm_manager_plus: ^5.0.0
 
 dev_dependencies:
   flutter_test:

@@ -15,3 +15,9 @@ class RuntimeSignalInput extends RuntimeInput {
 
   const RuntimeSignalInput(this.signalKey);
 }
+
+class RuntimeTickInput extends RuntimeInput {
+  final DateTime now;
+
+  RuntimeTickInput(this.now);
+}

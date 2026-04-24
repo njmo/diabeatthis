@@ -10,6 +10,10 @@ class CollectorContext extends RuntimePort {
     required this.container,
     required super.emitEvent,
     required super.emitSignal,
+    required super.waitForDuration,
+    required super.waitForSignal,
+    required super.durationWait,
+    required super.signalWait,
   });
 
   static fromRuntimeContext(RuntimeContext runtimeContext) {
@@ -17,6 +21,10 @@ class CollectorContext extends RuntimePort {
       container: runtimeContext.container,
       emitEvent: runtimeContext.emitEvent,
       emitSignal: runtimeContext.emitSignal,
+      waitForDuration: runtimeContext.waitForDuration,
+      waitForSignal: runtimeContext.waitForSignal,
+      durationWait: runtimeContext.durationWait,
+      signalWait: runtimeContext.signalWait,
     );
   }
 }

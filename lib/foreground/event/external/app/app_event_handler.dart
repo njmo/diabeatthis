@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:ui';
 
+import 'package:clock/clock.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/providers/app_lifecycle_state_provider.dart';
@@ -24,6 +27,7 @@ class AppEventHandler with Logging {
             .read(appLifecycleProvider.notifier)
             .setState(state);
         runtimeContext.emitEvent(data);
+        runtimeContext.tick(clock.now());
       },
       dumpLogs: (final data) async {
         final file = await LogFileWriter.writeLogs(Log.bufferedLogs, data.name);
@@ -79,6 +83,36 @@ class AppEventHandler with Logging {
             );
             sharedPrefs.reload();
             runtimeContext.container.invalidate(nightscoutUrlProvider);
+          },
+          collectTick: (String reason, int alarmId) async {
+            logI(
+              "Received collect tick command with reason: $reason and alarmId: $alarmId",
+            );
+
+            await FlutterForegroundTask.updateService(
+              foregroundTaskOptions: ForegroundTaskOptions(
+                allowWakeLock: true,
+                eventAction: ForegroundTaskEventAction.nothing(),
+              ),
+            );
+
+            logI("WakeLock ENABLED for collectTick");
+
+            Future.delayed(const Duration(seconds: 30), () async {
+              try {
+                await FlutterForegroundTask.updateService(
+                  foregroundTaskOptions: ForegroundTaskOptions(
+                    allowWakeLock: false,
+                    eventAction: ForegroundTaskEventAction.nothing(),
+                  ),
+                );
+                logI("WakeLock DISABLED after timeout (15s)");
+              } catch (e, st) {
+                logW("Failed to disable WakeLock: $e\n$st");
+              }
+            });
+
+            runtimeContext.tick(clock.now());
           },
         );
       },

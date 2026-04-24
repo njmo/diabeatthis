@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:diabeatthis/foreground/event/model/foreground_event.dart';
+import 'package:diabeatthis/foreground/runtime/deadline_waiter.dart';
 import 'package:diabeatthis/foreground/runtime/runtime_input.dart';
 import 'package:diabeatthis/foreground/runtime/runtime_waiter.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancellation.dart';
@@ -29,9 +30,9 @@ class FakeRuntimeHarness {
     ProviderContainer? container,
     TaskCancellation? cancellation,
     TaskInterruptController? interruptController,
-  })  : container = container ?? ProviderContainer(),
-        cancellation = cancellation ?? TaskCancellation(),
-        interruptController = interruptController ?? TaskInterruptController() {
+  }) : container = container ?? ProviderContainer(),
+       cancellation = cancellation ?? TaskCancellation(),
+       interruptController = interruptController ?? TaskInterruptController() {
     runtimeContext = RuntimeContext(
       cancellation: this.cancellation,
       interruptController: this.interruptController,
@@ -39,7 +40,9 @@ class FakeRuntimeHarness {
       emitSignal: _emitSignal,
       eventWaitFactory: _createEventWaitHandle,
       signalWaitFactory: _createSignalWaitHandle,
+      deadlineWaitFactory: _createDeadlineWaitHandle,
       container: this.container,
+      tick: (DateTime now) {},
     );
   }
 
@@ -64,6 +67,33 @@ class FakeRuntimeHarness {
     debugPrint('----------------------------');
   }
 
+  WaitHandle<void> _createDeadlineWaitHandle(DateTime deadline) {
+    if (cancellation.isCancelled) {
+      return WaitHandle<void>(
+        future: Future<void>.error(const TaskCancelledException()),
+        cancel: () {},
+      );
+    }
+
+    final completer = Completer<void>();
+    late final DeadlineWaiter waiter;
+
+    waiter = DeadlineWaiter(
+      deadline: deadline,
+      completer: completer,
+      onDone: _removeWaiter,
+    );
+
+    _waiters.add(waiter);
+
+    return WaitHandle<void>(
+      future: completer.future,
+      cancel: () {
+        waiter.cancel(const TaskCancelledException(), StackTrace.current);
+      },
+    );
+  }
+
   void dispatchEvent(ForegroundEvent event) {
     _deliverInput(RuntimeEventInput(event));
   }
@@ -72,10 +102,14 @@ class FakeRuntimeHarness {
     _deliverInput(RuntimeSignalInput(signalKey));
   }
 
+  void dispatchTick(DateTime now) {
+    _deliverInput(RuntimeTickInput(now));
+  }
+
   void dispatchEventToTask(
-      InterruptableWorkflowTask task,
-      ForegroundEvent event,
-      ) {
+    InterruptableWorkflowTask task,
+    ForegroundEvent event,
+  ) {
     final shouldInterrupt = task.shouldInterrupt(event);
 
     if (shouldInterrupt) {

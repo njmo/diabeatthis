@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/router/observers/riverpod_debug_observer.dart';
 import '../../core/logger/logger.dart';
-import '../collector/blood_sugar_collector.dart';
 import '../collector/device_status_collector.dart';
 import '../collector/foreground_collector.dart';
 import '../collector/meal_status_collector.dart';
@@ -59,7 +58,6 @@ class MyTaskHandler extends TaskHandler with Logging {
 
     _collectors = [
       DeviceStatusCollector(),
-      BloodSugarCollector(),
       NextMealCollector(),
       MealStatusCollector(),
       TreatmentsCollector(),
@@ -78,9 +76,6 @@ class MyTaskHandler extends TaskHandler with Logging {
 
   @override
   Future<void> onRepeatEvent(DateTime timestamp) async {
-    // if (_taskScheduler == null) return;
-    //
-    // _taskScheduler!.debugPrintState();
   }
 
   @override

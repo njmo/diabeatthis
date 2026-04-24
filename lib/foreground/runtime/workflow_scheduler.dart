@@ -7,6 +7,7 @@ import '../../core/logger/logger.dart';
 import '../event/model/foreground_event.dart';
 import '../task/base/runtime_context.dart';
 import '../task/base/workflow_task.dart';
+import 'deadline_waiter.dart';
 import 'runtime_input.dart';
 import 'runtime_waiter.dart';
 import 'task_cancellation.dart';
@@ -47,7 +48,9 @@ class WorkflowScheduler with Logging {
       emitSignal: emitSignal,
       eventWaitFactory: _createEventWaitHandle,
       signalWaitFactory: _createSignalWaitHandle,
+      deadlineWaitFactory: createDeadlineWaitHandle,
       container: container,
+      tick: tick,
     );
   }
 
@@ -103,6 +106,38 @@ class WorkflowScheduler with Logging {
     _waiters.add(waiter);
 
     return WaitHandle<T>(
+      future: completer.future,
+      cancel: () =>
+          waiter.cancel(const TaskCancelledException(), StackTrace.current),
+    );
+  }
+
+  void tick(DateTime now) {
+    if (_isDisposed) return;
+    _pendingInputs.addLast(RuntimeTickInput(now));
+    _ensureFlushScheduled();
+  }
+
+  WaitHandle<void> createDeadlineWaitHandle(DateTime deadline) {
+    if (_isDisposed) {
+      return WaitHandle<void>(
+        future: Future.error(const TaskCancelledException()),
+        cancel: () {},
+      );
+    }
+
+    final completer = Completer<void>();
+    late final DeadlineWaiter waiter;
+
+    waiter = DeadlineWaiter(
+      deadline: deadline,
+      completer: completer,
+      onDone: _removeWaiter,
+    );
+
+    _waiters.add(waiter);
+
+    return WaitHandle<void>(
       future: completer.future,
       cancel: () =>
           waiter.cancel(const TaskCancelledException(), StackTrace.current),

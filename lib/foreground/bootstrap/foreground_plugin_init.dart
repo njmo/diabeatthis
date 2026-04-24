@@ -21,11 +21,11 @@ void _initForegroundTask() {
       playSound: false,
     ),
     foregroundTaskOptions: ForegroundTaskOptions(
-      eventAction: ForegroundTaskEventAction.repeat(5000),
+      eventAction: ForegroundTaskEventAction.nothing(),
       autoRunOnBoot: true,
       autoRunOnMyPackageReplaced: true,
-      allowWakeLock: true,
-      allowWifiLock: true,
+      allowWakeLock: false,
+      allowWifiLock: false,
     ),
   );
 }

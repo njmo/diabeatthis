@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -23,6 +24,7 @@ Future<void> bootstrap(BootstrapBuilder builder) async {
       };
 
       // Initialize communication port
+      await AndroidAlarmManager.initialize();
       FlutterForegroundTask.initCommunicationPort();
 
       LogRuntimeConfig.configure(enableBuffer: true, capacity: 20000);
