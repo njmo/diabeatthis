@@ -20,20 +20,14 @@ class TreatmentFactory with Logging {
   List<Treatment> parseTreatments(List<dynamic> treatments) {
     final list = <Treatment>[];
 
-    final item = treatments.firstWhere(
-          (e) => e['eventType'] == 'Temporary Target',
-      orElse: () => null,
-    );
-
-    if (item != null) {
-      treatments.remove(item);
-      list.add(TemporaryTargetDto.fromJson(item).toDomain());
-    }
-
     for (var i = 0; i < treatments.length; i++) {
       final t = treatments[i];
 
       final type = (t['eventType'] ?? '').toString().toLowerCase();
+      if (type.contains('temporary target')) {
+        list.add(TemporaryTargetDto.fromJson(t).toDomain());
+        continue;
+      }
       if (type.contains('bolus wizard')) {
         list.add(MealDto.fromJson(t).toDomain());
         ignoreNextBolus = true;
@@ -45,13 +39,12 @@ class TreatmentFactory with Logging {
       }
       // sms bolus
       if (type.contains('meal bolus') || type.contains('carb correction')) {
-        final isBolusWizardNearby = [
-          i - 1,
-          i + 1,
-        ].any((index) =>
-        index >= 0 &&
-            index < treatments.length &&
-            treatments[index]['eventType'] == 'Bolus Wizard');
+        final isBolusWizardNearby = [i - 1, i + 1].any(
+          (index) =>
+              index >= 0 &&
+              index < treatments.length &&
+              treatments[index]['eventType'] == 'Bolus Wizard',
+        );
 
         if (isBolusWizardNearby) continue;
 
@@ -64,7 +57,9 @@ class TreatmentFactory with Logging {
           continue;
         }
       }
-      if (type.contains('carb correction')) list.add(TreatDto.fromJson(t).toDomain());
+      if (type.contains('carb correction')) {
+        list.add(TreatDto.fromJson(t).toDomain());
+      }
       if (type.contains('correction bolus')) {
         list.add(CorrectionBolusDto.fromJson(t).toDomain());
       }

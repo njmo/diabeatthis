@@ -18,7 +18,16 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
   }
 
   Future<List<ActivityLogData>> getActivityLogs({int page = 0}) async {
-    return (select(db.activityLog)..limit(15, offset: page * 15)).get();
+    return (select(db.activityLog)
+          ..orderBy([(log) => OrderingTerm.desc(log.startedAt)])
+          ..limit(15, offset: page * 15))
+        .get();
+  }
+
+  Future<ActivityLogData> getActivityLogById(int id) {
+    return (select(
+      db.activityLog,
+    )..where((tbl) => tbl.id.equals(id))).getSingle();
   }
 
   Future<ActivityLogData> insertActivityLog(

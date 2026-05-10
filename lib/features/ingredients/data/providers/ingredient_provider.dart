@@ -18,10 +18,7 @@ Stream<List<domain.Ingredient>> ingredientsStream(Ref ref) {
 }
 
 @riverpod
-Future<domain.Ingredient> ingredientById(
-  Ref ref,
-  int id,
-) async {
+Future<domain.Ingredient> ingredientById(Ref ref, int id) async {
   final db = ref.watch(databaseProvider);
   final ing = await db.ingredientDao.getIngredientById(id);
   return ing.toDomain();
@@ -55,10 +52,15 @@ Future<domain.Ingredient> insertIngredient(
 ) async {
   return ingredient.map(
     draft: (draft) async {
+      final name = draft.name.trim();
+      if (name.isEmpty) {
+        throw ArgumentError('Ingredient name cannot be empty');
+      }
+
       final db = ref.watch(databaseProvider);
       final value = await db
           .into(db.ingredient)
-          .insertReturningOrNull(ingredient.toCompanion());
+          .insertReturningOrNull(draft.copyWith(name: name).toCompanion());
       if (value != null) {
         return value.toDomain();
       } else {
@@ -80,7 +82,10 @@ Future<void> insertIngredientPortion(
     return;
   }
   final db = ref.watch(databaseProvider);
-  final ingredientId = ingredient.map(existing: (e) => e.id, draft: (_) => throw Exception('Cannot get id for draft'));
+  final ingredientId = ingredient.map(
+    existing: (e) => e.id,
+    draft: (_) => throw Exception('Cannot get id for draft'),
+  );
   await db.insertIngredientPortion(ingredientId, portion.id, amount);
 }
 
@@ -91,7 +96,10 @@ Future<double?> getAmountForPortionIngredient(
   domain.Portion portion,
 ) async {
   final db = ref.watch(databaseProvider);
-  final ingredientId = ingredient.map(existing: (e) => e.id, draft: (_) => throw Exception('Cannot get id for draft'));
+  final ingredientId = ingredient.map(
+    existing: (e) => e.id,
+    draft: (_) => throw Exception('Cannot get id for draft'),
+  );
   return await db
       .amountIngredientPortion(ingredientId, portion.id)
       .getSingleOrNull();
@@ -143,11 +151,12 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
       .toStringAsFixed(0);
 
   ConfidenceLevel getNutritionConfidence() => state.map(
-        draft: (d) => ConfidenceLevelX.fromDouble01(d.nutritionConfidence),
-        existing: (e) => e.nutritionConfidence as ConfidenceLevel,
-      );
+    draft: (d) => ConfidenceLevelX.fromDouble01(d.nutritionConfidence),
+    existing: (e) => e.nutritionConfidence as ConfidenceLevel,
+  );
 
-  String? getBrand() => state.map(draft: (d) => d.brand, existing: (e) => e.brand);
+  String? getBrand() =>
+      state.map(draft: (d) => d.brand, existing: (e) => e.brand);
   void setBrand(String value) => state = state.copyWith(brand: value);
 
   void setIsReference(bool value) => state = state.copyWith(isReference: value);

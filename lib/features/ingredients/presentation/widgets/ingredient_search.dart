@@ -6,6 +6,8 @@ import '../../../../common/widgets/forms.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/providers/ingredient_provider.dart';
 
+const int _ingredientSearchMaxLength = 120;
+
 class IngredientSearch extends HookConsumerWidget {
   const IngredientSearch({super.key});
 
@@ -35,7 +37,7 @@ class IngredientSearch extends HookConsumerWidget {
                 return TextFormField(
                   autofocus: true,
                   controller: controller,
-                  maxLength: 30,
+                  maxLength: _ingredientSearchMaxLength,
                   validator: (value) {
                     if (valuePicked.value < 0) {
                       return '';
@@ -70,10 +72,10 @@ class IngredientSearch extends HookConsumerWidget {
                             : FontWeight.normal,
                       ),
                     ),
-                    subtitle: Text(
-                      'Kalorie: ${ingredient.kcalPer100g} kcal',
-                    ),
-                    trailing: ingredient.isReference ? const Icon(Icons.dinner_dining) : null,
+                    subtitle: Text('Kalorie: ${ingredient.kcalPer100g} kcal'),
+                    trailing: ingredient.isReference
+                        ? const Icon(Icons.dinner_dining)
+                        : null,
                     onTap: () {
                       draft.overrideDraft(ingredient);
                       valuePicked.value = index;

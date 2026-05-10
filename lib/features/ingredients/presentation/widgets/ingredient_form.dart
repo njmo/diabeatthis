@@ -8,6 +8,8 @@ import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/providers/ingredient_provider.dart';
 import 'reference_ingredient_checkbox.dart';
 
+const int _ingredientNameMaxLength = 120;
+
 class IngredientForm extends HookConsumerWidget {
   const IngredientForm({super.key});
 
@@ -34,12 +36,14 @@ class IngredientForm extends HookConsumerWidget {
               builder: (context, controller) {
                 return TextFormField(
                   controller: controller,
-                  maxLength: 30,
+                  maxLength: _ingredientNameMaxLength,
                   validator: (value) {
-                    if ((value == null) ||
-                        (value.isEmpty) ||
-                        (value.length < 2)) {
-                      return '';
+                    final name = value?.trim() ?? '';
+                    if (name.isEmpty) {
+                      return 'Podaj nazwę składnika';
+                    }
+                    if (name.length < 2) {
+                      return 'Nazwa jest za krótka';
                     }
                     return null;
                   },

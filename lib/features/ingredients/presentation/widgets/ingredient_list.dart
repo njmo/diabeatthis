@@ -9,6 +9,8 @@ import '../../../../core/domain/model/ingredient.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/providers/ingredient_provider.dart';
 
+const int _ingredientSearchMaxLength = 120;
+
 class IngredientList extends HookConsumerWidget {
   const IngredientList({super.key});
 
@@ -38,7 +40,7 @@ class IngredientList extends HookConsumerWidget {
                   return TextFormField(
                     autofocus: false,
                     controller: controller,
-                    maxLength: 30,
+                    maxLength: _ingredientSearchMaxLength,
                     validator: (value) {
                       return '';
                     },
