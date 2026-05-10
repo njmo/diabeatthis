@@ -23,10 +23,8 @@ class DashboardPage extends ConsumerWidget {
       appBar: AppBar(
         actions: <Widget>[
           IconButton(
-            icon: Icon(
-              Icons.person_pin,
-              color: parentModeEnabled ? Colors.green : Colors.amber,
-            ),
+            tooltip: 'Zarządzanie',
+            icon: const Icon(Icons.admin_panel_settings_outlined),
             onPressed: () {
               context.router.pushPath('/management');
             },
