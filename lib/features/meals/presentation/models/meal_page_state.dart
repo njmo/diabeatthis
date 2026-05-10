@@ -8,6 +8,8 @@ class MealPageState {
   final bool detailedMode;
   final bool showRawTechnicalData;
   final DateTime? selectedTimestamp;
+  final DateTime? visibleStart;
+  final DateTime? visibleEnd;
 
   const MealPageState({
     required this.details,
@@ -16,6 +18,8 @@ class MealPageState {
     this.detailedMode = false,
     this.showRawTechnicalData = false,
     this.selectedTimestamp,
+    this.visibleStart,
+    this.visibleEnd,
   });
 
   MealPageState copyWith({
@@ -26,6 +30,9 @@ class MealPageState {
     bool? showRawTechnicalData,
     DateTime? selectedTimestamp,
     bool clearSelectedTimestamp = false,
+    DateTime? visibleStart,
+    DateTime? visibleEnd,
+    bool clearViewport = false,
   }) {
     return MealPageState(
       details: details ?? this.details,
@@ -36,6 +43,8 @@ class MealPageState {
       selectedTimestamp: clearSelectedTimestamp
           ? null
           : selectedTimestamp ?? this.selectedTimestamp,
+      visibleStart: clearViewport ? null : visibleStart ?? this.visibleStart,
+      visibleEnd: clearViewport ? null : visibleEnd ?? this.visibleEnd,
     );
   }
 }

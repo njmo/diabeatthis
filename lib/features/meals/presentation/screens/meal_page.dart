@@ -62,12 +62,16 @@ class _MealPageBody extends ConsumerWidget {
             analysis: state.analysis,
             analysisError: state.analysisError,
             selectedTimestamp: state.selectedTimestamp,
+            visibleStart: state.visibleStart,
+            visibleEnd: state.visibleEnd,
           ),
         if (details.meal.isEaten && state.analysis != null)
           _CobIobSection(
             mealId: details.meal.id,
             analysis: state.analysis!,
             selectedTimestamp: state.selectedTimestamp,
+            visibleStart: state.visibleStart,
+            visibleEnd: state.visibleEnd,
           ),
         if (details.meal.isEaten && state.analysis != null)
           _LinkedEventsSection(
@@ -509,12 +513,16 @@ class _GlucoseAnalysisSection extends ConsumerWidget {
   final MealAnalysisData? analysis;
   final String? analysisError;
   final DateTime? selectedTimestamp;
+  final DateTime? visibleStart;
+  final DateTime? visibleEnd;
 
   const _GlucoseAnalysisSection({
     required this.details,
     required this.analysis,
     required this.analysisError,
     required this.selectedTimestamp,
+    required this.visibleStart,
+    required this.visibleEnd,
   });
 
   @override
@@ -537,9 +545,13 @@ class _GlucoseAnalysisSection extends ConsumerWidget {
       title: 'Glucose analysis',
       initiallyExpanded: true,
       children: [
+        _TimelineControls(mealId: details.meal.id, analysis: analysis),
+        const SizedBox(height: 8),
         MealGlucoseChart(
           analysis: analysis,
           selectedTimestamp: selectedTimestamp,
+          visibleStart: visibleStart,
+          visibleEnd: visibleEnd,
           onTimestampSelected: (timestamp) {
             ref
                 .read(mealDetailsControllerProvider(details.meal.id).notifier)
@@ -588,11 +600,15 @@ class _CobIobSection extends ConsumerWidget {
   final int mealId;
   final MealAnalysisData analysis;
   final DateTime? selectedTimestamp;
+  final DateTime? visibleStart;
+  final DateTime? visibleEnd;
 
   const _CobIobSection({
     required this.mealId,
     required this.analysis,
     required this.selectedTimestamp,
+    required this.visibleStart,
+    required this.visibleEnd,
   });
 
   @override
@@ -603,6 +619,8 @@ class _CobIobSection extends ConsumerWidget {
         MealCobIobChart(
           analysis: analysis,
           selectedTimestamp: selectedTimestamp,
+          visibleStart: visibleStart,
+          visibleEnd: visibleEnd,
           onTimestampSelected: (timestamp) {
             ref
                 .read(mealDetailsControllerProvider(mealId).notifier)
@@ -628,6 +646,56 @@ class _CobIobSection extends ConsumerWidget {
         _InfoRow(
           label: 'Treatment insulin',
           value: _units(analysis.totalInsulinUnits),
+        ),
+      ],
+    );
+  }
+}
+
+class _TimelineControls extends ConsumerWidget {
+  final int mealId;
+  final MealAnalysisData analysis;
+
+  const _TimelineControls({required this.mealId, required this.analysis});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.read(mealDetailsControllerProvider(mealId).notifier);
+    final totalMinutes = analysis.chartEnd
+        .difference(analysis.chartStart)
+        .inMinutes
+        .abs();
+    final panStep = Duration(minutes: (totalMinutes / 6).round().clamp(10, 30));
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        IconButton.filledTonal(
+          tooltip: 'Pan left',
+          icon: const Icon(Icons.chevron_left),
+          onPressed: () => controller.panTimeline(-panStep),
+        ),
+        IconButton.filledTonal(
+          tooltip: 'Zoom in',
+          icon: const Icon(Icons.zoom_in),
+          onPressed: () => controller.zoomTimeline(0.65),
+        ),
+        IconButton.filledTonal(
+          tooltip: 'Reset zoom',
+          icon: const Icon(Icons.fit_screen),
+          onPressed: controller.resetTimelineViewport,
+        ),
+        IconButton.filledTonal(
+          tooltip: 'Zoom out',
+          icon: const Icon(Icons.zoom_out),
+          onPressed: () => controller.zoomTimeline(1.45),
+        ),
+        IconButton.filledTonal(
+          tooltip: 'Pan right',
+          icon: const Icon(Icons.chevron_right),
+          onPressed: () => controller.panTimeline(panStep),
         ),
       ],
     );
