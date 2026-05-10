@@ -1,5 +1,9 @@
+import '../../../../core/domain/model/correction_bolus.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
+import '../../../../core/domain/model/manual_bolus.dart';
+import '../../../../core/domain/model/meal.dart';
+import '../../../../core/domain/model/treat.dart';
 import '../../../../core/domain/model/treatment_base.dart';
 
 class MealAnalysisData {
@@ -70,6 +74,33 @@ class MealAnalysisData {
   double? get latestIob {
     if (deviceStatuses.isEmpty) return null;
     return deviceStatuses.last.iob;
+  }
+
+  double get totalInsulinUnits {
+    return treatments.fold<double>(0, (sum, treatment) {
+      if (treatment is ManualBolus) {
+        return sum + treatment.insulin;
+      }
+      if (treatment is CorrectionBolus) {
+        return sum + treatment.insulin;
+      }
+      if (treatment is Meal) {
+        return sum + (treatment.insulin ?? 0);
+      }
+      return sum;
+    });
+  }
+
+  int get totalTreatmentCarbs {
+    return treatments.fold<int>(0, (sum, treatment) {
+      if (treatment is Treat) {
+        return sum + treatment.carbs;
+      }
+      if (treatment is Meal) {
+        return sum + (treatment.carbs ?? 0);
+      }
+      return sum;
+    });
   }
 
   List<MealBehaviorFlagData> get behaviorFlags {

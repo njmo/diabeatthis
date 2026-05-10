@@ -134,7 +134,9 @@ class _MealHeader extends StatelessWidget {
             ),
             _SummaryCard(
               label: 'Total insulin',
-              value: _units(details.totalInsulinUnits),
+              value: _units(
+                state.analysis?.totalInsulinUnits ?? details.totalInsulinUnits,
+              ),
             ),
             _SummaryCard(
               label: 'Total carbs',
@@ -281,7 +283,7 @@ class _IngredientTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final canOpenIngredient = !ingredient.usesHistoricalNutrition;
 
-    return ListTile(
+    return ExpansionTile(
       leading: Icon(
         ingredient.usesHistoricalNutrition
             ? Icons.warning_amber
@@ -311,17 +313,129 @@ class _IngredientTile extends StatelessWidget {
         ].join(' • '),
       ),
       trailing: canOpenIngredient
-          ? const Icon(Icons.chevron_right)
+          ? IconButton(
+              tooltip: 'Open ingredient',
+              icon: const Icon(Icons.open_in_new),
+              onPressed: () => context.router.push(
+                IngredientRoute(ingredientId: ingredient.ingredientId),
+              ),
+            )
           : Tooltip(
               message:
                   'Ten posiłek używa historycznych wartości; link do aktualnego składnika jest nieaktywny.',
               child: Icon(Icons.link_off, color: scheme.error),
             ),
-      onTap: canOpenIngredient
-          ? () => context.router.push(
-              IngredientRoute(ingredientId: ingredient.ingredientId),
-            )
-          : null,
+      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      children: [
+        _InfoRow(label: 'Entry type', value: ingredient.entryType),
+        _InfoRow(label: 'Portion', value: ingredient.portionLabel),
+        _InfoRow(
+          label: 'Planned amount',
+          value: _number(ingredient.plannedAmount),
+        ),
+        _InfoRow(
+          label: 'Consumed amount',
+          value: _number(ingredient.effectiveConsumedAmount),
+        ),
+        _InfoRow(
+          label: 'Quantity confidence',
+          value: _confidence(ingredient.quantityConfidence),
+        ),
+        _InfoRow(
+          label: 'Consumed confidence',
+          value: _confidence(ingredient.consumedConfidence),
+        ),
+        _InfoRow(
+          label: 'Planned total grams',
+          value: _grams(ingredient.plannedTotalGrams),
+        ),
+        _InfoRow(
+          label: 'Consumed total grams',
+          value: _grams(ingredient.consumedTotalGrams),
+        ),
+        _InfoRow(label: 'Prep method', value: _fallback(ingredient.prepMethod)),
+        _InfoRow(label: 'Notes', value: _fallback(ingredient.notes)),
+        const SizedBox(height: 8),
+        _NutritionComparisonTable(ingredient: ingredient),
+      ],
+    );
+  }
+}
+
+class _NutritionComparisonTable extends StatelessWidget {
+  final MealIngredientDetailsData ingredient;
+
+  const _NutritionComparisonTable({required this.ingredient});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        headingRowHeight: 36,
+        dataRowMinHeight: 36,
+        dataRowMaxHeight: 44,
+        columns: const [
+          DataColumn(label: Text('Nutrition')),
+          DataColumn(label: Text('Planned used')),
+          DataColumn(label: Text('Consumed used')),
+          DataColumn(label: Text('Current')),
+        ],
+        rows: [
+          _nutritionRow(
+            'Carbs/100g',
+            ingredient.plannedNutrition.carbsPer100g,
+            ingredient.consumedNutrition.carbsPer100g,
+            ingredient.currentNutrition.carbsPer100g,
+            'g',
+          ),
+          _nutritionRow(
+            'Fat/100g',
+            ingredient.plannedNutrition.fatPer100g,
+            ingredient.consumedNutrition.fatPer100g,
+            ingredient.currentNutrition.fatPer100g,
+            'g',
+          ),
+          _nutritionRow(
+            'Fiber/100g',
+            ingredient.plannedNutrition.fiberPer100g,
+            ingredient.consumedNutrition.fiberPer100g,
+            ingredient.currentNutrition.fiberPer100g,
+            'g',
+          ),
+          _nutritionRow(
+            'Protein/100g',
+            ingredient.plannedNutrition.proteinPer100g,
+            ingredient.consumedNutrition.proteinPer100g,
+            ingredient.currentNutrition.proteinPer100g,
+            'g',
+          ),
+          _nutritionRow(
+            'Confidence',
+            ingredient.plannedNutrition.nutritionConfidence,
+            ingredient.consumedNutrition.nutritionConfidence,
+            ingredient.currentNutrition.nutritionConfidence,
+            '',
+          ),
+        ],
+      ),
+    );
+  }
+
+  DataRow _nutritionRow(
+    String label,
+    double planned,
+    double consumed,
+    double current,
+    String unit,
+  ) {
+    return DataRow(
+      cells: [
+        DataCell(Text(label)),
+        DataCell(Text(_nutritionValue(planned, unit))),
+        DataCell(Text(_nutritionValue(consumed, unit))),
+        DataCell(Text(_nutritionValue(current, unit))),
+      ],
     );
   }
 }
@@ -347,6 +461,11 @@ class _NutrientAnalysisSection extends StatelessWidget {
         NutrientSummaryChart(macros: macros),
         const SizedBox(height: 8),
         _ContributionBreakdown(details: details),
+        const SizedBox(height: 8),
+        _InfoRow(
+          label: 'Top predicted spike drivers',
+          value: _fallback(_topDrivers(details.ingredients)),
+        ),
       ],
     );
   }
@@ -378,7 +497,7 @@ class _ContributionBreakdown extends StatelessWidget {
           _InfoRow(
             label: ingredient.ingredientName,
             value:
-                'carbs ${_share(ingredient.consumedCarbsContribution, totalCarbs)} • fat ${_share(ingredient.consumedFatContribution, totalFat)} • kcal ${_share(ingredient.consumedCaloriesContribution, totalCalories)}',
+                'carbs ${_share(ingredient.consumedCarbsContribution, totalCarbs)} • fat ${_share(ingredient.consumedFatContribution, totalFat)} • kcal ${_share(ingredient.consumedCaloriesContribution, totalCalories)} • WBT ${_number(ingredient.consumedWbtKcalContribution)} kcal',
           ),
       ],
     );
@@ -502,6 +621,14 @@ class _CobIobSection extends ConsumerWidget {
         const SizedBox(height: 8),
         _InfoRow(label: 'Latest COB', value: _grams(analysis.latestCob)),
         _InfoRow(label: 'Latest IOB', value: _units(analysis.latestIob)),
+        _InfoRow(
+          label: 'Treatment carbs',
+          value: '${analysis.totalTreatmentCarbs}g',
+        ),
+        _InfoRow(
+          label: 'Treatment insulin',
+          value: _units(analysis.totalInsulinUnits),
+        ),
       ],
     );
   }
@@ -997,6 +1124,9 @@ String _units(double? value) =>
 
 String _percent(double? value) => value == null ? '-' : '${value.round()}%';
 
+String _confidence(double? value) =>
+    value == null ? '-' : '${(value * 100).round()}%';
+
 String _duration(Duration? duration) {
   if (duration == null) return '-';
   final sign = duration.isNegative ? '-' : '+';
@@ -1017,6 +1147,26 @@ String _snapshotDiff(double? value, String unit) {
   if (value == null) return '-';
   final prefix = value > 0 ? '+' : '';
   return '$prefix${_number(value)}$unit';
+}
+
+String _nutritionValue(double value, String unit) {
+  if (unit.isEmpty) {
+    return _confidence(value);
+  }
+  return '${_number(value)}$unit';
+}
+
+String _topDrivers(List<MealIngredientDetailsData> ingredients) {
+  final sorted = ingredients.toList()
+    ..sort(
+      (a, b) =>
+          b.consumedCarbsContribution.compareTo(a.consumedCarbsContribution),
+    );
+  return sorted
+      .take(3)
+      .where((ingredient) => ingredient.consumedCarbsContribution > 0)
+      .map((ingredient) => ingredient.ingredientName)
+      .join(', ');
 }
 
 T? _nearestByDate<T>(
