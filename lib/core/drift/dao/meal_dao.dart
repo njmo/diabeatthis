@@ -36,6 +36,20 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.getSingleOrNull();
   }
 
+  Future<List<MealData>> getMealsForIngredient(int ingredientId) {
+    final query =
+        select(db.meal).join([
+            innerJoin(
+              db.mealIngredients,
+              db.mealIngredients.mealId.equalsExp(meal.id),
+            ),
+          ])
+          ..where(db.mealIngredients.ingredientId.equals(ingredientId))
+          ..limit(10);
+
+    return query.map((row) => row.readTable(db.meal)).get();
+  }
+
   Future<MealData?> getNearestMeal() async {
     final now = clock.now().toUtc();
     final todayMillisecondsSinceEpoch = now.millisecondsSinceEpoch;
@@ -95,6 +109,13 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       ..where((tbl) => tbl.status.equals('skipped').not())
       ..where((tbl) => tbl.status.equals('summarized').not())
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)]);
+    return query.watch();
+  }
+
+  Stream<List<MealData>> getAllMeals({int page = 0}) {
+    final query = select(db.meal)
+      ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)])
+      ..limit(15, offset: page * 15);
     return query.watch();
   }
 

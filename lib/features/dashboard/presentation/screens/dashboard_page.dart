@@ -17,7 +17,6 @@ class DashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final name = ref.watch(nameProvider);
-    final parentModeController = ref.watch(parentModeProvider.notifier);
     final parentModeEnabled = ref.watch(parentModeProvider);
 
     return Scaffold(
@@ -29,7 +28,7 @@ class DashboardPage extends ConsumerWidget {
               color: parentModeEnabled ? Colors.green : Colors.amber,
             ),
             onPressed: () {
-              parentModeController.toggleParentMode();
+              context.router.pushPath('/management');
             },
           ),
           IconButton(

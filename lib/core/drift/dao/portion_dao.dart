@@ -21,6 +21,19 @@ class PortionDao extends DatabaseAccessor<DatabaseImpl> with _$PortionDaoMixin {
     return query.map((row) => row.readTable(db.portion)).get();
   }
 
+  Future<List<PortionData>> getPortionsForIngredientId(int ingredientId) {
+    final query = select(db.portion).join([
+      innerJoin(
+        db.ingredientPortions,
+        db.ingredientPortions.portionId.equalsExp(portion.id),
+      ),
+    ])
+      ..where(db.ingredientPortions.ingredientId.equals(ingredientId))
+      ..limit(10);
+
+    return query.map((row) => row.readTable(db.portion)).get();
+  }
+
   Future<List<PortionData>> getUnassignedPortionsForIngredientByQuery(int ingredientId, String queryStr) {
     final query = select(db.portion).join([
       leftOuterJoin(

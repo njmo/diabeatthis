@@ -92,21 +92,23 @@ class AppEventHandler with Logging {
             await FlutterForegroundTask.updateService(
               foregroundTaskOptions: ForegroundTaskOptions(
                 allowWakeLock: true,
+                allowWifiLock: true,
                 eventAction: ForegroundTaskEventAction.nothing(),
               ),
             );
 
             logI("WakeLock ENABLED for collectTick");
 
-            Future.delayed(const Duration(seconds: 30), () async {
+            Future.delayed(const Duration(seconds: 10), () async {
               try {
                 await FlutterForegroundTask.updateService(
                   foregroundTaskOptions: ForegroundTaskOptions(
                     allowWakeLock: false,
+                    allowWifiLock: false,
                     eventAction: ForegroundTaskEventAction.nothing(),
                   ),
                 );
-                logI("WakeLock DISABLED after timeout (15s)");
+                logI("WakeLock DISABLED after timeout (10)");
               } catch (e, st) {
                 logW("Failed to disable WakeLock: $e\n$st");
               }

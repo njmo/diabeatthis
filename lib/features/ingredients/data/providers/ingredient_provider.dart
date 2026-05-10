@@ -18,6 +18,16 @@ Stream<List<domain.Ingredient>> ingredientsStream(Ref ref) {
 }
 
 @riverpod
+Future<domain.Ingredient> ingredientById(
+  Ref ref,
+  int id,
+) async {
+  final db = ref.watch(databaseProvider);
+  final ing = await db.ingredientDao.getIngredientById(id);
+  return ing.toDomain();
+}
+
+@riverpod
 Future<List<domain.Ingredient>> ingredientsByQuery(
   Ref ref,
   String query,

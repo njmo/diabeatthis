@@ -7,7 +7,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 @pragma('vm:entry-point')
 class ForegroundAlarmBridge {
-  static const int collectAlarmId = 0xCAFEBABE;
+  static const int collectAlarmId = 0x424242;
 
   static Future<void> scheduleCollectTick(DateTime at) async {
     await AndroidAlarmManager.oneShotAt(

@@ -3,7 +3,12 @@ import '../database_impl.dart';
 
 part 'activity_dao.g.dart';
 
-@DriftAccessor(include: {'../schemas/tables/activity.drift', '../schemas/tables/activity_log.drift'})
+@DriftAccessor(
+  include: {
+    '../schemas/tables/activity.drift',
+    '../schemas/tables/activity_log.drift',
+  },
+)
 class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     with _$ActivityDaoMixin {
   ActivityDao(super.db);
@@ -12,12 +17,20 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     return into(db.activity).insertReturningOrNull(activity);
   }
 
-  Future<ActivityLogData> insertActivityLog(ActivityLogCompanion activityLog) async {
+  Future<List<ActivityLogData>> getActivityLogs({int page = 0}) async {
+    return (select(db.activityLog)..limit(15, offset: page * 15)).get();
+  }
+
+  Future<ActivityLogData> insertActivityLog(
+    ActivityLogCompanion activityLog,
+  ) async {
     return into(db.activityLog).insertReturning(activityLog);
   }
 
   Future<ActivityLogData> getActiveActivityLog() {
-    return (select(db.activityLog)..where((tbl) => tbl.endedAt.isNull())).getSingle();
+    return (select(
+      db.activityLog,
+    )..where((tbl) => tbl.endedAt.isNull())).getSingle();
   }
 
   Future<ActivityData> getActivityById(int id) {
@@ -29,6 +42,8 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
   }
 
   Future<void> removeActivityLog(ActivityLogCompanion companion) async {
-    await (delete(db.activityLog)..where((tbl) => tbl.id.equals(companion.id.value))).go();
+    await (delete(
+      db.activityLog,
+    )..where((tbl) => tbl.id.equals(companion.id.value))).go();
   }
 }

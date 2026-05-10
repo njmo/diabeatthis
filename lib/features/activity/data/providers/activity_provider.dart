@@ -101,11 +101,38 @@ Future<List<Activity>> activitiesByQuery(Ref ref, String query) async {
 }
 
 @riverpod
+Future<List<Activity>> activitiyLogByQuery(Ref ref, String query) async {
+  final db = ref.watch(databaseProvider);
+  final act = await db.activityDao.searchActivitiesByName(query, 6).get();
+  return act.map((e) => e.toDomain()).toList();
+}
+
+@riverpod
 Future<ActivityLog> insertActivityLog(Ref ref, ActivityLog activityLog) async {
   final db = ref.watch(databaseProvider);
   return await db.activityDao
       .insertActivityLog(activityLog.toCompanion())
       .then((value) => value.toDomain());
+}
+
+@riverpod
+Future<List<ActivityLog>> getActivityLogs(Ref ref) async {
+  final db = ref.watch(databaseProvider);
+  final value = await db.activityDao.getActivityLogs();
+  final activityLogs = <ActivityLog>[];
+  for (final log in value) {
+    final activity = await db.activityDao.getActivityById(log.activityId);
+    activityLogs.add(ActivityLog.view(
+      id: log.id,
+      activityName: activity.name,
+      startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
+      endedAt: log.endedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
+      activityId: activity.id,
+    ));
+  }
+  return activityLogs;
 }
 
 @riverpod
@@ -118,9 +145,9 @@ Future<void> stopActivity(Ref ref, ActivityLog activityLog) async {
         throw StateError('Nie można zakończyć draftu – brak id i endedAt'),
   );
   if(activityLog.startedAt.isBefore(clock.now())) {
-    await db.activityDao.removeActivityLog(updated.toCompanion());
-  } else {
     await db.activityDao.updateActivityLog(updated.toCompanion());
+  } else {
+    await db.activityDao.removeActivityLog(updated.toCompanion());
   }
 }
 
