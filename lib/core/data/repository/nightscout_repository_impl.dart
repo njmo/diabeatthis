@@ -218,6 +218,27 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
   }
 
   @override
+  Future<List<DeviceStatus>> fetchDeviceStatusBetween(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final minutes = end.difference(start).inMinutes.abs();
+    final qp = {
+      'find[created_at][\$gte]': start.toUtc().toIso8601String(),
+      'find[created_at][\$lt]': end.toUtc().toIso8601String(),
+      'find[openaps.suggested][\$exists]': 'true',
+      'count': (minutes + 24).clamp(48, 1000).toString(),
+    };
+    final url = _buildUri('/api/v1/devicestatus.json', qp);
+    final data = await service.fetchNightscoutData(url);
+    final statuses = (data as List)
+        .map((e) => DeviceStatusDto.fromJson(e).toDomain())
+        .toList();
+    statuses.sort((a, b) => a.date.compareTo(b.date));
+    return statuses;
+  }
+
+  @override
   Future<DeviceStatus?> fetchLastDeviceStatusBefore(DateTime before) async {
     final qp = {
       'find[created_at][\$lte]': before.toUtc().toIso8601String(),

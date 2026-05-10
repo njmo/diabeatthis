@@ -17,6 +17,10 @@ abstract class NightscoutRepository {
   Future<List<Glucose>> fetchGlucoseAfter(DateTime after);
   Future<List<Glucose>> fetchLastGlucoseWithLimit(int limit);
   Future<DeviceStatus> fetchLastDeviceStatus();
+  Future<List<DeviceStatus>> fetchDeviceStatusBetween(
+    DateTime start,
+    DateTime end,
+  );
   Future<DeviceStatus?> fetchLastDeviceStatusBefore(DateTime before);
   Future<TemporaryTarget> fetchLastTemporaryTarget();
   Future<TemporaryTarget> fetchLastTemporaryTargetById(String id);

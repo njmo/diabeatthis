@@ -24,6 +24,29 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
         .get();
   }
 
+  Future<List<TypedResult>> getActivityLogsOverlapping(
+    DateTime start,
+    DateTime end,
+  ) {
+    final startMs = start.millisecondsSinceEpoch;
+    final endMs = end.millisecondsSinceEpoch;
+    final query =
+        select(db.activityLog).join([
+            innerJoin(
+              db.activity,
+              db.activity.id.equalsExp(db.activityLog.activityId),
+            ),
+          ])
+          ..where(db.activityLog.startedAt.isSmallerThanValue(endMs))
+          ..where(
+            db.activityLog.endedAt.isNull() |
+                db.activityLog.endedAt.isBiggerThanValue(startMs),
+          )
+          ..orderBy([OrderingTerm(expression: db.activityLog.startedAt)]);
+
+    return query.get();
+  }
+
   Future<ActivityLogData> getActivityLogById(int id) {
     return (select(
       db.activityLog,

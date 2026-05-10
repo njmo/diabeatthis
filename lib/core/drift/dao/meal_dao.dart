@@ -36,6 +36,25 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.getSingleOrNull();
   }
 
+  Future<List<MealData>> getMealsBetween(
+    DateTime start,
+    DateTime end, {
+    int? excludeMealId,
+  }) {
+    final query = select(db.meal)
+      ..where(
+        (tbl) => tbl.plannedAt.isBetweenValues(
+          start.millisecondsSinceEpoch,
+          end.millisecondsSinceEpoch,
+        ),
+      )
+      ..orderBy([(tbl) => OrderingTerm.asc(tbl.plannedAt)]);
+    if (excludeMealId != null) {
+      query.where((tbl) => tbl.id.equals(excludeMealId).not());
+    }
+    return query.get();
+  }
+
   Future<List<MealData>> getMealsForIngredient(int ingredientId) {
     final query =
         select(db.meal).join([
