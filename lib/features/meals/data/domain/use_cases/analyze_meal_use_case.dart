@@ -130,13 +130,7 @@ class AnalyzeMealUseCase {
         value: details.meal.name,
         mealId: details.meal.id,
       ),
-      ...details.statusHistory.map((history) {
-        return MealTimelineEventData(
-          timestamp: history.createdAt,
-          type: MealTimelineEventType.mealStatus,
-          label: history.status,
-        );
-      }),
+      ..._mealStatusEvents(details),
       ...treatments.map(_treatmentEvent),
       ...activities.map((activity) {
         return MealTimelineEventData(
@@ -158,6 +152,40 @@ class AnalyzeMealUseCase {
       }),
     ]..sort((a, b) => a.timestamp.compareTo(b.timestamp));
     return events;
+  }
+
+  List<MealTimelineEventData> _mealStatusEvents(MealDetailsData details) {
+    final historyEvents = details.statusHistory.map((history) {
+      return MealTimelineEventData(
+        timestamp: history.createdAt,
+        type: MealTimelineEventType.mealStatus,
+        label: history.status,
+      );
+    }).toList();
+
+    final currentStatusAlreadyInHistory = details.statusHistory.any(
+      (history) => history.status == details.meal.status,
+    );
+    if (!currentStatusAlreadyInHistory) {
+      historyEvents.add(
+        MealTimelineEventData(
+          timestamp: _currentMealStatusTimestamp(details.meal),
+          type: MealTimelineEventType.mealStatus,
+          label: details.meal.status,
+          value: 'current status',
+        ),
+      );
+    }
+
+    return historyEvents;
+  }
+
+  DateTime _currentMealStatusTimestamp(MealRecordData meal) {
+    if (meal.summarizedAt != null &&
+        (meal.status == 'summarized' || meal.status.startsWith('eaten'))) {
+      return meal.summarizedAt!;
+    }
+    return meal.updatedAt;
   }
 
   MealTimelineEventData _treatmentEvent(Treatment treatment) {
