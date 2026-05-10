@@ -1,3 +1,4 @@
+import 'ingredient_history_entry_data.dart';
 import 'ingredient_portion_data.dart';
 import 'ingredient_usage_data.dart';
 
@@ -39,10 +40,12 @@ class IngredientDetailsData {
   Ingredient ingredient;
   List<IngredientPortionData> portions;
   List<IngredientUsageData> usages;
+  List<IngredientHistoryEntryData> history;
 
   IngredientDetailsData({
     required this.ingredient,
     required this.portions,
     required this.usages,
+    required this.history,
   });
 }

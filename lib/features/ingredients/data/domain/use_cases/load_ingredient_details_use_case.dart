@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../models/ingredient_details_data.dart';
+import '../../models/ingredient_history_entry_data.dart';
 import '../../models/ingredient_portion_data.dart';
 import '../../models/ingredient_usage_data.dart';
 
@@ -24,6 +25,9 @@ class LoadIngredientDetailsUseCase {
       ingredientId,
     );
     final meals = await db.mealDao.getMealsForIngredient(ingredientId);
+    final history = await db.ingredientDao.getIngredientStatusHistory(
+      ingredientId,
+    );
 
     final ingredientUsage = meals.map((meal) {
       return IngredientUsageData(
@@ -71,6 +75,18 @@ class LoadIngredientDetailsUseCase {
       ingredient: ingredientData,
       portions: portionsData,
       usages: ingredientUsage,
+      history: history.map((entry) {
+        return IngredientHistoryEntryData(
+          id: entry.id,
+          ingredientId: entry.ingredientId,
+          carbsPer100g: entry.carbsPer100g,
+          fatPer100g: entry.fatPer100g,
+          fiberPer100g: entry.fiberPer100g,
+          proteinPer100g: entry.proteinPer100g,
+          nutritionConfidence: entry.nutritionConfidence,
+          createdAt: DateTime.fromMillisecondsSinceEpoch(entry.createdAt),
+        );
+      }).toList(),
     );
   }
 }

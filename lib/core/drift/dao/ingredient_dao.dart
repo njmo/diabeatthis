@@ -23,6 +23,44 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     return query.getSingle();
   }
 
+  Future<List<IngredientStatusHistoryData>> getIngredientStatusHistory(
+    int ingredientId,
+  ) {
+    final query = select(ingredientStatusHistory)
+      ..where((tbl) => tbl.ingredientId.equals(ingredientId))
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.createdAt)]);
+
+    return query.get();
+  }
+
+  Future<void> updateIngredientDetails({
+    required int ingredientId,
+    required String name,
+    required double carbsPer100g,
+    required double fatPer100g,
+    required double fiberPer100g,
+    required double proteinPer100g,
+    required double nutritionConfidence,
+  }) async {
+    final updatedRows =
+        await (update(
+          ingredient,
+        )..where((tbl) => tbl.id.equals(ingredientId))).write(
+          IngredientCompanion(
+            name: Value(name),
+            carbsPer100g: Value(carbsPer100g),
+            fatPer100g: Value(fatPer100g),
+            fiberPer100g: Value(fiberPer100g),
+            proteinPer100g: Value(proteinPer100g),
+            nutritionConfidence: Value(nutritionConfidence),
+          ),
+        );
+
+    if (updatedRows == 0) {
+      throw StateError('Ingredient $ingredientId was not found');
+    }
+  }
+
   Future<MealMacroSummary?> totalsForMealConsumed(int mealId) async {
     final mi = db.mealIngredients;
     final ing = ingredient;

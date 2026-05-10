@@ -2,7 +2,11 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/models/ingredient_edit_draft.dart';
 import '../controllers/ingredient_details_controller.dart';
+import '../widgets/ingredient_detail_sections.dart';
+import '../widgets/ingredient_details_view.dart';
+import '../widgets/ingredient_edit_mode.dart';
 
 @RoutePage()
 class IngredientPage extends ConsumerWidget {
@@ -15,7 +19,35 @@ class IngredientPage extends ConsumerWidget {
     final state = ref.watch(ingredientDetailsControllerProvider(ingredientId));
 
     return Scaffold(
-      appBar: AppBar(title: Text('Składnik $ingredientId')),
+      appBar: AppBar(
+        title: state.maybeWhen(
+          data: (s) => Text(s.data.ingredient.name),
+          orElse: () => Text('Składnik $ingredientId'),
+        ),
+        actions: [
+          state.maybeWhen(
+            data: (s) {
+              if (s.isEditing) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                tooltip: 'Edytuj składnik',
+                icon: const Icon(Icons.edit),
+                onPressed: s.isSaving
+                    ? null
+                    : () => ref
+                          .read(
+                            ingredientDetailsControllerProvider(
+                              ingredientId,
+                            ).notifier,
+                          )
+                          .startEditing(),
+              );
+            },
+            orElse: () => const SizedBox.shrink(),
+          ),
+        ],
+      ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('error: $e')),
@@ -24,146 +56,56 @@ class IngredientPage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                s.data.ingredient.name,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                s.data.ingredient.brand ?? 'Bez marki',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-
-              const SizedBox(height: 16),
-
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        dense: true,
-                        title: const Text('Kalorie'),
-                        trailing: Text('${s.data.ingredient.kcalPer100g} kcal'),
-                      ),
-                      ListTile(
-                        dense: true,
-                        title: const Text('WBT'),
-                        trailing: Text(
-                          '${s.data.ingredient.wbtKcalPer100g} kcal',
-                        ),
-                      ),
-                      ListTile(
-                        dense: true,
-                        title: const Text('Net'),
-                        trailing: Text(
-                          '${s.data.ingredient.netKcalPer100g} kcal',
-                        ),
-                      ),
-                      const Divider(),
-                      ListTile(
-                        dense: true,
-                        title: const Text('Węglowodany'),
-                        trailing: Text('${s.data.ingredient.carbsPer100g} g'),
-                      ),
-                      ListTile(
-                        dense: true,
-                        title: const Text('Tłuszcz'),
-                        trailing: Text('${s.data.ingredient.fatPer100g} g'),
-                      ),
-                      ListTile(
-                        dense: true,
-                        title: const Text('Błonnik'),
-                        trailing: Text('${s.data.ingredient.fiberPer100g} g'),
-                      ),
-                      ListTile(
-                        dense: true,
-                        title: const Text('Białko'),
-                        trailing: Text('${s.data.ingredient.proteinPer100g} g'),
-                      ),
-                      const Divider(),
-                      ListTile(
-                        dense: true,
-                        title: const Text('IG'),
-                        trailing: Text('${s.data.ingredient.ig ?? '-'}'),
-                      ),
-                      ListTile(
-                        dense: true,
-                        title: const Text('Przygotowanie'),
-                        trailing: Text(s.data.ingredient.preparation ?? '-'),
-                      ),
-                      ListTile(
-                        dense: true,
-                        title: const Text('Confidence'),
-                        trailing: Text(
-                          '${s.data.ingredient.nutritionConfidence}',
-                        ),
-                      ),
-                      ListTile(
-                        dense: true,
-                        title: const Text('Referencyjny'),
-                        trailing: Text(
-                          s.data.ingredient.isReference ? 'Tak' : 'Nie',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-              Text(
-                'Zdefiniowane porcje',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-
-              if (s.data.portions.isEmpty)
-                const Card(
-                  child: ListTile(title: Text('Brak zdefiniowanych porcji')),
+              if (s.isEditing)
+                IngredientEditMode(
+                  ingredient: s.data.ingredient,
+                  isSaving: s.isSaving,
+                  onCancel: () => ref
+                      .read(
+                        ingredientDetailsControllerProvider(
+                          ingredientId,
+                        ).notifier,
+                      )
+                      .cancelEditing(),
+                  onSave: (draft) => _saveDraft(context, ref, draft),
                 )
               else
-                ...s.data.portions.map((portion) {
-                  return Card(
-                    child: ListTile(
-                      title: Text(portion.name),
-                      subtitle: Text(portion.unitHint),
-                      trailing: Text(
-                        '${portion.gramsPerPortion.toStringAsFixed(2)} g',
-                      ),
-                    ),
-                  );
-                }),
-
+                IngredientDetailsView(data: s.data),
               const SizedBox(height: 24),
-              Text(
-                'Użyty w posiłkach',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-
-              if (s.data.usages.isEmpty)
-                const Card(
-                  child: ListTile(
-                    title: Text('Nie użyto jeszcze w żadnym posiłku'),
-                  ),
-                )
-              else
-                ...s.data.usages.map((meal) {
-                  return Card(
-                    child: ListTile(
-                      title: Text(meal.name),
-                      subtitle: Text(meal.description),
-                      trailing: Text(
-                        '${meal.plannedAt.day}.${meal.plannedAt.month}.${meal.plannedAt.year}',
-                      ),
-                    ),
-                  );
-                }),
+              IngredientHistorySection(history: s.data.history),
+              const SizedBox(height: 24),
+              IngredientPortionsSection(portions: s.data.portions),
+              const SizedBox(height: 24),
+              IngredientMealsSection(usages: s.data.usages),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _saveDraft(
+    BuildContext context,
+    WidgetRef ref,
+    IngredientEditDraft draft,
+  ) async {
+    try {
+      await ref
+          .read(ingredientDetailsControllerProvider(ingredientId).notifier)
+          .save(draft);
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Składnik zapisany')));
+    } catch (e) {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Nie udało się zapisać składnika: $e')),
+      );
+    }
   }
 }
