@@ -33,4 +33,16 @@ class MealDetailsControllerNotifier extends _$MealDetailsControllerNotifier {
     if (current == null) return;
     state = AsyncData(current.copyWith(showRawTechnicalData: value));
   }
+
+  void selectTimestamp(DateTime timestamp) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData(current.copyWith(selectedTimestamp: timestamp));
+  }
+
+  void clearSelectedTimestamp() {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData(current.copyWith(clearSelectedTimestamp: true));
+  }
 }

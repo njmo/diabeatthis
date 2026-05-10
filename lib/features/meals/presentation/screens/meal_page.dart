@@ -61,11 +61,20 @@ class _MealPageBody extends ConsumerWidget {
             details: details,
             analysis: state.analysis,
             analysisError: state.analysisError,
+            selectedTimestamp: state.selectedTimestamp,
           ),
         if (details.meal.isEaten && state.analysis != null)
-          _CobIobSection(analysis: state.analysis!),
+          _CobIobSection(
+            mealId: details.meal.id,
+            analysis: state.analysis!,
+            selectedTimestamp: state.selectedTimestamp,
+          ),
         if (details.meal.isEaten && state.analysis != null)
-          _LinkedEventsSection(analysis: state.analysis!),
+          _LinkedEventsSection(
+            mealId: details.meal.id,
+            analysis: state.analysis!,
+            selectedTimestamp: state.selectedTimestamp,
+          ),
         _SnapshotsSection(details: details),
         if (state.showRawTechnicalData)
           _DebugSection(details: details, analysis: state.analysis),
@@ -376,19 +385,21 @@ class _ContributionBreakdown extends StatelessWidget {
   }
 }
 
-class _GlucoseAnalysisSection extends StatelessWidget {
+class _GlucoseAnalysisSection extends ConsumerWidget {
   final MealDetailsData details;
   final MealAnalysisData? analysis;
   final String? analysisError;
+  final DateTime? selectedTimestamp;
 
   const _GlucoseAnalysisSection({
     required this.details,
     required this.analysis,
     required this.analysisError,
+    required this.selectedTimestamp,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final analysis = this.analysis;
     if (analysis == null) {
       return _SectionTile(
@@ -407,7 +418,19 @@ class _GlucoseAnalysisSection extends StatelessWidget {
       title: 'Glucose analysis',
       initiallyExpanded: true,
       children: [
-        MealGlucoseChart(analysis: analysis),
+        MealGlucoseChart(
+          analysis: analysis,
+          selectedTimestamp: selectedTimestamp,
+          onTimestampSelected: (timestamp) {
+            ref
+                .read(mealDetailsControllerProvider(details.meal.id).notifier)
+                .selectTimestamp(timestamp);
+          },
+        ),
+        _CrosshairDetailsCard(
+          analysis: analysis,
+          selectedTimestamp: selectedTimestamp,
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -442,17 +465,31 @@ class _GlucoseAnalysisSection extends StatelessWidget {
   }
 }
 
-class _CobIobSection extends StatelessWidget {
+class _CobIobSection extends ConsumerWidget {
+  final int mealId;
   final MealAnalysisData analysis;
+  final DateTime? selectedTimestamp;
 
-  const _CobIobSection({required this.analysis});
+  const _CobIobSection({
+    required this.mealId,
+    required this.analysis,
+    required this.selectedTimestamp,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return _SectionTile(
       title: 'COB / IOB',
       children: [
-        MealCobIobChart(analysis: analysis),
+        MealCobIobChart(
+          analysis: analysis,
+          selectedTimestamp: selectedTimestamp,
+          onTimestampSelected: (timestamp) {
+            ref
+                .read(mealDetailsControllerProvider(mealId).notifier)
+                .selectTimestamp(timestamp);
+          },
+        ),
         const SizedBox(height: 8),
         const Wrap(
           spacing: 8,
@@ -470,16 +507,32 @@ class _CobIobSection extends StatelessWidget {
   }
 }
 
-class _LinkedEventsSection extends StatelessWidget {
+class _LinkedEventsSection extends ConsumerWidget {
+  final int mealId;
   final MealAnalysisData analysis;
+  final DateTime? selectedTimestamp;
 
-  const _LinkedEventsSection({required this.analysis});
+  const _LinkedEventsSection({
+    required this.mealId,
+    required this.analysis,
+    required this.selectedTimestamp,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return _SectionTile(
       title: 'Activity analysis',
       children: [
+        _EventTimeline(
+          events: analysis.timelineEvents,
+          selectedTimestamp: selectedTimestamp,
+          onSelected: (timestamp) {
+            ref
+                .read(mealDetailsControllerProvider(mealId).notifier)
+                .selectTimestamp(timestamp);
+          },
+        ),
+        const SizedBox(height: 8),
         for (final event in analysis.timelineEvents)
           ListTile(
             dense: true,
@@ -499,6 +552,11 @@ class _LinkedEventsSection extends StatelessWidget {
                 : event.mealId != null
                 ? () => context.router.push(MealRoute(mealId: event.mealId!))
                 : null,
+            onLongPress: () {
+              ref
+                  .read(mealDetailsControllerProvider(mealId).notifier)
+                  .selectTimestamp(event.timestamp);
+            },
           ),
       ],
     );
@@ -546,6 +604,105 @@ class _SnapshotsSection extends StatelessWidget {
                 '${ingredient.ingredientName}: ${_number(ingredient.consumedTotalGrams)}g',
           ),
       ],
+    );
+  }
+}
+
+class _CrosshairDetailsCard extends StatelessWidget {
+  final MealAnalysisData analysis;
+  final DateTime? selectedTimestamp;
+
+  const _CrosshairDetailsCard({
+    required this.analysis,
+    required this.selectedTimestamp,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = selectedTimestamp;
+    if (selected == null) {
+      return const SizedBox.shrink();
+    }
+
+    final glucose = _nearestByDate(
+      analysis.glucoseReadings,
+      selected,
+      (item) => item.date,
+    );
+    final status = _nearestByDate(
+      analysis.deviceStatuses,
+      selected,
+      (item) => item.date,
+    );
+    final activeEvents = analysis.timelineEvents.where((event) {
+      return event.timestamp.difference(selected).inMinutes.abs() <= 5;
+    }).toList();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          _MetricPill(label: 'Selected', value: _time(selected)),
+          _MetricPill(label: 'Glucose', value: _mgdl(glucose?.sgv)),
+          _MetricPill(label: 'COB', value: _grams(status?.cob)),
+          _MetricPill(label: 'IOB', value: _units(status?.iob)),
+          _MetricPill(
+            label: 'Events',
+            value: activeEvents.isEmpty
+                ? '-'
+                : activeEvents.map((event) => event.label).join(', '),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EventTimeline extends StatelessWidget {
+  final List<MealTimelineEventData> events;
+  final DateTime? selectedTimestamp;
+  final ValueChanged<DateTime> onSelected;
+
+  const _EventTimeline({
+    required this.events,
+    required this.selectedTimestamp,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (events.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final event in events)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                avatar: Icon(
+                  _eventIcon(event.type),
+                  size: 16,
+                  color: _eventColor(event.type),
+                ),
+                label: Text('${_time(event.timestamp)} ${event.label}'),
+                selected:
+                    selectedTimestamp != null &&
+                    selectedTimestamp!
+                            .difference(event.timestamp)
+                            .inMinutes
+                            .abs() <=
+                        2,
+                onSelected: (_) => onSelected(event.timestamp),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -860,4 +1017,21 @@ String _snapshotDiff(double? value, String unit) {
   if (value == null) return '-';
   final prefix = value > 0 ? '+' : '';
   return '$prefix${_number(value)}$unit';
+}
+
+T? _nearestByDate<T>(
+  Iterable<T> items,
+  DateTime target,
+  DateTime Function(T item) dateOf,
+) {
+  T? nearest;
+  int? bestDistance;
+  for (final item in items) {
+    final distance = dateOf(item).difference(target).inMilliseconds.abs();
+    if (bestDistance == null || distance < bestDistance) {
+      bestDistance = distance;
+      nearest = item;
+    }
+  }
+  return nearest;
 }

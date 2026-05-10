@@ -7,6 +7,7 @@ class MealPageState {
   final String? analysisError;
   final bool detailedMode;
   final bool showRawTechnicalData;
+  final DateTime? selectedTimestamp;
 
   const MealPageState({
     required this.details,
@@ -14,6 +15,7 @@ class MealPageState {
     this.analysisError,
     this.detailedMode = false,
     this.showRawTechnicalData = false,
+    this.selectedTimestamp,
   });
 
   MealPageState copyWith({
@@ -22,6 +24,8 @@ class MealPageState {
     String? analysisError,
     bool? detailedMode,
     bool? showRawTechnicalData,
+    DateTime? selectedTimestamp,
+    bool clearSelectedTimestamp = false,
   }) {
     return MealPageState(
       details: details ?? this.details,
@@ -29,6 +33,9 @@ class MealPageState {
       analysisError: analysisError ?? this.analysisError,
       detailedMode: detailedMode ?? this.detailedMode,
       showRawTechnicalData: showRawTechnicalData ?? this.showRawTechnicalData,
+      selectedTimestamp: clearSelectedTimestamp
+          ? null
+          : selectedTimestamp ?? this.selectedTimestamp,
     );
   }
 }

@@ -8,8 +8,15 @@ import '../../data/models/meal_analysis_data.dart';
 
 class MealGlucoseChart extends StatelessWidget {
   final MealAnalysisData analysis;
+  final DateTime? selectedTimestamp;
+  final ValueChanged<DateTime>? onTimestampSelected;
 
-  const MealGlucoseChart({super.key, required this.analysis});
+  const MealGlucoseChart({
+    super.key,
+    required this.analysis,
+    this.selectedTimestamp,
+    this.onTimestampSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +70,7 @@ class MealGlucoseChart extends StatelessWidget {
               ),
             ],
           ),
+          extraLinesData: _extraLines(bounds, selectedTimestamp),
           lineBarsData: [
             ..._glucoseSegments(bounds),
             ..._eventMarkers(bounds, analysis),
@@ -88,6 +96,15 @@ class MealGlucoseChart extends StatelessWidget {
             ),
           ),
           lineTouchData: LineTouchData(
+            touchCallback: (event, response) {
+              final spot = response?.lineBarSpots?.firstOrNull;
+              if (spot == null || !event.isInterestedForInteractions) {
+                return;
+              }
+              onTimestampSelected?.call(
+                analysis.chartStart.add(Duration(minutes: spot.x.round())),
+              );
+            },
             touchTooltipData: LineTouchTooltipData(
               getTooltipItems: (spots) {
                 return spots.map((spot) {
@@ -259,8 +276,15 @@ class MealGlucoseChart extends StatelessWidget {
 
 class MealCobIobChart extends StatelessWidget {
   final MealAnalysisData analysis;
+  final DateTime? selectedTimestamp;
+  final ValueChanged<DateTime>? onTimestampSelected;
 
-  const MealCobIobChart({super.key, required this.analysis});
+  const MealCobIobChart({
+    super.key,
+    required this.analysis,
+    this.selectedTimestamp,
+    this.onTimestampSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -283,6 +307,7 @@ class MealCobIobChart extends StatelessWidget {
           minY: 0,
           maxY: bounds.maxY,
           clipData: const FlClipData.all(),
+          extraLinesData: _extraLines(bounds, selectedTimestamp),
           lineBarsData: [
             LineChartBarData(
               spots: analysis.deviceStatuses
@@ -328,6 +353,17 @@ class MealCobIobChart extends StatelessWidget {
             border: Border.all(
               color: scheme.outlineVariant.withValues(alpha: 0.8),
             ),
+          ),
+          lineTouchData: LineTouchData(
+            touchCallback: (event, response) {
+              final spot = response?.lineBarSpots?.firstOrNull;
+              if (spot == null || !event.isInterestedForInteractions) {
+                return;
+              }
+              onTimestampSelected?.call(
+                analysis.chartStart.add(Duration(minutes: spot.x.round())),
+              );
+            },
           ),
         ),
       ),
@@ -435,6 +471,22 @@ class MealChartBounds {
       analysis.chartEnd.difference(analysis.chartStart).inMinutes.toDouble(),
     );
   }
+}
+
+ExtraLinesData _extraLines(MealChartBounds bounds, DateTime? timestamp) {
+  if (timestamp == null) {
+    return const ExtraLinesData();
+  }
+  return ExtraLinesData(
+    verticalLines: [
+      VerticalLine(
+        x: bounds.minutesFromStart(timestamp),
+        color: Colors.black.withValues(alpha: 0.45),
+        strokeWidth: 1.2,
+        dashArray: [4, 4],
+      ),
+    ],
+  );
 }
 
 Color _glucoseColor(double value) {
