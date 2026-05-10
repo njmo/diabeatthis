@@ -4,92 +4,62 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
-import '../../../../common/widgets/forms.dart';
 import '../../../../core/domain/model/ingredient.dart';
-import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/providers/ingredient_provider.dart';
-
-const int _ingredientSearchMaxLength = 120;
+import 'ingredient_list/ingredient_list_content.dart';
 
 class IngredientList extends HookConsumerWidget {
   const IngredientList({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final query = useState("");
-    final ingredients = ref.watch(ingredientsByQueryProvider(query.value));
-    final formKey = ref.watch(mealIngredientFormKeyProvider);
+    final queryController = useTextEditingController();
+    final query = useState('');
+    final ingredients = ref.watch(ingredientsStreamProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Form(
-              key: formKey,
-              autovalidateMode: AutovalidateMode.always,
-              child: StringFormField(
-                label: 'Nazwa',
-                value: '',
-                onChanged: (value) {
-                  query.value = value;
-                },
-                builder: (context, controller) {
-                  return TextFormField(
-                    autofocus: false,
-                    controller: controller,
-                    maxLength: _ingredientSearchMaxLength,
-                    validator: (value) {
-                      return '';
-                    },
-                    decoration: const InputDecoration(
-                      icon: Icon(Icons.search),
-                      labelText: 'Nazwa',
-                      border: OutlineInputBorder(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 16),
-            SizedBox(
-              child: ListView.builder(
-                itemBuilder: (context, index) {
-                  final ingredient = ingredients.asData?.value[index];
-                  if (ingredient == null) {
-                    return SizedBox.shrink();
-                  }
-                  return Card(
-                    child: ListTile(
-                      title: Text(
-                        ingredient.name,
-                        style: TextStyle(fontWeight: FontWeight.normal),
-                      ),
-                      subtitle: Text('Kalorie: ${ingredient.kcalPer100g} kcal'),
-                      trailing: ingredient.isReference
-                          ? const Icon(Icons.dinner_dining)
-                          : null,
-                      onTap: () {
-                        ingredient.mapOrNull(
-                          existing: (data) {
-                            context.router.push(
-                              routes.IngredientRoute(ingredientId: data.id),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  );
-                },
-                itemCount: ingredients.asData?.value.length ?? 0,
-                shrinkWrap: true,
-              ),
-            ),
-          ],
-        ),
+    return SafeArea(
+      child: ingredients.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(child: Text('Nie udało się wczytać: $e')),
+        data: (items) {
+          final filtered = _filterIngredients(items, query.value);
+
+          return IngredientListContent(
+            ingredients: filtered,
+            queryController: queryController,
+            query: query.value,
+            onQueryChanged: (value) => query.value = value,
+            onClearQuery: () {
+              queryController.clear();
+              query.value = '';
+            },
+            onIngredientTap: (ingredient) {
+              _openIngredientDetails(context, ingredient);
+            },
+          );
+        },
       ),
     );
   }
+}
+
+void _openIngredientDetails(BuildContext context, Ingredient ingredient) {
+  ingredient.mapOrNull(
+    existing: (data) {
+      context.router.push(routes.IngredientRoute(ingredientId: data.id));
+    },
+  );
+}
+
+List<Ingredient> _filterIngredients(List<Ingredient> items, String query) {
+  final normalizedQuery = query.trim().toLowerCase();
+  if (normalizedQuery.isEmpty) {
+    return items;
+  }
+
+  return items.where((ingredient) {
+    final brand = ingredient.brand?.toLowerCase() ?? '';
+    return ingredient.name.toLowerCase().contains(normalizedQuery) ||
+        brand.contains(normalizedQuery);
+  }).toList();
 }

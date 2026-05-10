@@ -1,5 +1,7 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../app/router/app_router.dart' as routes;
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/models/ingredient_history_entry_data.dart';
 import '../../data/models/ingredient_portion_data.dart';
@@ -90,6 +92,9 @@ class IngredientMealsSection extends StatelessWidget {
               title: meal.name,
               subtitle: meal.status,
               trailing: _formatDate(meal.plannedAt),
+              onTap: () {
+                context.router.push(routes.MealRoute(mealId: meal.mealId));
+              },
             );
           }),
       ],
@@ -154,12 +159,14 @@ class _ListSurface extends StatelessWidget {
   final String title;
   final String subtitle;
   final String trailing;
+  final VoidCallback? onTap;
 
   const _ListSurface({
     required this.leading,
     required this.title,
     required this.subtitle,
     required this.trailing,
+    this.onTap,
   });
 
   @override
@@ -169,11 +176,43 @@ class _ListSurface extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
+        onTap: onTap,
         leading: Icon(leading, color: colors.primary),
         title: Text(title),
         subtitle: subtitle.isEmpty ? null : Text(subtitle),
-        trailing: Text(trailing, style: Theme.of(context).textTheme.labelLarge),
+        trailing: _ListSurfaceTrailing(
+          label: trailing,
+          hasAction: onTap != null,
+        ),
       ),
+    );
+  }
+}
+
+class _ListSurfaceTrailing extends StatelessWidget {
+  final String label;
+  final bool hasAction;
+
+  const _ListSurfaceTrailing({required this.label, required this.hasAction});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Text(label, style: Theme.of(context).textTheme.labelLarge);
+    if (!hasAction) {
+      return text;
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        text,
+        const SizedBox(width: 4),
+        Icon(
+          Icons.chevron_right,
+          size: 20,
+          color: Theme.of(context).colorScheme.outline,
+        ),
+      ],
     );
   }
 }
