@@ -2,7 +2,8 @@ import 'dart:math' as math;
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
@@ -574,7 +575,7 @@ class _ContributionBreakdown extends StatelessWidget {
   }
 }
 
-class _MealChartsSection extends ConsumerWidget {
+class _MealChartsSection extends HookConsumerWidget {
   final MealDetailsData details;
   final MealAnalysisData? analysis;
   final String? analysisError;
@@ -589,7 +590,52 @@ class _MealChartsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scrollController = useScrollController();
     final analysis = this.analysis;
+    final viewportWidth = math.max(1.0, MediaQuery.sizeOf(context).width - 64);
+    final chartWidth = math.max(
+      viewportWidth,
+      (analysis?.chartEnd.difference(analysis.chartStart).inMinutes ?? 0) * 7.0,
+    );
+
+    useEffect(
+      () {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final analysis = this.analysis;
+          if (analysis == null) return;
+          if (!scrollController.hasClients) return;
+          final maxScroll = scrollController.position.maxScrollExtent;
+          if (maxScroll <= 0) return;
+
+          final totalMinutes = analysis.chartEnd
+              .difference(analysis.chartStart)
+              .inMinutes
+              .abs();
+          if (totalMinutes <= 0) return;
+
+          final mealOffsetMinutes = analysis.mealTime
+              .difference(analysis.chartStart)
+              .inMinutes
+              .clamp(0, totalMinutes)
+              .toDouble();
+          final mealX = chartWidth * mealOffsetMinutes / totalMinutes;
+          final targetOffset = (mealX - viewportWidth * 0.25).clamp(
+            0.0,
+            maxScroll,
+          );
+          scrollController.jumpTo(targetOffset);
+        });
+        return null;
+      },
+      [
+        analysis?.chartStart,
+        analysis?.chartEnd,
+        analysis?.mealTime,
+        chartWidth,
+        viewportWidth,
+      ],
+    );
+
     if (analysis == null) {
       return _SectionTile(
         title: 'Glucose analysis',
@@ -602,16 +648,12 @@ class _MealChartsSection extends ConsumerWidget {
       );
     }
 
-    final chartWidth = math.max(
-      MediaQuery.sizeOf(context).width - 64,
-      analysis.chartEnd.difference(analysis.chartStart).inMinutes * 7.0,
-    );
-
     return _SectionTile(
       title: 'Glucose / COB / IOB',
       initiallyExpanded: true,
       children: [
         SingleChildScrollView(
+          controller: scrollController,
           scrollDirection: Axis.horizontal,
           child: SizedBox(
             width: chartWidth,

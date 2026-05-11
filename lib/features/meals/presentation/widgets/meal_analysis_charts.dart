@@ -107,29 +107,29 @@ class MealGlucoseChart extends StatelessWidget {
               );
             },
             touchTooltipData: LineTouchTooltipData(
+              fitInsideHorizontally: true,
+              fitInsideVertically: true,
+              maxContentWidth: 220,
+              tooltipPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 6,
+              ),
+              tooltipMargin: 8,
               getTooltipItems: (spots) {
-                return spots.map((spot) {
-                  final time = analysis.chartStart.add(
-                    Duration(minutes: spot.x.round()),
-                  );
-                  final events = _eventsNearMinute(analysis, spot.x.round());
-                  if (events.isNotEmpty && spot.y > bounds.minY + 20) {
-                    return LineTooltipItem(
-                      '${_formatTime(time)}\n${events.map((event) => event.label).join('\n')}',
-                      TextStyle(
-                        color: scheme.onInverseSurface,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    );
-                  }
-                  return LineTooltipItem(
-                    '${_formatTime(time)}\n${spot.y.round()} mg/dL',
-                    TextStyle(
-                      color: scheme.onInverseSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  );
-                }).toList();
+                if (spots.isEmpty) {
+                  return const [];
+                }
+                final tooltip = _tooltipItemForSpots(
+                  spots: spots,
+                  analysis: analysis,
+                  bounds: bounds,
+                  textStyle: TextStyle(
+                    color: scheme.onInverseSurface,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                );
+                return [tooltip, for (var i = 1; i < spots.length; i++) null];
               },
             ),
           ),
@@ -335,12 +335,81 @@ List<MealTimelineEventData> _eventsNearMinute(
   MealAnalysisData analysis,
   int minute,
 ) {
-  return analysis.timelineEvents.where((event) {
+  final events = analysis.timelineEvents.where((event) {
     final eventMinute = event.timestamp
         .difference(analysis.chartStart)
         .inMinutes;
-    return (eventMinute - minute).abs() <= 1;
+    return eventMinute == minute;
   }).toList();
+  return _deduplicateEvents(events);
+}
+
+LineTooltipItem _tooltipItemForSpots({
+  required List<LineBarSpot> spots,
+  required MealAnalysisData analysis,
+  required MealChartBounds bounds,
+  required TextStyle textStyle,
+}) {
+  final eventMinute = _eventMinuteForSpots(analysis, spots);
+  final minute = eventMinute ?? spots.first.x.round();
+  final time = analysis.chartStart.add(Duration(minutes: minute));
+  final events = eventMinute == null
+      ? const <MealTimelineEventData>[]
+      : _eventsNearMinute(analysis, eventMinute);
+
+  if (events.isNotEmpty) {
+    final lines = events.map((event) {
+      final value = event.value?.replaceAll('\n', ' ');
+      if (value == null || value.trim().isEmpty) {
+        return event.label;
+      }
+      return '${event.label}: $value';
+    }).toList();
+    return LineTooltipItem(
+      '${_formatTime(time)}\n${lines.join('\n')}',
+      textStyle,
+    );
+  }
+
+  final glucose = _glucoseYAt(
+    analysis.glucoseReadings,
+    analysis.chartStart.add(Duration(minutes: minute)),
+  ).clamp(bounds.minY, bounds.maxY);
+  return LineTooltipItem(
+    '${_formatTime(time)}\n${glucose.round()} mg/dL',
+    textStyle,
+  );
+}
+
+int? _eventMinuteForSpots(MealAnalysisData analysis, List<LineBarSpot> spots) {
+  for (final spot in spots) {
+    final minute = spot.x.round();
+    if (_eventsNearMinute(analysis, minute).isNotEmpty) {
+      return minute;
+    }
+  }
+  return null;
+}
+
+List<MealTimelineEventData> _deduplicateEvents(
+  Iterable<MealTimelineEventData> events,
+) {
+  final seen = <String>{};
+  final unique = <MealTimelineEventData>[];
+  for (final event in events) {
+    final key = [
+      event.timestamp.millisecondsSinceEpoch,
+      event.type.name,
+      event.label,
+      event.value ?? '',
+      event.activityLogId ?? '',
+      event.mealId ?? '',
+    ].join('|');
+    if (seen.add(key)) {
+      unique.add(event);
+    }
+  }
+  return unique;
 }
 
 class _StackedEventMarker {
