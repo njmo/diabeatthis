@@ -5,8 +5,10 @@ import '../../../../../app/router/app_router.dart';
 import '../../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
 import '../../../data/models/meal_details_data.dart';
 import '../../../data/providers/meal_ingredients_list_provider.dart';
+import '../../models/meal_metric_view_data.dart';
 import 'meal_detail_components.dart';
 import 'meal_detail_formatters.dart';
+import 'meal_metric_components.dart';
 
 class MealNutritionAnalysisSection extends StatelessWidget {
   final MealDetailsData details;
@@ -27,12 +29,75 @@ class MealNutritionAnalysisSection extends StatelessWidget {
       title: 'Analiza żywieniowa',
       initiallyExpanded: true,
       children: [
+        MealNutritionMacroSummary(snapshot: snapshot),
+        const SizedBox(height: 12),
         for (final ingredient in details.ingredients)
           MealIngredientTile(ingredient: ingredient),
         const SizedBox(height: 12),
         NutrientSummaryChart(macros: macros),
         const SizedBox(height: 8),
         MealContributionBreakdown(details: details),
+      ],
+    );
+  }
+}
+
+class MealNutritionMacroSummary extends StatelessWidget {
+  final MealSnapshotDetailsData? snapshot;
+
+  const MealNutritionMacroSummary({super.key, required this.snapshot});
+
+  @override
+  Widget build(BuildContext context) {
+    final snapshot = this.snapshot;
+
+    return Column(
+      children: [
+        MealMetricGrid(
+          metrics: [
+            MealMetricTileData(
+              icon: Icons.grain,
+              label: 'Węglowodany',
+              value: formatGrams(snapshot?.totalCarbsG),
+            ),
+            MealMetricTileData(
+              icon: Icons.opacity,
+              label: 'Tłuszcz',
+              value: formatGrams(snapshot?.totalFatG),
+            ),
+            MealMetricTileData(
+              icon: Icons.fitness_center,
+              label: 'Białko',
+              value: formatGrams(snapshot?.totalProteinG),
+            ),
+            MealMetricTileData(
+              icon: Icons.eco_outlined,
+              label: 'Błonnik',
+              value: formatGrams(snapshot?.totalFiberG),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        MealCompactMetricBar(
+          metrics: [
+            MealCompactMetricData(
+              label: 'Kalorie',
+              value: formatSnapshotValue(snapshot?.totalCaloriesKcal, 'kcal'),
+            ),
+            MealCompactMetricData(
+              label: 'Netto',
+              value: formatGrams(snapshot?.totalNetCarbsG),
+            ),
+            MealCompactMetricData(
+              label: 'WBT',
+              value: formatSnapshotValue(snapshot?.wbtKcal, 'kcal'),
+            ),
+            MealCompactMetricData(
+              label: 'Masa',
+              value: formatGrams(snapshot?.totalGrams),
+            ),
+          ],
+        ),
       ],
     );
   }

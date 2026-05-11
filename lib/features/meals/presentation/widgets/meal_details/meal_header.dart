@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../models/meal_metric_view_data.dart';
 import '../../models/meal_page_state.dart';
-import 'meal_detail_components.dart';
 import 'meal_detail_formatters.dart';
 import 'meal_detail_icons.dart';
+import 'meal_metric_components.dart';
 
 class MealHeader extends StatelessWidget {
   final MealPageState state;
@@ -26,37 +27,38 @@ class MealHeader extends StatelessWidget {
         const SizedBox(height: 4),
         MealAnalysisProgressSummary(state: state),
         const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: MediaQuery.sizeOf(context).width > 720 ? 6 : 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 1.55,
-          children: [
-            MealSummaryCard(
+        MealMetricGrid(
+          wideColumns: 3,
+          metrics: [
+            MealMetricTileData(
+              icon: Icons.monitor_heart_outlined,
               label: 'Szczyt glikemii',
               value: formatMgdl(stats?.peakGlucose),
             ),
-            MealSummaryCard(
+            MealMetricTileData(
+              icon: Icons.timer_outlined,
               label: 'Czas do szczytu',
               value: formatDurationOffset(stats?.timeToPeak),
             ),
-            MealSummaryCard(
+            MealMetricTileData(
+              icon: Icons.timeline,
               label: 'Średnia glikemia',
               value: formatMgdl(stats?.averageGlucose?.round()),
             ),
-            MealSummaryCard(
+            MealMetricTileData(
+              icon: Icons.vaccines_outlined,
               label: 'Insulina łącznie',
               value: formatUnits(
                 state.analysis?.totalInsulinUnits ?? details.totalInsulinUnits,
               ),
             ),
-            MealSummaryCard(
+            MealMetricTileData(
+              icon: Icons.grain,
               label: 'Węglowodany',
               value: formatGrams(summary?.totalCarbsG),
             ),
-            MealSummaryCard(
+            MealMetricTileData(
+              icon: Icons.check_circle_outline,
               label: 'Czas w zakresie',
               value: formatPercent(stats?.timeInRangePercent),
             ),
