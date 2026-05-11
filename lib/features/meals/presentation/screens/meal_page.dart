@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,21 +57,11 @@ class _MealPageBody extends ConsumerWidget {
         _NutritionAnalysisSection(details: details),
         _MealAdvisorResultSection(details: details),
         if (details.meal.isEaten)
-          _GlucoseAnalysisSection(
+          _MealChartsSection(
             details: details,
             analysis: state.analysis,
             analysisError: state.analysisError,
             selectedTimestamp: state.selectedTimestamp,
-            visibleStart: state.visibleStart,
-            visibleEnd: state.visibleEnd,
-          ),
-        if (details.meal.isEaten && state.analysis != null)
-          _CobIobSection(
-            mealId: details.meal.id,
-            analysis: state.analysis!,
-            selectedTimestamp: state.selectedTimestamp,
-            visibleStart: state.visibleStart,
-            visibleEnd: state.visibleEnd,
           ),
         if (details.meal.isEaten && state.analysis != null)
           _LinkedEventsSection(
@@ -521,21 +513,17 @@ class _ContributionBreakdown extends StatelessWidget {
   }
 }
 
-class _GlucoseAnalysisSection extends ConsumerWidget {
+class _MealChartsSection extends ConsumerWidget {
   final MealDetailsData details;
   final MealAnalysisData? analysis;
   final String? analysisError;
   final DateTime? selectedTimestamp;
-  final DateTime? visibleStart;
-  final DateTime? visibleEnd;
 
-  const _GlucoseAnalysisSection({
+  const _MealChartsSection({
     required this.details,
     required this.analysis,
     required this.analysisError,
     required this.selectedTimestamp,
-    required this.visibleStart,
-    required this.visibleEnd,
   });
 
   @override
@@ -553,158 +541,68 @@ class _GlucoseAnalysisSection extends ConsumerWidget {
       );
     }
 
-    final stats = analysis.glucoseStats;
+    final chartWidth = math.max(
+      MediaQuery.sizeOf(context).width - 64,
+      analysis.chartEnd.difference(analysis.chartStart).inMinutes * 7.0,
+    );
+
     return _SectionTile(
-      title: 'Glucose analysis',
+      title: 'Glucose / COB / IOB',
       initiallyExpanded: true,
       children: [
-        _TimelineControls(mealId: details.meal.id, analysis: analysis),
-        const SizedBox(height: 8),
-        MealGlucoseChart(
-          analysis: analysis,
-          selectedTimestamp: selectedTimestamp,
-          visibleStart: visibleStart,
-          visibleEnd: visibleEnd,
-          onTimestampSelected: (timestamp) {
-            ref
-                .read(mealDetailsControllerProvider(details.meal.id).notifier)
-                .selectTimestamp(timestamp);
-          },
-        ),
-        _CrosshairDetailsCard(
-          analysis: analysis,
-          selectedTimestamp: selectedTimestamp,
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _MetricPill(
-              label: 'Avg',
-              value: _mgdl(stats.averageGlucose?.round()),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: chartWidth,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                MealGlucoseChart(
+                  analysis: analysis,
+                  selectedTimestamp: selectedTimestamp,
+                  onTimestampSelected: (timestamp) {
+                    ref
+                        .read(
+                          mealDetailsControllerProvider(
+                            details.meal.id,
+                          ).notifier,
+                        )
+                        .selectTimestamp(timestamp);
+                  },
+                ),
+                const SizedBox(height: 12),
+                MealDeviceMetricChart(
+                  analysis: analysis,
+                  metric: MealDeviceMetric.cob,
+                  selectedTimestamp: selectedTimestamp,
+                  onTimestampSelected: (timestamp) {
+                    ref
+                        .read(
+                          mealDetailsControllerProvider(
+                            details.meal.id,
+                          ).notifier,
+                        )
+                        .selectTimestamp(timestamp);
+                  },
+                ),
+                const SizedBox(height: 12),
+                MealDeviceMetricChart(
+                  analysis: analysis,
+                  metric: MealDeviceMetric.iob,
+                  selectedTimestamp: selectedTimestamp,
+                  onTimestampSelected: (timestamp) {
+                    ref
+                        .read(
+                          mealDetailsControllerProvider(
+                            details.meal.id,
+                          ).notifier,
+                        )
+                        .selectTimestamp(timestamp);
+                  },
+                ),
+              ],
             ),
-            _MetricPill(label: 'Min', value: _mgdl(stats.minGlucose)),
-            _MetricPill(label: 'Max', value: _mgdl(stats.maxGlucose)),
-            _MetricPill(label: 'Delta', value: _signedMgdl(stats.glucoseDelta)),
-            _MetricPill(
-              label: 'Rate',
-              value: stats.glucoseRateMgDlPerMinute == null
-                  ? '-'
-                  : '${stats.glucoseRateMgDlPerMinute!.toStringAsFixed(2)} mg/dL/min',
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _CobIobSection extends ConsumerWidget {
-  final int mealId;
-  final MealAnalysisData analysis;
-  final DateTime? selectedTimestamp;
-  final DateTime? visibleStart;
-  final DateTime? visibleEnd;
-
-  const _CobIobSection({
-    required this.mealId,
-    required this.analysis,
-    required this.selectedTimestamp,
-    required this.visibleStart,
-    required this.visibleEnd,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return _SectionTile(
-      title: 'COB / IOB',
-      children: [
-        MealDeviceMetricChart(
-          analysis: analysis,
-          metric: MealDeviceMetric.cob,
-          selectedTimestamp: selectedTimestamp,
-          visibleStart: visibleStart,
-          visibleEnd: visibleEnd,
-          onTimestampSelected: (timestamp) {
-            ref
-                .read(mealDetailsControllerProvider(mealId).notifier)
-                .selectTimestamp(timestamp);
-          },
-        ),
-        const SizedBox(height: 12),
-        MealDeviceMetricChart(
-          analysis: analysis,
-          metric: MealDeviceMetric.iob,
-          selectedTimestamp: selectedTimestamp,
-          visibleStart: visibleStart,
-          visibleEnd: visibleEnd,
-          onTimestampSelected: (timestamp) {
-            ref
-                .read(mealDetailsControllerProvider(mealId).notifier)
-                .selectTimestamp(timestamp);
-          },
-        ),
-        const SizedBox(height: 8),
-        _InfoRow(label: 'Latest COB', value: _grams(analysis.latestCob)),
-        _InfoRow(label: 'Latest IOB', value: _units(analysis.latestIob)),
-        _InfoRow(
-          label: 'Treatment carbs',
-          value: '${analysis.totalTreatmentCarbs}g',
-        ),
-        _InfoRow(
-          label: 'Treatment insulin',
-          value: _units(analysis.totalInsulinUnits),
-        ),
-      ],
-    );
-  }
-}
-
-class _TimelineControls extends ConsumerWidget {
-  final int mealId;
-  final MealAnalysisData analysis;
-
-  const _TimelineControls({required this.mealId, required this.analysis});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.read(mealDetailsControllerProvider(mealId).notifier);
-    final totalMinutes = analysis.chartEnd
-        .difference(analysis.chartStart)
-        .inMinutes
-        .abs();
-    final panStep = Duration(minutes: (totalMinutes / 6).round().clamp(10, 30));
-
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        IconButton.filledTonal(
-          tooltip: 'Pan left',
-          icon: const Icon(Icons.chevron_left),
-          onPressed: () => controller.panTimeline(-panStep),
-        ),
-        IconButton.filledTonal(
-          tooltip: 'Zoom in',
-          icon: const Icon(Icons.zoom_in),
-          onPressed: () => controller.zoomTimeline(0.65),
-        ),
-        IconButton.filledTonal(
-          tooltip: 'Reset zoom',
-          icon: const Icon(Icons.fit_screen),
-          onPressed: controller.resetTimelineViewport,
-        ),
-        IconButton.filledTonal(
-          tooltip: 'Zoom out',
-          icon: const Icon(Icons.zoom_out),
-          onPressed: () => controller.zoomTimeline(1.45),
-        ),
-        IconButton.filledTonal(
-          tooltip: 'Pan right',
-          icon: const Icon(Icons.chevron_right),
-          onPressed: () => controller.panTimeline(panStep),
+          ),
         ),
       ],
     );
@@ -808,58 +706,6 @@ class _SnapshotsSection extends StatelessWidget {
                 '${ingredient.ingredientName}: ${_number(ingredient.consumedTotalGrams)}g',
           ),
       ],
-    );
-  }
-}
-
-class _CrosshairDetailsCard extends StatelessWidget {
-  final MealAnalysisData analysis;
-  final DateTime? selectedTimestamp;
-
-  const _CrosshairDetailsCard({
-    required this.analysis,
-    required this.selectedTimestamp,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final selected = selectedTimestamp;
-    if (selected == null) {
-      return const SizedBox.shrink();
-    }
-
-    final glucose = _nearestByDate(
-      analysis.glucoseReadings,
-      selected,
-      (item) => item.date,
-    );
-    final status = _nearestByDate(
-      analysis.deviceStatuses,
-      selected,
-      (item) => item.date,
-    );
-    final activeEvents = analysis.timelineEvents.where((event) {
-      return event.timestamp.difference(selected).inMinutes.abs() <= 5;
-    }).toList();
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          _MetricPill(label: 'Selected', value: _time(selected)),
-          _MetricPill(label: 'Glucose', value: _mgdl(glucose?.sgv)),
-          _MetricPill(label: 'COB', value: _grams(status?.cob)),
-          _MetricPill(label: 'IOB', value: _units(status?.iob)),
-          _MetricPill(
-            label: 'Events',
-            value: activeEvents.isEmpty
-                ? '-'
-                : activeEvents.map((event) => event.label).join(', '),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -1052,18 +898,6 @@ class _SmallBadge extends StatelessWidget {
   }
 }
 
-class _MetricPill extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _MetricPill({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(label: Text('$label: $value'));
-  }
-}
-
 List<MealSnapshotComparisonRowData> _snapshotRows(MealDetailsData details) {
   final planned = details.plannedSnapshot;
   final consumed = details.consumedSnapshot;
@@ -1214,12 +1048,6 @@ String _number(double value) {
 
 String _mgdl(int? value) => value == null ? '-' : '$value mg/dL';
 
-String _signedMgdl(int? value) {
-  if (value == null) return '-';
-  final prefix = value > 0 ? '+' : '';
-  return '$prefix$value mg/dL';
-}
-
 String _grams(double? value) => value == null ? '-' : '${_number(value)}g';
 
 String _units(double? value) =>
@@ -1257,21 +1085,4 @@ String _nutritionValue(double value, String unit) {
     return _confidence(value);
   }
   return '${_number(value)}$unit';
-}
-
-T? _nearestByDate<T>(
-  Iterable<T> items,
-  DateTime target,
-  DateTime Function(T item) dateOf,
-) {
-  T? nearest;
-  int? bestDistance;
-  for (final item in items) {
-    final distance = dateOf(item).difference(target).inMilliseconds.abs();
-    if (bestDistance == null || distance < bestDistance) {
-      bestDistance = distance;
-      nearest = item;
-    }
-  }
-  return nearest;
 }

@@ -10,16 +10,12 @@ import '../../data/models/meal_analysis_data.dart';
 class MealGlucoseChart extends StatelessWidget {
   final MealAnalysisData analysis;
   final DateTime? selectedTimestamp;
-  final DateTime? visibleStart;
-  final DateTime? visibleEnd;
   final ValueChanged<DateTime>? onTimestampSelected;
 
   const MealGlucoseChart({
     super.key,
     required this.analysis,
     this.selectedTimestamp,
-    this.visibleStart,
-    this.visibleEnd,
     this.onTimestampSelected,
   });
 
@@ -39,8 +35,8 @@ class MealGlucoseChart extends StatelessWidget {
       height: 260,
       child: LineChart(
         LineChartData(
-          minX: bounds.minutesFromStart(visibleStart ?? analysis.chartStart),
-          maxX: bounds.minutesFromStart(visibleEnd ?? analysis.chartEnd),
+          minX: 0,
+          maxX: bounds.totalMinutes,
           minY: bounds.minY,
           maxY: bounds.maxY,
           clipData: const FlClipData.all(),
@@ -80,13 +76,7 @@ class MealGlucoseChart extends StatelessWidget {
             ..._glucoseSegments(bounds),
             ..._eventMarkers(bounds, analysis),
           ],
-          titlesData: _titles(
-            context,
-            analysis,
-            bounds,
-            visibleStart ?? analysis.chartStart,
-            visibleEnd ?? analysis.chartEnd,
-          ),
+          titlesData: _titles(context, analysis, bounds),
           gridData: FlGridData(
             drawVerticalLine: false,
             horizontalInterval: 50,
@@ -250,13 +240,7 @@ class MealGlucoseChart extends StatelessWidget {
     BuildContext context,
     MealAnalysisData analysis,
     MealChartBounds bounds,
-    DateTime visibleStart,
-    DateTime visibleEnd,
   ) {
-    final visibleMinutes = math.max(
-      1,
-      visibleEnd.difference(visibleStart).inMinutes,
-    );
     return FlTitlesData(
       topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
       rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -280,7 +264,7 @@ class MealGlucoseChart extends StatelessWidget {
         sideTitles: SideTitles(
           showTitles: true,
           reservedSize: 28,
-          interval: math.max(15, visibleMinutes / 4).toDouble(),
+          interval: math.max(15, bounds.totalMinutes / 4).toDouble(),
           getTitlesWidget: (value, meta) {
             final time = analysis.chartStart.add(
               Duration(minutes: value.round()),
@@ -313,9 +297,11 @@ List<_StackedEventMarker> _stackedEventMarkers(
       ifAbsent: () => 0,
     );
     final baseY = _glucoseYAt(analysis.glucoseReadings, event.timestamp);
-    final y = (baseY + 18 + level * 22).clamp(
-      bounds.minY + 18,
-      bounds.maxY - 12,
+    final aboveLineY = baseY + level * 22;
+    final belowLineY = baseY - level * 22;
+    final y = (aboveLineY <= bounds.maxY - 14 ? aboveLineY : belowLineY).clamp(
+      bounds.minY + 14,
+      bounds.maxY - 14,
     );
     return _StackedEventMarker(event: event, x: x, y: y.toDouble());
   }).toList();
@@ -373,8 +359,6 @@ class MealDeviceMetricChart extends StatelessWidget {
   final MealAnalysisData analysis;
   final MealDeviceMetric metric;
   final DateTime? selectedTimestamp;
-  final DateTime? visibleStart;
-  final DateTime? visibleEnd;
   final ValueChanged<DateTime>? onTimestampSelected;
 
   const MealDeviceMetricChart({
@@ -382,8 +366,6 @@ class MealDeviceMetricChart extends StatelessWidget {
     required this.analysis,
     required this.metric,
     this.selectedTimestamp,
-    this.visibleStart,
-    this.visibleEnd,
     this.onTimestampSelected,
   });
 
@@ -403,8 +385,8 @@ class MealDeviceMetricChart extends StatelessWidget {
       height: 170,
       child: LineChart(
         LineChartData(
-          minX: bounds.minutesFromStart(visibleStart ?? analysis.chartStart),
-          maxX: bounds.minutesFromStart(visibleEnd ?? analysis.chartEnd),
+          minX: 0,
+          maxX: bounds.totalMinutes,
           minY: 0,
           maxY: bounds.maxY,
           clipData: const FlClipData.all(),
@@ -425,13 +407,7 @@ class MealDeviceMetricChart extends StatelessWidget {
               dotData: const FlDotData(show: false),
             ),
           ],
-          titlesData: _simpleTitles(
-            context,
-            analysis,
-            bounds,
-            visibleStart ?? analysis.chartStart,
-            visibleEnd ?? analysis.chartEnd,
-          ),
+          titlesData: _simpleTitles(context, analysis, bounds),
           gridData: FlGridData(
             drawVerticalLine: false,
             getDrawingHorizontalLine: (_) {
@@ -467,13 +443,7 @@ class MealDeviceMetricChart extends StatelessWidget {
     BuildContext context,
     MealAnalysisData analysis,
     MealChartBounds bounds,
-    DateTime visibleStart,
-    DateTime visibleEnd,
   ) {
-    final visibleMinutes = math.max(
-      1,
-      visibleEnd.difference(visibleStart).inMinutes,
-    );
     return FlTitlesData(
       topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
       rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -496,7 +466,7 @@ class MealDeviceMetricChart extends StatelessWidget {
         sideTitles: SideTitles(
           showTitles: true,
           reservedSize: 28,
-          interval: math.max(15, visibleMinutes / 4).toDouble(),
+          interval: math.max(15, bounds.totalMinutes / 4).toDouble(),
           getTitlesWidget: (value, meta) {
             final time = analysis.chartStart.add(
               Duration(minutes: value.round()),

@@ -6,16 +6,12 @@ class MealPageState {
   final MealAnalysisData? analysis;
   final String? analysisError;
   final DateTime? selectedTimestamp;
-  final DateTime? visibleStart;
-  final DateTime? visibleEnd;
 
   const MealPageState({
     required this.details,
     this.analysis,
     this.analysisError,
     this.selectedTimestamp,
-    this.visibleStart,
-    this.visibleEnd,
   });
 
   MealPageState copyWith({
@@ -24,9 +20,6 @@ class MealPageState {
     String? analysisError,
     DateTime? selectedTimestamp,
     bool clearSelectedTimestamp = false,
-    DateTime? visibleStart,
-    DateTime? visibleEnd,
-    bool clearViewport = false,
   }) {
     return MealPageState(
       details: details ?? this.details,
@@ -35,8 +28,6 @@ class MealPageState {
       selectedTimestamp: clearSelectedTimestamp
           ? null
           : selectedTimestamp ?? this.selectedTimestamp,
-      visibleStart: clearViewport ? null : visibleStart ?? this.visibleStart,
-      visibleEnd: clearViewport ? null : visibleEnd ?? this.visibleEnd,
     );
   }
 }
