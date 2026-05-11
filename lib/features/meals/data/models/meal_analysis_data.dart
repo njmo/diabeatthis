@@ -3,6 +3,7 @@ import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/manual_bolus.dart';
 import '../../../../core/domain/model/meal.dart';
+import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../../core/domain/model/treatment_base.dart';
 
@@ -15,6 +16,7 @@ class MealAnalysisData {
   final DateTime mealTime;
   final List<Glucose> glucoseReadings;
   final List<Treatment> treatments;
+  final List<TemporaryTarget> temporaryTargets;
   final List<DeviceStatus> deviceStatuses;
   final List<MealLinkedActivityData> linkedActivities;
   final List<MealLinkedMealData> linkedMeals;
@@ -29,6 +31,7 @@ class MealAnalysisData {
     required this.mealTime,
     required this.glucoseReadings,
     required this.treatments,
+    required this.temporaryTargets,
     required this.deviceStatuses,
     required this.linkedActivities,
     required this.linkedMeals,
@@ -222,6 +225,7 @@ enum MealTimelineEventType {
   activity,
   meal,
   deviceStatus,
+  tempTarget,
 }
 
 class MealSnapshotComparisonRowData {

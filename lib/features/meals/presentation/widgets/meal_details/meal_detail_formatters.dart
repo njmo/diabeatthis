@@ -109,5 +109,6 @@ String timelineEventLabel(MealTimelineEventData event) {
     MealTimelineEventType.meal =>
       event.label == 'Meal eaten' ? 'Posiłek zjedzony' : 'Posiłek',
     MealTimelineEventType.deviceStatus => 'Status urządzenia',
+    MealTimelineEventType.tempTarget => 'Temp target',
   };
 }

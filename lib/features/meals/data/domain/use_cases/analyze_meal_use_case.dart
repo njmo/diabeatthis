@@ -6,6 +6,7 @@ import '../../../../../core/domain/model/correction_bolus.dart';
 import '../../../../../core/domain/model/extended_carb.dart';
 import '../../../../../core/domain/model/manual_bolus.dart';
 import '../../../../../core/domain/model/meal.dart';
+import '../../../../../core/domain/model/temporary_target.dart';
 import '../../../../../core/domain/model/treat.dart';
 import '../../../../../core/domain/model/treatment_base.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
@@ -37,6 +38,7 @@ class AnalyzeMealUseCase {
     final chartEnd = requestedChartEnd.isAfter(now) ? now : requestedChartEnd;
     final eventStart = mealTime.subtract(const Duration(hours: 1));
     final eventEnd = chartEnd;
+    final targetFetchStart = chartStart.subtract(const Duration(hours: 4));
 
     final repository = await ref.read(nightscoutRepositoryProvider.future);
     final glucose = await repository.fetchGlucoseBetween(chartStart, chartEnd);
@@ -44,10 +46,18 @@ class AnalyzeMealUseCase {
       eventStart,
       eventEnd,
     );
+    final targetTreatments = await repository.fetchTreatmentsBetween(
+      targetFetchStart,
+      chartEnd,
+    );
     final deviceStatuses = await repository.fetchDeviceStatusBetween(
       chartStart,
       chartEnd,
     );
+    final temporaryTargets = targetTreatments
+        .whereType<TemporaryTarget>()
+        .where((target) => _overlapsChart(target, chartStart, chartEnd))
+        .toList();
     final linkedActivities = await _loadLinkedActivities(eventStart, eventEnd);
     final linkedMeals = await _loadLinkedMeals(
       details.meal.id,
@@ -70,6 +80,7 @@ class AnalyzeMealUseCase {
       mealTime: mealTime,
       glucoseReadings: glucose,
       treatments: treatments,
+      temporaryTargets: temporaryTargets,
       deviceStatuses: deviceStatuses,
       linkedActivities: linkedActivities,
       linkedMeals: linkedMeals,
@@ -218,6 +229,14 @@ class AnalyzeMealUseCase {
         value: treatment.getParts(),
       );
     }
+    if (treatment is TemporaryTarget) {
+      return MealTimelineEventData(
+        timestamp: createdAt,
+        type: MealTimelineEventType.tempTarget,
+        label: 'Temp target',
+        value: treatment.getParts(),
+      );
+    }
     return MealTimelineEventData(
       timestamp: createdAt,
       type: MealTimelineEventType.deviceStatus,
@@ -228,6 +247,15 @@ class AnalyzeMealUseCase {
 
   DateTime _date(int millisecondsSinceEpoch) {
     return DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
+  }
+
+  bool _overlapsChart(
+    TemporaryTarget target,
+    DateTime chartStart,
+    DateTime chartEnd,
+  ) {
+    final targetEnd = target.createdAt.add(Duration(minutes: target.duration));
+    return target.createdAt.isBefore(chartEnd) && targetEnd.isAfter(chartStart);
   }
 
   Duration _postMealGlucoseWindow(MealDetailsData details) {

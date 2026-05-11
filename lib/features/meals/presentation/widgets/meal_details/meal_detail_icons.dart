@@ -11,6 +11,7 @@ IconData mealTimelineEventIcon(MealTimelineEventType type) {
     MealTimelineEventType.mealStatus => Icons.flag,
     MealTimelineEventType.meal => Icons.restaurant,
     MealTimelineEventType.deviceStatus => Icons.sensors,
+    MealTimelineEventType.tempTarget => Icons.timer,
   };
 }
 
@@ -23,6 +24,7 @@ Color mealTimelineEventColor(MealTimelineEventType type) {
     MealTimelineEventType.mealStatus => Colors.orange,
     MealTimelineEventType.meal => Colors.brown,
     MealTimelineEventType.deviceStatus => Colors.grey,
+    MealTimelineEventType.tempTarget => Colors.blue,
   };
 }
 
