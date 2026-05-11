@@ -2,11 +2,11 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../meals/data/drafts/meal_draft.dart';
-import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
+import '../../../../common/widgets/form_section.dart';
 import '../controllers/meal_summary_controller.dart';
-import '../providers/meal_summary_extra_items_provider.dart';
 import '../providers/meal_summary_item_ids_provider.dart';
+import '../widgets/meal_summary_carbs_hint_card.dart';
+import '../widgets/meal_summary_extra_items_section.dart';
 import '../widgets/meal_summary_item_row.dart';
 
 @RoutePage()
@@ -19,81 +19,69 @@ class MealSummaryPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncDraft = ref.watch(mealSummaryControllerProvider(mealId));
     final itemIds = ref.watch(mealSummaryItemIdsProvider(mealId));
-    final extraItems = ref.watch(mealSummaryExtraItemsProvider(mealId));
     final notifier = ref.read(mealSummaryControllerProvider(mealId).notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Podsumowanie posiłku')),
+      appBar: AppBar(title: const Text('Ile zjadłeś?')),
       body: asyncDraft.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('error: $e')),
-        data: (_) {
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        error: (e, st) => Center(child: Text('Nie udało się wczytać: $e')),
+        data: (draft) {
+          return SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               children: [
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: itemIds.length,
-                  itemBuilder: (context, index) {
-                    return MealSummaryItemRow(
-                      mealId: mealId,
-                      mealIngredientId: itemIds[index],
-                    );
-                  },
+                Text(
+                  'Sprawdź posiłek',
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                const Divider(),
-                Row(
+                const SizedBox(height: 4),
+                Text(
+                  'Wybierz ile porcji zostało zjedzone. Jeśli była dokładka, dodaj ją niżej.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                MealSummaryCarbsHintCard(draft: draft),
+                const SizedBox(height: 24),
+                FormSection(
+                  icon: Icons.restaurant,
+                  title: 'Składniki z planu',
+                  subtitle: 'Dla każdego składnika ustaw zjedzoną ilość.',
                   children: [
-                    const Text('Extra items'),
-                    IconButton(
-                      onPressed: () async {
-                        final mealIngredient =
-                            await showModalBottomSheet<MealIngredientsDraft>(
-                              context: context,
-                              useRootNavigator: false,
-                              isScrollControlled: true,
-                              builder: (_) => const AddMealIngredient(),
-                            );
-
-                        if (mealIngredient != null) {
-                          notifier.addExtraItem(mealIngredient);
-                        }
-                      },
-                      icon: const Icon(Icons.add_box, size: 20),
-                    ),
+                    for (final itemId in itemIds)
+                      MealSummaryItemRow(
+                        mealId: mealId,
+                        mealIngredientId: itemId,
+                      ),
                   ],
                 ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: extraItems.length,
-                  itemBuilder: (context, index) {
-                    final item = extraItems[index];
-                    return ListTile(
-                      title: Text(item.ingredient.name),
-                      trailing: IconButton(
-                        onPressed: () {
-                          notifier.removeExtraItem(item);
-                        },
-                        icon: const Icon(Icons.remove_circle_outline),
-                      ),
-                    );
-                  },
-                ),
-                const Divider(),
-                FilledButton(
-                  onPressed: () async {
-                    notifier.saveSummary();
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Podsumuj"),
+                const SizedBox(height: 24),
+                MealSummaryExtraItemsSection(
+                  mealId: mealId,
+                  items: draft.extraItems,
                 ),
               ],
             ),
           );
         },
+      ),
+      bottomNavigationBar: asyncDraft.maybeWhen(
+        data: (_) => SafeArea(
+          minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: FilledButton.icon(
+            onPressed: () async {
+              await notifier.saveSummary();
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
+            },
+            icon: const Icon(Icons.check),
+            label: const Text('Zapisz podsumowanie'),
+          ),
+        ),
+        orElse: () => null,
       ),
     );
   }

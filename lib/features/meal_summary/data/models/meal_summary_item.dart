@@ -7,6 +7,7 @@ class MealSummaryItem {
   final bool isReference;
 
   final double plannedAmount;
+  final double netCarbsPerAmount;
 
   MealSummaryItem({
     required this.id,
@@ -14,5 +15,6 @@ class MealSummaryItem {
     required this.portion,
     required this.isReference,
     required this.plannedAmount,
+    required this.netCarbsPerAmount,
   });
 }

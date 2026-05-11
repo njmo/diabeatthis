@@ -4,6 +4,7 @@ class MealSummaryItemDraft {
 
   final double plannedAmount;
   final String amountLabel;
+  final double netCarbsPerAmount;
 
   final double consumedAmount;
   final double consumedConfidence;
@@ -13,6 +14,7 @@ class MealSummaryItemDraft {
     required this.mealIngredientId,
     required this.plannedAmount,
     required this.amountLabel,
+    required this.netCarbsPerAmount,
     required this.consumedAmount,
     required this.consumedConfidence,
   });
@@ -26,6 +28,7 @@ class MealSummaryItemDraft {
       mealIngredientId: mealIngredientId,
       plannedAmount: plannedAmount,
       amountLabel: amountLabel,
+      netCarbsPerAmount: netCarbsPerAmount,
       consumedAmount: consumedAmount ?? this.consumedAmount,
       consumedConfidence: consumedConfidence ?? this.consumedConfidence,
     );

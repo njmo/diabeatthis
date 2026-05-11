@@ -10,12 +10,12 @@ class MealIngredientPreviewTile extends ConsumerWidget {
     super.key,
     required this.draft,
     required this.onRemove,
-    required this.onEdit,
+    this.onEdit,
   });
 
   final MealIngredientsDraft draft;
   final VoidCallback onRemove;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,11 +41,12 @@ class MealIngredientPreviewTile extends ConsumerWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              IconButton(
-                tooltip: 'Edytuj składnik',
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined),
-              ),
+              if (onEdit != null)
+                IconButton(
+                  tooltip: 'Edytuj składnik',
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined),
+                ),
               IconButton(
                 tooltip: 'Usuń składnik',
                 onPressed: onRemove,

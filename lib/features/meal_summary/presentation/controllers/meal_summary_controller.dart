@@ -1,11 +1,11 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../meals/data/drafts/meal_draft.dart';
-import '../../data/models/meal_summary_item.dart';
 import '../../domain/use_cases/finalize_meal_summary_use_case.dart';
 import '../../domain/use_cases/load_meal_summary_data_use_case.dart';
 import '../models/meal_summary_draft.dart';
 import '../models/meal_summary_item_draft.dart';
+import '../utils/meal_summary_formatters.dart';
 
 part 'meal_summary_controller.g.dart';
 
@@ -25,7 +25,8 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
         name: item.name,
         mealIngredientId: item.id,
         plannedAmount: item.plannedAmount,
-        amountLabel: _toAmountLabel(item),
+        amountLabel: mealSummaryAmountLabel(item),
+        netCarbsPerAmount: item.netCarbsPerAmount,
         consumedAmount: item.plannedAmount,
         consumedConfidence: 1.0,
       );
@@ -50,7 +51,9 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
       current.copyWith(
         itemsById: {
           ...current.itemsById,
-          mealIngredientId: item.copyWith(consumedAmount: value),
+          mealIngredientId: item.copyWith(
+            consumedAmount: value < 0 ? 0 : value,
+          ),
         },
       ),
     );
@@ -107,12 +110,21 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
       ),
     );
   }
-}
 
-String _toAmountLabel(MealSummaryItem item) {
-  final portion = item.portion;
-  if (portion == null) {
-    return item.isReference ? 'porcji referencyjnych' : 'g';
+  void replaceExtraItem(
+    MealIngredientsDraft oldItem,
+    MealIngredientsDraft newItem,
+  ) {
+    final current = state.value;
+    if (current == null) return;
+
+    state = AsyncData(
+      current.copyWith(
+        extraItems: [
+          for (final item in current.extraItems)
+            if (item == oldItem) newItem else item,
+        ],
+      ),
+    );
   }
-  return '${portion.name} ${portion.hint}';
 }

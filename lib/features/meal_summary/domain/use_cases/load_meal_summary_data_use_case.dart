@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
+import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../data/models/meal_summary_data.dart';
@@ -30,9 +31,31 @@ class LoadMealSummaryDataUseCase {
         isReference: mealIngredient.ingredient.isReference,
         portion: _mapPortion(mealIngredient.ingredientPortion),
         plannedAmount: mealIngredient.amount.toDouble(),
+        netCarbsPerAmount: _netCarbsPerAmount(mealIngredient),
       );
     }).toList();
     return MealSummaryData(mealId: mealId, items: items);
+  }
+
+  double _netCarbsPerAmount(MealIngredientsDraft mealIngredient) {
+    final netCarbsPer100g =
+        mealIngredient.ingredient.carbsPer100g -
+        mealIngredient.ingredient.fiberPer100g;
+    final safeNetCarbsPer100g = netCarbsPer100g < 0
+        ? 0.0
+        : netCarbsPer100g.toDouble();
+
+    if (mealIngredient.ingredient.isReference) {
+      return safeNetCarbsPer100g;
+    }
+
+    final gramsPerAmount = mealIngredient.ingredientPortion.portion.map(
+      empty: (_) => 1.0,
+      existing: (_) => mealIngredient.ingredientPortion.amount.toDouble(),
+      draft: (_) => mealIngredient.ingredientPortion.amount.toDouble(),
+    );
+
+    return gramsPerAmount * safeNetCarbsPer100g / 100;
   }
 
   MealSummaryPortion? _mapPortion(IngredientPortionDraft ingredientPortion) {
