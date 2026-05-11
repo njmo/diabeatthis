@@ -5,7 +5,6 @@ class MealPageState {
   final MealDetailsData details;
   final MealAnalysisData? analysis;
   final String? analysisError;
-  final bool detailedMode;
   final bool showRawTechnicalData;
   final DateTime? selectedTimestamp;
   final DateTime? visibleStart;
@@ -15,7 +14,6 @@ class MealPageState {
     required this.details,
     this.analysis,
     this.analysisError,
-    this.detailedMode = false,
     this.showRawTechnicalData = false,
     this.selectedTimestamp,
     this.visibleStart,
@@ -26,7 +24,6 @@ class MealPageState {
     MealDetailsData? details,
     MealAnalysisData? analysis,
     String? analysisError,
-    bool? detailedMode,
     bool? showRawTechnicalData,
     DateTime? selectedTimestamp,
     bool clearSelectedTimestamp = false,
@@ -38,7 +35,6 @@ class MealPageState {
       details: details ?? this.details,
       analysis: analysis ?? this.analysis,
       analysisError: analysisError ?? this.analysisError,
-      detailedMode: detailedMode ?? this.detailedMode,
       showRawTechnicalData: showRawTechnicalData ?? this.showRawTechnicalData,
       selectedTimestamp: clearSelectedTimestamp
           ? null

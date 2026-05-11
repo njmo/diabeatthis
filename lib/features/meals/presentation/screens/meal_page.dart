@@ -51,11 +51,11 @@ class _MealPageBody extends ConsumerWidget {
       children: [
         _MealHeader(state: state),
         const SizedBox(height: 12),
-        _ModeSwitches(state: state),
+        _RawTechnicalDataSwitch(state: state),
         const SizedBox(height: 12),
-        _BasicInfoSection(details: details, detailed: state.detailedMode),
-        _IngredientsSection(details: details),
-        _NutrientAnalysisSection(details: details),
+        _BasicInfoSection(details: details),
+        _NutritionAnalysisSection(details: details),
+        _MealAdvisorResultSection(details: details),
         if (details.meal.isEaten)
           _GlucoseAnalysisSection(
             details: details,
@@ -157,10 +157,10 @@ class _MealHeader extends StatelessWidget {
   }
 }
 
-class _ModeSwitches extends ConsumerWidget {
+class _RawTechnicalDataSwitch extends ConsumerWidget {
   final MealPageState state;
 
-  const _ModeSwitches({required this.state});
+  const _RawTechnicalDataSwitch({required this.state});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -168,20 +168,6 @@ class _ModeSwitches extends ConsumerWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        SegmentedButton<bool>(
-          segments: const [
-            ButtonSegment(value: false, label: Text('Compact')),
-            ButtonSegment(value: true, label: Text('Detailed')),
-          ],
-          selected: {state.detailedMode},
-          onSelectionChanged: (values) {
-            ref
-                .read(
-                  mealDetailsControllerProvider(state.details.meal.id).notifier,
-                )
-                .setDetailedMode(values.first);
-          },
-        ),
         FilterChip(
           label: const Text('Show raw technical data'),
           selected: state.showRawTechnicalData,
@@ -200,14 +186,12 @@ class _ModeSwitches extends ConsumerWidget {
 
 class _BasicInfoSection extends StatelessWidget {
   final MealDetailsData details;
-  final bool detailed;
 
-  const _BasicInfoSection({required this.details, required this.detailed});
+  const _BasicInfoSection({required this.details});
 
   @override
   Widget build(BuildContext context) {
     final meal = details.meal;
-    final decision = details.advisorDecision;
 
     return _SectionTile(
       title: 'Basic info',
@@ -223,55 +207,68 @@ class _BasicInfoSection extends StatelessWidget {
         _InfoRow(label: 'Created at', value: _dateTime(meal.createdAt)),
         _InfoRow(label: 'Updated at', value: _dateTime(meal.updatedAt)),
         _InfoRow(label: 'Notes', value: _fallback(meal.notes)),
-        _InfoRow(
-          label: 'Source',
-          value: meal.isSynced ? 'Nightscout' : 'Local',
+        _IconInfoRow(
+          icon: meal.isSynced ? Icons.cloud_done : Icons.edit_location_alt,
+          label: 'Sync state',
+          value: meal.isSynced ? 'Synced' : 'Local',
         ),
-        _InfoRow(
-          label: 'Meal advisor decision',
-          value: decision?.result ?? '-',
-        ),
-        if (decision != null) ...[
-          _InfoRow(
-            label: 'Initial wait',
-            value: '${decision.initialWaitTime} min',
-          ),
-          _InfoRow(label: 'Final wait', value: '${decision.finalWaitTime} min'),
-          _InfoRow(
-            label: 'Decision reason',
-            value: _fallback(decision.decisionReason),
-          ),
-        ],
-        if (detailed) ...[
-          _InfoRow(label: 'Meal id', value: meal.id.toString()),
-          _InfoRow(
-            label: 'Template id',
-            value: meal.mealTemplateId?.toString() ?? '-',
-          ),
-          _InfoRow(
-            label: 'Based on meal id',
-            value: meal.basedOnMealId?.toString() ?? '-',
-          ),
-          _InfoRow(label: 'Synced', value: meal.isSynced ? 'yes' : 'no'),
-        ],
+        _BasedOnMealRow(meal: meal),
       ],
     );
   }
 }
 
-class _IngredientsSection extends StatelessWidget {
-  final MealDetailsData details;
+class _BasedOnMealRow extends StatelessWidget {
+  final MealRecordData meal;
 
-  const _IngredientsSection({required this.details});
+  const _BasedOnMealRow({required this.meal});
 
   @override
   Widget build(BuildContext context) {
+    final basedOnMealId = meal.basedOnMealId;
+    if (basedOnMealId == null) {
+      return const _InfoRow(label: 'Based on meal', value: '-');
+    }
+
+    return ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.copy_all),
+      title: const Text('Based on meal'),
+      trailing: TextButton.icon(
+        icon: const Icon(Icons.open_in_new),
+        label: Text('#$basedOnMealId'),
+        onPressed: () => context.router.push(MealRoute(mealId: basedOnMealId)),
+      ),
+    );
+  }
+}
+
+class _NutritionAnalysisSection extends StatelessWidget {
+  final MealDetailsData details;
+
+  const _NutritionAnalysisSection({required this.details});
+
+  @override
+  Widget build(BuildContext context) {
+    final snapshot = details.preferredSummarySnapshot;
+    final macros = Macronutrients(
+      carbsTotal: snapshot?.totalCarbsG.round() ?? 0,
+      fatTotal: snapshot?.totalFatG.round() ?? 0,
+      fiberTotal: snapshot?.totalFiberG.round() ?? 0,
+      proteinTotal: snapshot?.totalProteinG.round() ?? 0,
+    );
+
     return _SectionTile(
-      title: 'Ingredients',
+      title: 'Nutrition analysis',
       initiallyExpanded: true,
       children: [
         for (final ingredient in details.ingredients)
           _IngredientTile(ingredient: ingredient),
+        const SizedBox(height: 12),
+        NutrientSummaryChart(macros: macros),
+        const SizedBox(height: 8),
+        _ContributionBreakdown(details: details),
       ],
     );
   }
@@ -444,32 +441,39 @@ class _NutritionComparisonTable extends StatelessWidget {
   }
 }
 
-class _NutrientAnalysisSection extends StatelessWidget {
+class _MealAdvisorResultSection extends StatelessWidget {
   final MealDetailsData details;
 
-  const _NutrientAnalysisSection({required this.details});
+  const _MealAdvisorResultSection({required this.details});
 
   @override
   Widget build(BuildContext context) {
-    final snapshot = details.preferredSummarySnapshot;
-    final macros = Macronutrients(
-      carbsTotal: snapshot?.totalCarbsG.round() ?? 0,
-      fatTotal: snapshot?.totalFatG.round() ?? 0,
-      fiberTotal: snapshot?.totalFiberG.round() ?? 0,
-      proteinTotal: snapshot?.totalProteinG.round() ?? 0,
-    );
+    final decision = details.advisorDecision;
 
     return _SectionTile(
-      title: 'Nutrient analysis',
+      title: 'Meal advisor result',
       children: [
-        NutrientSummaryChart(macros: macros),
-        const SizedBox(height: 8),
-        _ContributionBreakdown(details: details),
-        const SizedBox(height: 8),
-        _InfoRow(
-          label: 'Top predicted spike drivers',
-          value: _fallback(_topDrivers(details.ingredients)),
-        ),
+        if (decision == null)
+          const _InfoRow(label: 'Result', value: '-')
+        else ...[
+          _InfoRow(label: 'Result', value: decision.result),
+          _InfoRow(
+            label: 'Initial wait',
+            value: '${decision.initialWaitTime} min',
+          ),
+          _InfoRow(label: 'Final wait', value: '${decision.finalWaitTime} min'),
+          _InfoRow(
+            label: 'Wait ignored',
+            value: decision.waitTimeIgnored ? 'yes' : 'no',
+          ),
+          _InfoRow(
+            label: 'Decision reason',
+            value: _fallback(decision.decisionReason),
+          ),
+          _InfoRow(label: 'Version', value: decision.version.toString()),
+          _InfoRow(label: 'Created at', value: _dateTime(decision.createdAt)),
+          _InfoRow(label: 'Updated at', value: _dateTime(decision.updatedAt)),
+        ],
       ],
     );
   }
@@ -580,17 +584,8 @@ class _GlucoseAnalysisSection extends ConsumerWidget {
                   ? '-'
                   : '${stats.glucoseRateMgDlPerMinute!.toStringAsFixed(2)} mg/dL/min',
             ),
-            _MetricPill(
-              label: 'Meal response',
-              value: analysis.responseScore.score == null
-                  ? analysis.responseScore.label
-                  : '${analysis.responseScore.label} ${analysis.responseScore.score}',
-            ),
           ],
         ),
-        const SizedBox(height: 8),
-        for (final flag in analysis.behaviorFlags)
-          _InfoRow(label: flag.label, value: flag.reason),
       ],
     );
   }
@@ -616,8 +611,9 @@ class _CobIobSection extends ConsumerWidget {
     return _SectionTile(
       title: 'COB / IOB',
       children: [
-        MealCobIobChart(
+        MealDeviceMetricChart(
           analysis: analysis,
+          metric: MealDeviceMetric.cob,
           selectedTimestamp: selectedTimestamp,
           visibleStart: visibleStart,
           visibleEnd: visibleEnd,
@@ -627,14 +623,18 @@ class _CobIobSection extends ConsumerWidget {
                 .selectTimestamp(timestamp);
           },
         ),
-        const SizedBox(height: 8),
-        const Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _LegendItem(color: Colors.green, label: 'COB'),
-            _LegendItem(color: Colors.blue, label: 'IOB'),
-          ],
+        const SizedBox(height: 12),
+        MealDeviceMetricChart(
+          analysis: analysis,
+          metric: MealDeviceMetric.iob,
+          selectedTimestamp: selectedTimestamp,
+          visibleStart: visibleStart,
+          visibleEnd: visibleEnd,
+          onTimestampSelected: (timestamp) {
+            ref
+                .read(mealDetailsControllerProvider(mealId).notifier)
+                .selectTimestamp(timestamp);
+          },
         ),
         const SizedBox(height: 8),
         _InfoRow(label: 'Latest COB', value: _grams(analysis.latestCob)),
@@ -991,6 +991,35 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
+class _IconInfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _IconInfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: scheme.primary),
+          const SizedBox(width: 10),
+          Expanded(child: Text(label)),
+          const SizedBox(width: 12),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
 class _SummaryCard extends StatelessWidget {
   final String label;
   final String value;
@@ -1060,25 +1089,6 @@ class _MetricPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Chip(label: Text('$label: $value'));
-  }
-}
-
-class _LegendItem extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendItem({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(width: 10, height: 10, color: color),
-        const SizedBox(width: 6),
-        Text(label),
-      ],
-    );
   }
 }
 
@@ -1222,19 +1232,6 @@ String _nutritionValue(double value, String unit) {
     return _confidence(value);
   }
   return '${_number(value)}$unit';
-}
-
-String _topDrivers(List<MealIngredientDetailsData> ingredients) {
-  final sorted = ingredients.toList()
-    ..sort(
-      (a, b) =>
-          b.consumedCarbsContribution.compareTo(a.consumedCarbsContribution),
-    );
-  return sorted
-      .take(3)
-      .where((ingredient) => ingredient.consumedCarbsContribution > 0)
-      .map((ingredient) => ingredient.ingredientName)
-      .join(', ');
 }
 
 T? _nearestByDate<T>(

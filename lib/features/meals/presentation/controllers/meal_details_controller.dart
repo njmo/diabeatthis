@@ -22,12 +22,6 @@ class MealDetailsControllerNotifier extends _$MealDetailsControllerNotifier {
     }
   }
 
-  void setDetailedMode(bool value) {
-    final current = state.value;
-    if (current == null) return;
-    state = AsyncData(current.copyWith(detailedMode: value));
-  }
-
   void setShowRawTechnicalData(bool value) {
     final current = state.value;
     if (current == null) return;

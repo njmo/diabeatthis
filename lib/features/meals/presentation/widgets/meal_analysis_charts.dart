@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../data/models/meal_analysis_data.dart';
 
@@ -225,11 +226,9 @@ class MealGlucoseChart extends StatelessWidget {
         barWidth: 0,
         dotData: FlDotData(
           getDotPainter: (spot, percent, bar, index) {
-            return FlDotCirclePainter(
-              radius: 4,
+            return _TimelineEventIconPainter(
+              icon: _eventIcon(event.type),
               color: _eventColor(event.type),
-              strokeColor: Colors.white,
-              strokeWidth: 1,
             );
           },
         ),
@@ -290,16 +289,18 @@ class MealGlucoseChart extends StatelessWidget {
   }
 }
 
-class MealCobIobChart extends StatelessWidget {
+class MealDeviceMetricChart extends StatelessWidget {
   final MealAnalysisData analysis;
+  final MealDeviceMetric metric;
   final DateTime? selectedTimestamp;
   final DateTime? visibleStart;
   final DateTime? visibleEnd;
   final ValueChanged<DateTime>? onTimestampSelected;
 
-  const MealCobIobChart({
+  const MealDeviceMetricChart({
     super.key,
     required this.analysis,
+    required this.metric,
     this.selectedTimestamp,
     this.visibleStart,
     this.visibleEnd,
@@ -311,15 +312,15 @@ class MealCobIobChart extends StatelessWidget {
     if (analysis.deviceStatuses.isEmpty) {
       return const SizedBox(
         height: 160,
-        child: Center(child: Text('Brak COB / IOB w tym okresie')),
+        child: Center(child: Text('Brak device status w tym okresie')),
       );
     }
 
-    final bounds = MealChartBounds.fromDeviceStatuses(analysis);
+    final bounds = MealChartBounds.fromDeviceStatuses(analysis, metric);
     final scheme = Theme.of(context).colorScheme;
 
     return SizedBox(
-      height: 230,
+      height: 170,
       child: LineChart(
         LineChartData(
           minX: bounds.minutesFromStart(visibleStart ?? analysis.chartStart),
@@ -334,25 +335,11 @@ class MealCobIobChart extends StatelessWidget {
                   .map(
                     (status) => FlSpot(
                       bounds.minutesFromStart(status.date),
-                      status.cob,
+                      metric.value(status),
                     ),
                   )
                   .toList(),
-              color: Colors.green,
-              barWidth: 3,
-              isStrokeCapRound: true,
-              dotData: const FlDotData(show: false),
-            ),
-            LineChartBarData(
-              spots: analysis.deviceStatuses
-                  .map(
-                    (status) => FlSpot(
-                      bounds.minutesFromStart(status.date),
-                      status.iob,
-                    ),
-                  )
-                  .toList(),
-              color: Colors.blue,
+              color: metric.color,
               barWidth: 3,
               isStrokeCapRound: true,
               dotData: const FlDotData(show: false),
@@ -448,6 +435,28 @@ class MealCobIobChart extends StatelessWidget {
   }
 }
 
+enum MealDeviceMetric {
+  cob(label: 'COB', unit: 'g', color: Colors.green),
+  iob(label: 'IOB', unit: 'U', color: Colors.blue);
+
+  final String label;
+  final String unit;
+  final Color color;
+
+  const MealDeviceMetric({
+    required this.label,
+    required this.unit,
+    required this.color,
+  });
+
+  double value(DeviceStatus status) {
+    return switch (this) {
+      MealDeviceMetric.cob => status.cob,
+      MealDeviceMetric.iob => status.iob,
+    };
+  }
+}
+
 class MealChartBounds {
   final DateTime start;
   final DateTime end;
@@ -476,18 +485,18 @@ class MealChartBounds {
     );
   }
 
-  factory MealChartBounds.fromDeviceStatuses(MealAnalysisData analysis) {
-    final maxCob = analysis.deviceStatuses
-        .map((status) => status.cob)
-        .fold<double>(0, math.max);
-    final maxIob = analysis.deviceStatuses
-        .map((status) => status.iob)
+  factory MealChartBounds.fromDeviceStatuses(
+    MealAnalysisData analysis,
+    MealDeviceMetric metric,
+  ) {
+    final maxValue = analysis.deviceStatuses
+        .map(metric.value)
         .fold<double>(0, math.max);
     return MealChartBounds(
       start: analysis.chartStart,
       end: analysis.chartEnd,
       minY: 0,
-      maxY: math.max(10, math.max(maxCob, maxIob) + 2),
+      maxY: math.max(metric == MealDeviceMetric.iob ? 2 : 10, maxValue + 2),
       totalMinutes: _totalMinutes(analysis),
     );
   }
@@ -537,6 +546,68 @@ Color _eventColor(MealTimelineEventType type) {
     MealTimelineEventType.meal => Colors.brown,
     MealTimelineEventType.deviceStatus => Colors.grey,
   };
+}
+
+IconData _eventIcon(MealTimelineEventType type) {
+  return switch (type) {
+    MealTimelineEventType.insulin => Icons.vaccines,
+    MealTimelineEventType.carbs => Icons.bakery_dining,
+    MealTimelineEventType.correction => Icons.medical_services,
+    MealTimelineEventType.activity => Icons.directions_run,
+    MealTimelineEventType.mealStatus => Icons.flag,
+    MealTimelineEventType.meal => Icons.restaurant,
+    MealTimelineEventType.deviceStatus => Icons.sensors,
+  };
+}
+
+class _TimelineEventIconPainter extends FlDotPainter {
+  final IconData icon;
+  final Color color;
+  static const double size = 20;
+
+  const _TimelineEventIconPainter({required this.icon, required this.color});
+
+  @override
+  void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas) {
+    final backgroundPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    final borderPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+    canvas.drawCircle(offsetInCanvas, size / 2, backgroundPaint);
+    canvas.drawCircle(offsetInCanvas, size / 2, borderPaint);
+
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(
+          color: color,
+          fontSize: size * 0.58,
+          fontFamily: icon.fontFamily,
+          package: icon.fontPackage,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    textPainter.paint(
+      canvas,
+      offsetInCanvas - Offset(textPainter.width / 2, textPainter.height / 2),
+    );
+  }
+
+  @override
+  Size getSize(FlSpot spot) => Size.square(size);
+
+  @override
+  Color get mainColor => color;
+
+  @override
+  FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) => b;
+
+  @override
+  List<Object?> get props => [icon, color, size];
 }
 
 String _formatTime(DateTime date) {

@@ -103,75 +103,6 @@ class MealAnalysisData {
     });
   }
 
-  List<MealBehaviorFlagData> get behaviorFlags {
-    final stats = glucoseStats;
-    if (!stats.hasValues) return const [];
-
-    final flags = <MealBehaviorFlagData>[];
-    final timeToPeak = stats.timeToPeak;
-    if (timeToPeak != null && timeToPeak.inMinutes > 75) {
-      flags.add(
-        const MealBehaviorFlagData(
-          label: 'Late spike',
-          severity: MealBehaviorSeverity.warning,
-          reason: 'Peak glucose occurred late after the meal.',
-        ),
-      );
-    }
-    if (stats.minGlucose != null && stats.minGlucose! < 70) {
-      flags.add(
-        const MealBehaviorFlagData(
-          label: 'Hypo after bolus',
-          severity: MealBehaviorSeverity.critical,
-          reason: 'Glucose dropped below 70 mg/dL in the analysis window.',
-        ),
-      );
-    }
-    if (stats.timeAboveRangePercent != null &&
-        stats.timeAboveRangePercent! >= 35) {
-      flags.add(
-        const MealBehaviorFlagData(
-          label: 'Prolonged hyperglycemia',
-          severity: MealBehaviorSeverity.warning,
-          reason: 'A large part of the window was above range.',
-        ),
-      );
-    }
-    if (stats.peakGlucose != null && stats.peakGlucose! > 250) {
-      flags.add(
-        const MealBehaviorFlagData(
-          label: 'High spike severity',
-          severity: MealBehaviorSeverity.critical,
-          reason: 'Peak glucose exceeded 250 mg/dL.',
-        ),
-      );
-    }
-    return flags;
-  }
-
-  MealResponseScoreData get responseScore {
-    final stats = glucoseStats;
-    if (!stats.hasValues) {
-      return const MealResponseScoreData(label: 'Unknown', score: null);
-    }
-
-    var score = 100.0;
-    final peak = stats.peakGlucose ?? 0;
-    if (peak > 180) score -= (peak - 180) * 0.25;
-    if ((stats.minGlucose ?? 100) < 70) score -= 25;
-    score -= (stats.timeAboveRangePercent ?? 0) * 0.35;
-    score -= (stats.timeBelowRangePercent ?? 0) * 0.6;
-    score = score.clamp(1, 100);
-
-    final label = score >= 80
-        ? 'Good'
-        : score >= 60
-        ? 'Mixed'
-        : 'Needs review';
-
-    return MealResponseScoreData(label: label, score: score.round());
-  }
-
   static double? _rate(Glucose first, Glucose last) {
     final minutes = last.date.difference(first.date).inMinutes;
     if (minutes == 0) return null;
@@ -277,27 +208,6 @@ enum MealTimelineEventType {
   activity,
   meal,
   deviceStatus,
-}
-
-class MealBehaviorFlagData {
-  final String label;
-  final MealBehaviorSeverity severity;
-  final String reason;
-
-  const MealBehaviorFlagData({
-    required this.label,
-    required this.severity,
-    required this.reason,
-  });
-}
-
-enum MealBehaviorSeverity { info, warning, critical }
-
-class MealResponseScoreData {
-  final String label;
-  final int? score;
-
-  const MealResponseScoreData({required this.label, required this.score});
 }
 
 class MealSnapshotComparisonRowData {
