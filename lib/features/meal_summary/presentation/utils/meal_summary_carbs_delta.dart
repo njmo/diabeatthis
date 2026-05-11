@@ -4,17 +4,19 @@ import '../models/meal_summary_draft.dart';
 
 class MealSummaryCarbsDelta {
   const MealSummaryCarbsDelta({
-    required this.plannedItemsDelta,
+    required this.itemAmountDelta,
     required this.extraItemsCarbs,
+    required this.usesReportedBaseline,
   });
 
-  final double plannedItemsDelta;
+  final double itemAmountDelta;
   final double extraItemsCarbs;
+  final bool usesReportedBaseline;
 
-  double get total => plannedItemsDelta + extraItemsCarbs;
+  double get total => itemAmountDelta + extraItemsCarbs;
 
   int get roundedTotal => total.round();
-  int get roundedPlannedItemsDelta => plannedItemsDelta.round();
+  int get roundedItemAmountDelta => itemAmountDelta.round();
   int get roundedExtraItemsCarbs => extraItemsCarbs.round();
 
   bool get isNeutral => total.abs() < 0.5;
@@ -23,8 +25,12 @@ class MealSummaryCarbsDelta {
 }
 
 MealSummaryCarbsDelta calculateMealSummaryCarbsDelta(MealSummaryDraft draft) {
-  final plannedItemsDelta = draft.itemsById.values.fold(0.0, (sum, item) {
-    final amountDelta = item.consumedAmount - item.plannedAmount;
+  var usesReportedBaseline = false;
+  final itemAmountDelta = draft.itemsById.values.fold(0.0, (sum, item) {
+    if ((item.reportedAmount - item.plannedAmount).abs() >= 0.01) {
+      usesReportedBaseline = true;
+    }
+    final amountDelta = item.consumedAmount - item.reportedAmount;
     return sum + amountDelta * item.netCarbsPerAmount;
   });
 
@@ -33,8 +39,9 @@ MealSummaryCarbsDelta calculateMealSummaryCarbsDelta(MealSummaryDraft draft) {
   });
 
   return MealSummaryCarbsDelta(
-    plannedItemsDelta: plannedItemsDelta,
+    itemAmountDelta: itemAmountDelta,
     extraItemsCarbs: extraItemsCarbs,
+    usesReportedBaseline: usesReportedBaseline,
   );
 }
 

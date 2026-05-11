@@ -25,6 +25,7 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
         name: item.name,
         mealIngredientId: item.id,
         plannedAmount: item.plannedAmount,
+        reportedAmount: item.reportedAmount,
         amountLabel: mealSummaryAmountLabel(item),
         netCarbsPerAmount: item.netCarbsPerAmount,
         consumedAmount: item.consumedAmount,

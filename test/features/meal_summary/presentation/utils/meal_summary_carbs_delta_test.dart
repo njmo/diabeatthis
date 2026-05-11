@@ -26,7 +26,7 @@ void main() {
       ),
     );
 
-    expect(delta.plannedItemsDelta, -12);
+    expect(delta.itemAmountDelta, -12);
     expect(delta.extraItemsCarbs, 0);
     expect(delta.roundedTotal, -12);
     expect(delta.isNegative, isTrue);
@@ -58,7 +58,7 @@ void main() {
       ),
     );
 
-    expect(delta.plannedItemsDelta, 3);
+    expect(delta.itemAmountDelta, 3);
     expect(delta.extraItemsCarbs, 15);
     expect(delta.roundedTotal, 18);
     expect(delta.isPositive, isTrue);
@@ -85,11 +85,103 @@ void main() {
     expect(delta.roundedTotal, 0);
     expect(delta.isNeutral, isTrue);
   });
+
+  test('counts only the difference after a quick add-on was reported', () {
+    final delta = calculateMealSummaryCarbsDelta(
+      MealSummaryDraft(
+        mealId: 1,
+        mealStatus: 'eaten-extra',
+        itemIds: const [1],
+        itemsById: {
+          1: _item(
+            id: 1,
+            plannedAmount: 1,
+            reportedAmount: 1.5,
+            consumedAmount: 2,
+            netCarbsPerAmount: 12,
+          ),
+        },
+        extraItems: const [],
+      ),
+    );
+
+    expect(delta.itemAmountDelta, 6);
+    expect(delta.extraItemsCarbs, 0);
+    expect(delta.roundedTotal, 6);
+    expect(delta.usesReportedBaseline, isTrue);
+  });
+
+  test(
+    'combines mixed item corrections and extra ingredients intelligently',
+    () {
+      final delta = calculateMealSummaryCarbsDelta(
+        MealSummaryDraft(
+          mealId: 1,
+          mealStatus: 'eaten-extra',
+          itemIds: const [1, 2],
+          itemsById: {
+            1: _item(
+              id: 1,
+              plannedAmount: 1,
+              reportedAmount: 1.5,
+              consumedAmount: 1,
+              netCarbsPerAmount: 10,
+            ),
+            2: _item(
+              id: 2,
+              plannedAmount: 1,
+              reportedAmount: 1.5,
+              consumedAmount: 2,
+              netCarbsPerAmount: 8,
+            ),
+          },
+          extraItems: [
+            _extraItem(amount: 50, carbsPer100g: 60, fiberPer100g: 4),
+          ],
+        ),
+      );
+
+      expect(delta.itemAmountDelta, -1);
+      expect(delta.extraItemsCarbs, 28);
+      expect(delta.roundedTotal, 27);
+      expect(delta.isPositive, isTrue);
+      expect(delta.usesReportedBaseline, isTrue);
+    },
+  );
+
+  test(
+    'supports negative correction after a quick add-on was overreported',
+    () {
+      final delta = calculateMealSummaryCarbsDelta(
+        MealSummaryDraft(
+          mealId: 1,
+          mealStatus: 'eaten-extra',
+          itemIds: const [1],
+          itemsById: {
+            1: _item(
+              id: 1,
+              plannedAmount: 1,
+              reportedAmount: 2,
+              consumedAmount: 1.5,
+              netCarbsPerAmount: 16,
+            ),
+          },
+          extraItems: const [],
+        ),
+      );
+
+      expect(delta.itemAmountDelta, -8);
+      expect(delta.roundedTotal, -8);
+      expect(delta.isNegative, isTrue);
+      expect(delta.usesReportedBaseline, isTrue);
+    },
+  );
 }
 
 MealSummaryItemDraft _item({
   required int id,
   required double plannedAmount,
+  double? reportedAmount,
   required double consumedAmount,
   required double netCarbsPerAmount,
 }) {
@@ -97,6 +189,7 @@ MealSummaryItemDraft _item({
     mealIngredientId: id,
     name: 'Item $id',
     plannedAmount: plannedAmount,
+    reportedAmount: reportedAmount ?? plannedAmount,
     amountLabel: 'porcja',
     netCarbsPerAmount: netCarbsPerAmount,
     consumedAmount: consumedAmount,

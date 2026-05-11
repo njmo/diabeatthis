@@ -28,6 +28,7 @@ class LoadMealSummaryDataUseCase {
     );
     final items = mealIngredients.map((mealIngredient) {
       final plannedAmount = _plannedAmount(mealIngredient);
+      final reportedAmount = mealIngredient.consumedAmount ?? plannedAmount;
 
       return MealSummaryItem(
         name: mealIngredient.ingredient.name,
@@ -35,7 +36,8 @@ class LoadMealSummaryDataUseCase {
         isReference: mealIngredient.ingredient.isReference,
         portion: _mapPortion(mealIngredient.ingredientPortion),
         plannedAmount: plannedAmount,
-        consumedAmount: mealIngredient.consumedAmount ?? plannedAmount,
+        reportedAmount: reportedAmount,
+        consumedAmount: reportedAmount,
         consumedConfidence: mealIngredient.consumedConfidence ?? 1.0,
         netCarbsPerAmount: _netCarbsPerAmount(mealIngredient),
       );

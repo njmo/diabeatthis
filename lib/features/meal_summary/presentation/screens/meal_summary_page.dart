@@ -45,7 +45,7 @@ class MealSummaryPage extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   addOnAlreadyReported
-                      ? 'Dokładka została już zapisana. Sprawdź posiłek i zakończ podsumowanie.'
+                      ? 'Dokładka została już zapisana. Popraw ilości albo dodaj składnik, jeśli zjadłeś coś jeszcze.'
                       : 'Wybierz ile porcji zostało zjedzone. Jeśli była dokładka, dodaj ją niżej.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -69,13 +69,11 @@ class MealSummaryPage extends ConsumerWidget {
                       ),
                   ],
                 ),
-                if (!addOnAlreadyReported) ...[
-                  const SizedBox(height: 24),
-                  MealSummaryExtraItemsSection(
-                    mealId: mealId,
-                    items: draft.extraItems,
-                  ),
-                ],
+                const SizedBox(height: 24),
+                MealSummaryExtraItemsSection(
+                  mealId: mealId,
+                  items: draft.extraItems,
+                ),
               ],
             ),
           );
@@ -157,15 +155,21 @@ class MealSummaryPage extends ConsumerWidget {
   }
 
   String _dialogTitle(MealSummaryCarbsDelta delta, MealSummaryDraft draft) {
-    if (mealStatusHasReportedAddOn(draft.mealStatus)) {
+    final addOnAlreadyReported = mealStatusHasReportedAddOn(draft.mealStatus);
+
+    if (addOnAlreadyReported && delta.isNeutral) {
       return 'Podsumowanie zapisane';
     }
 
     if (delta.isPositive) {
-      return '+${delta.roundedTotal}g węglowodanów';
+      return addOnAlreadyReported
+          ? 'Dodaj +${delta.roundedTotal}g w AAPS'
+          : '+${delta.roundedTotal}g węglowodanów';
     }
     if (delta.isNegative) {
-      return '${delta.roundedTotal}g węglowodanów';
+      return addOnAlreadyReported
+          ? 'Do AAPS: ${delta.roundedTotal}g'
+          : '${delta.roundedTotal}g węglowodanów';
     }
     return 'Bez zmiany węglowodanów';
   }
@@ -175,7 +179,9 @@ class MealSummaryPage extends ConsumerWidget {
     MealSummarySaveMode mode,
     MealSummaryDraft draft,
   ) {
-    if (mealStatusHasReportedAddOn(draft.mealStatus)) {
+    final addOnAlreadyReported = mealStatusHasReportedAddOn(draft.mealStatus);
+
+    if (addOnAlreadyReported && delta.isNeutral) {
       return 'Dokładka była już zapisana wcześniej. Nie dopisuj ponownie tych samych węglowodanów w AAPS.';
     }
 
@@ -184,9 +190,15 @@ class MealSummaryPage extends ConsumerWidget {
         : '';
 
     if (delta.isPositive) {
+      if (addOnAlreadyReported) {
+        return 'Wpisz tylko różnicę: +${delta.roundedTotal}g w AAPS jako dodatkowe węglowodany. Wcześniej zapisana dokładka jest już uwzględniona.$suffix';
+      }
       return 'Wpisz +${delta.roundedTotal}g w AAPS jako dodatkowe węglowodany. AAPS policzy insulinę według profilu.$suffix';
     }
     if (delta.isNegative) {
+      if (addOnAlreadyReported) {
+        return 'Zjedzono o ${delta.roundedTotal.abs()}g węglowodanów mniej niż było już wpisane po dokładce. Jeśli AAPS przyjmuje korektę węglowodanów, wpisz ${delta.roundedTotal}g. Jeśli bolus był już podany, rozważ dojedzenie około ${delta.roundedTotal.abs()}g węglowodanów.$suffix';
+      }
       return 'Zjedzono o ${delta.roundedTotal.abs()}g węglowodanów mniej niż plan. Jeśli bolus był na pełny plan, rozważ dojedzenie około ${delta.roundedTotal.abs()}g węglowodanów.$suffix';
     }
     return 'Zjedzone węglowodany są zgodne z planem.$suffix';
