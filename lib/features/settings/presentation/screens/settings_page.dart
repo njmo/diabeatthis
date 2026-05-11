@@ -13,6 +13,8 @@ import '../../../../core/data/provider/nightscout_repository_provider.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data/repository/nightscout_repository_impl.dart';
 import '../../../../core/logger/logger.dart';
+import '../widgets/database_settings_section.dart';
+import '../widgets/settings_section_card.dart';
 
 const _nightscoutUrlKey = 'nightscout_url';
 const _childNameKey = 'main-user-name';
@@ -114,111 +116,133 @@ class SettingsPage extends HookConsumerWidget with Logging {
         }
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Quick settings')),
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Podaj adres swojego Nightscout. Bez niego nie możemy pobrać danych.',
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: urlController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nightscout URL',
-                      hintText: 'https://twoj-nightscout.com',
-                    ),
-                    keyboardType: TextInputType.url,
-                    autocorrect: false,
-                    validator: (value) {
-                      final text = value?.trim() ?? '';
+          appBar: AppBar(title: const Text('Ustawienia')),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SettingsSectionCard(
+                      icon: Icons.cloud_outlined,
+                      title: 'Nightscout',
+                      subtitle:
+                          'Podaj adres swojego Nightscout. Bez niego nie możemy pobrać danych.',
+                      children: [
+                        TextFormField(
+                          controller: urlController,
+                          decoration: const InputDecoration(
+                            labelText: 'Nightscout URL',
+                            hintText: 'https://twoj-nightscout.com',
+                          ),
+                          keyboardType: TextInputType.url,
+                          autocorrect: false,
+                          validator: (value) {
+                            final text = value?.trim() ?? '';
 
-                      if (text.isEmpty) {
-                        return 'Podaj adres Nightscout';
-                      }
+                            if (text.isEmpty) {
+                              return 'Podaj adres Nightscout';
+                            }
 
-                      final uri = Uri.tryParse(text);
-                      if (uri == null ||
-                          !uri.hasScheme ||
-                          (uri.scheme != 'http' && uri.scheme != 'https') ||
-                          uri.host.isEmpty) {
-                        return 'Podaj poprawny adres URL';
-                      }
+                            final uri = Uri.tryParse(text);
+                            if (uri == null ||
+                                !uri.hasScheme ||
+                                (uri.scheme != 'http' &&
+                                    uri.scheme != 'https') ||
+                                uri.host.isEmpty) {
+                              return 'Podaj poprawny adres URL';
+                            }
 
-                      return null;
-                    },
-                    onChanged: (_) {
-                      if (submitError.value != null) {
-                        submitError.value = null;
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: childNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Imię dziecka',
-                      hintText: 'Oliwier',
+                            return null;
+                          },
+                          onChanged: (_) {
+                            if (submitError.value != null) {
+                              submitError.value = null;
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: childNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Imię dziecka',
+                            hintText: 'Oliwier',
+                          ),
+                          textCapitalization: TextCapitalization.words,
+                        ),
+                        if (submitError.value != null) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            submitError.value!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: isSaving.value ? null : handleSave,
+                          icon: isSaving.value
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.save_outlined),
+                          label: const Text('Zapisz i przejdź dalej'),
+                        ),
+                      ],
                     ),
-                    textCapitalization: TextCapitalization.words,
-                  ),
-                  if (submitError.value != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      submitError.value!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                    const SizedBox(height: 16),
+                    SettingsSectionCard(
+                      icon: Icons.receipt_long_outlined,
+                      title: 'Logi',
+                      subtitle: 'Zbierz pliki diagnostyczne z UI lub tła.',
+                      children: [
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: () async {
+                                final nowString = clock.now().toIso8601String();
+                                final fileName = 'logs-$nowString-ui.txt';
+                                final file = await LogFileWriter.writeLogs(
+                                  Log.bufferedLogs,
+                                  fileName,
+                                );
+                                await SharePlus.instance.share(
+                                  ShareParams(files: [XFile(file.path)]),
+                                );
+                              },
+                              icon: const Icon(Icons.ios_share_outlined),
+                              label: const Text('Logi z UI'),
+                            ),
+                            FilledButton.icon(
+                              onPressed: () {
+                                final nowString = clock.now().toIso8601String();
+                                final fileName = 'logs-$nowString-fg.txt';
+                                final payload = DumpLogsEvent.saveToFile(
+                                  name: fileName,
+                                );
+                                ref.read(appEventRouterProvider).send(payload);
+                              },
+                              icon: const Icon(Icons.download_outlined),
+                              label: const Text('Logi z tła'),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 16),
+                    const DatabaseSettingsSection(),
                   ],
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      FilledButton(
-                        onPressed: () async {
-                          final nowString = clock.now().toIso8601String();
-                          final fileName = 'logs-$nowString-ui.txt';
-                          final file = await LogFileWriter.writeLogs(
-                            Log.bufferedLogs,
-                            fileName,
-                          );
-                          await SharePlus.instance.share(
-                            ShareParams(files: [XFile(file.path)]),
-                          );
-                        },
-                        child: const Text('Zbierz logi z ui'),
-                      ),
-                      const SizedBox(width: 10),
-                      FilledButton(
-                        onPressed: () {
-                          final nowString = clock.now().toIso8601String();
-                          final fileName = 'logs-$nowString-fg.txt';
-                          final payload = DumpLogsEvent.saveToFile(
-                            name: fileName,
-                          );
-                          ref.read(appEventRouterProvider).send(payload);
-                        },
-                        child: const Text('Zbierz logi z tła'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: isSaving.value ? null : handleSave,
-                    child: isSaving.value
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Zapisz i przejdź dalej'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
