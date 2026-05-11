@@ -1,6 +1,10 @@
 import 'package:clock/clock.dart';
 
+import '../../../../../core/domain/model/temporary_target.dart';
+import '../../../../../core/notifications/domain/events/temp_target_notification.dart';
+import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../event/internal/activity_event.dart';
+import '../../../../event/internal/treatment_available_event.dart';
 import '../../../../event/model/foreground_event.dart';
 import '../../../base/runtime_context.dart';
 import '../activity_monitor_context.dart';
@@ -9,6 +13,9 @@ import 'monitor_active_activity_executor.dart';
 
 class MonitorUntilActivityExecutor extends ActivityMonitorStateExecutor {
   const MonitorUntilActivityExecutor();
+
+  static const tempTargetSuggestionLeadTime = Duration(minutes: 45);
+  static const tempTargetSuggestionRetryInterval = Duration(minutes: 5);
 
   @override
   List<Type> get interruptableEvents => [
@@ -58,13 +65,46 @@ class MonitorUntilActivityExecutor extends ActivityMonitorStateExecutor {
       return const MonitorActiveActivityExecutor();
     }
 
-    final waitTime = startsAt.difference(clock.now());
-    if (waitTime <= Duration.zero) {
+    final timeToActivity = startsAt.difference(clock.now());
+    if (timeToActivity <= Duration.zero) {
       return const MonitorActiveActivityExecutor();
     }
 
-    logI("Sleeping until activity starts in ${waitTime.inMinutes} minutes");
-    await runtimeContext.waitForDuration(waitTime);
+    if (timeToActivity > tempTargetSuggestionLeadTime) {
+      final waitTime = timeToActivity - tempTargetSuggestionLeadTime;
+      logI(
+        "Sleeping until activity temp target window in "
+        "${waitTime.inMinutes} minutes",
+      );
+      await runtimeContext.waitForDuration(waitTime);
+    }
+
+    while (startsAt.isAfter(clock.now())) {
+      final activityLogId = activityMonitorContext.activityLogId;
+      if (activityLogId == null) {
+        return const MonitorActiveActivityExecutor();
+      }
+
+      logI("Showing activity temp target suggestion");
+      await runtimeContext.container
+          .read(notificationsControllerForegroundProvider)
+          .show(TempTargetNotificationEvent.activity(entityId: activityLogId));
+
+      final remaining = startsAt.difference(clock.now());
+      final waitTime = remaining < tempTargetSuggestionRetryInterval
+          ? remaining
+          : tempTargetSuggestionRetryInterval;
+      final targetEvent = await runtimeContext
+          .waitForEventWithTimeoutOrNull<
+            TreatmentAvailableEvent<TemporaryTarget>
+          >(waitTime);
+
+      if (targetEvent != null) {
+        logI("Activity temp target detected, waiting for activity start");
+        await runtimeContext.waitUntil(startsAt);
+        break;
+      }
+    }
 
     return const MonitorActiveActivityExecutor();
   }

@@ -2,12 +2,15 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/events/data/notification/activity_finished_response_event.dart';
+import 'package:diabeatthis/core/domain/model/temporary_target.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
 import 'package:diabeatthis/core/notifications/domain/events/activity_finished_notification.dart';
+import 'package:diabeatthis/core/notifications/domain/events/temp_target_notification.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/foreground/event/internal/activity_event.dart';
+import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
 import 'package:diabeatthis/foreground/task/tasks/activity_monitor_task/activity_monitor_task.dart';
 import 'package:diabeatthis/foreground/task/tasks/activity_monitor_task/executors/idle_executor.dart';
@@ -43,34 +46,128 @@ void main() {
         await _settle();
 
         expect(task.state, isA<MonitorUntilActivityExecutor>());
-        expect(notifications.shownEvents, isEmpty);
+        expect(notifications.shownEvents, hasLength(1));
+        expect(
+          notifications.shownEvents.single,
+          isA<TempTargetNotificationEvent>(),
+        );
+
+        harness.dispatchEvent(
+          TreatmentAvailableEvent<TemporaryTarget>(_temporaryTarget(now)),
+        );
+        await _settle();
 
         now = startsAt.subtract(const Duration(minutes: 1));
         await _dispatchTick(harness, now);
 
         expect(task.state, isA<MonitorUntilActivityExecutor>());
-        expect(notifications.shownEvents, isEmpty);
+        expect(notifications.shownEvents, hasLength(1));
 
         now = startsAt;
         await _dispatchTick(harness, now);
 
         expect(task.state, isA<MonitorActiveActivityExecutor>());
-        expect(notifications.shownEvents, isEmpty);
+        expect(notifications.shownEvents, hasLength(1));
 
         now = startsAt.add(const Duration(minutes: 29));
         await _dispatchTick(harness, now);
 
-        expect(notifications.shownEvents, isEmpty);
+        expect(notifications.shownEvents, hasLength(1));
 
         now = startsAt.add(const Duration(minutes: 30));
         await _dispatchTick(harness, now);
 
-        expect(notifications.shownEvents, hasLength(1));
-        final event = notifications.shownEvents.single;
+        expect(notifications.shownEvents, hasLength(2));
+        final event = notifications.shownEvents.last;
         expect(event, isA<ActivityFinishedNotificationEvent>());
         expect((event as ActivityFinishedNotificationEvent).activityLogId, 1);
       });
     });
+
+    test(
+      'shows activity temp target reminder 45 minutes before activity',
+      () async {
+        final db = DatabaseImpl(NativeDatabase.memory());
+        addTearDown(db.close);
+
+        var now = DateTime(2026, 3, 23, 12);
+        final startsAt = now.add(const Duration(minutes: 60));
+        await _seedActivityLog(db, startsAt: startsAt, durationMinutes: 30);
+
+        await withClock(Clock(() => now), () async {
+          final notifications = FakeNotificationsController();
+          final harness = _startHarness(db, notifications);
+          addTearDown(harness.dispose);
+
+          final task = ActivityMonitorTask();
+          _runTask(task, harness);
+          await _settle();
+
+          expect(task.state, isA<MonitorUntilActivityExecutor>());
+          expect(notifications.shownEvents, isEmpty);
+
+          now = startsAt.subtract(const Duration(minutes: 46));
+          await _dispatchTick(harness, now);
+
+          expect(notifications.shownEvents, isEmpty);
+
+          now = startsAt.subtract(const Duration(minutes: 45));
+          await _dispatchTick(harness, now);
+
+          expect(notifications.shownEvents, hasLength(1));
+          final event = notifications.shownEvents.single;
+          expect(event, isA<TempTargetNotificationEvent>());
+          expect((event as TempTargetNotificationEvent).entityId, 1);
+          expect(event.targetType, 'activity');
+          expect(task.state, isA<MonitorUntilActivityExecutor>());
+        });
+      },
+    );
+
+    test(
+      'repeats activity temp target reminder every 5 minutes until target event',
+      () async {
+        final db = DatabaseImpl(NativeDatabase.memory());
+        addTearDown(db.close);
+
+        var now = DateTime(2026, 3, 23, 12);
+        final startsAt = now.add(const Duration(minutes: 45));
+        await _seedActivityLog(db, startsAt: startsAt, durationMinutes: 30);
+
+        await withClock(Clock(() => now), () async {
+          final notifications = FakeNotificationsController();
+          final harness = _startHarness(db, notifications);
+          addTearDown(harness.dispose);
+
+          final task = ActivityMonitorTask();
+          _runTask(task, harness);
+          await _settle();
+
+          expect(notifications.shownEvents, hasLength(1));
+
+          now = now.add(const Duration(minutes: 5));
+          await _dispatchTick(harness, now);
+
+          expect(notifications.shownEvents, hasLength(2));
+
+          harness.dispatchEvent(
+            TreatmentAvailableEvent<TemporaryTarget>(_temporaryTarget(now)),
+          );
+          await _settle();
+
+          now = now.add(const Duration(minutes: 5));
+          await _dispatchTick(harness, now);
+
+          expect(notifications.shownEvents, hasLength(2));
+          expect(task.state, isA<MonitorUntilActivityExecutor>());
+
+          now = startsAt;
+          await _dispatchTick(harness, now);
+
+          expect(task.state, isA<MonitorActiveActivityExecutor>());
+        });
+      },
+    );
 
     test('confirmation ends active activity and returns to idle', () async {
       final db = DatabaseImpl(NativeDatabase.memory());
@@ -169,7 +266,7 @@ void main() {
       addTearDown(db.close);
 
       final now = DateTime(2026, 3, 23, 12);
-      final startsAt = now.add(const Duration(minutes: 30));
+      final startsAt = now.add(const Duration(minutes: 60));
       await _seedActivityLog(db, startsAt: startsAt, durationMinutes: 30);
 
       await withClock(Clock(() => now), () async {
@@ -256,6 +353,18 @@ Future<void> _seedActivityLog(
     ) VALUES (1, 1, ?)
     ''',
     variables: [Variable<int>(startsAt.millisecondsSinceEpoch)],
+  );
+}
+
+TemporaryTarget _temporaryTarget(DateTime createdAt) {
+  return TemporaryTarget(
+    id: 1,
+    nightscoutId: 'target-1',
+    createdAt: createdAt,
+    durationInMiliseconds: const Duration(hours: 1).inMilliseconds,
+    duration: 60,
+    targetBottom: 150,
+    targetTop: 150,
   );
 }
 
