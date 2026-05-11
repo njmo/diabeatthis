@@ -33,9 +33,10 @@ class ActivityLogPage extends ConsumerWidget {
         data: (state) {
           final log = state.data;
           final scheme = Theme.of(context).colorScheme;
+          final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding),
             children: [
               Card(
                 child: Padding(

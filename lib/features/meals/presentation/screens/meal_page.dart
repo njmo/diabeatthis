@@ -47,9 +47,10 @@ class MealPageBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final details = state.details;
+    final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding),
       children: [
         MealHeader(state: state),
         const SizedBox(height: 12),

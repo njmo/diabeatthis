@@ -35,6 +35,8 @@ class IngredientListContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
+
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         final isUserScroll =
@@ -87,7 +89,7 @@ class IngredientListContent extends StatelessWidget {
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPadding),
               sliver: SliverList.separated(
                 itemCount: ingredients.length + (onLoadMore == null ? 0 : 1),
                 itemBuilder: (context, index) {

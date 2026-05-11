@@ -79,6 +79,8 @@ class ActivityList extends HookConsumerWidget {
       );
     }
 
+    final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
+
     return SafeArea(
       top: false,
       child: Padding(
@@ -94,7 +96,7 @@ class ActivityList extends HookConsumerWidget {
             return false;
           },
           child: ListView.separated(
-            padding: const EdgeInsets.only(bottom: 16),
+            padding: EdgeInsets.only(bottom: bottomPadding),
             cacheExtent: 0,
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
