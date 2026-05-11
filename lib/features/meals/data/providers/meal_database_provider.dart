@@ -13,15 +13,15 @@ part 'meal_database_provider.g.dart';
 
 const mealListPageSize = 10;
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<void> updateMeal(Ref ref, domain.Meal meal, String status) async {
-  final db = ref.watch(databaseProvider);
+  final db = ref.read(databaseProvider);
   await db.mealDao.updateMealStatus(meal.id, status);
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<void> updateMealById(Ref ref, int mealId, String status) async {
-  final db = ref.watch(databaseProvider);
+  final db = ref.read(databaseProvider);
   await db.mealDao.updateMealStatus(mealId, status);
 }
 

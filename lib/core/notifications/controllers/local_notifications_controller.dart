@@ -54,6 +54,8 @@ class LocalNotificationsController implements NotificationsController {
 
   @override
   Future<void> schedule(NotificationEvent event, Duration duration) async {
+    bootstrap.ensureTimeZonesInitialized();
+
     final androidDetails = event.toAndroidNotificationDetails();
     final iosDetails = event.toDarwinNotificationDetails();
     final id = _idFactory.create(event.key);

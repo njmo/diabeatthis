@@ -6,9 +6,20 @@ import '../definitions/notification_definition_catalog_impl.dart';
 import '../handlers/notification_response_handler.dart';
 import '../mappers/darwin_notification_category_mapper.dart';
 
-Future<void> init(FlutterLocalNotificationsPlugin plugin) async {
+bool _timeZonesInitialized = false;
+
+void ensureTimeZonesInitialized() {
+  if (_timeZonesInitialized) {
+    return;
+  }
+
   tz.initializeTimeZones();
   tz.setLocalLocation(tz.getLocation('Europe/Warsaw'));
+  _timeZonesInitialized = true;
+}
+
+Future<void> init(FlutterLocalNotificationsPlugin plugin) async {
+  ensureTimeZonesInitialized();
 
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
 
