@@ -152,7 +152,11 @@ class _MealCard extends StatelessWidget {
                 children: [
                   _MetaPill(
                     icon: Icons.access_time,
-                    text: _shortTime(meal.plannedAt),
+                    text: _formatDateTime(meal.plannedAt),
+                  ),
+                  _MetaPill(
+                    icon: Icons.history,
+                    text: _daysAgo(meal.plannedAt),
                   ),
                   _MetaPill(
                     icon: Icons.flag_outlined,
@@ -199,6 +203,24 @@ class _MealCard extends StatelessWidget {
     final day = dt.day.toString().padLeft(2, '0');
     final month = dt.month.toString().padLeft(2, '0');
     return '$day.$month.${dt.year}';
+  }
+
+  static String _formatDateTime(DateTime? dt) {
+    if (dt == null) return '-';
+    return '${_shortTime(dt)} ${_formatDate(dt)}';
+  }
+
+  static String _daysAgo(DateTime? dt) {
+    if (dt == null) return '-';
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(dt.year, dt.month, dt.day);
+    final days = today.difference(day).inDays;
+
+    if (days == 0) return 'Dzisiaj';
+    if (days == 1) return 'Wczoraj';
+    if (days < 0) return 'Za ${-days} dni';
+    return '$days dni temu';
   }
 }
 

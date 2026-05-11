@@ -10,7 +10,7 @@ import '../../../meals/presentation/widgets/confidence_slider.dart';
 
 part 'ingredient_provider.g.dart';
 
-const ingredientListPageSize = 15;
+const ingredientListPageSize = 10;
 
 @riverpod
 Stream<List<domain.Ingredient>> ingredientsStream(Ref ref) {

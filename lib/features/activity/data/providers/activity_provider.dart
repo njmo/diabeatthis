@@ -10,7 +10,7 @@ import '../../../../core/logger/logger.dart';
 
 part 'activity_provider.g.dart';
 
-const activityLogListPageSize = 15;
+const activityLogListPageSize = 10;
 
 @riverpod
 class ActivityDraftNotifier extends _$ActivityDraftNotifier {

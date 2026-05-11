@@ -134,7 +134,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   Stream<List<MealData>> getAllMeals({int page = 0}) {
     final query = select(db.meal)
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)])
-      ..limit(15, offset: page * 15);
+      ..limit(10, offset: page * 10);
     return query.watch();
   }
 

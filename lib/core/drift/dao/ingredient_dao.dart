@@ -26,7 +26,7 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
   Future<List<IngredientData>> getIngredientsPage({int page = 0}) {
     final query = select(db.ingredient)
       ..orderBy([(tbl) => OrderingTerm.asc(tbl.name)])
-      ..limit(15, offset: page * 15);
+      ..limit(10, offset: page * 10);
 
     return query.get();
   }

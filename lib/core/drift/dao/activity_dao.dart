@@ -20,7 +20,7 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
   Future<List<ActivityLogData>> getActivityLogs({int page = 0}) async {
     return (select(db.activityLog)
           ..orderBy([(log) => OrderingTerm.desc(log.startedAt)])
-          ..limit(15, offset: page * 15))
+          ..limit(10, offset: page * 10))
         .get();
   }
 
