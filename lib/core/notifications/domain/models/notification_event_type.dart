@@ -2,5 +2,6 @@ enum NotificationEventType {
   eatNow,
   tempTarget,
   finishedEating,
-  mealSuggestion
+  mealSuggestion,
+  mealSummaryReminder,
 }

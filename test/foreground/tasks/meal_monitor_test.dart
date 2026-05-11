@@ -2,29 +2,37 @@ import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/events/data/notification/eat_now_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/finished_eating_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/meal_suggestion_response_event.dart';
+import 'package:diabeatthis/common/events/data/notification/meal_summary_reminder_response_event.dart';
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
+import 'package:diabeatthis/core/drift/database_impl.dart' hide Meal;
+import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
 import 'package:diabeatthis/core/notifications/domain/events/eat_now_event_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/finished_eating_event_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_suggestion_notification.dart';
+import 'package:diabeatthis/core/notifications/domain/events/meal_summary_reminder_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/temp_target_notification.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/utils/meal_advisor.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_database_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
+import 'package:diabeatthis/foreground/event/external/notification/notification_response_event.dart';
+import 'package:diabeatthis/foreground/event/external/notification/notification_response_event_handler.dart';
 import 'package:diabeatthis/foreground/event/internal/data_available_event.dart';
 import 'package:diabeatthis/foreground/event/internal/meal_status_changed_event.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/providers/device_status_value_provider.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/bolus_then_wait_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/detect_finished_eating_executor.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/finalize_meal_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/idle_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/meal_monitor_state_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/monitor_until_meal.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_task.dart';
+import 'package:drift/native.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -118,12 +126,42 @@ void main() {
       expect(event.mealId, 1);
     });
 
+    test('summary reminder action saves planned amount as consumed', () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      await _seedPlannedMeal(db);
+
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(container.dispose);
+
+      final harness = FakeRuntimeHarness(container: container);
+      NotificationResponseEventHandler().handle(
+        NotificationResponseEvent.mealSummaryReminderResponse(
+          data: MealSummaryReminderResponseEvent.agree(mealId: 1),
+        ),
+        harness.runtimeContext,
+      );
+
+      await _flushMicrotasks();
+
+      final meal = await db.mealDao.getMealById(1);
+      final snapshots = await db.select(db.mealSnapshot).get();
+
+      expect(meal?.status, 'summarized');
+      expect(snapshots, hasLength(1));
+      expect(snapshots.single.snapshotType, 'consumed');
+      expect(snapshots.single.totalNetCarbsG, 15);
+    });
+
     test(
       'manual meal start shows finished eating notification and returns to idle after confirmation',
       () {
         fakeAsync((async) {
           final start = DateTime(2026, 3, 23, 12, 0);
           withFakeClock(async, start, () {
+            fakeNotifications.scheduledEvents.clear();
             final calls = <(Meal, String)>{};
             final container = ProviderContainer(
               parent: parentContainer,
@@ -175,6 +213,19 @@ void main() {
             calls.remove((m, s));
 
             expect(fakeNotifications.shownEvents, hasLength(0));
+            expect(fakeNotifications.scheduledEvents, hasLength(1));
+            final scheduled = fakeNotifications.scheduledEvents.single;
+            expect(
+              scheduled.event,
+              isA<MealSummaryReminderNotificationEvent>(),
+            );
+            final reminder =
+                scheduled.event as MealSummaryReminderNotificationEvent;
+            expect(reminder.mealId, 1);
+            expect(
+              scheduled.duration,
+              FinalizeMealExecutor.summaryReminderDelay,
+            );
             expect(calls, hasLength(0));
             expect(task.state, isA<MealMonitorStateIdle>());
           });
@@ -1737,4 +1788,43 @@ void main() {
       });
     });
   });
+}
+
+Future<void> _flushMicrotasks() async {
+  await Future<void>.delayed(Duration.zero);
+  await Future<void>.delayed(Duration.zero);
+}
+
+Future<void> _seedPlannedMeal(DatabaseImpl db) async {
+  await db.customInsert('''
+    INSERT INTO ingredient (
+      id,
+      name,
+      carbs_per_100g,
+      fat_per_100g,
+      fiber_per_100g,
+      protein_per_100g,
+      nutrition_confidence
+    ) VALUES (1, 'Ryż', 20, 0, 5, 2, 1)
+  ''');
+
+  await db.customInsert('''
+    INSERT INTO meal (
+      id,
+      name,
+      planned_at,
+      status
+    ) VALUES (1, 'Obiad', 1774270800000, 'eaten')
+  ''');
+
+  await db.customInsert('''
+    INSERT INTO meal_ingredients (
+      id,
+      meal_id,
+      ingredient_id,
+      portion_id,
+      amount,
+      quantity_confidence
+    ) VALUES (1, 1, 1, NULL, 100, 1)
+  ''');
 }
