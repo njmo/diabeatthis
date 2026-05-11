@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../core/domain/model/meal.dart';
@@ -13,71 +12,152 @@ class MealList extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pagingController = useMemoized(
-      () => PagingController<int, Meal>(
-        getNextPageKey: _nextPageKey,
-        fetchPage: (pageKey) => ref.read(mealListPageProvider(pageKey).future),
-      ),
-      const [],
-    );
-    useEffect(() => pagingController.dispose, [pagingController]);
+    final meals = useState<List<Meal>>(const []);
+    final nextPage = useState(0);
+    final isLoading = useState(false);
+    final hasMore = useState(true);
+    final error = useState<Object?>(null);
+
+    Future<void> loadNextPage() async {
+      if (isLoading.value || !hasMore.value) {
+        return;
+      }
+
+      isLoading.value = true;
+      try {
+        await Future<void>.delayed(const Duration(seconds: 1));
+        if (!context.mounted) return;
+
+        final page = await ref.read(
+          mealListPageProvider(nextPage.value).future,
+        );
+        if (!context.mounted) return;
+
+        meals.value = [...meals.value, ...page];
+        nextPage.value += 1;
+        hasMore.value = page.length == mealListPageSize;
+        error.value = null;
+      } catch (e) {
+        if (!context.mounted) return;
+        error.value = e;
+      } finally {
+        if (context.mounted) {
+          isLoading.value = false;
+        }
+      }
+    }
+
+    useEffect(() {
+      loadNextPage();
+      return null;
+    }, const []);
+
+    if (meals.value.isEmpty && isLoading.value) {
+      return const SafeArea(
+        top: false,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (meals.value.isEmpty && error.value != null) {
+      return SafeArea(
+        top: false,
+        child: Center(
+          child: TextButton.icon(
+            onPressed: loadNextPage,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Spróbuj ponownie'),
+          ),
+        ),
+      );
+    }
+
+    if (meals.value.isEmpty) {
+      return const SafeArea(
+        top: false,
+        child: Center(child: Text('Brak posiłków')),
+      );
+    }
 
     return SafeArea(
       top: false,
-      child: PagingListener(
-        controller: pagingController,
-        builder: (context, state, fetchNextPage) {
-          return PagedListView<int, Meal>.separated(
-            state: state,
-            fetchNextPage: fetchNextPage,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            cacheExtent: 0,
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
-            builderDelegate: PagedChildBuilderDelegate<Meal>(
-              invisibleItemsThreshold: 0,
-              itemBuilder: (context, meal, index) {
-                return _MealCard(
-                  meal: meal,
-                  onTap: () =>
-                      context.router.push(routes.MealRoute(mealId: meal.id)),
-                );
-              },
-              firstPageProgressIndicatorBuilder: (_) =>
-                  const Center(child: CircularProgressIndicator()),
-              newPageProgressIndicatorBuilder: (_) => const Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              noItemsFoundIndicatorBuilder: (_) =>
-                  const Center(child: Text('Brak posiłków')),
-              firstPageErrorIndicatorBuilder: (_) =>
-                  const Center(child: Text('Nie udało się wczytać posiłków')),
-              newPageErrorIndicatorBuilder: (_) => Center(
-                child: TextButton.icon(
-                  onPressed: fetchNextPage,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Spróbuj ponownie'),
-                ),
-              ),
-              noMoreItemsIndicatorBuilder: (_) => const SizedBox(height: 8),
-            ),
-          );
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          final isUserScroll =
+              notification is ScrollUpdateNotification ||
+              notification is OverscrollNotification;
+          if (isUserScroll && notification.metrics.extentAfter < 120) {
+            loadNextPage();
+          }
+          return false;
         },
+        child: ListView.separated(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          cacheExtent: 0,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemCount: meals.value.length + 1,
+          itemBuilder: (context, index) {
+            if (index == meals.value.length) {
+              return _MealListTail(
+                isLoading: isLoading.value,
+                hasMore: hasMore.value,
+                hasError: error.value != null,
+                onRetry: loadNextPage,
+              );
+            }
+
+            final meal = meals.value[index];
+            return _MealCard(
+              meal: meal,
+              onTap: () =>
+                  context.router.push(routes.MealRoute(mealId: meal.id)),
+            );
+          },
+        ),
       ),
     );
   }
 }
 
-int? _nextPageKey(PagingState<int, Meal> state) {
-  final pages = state.pages;
-  if (pages != null &&
-      pages.isNotEmpty &&
-      pages.last.length < mealListPageSize) {
-    return null;
+class _MealListTail extends StatelessWidget {
+  final bool isLoading;
+  final bool hasMore;
+  final bool hasError;
+  final VoidCallback onRetry;
+
+  const _MealListTail({
+    required this.isLoading,
+    required this.hasMore,
+    required this.hasError,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (hasError) {
+      return Center(
+        child: TextButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh),
+          label: const Text('Spróbuj ponownie'),
+        ),
+      );
+    }
+
+    if (!hasMore) {
+      return const SizedBox(height: 8);
+    }
+
+    return const SizedBox(height: 24);
   }
-  final keys = state.keys;
-  return keys == null || keys.isEmpty ? 0 : keys.last + 1;
 }
 
 class _MealCard extends StatelessWidget {
