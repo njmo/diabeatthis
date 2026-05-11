@@ -34,9 +34,11 @@ class ActivityList extends HookConsumerWidget {
               state: state,
               fetchNextPage: fetchNextPage,
               padding: const EdgeInsets.only(bottom: 16),
+              cacheExtent: 0,
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               separatorBuilder: (_, _) => const SizedBox(height: 8),
               builderDelegate: PagedChildBuilderDelegate<ActivityLog>(
+                invisibleItemsThreshold: 0,
                 itemBuilder: (context, activity, index) {
                   return activity.whenOrNull(
                         view: (id, name, activityId, startedAt, endedAt) {

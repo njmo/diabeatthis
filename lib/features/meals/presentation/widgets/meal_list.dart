@@ -31,9 +31,11 @@ class MealList extends HookConsumerWidget {
             state: state,
             fetchNextPage: fetchNextPage,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            cacheExtent: 0,
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             builderDelegate: PagedChildBuilderDelegate<Meal>(
+              invisibleItemsThreshold: 0,
               itemBuilder: (context, meal, index) {
                 return _MealCard(
                   meal: meal,

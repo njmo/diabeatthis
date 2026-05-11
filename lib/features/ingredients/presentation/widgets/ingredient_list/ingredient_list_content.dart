@@ -33,6 +33,7 @@ class IngredientListContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
+      cacheExtent: 0,
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -58,6 +59,7 @@ class IngredientListContent extends StatelessWidget {
               fetchNextPage: fetchNextPage!,
               separatorBuilder: (context, index) => const SizedBox(height: 8),
               builderDelegate: PagedChildBuilderDelegate<Ingredient>(
+                invisibleItemsThreshold: 0,
                 itemBuilder: (context, ingredient, index) {
                   return IngredientListItem(
                     ingredient: ingredient,
