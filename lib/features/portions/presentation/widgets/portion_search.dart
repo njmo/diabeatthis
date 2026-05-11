@@ -74,7 +74,7 @@ class PortionSearch extends HookConsumerWidget with Logging {
                 child: SafeArea(
                   child: ListView.builder(
                     itemBuilder: (context, index) {
-                      if (data.isEmpty) return Text('No data');
+                      if (data.isEmpty) return Text('Brak danych');
                       final portion = data[index];
                       return ListTile(
                         title: Text(

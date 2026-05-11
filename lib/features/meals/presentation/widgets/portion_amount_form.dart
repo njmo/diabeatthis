@@ -14,51 +14,53 @@ class PortionAmountForm extends HookConsumerWidget {
     return AlertDialog(
       content: SingleChildScrollView(
         child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Zdefiniu ilosc porcji"),
-              SizedBox(height: 16),
-              StringFormField(
-                label: 'Ilosc porcji',
-                value: '',
-                onChanged: (value) { amount.value = value; },
-                builder: (context, controller) {
-                  return TextFormField(
-                    controller: controller,
-                    maxLength: 30,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if ((value == null)) {
-                        return 'Ilosc porcji';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      labelText: 'Ilosc porcji',
-                      border: OutlineInputBorder(),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Zdefiniuj ilość porcji'),
+            SizedBox(height: 16),
+            StringFormField(
+              label: 'Ilość porcji',
+              value: '',
+              onChanged: (value) {
+                amount.value = value;
+              },
+              builder: (context, controller) {
+                return TextFormField(
+                  controller: controller,
+                  maxLength: 30,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Podaj ilość porcji';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Ilość porcji',
+                    border: OutlineInputBorder(),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
+      ),
       actions: [
         Row(
           children: [
             Expanded(
               child: TextButton(
                 onPressed: () {
-                    Navigator.of(context).pop(int.tryParse(amount.value) ?? 0);
+                  Navigator.of(context).pop(int.tryParse(amount.value) ?? 0);
                 },
-                child: const Text('Add'),
+                child: const Text('Dodaj'),
               ),
             ),
             Expanded(
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
+                child: const Text('Anuluj'),
               ),
             ),
           ],

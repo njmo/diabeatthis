@@ -71,7 +71,7 @@ class IngredientForm extends HookConsumerWidget {
                     return null;
                   },
                   decoration: const InputDecoration(
-                    labelText: 'Brand',
+                    labelText: 'Producent',
                     border: OutlineInputBorder(),
                   ),
                 );
@@ -105,7 +105,7 @@ class IngredientForm extends HookConsumerWidget {
                           return null;
                         },
                         decoration: const InputDecoration(
-                          labelText: 'Weglowodany',
+                          labelText: 'Węglowodany',
                           border: OutlineInputBorder(),
                         ),
                       );

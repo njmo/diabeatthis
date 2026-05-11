@@ -29,10 +29,12 @@ class CopiedMealPicker extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextField(
-            onChanged: (value) { query.value = value; },
+            onChanged: (value) {
+              query.value = value;
+            },
             autofocus: true,
             decoration: const InputDecoration(
-              labelText: 'Nazwa szablonu',
+              labelText: 'Nazwa posiłku lub szablonu',
               icon: Icon(Icons.search),
               border: OutlineInputBorder(),
             ),

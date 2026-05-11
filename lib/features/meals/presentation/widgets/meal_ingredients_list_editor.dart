@@ -23,7 +23,7 @@ class MealIngredientsListEditor extends ConsumerWidget {
           calculatedMacronutrients.when(
             data: (value) => NutrientSummaryChart(macros: value),
             loading: () => const CircularProgressIndicator(),
-            error: (err, _) => Text('Ingredients (error: $err)'),
+            error: (err, _) => Text('Składniki (błąd: $err)'),
           ),
           const SizedBox(height: 16),
           Row(
@@ -31,18 +31,21 @@ class MealIngredientsListEditor extends ConsumerWidget {
               Expanded(
                 child: Row(
                   children: [
-                    Text('Ingredients list:', style: TextStyle(fontSize: 20),),
+                    Text('Lista składników:', style: TextStyle(fontSize: 20)),
                     const Spacer(),
                     InkWell(
                       onTap: () async {
-                        final mealIngredient = await showModalBottomSheet<MealIngredientsDraft>(
-                          context: context,
-                          useRootNavigator: false,
-                          isScrollControlled: true,
-                          builder: (_) => AddMealIngredient(),
-                        );
+                        final mealIngredient =
+                            await showModalBottomSheet<MealIngredientsDraft>(
+                              context: context,
+                              useRootNavigator: false,
+                              isScrollControlled: true,
+                              builder: (_) => AddMealIngredient(),
+                            );
                         if (mealIngredient != null) {
-                          ref.read(mealDraftProvider.notifier).addMealIngredient(mealIngredient);
+                          ref
+                              .read(mealDraftProvider.notifier)
+                              .addMealIngredient(mealIngredient);
                         }
                       },
                       child: const Icon(Icons.add_box, size: 20),

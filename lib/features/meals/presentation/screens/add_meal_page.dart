@@ -46,7 +46,7 @@ class AddMealPage extends HookConsumerWidget with Logging {
                             if ((value == null) ||
                                 (value.isEmpty) ||
                                 (value.length < 5)) {
-                              return 'Wpisz nazwe posiłku';
+                              return 'Wpisz nazwę posiłku';
                             }
                             return null;
                           },
@@ -128,7 +128,7 @@ class AddMealPage extends HookConsumerWidget with Logging {
                           },
                           validator: (value) {
                             if ((value == null) || (value.isEmpty)) {
-                              return 'Wybierz date';
+                              return 'Wybierz datę';
                             }
                             return null;
                           },

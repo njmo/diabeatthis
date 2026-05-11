@@ -11,7 +11,9 @@ class IngredientPortionAmountForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mealIngredientDraft = ref.watch(ingredientPortionAmountDraftProvider.notifier);
+    final mealIngredientDraft = ref.watch(
+      ingredientPortionAmountDraftProvider.notifier,
+    );
     final formKey = ref.watch(mealIngredientFormKeyProvider);
 
     return SingleChildScrollView(
@@ -25,7 +27,7 @@ class IngredientPortionAmountForm extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               StringFormField(
-                label: 'Wielkosc porcji w gramie',
+                label: 'Wielkość porcji w gramach',
                 value: '',
                 onChanged: mealIngredientDraft.setAmount,
                 builder: (context, controller) {
@@ -35,7 +37,9 @@ class IngredientPortionAmountForm extends HookConsumerWidget {
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     validator: (value) {
-                      if ((value == null) || (value.isEmpty) || (int.tryParse(value) ?? 0) == 0) {
+                      if ((value == null) ||
+                          (value.isEmpty) ||
+                          (int.tryParse(value) ?? 0) == 0) {
                         return '';
                       }
                       return null;

@@ -37,36 +37,36 @@ class AddMealIngredient extends ConsumerWidget {
             switch (addingStage) {
               AddMealIngredientStage.ingredientSearch =>
                 _textWithSearchTransition(
-                  'Ingredient search',
+                  'Wyszukaj składnik',
                   Icon(Icons.add_box),
                   addingStateNotifier,
                 ),
               AddMealIngredientStage.ingredientForm =>
                 _textWithSearchTransition(
-                  'Ingredient form',
+                  'Dodaj składnik',
                   Icon(Icons.search),
                   addingStateNotifier,
                 ),
               AddMealIngredientStage.portionAddNewSearch =>
                 _textWithSearchTransition(
-                  'Portion add new portion to ingredient',
+                  'Wybierz porcję dla składnika',
                   Icon(Icons.add),
                   addingStateNotifier,
                 ),
               AddMealIngredientStage.definedPortionsSearch =>
                 _textWithSearchTransition(
-                  'Portion search existing portions',
+                  'Wyszukaj istniejącą porcję',
                   Icon(Icons.add_box),
                   addingStateNotifier,
                 ),
-              AddMealIngredientStage.amountForm => Text('Amount form'),
-              AddMealIngredientStage.summary => Text('Summary'),
+              AddMealIngredientStage.amountForm => Text('Ilość'),
+              AddMealIngredientStage.summary => Text('Podsumowanie'),
               AddMealIngredientStage.portionSpecifyAmount => Text(
-                'Ingredient amount in portion',
+                'Waga składnika w porcji',
               ),
               AddMealIngredientStage.portionAddNewForm =>
                 _textWithSearchTransition(
-                  'Portion add new portion',
+                  'Dodaj nową porcję',
                   Icon(Icons.search),
                   addingStateNotifier,
                 ),
@@ -105,8 +105,8 @@ class AddMealIngredient extends ConsumerWidget {
                       }
                     },
                     child: (addingStage == AddMealIngredientStage.summary)
-                        ? Text('Add')
-                        : Text('Next'),
+                        ? Text('Dodaj')
+                        : Text('Dalej'),
                   ),
                 ),
                 addingStage != AddMealIngredientStage.definedPortionsSearch &&
@@ -118,7 +118,7 @@ class AddMealIngredient extends ConsumerWidget {
                           onPressed: () {
                             addingStateNotifier.setOverride();
                           },
-                          child: Text('Add by grams'),
+                          child: Text('Dodaj w gramach'),
                         ),
                       ),
                 addingStage != AddMealIngredientStage.summary
@@ -129,22 +129,22 @@ class AddMealIngredient extends ConsumerWidget {
                             final result = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('Discard changes?'),
+                                title: const Text('Odrzucić zmiany?'),
                                 content: const Text(
-                                  'Are you sure you want to discard changes?',
+                                  'Czy na pewno chcesz odrzucić zmiany?',
                                 ),
                                 actions: [
                                   TextButton(
                                     onPressed: () {
                                       Navigator.of(context).pop(true);
                                     },
-                                    child: Text('Yes'),
+                                    child: Text('Tak'),
                                   ),
                                   TextButton(
                                     onPressed: () {
                                       Navigator.of(context).pop(false);
                                     },
-                                    child: Text('No'),
+                                    child: Text('Nie'),
                                   ),
                                 ],
                               ),
@@ -155,7 +155,7 @@ class AddMealIngredient extends ConsumerWidget {
                               }
                             }
                           },
-                          child: Text('Discard'),
+                          child: Text('Odrzuć'),
                         ),
                       ),
               ],

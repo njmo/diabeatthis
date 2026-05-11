@@ -19,7 +19,7 @@ class MealIngredientsList extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: mealIngredientDrafts.isEmpty
-          ? const Text('No ingredients added')
+          ? const Text('Nie dodano składników')
           : ListView.builder(
               itemBuilder: (context, index) {
                 final draft = mealIngredientDrafts[index];
@@ -42,18 +42,18 @@ class MealIngredientsList extends ConsumerWidget {
 
                 final subtitle = draft.ingredientPortion.portion.when(
                   draft: (name, hint) =>
-                      Text('$amount of $name : ${portionAmount * amount}$hint'),
+                      Text('$amount x $name: ${portionAmount * amount}$hint'),
                   existing: (id, name, hint) {
                     if (portionAmount == 0) {
                       return CircularProgressIndicator();
                     } else {
                       return Text(
-                        '$amount of $name : ${amount * portionAmount}$hint',
+                        '$amount x $name: ${amount * portionAmount}$hint',
                       );
                     }
                   },
                   empty: () => draft.ingredient.isReference
-                      ? Text('$amount referencyjne porcje')
+                      ? Text('$amount porcji referencyjnych')
                       : Text('${amount}g'),
                 );
 
@@ -79,15 +79,19 @@ class MealIngredientsList extends ConsumerWidget {
                               mealIngredientsDraftProvider.notifier,
                             );
                             mealIngredientDraft.overrideMealIngredient(draft);
-                            addingStateNotifier.modifyIngredientStage(draft.ingredient.isReference);
+                            addingStateNotifier.modifyIngredientStage(
+                              draft.ingredient.isReference,
+                            );
 
                             final mealIngredient =
-                                await showModalBottomSheet<MealIngredientsDraft>(
-                              context: context,
-                              useRootNavigator: false,
-                              isScrollControlled: true,
-                              builder: (_) => AddMealIngredient(),
-                            );
+                                await showModalBottomSheet<
+                                  MealIngredientsDraft
+                                >(
+                                  context: context,
+                                  useRootNavigator: false,
+                                  isScrollControlled: true,
+                                  builder: (_) => AddMealIngredient(),
+                                );
                             if (mealIngredient != null) {
                               mealDraft.removeMealIngredient(draft);
                               mealDraft.addMealIngredient(mealIngredient);
