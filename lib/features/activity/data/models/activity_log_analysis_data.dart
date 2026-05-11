@@ -13,6 +13,7 @@ class ActivityLogAnalysisData {
   final DateTime activityStart;
   final DateTime activityEnd;
   final List<Glucose> glucoseReadings;
+  final List<DeviceStatus> deviceStatuses;
   final List<Treatment> chartTreatments;
   final List<TemporaryTarget> activityTargets;
   final List<Meal> preActivityMeals;
@@ -24,6 +25,7 @@ class ActivityLogAnalysisData {
     required this.activityStart,
     required this.activityEnd,
     required this.glucoseReadings,
+    required this.deviceStatuses,
     required this.chartTreatments,
     required this.activityTargets,
     required this.preActivityMeals,
@@ -33,6 +35,8 @@ class ActivityLogAnalysisData {
   int? get glucoseAtStart => _nearestGlucose(activityStart)?.sgv;
 
   double? get iobAtStart => deviceStatusAtStart?.iob;
+
+  double? get cobAtStart => deviceStatusAtStart?.cob;
 
   double? get averageGlucoseDuringActivity {
     final values = _glucoseDuringActivity.map((g) => g.sgv).toList();

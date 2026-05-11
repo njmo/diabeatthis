@@ -74,7 +74,19 @@ class ActivityLogPage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               if (state.analysis != null)
-                _ActivityAnalysisSection(analysis: state.analysis!)
+                _ActivityAnalysisSection(
+                  analysis: state.analysis!,
+                  selectedTimestamp: state.selectedTimestamp,
+                  onTimestampSelected: (timestamp) {
+                    ref
+                        .read(
+                          activityLogDetailsControllerProvider(
+                            activityLogId,
+                          ).notifier,
+                        )
+                        .selectTimestamp(timestamp);
+                  },
+                )
               else if (log.endedAt == null)
                 const _SectionCard(
                   title: 'Analiza glikemii',
@@ -236,8 +248,14 @@ class _StatusChip extends StatelessWidget {
 
 class _ActivityAnalysisSection extends StatelessWidget {
   final ActivityLogAnalysisData analysis;
+  final DateTime? selectedTimestamp;
+  final ValueChanged<DateTime>? onTimestampSelected;
 
-  const _ActivityAnalysisSection({required this.analysis});
+  const _ActivityAnalysisSection({
+    required this.analysis,
+    this.selectedTimestamp,
+    this.onTimestampSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -250,11 +268,29 @@ class _ActivityAnalysisSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _SectionCard(
-          title: 'Glikemia i zdarzenia',
+          title: 'Glikemia / COB / IOB i zdarzenia',
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: ActivityGlucoseChart(analysis: analysis),
+              child: ActivityAnalysisCharts(
+                analysis: analysis,
+                selectedTimestamp: selectedTimestamp,
+                onTimestampSelected: onTimestampSelected,
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _LegendItem(color: Colors.green, label: '70-180'),
+                  _LegendItem(color: Colors.amber, label: '180-250'),
+                  _LegendItem(color: Colors.red, label: '<70 / >250'),
+                  _LegendItem(color: Colors.teal, label: 'Aktywność'),
+                  _LegendItem(color: Colors.blue, label: 'Temp target'),
+                ],
+              ),
             ),
           ],
         ),
@@ -275,6 +311,13 @@ class _ActivityAnalysisSection extends StatelessWidget {
               value: analysis.iobAtStart == null
                   ? '-'
                   : '${analysis.iobAtStart!.toStringAsFixed(2)} U',
+            ),
+            _InfoRow(
+              icon: Icons.grain,
+              label: 'Aktywne węglowodany',
+              value: analysis.cobAtStart == null
+                  ? '-'
+                  : '${analysis.cobAtStart!.toStringAsFixed(1)} g',
             ),
             if (analysis.preActivityMeals.isEmpty)
               const _InfoRow(
@@ -476,6 +519,32 @@ class _InfoRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendItem({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: Theme.of(context).textTheme.labelMedium),
+      ],
     );
   }
 }

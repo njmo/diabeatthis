@@ -35,6 +35,10 @@ class LoadActivityLogAnalysisUseCase {
       treatmentFetchStart,
       chartEnd,
     );
+    final deviceStatuses = await repository.fetchDeviceStatusBetween(
+      chartStart,
+      chartEnd,
+    );
     final deviceStatusAtStart = await repository.fetchLastDeviceStatusBefore(
       log.startedAt,
     );
@@ -70,6 +74,7 @@ class LoadActivityLogAnalysisUseCase {
       activityStart: log.startedAt,
       activityEnd: activityEnd,
       glucoseReadings: glucose,
+      deviceStatuses: deviceStatuses,
       chartTreatments: chartTreatments,
       activityTargets: activityTargets,
       preActivityMeals: preActivityMeals,

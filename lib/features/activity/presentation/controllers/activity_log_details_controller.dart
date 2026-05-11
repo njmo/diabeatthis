@@ -27,4 +27,10 @@ class ActivityLogDetailsControllerNotifier
       return ActivityLogPageState(data: data, analysisError: error.toString());
     }
   }
+
+  void selectTimestamp(DateTime timestamp) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData(current.copyWith(selectedTimestamp: timestamp));
+  }
 }
