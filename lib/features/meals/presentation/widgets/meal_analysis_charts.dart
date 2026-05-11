@@ -614,9 +614,16 @@ class MealChartBounds {
       start: analysis.chartStart,
       end: analysis.chartEnd,
       minY: 0,
-      maxY: math.max(metric == MealDeviceMetric.iob ? 2 : 10, maxValue + 2),
+      maxY: _deviceMetricMaxY(maxValue),
       totalMinutes: _totalMinutes(analysis),
     );
+  }
+
+  static double _deviceMetricMaxY(double maxValue) {
+    if (maxValue <= 0) {
+      return 1;
+    }
+    return maxValue * 1.1;
   }
 
   double minutesFromStart(DateTime date) {
