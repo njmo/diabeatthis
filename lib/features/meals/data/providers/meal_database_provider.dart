@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart' show FutureProvider;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart' as domain;
@@ -9,6 +10,8 @@ import '../drafts/meal_draft.dart';
 import '../mapper/meal_draft_drift_mapper.dart';
 
 part 'meal_database_provider.g.dart';
+
+const mealListPageSize = 15;
 
 @riverpod
 Future<void> updateMeal(Ref ref, domain.Meal meal, String status) async {
@@ -52,6 +55,13 @@ Stream<List<domain.Meal>> allMealsStream(Ref ref) {
   return db.mealDao.getAllMeals().map((e) => e.toDomainList());
 }
 
+final mealListPageProvider = FutureProvider.autoDispose
+    .family<List<domain.Meal>, int>((ref, page) async {
+      final db = ref.watch(databaseProvider);
+      final meals = await db.mealDao.getAllMeals(page: page).first;
+      return meals.toDomainList();
+    });
+
 @riverpod
 Future<void> insertMealIngredient(
   Ref ref,
@@ -79,13 +89,13 @@ Future<void> insertMealIngredient(
 
 @riverpod
 Future<void> insertExtraMealIngredient(
-    Ref ref,
-    domain.Ingredient ingredient,
-    int mealId,
-    domain.Portion? portion,
-    double consumedAmount,
-    double consumedQuantityConfidence,
-    ) async {
+  Ref ref,
+  domain.Ingredient ingredient,
+  int mealId,
+  domain.Portion? portion,
+  double consumedAmount,
+  double consumedQuantityConfidence,
+) async {
   final db = ref.watch(databaseProvider);
   final ingredientId = ingredient.map(
     existing: (e) => e.id,
@@ -112,8 +122,7 @@ Future<domain.Meal?> getMealById(Ref ref, int id) async {
 }
 
 @riverpod
-Future<domain.Meal?> getNearestMeal(Ref ref)
-async {
+Future<domain.Meal?> getNearestMeal(Ref ref) async {
   final db = ref.read(databaseProvider);
   final meal = await db.mealDao.getNearestMeal();
   return meal?.toDomain();

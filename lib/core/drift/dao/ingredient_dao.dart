@@ -23,6 +23,14 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     return query.getSingle();
   }
 
+  Future<List<IngredientData>> getIngredientsPage({int page = 0}) {
+    final query = select(db.ingredient)
+      ..orderBy([(tbl) => OrderingTerm.asc(tbl.name)])
+      ..limit(15, offset: page * 15);
+
+    return query.get();
+  }
+
   Future<List<IngredientStatusHistoryData>> getIngredientStatusHistory(
     int ingredientId,
   ) {

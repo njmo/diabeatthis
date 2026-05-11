@@ -1,104 +1,175 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../core/domain/model/meal.dart';
 import '../../data/providers/meal_database_provider.dart';
 
-class MealList extends ConsumerWidget {
+class MealList extends HookConsumerWidget {
   const MealList({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final meals = ref.watch(allMealsStreamProvider);
+    final pagingController = useMemoized(
+      () => PagingController<int, Meal>(
+        getNextPageKey: _nextPageKey,
+        fetchPage: (pageKey) => ref.read(mealListPageProvider(pageKey).future),
+      ),
+      const [],
+    );
+    useEffect(() => pagingController.dispose, [pagingController]);
 
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: ListView.builder(
-        itemBuilder: (context, index) {
-          final meal = meals.asData?.value[index];
-          if (meal == null) {
-            return SizedBox.shrink();
-          }
-
-          return Card(
-            elevation: 2,
-            shadowColor: Colors.black12,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: ListTile(
-              title: Text(
-                meal.name,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
+    return SafeArea(
+      top: false,
+      child: PagingListener(
+        controller: pagingController,
+        builder: (context, state, fetchNextPage) {
+          return PagedListView<int, Meal>.separated(
+            state: state,
+            fetchNextPage: fetchNextPage,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
+            builderDelegate: PagedChildBuilderDelegate<Meal>(
+              itemBuilder: (context, meal, index) {
+                return _MealCard(
+                  meal: meal,
+                  onTap: () =>
+                      context.router.push(routes.MealRoute(mealId: meal.id)),
+                );
+              },
+              firstPageProgressIndicatorBuilder: (_) =>
+                  const Center(child: CircularProgressIndicator()),
+              newPageProgressIndicatorBuilder: (_) => const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
               ),
-              subtitle: Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  children: [
-                    _buildListTile(
-                      _shortTime(meal.plannedAt!),
-                      Icons.access_time,
-                      Theme.of(context).colorScheme,
-                    ),
-                    const SizedBox(width: 10),
-                    _buildListTile(
-                      _toMealStatus(meal.status),
-                      Icons.note_rounded,
-                      Theme.of(context).colorScheme,
-                    ),
-                  ],
+              noItemsFoundIndicatorBuilder: (_) =>
+                  const Center(child: Text('Brak posiłków')),
+              firstPageErrorIndicatorBuilder: (_) =>
+                  const Center(child: Text('Nie udało się wczytać posiłków')),
+              newPageErrorIndicatorBuilder: (_) => Center(
+                child: TextButton.icon(
+                  onPressed: fetchNextPage,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Spróbuj ponownie'),
                 ),
               ),
-              trailing: IconButton(
-                onPressed: () {
-                  ref.read(removeMealByIdProvider(meal));
-                },
-                icon: Icon(Icons.remove_circle),
-                iconSize: 20,
-              ),
-              onTap: () {
-                context.router.push(routes.MealRoute(mealId: meal.id));
-              },
+              noMoreItemsIndicatorBuilder: (_) => const SizedBox(height: 8),
             ),
           );
         },
-        itemCount: meals.asData?.value.length ?? 0,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
       ),
     );
   }
+}
 
-  Widget _buildListTile(String text, IconData icon, ColorScheme scheme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: scheme.onSecondaryContainer),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: scheme.onSecondaryContainer,
-            ),
+int? _nextPageKey(PagingState<int, Meal> state) {
+  final pages = state.pages;
+  if (pages != null &&
+      pages.isNotEmpty &&
+      pages.last.length < mealListPageSize) {
+    return null;
+  }
+  final keys = state.keys;
+  return keys == null || keys.isEmpty ? 0 : keys.last + 1;
+}
+
+class _MealCard extends StatelessWidget {
+  final Meal meal;
+  final VoidCallback onTap;
+
+  const _MealCard({required this.meal, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 1,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.restaurant,
+                      color: scheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          meal.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatDate(meal.plannedAt),
+                          style: textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _MetaPill(
+                    icon: Icons.access_time,
+                    text: _shortTime(meal.plannedAt),
+                  ),
+                  _MetaPill(
+                    icon: Icons.flag_outlined,
+                    text: _toMealStatus(meal.status),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  String _toMealStatus(String? status) {
+  static String _toMealStatus(String? status) {
     switch (status) {
       case 'eaten':
       case 'eaten-bolused':
-        return 'Zjedzony z podanym bolusem';
+        return 'Zjedzony';
       case 'skipped':
         return 'Pominięty';
       case 'waited-eating':
@@ -107,15 +178,58 @@ class MealList extends ConsumerWidget {
       case 'eating-then-bolus':
         return 'W trakcie jedzenia';
       case 'bolused-waiting':
-        return 'Oczekuje na zjedzenie';
+        return 'Oczekuje';
+      case 'summarized':
+        return 'Podsumowany';
       default:
         return 'Zaplanowany';
     }
   }
 
-  String _shortTime(DateTime? dt) {
-    if (dt == null) return "—";
+  static String _shortTime(DateTime? dt) {
+    if (dt == null) return '-';
     final t = TimeOfDay.fromDateTime(dt);
-    return "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
+    return '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+  }
+
+  static String _formatDate(DateTime? dt) {
+    if (dt == null) return '-';
+    final day = dt.day.toString().padLeft(2, '0');
+    final month = dt.month.toString().padLeft(2, '0');
+    return '$day.$month.${dt.year}';
+  }
+}
+
+class _MetaPill extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _MetaPill({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: scheme.onSecondaryContainer),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: scheme.onSecondaryContainer,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

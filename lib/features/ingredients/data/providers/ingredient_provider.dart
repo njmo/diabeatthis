@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart' show FutureProvider;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart' as domain;
@@ -9,6 +10,8 @@ import '../../../meals/presentation/widgets/confidence_slider.dart';
 
 part 'ingredient_provider.g.dart';
 
+const ingredientListPageSize = 15;
+
 @riverpod
 Stream<List<domain.Ingredient>> ingredientsStream(Ref ref) {
   final db = ref.watch(databaseProvider);
@@ -16,6 +19,13 @@ Stream<List<domain.Ingredient>> ingredientsStream(Ref ref) {
     (e) => e.toDomainList(),
   );
 }
+
+final ingredientListPageProvider = FutureProvider.autoDispose
+    .family<List<domain.Ingredient>, int>((ref, page) async {
+      final db = ref.watch(databaseProvider);
+      final ingredients = await db.ingredientDao.getIngredientsPage(page: page);
+      return ingredients.toDomainList();
+    });
 
 @riverpod
 Future<domain.Ingredient> ingredientById(Ref ref, int id) async {

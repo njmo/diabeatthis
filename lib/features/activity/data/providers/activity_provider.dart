@@ -1,4 +1,5 @@
 import 'package:clock/clock.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' show FutureProvider;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/activity.dart';
@@ -8,6 +9,8 @@ import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
 
 part 'activity_provider.g.dart';
+
+const activityLogListPageSize = 15;
 
 @riverpod
 class ActivityDraftNotifier extends _$ActivityDraftNotifier {
@@ -122,18 +125,42 @@ Future<List<ActivityLog>> getActivityLogs(Ref ref) async {
   final activityLogs = <ActivityLog>[];
   for (final log in value) {
     final activity = await db.activityDao.getActivityById(log.activityId);
-    activityLogs.add(ActivityLog.view(
-      id: log.id,
-      activityName: activity.name,
-      startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
-      endedAt: log.endedAt == null
-          ? null
-          : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
-      activityId: activity.id,
-    ));
+    activityLogs.add(
+      ActivityLog.view(
+        id: log.id,
+        activityName: activity.name,
+        startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
+        endedAt: log.endedAt == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
+        activityId: activity.id,
+      ),
+    );
   }
   return activityLogs;
 }
+
+final activityLogListPageProvider = FutureProvider.autoDispose
+    .family<List<ActivityLog>, int>((ref, page) async {
+      final db = ref.watch(databaseProvider);
+      final value = await db.activityDao.getActivityLogs(page: page);
+      final activityLogs = <ActivityLog>[];
+      for (final log in value) {
+        final activity = await db.activityDao.getActivityById(log.activityId);
+        activityLogs.add(
+          ActivityLog.view(
+            id: log.id,
+            activityName: activity.name,
+            startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
+            endedAt: log.endedAt == null
+                ? null
+                : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
+            activityId: activity.id,
+          ),
+        );
+      }
+      return activityLogs;
+    });
 
 @riverpod
 Future<void> stopActivity(Ref ref, ActivityLog activityLog) async {
@@ -144,7 +171,7 @@ Future<void> stopActivity(Ref ref, ActivityLog activityLog) async {
     draft: (a) =>
         throw StateError('Nie można zakończyć draftu – brak id i endedAt'),
   );
-  if(activityLog.startedAt.isBefore(clock.now())) {
+  if (activityLog.startedAt.isBefore(clock.now())) {
     await db.activityDao.updateActivityLog(updated.toCompanion());
   } else {
     await db.activityDao.removeActivityLog(updated.toCompanion());
