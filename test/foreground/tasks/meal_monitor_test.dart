@@ -9,6 +9,7 @@ import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart' hide Meal;
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
+import 'package:diabeatthis/core/notifications/definitions/event/meal_summary_reminder_notification_definition.dart';
 import 'package:diabeatthis/core/notifications/domain/events/eat_now_event_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/finished_eating_event_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_suggestion_notification.dart';
@@ -136,6 +137,14 @@ void main() {
       expect(event.mealId, 1);
     });
 
+    test('summary reminder notification has plan and acknowledge actions', () {
+      final labels = mealSummaryReminderNotificationDefinition.actions.map(
+        (action) => action.label,
+      );
+
+      expect(labels, ['Zjadłem tyle co plan', 'OK']);
+    });
+
     test('summary reminder action saves planned amount as consumed', () async {
       final db = DatabaseImpl(NativeDatabase.memory());
       addTearDown(db.close);
@@ -163,6 +172,61 @@ void main() {
       expect(snapshots, hasLength(1));
       expect(snapshots.single.snapshotType, 'consumed');
       expect(snapshots.single.totalNetCarbsG, 15);
+    });
+
+    test('summary reminder ok action leaves meal unchanged', () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      await _seedPlannedMeal(db);
+
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(container.dispose);
+
+      final harness = FakeRuntimeHarness(container: container);
+      NotificationResponseEventHandler().handle(
+        NotificationResponseEvent.mealSummaryReminderResponse(
+          data: MealSummaryReminderResponseEvent.dismiss(mealId: 1),
+        ),
+        harness.runtimeContext,
+      );
+
+      await _flushMicrotasks();
+
+      final meal = await db.mealDao.getMealById(1);
+      final snapshots = await db.select(db.mealSnapshot).get();
+
+      expect(meal?.status, 'eaten');
+      expect(snapshots, isEmpty);
+    });
+
+    test('summary reminder skips meal that was already summarized', () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      await _seedPlannedMeal(db);
+      await db.mealDao.updateMealStatus(1, 'summarized');
+
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(container.dispose);
+
+      final harness = FakeRuntimeHarness(container: container);
+      NotificationResponseEventHandler().handle(
+        NotificationResponseEvent.mealSummaryReminderResponse(
+          data: MealSummaryReminderResponseEvent.agree(mealId: 1),
+        ),
+        harness.runtimeContext,
+      );
+
+      await _flushMicrotasks();
+
+      final meal = await db.mealDao.getMealById(1);
+      final snapshots = await db.select(db.mealSnapshot).get();
+
+      expect(meal?.status, 'summarized');
+      expect(snapshots, isEmpty);
     });
 
     test(

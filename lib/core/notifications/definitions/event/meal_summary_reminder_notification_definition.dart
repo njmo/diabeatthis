@@ -12,6 +12,10 @@ const mealSummaryReminderNotificationDefinition = NotificationDefinition(
       type: NotificationActionType.agree,
       label: 'Zjadłem tyle co plan',
     ),
+    NotificationActionDef.plain(
+      type: NotificationActionType.dismiss,
+      label: 'OK',
+    ),
   ],
   channelType: NotificationChannelType.meal,
 );

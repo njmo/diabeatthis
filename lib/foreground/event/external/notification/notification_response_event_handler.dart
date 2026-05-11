@@ -26,6 +26,8 @@ class NotificationResponseEventHandler with Logging {
           data.when(
             agree: (mealId) =>
                 unawaited(_markPlannedAmountAsConsumed(mealId, context)),
+            dismiss: (mealId) =>
+                logI('Meal summary reminder dismissed for meal $mealId'),
             empty: (mealId) =>
                 logI('Meal summary reminder opened for meal $mealId'),
           ),
@@ -39,6 +41,17 @@ class NotificationResponseEventHandler with Logging {
     RuntimeContext context,
   ) async {
     try {
+      final meal = await context.container.read(
+        getMealByIdProvider(mealId).future,
+      );
+      final status = meal?.status;
+      if (!_canSummarizeFromReminder(status)) {
+        logI(
+          'Skipping reminder summary for meal $mealId because status is $status',
+        );
+        return;
+      }
+
       await context.container
           .read(mealSnapshotControllerProvider)
           .saveConsumedSnapshot(mealId);
@@ -53,5 +66,11 @@ class NotificationResponseEventHandler with Logging {
         stackTrace: st,
       );
     }
+  }
+
+  bool _canSummarizeFromReminder(String? status) {
+    return status == 'eaten' ||
+        status == 'eaten-extra' ||
+        status == 'eaten-bolused';
   }
 }

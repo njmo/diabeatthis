@@ -13,6 +13,10 @@ sealed class MealSummaryReminderResponseEvent
   const factory MealSummaryReminderResponseEvent.agree({required int mealId}) =
       _MealSummaryReminderResponseAgreeEvent;
 
+  const factory MealSummaryReminderResponseEvent.dismiss({
+    required int mealId,
+  }) = _MealSummaryReminderResponseDismissEvent;
+
   const factory MealSummaryReminderResponseEvent.empty({required int mealId}) =
       _MealSummaryReminderResponseEmptyEvent;
 
