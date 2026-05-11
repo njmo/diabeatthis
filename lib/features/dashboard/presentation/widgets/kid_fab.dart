@@ -12,11 +12,12 @@ import '../../../../core/logger/logger.dart';
 import '../../../activity/data/providers/activity_provider.dart';
 import '../../../activity/presentation/widgets/activity_picker_dialog.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
-import '../../../meals/data/providers/meal_database_provider.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../meals/presentation/controllers/add_meal_controller.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
+import '../utils/meal_status_dialog_result_handler.dart';
 import 'meal_status_dialog.dart';
+import 'meal_status_dialog_result.dart';
 
 class KidFAB extends HookConsumerWidget with Logging {
   const KidFAB({super.key});
@@ -154,13 +155,19 @@ class KidFAB extends HookConsumerWidget with Logging {
                   return;
                 }
 
-                final action = await showDialog<String?>(
+                final result = await showDialog<MealStatusDialogResult?>(
                   barrierDismissible: true,
                   context: context,
                   builder: (context) => MealStatusDialog(meal: addedMeal),
                 );
-                if (action != null) {
-                  await ref.read(updateMealProvider(addedMeal, action).future);
+                if (result != null && context.mounted) {
+                  await handleMealStatusDialogResult(
+                    context: context,
+                    ref: ref,
+                    meal: addedMeal,
+                    result: result,
+                    openSummaryAfterEaten: false,
+                  );
                 }
               }
               open.value = false;

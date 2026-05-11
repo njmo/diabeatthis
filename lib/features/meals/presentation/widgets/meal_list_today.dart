@@ -4,7 +4,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../core/data/provider/parent_controller_provider.dart';
+import '../../../dashboard/presentation/utils/meal_status_dialog_result_handler.dart';
 import '../../../dashboard/presentation/widgets/meal_status_dialog.dart';
+import '../../../dashboard/presentation/widgets/meal_status_dialog_result.dart';
 import '../../../dashboard/presentation/widgets/trailing_wait_after_bolus_status.dart';
 import '../../data/providers/meal_database_provider.dart';
 
@@ -31,17 +33,18 @@ class MealListToday extends ConsumerWidget {
                 context.router.push(routes.MealSummaryRoute(mealId: meal.id));
                 return;
               }
-              final action = await showDialog<String?>(
+              final result = await showDialog<MealStatusDialogResult?>(
                 barrierDismissible: true,
                 context: context,
                 builder: (context) => MealStatusDialog(meal: meal),
               );
-              if (action != null) {
-                await ref.read(updateMealProvider(meal, action).future);
-                if (context.mounted &&
-                    (action == 'eaten' || action == 'eaten-bolused')) {
-                  context.router.push(routes.MealSummaryRoute(mealId: meal.id));
-                }
+              if (result != null && context.mounted) {
+                await handleMealStatusDialogResult(
+                  context: context,
+                  ref: ref,
+                  meal: meal,
+                  result: result,
+                );
               }
             },
             child: Card(

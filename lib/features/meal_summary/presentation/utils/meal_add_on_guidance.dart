@@ -1,21 +1,10 @@
+export '../../domain/utils/meal_add_on_status.dart';
+
 class MealAddOnGuidance {
   const MealAddOnGuidance({required this.title, required this.message});
 
   final String title;
   final String message;
-}
-
-String mealStatusAfterAddOn(String? status) {
-  switch (status) {
-    case 'eating-then-bolus':
-      return 'eating-then-bolus';
-    case 'bolused-eating':
-      return 'bolused-eating';
-    case 'waited-eating':
-      return 'waited-eating';
-    default:
-      return 'eating-extra';
-  }
 }
 
 MealAddOnGuidance buildMealAddOnGuidance({

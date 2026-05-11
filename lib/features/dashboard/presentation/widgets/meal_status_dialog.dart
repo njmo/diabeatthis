@@ -2,17 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
-import '../../../meal_summary/domain/use_cases/add_meal_extra_item_use_case.dart';
-import '../../../meal_summary/presentation/utils/meal_add_on_guidance.dart';
-import '../../../meal_summary/presentation/utils/meal_summary_carbs_delta.dart';
-import '../../../meals/data/drafts/meal_draft.dart';
-import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
-import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../data/meal_dialog_controller.dart';
 import '../../data/meal_dialog_state.dart';
 import '../../data/providers/meal_advisor_result_provider.dart';
 import '../../data/providers/meal_snapshot_controller_provider.dart';
 import '../../data/utils/meal_advisor.dart';
+import 'meal_add_on_mode_dialog.dart';
+import 'meal_status_dialog_result.dart';
 
 class MealStatusDialog extends ConsumerWidget with Logging {
   final Meal meal;
@@ -145,9 +141,11 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                     }
                   }
                   if (context.mounted) {
-                    Navigator.of(
-                      context,
-                    ).pop(s.skipMeal ? 'skipped' : s.advice.decision!.status);
+                    Navigator.of(context).pop(
+                      MealStatusUpdateResult(
+                        s.skipMeal ? 'skipped' : s.advice.decision!.status,
+                      ),
+                    );
                   }
                 }
               },
@@ -161,14 +159,16 @@ class MealStatusDialog extends ConsumerWidget with Logging {
               child: const Text("Anuluj"),
             ),
             OutlinedButton.icon(
-              onPressed: () => _addExtraItem(context, ref),
+              onPressed: () => _chooseAddOn(context),
               icon: const Icon(Icons.add),
               label: const Text('Dokładka'),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (context.mounted) {
-                  Navigator.of(context).pop('eaten');
+                  Navigator.of(
+                    context,
+                  ).pop(const MealStatusUpdateResult('eaten'));
                 }
               },
               child: const Text("Zjadłem"),
@@ -184,7 +184,9 @@ class MealStatusDialog extends ConsumerWidget with Logging {
             ElevatedButton(
               onPressed: () async {
                 if (context.mounted) {
-                  Navigator.of(context).pop('eating');
+                  Navigator.of(
+                    context,
+                  ).pop(const MealStatusUpdateResult('eating'));
                 }
               },
               child: const Text("Jem"),
@@ -197,14 +199,16 @@ class MealStatusDialog extends ConsumerWidget with Logging {
               child: const Text("Anuluj"),
             ),
             OutlinedButton.icon(
-              onPressed: () => _addExtraItem(context, ref),
+              onPressed: () => _chooseAddOn(context),
               icon: const Icon(Icons.add),
               label: const Text('Dokładka'),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (context.mounted) {
-                  Navigator.of(context).pop('eaten-bolused');
+                  Navigator.of(
+                    context,
+                  ).pop(const MealStatusUpdateResult('eaten-bolused'));
                 }
               },
               child: const Text("Podałem insuline"),
@@ -248,66 +252,16 @@ class MealStatusDialog extends ConsumerWidget with Logging {
     }
   }
 
-  Future<void> _addExtraItem(BuildContext context, WidgetRef ref) async {
-    final mealIngredient = await showModalBottomSheet<MealIngredientsDraft>(
+  Future<void> _chooseAddOn(BuildContext context) async {
+    final choice = await showDialog<MealAddOnChoice?>(
       context: context,
-      useRootNavigator: false,
-      isScrollControlled: true,
-      builder: (_) => const AddMealIngredient(),
+      builder: (context) => const MealAddOnModeDialog(),
     );
 
-    if (mealIngredient == null) {
+    if (choice == null || !context.mounted) {
       return;
     }
 
-    await ref
-        .read(addMealExtraItemUseCaseProvider)
-        .call(
-          mealId: meal.id,
-          mealIngredient: mealIngredient,
-          statusAfterAdd: mealStatusAfterAddOn(meal.status),
-        );
-
-    final extraCarbs = calculateExtraItemNetCarbs(mealIngredient).round();
-    final totalCarbsForBolus = await _totalCarbsForBolus(ref);
-
-    if (!context.mounted) {
-      return;
-    }
-
-    final guidance = buildMealAddOnGuidance(
-      currentMealStatus: meal.status,
-      addedCarbs: extraCarbs,
-      totalCarbsForBolus: totalCarbsForBolus,
-    );
-
-    await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(guidance.title),
-        content: Text(guidance.message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-
-    if (context.mounted) {
-      Navigator.of(context).pop();
-    }
-  }
-
-  Future<int?> _totalCarbsForBolus(WidgetRef ref) async {
-    if (meal.status != 'eating-then-bolus') {
-      return null;
-    }
-
-    final summary = await ref.refresh(
-      mealMacronutrientsConsumedSummaryProvider(meal.id).future,
-    );
-    return summary?.netCarbsGrams.round();
+    Navigator.of(context).pop(MealStatusAddOnResult(choice));
   }
 }
