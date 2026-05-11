@@ -6,7 +6,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../activity/presentation/widgets/activity_list.dart';
 import '../../../ingredients/presentation/widgets/ingredient_list.dart';
 import '../../../meals/presentation/widgets/meal_list.dart';
-import '../../../meals/presentation/widgets/meal_list_today.dart';
 
 @RoutePage()
 class ManagementPage extends HookConsumerWidget {
