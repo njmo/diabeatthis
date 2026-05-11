@@ -51,8 +51,6 @@ class _MealPageBody extends ConsumerWidget {
       children: [
         _MealHeader(state: state),
         const SizedBox(height: 12),
-        _RawTechnicalDataSwitch(state: state),
-        const SizedBox(height: 12),
         _BasicInfoSection(details: details),
         _NutritionAnalysisSection(details: details),
         _MealAdvisorResultSection(details: details),
@@ -80,8 +78,6 @@ class _MealPageBody extends ConsumerWidget {
             selectedTimestamp: state.selectedTimestamp,
           ),
         _SnapshotsSection(details: details),
-        if (state.showRawTechnicalData)
-          _DebugSection(details: details, analysis: state.analysis),
       ],
     );
   }
@@ -106,15 +102,7 @@ class _MealHeader extends StatelessWidget {
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 4),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _StatusChip(label: details.meal.status),
-            if (details.advisorDecision != null)
-              _StatusChip(label: details.advisorDecision!.result),
-          ],
-        ),
+        _MealStatusSummary(details: details),
         const SizedBox(height: 12),
         GridView.count(
           crossAxisCount: MediaQuery.sizeOf(context).width > 720 ? 6 : 2,
@@ -157,31 +145,52 @@ class _MealHeader extends StatelessWidget {
   }
 }
 
-class _RawTechnicalDataSwitch extends ConsumerWidget {
-  final MealPageState state;
+class _MealStatusSummary extends StatelessWidget {
+  final MealDetailsData details;
 
-  const _RawTechnicalDataSwitch({required this.state});
+  const _MealStatusSummary({required this.details});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final statuses = _statusSummaryItems(details);
+    if (statuses.isEmpty) {
+      return _StatusChip(label: details.meal.status);
+    }
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
-        FilterChip(
-          label: const Text('Show raw technical data'),
-          selected: state.showRawTechnicalData,
-          onSelected: (value) {
-            ref
-                .read(
-                  mealDetailsControllerProvider(state.details.meal.id).notifier,
-                )
-                .setShowRawTechnicalData(value);
-          },
-        ),
+        for (final status in statuses)
+          Chip(
+            avatar: Icon(
+              _statusIcon(status.status),
+              size: 18,
+              color: status.isCurrent
+                  ? Theme.of(context).colorScheme.primary
+                  : null,
+            ),
+            label: Text(
+              status.isCurrent
+                  ? '${status.status} • current'
+                  : '${status.status} • ${_time(status.timestamp)}',
+            ),
+          ),
       ],
     );
   }
+}
+
+class _MealStatusSummaryItem {
+  final String status;
+  final DateTime timestamp;
+  final bool isCurrent;
+
+  const _MealStatusSummaryItem({
+    required this.status,
+    required this.timestamp,
+    required this.isCurrent,
+  });
 }
 
 class _BasicInfoSection extends StatelessWidget {
@@ -902,43 +911,6 @@ class _EventTimeline extends StatelessWidget {
   }
 }
 
-class _DebugSection extends StatelessWidget {
-  final MealDetailsData details;
-  final MealAnalysisData? analysis;
-
-  const _DebugSection({required this.details, required this.analysis});
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionTile(
-      title: 'Debug data',
-      children: [
-        _InfoRow(label: 'Meal id', value: details.meal.id.toString()),
-        _InfoRow(
-          label: 'Ingredients',
-          value: details.ingredients.length.toString(),
-        ),
-        _InfoRow(
-          label: 'Status history',
-          value: details.statusHistory.length.toString(),
-        ),
-        _InfoRow(
-          label: 'Treatments',
-          value: analysis?.treatments.length.toString() ?? '-',
-        ),
-        _InfoRow(
-          label: 'Device status',
-          value: analysis?.deviceStatuses.length.toString() ?? '-',
-        ),
-        _InfoRow(
-          label: 'Glucose readings',
-          value: analysis?.glucoseReadings.length.toString() ?? '-',
-        ),
-      ],
-    );
-  }
-}
-
 class _SectionTile extends StatelessWidget {
   final String title;
   final List<Widget> children;
@@ -1157,6 +1129,59 @@ Color _eventColor(MealTimelineEventType type) {
     MealTimelineEventType.meal => Colors.brown,
     MealTimelineEventType.deviceStatus => Colors.grey,
   };
+}
+
+IconData _statusIcon(String status) {
+  return switch (status) {
+    'planned' => Icons.schedule,
+    'bolused-waiting' => Icons.hourglass_top,
+    'bolused-eating' => Icons.restaurant,
+    'eaten' || 'eaten-bolused' || 'summarized' => Icons.check_circle,
+    'skipped' => Icons.cancel,
+    _ => Icons.flag,
+  };
+}
+
+List<_MealStatusSummaryItem> _statusSummaryItems(MealDetailsData details) {
+  final items = details.statusHistory.map((history) {
+    return _MealStatusSummaryItem(
+      status: history.status,
+      timestamp: history.createdAt,
+      isCurrent: false,
+    );
+  }).toList();
+
+  final hasCurrent = items.any((item) => item.status == details.meal.status);
+  if (!hasCurrent) {
+    items.add(
+      _MealStatusSummaryItem(
+        status: details.meal.status,
+        timestamp: _currentMealStatusTimestamp(details.meal),
+        isCurrent: true,
+      ),
+    );
+  } else {
+    final currentIndex = items.lastIndexWhere(
+      (item) => item.status == details.meal.status,
+    );
+    final current = items[currentIndex];
+    items[currentIndex] = _MealStatusSummaryItem(
+      status: current.status,
+      timestamp: current.timestamp,
+      isCurrent: true,
+    );
+  }
+
+  items.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+  return items;
+}
+
+DateTime _currentMealStatusTimestamp(MealRecordData meal) {
+  if (meal.summarizedAt != null &&
+      (meal.status == 'summarized' || meal.status.startsWith('eaten'))) {
+    return meal.summarizedAt!;
+  }
+  return meal.updatedAt;
 }
 
 String _dateTime(DateTime date) {

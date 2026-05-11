@@ -122,6 +122,16 @@ class MealGlucoseChart extends StatelessWidget {
                   final time = analysis.chartStart.add(
                     Duration(minutes: spot.x.round()),
                   );
+                  final events = _eventsNearMinute(analysis, spot.x.round());
+                  if (events.isNotEmpty && spot.y > bounds.minY + 20) {
+                    return LineTooltipItem(
+                      '${_formatTime(time)}\n${events.map((event) => event.label).join('\n')}',
+                      TextStyle(
+                        color: scheme.onInverseSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  }
                   return LineTooltipItem(
                     '${_formatTime(time)}\n${spot.y.round()} mg/dL',
                     TextStyle(
@@ -218,17 +228,17 @@ class MealGlucoseChart extends StatelessWidget {
     MealChartBounds bounds,
     MealAnalysisData analysis,
   ) {
-    final markerY = bounds.maxY - 8;
-    return analysis.timelineEvents.map((event) {
+    final markers = _stackedEventMarkers(bounds, analysis);
+    return markers.map((marker) {
       return LineChartBarData(
-        spots: [FlSpot(bounds.minutesFromStart(event.timestamp), markerY)],
-        color: _eventColor(event.type),
+        spots: [FlSpot(marker.x, marker.y)],
+        color: _eventColor(marker.event.type),
         barWidth: 0,
         dotData: FlDotData(
           getDotPainter: (spot, percent, bar, index) {
             return _TimelineEventIconPainter(
-              icon: _eventIcon(event.type),
-              color: _eventColor(event.type),
+              icon: _eventIcon(marker.event.type),
+              color: _eventColor(marker.event.type),
             );
           },
         ),
@@ -287,6 +297,76 @@ class MealGlucoseChart extends StatelessWidget {
       ),
     );
   }
+}
+
+List<_StackedEventMarker> _stackedEventMarkers(
+  MealChartBounds bounds,
+  MealAnalysisData analysis,
+) {
+  final usedLevelsByMinute = <int, int>{};
+  return analysis.timelineEvents.map((event) {
+    final x = bounds.minutesFromStart(event.timestamp);
+    final minute = x.round();
+    final level = usedLevelsByMinute.update(
+      minute,
+      (value) => value + 1,
+      ifAbsent: () => 0,
+    );
+    final baseY = _glucoseYAt(analysis.glucoseReadings, event.timestamp);
+    final y = (baseY + 18 + level * 22).clamp(
+      bounds.minY + 18,
+      bounds.maxY - 12,
+    );
+    return _StackedEventMarker(event: event, x: x, y: y.toDouble());
+  }).toList();
+}
+
+double _glucoseYAt(List<Glucose> readings, DateTime timestamp) {
+  if (readings.isEmpty) return 120;
+
+  Glucose? previous;
+  Glucose? next;
+  for (final reading in readings) {
+    if (!reading.date.isAfter(timestamp)) {
+      previous = reading;
+    }
+    if (!reading.date.isBefore(timestamp)) {
+      next = reading;
+      break;
+    }
+  }
+
+  if (previous != null && next != null && previous.date != next.date) {
+    final totalMs = next.date.difference(previous.date).inMilliseconds;
+    final offsetMs = timestamp.difference(previous.date).inMilliseconds;
+    final t = (offsetMs / totalMs).clamp(0.0, 1.0);
+    return previous.sgv + (next.sgv - previous.sgv) * t;
+  }
+  return (previous ?? next ?? readings.first).sgv.toDouble();
+}
+
+List<MealTimelineEventData> _eventsNearMinute(
+  MealAnalysisData analysis,
+  int minute,
+) {
+  return analysis.timelineEvents.where((event) {
+    final eventMinute = event.timestamp
+        .difference(analysis.chartStart)
+        .inMinutes;
+    return (eventMinute - minute).abs() <= 1;
+  }).toList();
+}
+
+class _StackedEventMarker {
+  final MealTimelineEventData event;
+  final double x;
+  final double y;
+
+  const _StackedEventMarker({
+    required this.event,
+    required this.x,
+    required this.y,
+  });
 }
 
 class MealDeviceMetricChart extends StatelessWidget {
