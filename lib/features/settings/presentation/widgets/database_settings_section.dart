@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -85,13 +86,26 @@ class _DatabaseSettingsSectionState
   }
 
   Future<void> _pickAndImportDatabase() async {
-    final result = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
-      allowMultiple: false,
-    );
-    final path = result?.files.single.path;
+    String? path;
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.any,
+        allowMultiple: false,
+      );
+      path = result?.files.single.path;
+    } on MissingPluginException {
+      if (!mounted) return;
+      _showSnackBar(
+        'Importer plików nie jest jeszcze dostępny. Uruchom aplikację ponownie po pełnym rebuildzie.',
+      );
+      return;
+    }
+
     if (path == null) return;
+    if (!path.toLowerCase().endsWith('.json')) {
+      _showSnackBar('Wybierz plik eksportu w formacie JSON.');
+      return;
+    }
 
     if (!mounted) return;
     final confirmed = await _confirmImport();
