@@ -11,7 +11,7 @@ import '../../data/models/meal_summary_portion.dart';
 
 part 'load_meal_summary_data_use_case.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 LoadMealSummaryDataUseCase loadMealSummaryDataUseCase(Ref ref) {
   return LoadMealSummaryDataUseCase(ref: ref);
 }
@@ -22,10 +22,14 @@ class LoadMealSummaryDataUseCase {
   LoadMealSummaryDataUseCase({required this.ref});
 
   Future<MealSummaryData> call(int mealId) async {
-    final meal = await ref.read(getMealByIdProvider(mealId).future);
-    final mealIngredients = await ref.read(
+    final mealFuture = ref.read(getMealByIdProvider(mealId).future);
+    final mealIngredientsFuture = ref.read(
       getMealIngredientsDraftForMealProvider(mealId).future,
     );
+
+    final meal = await mealFuture;
+    final mealIngredients = await mealIngredientsFuture;
+
     final items = mealIngredients.map((mealIngredient) {
       final plannedAmount = _plannedAmount(mealIngredient);
       final reportedAmount = mealIngredient.consumedAmount ?? plannedAmount;
