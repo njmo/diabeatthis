@@ -151,7 +151,10 @@ class DatabaseBackupService {
 
   Future<void> _deleteTables(Iterable<String> tableNames) async {
     for (final tableName in tableNames) {
-      await _db.customStatement('DELETE FROM ${_quoteIdentifier(tableName)}');
+      await _db.customUpdate(
+        'DELETE FROM ${_quoteIdentifier(tableName)}',
+        updates: {_tableByName(tableName)},
+      );
     }
   }
 
@@ -210,6 +213,14 @@ class DatabaseBackupService {
       'INSERT INTO ${_quoteIdentifier(tableName)} ($sqlColumns) '
       'VALUES ($placeholders)',
       variables: variables,
+      updates: {_tableByName(tableName)},
+    );
+  }
+
+  ResultSetImplementation _tableByName(String tableName) {
+    return _db.allTables.firstWhere(
+      (table) => table.actualTableName == tableName,
+      orElse: () => throw StateError('Unknown database table: $tableName'),
     );
   }
 

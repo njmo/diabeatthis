@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
@@ -18,6 +21,7 @@ class _DatabaseSettingsSectionState
     extends ConsumerState<DatabaseSettingsSection> {
   DatabaseBackupScope _selectedScope = DatabaseBackupScope.core;
   bool _isExporting = false;
+  bool _isImporting = false;
   bool _isClearing = false;
 
   @override
@@ -42,7 +46,8 @@ class _DatabaseSettingsSectionState
         _DatabaseActionButton(
           icon: Icons.file_download_outlined,
           label: 'Importuj z pliku',
-          onPressed: _showImportPickerMissingMessage,
+          isLoading: _isImporting,
+          onPressed: _isImporting ? null : _pickAndImportDatabase,
         ),
         const SizedBox(height: 16),
         Divider(color: Theme.of(context).colorScheme.outlineVariant),
@@ -79,9 +84,59 @@ class _DatabaseSettingsSectionState
     }
   }
 
-  void _showImportPickerMissingMessage() {
-    _showSnackBar(
-      'Do wyboru pliku importu potrzebna jest biblioteka file_picker.',
+  Future<void> _pickAndImportDatabase() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+      allowMultiple: false,
+    );
+    final path = result?.files.single.path;
+    if (path == null) return;
+
+    if (!mounted) return;
+    final confirmed = await _confirmImport();
+    if (confirmed != true) return;
+
+    setState(() => _isImporting = true);
+    try {
+      final result = await ref
+          .read(databaseBackupServiceProvider)
+          .importFromFile(File(path));
+      if (!mounted) return;
+      _showSnackBar(
+        'Zaimportowano ${result.rowCount} rekordów z pliku bazy danych.',
+      );
+    } on FormatException {
+      if (!mounted) return;
+      _showSnackBar('Ten plik nie wygląda jak poprawny eksport bazy danych.');
+    } catch (_) {
+      if (!mounted) return;
+      _showSnackBar('Nie udało się zaimportować bazy danych.');
+    } finally {
+      if (mounted) setState(() => _isImporting = false);
+    }
+  }
+
+  Future<bool?> _confirmImport() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Zaimportować bazę?'),
+        content: const Text(
+          'Import zastąpi aktualne dane lokalne zakresem zapisanym w pliku. '
+          'Przed kontynuacją upewnij się, że masz aktualny eksport.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Importuj'),
+          ),
+        ],
+      ),
     );
   }
 
