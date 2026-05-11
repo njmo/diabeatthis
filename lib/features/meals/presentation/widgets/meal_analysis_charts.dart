@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../data/models/meal_analysis_data.dart';
+import 'meal_details/meal_detail_formatters.dart';
+import 'meal_details/meal_detail_icons.dart';
 
 class MealGlucoseChart extends StatelessWidget {
   final MealAnalysisData analysis;
@@ -222,13 +224,13 @@ class MealGlucoseChart extends StatelessWidget {
     return markers.map((marker) {
       return LineChartBarData(
         spots: [FlSpot(marker.x, marker.y)],
-        color: _eventColor(marker.event.type),
+        color: mealTimelineEventColor(marker.event.type),
         barWidth: 0,
         dotData: FlDotData(
           getDotPainter: (spot, percent, bar, index) {
             return _TimelineEventIconPainter(
-              icon: _eventIcon(marker.event.type),
-              color: _eventColor(marker.event.type),
+              icon: mealTimelineEventIcon(marker.event.type),
+              color: mealTimelineEventColor(marker.event.type),
             );
           },
         ),
@@ -272,7 +274,7 @@ class MealGlucoseChart extends StatelessWidget {
             return SideTitleWidget(
               meta: meta,
               child: Text(
-                _formatTime(time),
+                mealTime(time),
                 style: Theme.of(context).textTheme.labelSmall,
               ),
             );
@@ -361,14 +363,11 @@ LineTooltipItem _tooltipItemForSpots({
     final lines = events.map((event) {
       final value = event.value?.replaceAll('\n', ' ');
       if (value == null || value.trim().isEmpty) {
-        return event.label;
+        return timelineEventLabel(event);
       }
-      return '${event.label}: $value';
+      return '${timelineEventLabel(event)}: $value';
     }).toList();
-    return LineTooltipItem(
-      '${_formatTime(time)}\n${lines.join('\n')}',
-      textStyle,
-    );
+    return LineTooltipItem('${mealTime(time)}\n${lines.join('\n')}', textStyle);
   }
 
   final glucose = _glucoseYAt(
@@ -376,7 +375,7 @@ LineTooltipItem _tooltipItemForSpots({
     analysis.chartStart.add(Duration(minutes: minute)),
   ).clamp(bounds.minY, bounds.maxY);
   return LineTooltipItem(
-    '${_formatTime(time)}\n${glucose.round()} mg/dL',
+    '${mealTime(time)}\n${glucose.round()} mg/dL',
     textStyle,
   );
 }
@@ -443,7 +442,7 @@ class MealDeviceMetricChart extends StatelessWidget {
     if (analysis.deviceStatuses.isEmpty) {
       return const SizedBox(
         height: 160,
-        child: Center(child: Text('Brak device status w tym okresie')),
+        child: Center(child: Text('Brak danych COB/IOB w tym okresie')),
       );
     }
 
@@ -543,7 +542,7 @@ class MealDeviceMetricChart extends StatelessWidget {
             return SideTitleWidget(
               meta: meta,
               child: Text(
-                _formatTime(time),
+                mealTime(time),
                 style: Theme.of(context).textTheme.labelSmall,
               ),
             );
@@ -655,30 +654,6 @@ Color _glucoseColor(double value) {
   return Colors.green;
 }
 
-Color _eventColor(MealTimelineEventType type) {
-  return switch (type) {
-    MealTimelineEventType.insulin => Colors.blue,
-    MealTimelineEventType.carbs => Colors.green,
-    MealTimelineEventType.correction => Colors.deepPurple,
-    MealTimelineEventType.activity => Colors.teal,
-    MealTimelineEventType.mealStatus => Colors.orange,
-    MealTimelineEventType.meal => Colors.brown,
-    MealTimelineEventType.deviceStatus => Colors.grey,
-  };
-}
-
-IconData _eventIcon(MealTimelineEventType type) {
-  return switch (type) {
-    MealTimelineEventType.insulin => Icons.vaccines,
-    MealTimelineEventType.carbs => Icons.bakery_dining,
-    MealTimelineEventType.correction => Icons.medical_services,
-    MealTimelineEventType.activity => Icons.directions_run,
-    MealTimelineEventType.mealStatus => Icons.flag,
-    MealTimelineEventType.meal => Icons.restaurant,
-    MealTimelineEventType.deviceStatus => Icons.sensors,
-  };
-}
-
 class _TimelineEventIconPainter extends FlDotPainter {
   final IconData icon;
   final Color color;
@@ -727,10 +702,4 @@ class _TimelineEventIconPainter extends FlDotPainter {
 
   @override
   List<Object?> get props => [icon, color, size];
-}
-
-String _formatTime(DateTime date) {
-  final hour = date.hour.toString().padLeft(2, '0');
-  final minute = date.minute.toString().padLeft(2, '0');
-  return '$hour:$minute';
 }

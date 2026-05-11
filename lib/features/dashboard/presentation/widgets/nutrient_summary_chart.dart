@@ -10,30 +10,34 @@ class NutrientSummaryChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final carbs =macros.carbsTotal;
+    final carbs = macros.carbsTotal;
     final fat = macros.fatTotal;
     final protein = macros.proteinTotal;
     final fiber = macros.fiberTotal;
 
     final total = carbs + protein + fat + fiber;
 
-    if(total == 0) {
+    if (total == 0) {
       return const SizedBox.shrink();
     }
 
     final nutrients = [
-      _Nutrient('Carbs', carbs , Colors.blue),
-      _Nutrient('Protein', protein, Colors.green),
-      _Nutrient('Fat', fat, Colors.orange),
-      _Nutrient('Fiber', fiber, Colors.purple),
+      _Nutrient('Węglowodany', carbs, Colors.blue),
+      _Nutrient('Białko', protein, Colors.green),
+      _Nutrient('Tłuszcz', fat, Colors.orange),
+      _Nutrient('Błonnik', fiber, Colors.purple),
     ];
 
-    final sections = nutrients.map((n) => PieChartSectionData(
-      value: n.value.toDouble(),
-      color: n.color,
-      showTitle: false,
-      radius: 35,
-    )).toList();
+    final sections = nutrients
+        .map(
+          (n) => PieChartSectionData(
+            value: n.value.toDouble(),
+            color: n.color,
+            showTitle: false,
+            radius: 35,
+          ),
+        )
+        .toList();
 
     final legendItems = nutrients.map((n) {
       final pct = total == 0 ? 0 : n.value / total * 100;
@@ -54,7 +58,10 @@ class NutrientSummaryChart extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Macronutrient Breakdown', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text(
+              'Podział makroskładników',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 10),
             Row(
               children: [
