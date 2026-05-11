@@ -68,6 +68,18 @@ class _DatabaseSettingsSectionState
     setState(() => _isExporting = true);
     try {
       final service = ref.read(databaseBackupServiceProvider);
+      final bytes = await service.exportToBytes(_selectedScope);
+      final savedPath = await FilePicker.saveFile(
+        fileName: service.exportFileName(_selectedScope),
+        bytes: bytes,
+        type: FileType.any,
+      );
+      if (savedPath == null) return;
+
+      if (!mounted) return;
+      _showSnackBar('Eksport bazy danych został zapisany.');
+    } on MissingPluginException {
+      final service = ref.read(databaseBackupServiceProvider);
       final file = await service.exportToFile(_selectedScope);
       await SharePlus.instance.share(
         ShareParams(
@@ -76,7 +88,7 @@ class _DatabaseSettingsSectionState
         ),
       );
       if (!mounted) return;
-      _showSnackBar('Eksport bazy danych jest gotowy.');
+      _showSnackBar('Eksport bazy danych jest gotowy do udostępnienia.');
     } catch (_) {
       if (!mounted) return;
       _showSnackBar('Nie udało się wyeksportować bazy danych.');
@@ -86,13 +98,14 @@ class _DatabaseSettingsSectionState
   }
 
   Future<void> _pickAndImportDatabase() async {
-    String? path;
+    PlatformFile? file;
     try {
       final result = await FilePicker.pickFiles(
         type: FileType.any,
         allowMultiple: false,
+        withData: true,
       );
-      path = result?.files.single.path;
+      file = result?.files.single;
     } on MissingPluginException {
       if (!mounted) return;
       _showSnackBar(
@@ -101,8 +114,11 @@ class _DatabaseSettingsSectionState
       return;
     }
 
-    if (path == null) return;
-    if (!path.toLowerCase().endsWith('.json')) {
+    if (file == null) return;
+    final path = file.path;
+    final fileName = file.name.toLowerCase();
+    final pathName = path?.toLowerCase();
+    if (!fileName.endsWith('.json') && pathName?.endsWith('.json') != true) {
       _showSnackBar('Wybierz plik eksportu w formacie JSON.');
       return;
     }
@@ -113,9 +129,15 @@ class _DatabaseSettingsSectionState
 
     setState(() => _isImporting = true);
     try {
-      final result = await ref
-          .read(databaseBackupServiceProvider)
-          .importFromFile(File(path));
+      final service = ref.read(databaseBackupServiceProvider);
+      if (file.bytes == null && path == null) {
+        _showSnackBar('Nie udało się odczytać wybranego pliku.');
+        return;
+      }
+
+      final result = file.bytes != null
+          ? await service.importFromBytes(file.bytes!)
+          : await service.importFromFile(File(path!));
       if (!mounted) return;
       _showSnackBar(
         'Zaimportowano ${result.rowCount} rekordów z pliku bazy danych.',

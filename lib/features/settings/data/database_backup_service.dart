@@ -26,15 +26,23 @@ class DatabaseBackupService {
 
   final DatabaseImpl _db;
 
-  Future<File> exportToFile(DatabaseBackupScope scope) async {
-    final payload = await exportToJson(scope);
-    final dir = await getTemporaryDirectory();
+  String exportFileName(DatabaseBackupScope scope) {
     final nowToken = clock.now().toIso8601String().replaceAll(':', '-');
-    final fileName = 'diabeatthis-db-${scope.fileToken}-$nowToken.json';
+    return 'diabeatthis-db-${scope.fileToken}-$nowToken.json';
+  }
+
+  Future<Uint8List> exportToBytes(DatabaseBackupScope scope) async {
+    final payload = await exportToJson(scope);
+    const encoder = JsonEncoder.withIndent('  ');
+    return Uint8List.fromList(utf8.encode(encoder.convert(payload)));
+  }
+
+  Future<File> exportToFile(DatabaseBackupScope scope) async {
+    final dir = await getTemporaryDirectory();
+    final fileName = exportFileName(scope);
     final file = File(p.join(dir.path, fileName));
 
-    const encoder = JsonEncoder.withIndent('  ');
-    return file.writeAsString(encoder.convert(payload), flush: true);
+    return file.writeAsBytes(await exportToBytes(scope), flush: true);
   }
 
   Future<Map<String, Object?>> exportToJson(DatabaseBackupScope scope) async {
@@ -60,7 +68,15 @@ class DatabaseBackupService {
   }
 
   Future<DatabaseBackupResult> importFromFile(File file) async {
-    final payload = jsonDecode(await file.readAsString());
+    return importFromString(await file.readAsString());
+  }
+
+  Future<DatabaseBackupResult> importFromBytes(List<int> bytes) async {
+    return importFromString(utf8.decode(bytes));
+  }
+
+  Future<DatabaseBackupResult> importFromString(String json) async {
+    final payload = jsonDecode(json);
     if (payload is! Map<String, Object?>) {
       throw const FormatException('Database backup must be a JSON object');
     }
