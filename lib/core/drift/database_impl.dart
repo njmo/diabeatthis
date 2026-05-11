@@ -32,7 +32,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -49,10 +49,30 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     onCreate: (m) async {
       await m.createAll();
     },
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await _addActivityDurationColumnIfMissing();
+      }
+    },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  Future<void> _addActivityDurationColumnIfMissing() async {
+    final columns = await customSelect('PRAGMA table_info(activity)').get();
+    final hasDurationColumn = columns.any(
+      (row) => row.data['name'] == 'duration_minutes',
+    );
+
+    if (hasDurationColumn) return;
+
+    await customStatement('''
+      ALTER TABLE activity
+      ADD COLUMN duration_minutes INTEGER
+      CHECK (duration_minutes IS NULL OR duration_minutes > 0)
+    ''');
+  }
 
   Future<void> deleteEverything() async {
     await customStatement('PRAGMA foreign_keys = OFF');

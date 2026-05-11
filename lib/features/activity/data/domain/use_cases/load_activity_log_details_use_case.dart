@@ -26,6 +26,7 @@ class LoadActivityLogDetailsUseCase {
       activityName: activity.name,
       percentagePre: activity.percentagePre,
       percentagePost: activity.percentagePost,
+      durationMinutes: activity.durationMinutes,
       startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
       endedAt: log.endedAt == null
           ? null

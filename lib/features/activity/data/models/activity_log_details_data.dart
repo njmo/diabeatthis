@@ -4,6 +4,7 @@ class ActivityLogDetailsData {
   final String activityName;
   final int percentagePre;
   final int percentagePost;
+  final int? durationMinutes;
   final DateTime startedAt;
   final DateTime? endedAt;
   final String? intensity;
@@ -18,6 +19,7 @@ class ActivityLogDetailsData {
     required this.activityName,
     required this.percentagePre,
     required this.percentagePost,
+    required this.durationMinutes,
     required this.startedAt,
     required this.endedAt,
     required this.intensity,

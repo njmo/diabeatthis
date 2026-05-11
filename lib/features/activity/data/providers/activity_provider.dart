@@ -23,8 +23,12 @@ class ActivityDraftNotifier extends _$ActivityDraftNotifier {
     state = state.map(
       existing: (a) => a.copyWith(name: value),
       draft: (a) => a.copyWith(name: value),
-      empty: (_) =>
-          Activity.draft(name: value, percentagePre: 0, percentagePost: 0),
+      empty: (_) => Activity.draft(
+        name: value,
+        percentagePre: 0,
+        percentagePost: 0,
+        durationMinutes: null,
+      ),
     );
   }
 
@@ -36,6 +40,7 @@ class ActivityDraftNotifier extends _$ActivityDraftNotifier {
         name: '',
         percentagePre: int.tryParse(value) ?? 0,
         percentagePost: 0,
+        durationMinutes: null,
       ),
     );
   }
@@ -48,6 +53,43 @@ class ActivityDraftNotifier extends _$ActivityDraftNotifier {
         name: '',
         percentagePre: 0,
         percentagePost: int.tryParse(value) ?? 0,
+        durationMinutes: null,
+      ),
+    );
+  }
+
+  void setDurationMinutes(String value) {
+    final trimmedValue = value.trim();
+    final duration = trimmedValue.isEmpty ? null : int.tryParse(trimmedValue);
+    state = state.map(
+      existing: (a) => a.copyWith(durationMinutes: duration),
+      draft: (a) => a.copyWith(durationMinutes: duration),
+      empty: (_) => Activity.draft(
+        name: '',
+        percentagePre: 0,
+        percentagePost: 0,
+        durationMinutes: duration,
+      ),
+    );
+  }
+
+  void setHasPlannedDuration(bool value) {
+    state = state.map(
+      existing: (a) => a.copyWith(
+        durationMinutes: value
+            ? a.durationMinutes ?? defaultPlannedActivityDurationMinutes
+            : null,
+      ),
+      draft: (a) => a.copyWith(
+        durationMinutes: value
+            ? a.durationMinutes ?? defaultPlannedActivityDurationMinutes
+            : null,
+      ),
+      empty: (_) => Activity.draft(
+        name: '',
+        percentagePre: 0,
+        percentagePost: 0,
+        durationMinutes: value ? defaultPlannedActivityDurationMinutes : null,
       ),
     );
   }
@@ -70,6 +112,18 @@ class ActivityDraftNotifier extends _$ActivityDraftNotifier {
     empty: (_) => 0,
   );
 
+  int? getDurationMinutes() => state.map(
+    existing: (a) => a.durationMinutes,
+    draft: (a) => a.durationMinutes,
+    empty: (_) => null,
+  );
+
+  bool hasPlannedDuration() => state.map(
+    existing: (a) => a.durationMinutes != null,
+    draft: (a) => a.durationMinutes != null,
+    empty: (_) => false,
+  );
+
   void overrideDraft(Activity activity) => state = activity;
 }
 
@@ -82,10 +136,7 @@ class ActivityControllerNotifier extends _$ActivityControllerNotifier {
 
   Future<Activity?> saveActivity(Activity act, [DateTime? date]) async {
     final db = ref.watch(databaseProvider);
-    final isDraft = act.maybeWhen(
-      draft: (_, __, ___) => true,
-      orElse: () => false,
-    );
+    final isDraft = act.maybeMap(draft: (_) => true, orElse: () => false);
     if (isDraft) {
       final value = await db.activityDao.insertActivity(act.toCompanion());
       if (value == null) return null;

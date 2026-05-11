@@ -131,6 +131,11 @@ class ActivityLogPage extends ConsumerWidget {
                     label: 'Czas trwania',
                     value: _formatDuration(log.duration),
                   ),
+                  _InfoRow(
+                    icon: Icons.schedule,
+                    label: 'Planowany czas',
+                    value: _formatMinutes(log.durationMinutes),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -211,6 +216,22 @@ class ActivityLogPage extends ConsumerWidget {
       return '$minutes min';
     }
     return '${hours}h ${minutes.toString().padLeft(2, '0')} min';
+  }
+
+  static String _formatMinutes(int? minutes) {
+    if (minutes == null) {
+      return 'Do ręcznego zatrzymania';
+    }
+
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes.remainder(60);
+    if (hours == 0) {
+      return '$minutes min';
+    }
+    if (remainingMinutes == 0) {
+      return '${hours}h';
+    }
+    return '${hours}h ${remainingMinutes.toString().padLeft(2, '0')} min';
   }
 }
 

@@ -21,6 +21,7 @@ extension ActivityDataToDomain on ActivityData {
     name: name,
     percentagePre: percentagePre,
     percentagePost: percentagePost,
+    durationMinutes: durationMinutes,
   );
 }
 
@@ -64,12 +65,14 @@ extension ActivityToCompanion on Activity {
         name: d.Value(e.name),
         percentagePre: d.Value(e.percentagePre),
         percentagePost: d.Value(e.percentagePost),
+        durationMinutes: d.Value(e.durationMinutes),
       ),
       existing: (e) => ActivityCompanion(
         id: d.Value(e.id),
         name: d.Value(e.name),
         percentagePre: d.Value(e.percentagePre),
         percentagePost: d.Value(e.percentagePost),
+        durationMinutes: d.Value(e.durationMinutes),
       ),
       empty: (_) => throw StateError("Empty should not be pushed"),
     );
