@@ -15,6 +15,7 @@ import '../collector/treatments_collector.dart';
 import '../event/external/external_event_handler.dart';
 import '../synchronization/synchronization_cache_controller.dart';
 import '../task/base/collector_context.dart';
+import '../task/tasks/activity_monitor_task/activity_monitor_task.dart';
 import '../task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import '../task/tasks/service_status_updater_task.dart';
 import '../task/tasks/temp_target_monitor_task.dart';
@@ -50,6 +51,7 @@ class MyTaskHandler extends TaskHandler with Logging {
 
     final tasks = [
       MealMonitorTask(),
+      ActivityMonitorTask(),
       ServiceStatusUpdaterTask(),
       TempTargetMonitorTask(),
     ];

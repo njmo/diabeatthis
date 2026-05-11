@@ -1,5 +1,6 @@
 import '../models/notification_event.dart';
 import '../models/notification_event_type.dart';
+import 'activity_finished_notification.dart';
 import 'eat_now_event_notification.dart';
 import 'finished_eating_event_notification.dart';
 import 'meal_suggestion_notification.dart';
@@ -22,6 +23,8 @@ class NotificationEventFactory {
         return MealSuggestionNotificationEvent.fromPayload(data);
       case NotificationEventType.finishedEating:
         return FinishedEatingNotificationEvent.fromPayload(data);
+      case NotificationEventType.activityFinished:
+        return ActivityFinishedNotificationEvent.fromPayload(data);
       case NotificationEventType.mealSummaryReminder:
         return MealSummaryReminderNotificationEvent.fromPayload(data);
     }

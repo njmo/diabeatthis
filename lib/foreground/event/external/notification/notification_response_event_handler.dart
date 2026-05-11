@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../../../common/events/data/notification/activity_finished_response_event.dart';
 import '../../../../common/events/data/notification/finished_eating_response_event.dart';
 import '../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../common/events/data/notification/meal_summary_reminder_response_event.dart';
@@ -32,6 +33,8 @@ class NotificationResponseEventHandler with Logging {
                 logI('Meal summary reminder opened for meal $mealId'),
           ),
       finishedEatingResponse: (FinishedEatingResponseEvent data) =>
+          context.emitEvent(data),
+      activityFinishedResponse: (ActivityFinishedResponseEvent data) =>
           context.emitEvent(data),
     );
   }
