@@ -448,9 +448,14 @@ class MealDeviceMetricChart extends StatelessWidget {
 
     final bounds = MealChartBounds.fromDeviceStatuses(analysis, metric);
     final scheme = Theme.of(context).colorScheme;
+    final spots = mealDeviceMetricSpots(
+      statuses: analysis.deviceStatuses,
+      metric: metric,
+      bounds: bounds,
+    );
 
     return SizedBox(
-      height: 170,
+      height: 80,
       child: LineChart(
         LineChartData(
           minX: 0,
@@ -461,16 +466,10 @@ class MealDeviceMetricChart extends StatelessWidget {
           extraLinesData: _extraLines(bounds, selectedTimestamp),
           lineBarsData: [
             LineChartBarData(
-              spots: analysis.deviceStatuses
-                  .map(
-                    (status) => FlSpot(
-                      bounds.minutesFromStart(status.date),
-                      metric.value(status),
-                    ),
-                  )
-                  .toList(),
+              spots: spots,
               color: metric.color,
               barWidth: 3,
+              isStepLineChart: true,
               isStrokeCapRound: true,
               dotData: const FlDotData(show: false),
             ),
@@ -551,6 +550,33 @@ class MealDeviceMetricChart extends StatelessWidget {
       ),
     );
   }
+}
+
+List<FlSpot> mealDeviceMetricSpots({
+  required List<DeviceStatus> statuses,
+  required MealDeviceMetric metric,
+  required MealChartBounds bounds,
+}) {
+  if (statuses.isEmpty) {
+    return const [];
+  }
+
+  final spots = <FlSpot>[];
+  for (var index = 0; index < statuses.length; index++) {
+    final status = statuses[index];
+    final effectiveDate = index == 0 ? status.date : statuses[index - 1].date;
+    spots.add(
+      FlSpot(bounds.minutesFromStart(effectiveDate), metric.value(status)),
+    );
+  }
+
+  final lastStatus = statuses.last;
+  final lastX = bounds.minutesFromStart(lastStatus.date);
+  if (spots.last.x < lastX) {
+    spots.add(FlSpot(lastX, metric.value(lastStatus)));
+  }
+
+  return spots;
 }
 
 enum MealDeviceMetric {
