@@ -67,7 +67,6 @@ class MealPageBody extends ConsumerWidget {
           MealActivityAnalysisSection(
             mealId: details.meal.id,
             analysis: state.analysis!,
-            selectedTimestamp: state.selectedTimestamp,
           ),
         MealTransitionAnalysisSection(details: details),
         MealSnapshotsSection(details: details),

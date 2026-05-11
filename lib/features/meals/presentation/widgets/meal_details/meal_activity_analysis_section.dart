@@ -12,13 +12,11 @@ import 'meal_detail_icons.dart';
 class MealActivityAnalysisSection extends ConsumerWidget {
   final int mealId;
   final MealAnalysisData analysis;
-  final DateTime? selectedTimestamp;
 
   const MealActivityAnalysisSection({
     super.key,
     required this.mealId,
     required this.analysis,
-    required this.selectedTimestamp,
   });
 
   @override
@@ -26,16 +24,6 @@ class MealActivityAnalysisSection extends ConsumerWidget {
     return MealSectionTile(
       title: 'Aktywności i zdarzenia',
       children: [
-        MealEventTimeline(
-          events: analysis.timelineEvents,
-          selectedTimestamp: selectedTimestamp,
-          onSelected: (timestamp) {
-            ref
-                .read(mealDetailsControllerProvider(mealId).notifier)
-                .selectTimestamp(timestamp);
-          },
-        ),
-        const SizedBox(height: 8),
         for (final event in analysis.timelineEvents)
           ListTile(
             dense: true,
@@ -64,56 +52,6 @@ class MealActivityAnalysisSection extends ConsumerWidget {
             },
           ),
       ],
-    );
-  }
-}
-
-class MealEventTimeline extends StatelessWidget {
-  final List<MealTimelineEventData> events;
-  final DateTime? selectedTimestamp;
-  final ValueChanged<DateTime> onSelected;
-
-  const MealEventTimeline({
-    super.key,
-    required this.events,
-    required this.selectedTimestamp,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (events.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (final event in events)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                avatar: Icon(
-                  mealTimelineEventIcon(event.type),
-                  size: 16,
-                  color: mealTimelineEventColor(event.type),
-                ),
-                label: Text(
-                  '${mealTime(event.timestamp)} ${timelineEventLabel(event)}',
-                ),
-                selected:
-                    selectedTimestamp != null &&
-                    selectedTimestamp!
-                            .difference(event.timestamp)
-                            .inMinutes
-                            .abs() <=
-                        2,
-                onSelected: (_) => onSelected(event.timestamp),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }

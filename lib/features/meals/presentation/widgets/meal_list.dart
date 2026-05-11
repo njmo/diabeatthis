@@ -25,7 +25,7 @@ class MealList extends HookConsumerWidget {
 
       isLoading.value = true;
       try {
-        await Future<void>.delayed(const Duration(seconds: 1));
+        await Future<void>.delayed(const Duration(milliseconds: 250));
         if (!context.mounted) return;
 
         final page = await ref.read(

@@ -58,7 +58,6 @@ dependencies:
   clock: ^1.1.2
   circular_buffer: ^0.12.0
   android_alarm_manager_plus: ^5.0.0
-  infinite_scroll_pagination: ^5.1.1
 
 dev_dependencies:
   flutter_test:
