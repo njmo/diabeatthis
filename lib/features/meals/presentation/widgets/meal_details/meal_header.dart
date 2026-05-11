@@ -20,11 +20,6 @@ class MealHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          details.meal.name,
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-        const SizedBox(height: 4),
         MealAnalysisProgressSummary(state: state),
         const SizedBox(height: 12),
         MealMetricGrid(

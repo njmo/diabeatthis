@@ -27,7 +27,7 @@ class MealPage extends ConsumerWidget {
       appBar: AppBar(
         title: state.maybeWhen(
           data: (value) => Text(value.details.meal.name),
-          orElse: () => Text('Posiłek $mealId'),
+          orElse: () => Text(''),
         ),
       ),
       body: state.when(
