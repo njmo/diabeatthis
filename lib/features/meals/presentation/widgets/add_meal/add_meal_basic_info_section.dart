@@ -22,7 +22,7 @@ class AddMealBasicInfoSection extends StatelessWidget {
       subtitle: 'Nazwij posiłek i wybierz, kiedy jest planowany.',
       children: [
         TextFormField(
-          maxLength: 30,
+          maxLength: 120,
           textInputAction: TextInputAction.next,
           validator: (value) {
             final name = value?.trim() ?? '';
