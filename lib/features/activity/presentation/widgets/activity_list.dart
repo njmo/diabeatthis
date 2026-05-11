@@ -4,7 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
-import '../../../../core/domain/model/activity_log.dart';
+import '../../../../core/domain/model/activity.dart';
 import '../../data/providers/activity_provider.dart';
 
 class ActivityList extends HookConsumerWidget {
@@ -12,7 +12,7 @@ class ActivityList extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activities = useState<List<ActivityLog>>(const []);
+    final activities = useState<List<Activity>>(const []);
     final nextPage = useState(0);
     final isLoading = useState(false);
     final hasMore = useState(true);
@@ -29,13 +29,13 @@ class ActivityList extends HookConsumerWidget {
         if (!context.mounted) return;
 
         final page = await ref.read(
-          activityLogListPageProvider(nextPage.value).future,
+          activityListPageProvider(nextPage.value).future,
         );
         if (!context.mounted) return;
 
         activities.value = [...activities.value, ...page];
         nextPage.value += 1;
-        hasMore.value = page.length == activityLogListPageSize;
+        hasMore.value = page.length == activityListPageSize;
         error.value = null;
       } catch (e) {
         if (!context.mounted) return;
@@ -113,18 +113,26 @@ class ActivityList extends HookConsumerWidget {
 
               final activity = activities.value[index];
               return activity.whenOrNull(
-                    view: (id, name, activityId, startedAt, endedAt) {
-                      return _ActivityLogCard(
-                        name: name,
-                        startedAt: startedAt,
-                        endedAt: endedAt,
-                        onTap: () {
-                          context.router.push(
-                            routes.ActivityLogRoute(activityLogId: id),
+                    existing:
+                        (
+                          id,
+                          name,
+                          percentagePre,
+                          percentagePost,
+                          durationMinutes,
+                        ) {
+                          return _ActivityCard(
+                            name: name,
+                            percentagePre: percentagePre,
+                            percentagePost: percentagePost,
+                            durationMinutes: durationMinutes,
+                            onTap: () {
+                              context.router.push(
+                                routes.ActivityRoute(activityId: id),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
                   ) ??
                   const SizedBox.shrink();
             },
@@ -175,23 +183,23 @@ class _ActivityListTail extends StatelessWidget {
   }
 }
 
-class _ActivityLogCard extends StatelessWidget {
+class _ActivityCard extends StatelessWidget {
   final String name;
-  final DateTime startedAt;
-  final DateTime? endedAt;
+  final int percentagePre;
+  final int percentagePost;
+  final int? durationMinutes;
   final VoidCallback onTap;
 
-  const _ActivityLogCard({
+  const _ActivityCard({
     required this.name,
-    required this.startedAt,
-    required this.endedAt,
+    required this.percentagePre,
+    required this.percentagePost,
+    required this.durationMinutes,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isActive = endedAt == null;
-
     return Card(
       margin: EdgeInsets.zero,
       elevation: 1,
@@ -218,7 +226,10 @@ class _ActivityLogCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  _StatusChip(active: isActive),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -227,16 +238,16 @@ class _ActivityLogCard extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   _MetaPill(
-                    icon: Icons.calendar_today,
-                    text: _formatDate(startedAt),
+                    icon: Icons.arrow_back,
+                    text: 'Przed: $percentagePre%',
                   ),
                   _MetaPill(
-                    icon: Icons.access_time,
-                    text: _formatTimeRange(startedAt, endedAt),
+                    icon: Icons.arrow_forward,
+                    text: 'Po: $percentagePost%',
                   ),
                   _MetaPill(
                     icon: Icons.timer,
-                    text: _formatDuration(startedAt, endedAt),
+                    text: _formatDuration(durationMinutes),
                   ),
                 ],
               ),
@@ -247,67 +258,20 @@ class _ActivityLogCard extends StatelessWidget {
     );
   }
 
-  static String _formatDate(DateTime date) {
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    return '$day.$month.${date.year}';
-  }
-
-  static String _formatTime(DateTime date) {
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  static String _formatTimeRange(DateTime startedAt, DateTime? endedAt) {
-    final end = endedAt == null ? 'teraz' : _formatTime(endedAt);
-    return '${_formatTime(startedAt)} - $end';
-  }
-
-  static String _formatDuration(DateTime startedAt, DateTime? endedAt) {
-    if (endedAt == null) {
-      return 'W trakcie';
+  static String _formatDuration(int? minutes) {
+    if (minutes == null) {
+      return 'Zakończenie ręczne';
     }
 
-    final duration = endedAt.difference(startedAt);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes.remainder(60);
     if (hours == 0) {
       return '$minutes min';
     }
-    return '${hours}h ${minutes.toString().padLeft(2, '0')} min';
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final bool active;
-
-  const _StatusChip({required this.active});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final background = active
-        ? scheme.primaryContainer
-        : scheme.surfaceContainerHighest;
-    final foreground = active
-        ? scheme.onPrimaryContainer
-        : scheme.onSurfaceVariant;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        active ? 'Aktywna' : 'Zakończona',
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
+    if (remainingMinutes == 0) {
+      return '${hours}h';
+    }
+    return '${hours}h ${remainingMinutes.toString().padLeft(2, '0')} min';
   }
 }
 

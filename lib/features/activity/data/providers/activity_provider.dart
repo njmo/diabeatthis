@@ -1,5 +1,4 @@
 import 'package:clock/clock.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' show FutureProvider;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/activity.dart';
@@ -11,6 +10,7 @@ import '../../../../core/logger/logger.dart';
 part 'activity_provider.g.dart';
 
 const activityLogListPageSize = 10;
+const activityListPageSize = 10;
 
 @riverpod
 class ActivityDraftNotifier extends _$ActivityDraftNotifier {
@@ -145,6 +145,12 @@ class ActivityControllerNotifier extends _$ActivityControllerNotifier {
       return act;
     }
   }
+
+  Future<Activity> updateActivity(Activity activity) async {
+    final db = ref.watch(databaseProvider);
+    final value = await db.activityDao.updateActivity(activity.toCompanion());
+    return value.toDomain();
+  }
 }
 
 @riverpod
@@ -185,33 +191,72 @@ Future<List<ActivityLog>> getActivityLogs(Ref ref) async {
             ? null
             : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
         activityId: activity.id,
+        durationMinutes: activity.durationMinutes,
       ),
     );
   }
   return activityLogs;
 }
 
-final activityLogListPageProvider = FutureProvider.autoDispose
-    .family<List<ActivityLog>, int>((ref, page) async {
-      final db = ref.watch(databaseProvider);
-      final value = await db.activityDao.getActivityLogs(page: page);
-      final activityLogs = <ActivityLog>[];
-      for (final log in value) {
-        final activity = await db.activityDao.getActivityById(log.activityId);
-        activityLogs.add(
-          ActivityLog.view(
-            id: log.id,
-            activityName: activity.name,
-            startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
-            endedAt: log.endedAt == null
-                ? null
-                : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
-            activityId: activity.id,
-          ),
-        );
-      }
-      return activityLogs;
-    });
+@riverpod
+Future<List<ActivityLog>> activityLogListPage(Ref ref, int page) async {
+  final db = ref.watch(databaseProvider);
+  final value = await db.activityDao.getActivityLogs(page: page);
+  final activityLogs = <ActivityLog>[];
+  for (final log in value) {
+    final activity = await db.activityDao.getActivityById(log.activityId);
+    activityLogs.add(
+      ActivityLog.view(
+        id: log.id,
+        activityName: activity.name,
+        startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
+        endedAt: log.endedAt == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
+        activityId: activity.id,
+        durationMinutes: activity.durationMinutes,
+      ),
+    );
+  }
+  return activityLogs;
+}
+
+@riverpod
+Future<List<Activity>> activityListPage(Ref ref, int page) async {
+  final db = ref.watch(databaseProvider);
+  final value = await db.activityDao.getActivities(page: page);
+  return value.toDomainList();
+}
+
+@riverpod
+Future<List<ActivityLog>> activityLogListForActivityPage(
+  Ref ref, {
+  required int activityId,
+  required int page,
+}) async {
+  final db = ref.watch(databaseProvider);
+  final value = await db.activityDao.getActivityLogsForActivity(
+    activityId,
+    page: page,
+  );
+  final activityLogs = <ActivityLog>[];
+  for (final log in value) {
+    final activity = await db.activityDao.getActivityById(log.activityId);
+    activityLogs.add(
+      ActivityLog.view(
+        id: log.id,
+        activityName: activity.name,
+        startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
+        endedAt: log.endedAt == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
+        activityId: activity.id,
+        durationMinutes: activity.durationMinutes,
+      ),
+    );
+  }
+  return activityLogs;
+}
 
 @riverpod
 Future<void> stopActivity(Ref ref, ActivityLog activityLog) async {
@@ -244,6 +289,7 @@ Future<ActivityLog?> getPendingActivity(Ref ref) async {
         ? null
         : DateTime.fromMillisecondsSinceEpoch(value.endedAt!),
     activityId: activity.id,
+    durationMinutes: activity.durationMinutes,
   );
 }
 

@@ -30,6 +30,10 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
     return elapsed >= target.duration;
   }
 
+  TemporaryTarget? _activeTarget(TemporaryTarget? target, DateTime now) {
+    return _isTargetExpired(target, now) ? null : target;
+  }
+
   int _elapsedMinutes(TemporaryTarget target, DateTime now) {
     final elapsed = now.difference(target.createdAt).inMinutes;
     return elapsed.clamp(0, target.duration);
@@ -40,22 +44,72 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
     return minutes < 0 ? 0 : minutes;
   }
 
-  int _minutesUntil(DateTime startedAt, DateTime now) {
-    final minutes = startedAt.difference(now).inMinutes;
-    return minutes < 0 ? 0 : minutes;
+  int _remainingMinutes(DateTime endAt, DateTime now) {
+    final seconds = endAt.difference(now).inSeconds;
+    if (seconds <= 0) return 0;
+    return (seconds / Duration.secondsPerMinute).ceil();
   }
 
-  bool _isActivityPlanned(dynamic pendingActivity, DateTime now) {
-    if (pendingActivity == null) return false;
-    return pendingActivity.startedAt.isAfter(now);
+  bool _isActivityPlanned(ActivityLog activity, DateTime now) {
+    return activity.startedAt.isAfter(now);
   }
 
   bool _isActivityLinkedToTarget(
-      dynamic pendingActivity,
-      TemporaryTarget target,
-      ) {
+    ActivityLog? pendingActivity,
+    TemporaryTarget target,
+  ) {
     if (pendingActivity == null) return false;
     return pendingActivity.startedAt == target.createdAt;
+  }
+
+  String _activityName(ActivityLog activity) {
+    return activity.whenOrNull(view: (_, name, _, _, _, _) => name) ??
+        'Aktywność';
+  }
+
+  int? _activityDurationMinutes(ActivityLog activity) {
+    return activity.whenOrNull(
+      view: (_, _, _, _, _, durationMinutes) => durationMinutes,
+    );
+  }
+
+  String _targetSubtitle(TemporaryTarget target, DateTime now) {
+    final elapsed = _elapsedMinutes(target, now);
+    return '${target.targetTop} mg/dl • $elapsed/${target.duration} min';
+  }
+
+  String _activitySubtitle(
+    ActivityLog activity,
+    DateTime now, {
+    TemporaryTarget? linkedTarget,
+  }) {
+    final isPlanned = _isActivityPlanned(activity, now);
+    final durationMinutes = _activityDurationMinutes(activity);
+    final parts = <String>[
+      _activityName(activity),
+      if (isPlanned)
+        'start za ${_remainingMinutes(activity.startedAt, now)} min'
+      else
+        'trwa ${_activityElapsedMinutes(activity.startedAt, now)} min',
+    ];
+
+    if (durationMinutes != null) {
+      final endAt = activity.startedAt.add(Duration(minutes: durationMinutes));
+      if (isPlanned) {
+        parts.add('czas trwania $durationMinutes min');
+      } else {
+        final minutesLeft = _remainingMinutes(endAt, now);
+        parts.add(
+          minutesLeft == 0 ? 'czas minął' : 'koniec za $minutesLeft min',
+        );
+      }
+    }
+
+    if (linkedTarget != null) {
+      parts.add('target ${_targetSubtitle(linkedTarget, now)}');
+    }
+
+    return parts.join(' • ');
   }
 
   @override
@@ -74,36 +128,32 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
       return const SizedBox.shrink();
     }
 
-    final target = _isTargetExpired(targetUi, now) ? null : targetUi;
+    final target = _activeTarget(targetUi, now);
     final pendingActivity = pendingActivityAsync.whenOrNull(data: (d) => d);
-
-    final isActivityPlanned = _isActivityPlanned(pendingActivity, now);
-    final isActivityInProgress =
-        pendingActivity != null && !isActivityPlanned;
-    final isActivityTargetActive =
-        target != null && _isActivityTarget(target);
-    final isMealTargetActive = target != null && _isMealTarget(target);
-    final isLinkedToActivityTarget = target != null &&
-        _isActivityTarget(target) &&
-        _isActivityLinkedToTarget(pendingActivity, target);
 
     final cards = <Widget>[];
 
-    if (isActivityInProgress && isLinkedToActivityTarget) {
-      final targetMinutes = _elapsedMinutes(target, now);final activityName =
-          pendingActivity.whenOrNull(view: (_, name, _, _, _) => name) ??
-              'Aktywność';
+    if (pendingActivity != null) {
+      final linkedTarget =
+          target != null &&
+              _isActivityTarget(target) &&
+              _isActivityLinkedToTarget(pendingActivity, target)
+          ? target
+          : null;
 
       cards.add(
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: _StatusInfoCard(
             icon: Icons.directions_run_rounded,
-            title: 'Aktywność w toku',
-            subtitle:
-            '$activityName • trwa ${_activityElapsedMinutes(pendingActivity.startedAt, now)} min '
-                '• target $activityTargetValue mg/dl '
-                '• target: $targetMinutes/${target.duration} min',
+            title: _isActivityPlanned(pendingActivity, now)
+                ? 'Zaplanowana aktywność'
+                : 'Aktywność w toku',
+            subtitle: _activitySubtitle(
+              pendingActivity,
+              now,
+              linkedTarget: linkedTarget,
+            ),
             trailing: IconButton(
               tooltip: 'Zakończ aktywność',
               icon: const Icon(Icons.stop_circle_outlined),
@@ -115,117 +165,92 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
           ),
         ),
       );
-    } else {
-      if (isActivityTargetActive) {
-        final targetMinutes = _elapsedMinutes(target, now);
+    }
 
+    final targetShownWithActivity =
+        target != null &&
+        _isActivityTarget(target) &&
+        _isActivityLinkedToTarget(pendingActivity, target);
+
+    if (target != null && !targetShownWithActivity) {
+      if (_isActivityTarget(target)) {
         cards.add(
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _StatusInfoCard(
               icon: Icons.track_changes_rounded,
-              title: 'Target aktywności aktywny',
-              subtitle:
-              '$activityTargetValue mg/dl • $targetMinutes/${target.duration} min',
-              trailing: (!isActivityPlanned && pendingActivity == null)
+              title: 'Temp target aktywności',
+              subtitle: _targetSubtitle(target, now),
+              trailing: pendingActivity == null
                   ? FilledButton.icon(
-                onPressed: () async {
-                  final activity = await showDialog<Activity?>(
-                    barrierDismissible: true,
-                    context: context,
-                    builder: (context) => const ActivityPickerDialog(),
-                  );
-
-                  if (activity == null) return;
-
-                  final controller =
-                  ref.read(activityControllerProvider.notifier);
-
-                  Activity? act;
-                  try {
-                    act = await controller.saveActivity(activity);
-                    if (act == null) {
-                      throw Exception(
-                        'Something went wrong with adding activity',
-                      );
-                    }
-                  } catch (e, st) {
-                    logE('Błąd dodawania aktywności $e, $st');
-                    if (context.mounted) {
-                      await showActivityAddFailedDialog(context);
-                    }
-                    return;
-                  }
-
-                  await act.whenOrNull(
-                    existing: (id, name, pre, post) async {
-                      logI('Starting activity: $id $name');
-                      try {
-                        await ref.read(
-                          insertActivityLogProvider(
-                            ActivityLog.draft(
-                              activityId: id,
-                              startedAt: target.createdAt,
-                            ),
-                          ).future,
+                      onPressed: () async {
+                        final activity = await showDialog<Activity?>(
+                          barrierDismissible: true,
+                          context: context,
+                          builder: (context) => const ActivityPickerDialog(),
                         );
-                        ref.invalidate(getPendingActivityProvider);
-                      } catch (_) {
-                        if (context.mounted) {
-                          await showActivityInProgressDialog(context);
+
+                        if (activity == null) return;
+
+                        final controller = ref.read(
+                          activityControllerProvider.notifier,
+                        );
+
+                        Activity? act;
+                        try {
+                          act = await controller.saveActivity(activity);
+                          if (act == null) {
+                            throw Exception(
+                              'Something went wrong with adding activity',
+                            );
+                          }
+                        } catch (e, st) {
+                          logE('Błąd dodawania aktywności $e, $st');
+                          if (context.mounted) {
+                            await showActivityAddFailedDialog(context);
+                          }
+                          return;
                         }
-                      }
-                    },
-                  );
-                },
-                icon: const Icon(Icons.app_registration),
-                label: const Text('Podepnij aktywność'),
-              )
+
+                        await act.whenOrNull(
+                          existing:
+                              (id, name, pre, post, durationMinutes) async {
+                                logI('Starting activity: $id $name');
+                                try {
+                                  await ref.read(
+                                    insertActivityLogProvider(
+                                      ActivityLog.draft(
+                                        activityId: id,
+                                        startedAt: target.createdAt,
+                                      ),
+                                    ).future,
+                                  );
+                                  ref.invalidate(getPendingActivityProvider);
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    await showActivityInProgressDialog(context);
+                                  }
+                                }
+                              },
+                        );
+                      },
+                      icon: const Icon(Icons.app_registration),
+                      label: const Text('Podepnij aktywność'),
+                    )
                   : null,
             ),
           ),
         );
       }
 
-      if (isMealTargetActive) {
-        final minutes = _elapsedMinutes(target, now);
-
+      if (_isMealTarget(target)) {
         cards.add(
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _StatusInfoCard(
               icon: Icons.restaurant_rounded,
-              title: 'Meal target aktywny',
-              subtitle: '$mealTargetValue mg/dl • $minutes/${target.duration} min',
-            ),
-          ),
-        );
-      }
-
-      if (pendingActivity != null) {
-        final activityName =
-            pendingActivity.whenOrNull(view: (_, name, _, _, _) => name) ??
-                'Aktywność';
-
-        cards.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _StatusInfoCard(
-              icon: Icons.directions_run_rounded,
-              title: isActivityPlanned
-                  ? 'Zaplanowana aktywność'
-                  : 'Aktywność w toku',
-              subtitle: isActivityPlanned
-                  ? '$activityName • start za ${_minutesUntil(pendingActivity.startedAt, now)} min'
-                  : '$activityName • trwa ${_activityElapsedMinutes(pendingActivity.startedAt, now)} min',
-              trailing: IconButton(
-                tooltip: 'Zakończ aktywność',
-                icon: const Icon(Icons.stop_circle_outlined),
-                onPressed: () async {
-                  await ref.read(stopActivityProvider(pendingActivity).future);
-                  ref.invalidate(getPendingActivityProvider);
-                },
-              ),
+              title: 'Temp target posiłku',
+              subtitle: _targetSubtitle(target, now),
             ),
           ),
         );
@@ -254,7 +279,7 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
           title: const Text('Aktywność w toku'),
           content: const Text(
             'Jedna aktywność jest już w trakcie.\n\n'
-                'Nie można rozpocząć nowej, dopóki obecna nie zostanie zakończona.',
+            'Nie można rozpocząć nowej, dopóki obecna nie zostanie zakończona.',
           ),
         );
       },
@@ -269,7 +294,7 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
           title: const Text('Problem z dodaniem aktywności'),
           content: const Text(
             'Taka aktywność już istnieje lub parametry nie są podane prawidłowo.\n'
-                'Pamiętaj: pre i post muszą być <100 i >0.',
+            'Pamiętaj: pre i post muszą być <100 i >0.',
           ),
         );
       },

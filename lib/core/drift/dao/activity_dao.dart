@@ -17,8 +17,31 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     return into(db.activity).insertReturningOrNull(activity);
   }
 
+  Future<ActivityData> updateActivity(ActivityCompanion activity) async {
+    await update(db.activity).replace(activity);
+    return getActivityById(activity.id.value);
+  }
+
+  Future<List<ActivityData>> getActivities({int page = 0}) async {
+    return (select(db.activity)
+          ..orderBy([(activity) => OrderingTerm.asc(activity.name)])
+          ..limit(10, offset: page * 10))
+        .get();
+  }
+
   Future<List<ActivityLogData>> getActivityLogs({int page = 0}) async {
     return (select(db.activityLog)
+          ..orderBy([(log) => OrderingTerm.desc(log.startedAt)])
+          ..limit(10, offset: page * 10))
+        .get();
+  }
+
+  Future<List<ActivityLogData>> getActivityLogsForActivity(
+    int activityId, {
+    int page = 0,
+  }) async {
+    return (select(db.activityLog)
+          ..where((log) => log.activityId.equals(activityId))
           ..orderBy([(log) => OrderingTerm.desc(log.startedAt)])
           ..limit(10, offset: page * 10))
         .get();

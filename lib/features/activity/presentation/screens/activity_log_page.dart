@@ -2,6 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/widgets/detail_section_card.dart';
 import '../../../../core/domain/model/correction_bolus.dart';
 import '../../../../core/domain/model/extended_carb.dart';
 import '../../../../core/domain/model/manual_bolus.dart';
@@ -68,6 +70,19 @@ class ActivityLogPage extends ConsumerWidget {
                           _StatusChip(active: log.isActive),
                         ],
                       ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            context.router.push(
+                              routes.ActivityRoute(activityId: log.activityId),
+                            );
+                          },
+                          icon: const Icon(Icons.open_in_new),
+                          label: const Text('Zobacz aktywność'),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -88,10 +103,10 @@ class ActivityLogPage extends ConsumerWidget {
                   },
                 )
               else if (log.endedAt == null)
-                const _SectionCard(
+                const DetailSectionCard(
                   title: 'Analiza glikemii',
                   children: [
-                    _InfoRow(
+                    DetailInfoRow(
                       icon: Icons.insights,
                       label: 'Status',
                       value: 'Dostępna po zakończeniu aktywności',
@@ -99,10 +114,10 @@ class ActivityLogPage extends ConsumerWidget {
                   ],
                 )
               else if (state.analysisError != null)
-                _SectionCard(
+                DetailSectionCard(
                   title: 'Analiza glikemii',
                   children: [
-                    _InfoRow(
+                    DetailInfoRow(
                       icon: Icons.cloud_off,
                       label: 'Nightscout',
                       value: state.analysisError!,
@@ -111,27 +126,27 @@ class ActivityLogPage extends ConsumerWidget {
                   ],
                 ),
               const SizedBox(height: 12),
-              _SectionCard(
+              DetailSectionCard(
                 title: 'Czas',
                 children: [
-                  _InfoRow(
+                  DetailInfoRow(
                     icon: Icons.play_arrow,
                     label: 'Start',
                     value: _formatDateTime(log.startedAt),
                   ),
-                  _InfoRow(
+                  DetailInfoRow(
                     icon: Icons.stop,
                     label: 'Koniec',
                     value: log.endedAt == null
                         ? 'W trakcie'
                         : _formatDateTime(log.endedAt!),
                   ),
-                  _InfoRow(
+                  DetailInfoRow(
                     icon: Icons.timer,
                     label: 'Czas trwania',
                     value: _formatDuration(log.duration),
                   ),
-                  _InfoRow(
+                  DetailInfoRow(
                     icon: Icons.schedule,
                     label: 'Planowany czas',
                     value: _formatMinutes(log.durationMinutes),
@@ -139,15 +154,15 @@ class ActivityLogPage extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              _SectionCard(
+              DetailSectionCard(
                 title: 'Wpływ na insulinę',
                 children: [
-                  _InfoRow(
+                  DetailInfoRow(
                     icon: Icons.arrow_back,
                     label: 'Przed aktywnością',
                     value: '${log.percentagePre}%',
                   ),
-                  _InfoRow(
+                  DetailInfoRow(
                     icon: Icons.arrow_forward,
                     label: 'Po aktywności',
                     value: '${log.percentagePost}%',
@@ -155,26 +170,26 @@ class ActivityLogPage extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              _SectionCard(
+              DetailSectionCard(
                 title: 'Szczegóły',
                 children: [
-                  _InfoRow(
+                  DetailInfoRow(
                     icon: Icons.speed,
                     label: 'Intensywność',
                     value: _fallback(log.intensity),
                   ),
-                  _InfoRow(
+                  DetailInfoRow(
                     icon: Icons.notes,
                     label: 'Notatki',
                     value: _fallback(log.notes),
                   ),
-                  _InfoRow(
+                  DetailInfoRow(
                     icon: Icons.sync,
                     label: 'Synchronizacja',
                     value: log.isSynced ? 'Zsynchronizowane' : 'Lokalne zmiany',
                     valueColor: log.isSynced ? scheme.primary : scheme.error,
                   ),
-                  _InfoRow(
+                  DetailInfoRow(
                     icon: Icons.update,
                     label: 'Ostatnia zmiana',
                     value: _formatDateTime(log.updatedAt),
@@ -288,7 +303,7 @@ class _ActivityAnalysisSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SectionCard(
+        DetailSectionCard(
           title: 'Glikemia / COB / IOB i zdarzenia',
           children: [
             Padding(
@@ -316,24 +331,24 @@ class _ActivityAnalysisSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        _SectionCard(
+        DetailSectionCard(
           title: 'Start aktywności',
           children: [
-            _InfoRow(
+            DetailInfoRow(
               icon: Icons.bloodtype,
               label: 'Cukier na starcie',
               value: analysis.glucoseAtStart == null
                   ? '-'
                   : '${analysis.glucoseAtStart} mg/dl',
             ),
-            _InfoRow(
+            DetailInfoRow(
               icon: Icons.vaccines,
               label: 'Aktywna insulina',
               value: analysis.iobAtStart == null
                   ? '-'
                   : '${analysis.iobAtStart!.toStringAsFixed(2)} U',
             ),
-            _InfoRow(
+            DetailInfoRow(
               icon: Icons.grain,
               label: 'Aktywne węglowodany',
               value: analysis.cobAtStart == null
@@ -341,7 +356,7 @@ class _ActivityAnalysisSection extends StatelessWidget {
                   : '${analysis.cobAtStart!.toStringAsFixed(1)} g',
             ),
             if (analysis.preActivityMeals.isEmpty)
-              const _InfoRow(
+              const DetailInfoRow(
                 icon: Icons.restaurant,
                 label: 'Posiłek do 1h przed',
                 value: 'Brak',
@@ -351,20 +366,20 @@ class _ActivityAnalysisSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        _SectionCard(
+        DetailSectionCard(
           title: 'Podsumowanie glikemii',
           children: [
-            _InfoRow(
+            DetailInfoRow(
               icon: Icons.show_chart,
               label: 'Średni cukier',
               value: average == null ? '-' : '${average.round()} mg/dl',
             ),
-            _InfoRow(
+            DetailInfoRow(
               icon: Icons.swap_vert,
               label: 'Zakres',
               value: min == null || max == null ? '-' : '$min-$max mg/dl',
             ),
-            _InfoRow(
+            DetailInfoRow(
               icon: Icons.bakery_dining,
               label: 'Dodatkowe treat',
               value: treats.isEmpty
@@ -375,11 +390,11 @@ class _ActivityAnalysisSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        _SectionCard(
+        DetailSectionCard(
           title: 'Zdarzenia Nightscout',
           children: [
             if (analysis.chartTreatments.isEmpty)
-              const _InfoRow(
+              const DetailInfoRow(
                 icon: Icons.event_busy,
                 label: 'Zdarzenia na wykresie',
                 value: 'Brak',
@@ -400,7 +415,7 @@ class _MealRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _InfoRow(
+    return DetailInfoRow(
       icon: Icons.restaurant,
       label: 'Posiłek ${_formatTime(meal.createdAt)}',
       value:
@@ -416,7 +431,7 @@ class _TreatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _InfoRow(
+    return DetailInfoRow(
       icon: Icons.bakery_dining,
       label: 'Treat ${_formatTime(treat.createdAt)}',
       value: '${treat.carbs} g',
@@ -460,35 +475,6 @@ class _TreatmentRow extends StatelessWidget {
   }
 }
 
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-
-  const _SectionCard({required this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 String _formatTime(DateTime? date) {
   if (date == null) return '-';
   final hour = date.hour.toString().padLeft(2, '0');
@@ -504,44 +490,6 @@ String _treatmentName(Treatment treatment) {
   if (treatment is CorrectionBolus) return 'Korekta';
   if (treatment is ExtendedCarb) return 'Extended carbs';
   return 'Treatment';
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color? valueColor;
-
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: [
-          Icon(icon, color: scheme.primary),
-          const SizedBox(width: 16),
-          Expanded(child: Text(label)),
-          const SizedBox(width: 16),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: TextStyle(color: valueColor, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _LegendItem extends StatelessWidget {

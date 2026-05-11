@@ -21,79 +21,79 @@ class ActivitySearch extends HookConsumerWidget {
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.25,
       width: MediaQuery.of(context).size.width * 0.8,
-        child: Column(
-          children: [
-            Form(
-              key: formKey,
-              autovalidateMode: AutovalidateMode.always,
-              child: StringFormField(
-                label: 'Nazwa',
-                value: '',
-                onChanged: (value) => query.value = value,
-                builder: (context, controller) {
-                  return TextFormField(
-                    autofocus: true,
-                    controller: controller,
-                    maxLength: 30,
-                    validator: (value) {
-                      if (valuePicked.value < 0) return '';
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: Icon(Icons.search),
-                      labelText: 'Nazwa',
-                      border: OutlineInputBorder(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 8),
-            activities.when(
-              data: (data) {
-                if (data.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Text('Brak wyników'),
-                  );
-                }
-                return Expanded(
-                  child: ListView.builder(
-                      padding: EdgeInsets.zero,
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      itemCount: data.length,
-                      itemBuilder: (context, index) {
-                        final activity = data[index];
-                        return ListTile(
-                          title: Text(
-                            activity.whenOrNull(
-                                  existing: (_, name, _, _) => name,
-                                ) ??
-                                '',
-                            style: TextStyle(
-                              fontWeight: (valuePicked.value == index)
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                          onTap: () {
-                            draft.overrideDraft(activity);
-                            valuePicked.value = index;
-                          },
-                        );
-                      },
+      child: Column(
+        children: [
+          Form(
+            key: formKey,
+            autovalidateMode: AutovalidateMode.always,
+            child: StringFormField(
+              label: 'Nazwa',
+              value: '',
+              onChanged: (value) => query.value = value,
+              builder: (context, controller) {
+                return TextFormField(
+                  autofocus: true,
+                  controller: controller,
+                  maxLength: 30,
+                  validator: (value) {
+                    if (valuePicked.value < 0) return '';
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    icon: Icon(Icons.search),
+                    labelText: 'Nazwa',
+                    border: OutlineInputBorder(),
                   ),
                 );
               },
-              error: (error, _) => Text(error.toString()),
-              loading: () => const Padding(
-                padding: EdgeInsets.only(top: 16),
-                child: CircularProgressIndicator(),
-              ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          activities.when(
+            data: (data) {
+              if (data.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: Text('Brak wyników'),
+                );
+              }
+              return Expanded(
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    final activity = data[index];
+                    return ListTile(
+                      title: Text(
+                        activity.whenOrNull(
+                              existing: (_, name, _, _, _) => name,
+                            ) ??
+                            '',
+                        style: TextStyle(
+                          fontWeight: (valuePicked.value == index)
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      onTap: () {
+                        draft.overrideDraft(activity);
+                        valuePicked.value = index;
+                      },
+                    );
+                  },
+                ),
+              );
+            },
+            error: (error, _) => Text(error.toString()),
+            loading: () => const Padding(
+              padding: EdgeInsets.only(top: 16),
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

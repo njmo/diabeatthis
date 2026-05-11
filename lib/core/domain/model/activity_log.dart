@@ -22,5 +22,6 @@ abstract class ActivityLog with _$ActivityLog {
     required int activityId,
     required DateTime startedAt,
     required DateTime? endedAt,
+    required int? durationMinutes,
   }) = _ActivityLogView;
 }

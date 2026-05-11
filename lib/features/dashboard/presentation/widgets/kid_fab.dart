@@ -53,7 +53,7 @@ class KidFAB extends HookConsumerWidget with Logging {
               }
 
               await act.whenOrNull(
-                existing: (id, name, pre, post) async {
+                existing: (id, name, pre, post, durationMinutes) async {
                   logI('Starting activity: $id $name');
                   try {
                     await ref.read(
@@ -98,7 +98,7 @@ class KidFAB extends HookConsumerWidget with Logging {
               }
 
               await act.whenOrNull(
-                existing: (id, name, pre, post) async {
+                existing: (id, name, pre, post, durationMinutes) async {
                   logI('Starting activity: $id $name');
                   try {
                     var date = clock.now();
