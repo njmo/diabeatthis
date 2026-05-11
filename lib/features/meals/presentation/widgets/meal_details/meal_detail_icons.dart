@@ -9,7 +9,8 @@ IconData mealTimelineEventIcon(MealTimelineEventType type) {
     MealTimelineEventType.correction => Icons.medical_services,
     MealTimelineEventType.activity => Icons.directions_run,
     MealTimelineEventType.mealStatus => Icons.flag,
-    MealTimelineEventType.meal => Icons.restaurant,
+    MealTimelineEventType.localMeal => Icons.restaurant,
+    MealTimelineEventType.nightscoutMeal => Icons.cloud_done,
     MealTimelineEventType.deviceStatus => Icons.sensors,
     MealTimelineEventType.tempTarget => Icons.timer,
   };
@@ -22,7 +23,8 @@ Color mealTimelineEventColor(MealTimelineEventType type) {
     MealTimelineEventType.correction => Colors.deepPurple,
     MealTimelineEventType.activity => Colors.teal,
     MealTimelineEventType.mealStatus => Colors.orange,
-    MealTimelineEventType.meal => Colors.brown,
+    MealTimelineEventType.localMeal => Colors.brown,
+    MealTimelineEventType.nightscoutMeal => Colors.indigo,
     MealTimelineEventType.deviceStatus => Colors.grey,
     MealTimelineEventType.tempTarget => Colors.blue,
   };

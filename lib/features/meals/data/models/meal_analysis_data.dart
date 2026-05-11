@@ -223,7 +223,8 @@ enum MealTimelineEventType {
   carbs,
   correction,
   activity,
-  meal,
+  localMeal,
+  nightscoutMeal,
   deviceStatus,
   tempTarget,
 }

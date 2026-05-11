@@ -138,7 +138,7 @@ class AnalyzeMealUseCase {
     final events = <MealTimelineEventData>[
       MealTimelineEventData(
         timestamp: details.meal.analysisTime,
-        type: MealTimelineEventType.meal,
+        type: MealTimelineEventType.localMeal,
         label: 'Meal eaten',
         value: details.meal.name,
         mealId: details.meal.id,
@@ -157,7 +157,7 @@ class AnalyzeMealUseCase {
       ...meals.map((meal) {
         return MealTimelineEventData(
           timestamp: meal.plannedAt,
-          type: MealTimelineEventType.meal,
+          type: MealTimelineEventType.localMeal,
           label: meal.name,
           value: meal.status,
           mealId: meal.mealId,
@@ -216,7 +216,7 @@ class AnalyzeMealUseCase {
     if (treatment is Meal) {
       return MealTimelineEventData(
         timestamp: createdAt,
-        type: MealTimelineEventType.meal,
+        type: MealTimelineEventType.nightscoutMeal,
         label: 'Meal',
         value: treatment.getParts(),
       );

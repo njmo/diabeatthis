@@ -106,8 +106,11 @@ String timelineEventLabel(MealTimelineEventData event) {
     MealTimelineEventType.correction => 'Korekta',
     MealTimelineEventType.activity => event.label,
     MealTimelineEventType.mealStatus => mealStatusLabel(event.label),
-    MealTimelineEventType.meal =>
-      event.label == 'Meal eaten' ? 'Posiłek zjedzony' : 'Posiłek',
+    MealTimelineEventType.localMeal =>
+      event.label == 'Meal eaten'
+          ? 'Posiłek z aplikacji'
+          : 'Posiłek w aplikacji',
+    MealTimelineEventType.nightscoutMeal => 'Posiłek z Nightscout',
     MealTimelineEventType.deviceStatus => 'Status urządzenia',
     MealTimelineEventType.tempTarget => 'Temp target',
   };
