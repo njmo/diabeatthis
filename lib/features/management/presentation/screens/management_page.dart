@@ -18,7 +18,6 @@ class ManagementPage extends HookConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Zarządzanie')),
       body: <Widget>[
-        MealListToday(),
         MealList(),
         IngredientList(),
         ActivityList(),
@@ -26,7 +25,6 @@ class ManagementPage extends HookConsumerWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: destination.value,
         destinations: const <Widget>[
-          NavigationDestination(icon: Icon(Icons.today), label: 'Dziś'),
           NavigationDestination(
             icon: Icon(Icons.restaurant_sharp),
             label: 'Posiłki',
