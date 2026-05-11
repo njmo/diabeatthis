@@ -26,6 +26,71 @@ class MealDetailsData {
   double get totalInsulinUnits {
     return advisorDecision?.recommendedInsulinUnits ?? 0;
   }
+
+  List<MealStatusTimelineEntryData> get statusTimeline {
+    final entries = statusHistory.map((history) {
+      return MealStatusTimelineEntryData(
+        status: history.status,
+        timestamp: history.createdAt,
+        isCurrent: false,
+      );
+    }).toList();
+
+    final current = MealStatusTimelineEntryData(
+      status: meal.status,
+      timestamp: meal.currentStatusTimestamp,
+      isCurrent: true,
+    );
+    final hasExactCurrent = entries.any(
+      (entry) =>
+          entry.status == current.status &&
+          entry.timestamp == current.timestamp,
+    );
+    if (!hasExactCurrent) {
+      entries.add(current);
+    } else {
+      final index = entries.lastIndexWhere(
+        (entry) =>
+            entry.status == current.status &&
+            entry.timestamp == current.timestamp,
+      );
+      entries[index] = current;
+    }
+
+    entries.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return entries;
+  }
+
+  List<MealStatusTransitionData> get statusTransitions {
+    final entries = statusTimeline;
+    if (entries.isEmpty) return const [];
+
+    final transitions = <MealStatusTransitionData>[];
+    MealStatusTimelineEntryData? previous;
+    for (final entry in entries) {
+      if (previous == null) {
+        transitions.add(
+          MealStatusTransitionData(
+            fromStatus: null,
+            toStatus: entry.status,
+            timestamp: entry.timestamp,
+            isCurrent: entry.isCurrent,
+          ),
+        );
+      } else if (previous.status != entry.status || entry.isCurrent) {
+        transitions.add(
+          MealStatusTransitionData(
+            fromStatus: previous.status,
+            toStatus: entry.status,
+            timestamp: entry.timestamp,
+            isCurrent: entry.isCurrent,
+          ),
+        );
+      }
+      previous = entry;
+    }
+    return transitions;
+  }
 }
 
 class MealRecordData {
@@ -56,6 +121,14 @@ class MealRecordData {
   });
 
   DateTime get analysisTime => summarizedAt ?? plannedAt;
+
+  DateTime get currentStatusTimestamp {
+    if (summarizedAt != null &&
+        (status == 'summarized' || status.startsWith('eaten'))) {
+      return summarizedAt!;
+    }
+    return updatedAt;
+  }
 
   bool get isEaten {
     return status == 'eaten' ||
@@ -189,6 +262,32 @@ class MealIngredientDetailsData {
   }
 }
 
+class MealStatusTimelineEntryData {
+  final String status;
+  final DateTime timestamp;
+  final bool isCurrent;
+
+  const MealStatusTimelineEntryData({
+    required this.status,
+    required this.timestamp,
+    required this.isCurrent,
+  });
+}
+
+class MealStatusTransitionData {
+  final String? fromStatus;
+  final String toStatus;
+  final DateTime timestamp;
+  final bool isCurrent;
+
+  const MealStatusTransitionData({
+    required this.fromStatus,
+    required this.toStatus,
+    required this.timestamp,
+    required this.isCurrent,
+  });
+}
+
 class IngredientNutritionData {
   final double carbsPer100g;
   final double fatPer100g;
@@ -271,6 +370,10 @@ class MealSnapshotDetailsData {
     required this.updatedAt,
     required this.isSynced,
   });
+
+  double get wbtKcal {
+    return totalProteinG * 4 + totalFatG * 9;
+  }
 }
 
 class MealStatusHistoryEntryData {

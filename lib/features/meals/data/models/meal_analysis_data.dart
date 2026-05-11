@@ -34,23 +34,27 @@ class MealAnalysisData {
   });
 
   GlucoseStatsData get glucoseStats {
-    final values = glucoseReadings.map((g) => g.sgv).toList();
+    final statsReadings = glucoseReadings.where((reading) {
+      return !reading.date.isBefore(mealTime) &&
+          !reading.date.isAfter(chartEnd);
+    }).toList();
+    final values = statsReadings.map((g) => g.sgv).toList();
     if (values.isEmpty) {
       return const GlucoseStatsData.empty();
     }
 
     values.sort();
     final sum = values.fold<int>(0, (previous, value) => previous + value);
-    final peak = glucoseReadings.reduce(
+    final peak = statsReadings.reduce(
       (best, item) => item.sgv > best.sgv ? item : best,
     );
-    final first = glucoseReadings.first;
-    final last = glucoseReadings.last;
-    final inRange = glucoseReadings
+    final first = statsReadings.first;
+    final last = statsReadings.last;
+    final inRange = statsReadings
         .where((g) => g.sgv >= 70 && g.sgv <= 180)
         .length;
-    final aboveRange = glucoseReadings.where((g) => g.sgv > 180).length;
-    final belowRange = glucoseReadings.where((g) => g.sgv < 70).length;
+    final aboveRange = statsReadings.where((g) => g.sgv > 180).length;
+    final belowRange = statsReadings.where((g) => g.sgv < 70).length;
 
     return GlucoseStatsData(
       averageGlucose: sum / values.length,
@@ -58,9 +62,9 @@ class MealAnalysisData {
       maxGlucose: values.last,
       peakGlucose: peak.sgv,
       timeToPeak: peak.date.difference(mealTime),
-      timeInRangePercent: inRange / glucoseReadings.length * 100,
-      timeAboveRangePercent: aboveRange / glucoseReadings.length * 100,
-      timeBelowRangePercent: belowRange / glucoseReadings.length * 100,
+      timeInRangePercent: inRange / statsReadings.length * 100,
+      timeAboveRangePercent: aboveRange / statsReadings.length * 100,
+      timeBelowRangePercent: belowRange / statsReadings.length * 100,
       glucoseDelta: last.sgv - first.sgv,
       glucoseRateMgDlPerMinute: _rate(first, last),
     );

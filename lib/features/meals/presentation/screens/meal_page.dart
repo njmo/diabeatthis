@@ -69,6 +69,7 @@ class _MealPageBody extends ConsumerWidget {
             analysis: state.analysis!,
             selectedTimestamp: state.selectedTimestamp,
           ),
+        _TransitionAnalysisSection(details: details),
         _SnapshotsSection(details: details),
       ],
     );
@@ -124,7 +125,7 @@ class _MealHeader extends StatelessWidget {
             ),
             _SummaryCard(
               label: 'Total carbs',
-              value: summary == null ? '-' : '${summary.totalCarbsG.round()}g',
+              value: _grams(summary?.totalCarbsG),
             ),
             _SummaryCard(
               label: 'Time in range',
@@ -144,45 +145,62 @@ class _MealStatusSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statuses = _statusSummaryItems(details);
-    if (statuses.isEmpty) {
-      return _StatusChip(label: details.meal.status);
-    }
-
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final status in statuses)
-          Chip(
-            avatar: Icon(
-              _statusIcon(status.status),
-              size: 18,
-              color: status.isCurrent
-                  ? Theme.of(context).colorScheme.primary
-                  : null,
-            ),
-            label: Text(
-              status.isCurrent
-                  ? '${status.status} • current'
-                  : '${status.status} • ${_time(status.timestamp)}',
-            ),
-          ),
-      ],
+    return Chip(
+      avatar: Icon(
+        _statusIcon(details.meal.status),
+        size: 18,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      label: Text('${details.meal.status} • current'),
     );
   }
 }
 
-class _MealStatusSummaryItem {
-  final String status;
-  final DateTime timestamp;
-  final bool isCurrent;
+class _TransitionAnalysisSection extends StatelessWidget {
+  final MealDetailsData details;
 
-  const _MealStatusSummaryItem({
-    required this.status,
-    required this.timestamp,
-    required this.isCurrent,
-  });
+  const _TransitionAnalysisSection({required this.details});
+
+  @override
+  Widget build(BuildContext context) {
+    final transitions = details.statusTransitions;
+
+    return _SectionTile(
+      title: 'Transition analysis',
+      children: [
+        if (transitions.isEmpty)
+          const _InfoRow(label: 'Status history', value: '-')
+        else
+          for (final transition in transitions)
+            ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                _statusIcon(transition.toStatus),
+                color: transition.isCurrent
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
+              ),
+              title: Text(_transitionLabel(transition)),
+              subtitle: Text(_dateTime(transition.timestamp)),
+              trailing: transition.isCurrent
+                  ? const _SmallBadge(label: 'current')
+                  : null,
+            ),
+      ],
+    );
+  }
+
+  String _transitionLabel(MealStatusTransitionData transition) {
+    final from = transition.fromStatus;
+    if (from == null) {
+      return 'Initial status: ${transition.toStatus}';
+    }
+    if (from == transition.toStatus) {
+      return transition.toStatus;
+    }
+    return '$from → ${transition.toStatus}';
+  }
 }
 
 class _BasicInfoSection extends StatelessWidget {
@@ -863,22 +881,6 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  final String label;
-
-  const _StatusChip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Chip(
-      label: Text(label),
-      backgroundColor: scheme.primaryContainer,
-      labelStyle: TextStyle(color: scheme.onPrimaryContainer),
-    );
-  }
-}
-
 class _SmallBadge extends StatelessWidget {
   final String label;
 
@@ -974,48 +976,6 @@ IconData _statusIcon(String status) {
     'skipped' => Icons.cancel,
     _ => Icons.flag,
   };
-}
-
-List<_MealStatusSummaryItem> _statusSummaryItems(MealDetailsData details) {
-  final items = details.statusHistory.map((history) {
-    return _MealStatusSummaryItem(
-      status: history.status,
-      timestamp: history.createdAt,
-      isCurrent: false,
-    );
-  }).toList();
-
-  final hasCurrent = items.any((item) => item.status == details.meal.status);
-  if (!hasCurrent) {
-    items.add(
-      _MealStatusSummaryItem(
-        status: details.meal.status,
-        timestamp: _currentMealStatusTimestamp(details.meal),
-        isCurrent: true,
-      ),
-    );
-  } else {
-    final currentIndex = items.lastIndexWhere(
-      (item) => item.status == details.meal.status,
-    );
-    final current = items[currentIndex];
-    items[currentIndex] = _MealStatusSummaryItem(
-      status: current.status,
-      timestamp: current.timestamp,
-      isCurrent: true,
-    );
-  }
-
-  items.sort((a, b) => a.timestamp.compareTo(b.timestamp));
-  return items;
-}
-
-DateTime _currentMealStatusTimestamp(MealRecordData meal) {
-  if (meal.summarizedAt != null &&
-      (meal.status == 'summarized' || meal.status.startsWith('eaten'))) {
-    return meal.summarizedAt!;
-  }
-  return meal.updatedAt;
 }
 
 String _dateTime(DateTime date) {

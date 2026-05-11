@@ -31,7 +31,8 @@ class AnalyzeMealUseCase {
 
     final mealTime = details.meal.analysisTime;
     final chartStart = mealTime.subtract(const Duration(minutes: 45));
-    final requestedChartEnd = mealTime.add(const Duration(minutes: 90));
+    final postMealWindow = _postMealGlucoseWindow(details);
+    final requestedChartEnd = mealTime.add(postMealWindow);
     final now = clock.now();
     final chartEnd = requestedChartEnd.isAfter(now) ? now : requestedChartEnd;
     final eventStart = mealTime.subtract(const Duration(hours: 1));
@@ -163,13 +164,15 @@ class AnalyzeMealUseCase {
       );
     }).toList();
 
-    final currentStatusAlreadyInHistory = details.statusHistory.any(
-      (history) => history.status == details.meal.status,
+    final currentStatusAlreadyInHistory = historyEvents.any(
+      (event) =>
+          event.label == details.meal.status &&
+          event.timestamp == details.meal.currentStatusTimestamp,
     );
     if (!currentStatusAlreadyInHistory) {
       historyEvents.add(
         MealTimelineEventData(
-          timestamp: _currentMealStatusTimestamp(details.meal),
+          timestamp: details.meal.currentStatusTimestamp,
           type: MealTimelineEventType.mealStatus,
           label: details.meal.status,
           value: 'current status',
@@ -178,14 +181,6 @@ class AnalyzeMealUseCase {
     }
 
     return historyEvents;
-  }
-
-  DateTime _currentMealStatusTimestamp(MealRecordData meal) {
-    if (meal.summarizedAt != null &&
-        (meal.status == 'summarized' || meal.status.startsWith('eaten'))) {
-      return meal.summarizedAt!;
-    }
-    return meal.updatedAt;
   }
 
   MealTimelineEventData _treatmentEvent(Treatment treatment) {
@@ -206,7 +201,15 @@ class AnalyzeMealUseCase {
         value: treatment.getParts(),
       );
     }
-    if (treatment is Treat || treatment is ExtendedCarb || treatment is Meal) {
+    if (treatment is Meal) {
+      return MealTimelineEventData(
+        timestamp: createdAt,
+        type: MealTimelineEventType.meal,
+        label: 'Meal',
+        value: treatment.getParts(),
+      );
+    }
+    if (treatment is Treat || treatment is ExtendedCarb) {
       return MealTimelineEventData(
         timestamp: createdAt,
         type: MealTimelineEventType.carbs,
@@ -224,5 +227,18 @@ class AnalyzeMealUseCase {
 
   DateTime _date(int millisecondsSinceEpoch) {
     return DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
+  }
+
+  Duration _postMealGlucoseWindow(MealDetailsData details) {
+    final summary = details.preferredSummarySnapshot;
+    final wbtKcal =
+        summary?.wbtKcal ??
+        details.ingredients.fold<double>(
+          0,
+          (sum, ingredient) => sum + ingredient.consumedWbtKcalContribution,
+        );
+    return wbtKcal > 100
+        ? const Duration(hours: 3)
+        : const Duration(minutes: 90);
   }
 }
