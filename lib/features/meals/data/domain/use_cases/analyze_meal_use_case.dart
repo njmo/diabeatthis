@@ -64,6 +64,7 @@ class AnalyzeMealUseCase {
     return MealAnalysisData(
       chartStart: chartStart,
       chartEnd: chartEnd,
+      expectedChartEnd: requestedChartEnd,
       eventStart: eventStart,
       eventEnd: eventEnd,
       mealTime: mealTime,

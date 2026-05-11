@@ -95,7 +95,7 @@ class _MealHeader extends StatelessWidget {
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 4),
-        _MealStatusSummary(details: details),
+        _MealAnalysisProgressSummary(state: state),
         const SizedBox(height: 12),
         GridView.count(
           crossAxisCount: MediaQuery.sizeOf(context).width > 720 ? 6 : 2,
@@ -138,20 +138,63 @@ class _MealHeader extends StatelessWidget {
   }
 }
 
-class _MealStatusSummary extends StatelessWidget {
-  final MealDetailsData details;
+class _MealAnalysisProgressSummary extends StatelessWidget {
+  final MealPageState state;
 
-  const _MealStatusSummary({required this.details});
+  const _MealAnalysisProgressSummary({required this.state});
 
   @override
   Widget build(BuildContext context) {
+    final details = state.details;
+    final analysis = state.analysis;
+    if (!details.meal.isEaten) {
+      return _HeaderStatusChip(
+        icon: _statusIcon(details.meal.status),
+        label: details.meal.status,
+      );
+    }
+    if (analysis == null) {
+      return const _HeaderStatusChip(
+        icon: Icons.pending_actions,
+        label: 'Analysis pending',
+      );
+    }
+    if (!analysis.hasFullGlucoseWindow) {
+      return _HeaderStatusChip(
+        icon: Icons.hourglass_top,
+        label: 'Analysis in progress',
+        detail: 'collecting until ${_time(analysis.expectedChartEnd)}',
+      );
+    }
+    return _HeaderStatusChip(
+      icon: Icons.check_circle,
+      label: 'Analysis complete',
+      detail: '${analysis.postMealWindow.inMinutes} min glucose window',
+    );
+  }
+}
+
+class _HeaderStatusChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? detail;
+
+  const _HeaderStatusChip({
+    required this.icon,
+    required this.label,
+    this.detail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = detail == null ? label : '$label • $detail';
     return Chip(
       avatar: Icon(
-        _statusIcon(details.meal.status),
+        icon,
         size: 18,
         color: Theme.of(context).colorScheme.primary,
       ),
-      label: Text('${details.meal.status} • current'),
+      label: Text(text),
     );
   }
 }

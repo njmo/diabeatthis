@@ -9,6 +9,7 @@ import '../../../../core/domain/model/treatment_base.dart';
 class MealAnalysisData {
   final DateTime chartStart;
   final DateTime chartEnd;
+  final DateTime expectedChartEnd;
   final DateTime eventStart;
   final DateTime eventEnd;
   final DateTime mealTime;
@@ -22,6 +23,7 @@ class MealAnalysisData {
   const MealAnalysisData({
     required this.chartStart,
     required this.chartEnd,
+    required this.expectedChartEnd,
     required this.eventStart,
     required this.eventEnd,
     required this.mealTime,
@@ -32,6 +34,14 @@ class MealAnalysisData {
     required this.linkedMeals,
     required this.timelineEvents,
   });
+
+  bool get hasFullGlucoseWindow {
+    return !chartEnd.isBefore(expectedChartEnd);
+  }
+
+  Duration get postMealWindow {
+    return expectedChartEnd.difference(mealTime);
+  }
 
   GlucoseStatsData get glucoseStats {
     final statsReadings = glucoseReadings.where((reading) {
