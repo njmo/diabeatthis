@@ -6,7 +6,9 @@ import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../../meals/presentation/widgets/meal_ingredient_preview_tile.dart';
+import '../../../portions/data/providers/portion_provider.dart';
 import '../controllers/meal_summary_controller.dart';
+import '../utils/meal_summary_extra_item_portion_resolver.dart';
 
 class MealSummaryExtraItemsSection extends ConsumerWidget {
   const MealSummaryExtraItemsSection({
@@ -90,9 +92,20 @@ class MealSummaryExtraItemsSection extends ConsumerWidget {
     );
 
     if (mealIngredient != null) {
+      final resolvedMealIngredient =
+          await resolveMealSummaryExtraItemPortionAmount(
+            item: mealIngredient,
+            loadPortionAmount: () => ref.read(
+              gramsPerPortionProvider(
+                mealIngredient.ingredient,
+                mealIngredient.ingredientPortion.portion,
+              ).future,
+            ),
+          );
+
       ref
           .read(mealSummaryControllerProvider(mealId).notifier)
-          .addExtraItem(mealIngredient);
+          .addExtraItem(resolvedMealIngredient);
     }
   }
 
@@ -116,9 +129,20 @@ class MealSummaryExtraItemsSection extends ConsumerWidget {
     );
 
     if (mealIngredient != null) {
+      final resolvedMealIngredient =
+          await resolveMealSummaryExtraItemPortionAmount(
+            item: mealIngredient,
+            loadPortionAmount: () => ref.read(
+              gramsPerPortionProvider(
+                mealIngredient.ingredient,
+                mealIngredient.ingredientPortion.portion,
+              ).future,
+            ),
+          );
+
       ref
           .read(mealSummaryControllerProvider(mealId).notifier)
-          .replaceExtraItem(item, mealIngredient);
+          .replaceExtraItem(item, resolvedMealIngredient);
     }
   }
 }

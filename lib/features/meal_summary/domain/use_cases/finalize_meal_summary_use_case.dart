@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../dashboard/data/providers/meal_snapshot_controller_provider.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
 import '../../presentation/models/meal_summary_draft.dart';
@@ -25,6 +26,9 @@ class FinalizeMealSummaryUseCase with Logging {
   }) async {
     final db = ref.read(databaseProvider);
     final snapshotController = ref.read(mealSnapshotControllerProvider);
+    final notificationsController = ref.read(notificationsControllerUiProvider);
+
+    await notificationsController.cancelAll();
 
     await db.transaction(() async {
       for (final item in draft.itemsById.values) {
