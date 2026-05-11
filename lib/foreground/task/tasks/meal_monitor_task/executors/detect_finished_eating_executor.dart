@@ -1,6 +1,7 @@
 import '../../../../../common/events/data/notification/finished_eating_response_event.dart';
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../../core/domain/model/meal.dart';
+import '../../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/domain/events/finished_eating_event_notification.dart';
 import '../../../../../core/notifications/domain/events/meal_suggestion_notification.dart';
@@ -82,7 +83,9 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     );
 
     if (bolusWaited == null) {
-      if (shouldBolus) {
+      if (isAddOn) {
+        await _waitForAddOnBolus(runtimeContext, mealMonitorContext);
+      } else if (shouldBolus) {
         logI("Checking if needed data is present");
         // if below passes it means that user manually went
         // through starting the meal earlier than planned.
@@ -164,7 +167,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       );
     }
 
-    var mealStatus = 'eaten';
+    var mealStatus = isAddOn ? 'eaten-extra' : 'eaten';
 
     if (shouldBolus) {
       logI("User should bolus after eating, showing notification");
@@ -211,5 +214,70 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     logI("Meal marked as $mealStatus");
 
     return FinalizeMealExecutor();
+  }
+
+  Future<void> _waitForAddOnBolus(
+    RuntimeContext runtimeContext,
+    MealMonitorContext mealMonitorContext,
+  ) async {
+    logI("Waiting for add-on calculator response");
+    final calculatorResponse = await runtimeContext
+        .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<Meal>>(
+          Duration(minutes: 10),
+        );
+
+    if (calculatorResponse != null) {
+      logI("Add-on calculator response available");
+      return;
+    }
+
+    final grams = await _resolveAddOnNetCarbs(
+      runtimeContext,
+      mealMonitorContext.activeMeal!.id,
+    );
+    logI("Add-on calculator response missing, showing reminder");
+
+    runtimeContext.container
+        .read(notificationsControllerForegroundProvider)
+        .show(
+          MealSuggestionNotificationEvent(
+            mealId: mealMonitorContext.activeMeal!.id,
+            decision: MealDecision.bolus,
+            carbs: grams,
+            minutes: 0,
+            isAddOn: true,
+          ),
+        );
+
+    await runtimeContext
+        .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<Meal>>(
+          Duration(minutes: 20),
+        );
+  }
+
+  Future<int> _resolveAddOnNetCarbs(
+    RuntimeContext runtimeContext,
+    int mealId,
+  ) async {
+    final plannedSummary = await runtimeContext.container.read(
+      mealMacronutrientsSummaryProvider(mealId).future,
+    );
+    final consumedSummary = await runtimeContext.container.read(
+      mealMacronutrientsConsumedSummaryProvider(mealId).future,
+    );
+    final addOnNetCarbs =
+        _netCarbs(consumedSummary) - _netCarbs(plannedSummary);
+    if (addOnNetCarbs <= 0) {
+      return 0;
+    }
+    return addOnNetCarbs.round();
+  }
+
+  double _netCarbs(MealMacroSummary? summary) {
+    if (summary == null) {
+      return 0;
+    }
+    final netCarbs = summary.carbsGrams - summary.fiberGrams;
+    return netCarbs < 0 ? 0 : netCarbs;
   }
 }

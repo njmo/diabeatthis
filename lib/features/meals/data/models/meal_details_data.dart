@@ -27,6 +27,17 @@ class MealDetailsData {
     return advisorDecision?.recommendedInsulinUnits ?? 0;
   }
 
+  bool get hasAddOn {
+    return meal.hasAddOnStatus ||
+        ingredients.any((ingredient) => ingredient.hasAddOnAmount);
+  }
+
+  double get addOnNetCarbsG {
+    return ingredients.fold(0.0, (sum, ingredient) {
+      return sum + ingredient.addOnNetCarbsContribution;
+    });
+  }
+
   List<MealStatusTimelineEntryData> get statusTimeline {
     final entries = statusHistory.map((history) {
       return MealStatusTimelineEntryData(
@@ -137,6 +148,10 @@ class MealRecordData {
         status == 'summarized';
   }
 
+  bool get hasAddOnStatus {
+    return status == 'eating-extra' || status == 'eaten-extra';
+  }
+
   Meal toDomainTreatment() {
     return Meal(
       id: id,
@@ -225,6 +240,10 @@ class MealIngredientDetailsData {
 
   bool get isExtra => entryType == 'extra';
 
+  bool get hasAddOnAmount {
+    return isExtra || addOnNetCarbsContribution.abs() >= 0.5;
+  }
+
   bool get usesHistoricalNutrition {
     return plannedNutritionDiffersFromCurrent ||
         consumedNutritionDiffersFromCurrent ||
@@ -244,6 +263,21 @@ class MealIngredientDetailsData {
 
   double get consumedCarbsContribution {
     return consumedTotalGrams * consumedNutrition.carbsPer100g / 100;
+  }
+
+  double get plannedNetCarbsContribution {
+    return plannedTotalGrams * plannedNutrition.safeNetCarbsPer100g / 100;
+  }
+
+  double get consumedNetCarbsContribution {
+    return consumedTotalGrams * consumedNutrition.safeNetCarbsPer100g / 100;
+  }
+
+  double get addOnNetCarbsContribution {
+    if (isExtra) {
+      return consumedNetCarbsContribution;
+    }
+    return consumedNetCarbsContribution - plannedNetCarbsContribution;
   }
 
   double get consumedFatContribution {
@@ -312,6 +346,11 @@ class IngredientNutritionData {
 
   double get wbtKcalPer100g {
     return proteinPer100g * 4 + fatPer100g * 9;
+  }
+
+  double get safeNetCarbsPer100g {
+    final netCarbs = carbsPer100g - fiberPer100g;
+    return netCarbs < 0 ? 0 : netCarbs;
   }
 
   bool differsFrom(IngredientNutritionData other) {

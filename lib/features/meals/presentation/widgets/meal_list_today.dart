@@ -9,6 +9,7 @@ import '../../../dashboard/presentation/widgets/meal_status_dialog.dart';
 import '../../../dashboard/presentation/widgets/meal_status_dialog_result.dart';
 import '../../../dashboard/presentation/widgets/trailing_wait_after_bolus_status.dart';
 import '../../data/providers/meal_database_provider.dart';
+import 'meal_details/meal_detail_formatters.dart';
 
 class MealListToday extends ConsumerWidget {
   const MealListToday({super.key});
@@ -125,25 +126,7 @@ class MealListToday extends ConsumerWidget {
   }
 
   String _toMealStatus(String? status) {
-    switch (status) {
-      case 'eaten':
-      case 'eaten-extra':
-        return 'Zjedzony';
-      case 'eaten-bolused':
-        return 'Zjedzony z podanym bolusem';
-      case 'skipped':
-        return 'Pominięty';
-      case 'waited-eating':
-      case 'bolused-eating':
-      case 'eating':
-      case 'eating-extra':
-      case 'eating-then-bolus':
-        return 'W trakcie jedzenia';
-      case 'bolused-waiting':
-        return 'Oczekuje na zjedzenie';
-      default:
-        return 'Zaplanowany';
-    }
+    return mealStatusLabel(status ?? 'planned');
   }
 
   String _shortTime(DateTime? dt) {

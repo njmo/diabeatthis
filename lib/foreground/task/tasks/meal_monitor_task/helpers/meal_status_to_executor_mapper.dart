@@ -13,11 +13,8 @@ MealMonitorStateExecutor? mealStatusChangedEventToExecutor(
   return event.map(
     eating: (MealStartedEatingEvent value) =>
         DetectFinishedEatingExecutor(shouldBolus: false, bolusWaited: true),
-    eatingExtra: (MealEatingExtraEvent value) => DetectFinishedEatingExecutor(
-      shouldBolus: false,
-      bolusWaited: true,
-      isAddOn: true,
-    ),
+    eatingExtra: (MealEatingExtraEvent value) =>
+        DetectFinishedEatingExecutor(shouldBolus: false, isAddOn: true),
     eaten: (MealFinishedEatingEvent value) => FinalizeMealExecutor(),
     eatenExtra: (MealFinishedEatingExtraEvent value) => FinalizeMealExecutor(),
     skipped: (MealSkippedEvent value) {

@@ -109,9 +109,9 @@ class RuntimeContext with Logging {
   }
 
   Future<T?> waitForEventWithTimeoutOrNull<T extends ForegroundEvent>(
-      Duration duration, {
-        bool Function(T event)? predicate,
-      }) async {
+    Duration duration, {
+    bool Function(T event)? predicate,
+  }) async {
     try {
       final result = await waitForEventWithTimeout<T>(
         duration,
@@ -119,6 +119,8 @@ class RuntimeContext with Logging {
       );
       return result;
     } on TimeoutException {
+      return null;
+    } on WaitTimeoutException {
       return null;
     }
   }

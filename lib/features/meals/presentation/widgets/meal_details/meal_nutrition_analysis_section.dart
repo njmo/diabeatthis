@@ -29,7 +29,11 @@ class MealNutritionAnalysisSection extends StatelessWidget {
       title: 'Analiza żywieniowa',
       initiallyExpanded: true,
       children: [
-        MealNutritionMacroSummary(snapshot: snapshot),
+        MealNutritionMacroSummary(
+          snapshot: snapshot,
+          hasAddOn: details.hasAddOn,
+          addOnNetCarbsG: details.addOnNetCarbsG,
+        ),
         const SizedBox(height: 12),
         for (final ingredient in details.ingredients)
           MealIngredientTile(ingredient: ingredient),
@@ -44,8 +48,15 @@ class MealNutritionAnalysisSection extends StatelessWidget {
 
 class MealNutritionMacroSummary extends StatelessWidget {
   final MealSnapshotDetailsData? snapshot;
+  final bool hasAddOn;
+  final double addOnNetCarbsG;
 
-  const MealNutritionMacroSummary({super.key, required this.snapshot});
+  const MealNutritionMacroSummary({
+    super.key,
+    required this.snapshot,
+    required this.hasAddOn,
+    required this.addOnNetCarbsG,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +86,12 @@ class MealNutritionMacroSummary extends StatelessWidget {
               label: 'Błonnik',
               value: formatGrams(snapshot?.totalFiberG),
             ),
+            if (hasAddOn)
+              MealMetricTileData(
+                icon: Icons.add_circle_outline,
+                label: 'Węgle z dokładki',
+                value: formatSignedGrams(addOnNetCarbsG),
+              ),
           ],
         ),
         const SizedBox(height: 12),

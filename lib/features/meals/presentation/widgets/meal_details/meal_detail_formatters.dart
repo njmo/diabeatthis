@@ -36,6 +36,12 @@ String formatGrams(double? value) {
   return value == null ? '-' : '${formatNumber(value)}g';
 }
 
+String formatSignedGrams(double? value) {
+  if (value == null) return '-';
+  final prefix = value > 0 ? '+' : '';
+  return '$prefix${formatNumber(value)}g';
+}
+
 String formatUnits(double? value) {
   return value == null ? '-' : '${value.toStringAsFixed(2)}U';
 }
@@ -83,9 +89,12 @@ String mealStatusLabel(String status) {
     'planned' => 'Zaplanowany',
     'bolused-waiting' => 'Bolus podany, oczekiwanie',
     'bolused-eating' => 'Bolus podany, jedzenie',
-    'eating-extra' => 'W trakcie jedzenia, dokładka',
+    'waited-eating' => 'Po oczekiwaniu, jedzenie',
+    'eating' => 'W trakcie jedzenia',
+    'eating-extra' => 'W trakcie dokładki',
+    'eating-then-bolus' => 'Jedzenie, bolus po posiłku',
     'eaten' => 'Zjedzony',
-    'eaten-extra' => 'Dokładka zjedzona',
+    'eaten-extra' => 'Zjedzony z dokładką',
     'eaten-bolused' => 'Zjedzony po bolusie',
     'summarized' => 'Podsumowany',
     'skipped' => 'Pominięty',
@@ -115,5 +124,18 @@ String timelineEventLabel(MealTimelineEventData event) {
     MealTimelineEventType.nightscoutMeal => 'Posiłek z Nightscout',
     MealTimelineEventType.deviceStatus => 'Status urządzenia',
     MealTimelineEventType.tempTarget => 'Temp target',
+  };
+}
+
+String? timelineEventValueLabel(MealTimelineEventData event) {
+  final value = event.value;
+  if (value == null) return null;
+
+  return switch (event.type) {
+    MealTimelineEventType.mealStatus =>
+      value == 'current status' ? 'Aktualny status' : value,
+    MealTimelineEventType.localMeal =>
+      event.label == 'Meal eaten' ? value : mealStatusLabel(value),
+    _ => value,
   };
 }

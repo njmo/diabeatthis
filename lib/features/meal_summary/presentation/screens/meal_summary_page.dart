@@ -31,9 +31,7 @@ class MealSummaryPage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Nie udało się wczytać: $e')),
         data: (draft) {
-          final addOnAlreadyReported = mealStatusHasReportedAddOn(
-            draft.mealStatus,
-          );
+          final addOnAlreadyReported = _hasReportedAddOn(draft);
           return SafeArea(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
@@ -85,7 +83,7 @@ class MealSummaryPage extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (!mealStatusHasReportedAddOn(draft.mealStatus)) ...[
+              if (!_hasReportedAddOn(draft)) ...[
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
@@ -155,7 +153,7 @@ class MealSummaryPage extends ConsumerWidget {
   }
 
   String _dialogTitle(MealSummaryCarbsDelta delta, MealSummaryDraft draft) {
-    final addOnAlreadyReported = mealStatusHasReportedAddOn(draft.mealStatus);
+    final addOnAlreadyReported = _hasReportedAddOn(draft);
 
     if (addOnAlreadyReported && delta.isNeutral) {
       return 'Podsumowanie zapisane';
@@ -179,7 +177,7 @@ class MealSummaryPage extends ConsumerWidget {
     MealSummarySaveMode mode,
     MealSummaryDraft draft,
   ) {
-    final addOnAlreadyReported = mealStatusHasReportedAddOn(draft.mealStatus);
+    final addOnAlreadyReported = _hasReportedAddOn(draft);
 
     if (addOnAlreadyReported && delta.isNeutral) {
       return 'Dokładka była już zapisana wcześniej. Nie dopisuj ponownie tych samych węglowodanów w AAPS.';
@@ -202,5 +200,14 @@ class MealSummaryPage extends ConsumerWidget {
       return 'Zjedzono o ${delta.roundedTotal.abs()}g węglowodanów mniej niż plan. Jeśli bolus był na pełny plan, rozważ dojedzenie około ${delta.roundedTotal.abs()}g węglowodanów.$suffix';
     }
     return 'Zjedzone węglowodany są zgodne z planem.$suffix';
+  }
+
+  bool _hasReportedAddOn(MealSummaryDraft draft) {
+    return mealSummaryHasReportedAddOn(
+      status: draft.mealStatus,
+      usesReportedBaseline: calculateMealSummaryCarbsDelta(
+        draft,
+      ).usesReportedBaseline,
+    );
   }
 }

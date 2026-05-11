@@ -9,12 +9,14 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
     required this.minutes,
     required this.decision,
     required this.carbs,
+    this.isAddOn = false,
   });
 
   final int mealId;
   final MealDecision decision;
   final int minutes;
   final int carbs;
+  final bool isAddOn;
 
   @override
   NotificationEventType get type => NotificationEventType.mealSuggestion;
@@ -26,10 +28,18 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
   NotificationKey get key => NotificationKey(type: type, entityId: mealId);
 
   @override
-  String get title => 'Sugestia odnośnie posiłku';
+  String get title =>
+      isAddOn ? 'Dokładka: wpisz w AAPS' : 'Sugestia odnośnie posiłku';
 
   @override
   String get body {
+    if (isAddOn) {
+      if (carbs > 0) {
+        return 'Nie widzę dodatkowego wpisu z AAPS. Wpisz +$carbs g węglowodanów za dokładkę.';
+      }
+      return 'Nie widzę dodatkowego wpisu z AAPS. Wpisz węglowodany za dokładkę.';
+    }
+
     switch (decision) {
       case MealDecision.eatNowBolusLater:
         return 'Zjedz teraz a insuline podaj po posiłku';
@@ -54,6 +64,7 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
     'minutes': minutes,
     'carbs': carbs,
     'decision': decision.index,
+    'isAddOn': isAddOn,
   };
 
   factory MealSuggestionNotificationEvent.fromPayload(
@@ -64,6 +75,7 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
       minutes: json['minutes'] as int,
       carbs: json['carbs'] as int,
       decision: MealDecision.values[json['decision'] as int],
+      isAddOn: json['isAddOn'] as bool? ?? false,
     );
   }
 }

@@ -26,3 +26,10 @@ bool mealStatusHasReportedAddOn(String? status) {
 bool mealStatusCanRequestAddOn(String? status) {
   return !mealStatusHasReportedAddOn(status);
 }
+
+bool mealSummaryHasReportedAddOn({
+  required String? status,
+  required bool usesReportedBaseline,
+}) {
+  return mealStatusHasReportedAddOn(status) || usesReportedBaseline;
+}

@@ -20,9 +20,7 @@ Future<void> handleMealStatusDialogResult({
       await ref.read(updateMealProvider(meal, status).future);
       if (context.mounted &&
           openSummaryAfterEaten &&
-          (status == 'eaten' ||
-              status == 'eaten-extra' ||
-              status == 'eaten-bolused')) {
+          shouldOpenSummaryAfterMealStatusUpdate(status)) {
         context.router.push(routes.MealSummaryRoute(mealId: meal.id));
       }
     case MealStatusAddOnResult(:final choice):
@@ -99,4 +97,8 @@ String _addOnMessage(String? mealStatus, MealAddOnMultiplierResult result) {
   }
 
   return 'Dokładka dodała około +${result.roundedAddedNetCarbs}g węglowodanów. W AAPS wpisz tę wartość jako dodatkowe węglowodany.';
+}
+
+bool shouldOpenSummaryAfterMealStatusUpdate(String status) {
+  return status == 'eaten' || status == 'eaten-bolused';
 }

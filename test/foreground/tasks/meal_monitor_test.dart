@@ -369,73 +369,117 @@ void main() {
         });
       },
     );
-    test('meal add-on shows add-on finished eating notification', () {
-      fakeAsync((async) {
-        final start = DateTime(2026, 3, 23, 12, 0);
-        withFakeClock(async, start, () {
-          final calls = <(Meal, String)>{};
-          final container = ProviderContainer(
-            parent: parentContainer,
-            overrides: [
-              getNearestMealProvider.overrideWithValue(AsyncData(null)),
-              getMealByIdProvider(1).overrideWithValue(
-                AsyncData(
-                  Meal(
-                    id: 1,
-                    status: 'eating-extra',
-                    name: 'asd',
-                    plannedAt: clock.now(),
+    test(
+      'meal add-on reminds about missing AAPS entry and finishes as add-on',
+      () {
+        fakeAsync((async) {
+          final start = DateTime(2026, 3, 23, 12, 0);
+          withFakeClock(async, start, () {
+            fakeNotifications.shownEvents.clear();
+            final calls = <(Meal, String)>{};
+            final container = ProviderContainer(
+              parent: parentContainer,
+              overrides: [
+                mealMacronutrientsSummaryProvider(1).overrideWithValue(
+                  AsyncData(
+                    MealMacroSummary(
+                      carbsGrams: 20,
+                      fatGrams: 0,
+                      proteinGrams: 0,
+                      fiberGrams: 2,
+                      totalGrams: 100,
+                    ),
                   ),
                 ),
+                mealMacronutrientsConsumedSummaryProvider(1).overrideWithValue(
+                  AsyncData(
+                    MealMacroSummary(
+                      carbsGrams: 30,
+                      fatGrams: 0,
+                      proteinGrams: 0,
+                      fiberGrams: 3,
+                      totalGrams: 150,
+                    ),
+                  ),
+                ),
+                getNearestMealProvider.overrideWithValue(AsyncData(null)),
+                getMealByIdProvider(1).overrideWithValue(
+                  AsyncData(
+                    Meal(
+                      id: 1,
+                      status: 'eating-extra',
+                      name: 'asd',
+                      plannedAt: clock.now(),
+                    ),
+                  ),
+                ),
+                updateMealProvider.overrideWith((ref, args) async {
+                  final (meal, status) = args;
+                  calls.add((meal, status));
+                }),
+              ],
+            );
+            final harness = FakeRuntimeHarness(container: container);
+            final task = MealMonitorTask();
+
+            task.run(harness.runtimeContext);
+            _settle(async);
+
+            expect(task.state, isA<MealMonitorStateIdle>());
+
+            harness.dispatchEventToTask(task, MealEatingExtraEvent(mealId: 1));
+            _settle(async);
+
+            expect(task.state, isA<DetectFinishedEatingExecutor>());
+            expect((task.state as DetectFinishedEatingExecutor).isAddOn, true);
+
+            _advanceMinutes(harness, async, 10);
+
+            expect(fakeNotifications.shownEvents, hasLength(1));
+            final reminder = fakeNotifications.lastShownEvent;
+            expect(reminder, isA<MealSuggestionNotificationEvent>());
+            final reminderTyped = reminder as MealSuggestionNotificationEvent;
+            expect(reminderTyped.isAddOn, true);
+            expect(reminderTyped.carbs, 9);
+            expect(reminderTyped.title, 'Dokładka: wpisz w AAPS');
+
+            harness.dispatchEventToTask(
+              task,
+              TreatmentAvailableEvent<Meal>(
+                Meal(id: 10, name: 'AAPS add-on', plannedAt: clock.now()),
               ),
-              updateMealProvider.overrideWith((ref, args) async {
-                final (meal, status) = args;
-                calls.add((meal, status));
-              }),
-            ],
-          );
-          final harness = FakeRuntimeHarness(container: container);
-          final task = MealMonitorTask();
+            );
+            _settle(async);
 
-          task.run(harness.runtimeContext);
-          _settle(async);
+            _advanceMinutes(harness, async, 5);
 
-          expect(task.state, isA<MealMonitorStateIdle>());
+            expect(fakeNotifications.shownEvents, hasLength(1));
+            final event = fakeNotifications.lastShownEvent;
+            expect(event, isA<FinishedEatingNotificationEvent>());
+            final eventTyped = event as FinishedEatingNotificationEvent;
+            expect(eventTyped.mealId, 1);
+            expect(eventTyped.isAddOn, true);
+            expect(eventTyped.title, 'Dokładka zjedzona?');
 
-          harness.dispatchEventToTask(task, MealEatingExtraEvent(mealId: 1));
-          _settle(async);
+            harness.dispatchEventToTask(
+              task,
+              FinishedEatingResponseEvent.agree(mealId: 1),
+            );
+            _settle(async);
 
-          expect(task.state, isA<DetectFinishedEatingExecutor>());
-          expect((task.state as DetectFinishedEatingExecutor).isAddOn, true);
+            expect(calls, hasLength(1));
+            final (m, s) = calls.single;
+            expect(m.id, 1);
+            expect(s, 'eaten-extra');
+            calls.remove((m, s));
 
-          _advanceMinutes(harness, async, 10);
-
-          expect(fakeNotifications.shownEvents, hasLength(1));
-          final event = fakeNotifications.lastShownEvent;
-          expect(event, isA<FinishedEatingNotificationEvent>());
-          final eventTyped = event as FinishedEatingNotificationEvent;
-          expect(eventTyped.mealId, 1);
-          expect(eventTyped.isAddOn, true);
-          expect(eventTyped.title, 'Dokładka zjedzona?');
-
-          harness.dispatchEventToTask(
-            task,
-            FinishedEatingResponseEvent.agree(mealId: 1),
-          );
-          _settle(async);
-
-          expect(calls, hasLength(1));
-          final (m, s) = calls.single;
-          expect(m.id, 1);
-          expect(s, 'eaten');
-          calls.remove((m, s));
-
-          expect(fakeNotifications.shownEvents, hasLength(0));
-          expect(calls, hasLength(0));
-          expect(task.state, isA<MealMonitorStateIdle>());
+            expect(fakeNotifications.shownEvents, hasLength(0));
+            expect(calls, hasLength(0));
+            expect(task.state, isA<MealMonitorStateIdle>());
+          });
         });
-      });
-    });
+      },
+    );
 
     test(
       'shows temp target suggestion when planned meal is 26 minutes away and device status is already available',

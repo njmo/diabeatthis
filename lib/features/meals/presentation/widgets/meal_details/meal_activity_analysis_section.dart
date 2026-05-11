@@ -24,34 +24,53 @@ class MealActivityAnalysisSection extends ConsumerWidget {
     return MealSectionTile(
       title: 'Aktywności i zdarzenia',
       children: [
-        for (final event in analysis.timelineEvents)
-          ListTile(
-            dense: true,
-            leading: Icon(
-              mealTimelineEventIcon(event.type),
-              color: mealTimelineEventColor(event.type),
-            ),
-            title: Text(
-              '${mealTime(event.timestamp)} • ${timelineEventLabel(event)}',
-            ),
-            subtitle: event.value == null ? null : Text(event.value!),
-            trailing: event.activityLogId != null || event.mealId != null
-                ? const Icon(Icons.chevron_right)
-                : null,
-            onTap: event.activityLogId != null
-                ? () => context.router.push(
-                    ActivityLogRoute(activityLogId: event.activityLogId!),
-                  )
-                : event.mealId != null
-                ? () => context.router.push(MealRoute(mealId: event.mealId!))
-                : null,
-            onLongPress: () {
-              ref
-                  .read(mealDetailsControllerProvider(mealId).notifier)
-                  .selectTimestamp(event.timestamp);
-            },
-          ),
+        for (final event in analysis.timelineEvents) ...[
+          MealTimelineEventTile(mealId: mealId, event: event),
+        ],
       ],
+    );
+  }
+}
+
+class MealTimelineEventTile extends ConsumerWidget {
+  final int mealId;
+  final MealTimelineEventData event;
+
+  const MealTimelineEventTile({
+    super.key,
+    required this.mealId,
+    required this.event,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final valueLabel = timelineEventValueLabel(event);
+
+    return ListTile(
+      dense: true,
+      leading: Icon(
+        mealTimelineEventIcon(event.type),
+        color: mealTimelineEventColor(event.type),
+      ),
+      title: Text(
+        '${mealTime(event.timestamp)} • ${timelineEventLabel(event)}',
+      ),
+      subtitle: valueLabel == null ? null : Text(valueLabel),
+      trailing: event.activityLogId != null || event.mealId != null
+          ? const Icon(Icons.chevron_right)
+          : null,
+      onTap: event.activityLogId != null
+          ? () => context.router.push(
+              ActivityLogRoute(activityLogId: event.activityLogId!),
+            )
+          : event.mealId != null
+          ? () => context.router.push(MealRoute(mealId: event.mealId!))
+          : null,
+      onLongPress: () {
+        ref
+            .read(mealDetailsControllerProvider(mealId).notifier)
+            .selectTimestamp(event.timestamp);
+      },
     );
   }
 }

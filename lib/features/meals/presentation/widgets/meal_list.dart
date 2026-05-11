@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../core/domain/model/meal.dart';
 import '../../data/providers/meal_database_provider.dart';
+import 'meal_details/meal_detail_formatters.dart';
 
 class MealList extends HookConsumerWidget {
   const MealList({super.key});
@@ -254,26 +255,7 @@ class _MealCard extends StatelessWidget {
   }
 
   static String _toMealStatus(String? status) {
-    switch (status) {
-      case 'eaten':
-      case 'eaten-extra':
-      case 'eaten-bolused':
-        return 'Zjedzony';
-      case 'skipped':
-        return 'Pominięty';
-      case 'waited-eating':
-      case 'bolused-eating':
-      case 'eating':
-      case 'eating-extra':
-      case 'eating-then-bolus':
-        return 'W trakcie jedzenia';
-      case 'bolused-waiting':
-        return 'Oczekuje';
-      case 'summarized':
-        return 'Podsumowany';
-      default:
-        return 'Zaplanowany';
-    }
+    return mealStatusLabel(status ?? 'planned');
   }
 
   static String _shortTime(DateTime? dt) {

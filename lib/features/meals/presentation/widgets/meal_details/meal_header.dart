@@ -52,6 +52,12 @@ class MealHeader extends StatelessWidget {
               label: 'Węglowodany',
               value: formatGrams(summary?.totalCarbsG),
             ),
+            if (details.hasAddOn)
+              MealMetricTileData(
+                icon: Icons.add_circle_outline,
+                label: 'Dokładka',
+                value: formatSignedGrams(details.addOnNetCarbsG),
+              ),
             MealMetricTileData(
               icon: Icons.check_circle_outline,
               label: 'Czas w zakresie',
@@ -73,30 +79,66 @@ class MealAnalysisProgressSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final details = state.details;
     final analysis = state.analysis;
+    final chips = <HeaderStatusChip>[];
     if (!details.meal.isEaten) {
-      return HeaderStatusChip(
-        icon: mealStatusIcon(details.meal.status),
-        label: mealStatusLabel(details.meal.status),
+      chips.add(
+        HeaderStatusChip(
+          icon: mealStatusIcon(details.meal.status),
+          label: mealStatusLabel(details.meal.status),
+        ),
       );
+      if (details.hasAddOn) {
+        chips.add(const HeaderStatusChip.addOn());
+      }
+      return MealHeaderStatusRow(chips: chips);
     }
     if (analysis == null) {
-      return const HeaderStatusChip(
-        icon: Icons.pending_actions,
-        label: 'Analiza oczekuje na dane',
+      chips.add(
+        const HeaderStatusChip(
+          icon: Icons.pending_actions,
+          label: 'Analiza oczekuje na dane',
+        ),
       );
+      if (details.hasAddOn) {
+        chips.add(const HeaderStatusChip.addOn());
+      }
+      return MealHeaderStatusRow(chips: chips);
     }
     if (!analysis.hasFullGlucoseWindow) {
-      return HeaderStatusChip(
-        icon: Icons.hourglass_top,
-        label: 'Analiza w toku',
-        detail: 'zbieranie do ${mealTime(analysis.expectedChartEnd)}',
+      chips.add(
+        HeaderStatusChip(
+          icon: Icons.hourglass_top,
+          label: 'Analiza w toku',
+          detail: 'zbieranie do ${mealTime(analysis.expectedChartEnd)}',
+        ),
       );
+      if (details.hasAddOn) {
+        chips.add(const HeaderStatusChip.addOn());
+      }
+      return MealHeaderStatusRow(chips: chips);
     }
-    return HeaderStatusChip(
-      icon: Icons.check_circle,
-      label: 'Analiza gotowa',
-      detail: 'okno glikemii ${analysis.postMealWindow.inMinutes} min',
+    chips.add(
+      HeaderStatusChip(
+        icon: Icons.check_circle,
+        label: 'Analiza gotowa',
+        detail: 'okno glikemii ${analysis.postMealWindow.inMinutes} min',
+      ),
     );
+    if (details.hasAddOn) {
+      chips.add(const HeaderStatusChip.addOn());
+    }
+    return MealHeaderStatusRow(chips: chips);
+  }
+}
+
+class MealHeaderStatusRow extends StatelessWidget {
+  final List<HeaderStatusChip> chips;
+
+  const MealHeaderStatusRow({super.key, required this.chips});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(spacing: 8, runSpacing: 8, children: chips);
   }
 }
 
@@ -111,6 +153,11 @@ class HeaderStatusChip extends StatelessWidget {
     required this.label,
     this.detail,
   });
+
+  const HeaderStatusChip.addOn({super.key})
+    : icon = Icons.add_circle_outline,
+      label = 'Dokładka',
+      detail = 'uwzględniona w posiłku';
 
   @override
   Widget build(BuildContext context) {

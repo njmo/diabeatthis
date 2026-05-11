@@ -14,6 +14,23 @@ void main() {
       expect(mealStatusCanRequestAddOn('eating-extra'), isFalse);
     });
 
+    test('treats reported consumed baseline as an already handled add-on', () {
+      expect(
+        mealSummaryHasReportedAddOn(
+          status: 'eaten-bolused',
+          usesReportedBaseline: true,
+        ),
+        isTrue,
+      );
+      expect(
+        mealSummaryHasReportedAddOn(
+          status: 'eaten',
+          usesReportedBaseline: false,
+        ),
+        isFalse,
+      );
+    });
+
     test('preserves eat-then-bolus flow after an add-on', () {
       expect(mealStatusAfterAddOn('eating-then-bolus'), 'eating-then-bolus');
     });
