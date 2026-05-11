@@ -84,6 +84,7 @@ class _TimelineAnalysisChartsState extends State<TimelineAnalysisCharts> {
                   glucoseReadings: widget.glucoseReadings,
                   events: widget.events,
                   ranges: widget.ranges,
+                  showBottomTitles: false,
                   onTimestampSelected: widget.onTimestampSelected,
                 ),
                 const SizedBox(height: 12),
@@ -94,6 +95,7 @@ class _TimelineAnalysisChartsState extends State<TimelineAnalysisCharts> {
                   deviceStatuses: widget.deviceStatuses,
                   metric: TimelineDeviceMetric.cob,
                   ranges: widget.ranges,
+                  showBottomTitles: false,
                   onTimestampSelected: widget.onTimestampSelected,
                 ),
                 const SizedBox(height: 12),
@@ -104,6 +106,7 @@ class _TimelineAnalysisChartsState extends State<TimelineAnalysisCharts> {
                   deviceStatuses: widget.deviceStatuses,
                   metric: TimelineDeviceMetric.iob,
                   ranges: widget.ranges,
+                  showBottomTitles: true,
                   onTimestampSelected: widget.onTimestampSelected,
                 ),
               ],
@@ -154,6 +157,7 @@ class TimelineGlucoseChart extends StatelessWidget {
   final List<Glucose> glucoseReadings;
   final List<TimelineChartEvent> events;
   final List<TimelineChartRange> ranges;
+  final bool showBottomTitles;
   final ValueChanged<DateTime>? onTimestampSelected;
 
   const TimelineGlucoseChart({
@@ -164,6 +168,7 @@ class TimelineGlucoseChart extends StatelessWidget {
     required this.glucoseReadings,
     this.events = const [],
     this.ranges = const [],
+    this.showBottomTitles = true,
     this.onTimestampSelected,
   });
 
@@ -288,27 +293,28 @@ class TimelineGlucoseChart extends StatelessWidget {
 
   List<HorizontalRangeAnnotation> _glucoseRanges(TimelineChartBounds bounds) {
     return [
-      HorizontalRangeAnnotation(
-        y1: bounds.minY,
-        y2: 70,
-        color: Colors.red.withValues(alpha: 0.08),
-      ),
-      HorizontalRangeAnnotation(
-        y1: 70,
-        y2: 180,
-        color: Colors.green.withValues(alpha: 0.08),
-      ),
-      HorizontalRangeAnnotation(
-        y1: 180,
-        y2: 250,
-        color: Colors.amber.withValues(alpha: 0.10),
-      ),
-      HorizontalRangeAnnotation(
-        y1: 250,
-        y2: bounds.maxY,
-        color: Colors.red.withValues(alpha: 0.08),
-      ),
-    ];
+      _horizontalRange(bounds, double.negativeInfinity, 70, Colors.red, 0.08),
+      _horizontalRange(bounds, 70, 180, Colors.green, 0.08),
+      _horizontalRange(bounds, 180, 250, Colors.amber, 0.10),
+      _horizontalRange(bounds, 250, double.infinity, Colors.red, 0.08),
+    ].nonNulls.toList();
+  }
+
+  HorizontalRangeAnnotation? _horizontalRange(
+    TimelineChartBounds bounds,
+    double start,
+    double end,
+    Color color,
+    double alpha,
+  ) {
+    final y1 = math.max(bounds.minY, start);
+    final y2 = math.min(bounds.maxY, end);
+    if (y1 >= y2) return null;
+    return HorizontalRangeAnnotation(
+      y1: y1,
+      y2: y2,
+      color: color.withValues(alpha: alpha),
+    );
   }
 
   List<VerticalRangeAnnotation> _verticalRanges(TimelineChartBounds bounds) {
@@ -447,8 +453,8 @@ class TimelineGlucoseChart extends StatelessWidget {
       ),
       bottomTitles: AxisTitles(
         sideTitles: SideTitles(
-          showTitles: true,
-          reservedSize: 28,
+          showTitles: showBottomTitles,
+          reservedSize: showBottomTitles ? 28 : 0,
           interval: math.max(15, bounds.totalMinutes / 4).toDouble(),
           getTitlesWidget: (value, meta) {
             final time = chartStart.add(Duration(minutes: value.round()));
@@ -473,6 +479,7 @@ class TimelineDeviceMetricChart extends StatelessWidget {
   final List<DeviceStatus> deviceStatuses;
   final TimelineDeviceMetric metric;
   final List<TimelineChartRange> ranges;
+  final bool showBottomTitles;
   final ValueChanged<DateTime>? onTimestampSelected;
 
   const TimelineDeviceMetricChart({
@@ -483,6 +490,7 @@ class TimelineDeviceMetricChart extends StatelessWidget {
     required this.deviceStatuses,
     required this.metric,
     this.ranges = const [],
+    this.showBottomTitles = true,
     this.onTimestampSelected,
   });
 
@@ -603,8 +611,8 @@ class TimelineDeviceMetricChart extends StatelessWidget {
       ),
       bottomTitles: AxisTitles(
         sideTitles: SideTitles(
-          showTitles: true,
-          reservedSize: 28,
+          showTitles: showBottomTitles,
+          reservedSize: showBottomTitles ? 28 : 0,
           interval: math.max(15, bounds.totalMinutes / 4).toDouble(),
           getTitlesWidget: (value, meta) {
             final time = chartStart.add(Duration(minutes: value.round()));
@@ -736,11 +744,13 @@ class TimelineChartBounds {
     final values = glucoseReadings.map((g) => g.sgv).toList();
     final minValue = values.reduce(math.min);
     final maxValue = values.reduce(math.max);
+    final minY = minValue * 0.85;
+    final maxY = maxValue * 1.15;
     return TimelineChartBounds(
       start: chartStart,
       end: chartEnd,
-      minY: math.min(60, minValue - 12).toDouble(),
-      maxY: math.max(260, maxValue + 12).toDouble(),
+      minY: minY.toDouble(),
+      maxY: math.max(minY + 1, maxY).toDouble(),
       totalMinutes: _totalMinutes(chartStart, chartEnd),
     );
   }
