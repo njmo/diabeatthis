@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/widgets/form_section.dart';
 import '../../domain/use_cases/finalize_meal_summary_use_case.dart';
+import '../../domain/utils/meal_add_on_status.dart';
 import '../controllers/meal_summary_controller.dart';
 import '../models/meal_summary_draft.dart';
 import '../providers/meal_summary_item_ids_provider.dart';
@@ -30,6 +31,9 @@ class MealSummaryPage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Nie udało się wczytać: $e')),
         data: (draft) {
+          final addOnAlreadyReported = mealStatusHasReportedAddOn(
+            draft.mealStatus,
+          );
           return SafeArea(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
@@ -40,13 +44,18 @@ class MealSummaryPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Wybierz ile porcji zostało zjedzone. Jeśli była dokładka, dodaj ją niżej.',
+                  addOnAlreadyReported
+                      ? 'Dokładka została już zapisana. Sprawdź posiłek i zakończ podsumowanie.'
+                      : 'Wybierz ile porcji zostało zjedzone. Jeśli była dokładka, dodaj ją niżej.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 16),
-                MealSummaryCarbsHintCard(draft: draft),
+                MealSummaryCarbsHintCard(
+                  draft: draft,
+                  addOnAlreadyReported: addOnAlreadyReported,
+                ),
                 const SizedBox(height: 24),
                 FormSection(
                   icon: Icons.restaurant,
@@ -60,11 +69,13 @@ class MealSummaryPage extends ConsumerWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                MealSummaryExtraItemsSection(
-                  mealId: mealId,
-                  items: draft.extraItems,
-                ),
+                if (!addOnAlreadyReported) ...[
+                  const SizedBox(height: 24),
+                  MealSummaryExtraItemsSection(
+                    mealId: mealId,
+                    items: draft.extraItems,
+                  ),
+                ],
               ],
             ),
           );
@@ -76,20 +87,22 @@ class MealSummaryPage extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => _saveSummary(
-                    context: context,
-                    notifier: notifier,
-                    draft: draft,
-                    mode: MealSummarySaveMode.continueEating,
+              if (!mealStatusHasReportedAddOn(draft.mealStatus)) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _saveSummary(
+                      context: context,
+                      notifier: notifier,
+                      draft: draft,
+                      mode: MealSummarySaveMode.continueEating,
+                    ),
+                    icon: const Icon(Icons.restaurant),
+                    label: const Text('Zapisz dokładkę i wróć do jedzenia'),
                   ),
-                  icon: const Icon(Icons.restaurant),
-                  label: const Text('Zapisz dokładkę i wróć do jedzenia'),
                 ),
-              ),
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
+              ],
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
@@ -127,8 +140,8 @@ class MealSummaryPage extends ConsumerWidget {
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(_dialogTitle(delta)),
-        content: Text(_dialogMessage(delta, mode)),
+        title: Text(_dialogTitle(delta, draft)),
+        content: Text(_dialogMessage(delta, mode, draft)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -143,7 +156,11 @@ class MealSummaryPage extends ConsumerWidget {
     }
   }
 
-  String _dialogTitle(MealSummaryCarbsDelta delta) {
+  String _dialogTitle(MealSummaryCarbsDelta delta, MealSummaryDraft draft) {
+    if (mealStatusHasReportedAddOn(draft.mealStatus)) {
+      return 'Podsumowanie zapisane';
+    }
+
     if (delta.isPositive) {
       return '+${delta.roundedTotal}g węglowodanów';
     }
@@ -153,7 +170,15 @@ class MealSummaryPage extends ConsumerWidget {
     return 'Bez zmiany węglowodanów';
   }
 
-  String _dialogMessage(MealSummaryCarbsDelta delta, MealSummarySaveMode mode) {
+  String _dialogMessage(
+    MealSummaryCarbsDelta delta,
+    MealSummarySaveMode mode,
+    MealSummaryDraft draft,
+  ) {
+    if (mealStatusHasReportedAddOn(draft.mealStatus)) {
+      return 'Dokładka była już zapisana wcześniej. Nie dopisuj ponownie tych samych węglowodanów w AAPS.';
+    }
+
     final suffix = mode == MealSummarySaveMode.continueEating
         ? '\n\nPosiłek wrócił do statusu jedzenia. Kolejne podsumowanie zacznie od zapisanych wartości.'
         : '';

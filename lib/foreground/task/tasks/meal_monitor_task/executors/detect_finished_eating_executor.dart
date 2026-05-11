@@ -36,6 +36,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     MealEatingThenBolus,
     MealEatingExtraEvent,
     MealFinishedEatingEvent,
+    MealFinishedEatingExtraEvent,
     MealFinishedEatingBolusedEvent,
   ];
 
@@ -46,6 +47,9 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
   ) {
     logI("DetectFinishedEatingExecutor shouldInterrupt ${event.runtimeType}");
     if (event is MealFinishedEatingEvent) {
+      return event.mealId == mealMonitorContext.activeMeal!.id;
+    }
+    if (event is MealFinishedEatingExtraEvent) {
       return event.mealId == mealMonitorContext.activeMeal!.id;
     }
     if (event is MealFinishedEatingBolusedEvent) {

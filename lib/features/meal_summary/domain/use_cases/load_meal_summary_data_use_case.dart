@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
+import '../../../meals/data/providers/meal_database_provider.dart';
 import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../data/models/meal_summary_data.dart';
@@ -21,6 +22,7 @@ class LoadMealSummaryDataUseCase {
   LoadMealSummaryDataUseCase({required this.ref});
 
   Future<MealSummaryData> call(int mealId) async {
+    final meal = await ref.read(getMealByIdProvider(mealId).future);
     final mealIngredients = await ref.read(
       getMealIngredientsDraftForMealProvider(mealId).future,
     );
@@ -38,7 +40,11 @@ class LoadMealSummaryDataUseCase {
         netCarbsPerAmount: _netCarbsPerAmount(mealIngredient),
       );
     }).toList();
-    return MealSummaryData(mealId: mealId, items: items);
+    return MealSummaryData(
+      mealId: mealId,
+      mealStatus: meal?.status,
+      items: items,
+    );
   }
 
   double _plannedAmount(MealIngredientsDraft mealIngredient) {

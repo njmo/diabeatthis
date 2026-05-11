@@ -256,6 +256,7 @@ class _MealCard extends StatelessWidget {
   static String _toMealStatus(String? status) {
     switch (status) {
       case 'eaten':
+      case 'eaten-extra':
       case 'eaten-bolused':
         return 'Zjedzony';
       case 'skipped':

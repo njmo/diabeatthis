@@ -4,20 +4,29 @@ import '../models/meal_summary_draft.dart';
 import '../utils/meal_summary_carbs_delta.dart';
 
 class MealSummaryCarbsHintCard extends StatelessWidget {
-  const MealSummaryCarbsHintCard({super.key, required this.draft});
+  const MealSummaryCarbsHintCard({
+    super.key,
+    required this.draft,
+    this.addOnAlreadyReported = false,
+  });
 
   final MealSummaryDraft draft;
+  final bool addOnAlreadyReported;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final delta = calculateMealSummaryCarbsDelta(draft);
-    final foregroundColor = _foregroundColor(colorScheme, delta);
+    final foregroundColor = addOnAlreadyReported
+        ? colorScheme.onSurfaceVariant
+        : _foregroundColor(colorScheme, delta);
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: _backgroundColor(colorScheme, delta),
+        color: addOnAlreadyReported
+            ? colorScheme.surfaceContainerHighest
+            : _backgroundColor(colorScheme, delta),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
@@ -25,27 +34,35 @@ class MealSummaryCarbsHintCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(_icon(delta), color: foregroundColor),
+            Icon(
+              addOnAlreadyReported ? Icons.check_circle_outline : _icon(delta),
+              color: foregroundColor,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _title(delta),
+                    addOnAlreadyReported
+                        ? 'Dokładka już uwzględniona'
+                        : _title(delta),
                     style: textTheme.titleMedium?.copyWith(
                       color: foregroundColor,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _description(delta),
+                    addOnAlreadyReported
+                        ? 'Nie dopisuj ponownie tych samych węglowodanów w AAPS.'
+                        : _description(delta),
                     style: textTheme.bodySmall?.copyWith(
                       color: foregroundColor,
                     ),
                   ),
-                  if (delta.roundedPlannedItemsDelta != 0 ||
-                      delta.roundedExtraItemsCarbs != 0) ...[
+                  if (!addOnAlreadyReported &&
+                      (delta.roundedPlannedItemsDelta != 0 ||
+                          delta.roundedExtraItemsCarbs != 0)) ...[
                     const SizedBox(height: 8),
                     Text(
                       'Plan: ${_formatSigned(delta.roundedPlannedItemsDelta)}g • Dokładka: +${delta.roundedExtraItemsCarbs}g',

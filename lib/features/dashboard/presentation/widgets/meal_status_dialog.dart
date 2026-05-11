@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../meal_summary/domain/utils/meal_add_on_status.dart';
 import '../../data/meal_dialog_controller.dart';
 import '../../data/meal_dialog_state.dart';
 import '../../data/providers/meal_advisor_result_provider.dart';
@@ -166,9 +167,11 @@ class MealStatusDialog extends ConsumerWidget with Logging {
             ElevatedButton(
               onPressed: () async {
                 if (context.mounted) {
-                  Navigator.of(
-                    context,
-                  ).pop(const MealStatusUpdateResult('eaten'));
+                  Navigator.of(context).pop(
+                    MealStatusUpdateResult(
+                      mealStatusAfterEatingConfirmation(meal.status),
+                    ),
+                  );
                 }
               },
               child: const Text("Zjadłem"),

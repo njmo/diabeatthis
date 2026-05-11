@@ -10,3 +10,15 @@ String mealStatusAfterAddOn(String? status) {
       return 'eating-extra';
   }
 }
+
+String mealStatusAfterEatingConfirmation(String? status) {
+  if (status == 'eating-extra') {
+    return 'eaten-extra';
+  }
+
+  return 'eaten';
+}
+
+bool mealStatusHasReportedAddOn(String? status) {
+  return status == 'eating-extra' || status == 'eaten-extra';
+}

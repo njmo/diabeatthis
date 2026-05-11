@@ -34,6 +34,7 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
 
     return MealSummaryDraft(
       mealId: mealId,
+      mealStatus: data.mealStatus,
       itemIds: itemIds,
       itemsById: itemsById,
       extraItems: [],

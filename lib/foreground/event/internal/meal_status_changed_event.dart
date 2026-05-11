@@ -21,6 +21,9 @@ sealed class MealStatusChangedEvent
   const factory MealStatusChangedEvent.eaten({required int mealId}) =
       MealFinishedEatingEvent;
 
+  const factory MealStatusChangedEvent.eatenExtra({required int mealId}) =
+      MealFinishedEatingExtraEvent;
+
   const factory MealStatusChangedEvent.skipped({required int mealId}) =
       MealSkippedEvent;
 

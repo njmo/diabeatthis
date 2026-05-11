@@ -12,6 +12,7 @@ void main() {
     final delta = calculateMealSummaryCarbsDelta(
       MealSummaryDraft(
         mealId: 1,
+        mealStatus: 'eaten',
         itemIds: const [1],
         itemsById: {
           1: _item(
@@ -35,6 +36,7 @@ void main() {
     final delta = calculateMealSummaryCarbsDelta(
       MealSummaryDraft(
         mealId: 1,
+        mealStatus: 'eaten',
         itemIds: const [1, 2],
         itemsById: {
           1: _item(
@@ -66,6 +68,7 @@ void main() {
     final delta = calculateMealSummaryCarbsDelta(
       MealSummaryDraft(
         mealId: 1,
+        mealStatus: 'eaten',
         itemIds: const [1],
         itemsById: {
           1: _item(

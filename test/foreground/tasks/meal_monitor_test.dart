@@ -126,6 +126,16 @@ void main() {
       expect(event.mealId, 1);
     });
 
+    test('parses eaten-extra meal status as add-on finished event', () {
+      final event = MealStatusChangedEvent.fromJson({
+        'kind': 'eaten-extra',
+        'mealId': 1,
+      });
+
+      expect(event, isA<MealFinishedEatingExtraEvent>());
+      expect(event.mealId, 1);
+    });
+
     test('summary reminder action saves planned amount as consumed', () async {
       final db = DatabaseImpl(NativeDatabase.memory());
       addTearDown(db.close);

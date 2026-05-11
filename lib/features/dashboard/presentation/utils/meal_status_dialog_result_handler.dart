@@ -20,7 +20,9 @@ Future<void> handleMealStatusDialogResult({
       await ref.read(updateMealProvider(meal, status).future);
       if (context.mounted &&
           openSummaryAfterEaten &&
-          (status == 'eaten' || status == 'eaten-bolused')) {
+          (status == 'eaten' ||
+              status == 'eaten-extra' ||
+              status == 'eaten-bolused')) {
         context.router.push(routes.MealSummaryRoute(mealId: meal.id));
       }
     case MealStatusAddOnResult(:final choice):
@@ -63,7 +65,7 @@ Future<void> handleMealAddOnChoice({
   await showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('${result.roundedTotalNetCarbs}g węglowodanów razem'),
+      title: Text(_addOnTitle(meal.status, result)),
       content: Text(_addOnMessage(meal.status, result)),
       actions: [
         TextButton(
@@ -73,6 +75,18 @@ Future<void> handleMealAddOnChoice({
       ],
     ),
   );
+}
+
+String _addOnTitle(String? mealStatus, MealAddOnMultiplierResult result) {
+  if (mealStatus == 'eating-then-bolus') {
+    return 'Wpisz ${result.roundedTotalNetCarbs}g w AAPS';
+  }
+
+  if (result.roundedAddedNetCarbs <= 0) {
+    return 'Dokładka zapisana';
+  }
+
+  return 'Dodaj +${result.roundedAddedNetCarbs}g w AAPS';
 }
 
 String _addOnMessage(String? mealStatus, MealAddOnMultiplierResult result) {

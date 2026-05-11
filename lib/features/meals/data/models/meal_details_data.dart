@@ -132,6 +132,7 @@ class MealRecordData {
 
   bool get isEaten {
     return status == 'eaten' ||
+        status == 'eaten-extra' ||
         status == 'eaten-bolused' ||
         status == 'summarized';
   }

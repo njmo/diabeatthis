@@ -29,7 +29,9 @@ class MealListToday extends ConsumerWidget {
 
           return InkWell(
             onTap: () async {
-              if (meal.status == 'eaten' || meal.status == 'eaten-bolused') {
+              if (meal.status == 'eaten' ||
+                  meal.status == 'eaten-extra' ||
+                  meal.status == 'eaten-bolused') {
                 context.router.push(routes.MealSummaryRoute(mealId: meal.id));
                 return;
               }
@@ -125,6 +127,8 @@ class MealListToday extends ConsumerWidget {
   String _toMealStatus(String? status) {
     switch (status) {
       case 'eaten':
+      case 'eaten-extra':
+        return 'Zjedzony';
       case 'eaten-bolused':
         return 'Zjedzony z podanym bolusem';
       case 'skipped':

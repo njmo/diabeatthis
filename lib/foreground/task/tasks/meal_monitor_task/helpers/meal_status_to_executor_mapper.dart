@@ -19,6 +19,7 @@ MealMonitorStateExecutor? mealStatusChangedEventToExecutor(
       isAddOn: true,
     ),
     eaten: (MealFinishedEatingEvent value) => FinalizeMealExecutor(),
+    eatenExtra: (MealFinishedEatingExtraEvent value) => FinalizeMealExecutor(),
     skipped: (MealSkippedEvent value) {
       if (eventForActiveMeal) {
         return MealMonitorStateIdle();
