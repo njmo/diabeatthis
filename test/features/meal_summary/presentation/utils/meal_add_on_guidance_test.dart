@@ -10,6 +10,8 @@ void main() {
     test('marks an add-on as eaten without losing add-on state', () {
       expect(mealStatusAfterEatingConfirmation('eating-extra'), 'eaten-extra');
       expect(mealStatusHasReportedAddOn('eaten-extra'), isTrue);
+      expect(mealStatusCanRequestAddOn('eaten-extra'), isFalse);
+      expect(mealStatusCanRequestAddOn('eating-extra'), isFalse);
     });
 
     test('preserves eat-then-bolus flow after an add-on', () {

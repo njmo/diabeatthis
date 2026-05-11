@@ -22,3 +22,7 @@ String mealStatusAfterEatingConfirmation(String? status) {
 bool mealStatusHasReportedAddOn(String? status) {
   return status == 'eating-extra' || status == 'eaten-extra';
 }
+
+bool mealStatusCanRequestAddOn(String? status) {
+  return !mealStatusHasReportedAddOn(status);
+}

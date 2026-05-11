@@ -159,11 +159,12 @@ class MealStatusDialog extends ConsumerWidget with Logging {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text("Anuluj"),
             ),
-            OutlinedButton.icon(
-              onPressed: () => _chooseAddOn(context),
-              icon: const Icon(Icons.add),
-              label: const Text('Dokładka'),
-            ),
+            if (mealStatusCanRequestAddOn(meal.status))
+              OutlinedButton.icon(
+                onPressed: () => _chooseAddOn(context),
+                icon: const Icon(Icons.add),
+                label: const Text('Dokładka'),
+              ),
             ElevatedButton(
               onPressed: () async {
                 if (context.mounted) {
@@ -201,11 +202,12 @@ class MealStatusDialog extends ConsumerWidget with Logging {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text("Anuluj"),
             ),
-            OutlinedButton.icon(
-              onPressed: () => _chooseAddOn(context),
-              icon: const Icon(Icons.add),
-              label: const Text('Dokładka'),
-            ),
+            if (mealStatusCanRequestAddOn(meal.status))
+              OutlinedButton.icon(
+                onPressed: () => _chooseAddOn(context),
+                icon: const Icon(Icons.add),
+                label: const Text('Dokładka'),
+              ),
             ElevatedButton(
               onPressed: () async {
                 if (context.mounted) {
