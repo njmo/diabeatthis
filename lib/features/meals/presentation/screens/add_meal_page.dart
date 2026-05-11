@@ -6,11 +6,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/date_time_picker.dart';
 import '../../../../core/logger/logger.dart';
-import '../../../dashboard/data/providers/meal_add_provider.dart';
 import '../../../meal_template/data/provider/meal_template_ingredients_list_provider.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
+import '../controllers/add_meal_controller.dart';
 import '../widgets/copied_meal_form_field.dart';
 import '../widgets/copied_meal_picker.dart';
 import '../widgets/meal_ingredients_list_editor.dart';
@@ -23,10 +23,12 @@ class AddMealPage extends HookConsumerWidget with Logging {
   Widget build(BuildContext context, WidgetRef ref) {
     final formKey = useState(GlobalKey<FormState>());
     final mealDraft = ref.read(mealDraftProvider.notifier);
-    final dateController = TextEditingController();
+    final dateController = useTextEditingController();
+    final addMealState = ref.watch(addMealControllerProvider);
+    final isSaving = addMealState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Meal Page')),
+      appBar: AppBar(title: const Text('Dodaj posiłek')),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -132,7 +134,7 @@ class AddMealPage extends HookConsumerWidget with Logging {
                           },
                           decoration: const InputDecoration(
                             icon: Icon(Icons.calendar_today_rounded),
-                            labelText: 'Planned Date',
+                            labelText: 'Planowana data',
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -141,15 +143,34 @@ class AddMealPage extends HookConsumerWidget with Logging {
                           child: MealIngredientsListEditor(),
                         ),
                         InkWell(
-                          child: const Text('Add all'),
+                          child: isSaving
+                              ? const CircularProgressIndicator()
+                              : const Text('Dodaj posiłek'),
                           onTap: () async {
+                            if (isSaving) {
+                              return;
+                            }
                             if (formKey.value.currentState!.validate()) {
                               formKey.value.currentState!.save();
                               final updatedDraft = ref.read(mealDraftProvider);
-                              ref
-                                  .watch(mealAddProvider.notifier)
-                                  .addMeal(updatedDraft);
-                              context.router.pop();
+                              try {
+                                await ref
+                                    .read(addMealControllerProvider.notifier)
+                                    .addMeal(updatedDraft);
+                                if (context.mounted) {
+                                  context.router.pop();
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Nie udało się dodać posiłku: $e',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
                             }
                           },
                         ),

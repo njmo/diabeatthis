@@ -14,8 +14,8 @@ import '../../../activity/presentation/widgets/activity_picker_dialog.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
+import '../../../meals/presentation/controllers/add_meal_controller.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
-import '../../data/providers/meal_add_provider.dart';
 import 'meal_status_dialog.dart';
 
 class KidFAB extends HookConsumerWidget with Logging {
@@ -55,7 +55,6 @@ class KidFAB extends HookConsumerWidget with Logging {
                 existing: (id, name, pre, post) async {
                   logI('Starting activity: $id $name');
                   try {
-
                     await ref.read(
                       insertActivityLogProvider(
                         ActivityLog.draft(
@@ -75,7 +74,8 @@ class KidFAB extends HookConsumerWidget with Logging {
             }
             open.value = false;
           }),
-          const SizedBox(height: 8),_buildOption(Icons.sports_basketball, 'Zaplanuj aktywność', () async {
+          const SizedBox(height: 8),
+          _buildOption(Icons.sports_basketball, 'Zaplanuj aktywność', () async {
             final activity = await showDialog<Activity?>(
               barrierDismissible: true,
               context: context,
@@ -101,18 +101,17 @@ class KidFAB extends HookConsumerWidget with Logging {
                   logI('Starting activity: $id $name');
                   try {
                     var date = clock.now();
-                    if(context.mounted) {
-                      final selectedDate = await showDateTimePicker(context: context);
-                      if(selectedDate != null) {
+                    if (context.mounted) {
+                      final selectedDate = await showDateTimePicker(
+                        context: context,
+                      );
+                      if (selectedDate != null) {
                         date = selectedDate;
                       }
                     }
                     await ref.read(
                       insertActivityLogProvider(
-                        ActivityLog.draft(
-                          activityId: id,
-                          startedAt: date,
-                        ),
+                        ActivityLog.draft(activityId: id, startedAt: date),
                       ).future,
                     );
                     ref.invalidate(getPendingActivityProvider);
@@ -148,7 +147,7 @@ class KidFAB extends HookConsumerWidget with Logging {
                 draft.addMealIngredient(mealIngredient);
                 draft.setName("QM: ${mealIngredient.ingredient.name}");
                 final addedMeal = await ref
-                    .watch(mealAddProvider.notifier)
+                    .read(addMealControllerProvider.notifier)
                     .addMeal(ref.read(mealDraftProvider));
 
                 if (!context.mounted) {
