@@ -3,6 +3,7 @@ import 'package:clock/clock.dart';
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../../core/domain/model/device_status.dart';
 import '../../../../../core/domain/model/meal_macro_summary.dart';
+import '../../../../../core/domain/model/temporary_target.dart';
 import '../../../../../core/notifications/domain/events/meal_suggestion_notification.dart';
 import '../../../../../core/notifications/domain/events/temp_target_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -14,6 +15,7 @@ import '../../../../../features/meals/data/providers/meal_ingredients_list_provi
 import '../../../../event/internal/data_available_event.dart';
 import '../../../../event/internal/meal_event.dart';
 import '../../../../event/internal/meal_status_changed_event.dart';
+import '../../../../event/internal/treatment_available_event.dart';
 import '../../../../event/model/foreground_event.dart';
 import '../../../../providers/device_status_value_provider.dart';
 import '../../../../runtime/wait_handle.dart';
@@ -33,6 +35,8 @@ enum PathDecision {
 
 class MonitorUntilMeal extends MealMonitorStateExecutor {
   MonitorUntilMeal();
+
+  static const tempTargetSuggestionRetryInterval = Duration(minutes: 5);
 
   @override
   List<Type> get interruptableEvents => [
@@ -105,6 +109,36 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     notificationProvider.show(
       TempTargetNotificationEvent.meal(entityId: mealId),
     );
+  }
+
+  Future<bool> showTempTargetUntilDetected(
+    RuntimeContext context,
+    int mealId,
+    Duration maxWait,
+  ) async {
+    final deadline = clock.now().add(maxWait);
+
+    while (clock.now().isBefore(deadline)) {
+      logI("showing temp target suggestion notification");
+      showTempTargetNotification(context, mealId);
+
+      final remaining = deadline.difference(clock.now());
+      final waitTime = remaining < tempTargetSuggestionRetryInterval
+          ? remaining
+          : tempTargetSuggestionRetryInterval;
+
+      final targetEvent = await context
+          .waitForEventWithTimeoutOrNull<
+            TreatmentAvailableEvent<TemporaryTarget>
+          >(waitTime);
+
+      if (targetEvent != null) {
+        logI("Meal temp target detected");
+        return true;
+      }
+    }
+
+    return false;
   }
 
   DateTime alignToNextCgmReading(DateTime target, DateTime lastReading) {
@@ -234,6 +268,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       return MealMonitorStateIdle();
     }
 
+    var mealTempTargetDetected = false;
+
     while (true) {
       final now = clock.now();
       final timeToMeal = normalizedMealTime.difference(now);
@@ -265,18 +301,15 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               maxWaitMinutes,
             );
             logI("Blood sugar value: ${deviceStatus.bg}");
-            var notificationShown = false;
-            if (deviceStatus.bg > 100) {
-              logI("showing temp target suggestion notification");
-              showTempTargetNotification(
+            if (deviceStatus.bg > 100 && !mealTempTargetDetected) {
+              mealTempTargetDetected = await showTempTargetUntilDetected(
                 runtimeContext,
                 mealMonitorContext.activeMeal!.id,
+                Duration(minutes: maxWaitMinutes),
               );
-
-              logI("showing notification done sleeping till next path");
-              notificationShown = true;
+              continue;
             }
-            if (maxWaitMinutes > 5 && !notificationShown) {
+            if (maxWaitMinutes > 5) {
               logI("sleeping till next readaing for ${maxWaitMinutes - 5}");
               await runtimeContext.waitForDuration(
                 Duration(minutes: maxWaitMinutes - 5),

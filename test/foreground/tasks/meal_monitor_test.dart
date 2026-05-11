@@ -8,6 +8,7 @@ import 'package:diabeatthis/common/events/data/notification/temp_target_type.dar
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
+import 'package:diabeatthis/core/domain/model/temporary_target.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart' hide Meal;
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
@@ -640,6 +641,70 @@ void main() {
 
             expect(fakeNotifications.shownEvents, hasLength(0));
             expect(calls, hasLength(0));
+          });
+        });
+      },
+    );
+    test(
+      'repeats temp target suggestion every 5 minutes until target event arrives',
+      () {
+        fakeAsync((async) {
+          final start = DateTime(2026, 3, 23, 12, 0);
+          withFakeClock(async, start, () {
+            fakeNotifications.shownEvents.clear();
+            addTearDown(fakeNotifications.shownEvents.clear);
+            final container = ProviderContainer(
+              parent: parentContainer,
+              overrides: [
+                getNearestMealProvider.overrideWithValue(
+                  AsyncData(
+                    Meal(
+                      id: 1,
+                      status: 'planned',
+                      name: 'asd',
+                      plannedAt: clock.now().add(Duration(minutes: 35)),
+                    ),
+                  ),
+                ),
+                deviceStatusValueProvider.overrideWithValue(
+                  DeviceStatus(
+                    bg: 120,
+                    iob: 100,
+                    cob: 100,
+                    id: 0,
+                    date: clock.now().subtract(Duration(minutes: 2)),
+                    tick: '',
+                  ),
+                ),
+              ],
+            );
+            final harness = FakeRuntimeHarness(container: container);
+            final task = MealMonitorTask();
+
+            task.run(harness.runtimeContext);
+            _settle(async);
+
+            expect(fakeNotifications.shownEvents, hasLength(1));
+            expect(
+              fakeNotifications.shownEvents.single,
+              isA<TempTargetNotificationEvent>(),
+            );
+
+            _advanceMinutes(harness, async, 5);
+
+            expect(fakeNotifications.shownEvents, hasLength(2));
+
+            harness.dispatchEvent(
+              TreatmentAvailableEvent<TemporaryTarget>(
+                _temporaryTarget(clock.now()),
+              ),
+            );
+            _settle(async);
+
+            _advanceMinutes(harness, async, 1);
+
+            expect(fakeNotifications.shownEvents, hasLength(2));
+            fakeNotifications.shownEvents.clear();
           });
         });
       },
@@ -1955,6 +2020,18 @@ void main() {
 Future<void> _flushMicrotasks() async {
   await Future<void>.delayed(Duration.zero);
   await Future<void>.delayed(Duration.zero);
+}
+
+TemporaryTarget _temporaryTarget(DateTime createdAt) {
+  return TemporaryTarget(
+    id: 1,
+    nightscoutId: 'target-1',
+    createdAt: createdAt,
+    durationInMiliseconds: const Duration(hours: 1).inMilliseconds,
+    duration: 60,
+    targetBottom: 150,
+    targetTop: 150,
+  );
 }
 
 Future<void> _seedPlannedMeal(DatabaseImpl db) async {
