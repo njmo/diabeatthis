@@ -103,7 +103,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       notificationsControllerForegroundProvider,
     );
     notificationProvider.show(
-      TempTargetNotificationEvent(tempTargetString: 'Meal', mealId: mealId),
+      TempTargetNotificationEvent.meal(entityId: mealId),
     );
   }
 

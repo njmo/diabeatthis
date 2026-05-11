@@ -3,6 +3,8 @@ import 'package:diabeatthis/common/events/data/notification/eat_now_response_eve
 import 'package:diabeatthis/common/events/data/notification/finished_eating_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/meal_suggestion_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/meal_summary_reminder_response_event.dart';
+import 'package:diabeatthis/common/events/data/notification/temp_target_response_event.dart';
+import 'package:diabeatthis/common/events/data/notification/temp_target_type.dart';
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
@@ -143,6 +145,48 @@ void main() {
       );
 
       expect(labels, ['Zjadłem tyle co plan', 'OK']);
+    });
+
+    test('temp target notification supports meal and activity sources', () {
+      final meal = TempTargetNotificationEvent.meal(entityId: 1);
+      final activity = TempTargetNotificationEvent.activity(entityId: 2);
+
+      expect(meal.entityId, 1);
+      expect(meal.targetType, TempTargetType.meal);
+      expect(meal.tempTargetString, 'Meal');
+      expect(activity.entityId, 2);
+      expect(activity.targetType, TempTargetType.activity);
+      expect(activity.tempTargetString, 'Activity');
+
+      final activityPayload =
+          activity.toPayload()['action_data']! as Map<String, Object?>;
+
+      expect(activityPayload['entityId'], 2);
+      expect(activityPayload['targetType'], TempTargetType.activity);
+    });
+
+    test('temp target response accepts meal payload', () {
+      final event = TempTargetResponseEvent.fromJson({
+        'action': 'agree',
+        'entityId': 1,
+        'targetType': TempTargetType.meal,
+        'tempTargetString': 'Meal',
+      });
+
+      expect(event.entityId, 1);
+      expect(event.targetType, TempTargetType.meal);
+    });
+
+    test('temp target response accepts activity source payload', () {
+      final event = TempTargetResponseEvent.fromJson({
+        'action': 'agree',
+        'entityId': 2,
+        'targetType': TempTargetType.activity,
+        'tempTargetString': 'Activity',
+      });
+
+      expect(event.entityId, 2);
+      expect(event.targetType, TempTargetType.activity);
     });
 
     test('summary reminder action saves planned amount as consumed', () async {

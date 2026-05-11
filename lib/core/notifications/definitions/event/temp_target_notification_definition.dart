@@ -18,7 +18,7 @@ const tempTargetNotificationDefinition = NotificationDefinition(
     ),
     NotificationActionDef.plain(
       type: NotificationActionType.skip,
-      label: 'Pomiń posiłek',
+      label: 'Pomiń',
     ),
   ],
   channelType: NotificationChannelType.target,
