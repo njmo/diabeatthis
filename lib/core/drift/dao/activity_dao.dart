@@ -76,6 +76,12 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     )..where((tbl) => tbl.id.equals(id))).getSingle();
   }
 
+  Future<ActivityLogData?> getActivityLogByIdOrNull(int id) {
+    return (select(
+      db.activityLog,
+    )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
+  }
+
   Future<ActivityLogData> insertActivityLog(
     ActivityLogCompanion activityLog,
   ) async {
@@ -86,6 +92,23 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     return (select(
       db.activityLog,
     )..where((tbl) => tbl.endedAt.isNull())).getSingle();
+  }
+
+  Future<ActivityLogData?> getNearestActivityLog() {
+    final query = select(db.activityLog)
+      ..where((tbl) => tbl.endedAt.isNull())
+      ..orderBy([(log) => OrderingTerm.asc(log.startedAt)])
+      ..limit(1);
+
+    return query.getSingleOrNull();
+  }
+
+  Stream<List<ActivityLogData>> getAllPendingActivityLogs() {
+    final query = select(db.activityLog)
+      ..where((tbl) => tbl.endedAt.isNull())
+      ..orderBy([(log) => OrderingTerm.asc(log.startedAt)]);
+
+    return query.watch();
   }
 
   Future<ActivityData> getActivityById(int id) {

@@ -52,6 +52,7 @@ class FakeRuntimeHarness {
 
   void _emitSignal(String signalKey) {
     emittedSignals.add(signalKey);
+    _deliverInput(RuntimeSignalInput(signalKey));
   }
 
   void log(String message) {

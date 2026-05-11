@@ -9,6 +9,7 @@ import '../../core/logger/logger.dart';
 import '../collector/device_status_collector.dart';
 import '../collector/foreground_collector.dart';
 import '../collector/meal_status_collector.dart';
+import '../collector/next_activity_collector.dart';
 import '../collector/next_meal_collector.dart';
 import '../collector/treatments_collector.dart';
 import '../event/external/external_event_handler.dart';
@@ -58,6 +59,7 @@ class MyTaskHandler extends TaskHandler with Logging {
 
     _collectors = [
       DeviceStatusCollector(),
+      NextActivityCollector(),
       NextMealCollector(),
       MealStatusCollector(),
       TreatmentsCollector(),
@@ -75,8 +77,7 @@ class MyTaskHandler extends TaskHandler with Logging {
   }
 
   @override
-  Future<void> onRepeatEvent(DateTime timestamp) async {
-  }
+  Future<void> onRepeatEvent(DateTime timestamp) async {}
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
