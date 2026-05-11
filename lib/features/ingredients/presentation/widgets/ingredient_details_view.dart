@@ -107,6 +107,7 @@ class _MacroGrid extends StatelessWidget {
           crossAxisCount: columns,
           crossAxisSpacing: 8,
           mainAxisSpacing: 8,
+          padding: EdgeInsets.zero,
           childAspectRatio: columns == 4 ? 1.65 : 1.85,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
