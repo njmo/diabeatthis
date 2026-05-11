@@ -35,6 +35,7 @@ IconData mealStatusIcon(String status) {
     'planned' => Icons.schedule,
     'bolused-waiting' => Icons.hourglass_top,
     'bolused-eating' => Icons.restaurant,
+    'eating-extra' => Icons.add_circle,
     'eaten' || 'eaten-bolused' || 'summarized' => Icons.check_circle,
     'skipped' => Icons.cancel,
     _ => Icons.flag,

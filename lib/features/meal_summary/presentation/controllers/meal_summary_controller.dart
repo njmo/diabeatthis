@@ -27,8 +27,8 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
         plannedAmount: item.plannedAmount,
         amountLabel: mealSummaryAmountLabel(item),
         netCarbsPerAmount: item.netCarbsPerAmount,
-        consumedAmount: item.plannedAmount,
-        consumedConfidence: 1.0,
+        consumedAmount: item.consumedAmount,
+        consumedConfidence: item.consumedConfidence,
       );
     }
 
@@ -59,7 +59,9 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
     );
   }
 
-  Future<void> saveSummary() async {
+  Future<void> saveSummary({
+    MealSummarySaveMode mode = MealSummarySaveMode.finishMeal,
+  }) async {
     final current = state.value;
     if (current == null) return;
 
@@ -67,7 +69,7 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
 
     try {
       final useCase = ref.read(finalizeMealSummaryUseCaseProvider);
-      await useCase.call(current);
+      await useCase.call(current, mode: mode);
       state = AsyncData(current);
     } catch (e, st) {
       state = AsyncError(e, st);

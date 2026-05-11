@@ -83,6 +83,7 @@ String mealStatusLabel(String status) {
     'planned' => 'Zaplanowany',
     'bolused-waiting' => 'Bolus podany, oczekiwanie',
     'bolused-eating' => 'Bolus podany, jedzenie',
+    'eating-extra' => 'W trakcie jedzenia, dokładka',
     'eaten' => 'Zjedzony',
     'eaten-bolused' => 'Zjedzony po bolusie',
     'summarized' => 'Podsumowany',

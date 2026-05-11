@@ -38,6 +38,10 @@ class MealListToday extends ConsumerWidget {
               );
               if (action != null) {
                 await ref.read(updateMealProvider(meal, action).future);
+                if (context.mounted &&
+                    (action == 'eaten' || action == 'eaten-bolused')) {
+                  context.router.push(routes.MealSummaryRoute(mealId: meal.id));
+                }
               }
             },
             child: Card(
@@ -125,6 +129,7 @@ class MealListToday extends ConsumerWidget {
       case 'waited-eating':
       case 'bolused-eating':
       case 'eating':
+      case 'eating-extra':
       case 'eating-then-bolus':
         return 'W trakcie jedzenia';
       case 'bolused-waiting':

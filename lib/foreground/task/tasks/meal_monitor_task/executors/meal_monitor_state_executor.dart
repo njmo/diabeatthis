@@ -10,6 +10,7 @@ abstract class MealMonitorStateExecutor with Logging {
 
   List<Type> get interruptableEvents => [
     MealStartedEatingEvent,
+    MealEatingExtraEvent,
     MealEatingThenBolus,
     MealBolusedEatingEvent,
     MealBolusedWaitingEvent,
@@ -20,7 +21,10 @@ abstract class MealMonitorStateExecutor with Logging {
   // For example to check whether event applies to current active meal
   // to avoid situation that event skipped for some random meal will
   // cause interruption to the currently active executor.
-  bool shouldInterrupt(ForegroundEvent event, MealMonitorContext mealMonitorContext) {
+  bool shouldInterrupt(
+    ForegroundEvent event,
+    MealMonitorContext mealMonitorContext,
+  ) {
     logI("MealMonitorStateExecutor shouldInterrupt ${event.runtimeType}");
     return true;
   }

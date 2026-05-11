@@ -37,6 +37,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
   @override
   List<Type> get interruptableEvents => [
     MealStartedEatingEvent,
+    MealEatingExtraEvent,
     MealBolusedEatingEvent,
     MealEatingThenBolus,
     MealBolusedWaitingEvent,
@@ -425,7 +426,10 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               skip: (_) async {
                 logI("User dismissed meal, clicked on notification");
                 await runtimeContext.container.read(
-                  updateMealProvider(mealMonitorContext.activeMeal!, 'skipped').future,
+                  updateMealProvider(
+                    mealMonitorContext.activeMeal!,
+                    'skipped',
+                  ).future,
                 );
                 nextExecutor = MealMonitorStateIdle();
               },

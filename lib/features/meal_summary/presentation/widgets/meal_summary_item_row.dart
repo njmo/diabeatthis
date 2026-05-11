@@ -29,7 +29,7 @@ class MealSummaryItemRow extends ConsumerWidget {
 
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final extraCarbs = _extraNetCarbs(item);
+    final carbDelta = _netCarbsDelta(item);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -61,10 +61,13 @@ class MealSummaryItemRow extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  if (extraCarbs >= 0.5)
+                  if (carbDelta.abs() >= 0.5)
                     Chip(
-                      avatar: const Icon(Icons.add, size: 18),
-                      label: Text('+${extraCarbs.round()}g węgli'),
+                      avatar: Icon(
+                        carbDelta > 0 ? Icons.add : Icons.remove,
+                        size: 18,
+                      ),
+                      label: Text('${_formatSigned(carbDelta.round())}g węgli'),
                     ),
                 ],
               ),
@@ -163,9 +166,15 @@ class MealSummaryItemRow extends ConsumerWidget {
     return item.amountLabel == 'g' ? 5 : 0.5;
   }
 
-  double _extraNetCarbs(MealSummaryItemDraft item) {
-    final extraAmount = item.consumedAmount - item.plannedAmount;
-    if (extraAmount <= 0) return 0;
-    return extraAmount * item.netCarbsPerAmount;
+  double _netCarbsDelta(MealSummaryItemDraft item) {
+    final amountDelta = item.consumedAmount - item.plannedAmount;
+    return amountDelta * item.netCarbsPerAmount;
+  }
+
+  String _formatSigned(int value) {
+    if (value > 0) {
+      return '+$value';
+    }
+    return value.toString();
   }
 }

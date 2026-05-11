@@ -20,8 +20,8 @@ import 'meal_monitor_transition.dart';
 class MealMonitorTask extends InterruptableWorkflowTask with Logging {
   @override
   List<bool Function(ForegroundEvent)> get interruptableEventsMatcher => [
-        (e) => e is NextMealEvent,
-        (e) => e is MealStatusChangedEvent,
+    (e) => e is NextMealEvent,
+    (e) => e is MealStatusChangedEvent,
   ];
 
   @visibleForTesting
@@ -123,6 +123,11 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
           nextMealExecutorContext = _activeMealExecutorContext.copyWith(
             activeMeal: null,
           );
+        }
+        if (eventForActiveMeal &&
+            (interruptedEvent is MealEatingExtraEvent ||
+                interruptedEvent is MealEatingThenBolus)) {
+          nextMealExecutorContext = _activeMealExecutorContext.copyWith();
         }
 
         // pick next state based on interrupted event type

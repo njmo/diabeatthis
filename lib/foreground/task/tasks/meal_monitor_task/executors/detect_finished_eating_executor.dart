@@ -21,16 +21,20 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     with Logging {
   final bool shouldBolus;
   final bool? bolusWaited;
+  final bool isAddOn;
   int? grams;
 
   DetectFinishedEatingExecutor({
     required this.shouldBolus,
     this.grams,
     this.bolusWaited,
+    this.isAddOn = false,
   });
 
   @override
   List<Type> get interruptableEvents => [
+    MealEatingThenBolus,
+    MealEatingExtraEvent,
     MealFinishedEatingEvent,
     MealFinishedEatingBolusedEvent,
   ];
@@ -45,6 +49,12 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       return event.mealId == mealMonitorContext.activeMeal!.id;
     }
     if (event is MealFinishedEatingBolusedEvent) {
+      return event.mealId == mealMonitorContext.activeMeal!.id;
+    }
+    if (event is MealEatingThenBolus) {
+      return event.mealId == mealMonitorContext.activeMeal!.id;
+    }
+    if (event is MealEatingExtraEvent) {
       return event.mealId == mealMonitorContext.activeMeal!.id;
     }
     return true;
@@ -77,7 +87,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
             "User manually went through starting the meal earlier than planned",
           );
           final mealSummary = await runtimeContext.container.read(
-            mealMacronutrientsSummaryProvider(
+            mealMacronutrientsConsumedSummaryProvider(
               mealMonitorContext.activeMeal!.id,
             ).future,
           );
@@ -127,6 +137,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       notificationProvider.show(
         FinishedEatingNotificationEvent(
           mealId: mealMonitorContext.activeMeal!.id,
+          isAddOn: isAddOn,
         ),
       );
       logI("Notification shown, waiting for user response");

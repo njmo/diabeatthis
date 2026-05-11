@@ -108,6 +108,16 @@ void main() {
   LogRuntimeConfig.configure(isUnitTest: true, enableBuffer: false);
 
   group("MealMonitorTask tests", () {
+    test('parses eating-extra meal status as add-on eating event', () {
+      final event = MealStatusChangedEvent.fromJson({
+        'kind': 'eating-extra',
+        'mealId': 1,
+      });
+
+      expect(event, isA<MealEatingExtraEvent>());
+      expect(event.mealId, 1);
+    });
+
     test(
       'manual meal start shows finished eating notification and returns to idle after confirmation',
       () {
@@ -145,7 +155,6 @@ void main() {
             expect(task.state, isNot(isA<MealMonitorStateIdle>()));
 
             _advanceMinutes(harness, async, 21);
-
 
             expect(fakeNotifications.shownEvents, hasLength(1));
             final event = fakeNotifications.lastShownEvent;
@@ -235,6 +244,74 @@ void main() {
         });
       },
     );
+    test('meal add-on shows add-on finished eating notification', () {
+      fakeAsync((async) {
+        final start = DateTime(2026, 3, 23, 12, 0);
+        withFakeClock(async, start, () {
+          final calls = <(Meal, String)>{};
+          final container = ProviderContainer(
+            parent: parentContainer,
+            overrides: [
+              getNearestMealProvider.overrideWithValue(AsyncData(null)),
+              getMealByIdProvider(1).overrideWithValue(
+                AsyncData(
+                  Meal(
+                    id: 1,
+                    status: 'eating-extra',
+                    name: 'asd',
+                    plannedAt: clock.now(),
+                  ),
+                ),
+              ),
+              updateMealProvider.overrideWith((ref, args) async {
+                final (meal, status) = args;
+                calls.add((meal, status));
+              }),
+            ],
+          );
+          final harness = FakeRuntimeHarness(container: container);
+          final task = MealMonitorTask();
+
+          task.run(harness.runtimeContext);
+          _settle(async);
+
+          expect(task.state, isA<MealMonitorStateIdle>());
+
+          harness.dispatchEventToTask(task, MealEatingExtraEvent(mealId: 1));
+          _settle(async);
+
+          expect(task.state, isA<DetectFinishedEatingExecutor>());
+          expect((task.state as DetectFinishedEatingExecutor).isAddOn, true);
+
+          _advanceMinutes(harness, async, 10);
+
+          expect(fakeNotifications.shownEvents, hasLength(1));
+          final event = fakeNotifications.lastShownEvent;
+          expect(event, isA<FinishedEatingNotificationEvent>());
+          final eventTyped = event as FinishedEatingNotificationEvent;
+          expect(eventTyped.mealId, 1);
+          expect(eventTyped.isAddOn, true);
+          expect(eventTyped.title, 'Dokładka zjedzona?');
+
+          harness.dispatchEventToTask(
+            task,
+            FinishedEatingResponseEvent.agree(mealId: 1),
+          );
+          _settle(async);
+
+          expect(calls, hasLength(1));
+          final (m, s) = calls.single;
+          expect(m.id, 1);
+          expect(s, 'eaten');
+          calls.remove((m, s));
+
+          expect(fakeNotifications.shownEvents, hasLength(0));
+          expect(calls, hasLength(0));
+          expect(task.state, isA<MealMonitorStateIdle>());
+        });
+      });
+    });
+
     test(
       'shows temp target suggestion when planned meal is 26 minutes away and device status is already available',
       () {
@@ -1328,6 +1405,17 @@ void main() {
                   ),
                 ),
               ),
+              mealMacronutrientsConsumedSummaryProvider(1).overrideWithValue(
+                AsyncData(
+                  MealMacroSummary(
+                    fatGrams: 10,
+                    proteinGrams: 10,
+                    fiberGrams: 0,
+                    carbsGrams: 52,
+                    totalGrams: 50,
+                  ),
+                ),
+              ),
               updateMealProvider.overrideWith((ref, args) async {
                 final (meal, status) = args;
                 calls.add((meal, status));
@@ -1366,7 +1454,7 @@ void main() {
           expect(event, isA<MealSuggestionNotificationEvent>());
           final eventTypedSuggestion = event as MealSuggestionNotificationEvent;
           expect(eventTypedSuggestion.decision, MealDecision.bolus);
-          expect(eventTypedSuggestion.carbs, 10);
+          expect(eventTypedSuggestion.carbs, 52);
           expect(eventTypedSuggestion.minutes, 0);
           harness.dispatchEventToTask(
             task,
@@ -1575,6 +1663,17 @@ void main() {
             parent: parentContainer,
             overrides: [
               mealMacronutrientsSummaryProvider(1).overrideWithValue(
+                AsyncData(
+                  MealMacroSummary(
+                    fatGrams: 10,
+                    proteinGrams: 10,
+                    fiberGrams: 10,
+                    carbsGrams: 10,
+                    totalGrams: 50,
+                  ),
+                ),
+              ),
+              mealMacronutrientsConsumedSummaryProvider(1).overrideWithValue(
                 AsyncData(
                   MealMacroSummary(
                     fatGrams: 10,

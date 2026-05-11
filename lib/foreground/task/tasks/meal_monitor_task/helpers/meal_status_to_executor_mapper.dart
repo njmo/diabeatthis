@@ -7,12 +7,17 @@ import '../executors/meal_monitor_state_executor.dart';
 import '../executors/monitor_until_meal.dart';
 
 MealMonitorStateExecutor? mealStatusChangedEventToExecutor(
-    MealStatusChangedEvent event,
-    bool eventForActiveMeal,
-    ) {
+  MealStatusChangedEvent event,
+  bool eventForActiveMeal,
+) {
   return event.map(
     eating: (MealStartedEatingEvent value) =>
         DetectFinishedEatingExecutor(shouldBolus: false, bolusWaited: true),
+    eatingExtra: (MealEatingExtraEvent value) => DetectFinishedEatingExecutor(
+      shouldBolus: false,
+      bolusWaited: true,
+      isAddOn: true,
+    ),
     eaten: (MealFinishedEatingEvent value) => FinalizeMealExecutor(),
     skipped: (MealSkippedEvent value) {
       if (eventForActiveMeal) {
@@ -30,6 +35,7 @@ MealMonitorStateExecutor? mealStatusChangedEventToExecutor(
     eatenBolused: (MealFinishedEatingBolusedEvent value) =>
         FinalizeMealExecutor(),
     planned: (MealPlannedEvent value) => MonitorUntilMeal(),
-    waitedEating: (WaitedEatingEvent value) => DetectFinishedEatingExecutor(shouldBolus: false, bolusWaited: true),
+    waitedEating: (WaitedEatingEvent value) =>
+        DetectFinishedEatingExecutor(shouldBolus: false, bolusWaited: true),
   );
 }

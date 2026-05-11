@@ -25,16 +25,28 @@ class LoadMealSummaryDataUseCase {
       getMealIngredientsDraftForMealProvider(mealId).future,
     );
     final items = mealIngredients.map((mealIngredient) {
+      final plannedAmount = _plannedAmount(mealIngredient);
+
       return MealSummaryItem(
         name: mealIngredient.ingredient.name,
         id: mealIngredient.mealIngredientId!,
         isReference: mealIngredient.ingredient.isReference,
         portion: _mapPortion(mealIngredient.ingredientPortion),
-        plannedAmount: mealIngredient.amount.toDouble(),
+        plannedAmount: plannedAmount,
+        consumedAmount: mealIngredient.consumedAmount ?? plannedAmount,
+        consumedConfidence: mealIngredient.consumedConfidence ?? 1.0,
         netCarbsPerAmount: _netCarbsPerAmount(mealIngredient),
       );
     }).toList();
     return MealSummaryData(mealId: mealId, items: items);
+  }
+
+  double _plannedAmount(MealIngredientsDraft mealIngredient) {
+    if (mealIngredient.entryType == 'extra') {
+      return mealIngredient.consumedAmount ?? mealIngredient.amount.toDouble();
+    }
+
+    return mealIngredient.amount.toDouble();
   }
 
   double _netCarbsPerAmount(MealIngredientsDraft mealIngredient) {

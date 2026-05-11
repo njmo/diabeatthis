@@ -11,6 +11,7 @@ class MealMonitorStateIdle extends MealMonitorStateExecutor with Logging {
   @override
   List<Type> get interruptableEvents => [
     MealStartedEatingEvent,
+    MealEatingExtraEvent,
     MealBolusedEatingEvent,
     MealBolusedWaitingEvent,
     MealEatingThenBolus,

@@ -263,6 +263,7 @@ class _MealCard extends StatelessWidget {
       case 'waited-eating':
       case 'bolused-eating':
       case 'eating':
+      case 'eating-extra':
       case 'eating-then-bolus':
         return 'W trakcie jedzenia';
       case 'bolused-waiting':

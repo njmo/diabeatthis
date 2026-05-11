@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../meals/data/drafts/meal_draft.dart';
-import '../../../portions/data/drafts/portion_draft.dart';
 import '../models/meal_summary_draft.dart';
+import '../utils/meal_summary_carbs_delta.dart';
 
 class MealSummaryCarbsHintCard extends StatelessWidget {
   const MealSummaryCarbsHintCard({super.key, required this.draft});
@@ -13,14 +12,12 @@ class MealSummaryCarbsHintCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final extraCarbs = _extraNetCarbs(draft);
-    final hasExtraCarbs = extraCarbs >= 0.5;
+    final delta = calculateMealSummaryCarbsDelta(draft);
+    final foregroundColor = _foregroundColor(colorScheme, delta);
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: hasExtraCarbs
-            ? colorScheme.tertiaryContainer
-            : colorScheme.surfaceContainerHighest,
+        color: _backgroundColor(colorScheme, delta),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
@@ -28,38 +25,35 @@ class MealSummaryCarbsHintCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              hasExtraCarbs ? Icons.add_chart : Icons.check_circle_outline,
-              color: hasExtraCarbs
-                  ? colorScheme.onTertiaryContainer
-                  : colorScheme.onSurfaceVariant,
-            ),
+            Icon(_icon(delta), color: foregroundColor),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    hasExtraCarbs
-                        ? 'Dokładka: +${extraCarbs.round()}g węglowodanów'
-                        : 'Bez dodatkowych węglowodanów',
+                    _title(delta),
                     style: textTheme.titleMedium?.copyWith(
-                      color: hasExtraCarbs
-                          ? colorScheme.onTertiaryContainer
-                          : colorScheme.onSurfaceVariant,
+                      color: foregroundColor,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    hasExtraCarbs
-                        ? 'Tę wartość można wpisać do kalkulatora AAPS jako dodatkowe węglowodany.'
-                        : 'Zaznacz większą ilość albo dodaj składnik, jeśli była dokładka.',
+                    _description(delta),
                     style: textTheme.bodySmall?.copyWith(
-                      color: hasExtraCarbs
-                          ? colorScheme.onTertiaryContainer
-                          : colorScheme.onSurfaceVariant,
+                      color: foregroundColor,
                     ),
                   ),
+                  if (delta.roundedPlannedItemsDelta != 0 ||
+                      delta.roundedExtraItemsCarbs != 0) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Plan: ${_formatSigned(delta.roundedPlannedItemsDelta)}g • Dokładka: +${delta.roundedExtraItemsCarbs}g',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: foregroundColor,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -69,32 +63,60 @@ class MealSummaryCarbsHintCard extends StatelessWidget {
     );
   }
 
-  double _extraNetCarbs(MealSummaryDraft draft) {
-    final plannedItemCarbs = draft.itemsById.values.fold(0.0, (sum, item) {
-      final extraAmount = item.consumedAmount - item.plannedAmount;
-      if (extraAmount <= 0) return sum;
-      return sum + extraAmount * item.netCarbsPerAmount;
-    });
-
-    final extraItemCarbs = draft.extraItems.fold(0.0, (sum, item) {
-      return sum + _extraItemNetCarbs(item);
-    });
-
-    return plannedItemCarbs + extraItemCarbs;
+  Color _backgroundColor(ColorScheme colorScheme, MealSummaryCarbsDelta delta) {
+    if (delta.isPositive) {
+      return colorScheme.tertiaryContainer;
+    }
+    if (delta.isNegative) {
+      return colorScheme.errorContainer;
+    }
+    return colorScheme.surfaceContainerHighest;
   }
 
-  double _extraItemNetCarbs(MealIngredientsDraft item) {
-    final netCarbsPer100g =
-        item.ingredient.carbsPer100g - item.ingredient.fiberPer100g;
-    final safeNetCarbsPer100g = netCarbsPer100g < 0 ? 0 : netCarbsPer100g;
-    final grams = item.ingredient.isReference
-        ? item.amount * 100
-        : item.ingredientPortion.portion.map(
-            empty: (_) => item.amount,
-            existing: (_) => item.amount * item.ingredientPortion.amount,
-            draft: (_) => item.amount * item.ingredientPortion.amount,
-          );
+  Color _foregroundColor(ColorScheme colorScheme, MealSummaryCarbsDelta delta) {
+    if (delta.isPositive) {
+      return colorScheme.onTertiaryContainer;
+    }
+    if (delta.isNegative) {
+      return colorScheme.onErrorContainer;
+    }
+    return colorScheme.onSurfaceVariant;
+  }
 
-    return grams * safeNetCarbsPer100g / 100;
+  IconData _icon(MealSummaryCarbsDelta delta) {
+    if (delta.isPositive) {
+      return Icons.add_chart;
+    }
+    if (delta.isNegative) {
+      return Icons.remove_circle_outline;
+    }
+    return Icons.check_circle_outline;
+  }
+
+  String _title(MealSummaryCarbsDelta delta) {
+    if (delta.isPositive) {
+      return 'Do AAPS: +${delta.roundedTotal}g węglowodanów';
+    }
+    if (delta.isNegative) {
+      return 'Zjedzono mniej: ${delta.roundedTotal}g węglowodanów';
+    }
+    return 'Węglowodany zgodne z planem';
+  }
+
+  String _description(MealSummaryCarbsDelta delta) {
+    if (delta.isPositive) {
+      return 'Tę wartość wpisz jako dodatkowe węglowodany. AAPS policzy insulinę według profilu.';
+    }
+    if (delta.isNegative) {
+      return 'Brakuje około ${delta.roundedTotal.abs()}g względem planu. Jeśli bolus był na pełny plan, rozważ dojedzenie tej ilości węglowodanów.';
+    }
+    return 'Nie trzeba dopisywać dodatkowych węglowodanów.';
+  }
+
+  String _formatSigned(int value) {
+    if (value > 0) {
+      return '+$value';
+    }
+    return value.toString();
   }
 }
