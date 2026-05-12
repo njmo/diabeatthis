@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
+import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/drafts/portion_filter.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -67,7 +68,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     state = AddMealIngredientStage.ingredientPhotoScan;
   }
 
-  void nextStage() async {
+  Future<void> nextStage() async {
     prev = state;
     switch (state) {
       case AddMealIngredientStage.ingredientSearch:
@@ -94,19 +95,11 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         }
         break;
       case AddMealIngredientStage.ingredientPhotoScan:
+        final scannedIngredient = await ref
+            .read(ingredientPhotoScanControllerProvider.notifier)
+            .scanIngredient();
         final ingredientDraft = ref.read(ingredientDraftProvider.notifier);
-        ingredientDraft.overrideDraft(
-          Ingredient.draft(
-            name: 'Testowy produkt',
-            brand: 'Przykładowy producent',
-            carbsPer100g: 62.3,
-            fatPer100g: 20.1,
-            fiberPer100g: 3.2,
-            proteinPer100g: 6.4,
-            nutritionConfidence: 0.25,
-            isReference: false,
-          ),
-        );
+        ingredientDraft.overrideDraft(scannedIngredient);
         ref.invalidate(mealIngredientFormKeyProvider);
         state = AddMealIngredientStage.ingredientForm;
         break;

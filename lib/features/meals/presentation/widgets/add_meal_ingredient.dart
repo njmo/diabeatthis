@@ -8,6 +8,7 @@ import '../../../ingredients/presentation/widgets/ingredient_form.dart';
 import '../../../ingredients/presentation/widgets/ingredient_photo_scan.dart';
 import '../../../ingredients/presentation/widgets/ingredient_portion_amount_form.dart';
 import '../../../ingredients/presentation/widgets/ingredient_search.dart';
+import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../../portions/presentation/widgets/portion_form.dart';
 import '../../../portions/presentation/widgets/portion_search.dart';
@@ -23,6 +24,10 @@ class AddMealIngredient extends ConsumerWidget {
     ref.watch(portionFilterProvider);
     ref.watch(ingredientDraftProvider);
     final addingStage = ref.watch(addMealIngredientStageProvider);
+    final photoScanState = ref.watch(ingredientPhotoScanControllerProvider);
+    final isScanningIngredient =
+        addingStage == AddMealIngredientStage.ingredientPhotoScan &&
+        photoScanState.isLoading;
     final addingStateNotifier = ref.read(
       addMealIngredientStageProvider.notifier,
     );
@@ -120,26 +125,31 @@ class AddMealIngredient extends ConsumerWidget {
         children: [
           Expanded(
             child: ElevatedButton(
-              onPressed: () {
-                if (addingStage == AddMealIngredientStage.summary) {
-                  Navigator.of(
-                    context,
-                  ).pop(ref.read(mealIngredientsDraftProvider));
-                } else if (addingStage ==
-                    AddMealIngredientStage.ingredientPhotoScan) {
-                  addingStateNotifier.nextStage();
-                } else {
-                  final formKey = ref.read(mealIngredientFormKeyProvider);
-                  if (formKey.currentState!.validate()) {
-                    addingStateNotifier.nextStage();
-                    formKey.currentState!.reset();
-                  }
-                }
-              },
+              onPressed: isScanningIngredient
+                  ? null
+                  : () async {
+                      if (addingStage == AddMealIngredientStage.summary) {
+                        Navigator.of(
+                          context,
+                        ).pop(ref.read(mealIngredientsDraftProvider));
+                      } else if (addingStage ==
+                          AddMealIngredientStage.ingredientPhotoScan) {
+                        await addingStateNotifier.nextStage();
+                      } else {
+                        final formKey = ref.read(mealIngredientFormKeyProvider);
+                        if (formKey.currentState!.validate()) {
+                          await addingStateNotifier.nextStage();
+                          formKey.currentState!.reset();
+                        }
+                      }
+                    },
               child: (addingStage == AddMealIngredientStage.summary)
                   ? const Text('Dodaj')
                   : Text(
-                      addingStage == AddMealIngredientStage.ingredientPhotoScan
+                      isScanningIngredient
+                          ? 'Odczytuję...'
+                          : addingStage ==
+                                AddMealIngredientStage.ingredientPhotoScan
                           ? 'Symuluj odczyt'
                           : 'Dalej',
                     ),
