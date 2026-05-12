@@ -98,6 +98,9 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         final scannedIngredient = await ref
             .read(ingredientPhotoScanControllerProvider.notifier)
             .scanIngredient();
+        if (scannedIngredient == null) {
+          break;
+        }
         final ingredientDraft = ref.read(ingredientDraftProvider.notifier);
         ingredientDraft.overrideDraft(scannedIngredient);
         ref.invalidate(mealIngredientFormKeyProvider);

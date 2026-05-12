@@ -16,13 +16,16 @@ class IngredientPhotoScanController extends _$IngredientPhotoScanController {
     return null;
   }
 
-  Future<Ingredient> scanIngredient() async {
+  Future<Ingredient?> scanIngredient() async {
     state = const AsyncLoading();
 
     try {
       final useCase = ref.read(scanIngredientFromPhotosUseCaseProvider);
       final result = await useCase.call();
       state = AsyncData(result);
+      if (result.needsRetake) {
+        return null;
+      }
       return result.toIngredientDraft();
     } catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);

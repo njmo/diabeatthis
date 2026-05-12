@@ -1,4 +1,5 @@
 import 'package:diabeatthis/features/meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
+import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_scan_result.dart';
 import 'package:diabeatthis/features/meal_advisor/data/parsers/ingredient_scan_result_parser.dart';
 import 'package:diabeatthis/features/meal_advisor/domain/mappers/ingredient_scan_result_mapper.dart';
 import 'package:diabeatthis/features/meal_advisor/domain/use_cases/scan_ingredient_from_photos_use_case.dart';
@@ -17,6 +18,8 @@ void main() {
         final result = await useCase.call();
         final draft = result.toIngredientDraft();
 
+        expect(result.status, IngredientScanStatus.recognized);
+        expect(result.needsRetake, isFalse);
         expect(result.name, 'Testowy produkt');
         expect(result.brand, 'Przykładowy producent');
         expect(result.portions.single.name, '2 ciastka');

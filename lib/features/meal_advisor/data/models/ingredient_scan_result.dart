@@ -1,18 +1,40 @@
+enum IngredientScanStatus { recognized, needsRetake }
+
+enum IngredientScanPhotoTarget { front, nutritionLabel, both }
+
 class IngredientScanResult {
+  final IngredientScanStatus status;
   final String? name;
   final String? brand;
   final NutritionPer100g? nutritionPer100g;
   final List<RecognizedPortion> portions;
+  final IngredientScanRetakeRequest? retakeRequest;
 
   const IngredientScanResult({
+    required this.status,
     required this.name,
     required this.brand,
     required this.nutritionPer100g,
     required this.portions,
+    required this.retakeRequest,
   });
+
+  bool get needsRetake => status == IngredientScanStatus.needsRetake;
 
   bool get hasCompleteNutritionPer100g =>
       nutritionPer100g?.hasCompleteMacros ?? false;
+}
+
+class IngredientScanRetakeRequest {
+  final IngredientScanPhotoTarget photo;
+  final String? reason;
+  final String? message;
+
+  const IngredientScanRetakeRequest({
+    required this.photo,
+    required this.reason,
+    required this.message,
+  });
 }
 
 class NutritionPer100g {

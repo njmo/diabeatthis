@@ -9,6 +9,7 @@ class DebugIngredientPhotoScanClient {
 
 const debugIngredientPhotoScanResponse = '''
 {
+  "status": "recognized",
   "name": "Testowy produkt",
   "brand": "Przykładowy producent",
   "nutritionPer100g": {

@@ -17,12 +17,51 @@ class IngredientScanResultParser {
   }
 
   IngredientScanResult parseMap(Map<String, dynamic> json) {
+    final status = _parseStatus(json);
+    if (status == IngredientScanStatus.needsRetake) {
+      return IngredientScanResult(
+        status: status,
+        name: null,
+        brand: null,
+        nutritionPer100g: null,
+        portions: const [],
+        retakeRequest: _parseRetakeRequest(json),
+      );
+    }
+
     return IngredientScanResult(
+      status: status,
       name: _readString(json, 'name'),
       brand: _readString(json, 'brand'),
       nutritionPer100g: _parseNutritionPer100g(json),
       portions: _parsePortions(json),
+      retakeRequest: null,
     );
+  }
+
+  IngredientScanStatus _parseStatus(Map<String, dynamic> json) {
+    final status = _readString(json, 'status');
+    return switch (status) {
+      'needsRetake' => IngredientScanStatus.needsRetake,
+      _ => IngredientScanStatus.recognized,
+    };
+  }
+
+  IngredientScanRetakeRequest _parseRetakeRequest(Map<String, dynamic> json) {
+    return IngredientScanRetakeRequest(
+      photo: _parsePhotoTarget(json),
+      reason: _readString(json, 'reason'),
+      message: _readString(json, 'message'),
+    );
+  }
+
+  IngredientScanPhotoTarget _parsePhotoTarget(Map<String, dynamic> json) {
+    final photo = _readString(json, 'photo');
+    return switch (photo) {
+      'front' => IngredientScanPhotoTarget.front,
+      'nutritionLabel' => IngredientScanPhotoTarget.nutritionLabel,
+      _ => IngredientScanPhotoTarget.both,
+    };
   }
 
   NutritionPer100g _parseNutritionPer100g(Map<String, dynamic> json) {
