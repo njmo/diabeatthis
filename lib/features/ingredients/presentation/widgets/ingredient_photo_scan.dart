@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../core/llm/local_llm_client.dart';
 import '../../../../core/media/providers/camera_permission_service_provider.dart';
 import '../../../meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
 import '../../../meal_advisor/data/models/ingredient_photo_scan_input.dart';
@@ -14,7 +15,9 @@ class IngredientPhotoScan extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scanResult = ref.watch(ingredientPhotoScanControllerProvider).value;
+    final scanState = ref.watch(ingredientPhotoScanControllerProvider);
+    final scanResult = scanState.value;
+    final scanError = scanState.whenOrNull(error: (error, _) => error);
     final scanInput = ref.watch(ingredientPhotoScanCaptureControllerProvider);
     final retakeRequest = scanResult?.retakeRequest;
     final debugScenario = ref.watch(
@@ -50,6 +53,12 @@ class IngredientPhotoScan extends ConsumerWidget {
           const SizedBox(height: 12),
           if (retakeRequest != null) ...[
             IngredientPhotoRetakeMessage(request: retakeRequest),
+            const SizedBox(height: 12),
+          ],
+          if (scanError != null) ...[
+            IngredientPhotoScanErrorMessage(
+              message: _scanErrorMessage(scanError),
+            ),
             const SizedBox(height: 12),
           ],
           Text(
@@ -102,6 +111,16 @@ class IngredientPhotoScan extends ConsumerWidget {
       ),
     );
   }
+}
+
+String _scanErrorMessage(Object error) {
+  if (error is LocalLlmUnavailableException) {
+    return 'Lokalny model nie jest jeszcze skonfigurowany.';
+  }
+  if (error is FormatException) {
+    return 'Nie udało się odczytać odpowiedzi modelu. Spróbuj ponownie.';
+  }
+  return 'Nie udało się odczytać danych ze zdjęć. Spróbuj ponownie.';
 }
 
 String _photoCaptureMessage(IngredientPhotoCaptureState state) {
@@ -179,6 +198,40 @@ class IngredientPhotoRetakeMessage extends StatelessWidget {
             Expanded(
               child: Text(
                 request.message ?? _retakeFallbackMessage(request.photo),
+                style: TextStyle(color: colors.onErrorContainer),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class IngredientPhotoScanErrorMessage extends StatelessWidget {
+  final String message;
+
+  const IngredientPhotoScanErrorMessage({required this.message, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.error_outline, color: colors.onErrorContainer),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
                 style: TextStyle(color: colors.onErrorContainer),
               ),
             ),

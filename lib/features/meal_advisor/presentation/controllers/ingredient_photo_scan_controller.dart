@@ -36,7 +36,7 @@ class IngredientPhotoScanController extends _$IngredientPhotoScanController {
       return result.toIngredientDraft();
     } catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);
-      rethrow;
+      return null;
     }
   }
 
