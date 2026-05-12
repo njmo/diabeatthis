@@ -7,7 +7,7 @@ import '../../../../core/domain/model/activity_log.dart';
 import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../activity/data/providers/activity_provider.dart';
-import '../../../activity/presentation/widgets/activity_picker_dialog.dart';
+import '../../../activity/presentation/widgets/activity_picker_sheet.dart';
 import '../../data/providers/temporary_target_ui_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 
@@ -184,13 +184,10 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
               trailing: pendingActivity == null
                   ? FilledButton.icon(
                       onPressed: () async {
-                        final activity = await showDialog<Activity?>(
-                          barrierDismissible: true,
-                          context: context,
-                          builder: (context) => const ActivityPickerDialog(),
-                        );
+                        final activity = await showActivityPickerSheet(context);
 
                         if (activity == null) return;
+                        if (!context.mounted) return;
 
                         final controller = ref.read(
                           activityControllerProvider.notifier,

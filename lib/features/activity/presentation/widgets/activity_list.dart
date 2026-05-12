@@ -238,12 +238,12 @@ class _ActivityCard extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   _MetaPill(
-                    icon: Icons.arrow_back,
-                    text: 'Przed: $percentagePre%',
+                    icon: Icons.schedule,
+                    text: '1h przed: $percentagePre% mniej',
                   ),
                   _MetaPill(
-                    icon: Icons.arrow_forward,
-                    text: 'Po: $percentagePost%',
+                    icon: Icons.sports_score,
+                    text: 'Po: $percentagePost% mniej',
                   ),
                   _MetaPill(
                     icon: Icons.timer,

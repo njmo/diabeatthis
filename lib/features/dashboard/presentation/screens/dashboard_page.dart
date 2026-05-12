@@ -7,8 +7,8 @@ import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../meals/presentation/widgets/meal_list_today.dart';
 import '../widgets/dashboard_fab.dart';
 import '../widgets/dashboard_status_card.dart';
-import '../widgets/kid_fab.dart';
 import '../widgets/nightscout_dashboard.dart';
+import '../widgets/parent_dashboard_fab.dart';
 
 @RoutePage()
 class DashboardPage extends ConsumerWidget {
@@ -38,8 +38,8 @@ class DashboardPage extends ConsumerWidget {
         ],
       ),
       floatingActionButton: parentModeEnabled
-          ? const DashboardFAB()
-          : const KidFAB(),
+          ? const ParentDashboardFAB()
+          : const DashboardFAB(),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(

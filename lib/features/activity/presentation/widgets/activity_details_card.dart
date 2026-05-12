@@ -22,14 +22,14 @@ class ActivityDetailsCard extends StatelessWidget {
       title: name,
       children: [
         DetailInfoRow(
-          icon: Icons.arrow_back,
-          label: 'Przed aktywnością',
-          value: '$percentagePre%',
+          icon: Icons.schedule,
+          label: '1h przed posiłkiem',
+          value: '$percentagePre% mniej',
         ),
         DetailInfoRow(
-          icon: Icons.arrow_forward,
-          label: 'Po aktywności',
-          value: '$percentagePost%',
+          icon: Icons.sports_score,
+          label: 'Po treningu',
+          value: '$percentagePost% mniej',
         ),
         DetailInfoRow(
           icon: Icons.timer,

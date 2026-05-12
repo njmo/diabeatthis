@@ -4,9 +4,21 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/widgets/fab_action_option.dart';
+import '../../../../core/domain/model/activity.dart';
+import '../../../../core/domain/model/activity_log.dart';
+import '../../../../core/logger/logger.dart';
+import '../../../activity/data/providers/activity_provider.dart';
+import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
+import '../../../meals/presentation/controllers/add_meal_controller.dart';
+import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
+import '../utils/meal_status_dialog_result_handler.dart';
+import 'dashboard_activity_sheet.dart';
+import 'meal_status_dialog.dart';
+import 'meal_status_dialog_result.dart';
 
-class DashboardFAB extends HookConsumerWidget {
+class DashboardFAB extends HookConsumerWidget with Logging {
   const DashboardFAB({super.key});
 
   @override
@@ -18,20 +30,78 @@ class DashboardFAB extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (open.value) ...[
-          _buildOption(Icons.note_alt, 'Add note', () {
-            open.value = false;
-          }),
+          FabActionOption(
+            icon: Icons.directions_run,
+            label: 'Dodaj aktywność',
+            onTap: () async {
+              open.value = false;
+              final action =
+                  await showModalBottomSheet<DashboardActivityAction>(
+                    context: context,
+                    useRootNavigator: false,
+                    isScrollControlled: true,
+                    builder: (_) => const DashboardActivitySheet(),
+                  );
+              if (action == null) return;
+              if (!context.mounted) return;
+
+              await _saveActivityLog(context, ref, action);
+            },
+          ),
           const SizedBox(height: 8),
-          _buildOption(Icons.restaurant, 'Plan meal', () {
-            ref.read(mealDraftProvider.notifier).reset();
-            context.router.push(routes.AddMealRoute());
-            open.value = false;
-          }),
+          FabActionOption(
+            icon: Icons.restaurant,
+            label: 'Zaplanuj posiłek',
+            onTap: () {
+              ref.read(mealDraftProvider.notifier).reset();
+              context.router.push(routes.AddMealRoute());
+              open.value = false;
+            },
+          ),
           const SizedBox(height: 8),
-          _buildOption(Icons.restaurant, 'Add template', () {
-            context.router.push(routes.AddMealTemplateRoute());
-            open.value = false;
-          }),
+          FabActionOption(
+            icon: Icons.bakery_dining_rounded,
+            label: 'Zjedz coś na szybko',
+            onTap: () async {
+              open.value = false;
+              ref.read(mealDraftProvider.notifier).reset();
+              final mealIngredient =
+                  await showModalBottomSheet<MealIngredientsDraft>(
+                    context: context,
+                    useRootNavigator: false,
+                    isScrollControlled: true,
+                    builder: (_) => AddMealIngredient(),
+                  );
+              if (mealIngredient != null) {
+                final draft = ref.read(mealDraftProvider.notifier);
+                draft.addMealIngredient(mealIngredient);
+                draft.setName("QM: ${mealIngredient.ingredient.name}");
+                final addedMeal = await ref
+                    .read(addMealControllerProvider.notifier)
+                    .addMeal(ref.read(mealDraftProvider));
+
+                if (!context.mounted) {
+                  return;
+                }
+
+                final result = await showDialog<MealStatusDialogResult?>(
+                  barrierDismissible: true,
+                  context: context,
+                  builder: (context) => MealStatusDialog(meal: addedMeal),
+                );
+                if (result != null && context.mounted) {
+                  await handleMealStatusDialogResult(
+                    context: context,
+                    ref: ref,
+                    meal: addedMeal,
+                    result: result,
+                    openSummaryAfterEaten: false,
+                  );
+                }
+                ref.read(mealDraftProvider.notifier).reset();
+              }
+            },
+          ),
           const SizedBox(height: 16),
         ],
         FloatingActionButton(
@@ -42,32 +112,71 @@ class DashboardFAB extends HookConsumerWidget {
     );
   }
 
-  Widget _buildOption(IconData icon, String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 160,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 4,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.black87),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(color: Colors.black87)),
-          ],
-        ),
-      ),
+  Future<void> _saveActivityLog(
+    BuildContext context,
+    WidgetRef ref,
+    DashboardActivityAction action,
+  ) async {
+    final c = ref.read(activityControllerProvider.notifier);
+    Activity? act;
+    try {
+      act = await c.saveActivity(action.activity);
+      if (act == null) {
+        throw Exception('Something went wrong with adding activity');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        await showActivityAddFailedDialog(context);
+      }
+      return;
+    }
+
+    await act.whenOrNull(
+      existing: (id, name, pre, post, durationMinutes) async {
+        logI('Adding activity: $id $name');
+        try {
+          await ref.read(
+            insertActivityLogProvider(
+              ActivityLog.draft(activityId: id, startedAt: action.startedAt),
+            ).future,
+          );
+          ref.invalidate(getPendingActivityProvider);
+        } catch (e) {
+          if (context.mounted) {
+            await showActivityInProgressDialog(context);
+          }
+        }
+      },
+    );
+  }
+
+  Future<void> showActivityInProgressDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Aktywność w toku'),
+          content: const Text(
+            'Jedna aktywność jest już w trakcie.\n\n'
+            'Nie można rozpocząć nowej, dopóki obecna nie zostanie zakończona.',
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> showActivityAddFailedDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Problem z dodaniem aktywności'),
+          content: const Text(
+            'Taka aktywność już istnieje lub parametry nie są podane prawidłowo.\n'
+            'Pamiętaj: pre i post muszą być <100 i >0.',
+          ),
+        );
+      },
     );
   }
 }

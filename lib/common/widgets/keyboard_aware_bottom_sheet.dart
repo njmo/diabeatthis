@@ -7,7 +7,7 @@ class KeyboardAwareBottomSheet extends StatelessWidget {
     required this.body,
     required this.actions,
     this.padding = const EdgeInsets.fromLTRB(16, 16, 16, 16),
-    this.maxHeightFactor = 0.92,
+    this.maxHeightFactor = 0.9,
   });
 
   final Widget header;
@@ -19,18 +19,20 @@ class KeyboardAwareBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    final availableHeight =
-        mediaQuery.size.height -
+    final maxSheetHeight = mediaQuery.size.height * maxHeightFactor;
+    final maxContentHeight =
+        maxSheetHeight -
         mediaQuery.viewInsets.bottom -
-        mediaQuery.padding.top;
-    final maxHeight = availableHeight * maxHeightFactor;
+        mediaQuery.padding.top -
+        padding.vertical;
+    final maxHeight = maxContentHeight < 160 ? 160.0 : maxContentHeight;
 
     return AnimatedPadding(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
       padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
       child: SafeArea(
-        top: false,
+        top: true,
         child: Padding(
           padding: padding,
           child: ConstrainedBox(

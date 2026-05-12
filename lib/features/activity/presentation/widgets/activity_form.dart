@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/widgets/form_section.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/providers/activity_provider.dart';
 
@@ -20,7 +21,7 @@ class ActivityForm extends HookConsumerWidget {
     final maxHeight = availableHeight.clamp(240.0, 520.0);
 
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.8,
+      width: double.infinity,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: SingleChildScrollView(
@@ -32,87 +33,134 @@ class ActivityForm extends HookConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextFormField(
-                  key: const ValueKey('activity-name-field'),
-                  initialValue: activityDraft.getName(),
-                  maxLength: 30,
-                  validator: (value) {
-                    final text = value?.trim() ?? '';
-                    if (text.length < 2) {
-                      return '';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) {
-                    activityDraft.setName(value?.trim() ?? '');
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Nazwa aktywnosci',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: hasPlannedDuration,
-                  onChanged: (value) {
-                    activityDraft.setHasPlannedDuration(value ?? false);
-                  },
-                  title: const Text('Aktywność ma start i koniec'),
-                  subtitle: const Text('Odznacz, jeśli kończysz ją ręcznie'),
-                ),
-                if (hasPlannedDuration)
-                  TextFormField(
-                    key: const ValueKey('activity-duration-field'),
-                    initialValue:
-                        activityDraft.getDurationMinutes()?.toString() ?? '',
-                    keyboardType: TextInputType.number,
-                    maxLength: 4,
-                    validator: (value) {
-                      final duration = int.tryParse(value?.trim() ?? '');
-                      if (duration == null || duration <= 0) {
-                        return '';
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      activityDraft.setDurationMinutes(value?.trim() ?? '');
-                    },
-                    decoration: const InputDecoration(
-                      labelText: 'Czas trwania w minutach',
-                      border: OutlineInputBorder(),
+                FormSection(
+                  title: 'Aktywność',
+                  icon: Icons.directions_run,
+                  children: [
+                    TextFormField(
+                      key: const ValueKey('activity-name-field'),
+                      initialValue: activityDraft.getName(),
+                      maxLength: 30,
+                      textInputAction: TextInputAction.next,
+                      validator: (value) {
+                        final text = value?.trim() ?? '';
+                        if (text.length < 2) {
+                          return 'Podaj nazwę aktywności';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) {
+                        activityDraft.setName(value?.trim() ?? '');
+                      },
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.badge_outlined),
+                        labelText: 'Nazwa aktywności',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
-                  ),
-                TextFormField(
-                  key: const ValueKey('activity-percentage-pre-field'),
-                  initialValue: _initialPercentageValue(
-                    activityDraft.getPercentagePre(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  maxLength: 3,
-                  validator: _percentageValidator,
-                  onSaved: (value) {
-                    activityDraft.setPercentagePre(value?.trim() ?? '');
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Procent przed wysilkiem',
-                    border: OutlineInputBorder(),
-                  ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: hasPlannedDuration,
+                      onChanged: (value) {
+                        activityDraft.setHasPlannedDuration(value ?? false);
+                      },
+                      title: const Text('Ma planowany czas trwania'),
+                      subtitle: const Text(
+                        'Odznacz, jeśli aktywność kończysz ręcznie',
+                      ),
+                    ),
+                    if (hasPlannedDuration) ...[
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        key: const ValueKey('activity-duration-field'),
+                        initialValue:
+                            activityDraft.getDurationMinutes()?.toString() ??
+                            '',
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
+                        maxLength: 4,
+                        validator: (value) {
+                          final duration = int.tryParse(value?.trim() ?? '');
+                          if (duration == null || duration <= 0) {
+                            return 'Podaj czas w minutach';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          activityDraft.setDurationMinutes(value?.trim() ?? '');
+                        },
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.timer_outlined),
+                          suffixText: 'min',
+                          labelText: 'Czas trwania',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                TextFormField(
-                  key: const ValueKey('activity-percentage-post-field'),
-                  initialValue: _initialPercentageValue(
-                    activityDraft.getPercentagePost(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  maxLength: 3,
-                  validator: _percentageValidator,
-                  onSaved: (value) {
-                    activityDraft.setPercentagePost(value?.trim() ?? '');
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Procent po wysilku',
-                    border: OutlineInputBorder(),
-                  ),
+                const SizedBox(height: 16),
+                FormSection(
+                  title: 'Wrażliwość na insulinę',
+                  icon: Icons.percent,
+                  subtitle:
+                      'O ile obniżyć dawkę insuliny w kontekście aktywności.',
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            key: const ValueKey(
+                              'activity-percentage-pre-field',
+                            ),
+                            initialValue: _initialPercentageValue(
+                              activityDraft.getPercentagePre(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            textInputAction: TextInputAction.next,
+                            maxLength: 3,
+                            validator: _percentageValidator,
+                            onSaved: (value) {
+                              activityDraft.setPercentagePre(
+                                value?.trim() ?? '',
+                              );
+                            },
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.schedule),
+                              suffixText: '%',
+                              labelText: '1h przed',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            key: const ValueKey(
+                              'activity-percentage-post-field',
+                            ),
+                            initialValue: _initialPercentageValue(
+                              activityDraft.getPercentagePost(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            maxLength: 3,
+                            validator: _percentageValidator,
+                            onSaved: (value) {
+                              activityDraft.setPercentagePost(
+                                value?.trim() ?? '',
+                              );
+                            },
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.sports_score),
+                              suffixText: '%',
+                              labelText: 'Po treningu',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -125,7 +173,7 @@ class ActivityForm extends HookConsumerWidget {
   String? _percentageValidator(String? value) {
     final percentage = int.tryParse(value?.trim() ?? '');
     if (percentage == null || percentage <= 0 || percentage >= 100) {
-      return '';
+      return 'Podaj obniżenie od 1 do 99%';
     }
     return null;
   }

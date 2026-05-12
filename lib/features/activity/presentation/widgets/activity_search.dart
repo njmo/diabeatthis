@@ -4,11 +4,17 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/forms.dart';
 import '../../../../core/domain/model/activity.dart';
-import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/providers/activity_provider.dart';
 
 class ActivitySearch extends HookConsumerWidget {
-  const ActivitySearch({super.key});
+  const ActivitySearch({
+    super.key,
+    this.autofocus = false,
+    this.showSearchField = true,
+  });
+
+  final bool autofocus;
+  final bool showSearchField;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -16,39 +22,33 @@ class ActivitySearch extends HookConsumerWidget {
     final valuePicked = useState(-1);
     final activities = ref.watch(activitiesByQueryProvider(query.value));
     final draft = ref.watch(activityDraftProvider.notifier);
-    final formKey = ref.watch(mealIngredientFormKeyProvider);
 
     return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.25,
-      width: MediaQuery.of(context).size.width * 0.8,
+      height: (MediaQuery.of(context).size.height * 0.36).clamp(260.0, 380.0),
+      width: double.infinity,
       child: Column(
         children: [
-          Form(
-            key: formKey,
-            autovalidateMode: AutovalidateMode.always,
-            child: StringFormField(
+          if (showSearchField) ...[
+            StringFormField(
               label: 'Nazwa',
               value: '',
               onChanged: (value) => query.value = value,
               builder: (context, controller) {
                 return TextFormField(
-                  autofocus: true,
+                  autofocus: autofocus,
                   controller: controller,
                   maxLength: 30,
-                  validator: (value) {
-                    if (valuePicked.value < 0) return '';
-                    return null;
-                  },
                   decoration: const InputDecoration(
-                    icon: Icon(Icons.search),
+                    prefixIcon: Icon(Icons.search),
                     labelText: 'Nazwa',
+                    counterText: '',
                     border: OutlineInputBorder(),
                   ),
                 );
               },
             ),
-          ),
-          const SizedBox(height: 8),
+            const SizedBox(height: 12),
+          ],
           activities.when(
             data: (data) {
               if (data.isEmpty) {
@@ -65,22 +65,70 @@ class ActivitySearch extends HookConsumerWidget {
                   itemCount: data.length,
                   itemBuilder: (context, index) {
                     final activity = data[index];
-                    return ListTile(
-                      title: Text(
-                        activity.whenOrNull(
-                              existing: (_, name, _, _, _) => name,
-                            ) ??
-                            '',
-                        style: TextStyle(
-                          fontWeight: (valuePicked.value == index)
-                              ? FontWeight.bold
-                              : FontWeight.normal,
+                    final selected = valuePicked.value == index;
+                    final theme = Theme.of(context);
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      color: selected
+                          ? theme.colorScheme.primaryContainer
+                          : theme.colorScheme.surfaceContainerHighest,
+                      elevation: selected ? 1 : 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(
+                          color: selected
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.outlineVariant,
                         ),
                       ),
-                      onTap: () {
-                        draft.overrideDraft(activity);
-                        valuePicked.value = index;
-                      },
+                      child: ListTile(
+                        dense: true,
+                        visualDensity: VisualDensity.compact,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 0,
+                        ),
+                        leading: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.directions_run,
+                            color: selected
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.primary,
+                          ),
+                        ),
+                        title: Text(
+                          _activityName(activity),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: selected
+                                ? FontWeight.w800
+                                : FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Text(
+                          _activitySubtitle(activity),
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        trailing: selected
+                            ? Icon(
+                                Icons.check_circle,
+                                color: theme.colorScheme.primary,
+                              )
+                            : const Icon(Icons.chevron_right),
+                        onTap: () {
+                          draft.overrideDraft(activity);
+                          valuePicked.value = index;
+                        },
+                      ),
                     );
                   },
                 ),
@@ -95,5 +143,38 @@ class ActivitySearch extends HookConsumerWidget {
         ],
       ),
     );
+  }
+
+  static String _activityName(Activity activity) {
+    return activity.when(
+      existing: (_, name, _, _, _) => name,
+      draft: (name, _, _, _) => name,
+      empty: () => '',
+    );
+  }
+
+  static String _activitySubtitle(Activity activity) {
+    final durationMinutes = activity.when(
+      existing: (_, _, _, _, durationMinutes) => durationMinutes,
+      draft: (_, _, _, durationMinutes) => durationMinutes,
+      empty: () => null,
+    );
+    return _formatDuration(durationMinutes);
+  }
+
+  static String _formatDuration(int? minutes) {
+    if (minutes == null) {
+      return 'zakończenie ręczne';
+    }
+
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes.remainder(60);
+    if (hours == 0) {
+      return '$minutes min';
+    }
+    if (remainingMinutes == 0) {
+      return '${hours}h';
+    }
+    return '${hours}h ${remainingMinutes.toString().padLeft(2, '0')} min';
   }
 }

@@ -124,6 +124,8 @@ class ActivityDraftNotifier extends _$ActivityDraftNotifier {
     empty: (_) => false,
   );
 
+  void reset() => state = Activity.empty();
+
   void overrideDraft(Activity activity) => state = activity;
 }
 
@@ -300,28 +302,28 @@ Future<Activity?> getActivityById(Ref ref, int id) async {
   return value.toDomain();
 }
 
-enum ActivityDialogStep { add, search, confirm }
+enum ActivityPickerStep { initial, add, search }
 
 @riverpod
 class ActivityDialogController extends _$ActivityDialogController {
   @override
-  ActivityDialogStep build() {
-    return ActivityDialogStep.search;
+  ActivityPickerStep build() {
+    return ActivityPickerStep.initial;
   }
 
-  void addState() => state = ActivityDialogStep.add;
-  void searchState() => state = ActivityDialogStep.search;
-  void confirmState() => state = ActivityDialogStep.confirm;
+  void initialState() => state = ActivityPickerStep.initial;
+  void addState() => state = ActivityPickerStep.add;
+  void searchState() => state = ActivityPickerStep.search;
   void toOppositeState() {
     switch (state) {
-      case ActivityDialogStep.add:
-        state = ActivityDialogStep.search;
+      case ActivityPickerStep.initial:
+        state = ActivityPickerStep.search;
         break;
-      case ActivityDialogStep.search:
-        state = ActivityDialogStep.add;
+      case ActivityPickerStep.add:
+        state = ActivityPickerStep.search;
         break;
-      case ActivityDialogStep.confirm:
-        state = ActivityDialogStep.search;
+      case ActivityPickerStep.search:
+        state = ActivityPickerStep.add;
         break;
     }
   }

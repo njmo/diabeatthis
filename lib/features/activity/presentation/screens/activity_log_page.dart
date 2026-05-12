@@ -158,14 +158,14 @@ class ActivityLogPage extends ConsumerWidget {
                 title: 'Wpływ na insulinę',
                 children: [
                   DetailInfoRow(
-                    icon: Icons.arrow_back,
-                    label: 'Przed aktywnością',
-                    value: '${log.percentagePre}%',
+                    icon: Icons.schedule,
+                    label: '1h przed posiłkiem',
+                    value: '${log.percentagePre}% mniej',
                   ),
                   DetailInfoRow(
-                    icon: Icons.arrow_forward,
-                    label: 'Po aktywności',
-                    value: '${log.percentagePost}%',
+                    icon: Icons.sports_score,
+                    label: 'Po treningu',
+                    value: '${log.percentagePost}% mniej',
                   ),
                 ],
               ),

@@ -30,9 +30,31 @@ Future<DateTime?> showDateTimePicker({
   return selectedTime == null
       ? selectedDate
       : DateTime(
-    selectedDate.year,
-    selectedDate.month,
-    selectedDate.day,
+          selectedDate.year,
+          selectedDate.month,
+          selectedDate.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        );
+}
+
+Future<DateTime?> showTodayTimePicker({
+  required BuildContext context,
+  DateTime? initialDate,
+}) async {
+  final baseDate = initialDate ?? clock.now();
+  final selectedTime = await showTimePicker(
+    context: context,
+    initialTime: TimeOfDay.fromDateTime(baseDate),
+  );
+
+  if (selectedTime == null) return null;
+
+  final today = clock.now();
+  return DateTime(
+    today.year,
+    today.month,
+    today.day,
     selectedTime.hour,
     selectedTime.minute,
   );
