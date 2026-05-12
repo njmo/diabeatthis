@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/llm/local_llm_client.dart';
@@ -8,11 +9,12 @@ import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
 import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 
-class IngredientPhotoScan extends ConsumerWidget {
+class IngredientPhotoScan extends HookConsumerWidget {
   const IngredientPhotoScan({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final captureResult = useState<IngredientPhotoCaptureResult?>(null);
     final scanState = ref.watch(ingredientPhotoScanControllerProvider);
     final scanResult = scanState.value;
     final scanError = scanState.whenOrNull(error: (error, _) => error);
@@ -31,8 +33,12 @@ class IngredientPhotoScan extends ConsumerWidget {
             title: 'Przód opakowania',
             subtitle: 'Nazwa produktu i producent',
             photoPath: scanInput.frontPhotoPath,
-            onCapture: () =>
-                _capturePhoto(context, ref, IngredientPhotoScanPhoto.front),
+            onCapture: () => _capturePhoto(
+              context,
+              ref,
+              captureResult,
+              IngredientPhotoScanPhoto.front,
+            ),
           ),
           const SizedBox(height: 8),
           IngredientPhotoStepTile(
@@ -43,10 +49,22 @@ class IngredientPhotoScan extends ConsumerWidget {
             onCapture: () => _capturePhoto(
               context,
               ref,
+              captureResult,
               IngredientPhotoScanPhoto.nutritionLabel,
             ),
           ),
           const SizedBox(height: 12),
+          if (captureResult.value != null) ...[
+            IngredientPhotoCaptureMessage(
+              result: captureResult.value!,
+              onOpenSettings: captureResult.value!.canOpenSettings
+                  ? () {
+                      ref.read(cameraPermissionServiceProvider).openSettings();
+                    }
+                  : null,
+            ),
+            const SizedBox(height: 12),
+          ],
           if (isScanning) ...[
             const IngredientPhotoScanProgressMessage(),
             const SizedBox(height: 12),
@@ -69,30 +87,66 @@ class IngredientPhotoScan extends ConsumerWidget {
   Future<void> _capturePhoto(
     BuildContext context,
     WidgetRef ref,
+    ValueNotifier<IngredientPhotoCaptureResult?> captureResult,
     IngredientPhotoScanPhoto photo,
   ) async {
+    captureResult.value = null;
     final result = await ref
         .read(ingredientPhotoScanCaptureControllerProvider.notifier)
         .capture(photo);
-    if (!context.mounted ||
-        result.state == IngredientPhotoCaptureState.captured ||
-        result.state == IngredientPhotoCaptureState.cancelled) {
+    if (!context.mounted) {
       return;
     }
 
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.hideCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(_photoCaptureMessage(result.state)),
-        action: result.canOpenSettings
-            ? SnackBarAction(
-                label: 'Ustawienia',
-                onPressed: () {
-                  ref.read(cameraPermissionServiceProvider).openSettings();
-                },
-              )
-            : null,
+    captureResult.value =
+        result.state == IngredientPhotoCaptureState.captured ||
+            result.state == IngredientPhotoCaptureState.cancelled
+        ? null
+        : result;
+  }
+}
+
+class IngredientPhotoCaptureMessage extends StatelessWidget {
+  final IngredientPhotoCaptureResult result;
+  final VoidCallback? onOpenSettings;
+
+  const IngredientPhotoCaptureMessage({
+    required this.result,
+    required this.onOpenSettings,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.camera_alt_outlined, color: colors.onErrorContainer),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _photoCaptureMessage(result.state),
+                style: TextStyle(color: colors.onErrorContainer),
+              ),
+            ),
+            if (onOpenSettings != null) ...[
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: onOpenSettings,
+                child: const Text('Ustawienia'),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -38,5 +38,12 @@ void main() {
         contains('continue with a draft or retry the photos'),
       );
     });
+
+    test('asks the model to return names in lowercase', () {
+      expect(
+        ingredientPhotoScanPrompt,
+        contains('Return product and brand names in lowercase'),
+      );
+    });
   });
 }

@@ -51,6 +51,7 @@ Rules:
 - Use null for optional unknown fields.
 - Do not infer missing macronutrients from kcal.
 - Do not translate product or brand names.
+- Return product and brand names in lowercase.
 - For nutritionPer100g, use values per 100 g only.
 - Put package serving sizes in portions only when explicitly visible.
 ''';
