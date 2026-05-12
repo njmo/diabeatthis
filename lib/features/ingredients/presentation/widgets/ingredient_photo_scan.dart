@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
+import '../../../meal_advisor/data/models/ingredient_photo_scan_input.dart';
 import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
 import '../../../meal_advisor/data/providers/debug_ingredient_photo_scan_provider.dart';
+import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 
 class IngredientPhotoScan extends ConsumerWidget {
@@ -12,6 +14,7 @@ class IngredientPhotoScan extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scanResult = ref.watch(ingredientPhotoScanControllerProvider).value;
+    final scanInput = ref.watch(ingredientPhotoScanCaptureControllerProvider);
     final retakeRequest = scanResult?.retakeRequest;
     final debugScenario = ref.watch(
       debugIngredientPhotoScanScenarioControllerProvider,
@@ -23,16 +26,24 @@ class IngredientPhotoScan extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _PhotoStepTile(
+          IngredientPhotoStepTile(
             icon: Icons.inventory_2_outlined,
             title: 'Przód opakowania',
             subtitle: 'Nazwa produktu i producent',
+            photoPath: scanInput.frontPhotoPath,
+            onCapture: () => ref
+                .read(ingredientPhotoScanCaptureControllerProvider.notifier)
+                .capture(IngredientPhotoScanPhoto.front),
           ),
           const SizedBox(height: 8),
-          _PhotoStepTile(
+          IngredientPhotoStepTile(
             icon: Icons.table_chart_outlined,
             title: 'Tabela makro',
             subtitle: 'Wartości odżywcze na 100 g',
+            photoPath: scanInput.nutritionLabelPhotoPath,
+            onCapture: () => ref
+                .read(ingredientPhotoScanCaptureControllerProvider.notifier)
+                .capture(IngredientPhotoScanPhoto.nutritionLabel),
           ),
           const SizedBox(height: 12),
           if (retakeRequest != null) ...[
@@ -141,27 +152,43 @@ String _retakeFallbackMessage(IngredientScanPhotoTarget photo) {
   };
 }
 
-class _PhotoStepTile extends StatelessWidget {
+class IngredientPhotoStepTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final String? photoPath;
+  final VoidCallback onCapture;
 
-  const _PhotoStepTile({
+  const IngredientPhotoStepTile({
     required this.icon,
     required this.title,
     required this.subtitle,
+    required this.photoPath,
+    required this.onCapture,
+    super.key,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
+    final isCaptured = photoPath != null;
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: colors.primary),
       title: Text(title),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.pending_outlined),
+      subtitle: Text(
+        isCaptured
+            ? '$subtitle\nGotowe: ${photoPath!.split('/').last}'
+            : subtitle,
+      ),
+      isThreeLine: isCaptured,
+      onTap: onCapture,
+      trailing: Icon(
+        isCaptured ? Icons.check_circle_outline : Icons.add_a_photo_outlined,
+        color: isCaptured ? colors.primary : null,
+      ),
     );
   }
 }

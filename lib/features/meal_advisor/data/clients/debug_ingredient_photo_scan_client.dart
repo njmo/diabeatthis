@@ -1,3 +1,5 @@
+import '../models/ingredient_photo_scan_input.dart';
+
 enum DebugIngredientPhotoScanScenario {
   recognized,
   needsRetake,
@@ -13,7 +15,7 @@ class DebugIngredientPhotoScanClient {
     this.delay = const Duration(seconds: 2),
   });
 
-  Future<String> scan() async {
+  Future<String> scan(IngredientPhotoScanInput input) async {
     await Future<void>.delayed(delay);
     return switch (scenario) {
       DebugIngredientPhotoScanScenario.recognized =>

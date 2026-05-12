@@ -1,4 +1,5 @@
 import 'package:diabeatthis/features/meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
+import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_photo_scan_input.dart';
 import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_scan_result.dart';
 import 'package:diabeatthis/features/meal_advisor/data/parsers/ingredient_scan_result_parser.dart';
 import 'package:diabeatthis/features/meal_advisor/domain/services/ingredient_scan_result_validator.dart';
@@ -15,7 +16,16 @@ void main() {
       scenario: scenario,
       delay: Duration.zero,
     );
-    return validator.validate(parser.parse(await client.scan()));
+    return validator.validate(
+      parser.parse(
+        await client.scan(
+          const IngredientPhotoScanInput(
+            frontPhotoPath: 'front.jpg',
+            nutritionLabelPhotoPath: 'nutrition.jpg',
+          ),
+        ),
+      ),
+    );
   }
 
   group('DebugIngredientPhotoScanClient', () {

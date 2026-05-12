@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/clients/debug_ingredient_photo_scan_client.dart';
+import '../../data/models/ingredient_photo_scan_input.dart';
 import '../../data/models/ingredient_scan_result.dart';
 import '../../data/parsers/ingredient_scan_result_parser.dart';
 import '../../data/providers/debug_ingredient_photo_scan_provider.dart';
@@ -31,8 +32,14 @@ class ScanIngredientFromPhotosUseCase {
     required this.validator,
   });
 
-  Future<IngredientScanResult> call() async {
-    final response = await client.scan();
+  Future<IngredientScanResult> call(IngredientPhotoScanInput input) async {
+    if (!input.hasRequiredPhotos) {
+      throw StateError(
+        'Ingredient scan requires front and nutrition label photos.',
+      );
+    }
+
+    final response = await client.scan(input);
     return validator.validate(parser.parse(response));
   }
 }

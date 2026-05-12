@@ -10,6 +10,7 @@ import '../../../ingredients/presentation/widgets/ingredient_portion_amount_form
 import '../../../ingredients/presentation/widgets/ingredient_scan_review_dialog.dart';
 import '../../../ingredients/presentation/widgets/ingredient_search.dart';
 import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
+import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../../portions/presentation/widgets/portion_form.dart';
@@ -27,9 +28,16 @@ class AddMealIngredient extends ConsumerWidget {
     ref.watch(ingredientDraftProvider);
     final addingStage = ref.watch(addMealIngredientStageProvider);
     final photoScanState = ref.watch(ingredientPhotoScanControllerProvider);
+    final photoScanInput = ref.watch(
+      ingredientPhotoScanCaptureControllerProvider,
+    );
     final isScanningIngredient =
         addingStage == AddMealIngredientStage.ingredientPhotoScan &&
         photoScanState.isLoading;
+    final isIngredientPhotoScanStage =
+        addingStage == AddMealIngredientStage.ingredientPhotoScan;
+    final canScanIngredientPhotos =
+        !isIngredientPhotoScanStage || photoScanInput.hasRequiredPhotos;
     final addingStateNotifier = ref.read(
       addMealIngredientStageProvider.notifier,
     );
@@ -127,7 +135,7 @@ class AddMealIngredient extends ConsumerWidget {
         children: [
           Expanded(
             child: ElevatedButton(
-              onPressed: isScanningIngredient
+              onPressed: isScanningIngredient || !canScanIngredientPhotos
                   ? null
                   : () async {
                       if (addingStage == AddMealIngredientStage.summary) {
@@ -174,7 +182,9 @@ class AddMealIngredient extends ConsumerWidget {
                           ? 'Odczytuję...'
                           : addingStage ==
                                 AddMealIngredientStage.ingredientPhotoScan
-                          ? 'Symuluj odczyt'
+                          ? photoScanInput.hasRequiredPhotos
+                                ? 'Symuluj odczyt'
+                                : 'Dodaj zdjęcia'
                           : 'Dalej',
                     ),
             ),

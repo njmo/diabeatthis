@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart';
 import '../../data/models/ingredient_scan_result.dart';
+import '../../data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../domain/mappers/ingredient_scan_result_mapper.dart';
 import '../../domain/use_cases/scan_ingredient_from_photos_use_case.dart';
 
@@ -17,11 +18,17 @@ class IngredientPhotoScanController extends _$IngredientPhotoScanController {
   }
 
   Future<Ingredient?> scanIngredient() async {
+    final input = ref.read(ingredientPhotoScanCaptureControllerProvider);
+    if (!input.hasRequiredPhotos) {
+      state = const AsyncData(null);
+      return null;
+    }
+
     state = const AsyncLoading();
 
     try {
       final useCase = ref.read(scanIngredientFromPhotosUseCaseProvider);
-      final result = await useCase.call();
+      final result = await useCase.call(input);
       state = AsyncData(result);
       if (result.needsRetake || result.needsReview) {
         return null;

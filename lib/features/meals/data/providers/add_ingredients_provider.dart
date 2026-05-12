@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
+import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/drafts/portion_filter.dart';
@@ -65,6 +66,8 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   void startIngredientPhotoScan() {
     prev = state;
     ref.invalidate(ingredientDraftProvider);
+    ref.invalidate(ingredientPhotoScanCaptureControllerProvider);
+    ref.invalidate(ingredientPhotoScanControllerProvider);
     state = AddMealIngredientStage.ingredientPhotoScan;
   }
 

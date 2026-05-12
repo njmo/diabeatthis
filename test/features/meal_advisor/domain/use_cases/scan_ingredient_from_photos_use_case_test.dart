@@ -1,4 +1,5 @@
 import 'package:diabeatthis/features/meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
+import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_photo_scan_input.dart';
 import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_scan_result.dart';
 import 'package:diabeatthis/features/meal_advisor/data/parsers/ingredient_scan_result_parser.dart';
 import 'package:diabeatthis/features/meal_advisor/domain/mappers/ingredient_scan_result_mapper.dart';
@@ -16,8 +17,12 @@ void main() {
           parser: IngredientScanResultParser(),
           validator: IngredientScanResultValidator(),
         );
+        const input = IngredientPhotoScanInput(
+          frontPhotoPath: 'front.jpg',
+          nutritionLabelPhotoPath: 'nutrition.jpg',
+        );
 
-        final result = await useCase.call();
+        final result = await useCase.call(input);
         final draft = result.toIngredientDraft();
 
         expect(result.status, IngredientScanStatus.recognized);
@@ -35,5 +40,18 @@ void main() {
         expect(draft.isReference, isFalse);
       },
     );
+
+    test('rejects scan without required photos', () async {
+      const useCase = ScanIngredientFromPhotosUseCase(
+        client: DebugIngredientPhotoScanClient(delay: Duration.zero),
+        parser: IngredientScanResultParser(),
+        validator: IngredientScanResultValidator(),
+      );
+
+      await expectLater(
+        useCase.call(const IngredientPhotoScanInput(frontPhotoPath: 'x')),
+        throwsStateError,
+      );
+    });
   });
 }
