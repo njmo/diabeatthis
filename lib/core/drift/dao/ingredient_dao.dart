@@ -31,6 +31,46 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     return query.get();
   }
 
+  Future<List<IngredientData>> searchIngredientsByNamesOrBrand({
+    required List<String> names,
+    required String? brand,
+    required int limit,
+  }) {
+    final normalizedNames = names
+        .map(_normalizeSearchTerm)
+        .where((name) => name.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    final normalizedBrand = _normalizeSearchTerm(brand ?? '');
+
+    if (normalizedNames.isEmpty && normalizedBrand.isEmpty) {
+      return Future.value(const []);
+    }
+
+    final query = select(db.ingredient)
+      ..where((tbl) {
+        Expression<bool>? condition;
+
+        void addCondition(Expression<bool> expression) {
+          condition = condition == null ? expression : condition! | expression;
+        }
+
+        for (final name in normalizedNames) {
+          addCondition(tbl.name.like('%$name%'));
+        }
+
+        if (normalizedBrand.isNotEmpty) {
+          addCondition(tbl.brand.like('%$normalizedBrand%'));
+        }
+
+        return condition ?? const Constant(false);
+      })
+      ..orderBy([(tbl) => OrderingTerm.asc(tbl.name)])
+      ..limit(limit);
+
+    return query.get();
+  }
+
   Future<List<IngredientStatusHistoryData>> getIngredientStatusHistory(
     int ingredientId,
   ) {
@@ -183,3 +223,5 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     );
   }
 }
+
+String _normalizeSearchTerm(String value) => value.trim().toLowerCase();

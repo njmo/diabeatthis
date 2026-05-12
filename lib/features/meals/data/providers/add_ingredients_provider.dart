@@ -5,6 +5,7 @@ import '../../../../core/domain/model/ingredient.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
+import '../../../meal_advisor/presentation/controllers/ingredient_photo_search_controller.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/drafts/portion_filter.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -66,7 +67,26 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     ref.invalidate(ingredientDraftProvider);
     ref.invalidate(ingredientPhotoScanCaptureControllerProvider);
     ref.invalidate(ingredientPhotoScanControllerProvider);
+    ref.invalidate(ingredientPhotoSearchControllerProvider);
     _moveTo(AddMealIngredientStage.ingredientPhotoScan);
+  }
+
+  Future<void> startIngredientPhotoSearch() async {
+    ref.invalidate(ingredientDraftProvider);
+    ref.invalidate(ingredientPhotoScanCaptureControllerProvider);
+    ref.invalidate(ingredientPhotoScanControllerProvider);
+    ref.invalidate(ingredientPhotoSearchControllerProvider);
+    await ref
+        .read(ingredientPhotoSearchControllerProvider.notifier)
+        .captureAndSearch();
+  }
+
+  void continuePhotoSearchAsFullScan() {
+    ref.invalidate(ingredientPhotoScanControllerProvider);
+    _moveTo(
+      AddMealIngredientStage.ingredientPhotoScan,
+      backTo: AddMealIngredientStage.ingredientSearch,
+    );
   }
 
   Future<void> nextStage() async {
@@ -237,6 +257,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     if (state == AddMealIngredientStage.ingredientPhotoScan) {
       ref.invalidate(ingredientPhotoScanCaptureControllerProvider);
       ref.invalidate(ingredientPhotoScanControllerProvider);
+      ref.invalidate(ingredientPhotoSearchControllerProvider);
       prev = AddMealIngredientStage.ingredientSearch;
       state = AddMealIngredientStage.ingredientSearch;
       return;

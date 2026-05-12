@@ -6,6 +6,7 @@ import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 
 import '../../../../core/drift/providers/database_provider.dart';
+import '../../../meal_advisor/data/models/ingredient_photo_search_result.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 
 part 'ingredient_provider.g.dart';
@@ -42,6 +43,28 @@ Future<List<domain.Ingredient>> ingredientsByQuery(
   final db = ref.watch(databaseProvider);
   final ing = await db.ingredientDao.searchIngredientsByName(query, 6).get();
   return ing.map((e) => e.toDomain()).toList();
+}
+
+@riverpod
+Future<List<domain.Ingredient>> ingredientsByPhotoSearchCandidates(
+  Ref ref,
+  String candidatesKey,
+) async {
+  final candidates = IngredientPhotoSearchResult.tryParseCandidatesKey(
+    candidatesKey,
+  );
+  if (candidates == null || !candidates.hasCandidates) {
+    return const [];
+  }
+
+  final db = ref.watch(databaseProvider);
+  final rows = await db.ingredientDao.searchIngredientsByNamesOrBrand(
+    names: candidates.names,
+    brand: candidates.brand,
+    limit: 12,
+  );
+
+  return rows.toDomainList();
 }
 
 @riverpod

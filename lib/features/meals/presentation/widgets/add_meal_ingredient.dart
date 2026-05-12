@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
+import '../../../../common/widgets/camera_search_icon.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../ingredients/presentation/widgets/ingredient_form.dart';
@@ -12,6 +13,7 @@ import '../../../ingredients/presentation/widgets/ingredient_search.dart';
 import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
 import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
+import '../../../meal_advisor/presentation/controllers/ingredient_photo_search_controller.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../../portions/presentation/widgets/portion_form.dart';
 import '../../../portions/presentation/widgets/portion_search.dart';
@@ -28,6 +30,7 @@ class AddMealIngredient extends ConsumerWidget {
     ref.watch(ingredientDraftProvider);
     final addingStage = ref.watch(addMealIngredientStageProvider);
     final photoScanState = ref.watch(ingredientPhotoScanControllerProvider);
+    final photoSearchState = ref.watch(ingredientPhotoSearchControllerProvider);
     final photoScanInput = ref.watch(
       ingredientPhotoScanCaptureControllerProvider,
     );
@@ -57,6 +60,13 @@ class AddMealIngredient extends ConsumerWidget {
               tooltip: 'Dodaj ze zdjęć',
               onPressed: addingStateNotifier.startIngredientPhotoScan,
               icon: const Icon(Icons.add_a_photo_outlined),
+            ),
+            IconButton(
+              tooltip: 'Znajdź ze zdjęcia',
+              onPressed: photoSearchState.isLoading
+                  ? null
+                  : addingStateNotifier.startIngredientPhotoSearch,
+              icon: const CameraSearchIcon(),
             ),
           ],
         ),
