@@ -1,3 +1,4 @@
+import 'package:diabeatthis/core/logger/logger.dart';
 import 'package:diabeatthis/features/meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
 import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_photo_scan_input.dart';
 import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_scan_result.dart';
@@ -9,6 +10,16 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ScanIngredientFromPhotosUseCase', () {
+    setUp(() {
+      Log.clearBuffer();
+      LogRuntimeConfig.configure(enableBuffer: true, isUnitTest: true);
+    });
+
+    tearDown(() {
+      Log.clearBuffer();
+      LogRuntimeConfig.configure(enableBuffer: false, isUnitTest: false);
+    });
+
     test(
       'parses debug scan response and maps it to ingredient draft',
       () async {
@@ -40,6 +51,28 @@ void main() {
         expect(draft.isReference, isFalse);
       },
     );
+
+    test('logs raw scan response and recognized portions', () async {
+      const useCase = ScanIngredientFromPhotosUseCase(
+        client: DebugIngredientPhotoScanClient(delay: Duration.zero),
+        parser: IngredientScanResultParser(),
+        validator: IngredientScanResultValidator(),
+      );
+      const input = IngredientPhotoScanInput(
+        frontPhotoPath: 'front.jpg',
+        nutritionLabelPhotoPath: 'nutrition.jpg',
+      );
+
+      await useCase.call(input);
+
+      final messages = Log.bufferedLogs
+          .map((entry) => entry.message)
+          .join('\n');
+      expect(messages, contains('Raw ingredient scan response'));
+      expect(messages, contains('Recognized ingredient portions'));
+      expect(messages, contains('2 ciastka'));
+      expect(messages, contains('grams=25.0'));
+    });
 
     test('rejects scan without required photos', () async {
       const useCase = ScanIngredientFromPhotosUseCase(
