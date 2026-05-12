@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../ingredients/presentation/widgets/ingredient_form.dart';
+import '../../../ingredients/presentation/widgets/ingredient_photo_scan.dart';
 import '../../../ingredients/presentation/widgets/ingredient_portion_amount_form.dart';
 import '../../../ingredients/presentation/widgets/ingredient_search.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -18,6 +21,7 @@ class AddMealIngredient extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(portionFilterProvider);
+    ref.watch(ingredientDraftProvider);
     final addingStage = ref.watch(addMealIngredientStageProvider);
     final addingStateNotifier = ref.read(
       addMealIngredientStageProvider.notifier,
@@ -25,36 +29,74 @@ class AddMealIngredient extends ConsumerWidget {
 
     return KeyboardAwareBottomSheet(
       header: switch (addingStage) {
-        AddMealIngredientStage.ingredientSearch => _textWithSearchTransition(
-          'Wyszukaj składnik',
-          Icon(Icons.add_box),
-          addingStateNotifier,
+        AddMealIngredientStage.ingredientSearch => BottomSheetStepHeader(
+          title: 'Wyszukaj składnik',
+          onBack: addingStateNotifier.back,
+          actions: [
+            IconButton(
+              tooltip: 'Dodaj ręcznie',
+              onPressed: addingStateNotifier.startManualIngredient,
+              icon: const Icon(Icons.add_box_outlined),
+            ),
+            IconButton(
+              tooltip: 'Dodaj ze zdjęć',
+              onPressed: addingStateNotifier.startIngredientPhotoScan,
+              icon: const Icon(Icons.add_a_photo_outlined),
+            ),
+          ],
         ),
-        AddMealIngredientStage.ingredientForm => _textWithSearchTransition(
-          'Dodaj składnik',
-          Icon(Icons.search),
-          addingStateNotifier,
+        AddMealIngredientStage.ingredientPhotoScan => BottomSheetStepHeader(
+          title: 'Dodaj ze zdjęć',
+          onBack: addingStateNotifier.back,
         ),
-        AddMealIngredientStage.portionAddNewSearch => _textWithSearchTransition(
-          'Wybierz porcję dla składnika',
-          Icon(Icons.add),
-          addingStateNotifier,
+        AddMealIngredientStage.ingredientForm => BottomSheetStepHeader(
+          title: 'Dodaj składnik',
+          onBack: addingStateNotifier.back,
+          actions: [
+            IconButton(
+              tooltip: 'Wyszukaj składnik',
+              onPressed: addingStateNotifier.toOppositeStage,
+              icon: const Icon(Icons.search),
+            ),
+          ],
         ),
-        AddMealIngredientStage.definedPortionsSearch =>
-          _textWithSearchTransition(
-            'Wyszukaj istniejącą porcję',
-            Icon(Icons.add_box),
-            addingStateNotifier,
-          ),
-        AddMealIngredientStage.amountForm => Text('Ilość'),
-        AddMealIngredientStage.summary => Text('Podsumowanie'),
-        AddMealIngredientStage.portionSpecifyAmount => Text(
+        AddMealIngredientStage.portionAddNewSearch => BottomSheetStepHeader(
+          title: 'Wybierz porcję dla składnika',
+          onBack: addingStateNotifier.back,
+          actions: [
+            IconButton(
+              tooltip: 'Dodaj porcję',
+              onPressed: addingStateNotifier.toOppositeStage,
+              icon: const Icon(Icons.add),
+            ),
+          ],
+        ),
+        AddMealIngredientStage.definedPortionsSearch => BottomSheetStepHeader(
+          title: 'Wyszukaj istniejącą porcję',
+          onBack: addingStateNotifier.back,
+          actions: [
+            IconButton(
+              tooltip: 'Dodaj porcję',
+              onPressed: addingStateNotifier.toOppositeStage,
+              icon: const Icon(Icons.add_box_outlined),
+            ),
+          ],
+        ),
+        AddMealIngredientStage.amountForm => const Text('Ilość'),
+        AddMealIngredientStage.summary => const Text('Podsumowanie'),
+        AddMealIngredientStage.portionSpecifyAmount => const Text(
           'Waga składnika w porcji',
         ),
-        AddMealIngredientStage.portionAddNewForm => _textWithSearchTransition(
-          'Dodaj nową porcję',
-          Icon(Icons.search),
-          addingStateNotifier,
+        AddMealIngredientStage.portionAddNewForm => BottomSheetStepHeader(
+          title: 'Dodaj nową porcję',
+          onBack: addingStateNotifier.back,
+          actions: [
+            IconButton(
+              tooltip: 'Wyszukaj porcję',
+              onPressed: addingStateNotifier.toOppositeStage,
+              icon: const Icon(Icons.search),
+            ),
+          ],
         ),
       },
       body: AnimatedSwitcher(
@@ -63,6 +105,7 @@ class AddMealIngredient extends ConsumerWidget {
         switchOutCurve: Curves.easeIn,
         child: switch (addingStage) {
           AddMealIngredientStage.ingredientSearch => IngredientSearch(),
+          AddMealIngredientStage.ingredientPhotoScan => IngredientPhotoScan(),
           AddMealIngredientStage.ingredientForm => IngredientForm(),
           AddMealIngredientStage.portionAddNewSearch => PortionSearch(),
           AddMealIngredientStage.definedPortionsSearch => PortionSearch(),
@@ -82,6 +125,9 @@ class AddMealIngredient extends ConsumerWidget {
                   Navigator.of(
                     context,
                   ).pop(ref.read(mealIngredientsDraftProvider));
+                } else if (addingStage ==
+                    AddMealIngredientStage.ingredientPhotoScan) {
+                  addingStateNotifier.nextStage();
                 } else {
                   final formKey = ref.read(mealIngredientFormKeyProvider);
                   if (formKey.currentState!.validate()) {
@@ -91,8 +137,12 @@ class AddMealIngredient extends ConsumerWidget {
                 }
               },
               child: (addingStage == AddMealIngredientStage.summary)
-                  ? Text('Dodaj')
-                  : Text('Dalej'),
+                  ? const Text('Dodaj')
+                  : Text(
+                      addingStage == AddMealIngredientStage.ingredientPhotoScan
+                          ? 'Symuluj odczyt'
+                          : 'Dalej',
+                    ),
             ),
           ),
           addingStage != AddMealIngredientStage.definedPortionsSearch &&
@@ -103,7 +153,7 @@ class AddMealIngredient extends ConsumerWidget {
                     onPressed: () {
                       addingStateNotifier.setOverride();
                     },
-                    child: Text('Dodaj w gramach'),
+                    child: const Text('Dodaj w gramach'),
                   ),
                 ),
           addingStage != AddMealIngredientStage.summary
@@ -123,13 +173,13 @@ class AddMealIngredient extends ConsumerWidget {
                               onPressed: () {
                                 Navigator.of(context).pop(true);
                               },
-                              child: Text('Tak'),
+                              child: const Text('Tak'),
                             ),
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).pop(false);
                               },
-                              child: Text('Nie'),
+                              child: const Text('Nie'),
                             ),
                           ],
                         ),
@@ -140,37 +190,11 @@ class AddMealIngredient extends ConsumerWidget {
                         }
                       }
                     },
-                    child: Text('Odrzuć'),
+                    child: const Text('Odrzuć'),
                   ),
                 ),
         ],
       ),
-    );
-  }
-
-  Widget _textWithSearchTransition(
-    String text,
-    Icon icon,
-    AddMealIngredientStageNotifier notifier,
-  ) {
-    return Row(
-      children: [
-        Align(
-          alignment: Alignment.topLeft,
-          child: IconButton(
-            onPressed: () => notifier.back(),
-            icon: Icon(Icons.arrow_back),
-          ),
-        ),
-        Expanded(child: Text(text)),
-        Align(
-          alignment: Alignment.centerRight,
-          child: IconButton(
-            onPressed: () => notifier.toOppositeStage(),
-            icon: icon,
-          ),
-        ),
-      ],
     );
   }
 }

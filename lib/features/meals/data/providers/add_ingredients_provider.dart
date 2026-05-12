@@ -12,6 +12,7 @@ part 'add_ingredients_provider.g.dart';
 
 enum AddMealIngredientStage {
   ingredientSearch,
+  ingredientPhotoScan,
   ingredientForm,
   portionAddNewSearch,
   portionAddNewForm,
@@ -52,6 +53,20 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   }
 
   void setStage(AddMealIngredientStage stage) => state = stage;
+
+  void startManualIngredient() {
+    prev = state;
+    ref.invalidate(ingredientDraftProvider);
+    ref.invalidate(mealIngredientFormKeyProvider);
+    state = AddMealIngredientStage.ingredientForm;
+  }
+
+  void startIngredientPhotoScan() {
+    prev = state;
+    ref.invalidate(ingredientDraftProvider);
+    state = AddMealIngredientStage.ingredientPhotoScan;
+  }
+
   void nextStage() async {
     prev = state;
     switch (state) {
@@ -77,6 +92,23 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
 
           state = AddMealIngredientStage.definedPortionsSearch;
         }
+        break;
+      case AddMealIngredientStage.ingredientPhotoScan:
+        final ingredientDraft = ref.read(ingredientDraftProvider.notifier);
+        ingredientDraft.overrideDraft(
+          Ingredient.draft(
+            name: 'Testowy produkt',
+            brand: 'Przykładowy producent',
+            carbsPer100g: 62.3,
+            fatPer100g: 20.1,
+            fiberPer100g: 3.2,
+            proteinPer100g: 6.4,
+            nutritionConfidence: 0.25,
+            isReference: false,
+          ),
+        );
+        ref.invalidate(mealIngredientFormKeyProvider);
+        state = AddMealIngredientStage.ingredientForm;
         break;
       case AddMealIngredientStage.ingredientForm:
         final ingredientDraft = ref.read(ingredientDraftProvider);
@@ -125,7 +157,9 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         break;
       case AddMealIngredientStage.amountForm:
         final amountDraft = ref.read(mealIngredientAmountDraftProvider);
-        final quantityConfidence = ref.read(mealIngredientConfidenceDraftProvider);
+        final quantityConfidence = ref.read(
+          mealIngredientConfidenceDraftProvider,
+        );
         final mealIngredientsDraft = ref.watch(
           mealIngredientsDraftProvider.notifier,
         );
@@ -142,8 +176,10 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     prev = state;
     switch (state) {
       case AddMealIngredientStage.ingredientSearch:
-        state = AddMealIngredientStage.ingredientForm;
-        ref.invalidate(ingredientDraftProvider);
+        startManualIngredient();
+        break;
+      case AddMealIngredientStage.ingredientPhotoScan:
+        state = AddMealIngredientStage.ingredientSearch;
         break;
       case AddMealIngredientStage.definedPortionsSearch:
         final ingredientDraft = ref.read(ingredientDraftProvider);
