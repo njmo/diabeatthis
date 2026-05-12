@@ -63,6 +63,7 @@ dependencies:
   flutter_gemma: ^0.12.6
   firebase_core: ^4.8.0
   firebase_ai: ^3.12.0
+  firebase_app_check: ^0.4.4
 
 dev_dependencies:
   flutter_test:
