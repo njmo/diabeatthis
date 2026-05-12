@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "1018488815956",
+    "project_id": "diabeatthis-e634c",
+    "storage_bucket": "diabeatthis-e634c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1018488815956:android:8692d65ca3adf7f21f48c1",
+        "android_client_info": {
+          "package_name": "pl.diabeatthis.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1018488815956-bp0gq7bm2voc5j9tmvms5u8mvptaj9kd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDMq9iOe6T6Ggs8Wc5yC5RUrwgEoW3R-A8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1018488815956-bp0gq7bm2voc5j9tmvms5u8mvptaj9kd.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1018488815956-aiih5ljsl4rs6r5pbmjvnqroq0kqvsfb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.diabeatthis"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

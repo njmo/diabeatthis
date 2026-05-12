@@ -68,14 +68,21 @@ void main() {
   });
 }
 
-class _FakeLocalLlmImageLoader implements LocalLlmImageLoader {
-  final Map<String, Uint8List> imagesByPath;
+class _FakeLocalLlmImageLoader implements LlmImageLoader {
+  final Map<String, Uint8List> imageBytesByPath;
 
-  const _FakeLocalLlmImageLoader(this.imagesByPath);
+  const _FakeLocalLlmImageLoader(this.imageBytesByPath);
 
   @override
-  Future<List<Uint8List>> loadAll(List<String> imagePaths) async {
-    return imagePaths.map((path) => imagesByPath[path]!).toList();
+  Future<List<LlmImageData>> loadAll(List<String> imagePaths) async {
+    return imagePaths
+        .map(
+          (path) => LlmImageData(
+            bytes: imageBytesByPath[path]!,
+            mimeType: 'image/jpeg',
+          ),
+        )
+        .toList();
   }
 }
 

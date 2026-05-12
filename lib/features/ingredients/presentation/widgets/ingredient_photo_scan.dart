@@ -177,9 +177,9 @@ class IngredientPhotoScanDebugControls extends StatelessWidget {
               icon: Icon(Icons.bug_report_outlined),
             ),
             ButtonSegment(
-              value: IngredientPhotoScanClientMode.localLlm,
-              label: Text('LLM'),
-              icon: Icon(Icons.memory_outlined),
+              value: IngredientPhotoScanClientMode.cloudAi,
+              label: Text('AI'),
+              icon: Icon(Icons.cloud_outlined),
             ),
           ],
           selected: {clientMode},

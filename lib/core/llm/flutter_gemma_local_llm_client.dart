@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_gemma/flutter_gemma.dart';
@@ -9,13 +8,13 @@ import 'local_llm_client.dart';
 
 class FlutterGemmaLocalLlmClient implements LocalLlmClient {
   final FlutterGemmaInferenceGateway gateway;
-  final LocalLlmImageLoader imageLoader;
+  final LlmImageLoader imageLoader;
   final int maxTokens;
   final PreferredBackend? preferredBackend;
 
   const FlutterGemmaLocalLlmClient({
     this.gateway = const FlutterGemmaInferenceGateway(),
-    this.imageLoader = const FileLocalLlmImageLoader(),
+    this.imageLoader = const FileLlmImageLoader(),
     this.maxTokens = 4096,
     this.preferredBackend,
   });
@@ -29,10 +28,10 @@ class FlutterGemmaLocalLlmClient implements LocalLlmClient {
 
   Future<LocalLlmResponse> _generate(LocalLlmRequest request) async {
     try {
-      final imageBytes = await imageLoader.loadAll(request.imagePaths);
+      final images = await imageLoader.loadAll(request.imagePaths);
       final text = await gateway.generate(
         prompt: request.prompt,
-        imageBytes: imageBytes,
+        imageBytes: images.map((image) => image.bytes).toList(),
         maxTokens: maxTokens,
         preferredBackend: preferredBackend,
       );
@@ -47,19 +46,6 @@ class FlutterGemmaLocalLlmClient implements LocalLlmClient {
       }
       rethrow;
     }
-  }
-}
-
-abstract interface class LocalLlmImageLoader {
-  Future<List<Uint8List>> loadAll(List<String> imagePaths);
-}
-
-class FileLocalLlmImageLoader implements LocalLlmImageLoader {
-  const FileLocalLlmImageLoader();
-
-  @override
-  Future<List<Uint8List>> loadAll(List<String> imagePaths) {
-    return Future.wait(imagePaths.map((path) => File(path).readAsBytes()));
   }
 }
 

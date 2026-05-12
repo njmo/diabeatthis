@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/llm/providers/local_llm_client_provider.dart';
+import '../../../../core/llm/providers/firebase_ai_llm_client_provider.dart';
 import '../clients/debug_ingredient_photo_scan_client.dart';
 import '../clients/ingredient_photo_scan_client.dart';
 import '../clients/local_llm_ingredient_photo_scan_client.dart';
@@ -8,7 +8,7 @@ import 'debug_ingredient_photo_scan_provider.dart';
 
 part 'ingredient_photo_scan_client_provider.g.dart';
 
-enum IngredientPhotoScanClientMode { debug, localLlm }
+enum IngredientPhotoScanClientMode { debug, cloudAi }
 
 @riverpod
 class IngredientPhotoScanClientModeController
@@ -30,8 +30,8 @@ IngredientPhotoScanClient ingredientPhotoScanClient(Ref ref) {
     IngredientPhotoScanClientMode.debug => DebugIngredientPhotoScanClient(
       scenario: ref.watch(debugIngredientPhotoScanScenarioControllerProvider),
     ),
-    IngredientPhotoScanClientMode.localLlm => LocalLlmIngredientPhotoScanClient(
-      llmClient: ref.watch(localLlmClientProvider),
+    IngredientPhotoScanClientMode.cloudAi => LocalLlmIngredientPhotoScanClient(
+      llmClient: ref.watch(firebaseAiLlmClientProvider),
     ),
   };
 }

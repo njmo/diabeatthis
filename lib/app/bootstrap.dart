@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logger/logger.dart';
+import '../firebase_options.dart';
 import 'app_container.dart';
 
 typedef BootstrapBuilder = FutureOr<Widget> Function();
@@ -35,7 +37,7 @@ Future<void> bootstrap(BootstrapBuilder builder) async {
       }
       */
 
-      // Do any other init that might touch bindings here (Firebase, etc.)
+      await _initializeFirebase();
 
       final app = await builder();
       runApp(
@@ -47,4 +49,16 @@ Future<void> bootstrap(BootstrapBuilder builder) async {
       // send to crash reporter if you like
     },
   );
+}
+
+Future<void> _initializeFirebase() async {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+    return;
+  }
+
+  if (Firebase.apps.isNotEmpty) {
+    return;
+  }
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 }

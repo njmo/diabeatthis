@@ -1,5 +1,5 @@
 import 'package:diabeatthis/core/llm/local_llm_client.dart';
-import 'package:diabeatthis/core/llm/providers/local_llm_client_provider.dart';
+import 'package:diabeatthis/core/llm/providers/firebase_ai_llm_client_provider.dart';
 import 'package:diabeatthis/features/meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
 import 'package:diabeatthis/features/meal_advisor/data/clients/local_llm_ingredient_photo_scan_client.dart';
 import 'package:diabeatthis/features/meal_advisor/data/providers/ingredient_photo_scan_client_provider.dart';
@@ -18,17 +18,19 @@ void main() {
       );
     });
 
-    test('can switch to local LLM client', () {
+    test('can switch to cloud AI client', () {
       final container = ProviderContainer(
         overrides: [
-          localLlmClientProvider.overrideWithValue(const _FakeLocalLlmClient()),
+          firebaseAiLlmClientProvider.overrideWithValue(
+            const _FakeLocalLlmClient(),
+          ),
         ],
       );
       addTearDown(container.dispose);
 
       container
           .read(ingredientPhotoScanClientModeControllerProvider.notifier)
-          .setMode(IngredientPhotoScanClientMode.localLlm);
+          .setMode(IngredientPhotoScanClientMode.cloudAi);
 
       expect(
         container.read(ingredientPhotoScanClientProvider),
