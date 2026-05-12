@@ -128,6 +128,7 @@ class KidFAB extends HookConsumerWidget with Logging {
           }),
           const SizedBox(height: 8),
           _buildOption(Icons.restaurant, 'Zaplanuj posiłek', () {
+            ref.read(mealDraftProvider.notifier).reset();
             context.router.push(routes.AddMealRoute());
             open.value = false;
           }),
@@ -136,6 +137,8 @@ class KidFAB extends HookConsumerWidget with Logging {
             Icons.bakery_dining_rounded,
             'Zjedz coś na szybko',
             () async {
+              open.value = false;
+              ref.read(mealDraftProvider.notifier).reset();
               final mealIngredient =
                   await showModalBottomSheet<MealIngredientsDraft>(
                     context: context,
@@ -144,7 +147,7 @@ class KidFAB extends HookConsumerWidget with Logging {
                     builder: (_) => AddMealIngredient(),
                   );
               if (mealIngredient != null) {
-                final draft = ref.watch(mealDraftProvider.notifier);
+                final draft = ref.read(mealDraftProvider.notifier);
                 draft.addMealIngredient(mealIngredient);
                 draft.setName("QM: ${mealIngredient.ingredient.name}");
                 final addedMeal = await ref
@@ -169,8 +172,8 @@ class KidFAB extends HookConsumerWidget with Logging {
                     openSummaryAfterEaten: false,
                   );
                 }
+                ref.read(mealDraftProvider.notifier).reset();
               }
-              open.value = false;
             },
           ),
           const SizedBox(height: 16),

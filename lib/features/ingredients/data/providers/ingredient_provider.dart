@@ -76,6 +76,7 @@ class IngredientPortionAmountDraftNotifier
   }
 
   void setAmount(String amount) => state = double.tryParse(amount) ?? 0;
+  void setValue(double amount) => state = amount < 0 ? 0 : amount;
 }
 
 @riverpod

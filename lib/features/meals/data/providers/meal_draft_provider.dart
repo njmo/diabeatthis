@@ -19,6 +19,7 @@ class MealIngredientAmountDraftNotifier
   }
 
   void setAmount(String amount) => state = double.tryParse(amount) ?? 0;
+  void setValue(double amount) => state = amount < 0 ? 0 : amount;
   String getAmount() => state.toString();
 }
 
@@ -85,6 +86,10 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
 class MealDraftNotifier extends _$MealDraftNotifier with Logging {
   @override
   MealDraft build() {
+    return _emptyDraft();
+  }
+
+  MealDraft _emptyDraft() {
     return MealDraft(
       name: '',
       mealIngredients: [],
@@ -93,6 +98,7 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
     );
   }
 
+  void reset() => state = _emptyDraft();
   void setName(String name) => state = state.copyWith(name: name);
   void setPlannedAt(DateTime plannedAt) {
     logI("Srtting planned at to ${plannedAt.toIso8601String()}");

@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../meals/data/providers/meal_draft_provider.dart';
 
 class DashboardFAB extends HookConsumerWidget {
   const DashboardFAB({super.key});
@@ -22,6 +23,7 @@ class DashboardFAB extends HookConsumerWidget {
           }),
           const SizedBox(height: 8),
           _buildOption(Icons.restaurant, 'Plan meal', () {
+            ref.read(mealDraftProvider.notifier).reset();
             context.router.push(routes.AddMealRoute());
             open.value = false;
           }),

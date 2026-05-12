@@ -33,6 +33,7 @@ GlobalKey<FormState> mealIngredientFormKey(Ref ref) {
 @riverpod
 class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   late AddMealIngredientStage prev;
+
   @override
   AddMealIngredientStage build() {
     prev = AddMealIngredientStage.ingredientSearch;
@@ -41,7 +42,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
 
   void modifyIngredientStage(bool isReference) {
     if (isReference) {
-      state = AddMealIngredientStage.amountForm;
+      _openAmountForm();
       return;
     }
     state = AddMealIngredientStage.portionAddNewSearch;
@@ -52,7 +53,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
       mealIngredientsDraftProvider.notifier,
     );
     mealIngredientsDraft.setIngredientPortion(PortionSelection.empty());
-    state = AddMealIngredientStage.amountForm;
+    _openAmountForm();
   }
 
   void setStage(AddMealIngredientStage stage) => state = stage;
@@ -99,7 +100,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         mealIngredientsDraft.setIngredient(ingredientDraft);
         if (ingredientDraft.isReference) {
           mealIngredientsDraft.setIngredientPortion(PortionSelection.empty());
-          _moveTo(AddMealIngredientStage.amountForm);
+          _openAmountForm();
         } else {
           final portionsFilter = ref.read(portionFilterProvider.notifier);
           portionsFilter.setFilter(
@@ -137,7 +138,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         mealIngredientsDraft.setIngredient(ingredientDraft);
         if (ingredientDraft.isReference) {
           mealIngredientsDraft.setIngredientPortion(PortionSelection.empty());
-          _moveTo(AddMealIngredientStage.amountForm);
+          _openAmountForm();
         } else {
           final portionsFilter = ref.read(portionFilterProvider.notifier);
           portionsFilter.setFilter(PortionFilter.byQuery());
@@ -164,7 +165,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         mealIngredientsDraft.setIngredientPortionAmount(
           ingredientAmountInPortion,
         );
-        _moveTo(AddMealIngredientStage.amountForm);
+        _openAmountForm();
         break;
       case AddMealIngredientStage.definedPortionsSearch:
         final portionsDraft = ref.read(portionDraftProvider);
@@ -172,7 +173,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
           mealIngredientsDraftProvider.notifier,
         );
         mealIngredientsDraft.setIngredientPortion(portionsDraft);
-        _moveTo(AddMealIngredientStage.amountForm);
+        _openAmountForm();
         break;
       case AddMealIngredientStage.amountForm:
         final amountDraft = ref.read(mealIngredientAmountDraftProvider);
@@ -227,7 +228,6 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
       case AddMealIngredientStage.amountForm:
       case AddMealIngredientStage.summary:
       case AddMealIngredientStage.portionSpecifyAmount:
-        // TODO: Handle this case.
         throw UnimplementedError();
     }
   }
@@ -268,5 +268,12 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   void _moveTo(AddMealIngredientStage next, {AddMealIngredientStage? backTo}) {
     prev = backTo ?? state;
     state = next;
+  }
+
+  void _openAmountForm() {
+    final draft = ref.read(mealIngredientsDraftProvider);
+    final amount = draft.amount > 0 ? draft.amount : 1.0;
+    ref.read(mealIngredientAmountDraftProvider.notifier).setValue(amount);
+    _moveTo(AddMealIngredientStage.amountForm);
   }
 }

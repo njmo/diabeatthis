@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/widgets/camera_search_icon.dart';
 import '../../../../common/widgets/forms.dart';
+import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/llm/local_llm_client.dart';
 import '../../../../core/media/providers/camera_permission_service_provider.dart';
 import '../../../meal_advisor/data/models/ingredient_photo_search_result.dart';
@@ -34,9 +36,10 @@ class IngredientSearch extends HookConsumerWidget {
             ),
           )
         : ref.watch(ingredientsByQueryProvider(query.value));
+    final selectedIngredient = ref.watch(ingredientDraftProvider);
     final draft = ref.watch(ingredientDraftProvider.notifier);
     final formKey = ref.watch(mealIngredientFormKeyProvider);
-    final addIngredientStage = ref.read(
+    final addIngredientController = ref.read(
       addMealIngredientStageProvider.notifier,
     );
 
@@ -45,6 +48,13 @@ class IngredientSearch extends HookConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          IngredientSearchActions(
+            isPhotoSearchLoading: photoSearchState.isLoading,
+            onAddManual: addIngredientController.startManualIngredient,
+            onScanLabel: addIngredientController.startIngredientPhotoScan,
+            onSearchPhoto: addIngredientController.startIngredientPhotoSearch,
+          ),
+          const SizedBox(height: 8),
           Form(
             key: formKey,
             autovalidateMode: AutovalidateMode.always,
@@ -60,24 +70,26 @@ class IngredientSearch extends HookConsumerWidget {
                   controller: controller,
                   maxLength: _ingredientSearchMaxLength,
                   validator: (value) {
-                    if (valuePicked.value < 0) {
+                    if (valuePicked.value < 0 &&
+                        !selectedIngredient.hasSearchSelection) {
                       return '';
                     }
                     return null;
                   },
                   decoration: const InputDecoration(
-                    icon: Icon(Icons.search),
-                    labelText: 'Nazwa',
+                    prefixIcon: Icon(Icons.search),
+                    labelText: 'Szukaj składnika',
+                    counterText: '',
                     border: OutlineInputBorder(),
                   ),
                 );
               },
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 8),
           if (photoSearchState.isLoading) ...[
             const IngredientPhotoSearchProgressMessage(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
           ],
           if (photoSearch?.captureError != null) ...[
             IngredientPhotoCaptureMessage(
@@ -88,61 +100,206 @@ class IngredientSearch extends HookConsumerWidget {
                     }
                   : null,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
           ],
           if (photoSearchState.hasError) ...[
             IngredientPhotoSearchErrorMessage(
               message: _photoSearchErrorMessage(photoSearchState.error!),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
           ],
           if (normalizedQuery.isEmpty && photoSearchResult != null) ...[
             IngredientPhotoSearchSummary(result: photoSearchResult),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
           ],
           if (isPhotoSearchActive &&
               ingredients.hasValue &&
               (ingredients.asData?.value.isEmpty ?? false)) ...[
             IngredientPhotoSearchEmptyMessage(
               onContinueWithScan:
-                  addIngredientStage.continuePhotoSearchAsFullScan,
+                  addIngredientController.continuePhotoSearchAsFullScan,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
           ],
           SizedBox(
-            height: 200,
-            child: ListView.builder(
+            height: 240,
+            child: ListView.separated(
               itemBuilder: (context, index) {
                 final ingredient = ingredients.asData?.value[index];
                 if (ingredient == null) {
                   return SizedBox.shrink();
                 }
-                return Card(
-                  child: ListTile(
-                    title: Text(
-                      ingredient.name,
-                      style: TextStyle(
-                        fontWeight: (valuePicked.value == index)
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                    subtitle: Text('Kalorie: ${ingredient.kcalPer100g} kcal'),
-                    trailing: ingredient.isReference
-                        ? const Icon(Icons.dinner_dining)
-                        : null,
-                    onTap: () {
-                      draft.overrideDraft(ingredient);
-                      valuePicked.value = index;
-                    },
-                  ),
+                final selected =
+                    valuePicked.value == index ||
+                    selectedIngredient.matchesSearchResult(ingredient);
+                return IngredientSearchTile(
+                  name: ingredient.name,
+                  kcalPer100g: ingredient.kcalPer100g,
+                  isReference: ingredient.isReference,
+                  selected: selected,
+                  onTap: () {
+                    draft.overrideDraft(ingredient);
+                    valuePicked.value = index;
+                  },
                 );
               },
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemCount: ingredients.asData?.value.length ?? 0,
-              shrinkWrap: true,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class IngredientSearchTile extends StatelessWidget {
+  final String name;
+  final double? kcalPer100g;
+  final bool isReference;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const IngredientSearchTile({
+    required this.name,
+    required this.kcalPer100g,
+    required this.isReference,
+    required this.selected,
+    required this.onTap,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final kcalLabel = kcalPer100g == null ? '-' : kcalPer100g!.round();
+
+    return Material(
+      color: selected ? colorScheme.secondaryContainer : colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(
+          color: selected ? colorScheme.secondary : colorScheme.outlineVariant,
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        dense: true,
+        contentPadding: const EdgeInsets.only(left: 12, right: 8),
+        onTap: onTap,
+        leading: CircleAvatar(
+          backgroundColor: selected
+              ? colorScheme.secondary
+              : colorScheme.surfaceContainerHighest,
+          foregroundColor: selected
+              ? colorScheme.onSecondary
+              : colorScheme.onSurfaceVariant,
+          child: Icon(
+            isReference ? Icons.dinner_dining : Icons.restaurant,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+        subtitle: Text('$kcalLabel kcal / 100 g'),
+        trailing: selected ? const Icon(Icons.check_circle) : null,
+      ),
+    );
+  }
+}
+
+class IngredientSearchActions extends StatelessWidget {
+  final bool isPhotoSearchLoading;
+  final VoidCallback onAddManual;
+  final VoidCallback onScanLabel;
+  final VoidCallback onSearchPhoto;
+
+  const IngredientSearchActions({
+    required this.isPhotoSearchLoading,
+    required this.onAddManual,
+    required this.onScanLabel,
+    required this.onSearchPhoto,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _IngredientSearchActionButton(
+            icon: const Icon(Icons.add_box_outlined),
+            label: 'Ręcznie',
+            tooltip: 'Dodaj ręcznie',
+            onPressed: onAddManual,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _IngredientSearchActionButton(
+            icon: const Icon(Icons.add_a_photo_outlined),
+            label: 'Etykieta',
+            tooltip: 'Odczytaj etykietę',
+            onPressed: onScanLabel,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _IngredientSearchActionButton(
+            icon: const CameraSearchIcon(size: 18),
+            label: isPhotoSearchLoading ? 'Szukam' : 'Ze zdjęcia',
+            tooltip: 'Znajdź ze zdjęcia',
+            onPressed: isPhotoSearchLoading ? null : onSearchPhoto,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _IngredientSearchActionButton extends StatelessWidget {
+  final Widget icon;
+  final String label;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  const _IngredientSearchActionButton({
+    required this.icon,
+    required this.label,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(48),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconTheme.merge(data: const IconThemeData(size: 18), child: icon),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -161,7 +318,7 @@ class IngredientPhotoSearchProgressMessage extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Row(
           children: [
             SizedBox(
@@ -175,7 +332,7 @@ class IngredientPhotoSearchProgressMessage extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Szukam produktu na podstawie zdjęcia.',
+                'Szukam ze zdjęcia.',
                 style: TextStyle(color: colors.onPrimaryContainer),
               ),
             ),
@@ -209,7 +366,7 @@ class IngredientPhotoSearchSummary extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -249,22 +406,25 @@ class IngredientPhotoSearchEmptyMessage extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.info_outline, color: colors.onSurfaceVariant),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Nie znalazłem podobnego składnika w bazie. Dodaj zdjęcie tabeli makro, żeby utworzyć nowy składnik.',
-                style: TextStyle(color: colors.onSurfaceVariant),
-              ),
-            ),
-            const SizedBox(width: 8),
-            TextButton(
-              onPressed: onContinueWithScan,
-              child: const Text('Dodaj makro'),
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: colors.onSurfaceVariant),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Brak wyniku w bazie.',
+                    style: TextStyle(color: colors.onSurfaceVariant),
+                  ),
+                ),
+                TextButton(
+                  onPressed: onContinueWithScan,
+                  child: const Text('Dodaj makro'),
+                ),
+              ],
             ),
           ],
         ),
@@ -288,7 +448,7 @@ class IngredientPhotoSearchErrorMessage extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -325,4 +485,26 @@ String _photoSearchErrorMessage(Object error) {
     return 'Nie udało się odczytać odpowiedzi modelu. Spróbuj ponownie.';
   }
   return 'Nie udało się wyszukać produktu ze zdjęcia. Spróbuj ponownie.';
+}
+
+extension IngredientSearchSelectionX on domain.Ingredient {
+  bool get hasSearchSelection => map(
+    draft: (draft) => draft.name.trim().isNotEmpty,
+    existing: (_) => true,
+  );
+
+  bool matchesSearchResult(domain.Ingredient ingredient) {
+    return map(
+      draft: (draft) => ingredient.map(
+        draft: (other) =>
+            draft.name == other.name && draft.brand == other.brand,
+        existing: (other) =>
+            draft.name == other.name && draft.brand == other.brand,
+      ),
+      existing: (existing) => ingredient.map(
+        draft: (_) => false,
+        existing: (other) => existing.id == other.id,
+      ),
+    );
+  }
 }

@@ -55,7 +55,7 @@ class FriendlyAmountSelector extends StatelessWidget {
                   onPressed: normalizedValue <= min
                       ? null
                       : () => onChanged(_normalize(normalizedValue - step)),
-                  icon: const Icon(Icons.remove),
+                  icon: Text(_stepLabel(-step)),
                 ),
                 Expanded(
                   child: Text(
@@ -69,7 +69,7 @@ class FriendlyAmountSelector extends StatelessWidget {
                   onPressed: max != null && normalizedValue >= max!
                       ? null
                       : () => onChanged(_normalize(normalizedValue + step)),
-                  icon: const Icon(Icons.add),
+                  icon: Text(_stepLabel(step)),
                 ),
               ],
             ),
@@ -106,5 +106,14 @@ class FriendlyAmountSelector extends StatelessWidget {
 
   bool _isSelected(double current, double option) {
     return (current - _normalize(option)).abs() < 0.05;
+  }
+
+  String _stepLabel(double rawStep) {
+    final sign = rawStep > 0 ? '+' : '-';
+    final absolute = rawStep.abs();
+    final formatted = absolute % 1 == 0
+        ? absolute.toStringAsFixed(0)
+        : absolute.toStringAsFixed(1).replaceAll('.', ',');
+    return '$sign$formatted';
   }
 }
