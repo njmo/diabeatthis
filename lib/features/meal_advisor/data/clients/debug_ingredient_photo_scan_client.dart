@@ -1,4 +1,5 @@
 import '../models/ingredient_photo_scan_input.dart';
+import 'ingredient_photo_scan_client.dart';
 
 enum DebugIngredientPhotoScanScenario {
   recognized,
@@ -6,7 +7,7 @@ enum DebugIngredientPhotoScanScenario {
   incompleteRecognized,
 }
 
-class DebugIngredientPhotoScanClient {
+class DebugIngredientPhotoScanClient implements IngredientPhotoScanClient {
   final DebugIngredientPhotoScanScenario scenario;
   final Duration delay;
 
@@ -15,6 +16,7 @@ class DebugIngredientPhotoScanClient {
     this.delay = const Duration(seconds: 2),
   });
 
+  @override
   Future<String> scan(IngredientPhotoScanInput input) async {
     await Future<void>.delayed(delay);
     return switch (scenario) {

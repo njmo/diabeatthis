@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/clients/debug_ingredient_photo_scan_client.dart';
+import '../../data/clients/ingredient_photo_scan_client.dart';
 import '../../data/models/ingredient_photo_scan_input.dart';
 import '../../data/models/ingredient_scan_result.dart';
 import '../../data/parsers/ingredient_scan_result_parser.dart';
@@ -22,7 +23,7 @@ ScanIngredientFromPhotosUseCase scanIngredientFromPhotosUseCase(Ref ref) {
 }
 
 class ScanIngredientFromPhotosUseCase {
-  final DebugIngredientPhotoScanClient client;
+  final IngredientPhotoScanClient client;
   final IngredientScanResultParser parser;
   final IngredientScanResultValidator validator;
 
