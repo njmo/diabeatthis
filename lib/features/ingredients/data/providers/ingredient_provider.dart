@@ -131,13 +131,13 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
   }
 
   void setCarbsPer100g(String value) =>
-      state = state.copyWith(carbsPer100g: double.tryParse(value) ?? 0.0);
+      state = state.copyWith(carbsPer100g: _parseDraftNumber(value));
   void setFatPer100g(String value) =>
-      state = state.copyWith(fatPer100g: double.tryParse(value) ?? 0.0);
+      state = state.copyWith(fatPer100g: _parseDraftNumber(value));
   void setFiberPer100g(String value) =>
-      state = state.copyWith(fiberPer100g: double.tryParse(value) ?? 0.0);
+      state = state.copyWith(fiberPer100g: _parseDraftNumber(value));
   void setProteinPer100g(String value) =>
-      state = state.copyWith(proteinPer100g: double.tryParse(value) ?? 0.0);
+      state = state.copyWith(proteinPer100g: _parseDraftNumber(value));
   void setName(String value) => state = state.copyWith(name: value);
   void setNutritionConfidence(ConfidenceLevel value) =>
       state = state.copyWith(nutritionConfidence: value.toDouble01());
@@ -146,19 +146,19 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
   String getName() => state.map(draft: (d) => d.name, existing: (e) => e.name);
   String getCarbsPer100g() => state
       .map(draft: (d) => d.carbsPer100g, existing: (e) => e.carbsPer100g)
-      .toStringAsFixed(0);
+      .formatDraftNumber();
 
   String getFatPer100g() => state
       .map(draft: (d) => d.fatPer100g, existing: (e) => e.fatPer100g)
-      .toStringAsFixed(0);
+      .formatDraftNumber();
 
   String getFiberPer100g() => state
       .map(draft: (d) => d.fiberPer100g, existing: (e) => e.fiberPer100g)
-      .toStringAsFixed(0);
+      .formatDraftNumber();
 
   String getProteinPer100g() => state
       .map(draft: (d) => d.proteinPer100g, existing: (e) => e.proteinPer100g)
-      .toStringAsFixed(0);
+      .formatDraftNumber();
 
   ConfidenceLevel getNutritionConfidence() => state.map(
     draft: (d) => ConfidenceLevelX.fromDouble01(d.nutritionConfidence),
@@ -170,4 +170,18 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
   void setBrand(String value) => state = state.copyWith(brand: value);
 
   void setIsReference(bool value) => state = state.copyWith(isReference: value);
+}
+
+double _parseDraftNumber(String value) {
+  final normalized = value.trim().replaceAll(',', '.');
+  return double.tryParse(normalized) ?? 0.0;
+}
+
+extension on double {
+  String formatDraftNumber() {
+    if (this == roundToDouble()) {
+      return toStringAsFixed(0);
+    }
+    return toStringAsFixed(2);
+  }
 }
