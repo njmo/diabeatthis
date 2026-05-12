@@ -7,7 +7,9 @@ import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../ingredients/presentation/widgets/ingredient_form.dart';
 import '../../../ingredients/presentation/widgets/ingredient_photo_scan.dart';
 import '../../../ingredients/presentation/widgets/ingredient_portion_amount_form.dart';
+import '../../../ingredients/presentation/widgets/ingredient_scan_review_dialog.dart';
 import '../../../ingredients/presentation/widgets/ingredient_search.dart';
+import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../../portions/presentation/widgets/portion_form.dart';
@@ -135,6 +137,28 @@ class AddMealIngredient extends ConsumerWidget {
                       } else if (addingStage ==
                           AddMealIngredientStage.ingredientPhotoScan) {
                         await addingStateNotifier.nextStage();
+                        if (!context.mounted) {
+                          return;
+                        }
+                        final scanResult = ref
+                            .read(ingredientPhotoScanControllerProvider)
+                            .when(
+                              data: (value) => value,
+                              error: (_, _) => null,
+                              loading: () => null,
+                            );
+                        if (scanResult?.status ==
+                            IngredientScanStatus.needsReview) {
+                          final shouldContinue =
+                              await showIngredientScanReviewDialog(
+                                context: context,
+                                result: scanResult!,
+                              );
+                          if (shouldContinue == true) {
+                            addingStateNotifier
+                                .continueWithIngredientScanReview();
+                          }
+                        }
                       } else {
                         final formKey = ref.read(mealIngredientFormKeyProvider);
                         if (formKey.currentState!.validate()) {

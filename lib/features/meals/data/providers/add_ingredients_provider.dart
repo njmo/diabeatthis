@@ -213,6 +213,21 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     return false;
   }
 
+  void continueWithIngredientScanReview() {
+    final scannedIngredient = ref
+        .read(ingredientPhotoScanControllerProvider.notifier)
+        .draftFromCurrentResult();
+    if (scannedIngredient == null) {
+      return;
+    }
+
+    final ingredientDraft = ref.read(ingredientDraftProvider.notifier);
+    ingredientDraft.overrideDraft(scannedIngredient);
+    ref.invalidate(mealIngredientFormKeyProvider);
+    prev = state;
+    state = AddMealIngredientStage.ingredientForm;
+  }
+
   void back() {
     state = prev;
   }

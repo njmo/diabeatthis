@@ -2,6 +2,7 @@ import 'package:diabeatthis/features/meal_advisor/data/clients/debug_ingredient_
 import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_scan_result.dart';
 import 'package:diabeatthis/features/meal_advisor/data/parsers/ingredient_scan_result_parser.dart';
 import 'package:diabeatthis/features/meal_advisor/domain/mappers/ingredient_scan_result_mapper.dart';
+import 'package:diabeatthis/features/meal_advisor/domain/services/ingredient_scan_result_validator.dart';
 import 'package:diabeatthis/features/meal_advisor/domain/use_cases/scan_ingredient_from_photos_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,6 +14,7 @@ void main() {
         const useCase = ScanIngredientFromPhotosUseCase(
           client: DebugIngredientPhotoScanClient(),
           parser: IngredientScanResultParser(),
+          validator: IngredientScanResultValidator(),
         );
 
         final result = await useCase.call();

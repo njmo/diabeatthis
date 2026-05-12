@@ -23,7 +23,7 @@ class IngredientPhotoScanController extends _$IngredientPhotoScanController {
       final useCase = ref.read(scanIngredientFromPhotosUseCaseProvider);
       final result = await useCase.call();
       state = AsyncData(result);
-      if (result.needsRetake) {
+      if (result.needsRetake || result.needsReview) {
         return null;
       }
       return result.toIngredientDraft();
@@ -31,5 +31,17 @@ class IngredientPhotoScanController extends _$IngredientPhotoScanController {
       state = AsyncError(error, stackTrace);
       rethrow;
     }
+  }
+
+  Ingredient? draftFromCurrentResult() {
+    final result = state.when(
+      data: (value) => value,
+      error: (_, _) => null,
+      loading: () => null,
+    );
+    if (result == null || result.needsRetake) {
+      return null;
+    }
+    return result.toIngredientDraft();
   }
 }

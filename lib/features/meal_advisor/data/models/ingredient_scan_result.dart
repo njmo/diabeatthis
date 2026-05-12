@@ -1,4 +1,4 @@
-enum IngredientScanStatus { recognized, needsRetake }
+enum IngredientScanStatus { recognized, needsRetake, needsReview }
 
 enum IngredientScanPhotoTarget { front, nutritionLabel, both }
 
@@ -20,6 +20,9 @@ class IngredientScanResult {
   });
 
   bool get needsRetake => status == IngredientScanStatus.needsRetake;
+  bool get needsReview => status == IngredientScanStatus.needsReview;
+  bool get hasRecognizedMinimumData =>
+      name != null && hasCompleteNutritionPer100g;
 
   bool get hasCompleteNutritionPer100g =>
       nutritionPer100g?.hasCompleteMacros ?? false;

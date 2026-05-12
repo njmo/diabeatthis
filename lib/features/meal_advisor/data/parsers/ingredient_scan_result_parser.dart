@@ -43,6 +43,7 @@ class IngredientScanResultParser {
     final status = _readString(json, 'status');
     return switch (status) {
       'needsRetake' => IngredientScanStatus.needsRetake,
+      'needsReview' => IngredientScanStatus.needsReview,
       _ => IngredientScanStatus.recognized,
     };
   }
