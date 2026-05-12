@@ -3,12 +3,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/llm/local_llm_client.dart';
 import '../../../../core/media/providers/camera_permission_service_provider.dart';
-import '../../../meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
 import '../../../meal_advisor/data/models/ingredient_photo_scan_input.dart';
 import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
-import '../../../meal_advisor/data/providers/debug_ingredient_photo_scan_provider.dart';
 import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
-import '../../../meal_advisor/data/providers/ingredient_photo_scan_client_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 
 class IngredientPhotoScan extends ConsumerWidget {
@@ -21,12 +18,6 @@ class IngredientPhotoScan extends ConsumerWidget {
     final scanError = scanState.whenOrNull(error: (error, _) => error);
     final scanInput = ref.watch(ingredientPhotoScanCaptureControllerProvider);
     final retakeRequest = scanResult?.retakeRequest;
-    final debugScenario = ref.watch(
-      debugIngredientPhotoScanScenarioControllerProvider,
-    );
-    final scanClientMode = ref.watch(
-      ingredientPhotoScanClientModeControllerProvider,
-    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -65,29 +56,6 @@ class IngredientPhotoScan extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
           ],
-          Text(
-            'Na razie ten krok używa przykładowego odczytu.',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 12),
-          IngredientPhotoScanDebugControls(
-            clientMode: scanClientMode,
-            onClientModeChanged: (mode) {
-              ref
-                  .read(
-                    ingredientPhotoScanClientModeControllerProvider.notifier,
-                  )
-                  .setMode(mode);
-            },
-            scenario: debugScenario,
-            onScenarioChanged: (scenario) {
-              ref
-                  .read(
-                    debugIngredientPhotoScanScenarioControllerProvider.notifier,
-                  )
-                  .setScenario(scenario);
-            },
-          ),
         ],
       ),
     );
@@ -148,72 +116,6 @@ String _photoCaptureMessage(IngredientPhotoCaptureState state) {
     IngredientPhotoCaptureState.captured ||
     IngredientPhotoCaptureState.cancelled => '',
   };
-}
-
-class IngredientPhotoScanDebugControls extends StatelessWidget {
-  final IngredientPhotoScanClientMode clientMode;
-  final ValueChanged<IngredientPhotoScanClientMode> onClientModeChanged;
-  final DebugIngredientPhotoScanScenario scenario;
-  final ValueChanged<DebugIngredientPhotoScanScenario> onScenarioChanged;
-
-  const IngredientPhotoScanDebugControls({
-    required this.clientMode,
-    required this.onClientModeChanged,
-    required this.scenario,
-    required this.onScenarioChanged,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SegmentedButton<IngredientPhotoScanClientMode>(
-          segments: const [
-            ButtonSegment(
-              value: IngredientPhotoScanClientMode.debug,
-              label: Text('Debug'),
-              icon: Icon(Icons.bug_report_outlined),
-            ),
-            ButtonSegment(
-              value: IngredientPhotoScanClientMode.cloudAi,
-              label: Text('AI'),
-              icon: Icon(Icons.cloud_outlined),
-            ),
-          ],
-          selected: {clientMode},
-          onSelectionChanged: (selection) =>
-              onClientModeChanged(selection.first),
-        ),
-        if (clientMode == IngredientPhotoScanClientMode.debug) ...[
-          const SizedBox(height: 8),
-          SegmentedButton<DebugIngredientPhotoScanScenario>(
-            segments: const [
-              ButtonSegment(
-                value: DebugIngredientPhotoScanScenario.recognized,
-                label: Text('Pełny'),
-                icon: Icon(Icons.check_circle_outline),
-              ),
-              ButtonSegment(
-                value: DebugIngredientPhotoScanScenario.needsRetake,
-                label: Text('Nieczytelne'),
-                icon: Icon(Icons.refresh_outlined),
-              ),
-              ButtonSegment(
-                value: DebugIngredientPhotoScanScenario.incompleteRecognized,
-                label: Text('Niepełny'),
-                icon: Icon(Icons.rule_outlined),
-              ),
-            ],
-            selected: {scenario},
-            onSelectionChanged: (selection) =>
-                onScenarioChanged(selection.first),
-          ),
-        ],
-      ],
-    );
-  }
 }
 
 class IngredientPhotoRetakeMessage extends StatelessWidget {
