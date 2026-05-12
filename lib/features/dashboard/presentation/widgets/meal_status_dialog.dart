@@ -188,9 +188,10 @@ class MealStatusDialog extends ConsumerWidget with Logging {
             ElevatedButton(
               onPressed: () async {
                 if (context.mounted) {
-                  Navigator.of(
-                    context,
-                  ).pop(const MealStatusUpdateResult('eating'));
+                  final status = meal.status == 'bolused-waiting'
+                      ? 'waited-eating'
+                      : 'eating';
+                  Navigator.of(context).pop(MealStatusUpdateResult(status));
                 }
               },
               child: const Text("Jem"),

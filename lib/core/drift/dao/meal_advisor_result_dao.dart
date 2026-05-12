@@ -24,10 +24,12 @@ class MealAdvisorResultDao extends DatabaseAccessor<DatabaseImpl>
     }
   }
 
-  void updateAdvisorResultFinalWaitTime(int mealId, int finalWaitTime) async {
-    await (update(db.mealAdvisorResult)..where((t) => t.mealId.equals(mealId))).write(
-      MealAdvisorResultCompanion(finalWaitTime: Value(finalWaitTime)),
-    );
+  Future<void> updateAdvisorResultFinalWaitTime(
+    int mealId,
+    int finalWaitTime,
+  ) async {
+    await (update(db.mealAdvisorResult)..where((t) => t.mealId.equals(mealId)))
+        .write(MealAdvisorResultCompanion(finalWaitTime: Value(finalWaitTime)));
   }
 
   Future<int> insertMealAdvisorResult(int mealId, MealAdvice advice) {

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../core/domain/model/meal.dart';
 import '../../../meal_summary/domain/use_cases/apply_meal_add_on_multiplier_use_case.dart';
+import '../../../meals/data/domain/use_cases/complete_bolus_wait_use_case.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
 import '../widgets/meal_status_dialog_result.dart';
 
@@ -17,6 +18,11 @@ Future<void> handleMealStatusDialogResult({
 }) async {
   switch (result) {
     case MealStatusUpdateResult(:final status):
+      if (meal.status == 'bolused-waiting' && status == 'waited-eating') {
+        await ref.read(completeBolusWaitUseCaseProvider).call(meal);
+        return;
+      }
+
       await ref.read(updateMealProvider(meal, status).future);
       if (context.mounted &&
           openSummaryAfterEaten &&
