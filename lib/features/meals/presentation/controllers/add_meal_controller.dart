@@ -14,6 +14,7 @@ class AddMealControllerNotifier extends _$AddMealControllerNotifier {
   }
 
   Future<Meal> addMeal(MealDraft draft) async {
+    final keepAliveLink = ref.keepAlive();
     state = const AsyncLoading();
 
     try {
@@ -24,6 +25,8 @@ class AddMealControllerNotifier extends _$AddMealControllerNotifier {
     } catch (e, st) {
       state = AsyncError(e, st);
       rethrow;
+    } finally {
+      keepAliveLink.close();
     }
   }
 }

@@ -9,9 +9,9 @@ import '../../../../core/domain/model/activity.dart';
 import '../../../../core/domain/model/activity_log.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../activity/data/providers/activity_provider.dart';
+import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
-import '../../../meals/presentation/controllers/add_meal_controller.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../utils/meal_status_dialog_result_handler.dart';
 import 'dashboard_activity_sheet.dart';
@@ -77,8 +77,8 @@ class DashboardFAB extends HookConsumerWidget with Logging {
                 draft.addMealIngredient(mealIngredient);
                 draft.setName("QM: ${mealIngredient.ingredient.name}");
                 final addedMeal = await ref
-                    .read(addMealControllerProvider.notifier)
-                    .addMeal(ref.read(mealDraftProvider));
+                    .read(addMealUseCaseProvider)
+                    .call(ref.read(mealDraftProvider));
 
                 if (!context.mounted) {
                   return;
