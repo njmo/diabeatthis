@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
 import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
+import '../../../meal_advisor/data/providers/debug_ingredient_photo_scan_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 
 class IngredientPhotoScan extends ConsumerWidget {
@@ -11,6 +13,9 @@ class IngredientPhotoScan extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scanResult = ref.watch(ingredientPhotoScanControllerProvider).value;
     final retakeRequest = scanResult?.retakeRequest;
+    final debugScenario = ref.watch(
+      debugIngredientPhotoScanScenarioControllerProvider,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -38,8 +43,55 @@ class IngredientPhotoScan extends ConsumerWidget {
             'Na razie ten krok używa przykładowego odczytu.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
+          const SizedBox(height: 12),
+          IngredientPhotoScanDebugScenarioPicker(
+            scenario: debugScenario,
+            onChanged: (scenario) {
+              ref
+                  .read(
+                    debugIngredientPhotoScanScenarioControllerProvider.notifier,
+                  )
+                  .setScenario(scenario);
+            },
+          ),
         ],
       ),
+    );
+  }
+}
+
+class IngredientPhotoScanDebugScenarioPicker extends StatelessWidget {
+  final DebugIngredientPhotoScanScenario scenario;
+  final ValueChanged<DebugIngredientPhotoScanScenario> onChanged;
+
+  const IngredientPhotoScanDebugScenarioPicker({
+    required this.scenario,
+    required this.onChanged,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SegmentedButton<DebugIngredientPhotoScanScenario>(
+      segments: const [
+        ButtonSegment(
+          value: DebugIngredientPhotoScanScenario.recognized,
+          label: Text('Pełny'),
+          icon: Icon(Icons.check_circle_outline),
+        ),
+        ButtonSegment(
+          value: DebugIngredientPhotoScanScenario.needsRetake,
+          label: Text('Nieczytelne'),
+          icon: Icon(Icons.refresh_outlined),
+        ),
+        ButtonSegment(
+          value: DebugIngredientPhotoScanScenario.incompleteRecognized,
+          label: Text('Niepełny'),
+          icon: Icon(Icons.rule_outlined),
+        ),
+      ],
+      selected: {scenario},
+      onSelectionChanged: (selection) => onChanged(selection.first),
     );
   }
 }

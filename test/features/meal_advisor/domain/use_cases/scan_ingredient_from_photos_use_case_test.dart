@@ -12,7 +12,7 @@ void main() {
       'parses debug scan response and maps it to ingredient draft',
       () async {
         const useCase = ScanIngredientFromPhotosUseCase(
-          client: DebugIngredientPhotoScanClient(),
+          client: DebugIngredientPhotoScanClient(delay: Duration.zero),
           parser: IngredientScanResultParser(),
           validator: IngredientScanResultValidator(),
         );

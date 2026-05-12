@@ -1,9 +1,28 @@
+enum DebugIngredientPhotoScanScenario {
+  recognized,
+  needsRetake,
+  incompleteRecognized,
+}
+
 class DebugIngredientPhotoScanClient {
-  const DebugIngredientPhotoScanClient();
+  final DebugIngredientPhotoScanScenario scenario;
+  final Duration delay;
+
+  const DebugIngredientPhotoScanClient({
+    this.scenario = DebugIngredientPhotoScanScenario.recognized,
+    this.delay = const Duration(seconds: 2),
+  });
 
   Future<String> scan() async {
-    await Future<void>.delayed(const Duration(seconds: 2));
-    return debugIngredientPhotoScanResponse;
+    await Future<void>.delayed(delay);
+    return switch (scenario) {
+      DebugIngredientPhotoScanScenario.recognized =>
+        debugIngredientPhotoScanResponse,
+      DebugIngredientPhotoScanScenario.needsRetake =>
+        debugIngredientPhotoScanRetakeResponse,
+      DebugIngredientPhotoScanScenario.incompleteRecognized =>
+        debugIngredientPhotoScanIncompleteResponse,
+    };
   }
 }
 
@@ -26,5 +45,29 @@ const debugIngredientPhotoScanResponse = '''
       "source": "nutrition_label"
     }
   ]
+}
+''';
+
+const debugIngredientPhotoScanRetakeResponse = '''
+{
+  "status": "needsRetake",
+  "photo": "nutritionLabel",
+  "reason": "blurry_or_incomplete",
+  "message": "Tabela wartości odżywczych jest niewyraźna. Zrób zdjęcie jeszcze raz."
+}
+''';
+
+const debugIngredientPhotoScanIncompleteResponse = '''
+{
+  "status": "recognized",
+  "name": "Testowy produkt",
+  "brand": null,
+  "nutritionPer100g": {
+    "carbs": 62.3,
+    "fat": null,
+    "protein": 6.4,
+    "fiber": null
+  },
+  "portions": []
 }
 ''';
