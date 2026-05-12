@@ -18,6 +18,7 @@ class IngredientPhotoScan extends ConsumerWidget {
     final scanError = scanState.whenOrNull(error: (error, _) => error);
     final scanInput = ref.watch(ingredientPhotoScanCaptureControllerProvider);
     final retakeRequest = scanResult?.retakeRequest;
+    final isScanning = scanState.isLoading;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -46,6 +47,10 @@ class IngredientPhotoScan extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
+          if (isScanning) ...[
+            const IngredientPhotoScanProgressMessage(),
+            const SizedBox(height: 12),
+          ],
           if (retakeRequest != null) ...[
             IngredientPhotoRetakeMessage(request: retakeRequest),
             const SizedBox(height: 12),
@@ -88,6 +93,45 @@ class IngredientPhotoScan extends ConsumerWidget {
                 },
               )
             : null,
+      ),
+    );
+  }
+}
+
+class IngredientPhotoScanProgressMessage extends StatelessWidget {
+  const IngredientPhotoScanProgressMessage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.primaryContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: colors.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Odczytuję dane ze zdjęć. To może potrwać kilkanaście sekund.',
+                style: TextStyle(color: colors.onPrimaryContainer),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
