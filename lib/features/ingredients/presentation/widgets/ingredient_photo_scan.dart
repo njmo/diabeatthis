@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/media/camera_permission_service.dart';
+import '../../../../common/media/providers/camera_permission_service_provider.dart';
 import '../../../meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
 import '../../../meal_advisor/data/models/ingredient_photo_scan_input.dart';
 import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
@@ -31,9 +33,8 @@ class IngredientPhotoScan extends ConsumerWidget {
             title: 'Przód opakowania',
             subtitle: 'Nazwa produktu i producent',
             photoPath: scanInput.frontPhotoPath,
-            onCapture: () => ref
-                .read(ingredientPhotoScanCaptureControllerProvider.notifier)
-                .capture(IngredientPhotoScanPhoto.front),
+            onCapture: () =>
+                _capturePhoto(context, ref, IngredientPhotoScanPhoto.front),
           ),
           const SizedBox(height: 8),
           IngredientPhotoStepTile(
@@ -41,9 +42,11 @@ class IngredientPhotoScan extends ConsumerWidget {
             title: 'Tabela makro',
             subtitle: 'Wartości odżywcze na 100 g',
             photoPath: scanInput.nutritionLabelPhotoPath,
-            onCapture: () => ref
-                .read(ingredientPhotoScanCaptureControllerProvider.notifier)
-                .capture(IngredientPhotoScanPhoto.nutritionLabel),
+            onCapture: () => _capturePhoto(
+              context,
+              ref,
+              IngredientPhotoScanPhoto.nutritionLabel,
+            ),
           ),
           const SizedBox(height: 12),
           if (retakeRequest != null) ...[
@@ -69,6 +72,47 @@ class IngredientPhotoScan extends ConsumerWidget {
       ),
     );
   }
+
+  Future<void> _capturePhoto(
+    BuildContext context,
+    WidgetRef ref,
+    IngredientPhotoScanPhoto photo,
+  ) async {
+    final result = await ref
+        .read(ingredientPhotoScanCaptureControllerProvider.notifier)
+        .capture(photo);
+    if (!context.mounted || result.canUseCamera) {
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(_cameraPermissionMessage(result.state)),
+        action: result.canOpenSettings
+            ? SnackBarAction(
+                label: 'Ustawienia',
+                onPressed: () {
+                  ref.read(cameraPermissionServiceProvider).openSettings();
+                },
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+String _cameraPermissionMessage(CameraPermissionState state) {
+  return switch (state) {
+    CameraPermissionState.denied =>
+      'Aparat jest potrzebny do zrobienia zdjęcia opakowania.',
+    CameraPermissionState.permanentlyDenied =>
+      'Uprawnienie aparatu jest zablokowane. Włącz je w ustawieniach aplikacji.',
+    CameraPermissionState.restricted =>
+      'Dostęp do aparatu jest ograniczony w ustawieniach urządzenia.',
+    CameraPermissionState.granted => '',
+  };
 }
 
 class IngredientPhotoScanDebugScenarioPicker extends StatelessWidget {

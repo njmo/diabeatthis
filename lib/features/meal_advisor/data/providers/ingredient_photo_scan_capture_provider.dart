@@ -1,5 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/media/camera_permission_service.dart';
+import '../../../../common/media/providers/camera_permission_service_provider.dart';
 import '../models/ingredient_photo_scan_input.dart';
 
 part 'ingredient_photo_scan_capture_provider.g.dart';
@@ -12,8 +14,16 @@ class IngredientPhotoScanCaptureController
     return const IngredientPhotoScanInput();
   }
 
-  void capture(IngredientPhotoScanPhoto photo) {
+  Future<CameraPermissionResult> capture(IngredientPhotoScanPhoto photo) async {
+    final permission = await ref
+        .read(cameraPermissionServiceProvider)
+        .requestCamera();
+    if (!permission.canUseCamera) {
+      return permission;
+    }
+
     state = state.withPhoto(photo, debugIngredientPhotoScanPath(photo));
+    return permission;
   }
 
   void reset() {
