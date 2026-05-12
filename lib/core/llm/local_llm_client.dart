@@ -69,6 +69,29 @@ abstract interface class LocalLlmClient {
   Future<LocalLlmResponse> generate(LocalLlmRequest request);
 }
 
+enum LlmRequestFailure {
+  network,
+  unauthorized,
+  quotaExceeded,
+  timeout,
+  unavailable,
+}
+
+class LlmRequestException implements Exception {
+  final LlmRequestFailure failure;
+  final String message;
+  final Object? cause;
+
+  const LlmRequestException({
+    required this.failure,
+    required this.message,
+    this.cause,
+  });
+
+  @override
+  String toString() => 'LlmRequestException($failure): $message';
+}
+
 class LocalLlmUnavailableException implements Exception {
   final String message;
 

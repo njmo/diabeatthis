@@ -21,6 +21,10 @@ void main() {
         container.read(ingredientPhotoScanClientProvider),
         isA<LocalLlmIngredientPhotoScanClient>(),
       );
+      final client =
+          container.read(ingredientPhotoScanClientProvider)
+              as LocalLlmIngredientPhotoScanClient;
+      expect(client.timeout, const Duration(seconds: 30));
     });
   });
 }

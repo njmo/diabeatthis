@@ -94,6 +94,19 @@ class IngredientPhotoScan extends ConsumerWidget {
 }
 
 String _scanErrorMessage(Object error) {
+  if (error is LlmRequestException) {
+    return switch (error.failure) {
+      LlmRequestFailure.network =>
+        'Brak połączenia z AI. Sprawdź internet i spróbuj ponownie.',
+      LlmRequestFailure.unauthorized =>
+        'Nie udało się potwierdzić aplikacji w Firebase. Spróbuj ponownie po konfiguracji App Check.',
+      LlmRequestFailure.quotaExceeded =>
+        'Limit odczytów AI został wyczerpany. Spróbuj później.',
+      LlmRequestFailure.timeout => 'Odczyt trwał zbyt długo. Spróbuj ponownie.',
+      LlmRequestFailure.unavailable =>
+        'AI jest chwilowo niedostępne. Spróbuj ponownie.',
+    };
+  }
   if (error is LocalLlmUnavailableException) {
     return 'Lokalny model nie jest jeszcze skonfigurowany.';
   }

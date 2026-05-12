@@ -10,5 +10,6 @@ part 'ingredient_photo_scan_client_provider.g.dart';
 IngredientPhotoScanClient ingredientPhotoScanClient(Ref ref) {
   return LocalLlmIngredientPhotoScanClient(
     llmClient: ref.watch(firebaseAiLlmClientProvider),
+    timeout: const Duration(seconds: 30),
   );
 }

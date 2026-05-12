@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:diabeatthis/core/llm/firebase_ai_llm_client.dart';
 import 'package:diabeatthis/core/llm/local_llm_client.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -51,6 +52,78 @@ void main() {
 
       expect(gateway.images, [frontImage, nutritionImage]);
     });
+
+    test('maps Firebase permission failures to unauthorized LLM error', () {
+      final client = FirebaseAiLlmClient(
+        gateway: _FailingFirebaseAiGenerateContentGateway(
+          FirebaseException(
+            plugin: 'firebase_ai',
+            code: 'permission-denied',
+            message: 'App Check token rejected.',
+          ),
+        ),
+        imageLoader: const _FakeLlmImageLoader({}),
+      );
+
+      expect(
+        client.generate(const LocalLlmRequest(prompt: 'Read product data')),
+        throwsA(
+          isA<LlmRequestException>().having(
+            (error) => error.failure,
+            'failure',
+            LlmRequestFailure.unauthorized,
+          ),
+        ),
+      );
+    });
+
+    test('maps App Check attestation failures to unauthorized LLM error', () {
+      final client = FirebaseAiLlmClient(
+        gateway: _FailingFirebaseAiGenerateContentGateway(
+          FirebaseException(
+            plugin: 'firebase_ai',
+            code: 'unknown',
+            message:
+                'Error returned from API. code: 403 body: App attestation failed.',
+          ),
+        ),
+        imageLoader: const _FakeLlmImageLoader({}),
+      );
+
+      expect(
+        client.generate(const LocalLlmRequest(prompt: 'Read product data')),
+        throwsA(
+          isA<LlmRequestException>().having(
+            (error) => error.failure,
+            'failure',
+            LlmRequestFailure.unauthorized,
+          ),
+        ),
+      );
+    });
+
+    test('maps request timeout to timeout LLM error', () {
+      final client = FirebaseAiLlmClient(
+        gateway: _SlowFirebaseAiGenerateContentGateway(),
+        imageLoader: const _FakeLlmImageLoader({}),
+      );
+
+      expect(
+        client.generate(
+          const LocalLlmRequest(
+            prompt: 'Read product data',
+            timeout: Duration(milliseconds: 1),
+          ),
+        ),
+        throwsA(
+          isA<LlmRequestException>().having(
+            (error) => error.failure,
+            'failure',
+            LlmRequestFailure.timeout,
+          ),
+        ),
+      );
+    });
   });
 }
 
@@ -85,5 +158,34 @@ class _FakeFirebaseAiGenerateContentGateway
     this.prompt = prompt;
     this.images = images;
     return response;
+  }
+}
+
+class _FailingFirebaseAiGenerateContentGateway
+    extends FirebaseAiGenerateContentGateway {
+  final Object error;
+
+  const _FailingFirebaseAiGenerateContentGateway(this.error);
+
+  @override
+  Future<String> generate({
+    required String modelName,
+    required String prompt,
+    required List<LlmImageData> images,
+  }) async {
+    throw error;
+  }
+}
+
+class _SlowFirebaseAiGenerateContentGateway
+    extends FirebaseAiGenerateContentGateway {
+  @override
+  Future<String> generate({
+    required String modelName,
+    required String prompt,
+    required List<LlmImageData> images,
+  }) async {
+    await Future<void>.delayed(const Duration(seconds: 1));
+    return '{"status":"ok"}';
   }
 }

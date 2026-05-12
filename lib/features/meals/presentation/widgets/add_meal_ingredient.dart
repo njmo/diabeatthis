@@ -183,7 +183,7 @@ class AddMealIngredient extends ConsumerWidget {
                           : addingStage ==
                                 AddMealIngredientStage.ingredientPhotoScan
                           ? photoScanInput.hasRequiredPhotos
-                                ? 'Symuluj odczyt'
+                                ? 'Odczytaj dane'
                                 : 'Dodaj zdjęcia'
                           : 'Dalej',
                     ),

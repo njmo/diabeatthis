@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:firebase_ai/firebase_ai.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'local_llm_client.dart';
 
@@ -18,10 +20,32 @@ class FirebaseAiLlmClient implements LocalLlmClient {
   });
 
   @override
-  Future<LocalLlmResponse> generate(LocalLlmRequest request) {
-    final operation = _generate(request);
-    final timeout = request.timeout;
-    return timeout == null ? operation : operation.timeout(timeout);
+  Future<LocalLlmResponse> generate(LocalLlmRequest request) async {
+    try {
+      final operation = _generate(request);
+      final timeout = request.timeout;
+      return timeout == null
+          ? await operation
+          : await operation.timeout(timeout);
+    } on TimeoutException catch (error) {
+      throw LlmRequestException(
+        failure: LlmRequestFailure.timeout,
+        message: 'Firebase AI request timed out.',
+        cause: error,
+      );
+    } on SocketException catch (error) {
+      throw LlmRequestException(
+        failure: LlmRequestFailure.network,
+        message: 'Firebase AI network request failed.',
+        cause: error,
+      );
+    } on FirebaseException catch (error) {
+      throw LlmRequestException(
+        failure: _firebaseFailure(error),
+        message: error.message ?? 'Firebase AI request failed.',
+        cause: error,
+      );
+    }
   }
 
   Future<LocalLlmResponse> _generate(LocalLlmRequest request) async {
@@ -33,6 +57,29 @@ class FirebaseAiLlmClient implements LocalLlmClient {
     );
     return LocalLlmResponse(text: text);
   }
+}
+
+LlmRequestFailure _firebaseFailure(FirebaseException error) {
+  final code = error.code.toLowerCase();
+  final message = error.message?.toLowerCase() ?? '';
+  if (code.contains('resource-exhausted') || code.contains('quota')) {
+    return LlmRequestFailure.quotaExceeded;
+  }
+  if (code.contains('permission') ||
+      code.contains('unauth') ||
+      code.contains('app-check') ||
+      message.contains('app attestation failed') ||
+      message.contains('app check') ||
+      message.contains('code: 403')) {
+    return LlmRequestFailure.unauthorized;
+  }
+  if (code.contains('deadline') || code.contains('timeout')) {
+    return LlmRequestFailure.timeout;
+  }
+  if (code.contains('network') || code.contains('unavailable')) {
+    return LlmRequestFailure.network;
+  }
+  return LlmRequestFailure.unavailable;
 }
 
 class FirebaseAiGenerateContentGateway {
