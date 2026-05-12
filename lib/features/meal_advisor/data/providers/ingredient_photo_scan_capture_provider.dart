@@ -1,10 +1,31 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../common/media/camera_permission_service.dart';
-import '../../../../common/media/providers/camera_permission_service_provider.dart';
+import '../../../../core/media/camera_permission_service.dart';
+import '../../../../core/media/camera_photo_capture_service.dart';
+import '../../../../core/media/providers/camera_permission_service_provider.dart';
+import '../../../../core/media/providers/camera_photo_capture_service_provider.dart';
 import '../models/ingredient_photo_scan_input.dart';
 
 part 'ingredient_photo_scan_capture_provider.g.dart';
+
+enum IngredientPhotoCaptureState {
+  captured,
+  cancelled,
+  cameraUnavailable,
+  permissionDenied,
+  permissionPermanentlyDenied,
+  permissionRestricted,
+}
+
+class IngredientPhotoCaptureResult {
+  final IngredientPhotoCaptureState state;
+
+  const IngredientPhotoCaptureResult(this.state);
+
+  bool get canOpenSettings =>
+      state == IngredientPhotoCaptureState.permissionPermanentlyDenied ||
+      state == IngredientPhotoCaptureState.permissionRestricted;
+}
 
 @riverpod
 class IngredientPhotoScanCaptureController
@@ -14,16 +35,36 @@ class IngredientPhotoScanCaptureController
     return const IngredientPhotoScanInput();
   }
 
-  Future<CameraPermissionResult> capture(IngredientPhotoScanPhoto photo) async {
+  Future<IngredientPhotoCaptureResult> capture(
+    IngredientPhotoScanPhoto photo,
+  ) async {
     final permission = await ref
         .read(cameraPermissionServiceProvider)
         .requestCamera();
     if (!permission.canUseCamera) {
-      return permission;
+      return IngredientPhotoCaptureResult(
+        _mapPermissionState(permission.state),
+      );
     }
 
-    state = state.withPhoto(photo, debugIngredientPhotoScanPath(photo));
-    return permission;
+    final capturedPhoto = await ref
+        .read(cameraPhotoCaptureServiceProvider)
+        .capturePhoto();
+    if (capturedPhoto.state == CameraPhotoCaptureState.cancelled) {
+      return const IngredientPhotoCaptureResult(
+        IngredientPhotoCaptureState.cancelled,
+      );
+    }
+    if (!capturedPhoto.hasPhoto) {
+      return const IngredientPhotoCaptureResult(
+        IngredientPhotoCaptureState.cameraUnavailable,
+      );
+    }
+
+    state = state.withPhoto(photo, capturedPhoto.path!);
+    return const IngredientPhotoCaptureResult(
+      IngredientPhotoCaptureState.captured,
+    );
   }
 
   void reset() {
@@ -31,10 +72,14 @@ class IngredientPhotoScanCaptureController
   }
 }
 
-String debugIngredientPhotoScanPath(IngredientPhotoScanPhoto photo) {
-  final name = switch (photo) {
-    IngredientPhotoScanPhoto.front => 'front',
-    IngredientPhotoScanPhoto.nutritionLabel => 'nutrition-label',
+IngredientPhotoCaptureState _mapPermissionState(CameraPermissionState state) {
+  return switch (state) {
+    CameraPermissionState.granted => IngredientPhotoCaptureState.captured,
+    CameraPermissionState.denied =>
+      IngredientPhotoCaptureState.permissionDenied,
+    CameraPermissionState.permanentlyDenied =>
+      IngredientPhotoCaptureState.permissionPermanentlyDenied,
+    CameraPermissionState.restricted =>
+      IngredientPhotoCaptureState.permissionRestricted,
   };
-  return 'debug://ingredient-photo-scan/$name-${DateTime.now().millisecondsSinceEpoch}.jpg';
 }

@@ -59,6 +59,7 @@ dependencies:
   circular_buffer: ^0.12.0
   android_alarm_manager_plus: ^5.0.0
   file_picker: ^11.0.2
+  image_picker: ^1.2.2
 
 dev_dependencies:
   flutter_test:

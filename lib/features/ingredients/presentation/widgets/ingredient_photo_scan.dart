@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../../common/media/camera_permission_service.dart';
-import '../../../../common/media/providers/camera_permission_service_provider.dart';
+import '../../../../core/media/providers/camera_permission_service_provider.dart';
 import '../../../meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
 import '../../../meal_advisor/data/models/ingredient_photo_scan_input.dart';
 import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
@@ -81,7 +80,9 @@ class IngredientPhotoScan extends ConsumerWidget {
     final result = await ref
         .read(ingredientPhotoScanCaptureControllerProvider.notifier)
         .capture(photo);
-    if (!context.mounted || result.canUseCamera) {
+    if (!context.mounted ||
+        result.state == IngredientPhotoCaptureState.captured ||
+        result.state == IngredientPhotoCaptureState.cancelled) {
       return;
     }
 
@@ -89,7 +90,7 @@ class IngredientPhotoScan extends ConsumerWidget {
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
-        content: Text(_cameraPermissionMessage(result.state)),
+        content: Text(_photoCaptureMessage(result.state)),
         action: result.canOpenSettings
             ? SnackBarAction(
                 label: 'Ustawienia',
@@ -103,15 +104,18 @@ class IngredientPhotoScan extends ConsumerWidget {
   }
 }
 
-String _cameraPermissionMessage(CameraPermissionState state) {
+String _photoCaptureMessage(IngredientPhotoCaptureState state) {
   return switch (state) {
-    CameraPermissionState.denied =>
+    IngredientPhotoCaptureState.permissionDenied =>
       'Aparat jest potrzebny do zrobienia zdjęcia opakowania.',
-    CameraPermissionState.permanentlyDenied =>
+    IngredientPhotoCaptureState.permissionPermanentlyDenied =>
       'Uprawnienie aparatu jest zablokowane. Włącz je w ustawieniach aplikacji.',
-    CameraPermissionState.restricted =>
+    IngredientPhotoCaptureState.permissionRestricted =>
       'Dostęp do aparatu jest ograniczony w ustawieniach urządzenia.',
-    CameraPermissionState.granted => '',
+    IngredientPhotoCaptureState.cameraUnavailable =>
+      'Nie udało się uruchomić aparatu. Spróbuj ponownie.',
+    IngredientPhotoCaptureState.captured ||
+    IngredientPhotoCaptureState.cancelled => '',
   };
 }
 
@@ -222,11 +226,7 @@ class IngredientPhotoStepTile extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: colors.primary),
       title: Text(title),
-      subtitle: Text(
-        isCaptured
-            ? '$subtitle\nGotowe: ${photoPath!.split('/').last}'
-            : subtitle,
-      ),
+      subtitle: Text(isCaptured ? '$subtitle\nZdjęcie dodane' : subtitle),
       isThreeLine: isCaptured,
       onTap: onCapture,
       trailing: Icon(

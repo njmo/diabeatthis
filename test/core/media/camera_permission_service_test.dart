@@ -1,4 +1,4 @@
-import 'package:diabeatthis/common/media/camera_permission_service.dart';
+import 'package:diabeatthis/core/media/camera_permission_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:permission_handler/permission_handler.dart';
 
