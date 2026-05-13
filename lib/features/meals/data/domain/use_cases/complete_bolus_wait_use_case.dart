@@ -25,9 +25,15 @@ class CompleteBolusWaitUseCase {
 
     await db.transaction(() async {
       if (finalWaitMinutes != null) {
-        await db.mealAdvisorResultDao.updateAdvisorResultFinalWaitTime(
-          meal.id,
-          finalWaitMinutes,
+        final initialWaitTime = await db.mealAdvisorResultDao
+            .getMealAdvisorResultInitialWaitTime(meal.id);
+        final waitTimeIgnored =
+            initialWaitTime != null && finalWaitMinutes < initialWaitTime;
+
+        await db.mealAdvisorResultDao.updateAdvisorResultWaitOutcome(
+          mealId: meal.id,
+          finalWaitTime: finalWaitMinutes,
+          waitTimeIgnored: waitTimeIgnored,
         );
       }
 

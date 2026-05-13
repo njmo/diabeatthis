@@ -124,6 +124,9 @@ class MealAnalysisProgressSummary extends StatelessWidget {
         detail: 'okno glikemii ${analysis.postMealWindow.inMinutes} min',
       ),
     );
+    if (details.advisorDecision?.waitTimeIgnored == true) {
+      chips.add(const HeaderStatusChip.waitTimeIgnored());
+    }
     if (details.hasAddOn) {
       chips.add(const HeaderStatusChip.addOn());
     }
@@ -158,6 +161,11 @@ class HeaderStatusChip extends StatelessWidget {
     : icon = Icons.add_circle_outline,
       label = 'Dokładka',
       detail = 'uwzględniona w posiłku';
+
+  const HeaderStatusChip.waitTimeIgnored({super.key})
+    : icon = Icons.fast_forward_outlined,
+      label = 'Czekanie pominięte',
+      detail = null;
 
   @override
   Widget build(BuildContext context) {

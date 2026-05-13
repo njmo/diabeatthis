@@ -50,7 +50,43 @@ void main() {
     expect(meal?.status, 'waited-eating');
     expect(advisor.initialWaitTime, 15);
     expect(advisor.finalWaitTime, 34);
+    expect(advisor.waitTimeIgnored, isFalse);
   });
+
+  test(
+    'marks wait as ignored when actual wait is shorter than advised',
+    () async {
+      final waitStartedAt = DateTime(2026, 5, 12, 12);
+      final now = waitStartedAt.add(const Duration(minutes: 6));
+      await _seedBolusWaitMeal(db, waitStartedAt: waitStartedAt);
+
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(container.dispose);
+
+      await withClock(Clock.fixed(now), () {
+        return container
+            .read(completeBolusWaitUseCaseProvider)
+            .call(
+              domain.Meal(
+                id: 1,
+                name: 'Obiad',
+                status: 'bolused-waiting',
+                updatedAt: waitStartedAt,
+              ),
+            );
+      });
+
+      final advisor = await (db.select(
+        db.mealAdvisorResult,
+      )..where((tbl) => tbl.mealId.equals(1))).getSingle();
+
+      expect(advisor.initialWaitTime, 15);
+      expect(advisor.finalWaitTime, 6);
+      expect(advisor.waitTimeIgnored, isTrue);
+    },
+  );
 }
 
 Future<void> _seedBolusWaitMeal(
