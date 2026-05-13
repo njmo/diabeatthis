@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 
-import '../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
+import '../../core/data_sources/providers/source_repository_providers.dart';
 import '../../core/domain/model/correction_bolus.dart';
 import '../../core/domain/model/extended_carb.dart';
 import '../../core/domain/model/manual_bolus.dart';
@@ -29,9 +29,7 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
     var lastReadingDate = clock.now();
 
     try {
-      final target = await context.container.read(
-        temporaryTargetProvider.future,
-      );
+      final target = await _fetchLastTemporaryTarget(context);
       if (target.createdAt
           .add(Duration(minutes: target.duration))
           .isAfter(lastReadingDate)) {
@@ -46,9 +44,7 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
       var treatments = const <Treatment>[];
 
       try {
-        treatments = await context.container.read(
-          treatmentsAfterProvider(lastReadingDate).future,
-        );
+        treatments = await _fetchTreatmentsAfter(context, lastReadingDate);
       } catch (e, st) {
         logW("Error fetching treatments $e\n$st");
       }
@@ -65,6 +61,25 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
       lastReadingDate = treatments.first.createdAt ?? clock.now();
       lastReadingDate = lastReadingDate.add(const Duration(seconds: 5));
     }
+  }
+
+  Future<TemporaryTarget> _fetchLastTemporaryTarget(
+    CollectorContext context,
+  ) async {
+    final repository = await context.container.read(
+      treatmentSourceRepositoryProvider.future,
+    );
+    return repository.fetchLastTemporaryTarget();
+  }
+
+  Future<List<Treatment>> _fetchTreatmentsAfter(
+    CollectorContext context,
+    DateTime after,
+  ) async {
+    final repository = await context.container.read(
+      treatmentSourceRepositoryProvider.future,
+    );
+    return repository.fetchTreatmentsAfter(after);
   }
 
   void _handleTreatment(CollectorContext context, Treatment data) {

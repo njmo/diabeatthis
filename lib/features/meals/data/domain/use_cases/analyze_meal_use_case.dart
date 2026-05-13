@@ -1,7 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
+import '../../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../../core/domain/model/correction_bolus.dart';
 import '../../../../../core/domain/model/extended_carb.dart';
 import '../../../../../core/domain/model/manual_bolus.dart';
@@ -40,20 +40,29 @@ class AnalyzeMealUseCase {
     final eventEnd = chartEnd;
     final targetFetchStart = chartStart.subtract(const Duration(hours: 4));
 
-    final repository = await ref.read(nightscoutRepositoryProvider.future);
-    final glucose = await repository.fetchGlucoseBetween(chartStart, chartEnd);
-    final treatments = await repository.fetchTreatmentsBetween(
-      eventStart,
-      eventEnd,
+    final glucoseRepository = await ref.read(
+      glucoseSourceRepositoryProvider.future,
     );
-    final targetTreatments = await repository.fetchTreatmentsBetween(
-      targetFetchStart,
-      chartEnd,
+    final treatmentRepository = await ref.read(
+      treatmentSourceRepositoryProvider.future,
     );
-    final deviceStatuses = await repository.fetchDeviceStatusBetween(
+    final deviceStatusRepository = await ref.read(
+      deviceStatusSourceRepositoryProvider.future,
+    );
+    final glucose = await glucoseRepository.fetchGlucoseBetween(
       chartStart,
       chartEnd,
     );
+    final treatments = await treatmentRepository.fetchTreatmentsBetween(
+      eventStart,
+      eventEnd,
+    );
+    final targetTreatments = await treatmentRepository.fetchTreatmentsBetween(
+      targetFetchStart,
+      chartEnd,
+    );
+    final deviceStatuses = await deviceStatusRepository
+        .fetchDeviceStatusBetween(chartStart, chartEnd);
     final temporaryTargets = targetTreatments
         .whereType<TemporaryTarget>()
         .where((target) => _overlapsChart(target, chartStart, chartEnd))

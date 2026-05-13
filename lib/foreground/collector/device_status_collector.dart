@@ -5,7 +5,7 @@ import 'package:clock/clock.dart';
 
 import '../../app/providers/app_lifecycle_state_provider.dart';
 import '../../common/events/data/task/task_data_synchronization_payload.dart';
-import '../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
+import '../../core/data_sources/providers/source_repository_providers.dart';
 import '../../core/domain/model/device_status.dart';
 import '../../core/domain/model/glucose.dart';
 import '../../core/logger/logger.dart';
@@ -35,10 +35,8 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
     DeviceStatus? last;
 
     try {
-      last = await context.container.read(deviceStatusProvider.future);
-      if (last != null) {
-        _handleDeviceStatus(context, last);
-      }
+      last = await _fetchLastDeviceStatus(context);
+      _handleDeviceStatus(context, last);
     } catch (e, st) {
       logW("Initial device status read failed: $e\n$st");
     }
@@ -46,40 +44,37 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
     while (!_disposed) {
       if (last == null) {
         try {
-          last = await context.container.read(deviceStatusProvider.future);
-          if (last != null) {
-            _handleDeviceStatus(context, last);
-          }
+          last = await _fetchLastDeviceStatus(context);
+          _handleDeviceStatus(context, last);
         } catch (e, st) {
           logW("Device status fetch failed: $e\n$st");
           await context.waitForDuration(_fallbackWait);
-          ForegroundAlarmBridge.scheduleCollectTick(clock.now().add(_fallbackWait));
+          ForegroundAlarmBridge.scheduleCollectTick(
+            clock.now().add(_fallbackWait),
+          );
           continue;
         }
       }
 
-      if (last == null) {
-        await context.waitForDuration(_fallbackWait);
-        ForegroundAlarmBridge.scheduleCollectTick(clock.now().add(_fallbackWait));
-        continue;
-      }
+      final knownLast = last;
 
-      final nextExpectedAt = last.date.add(_expectedInterval);
+      final nextExpectedAt = knownLast.date.add(_expectedInterval);
       final waitUntilExpected = nextExpectedAt.difference(clock.now());
 
       if (waitUntilExpected > Duration.zero) {
         await context.waitForDuration(waitUntilExpected);
-        ForegroundAlarmBridge.scheduleCollectTick(clock.now().add(waitUntilExpected));
+        ForegroundAlarmBridge.scheduleCollectTick(
+          clock.now().add(waitUntilExpected),
+        );
       }
 
       while (!_disposed) {
         try {
-          final current = await context.container.read(
-            deviceStatusProvider.future,
-          );
+          final current = await _fetchLastDeviceStatus(context);
 
           final isNewStatus =
-              current.date.isAfter(last!.date) || current.id != last.id;
+              current.date.isAfter(knownLast.date) ||
+              current.id != knownLast.id;
 
           if (isNewStatus) {
             last = current;
@@ -92,9 +87,18 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
         }
 
         await context.waitForDuration(_nearReadPollInterval);
-        ForegroundAlarmBridge.scheduleCollectTick(clock.now().add(_nearReadPollInterval));
+        ForegroundAlarmBridge.scheduleCollectTick(
+          clock.now().add(_nearReadPollInterval),
+        );
       }
     }
+  }
+
+  Future<DeviceStatus> _fetchLastDeviceStatus(CollectorContext context) async {
+    final repository = await context.container.read(
+      deviceStatusSourceRepositoryProvider.future,
+    );
+    return repository.fetchLastDeviceStatus();
   }
 
   void _handleDeviceStatus(CollectorContext context, DeviceStatus data) {
@@ -110,12 +114,22 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
     logI("Scheduling next alarm on ${nextAlarm.toIso8601String()}");
     ForegroundAlarmBridge.scheduleCollectTick(nextAlarm);
 
-    final glucose = Glucose(id: data.id, sgv: data.bg, tick: int.tryParse(data.tick), date: data.date, direction: '');
+    final glucose = Glucose(
+      id: data.id,
+      sgv: data.bg,
+      tick: int.tryParse(data.tick),
+      date: data.date,
+      direction: '',
+    );
 
     if (context.container.read(appLifecycleProvider) ==
         AppLifecycleState.resumed) {
-      context.container.read(taskEventRouterProvider).send(TaskDeviceStatusSynchronization(data: data));
-      context.container.read(taskEventRouterProvider).send(TaskGlucoseSynchronization(data: glucose));
+      context.container
+          .read(taskEventRouterProvider)
+          .send(TaskDeviceStatusSynchronization(data: data));
+      context.container
+          .read(taskEventRouterProvider)
+          .send(TaskGlucoseSynchronization(data: glucose));
     }
 
     final cache = context.container.read(

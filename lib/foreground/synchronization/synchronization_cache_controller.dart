@@ -1,7 +1,7 @@
 import 'package:circular_buffer/circular_buffer.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
+import '../../core/data_sources/providers/source_repository_providers.dart';
 import '../../core/domain/model/device_status.dart';
 import '../../core/domain/model/glucose.dart';
 import '../../core/domain/model/temporary_target.dart';
@@ -49,9 +49,10 @@ class SynchronizationCacheController {
   );
 
   Future<void> init(ProviderContainer container) async {
-    final glucoseReadings = await container.read(
-      glucoseWithLimitProvider(10).future,
+    final repository = await container.read(
+      glucoseSourceRepositoryProvider.future,
     );
+    final glucoseReadings = await repository.fetchLastGlucoseWithLimit(10);
 
     glucoseReadings.reversed.forEach(cacheGlucose);
   }

@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
+import '../../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
 import '../../models/activity_log_analysis_data.dart';
@@ -29,19 +29,27 @@ class LoadActivityLogAnalysisUseCase {
     final treatmentFetchStart = chartStart.subtract(const Duration(hours: 4));
     final preMealStart = log.startedAt.subtract(const Duration(hours: 1));
 
-    final repository = await ref.read(nightscoutRepositoryProvider.future);
-    final glucose = await repository.fetchGlucoseBetween(chartStart, chartEnd);
-    final treatments = await repository.fetchTreatmentsBetween(
-      treatmentFetchStart,
-      chartEnd,
+    final glucoseRepository = await ref.read(
+      glucoseSourceRepositoryProvider.future,
     );
-    final deviceStatuses = await repository.fetchDeviceStatusBetween(
+    final treatmentRepository = await ref.read(
+      treatmentSourceRepositoryProvider.future,
+    );
+    final deviceStatusRepository = await ref.read(
+      deviceStatusSourceRepositoryProvider.future,
+    );
+    final glucose = await glucoseRepository.fetchGlucoseBetween(
       chartStart,
       chartEnd,
     );
-    final deviceStatusAtStart = await repository.fetchLastDeviceStatusBefore(
-      log.startedAt,
+    final treatments = await treatmentRepository.fetchTreatmentsBetween(
+      treatmentFetchStart,
+      chartEnd,
     );
+    final deviceStatuses = await deviceStatusRepository
+        .fetchDeviceStatusBetween(chartStart, chartEnd);
+    final deviceStatusAtStart = await deviceStatusRepository
+        .fetchLastDeviceStatusBefore(log.startedAt);
 
     final chartTreatments = treatments.where((treatment) {
       final createdAt = treatment.createdAt;

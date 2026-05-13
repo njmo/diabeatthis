@@ -7,7 +7,7 @@
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
+import '../../core/data_sources/providers/source_repository_providers.dart';
 import '../../core/domain/model/device_status.dart';
 
 part 'device_status_stream_provider.g.dart';
@@ -19,12 +19,15 @@ Stream<DeviceStatus> deviceStatusStream(Ref ref) async* {
     disposed = true;
   });
 
-  var last = await ref.read(deviceStatusProvider.future);
+  final repository = await ref.read(
+    deviceStatusSourceRepositoryProvider.future,
+  );
+  var last = await repository.fetchLastDeviceStatus();
   yield last;
 
   while (!disposed) {
     try {
-      final current = await ref.read(deviceStatusProvider.future);
+      final current = await repository.fetchLastDeviceStatus();
       // TODO: temporary fix for duplicates
       final timeDifference = current.date.difference(last.date);
       if (timeDifference > Duration(minutes: 1)) {
