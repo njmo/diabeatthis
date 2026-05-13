@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import '../../../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
+import '../../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../data/models/meal_details_data.dart';
 import 'meal_detail_components.dart';
 import 'meal_detail_formatters.dart';
@@ -33,8 +34,16 @@ class MealAdvisorResultSection extends StatelessWidget {
             value: decision.waitTimeIgnored ? 'tak' : 'nie',
           ),
           MealInfoRow(
-            label: 'Powód decyzji',
-            value: fallbackText(decision.decisionReason),
+            label: 'Rodzaj obsługi WBT',
+            value: _wbtDeliveryModeValue(decision),
+          ),
+          MealInfoRow(
+            label: 'Czas do startu uwalniania',
+            value: _wbtReleaseStartValue(decision),
+          ),
+          MealInfoRow(
+            label: 'Czas trwania uwalniania',
+            value: _wbtReleaseDurationValue(decision),
           ),
           MealInfoRow(label: 'Wersja', value: decision.version.toString()),
           MealInfoRow(
@@ -47,6 +56,58 @@ class MealAdvisorResultSection extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+
+  String _wbtDeliveryModeValue(MealAdvisorDecisionData decision) {
+    if (decision.extendedCarbsGrams <= 0) return 'Brak';
+
+    return switch (_scheduleSettings(decision)?.deliveryMode) {
+      ExtendedCarbsDeliveryMode.extendedCarbs => 'Extended carbs',
+      ExtendedCarbsDeliveryMode.extraBolus => 'Dodatkowy bolus',
+      null => 'Brak konfiguracji',
+    };
+  }
+
+  String _wbtReleaseStartValue(MealAdvisorDecisionData decision) {
+    if (decision.extendedCarbsGrams <= 0) return '-';
+    final scheduleSettings = _scheduleSettings(decision);
+    if (scheduleSettings == null) return '-';
+
+    return formatExtendedCarbsScheduleMinutes(scheduleSettings.delayMinutes);
+  }
+
+  String _wbtReleaseDurationValue(MealAdvisorDecisionData decision) {
+    if (decision.extendedCarbsGrams <= 0) return '-';
+    final scheduleSettings = _scheduleSettings(decision);
+    if (scheduleSettings == null ||
+        scheduleSettings.deliveryMode == ExtendedCarbsDeliveryMode.extraBolus) {
+      return '-';
+    }
+
+    return formatExtendedCarbsScheduleMinutes(scheduleSettings.durationMinutes);
+  }
+
+  ExtendedCarbsScheduleSettings? _scheduleSettings(
+    MealAdvisorDecisionData decision,
+  ) {
+    final deliveryMode = decision.extendedCarbsDeliveryMode;
+    final delayMinutes = decision.extendedCarbsDelayMinutes;
+    final durationMinutes = decision.extendedCarbsDurationMinutes;
+
+    if (deliveryMode == null ||
+        delayMinutes == null ||
+        durationMinutes == null) {
+      return null;
+    }
+
+    return ExtendedCarbsScheduleSettings(
+      deliveryMode: ExtendedCarbsDeliveryMode.values.firstWhere(
+        (mode) => mode.name == deliveryMode,
+        orElse: () => ExtendedCarbsDeliveryMode.extendedCarbs,
+      ),
+      delayMinutes: delayMinutes,
+      durationMinutes: durationMinutes,
     );
   }
 }

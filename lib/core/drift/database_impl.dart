@@ -32,7 +32,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -53,6 +53,9 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       if (from < 2) {
         await _addActivityDurationColumnIfMissing();
       }
+      if (from < 3) {
+        await _addMealAdvisorExtendedCarbsColumnsIfMissing();
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -71,6 +74,42 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       ALTER TABLE activity
       ADD COLUMN duration_minutes INTEGER
       CHECK (duration_minutes IS NULL OR duration_minutes > 0)
+    ''');
+  }
+
+  Future<void> _addMealAdvisorExtendedCarbsColumnsIfMissing() async {
+    await _addMealAdvisorResultColumnIfMissing(
+      name: 'extended_carbs_grams',
+      definition: 'extended_carbs_grams INTEGER NOT NULL DEFAULT 0',
+    );
+    await _addMealAdvisorResultColumnIfMissing(
+      name: 'extended_carbs_delivery_mode',
+      definition: 'extended_carbs_delivery_mode TEXT',
+    );
+    await _addMealAdvisorResultColumnIfMissing(
+      name: 'extended_carbs_delay_minutes',
+      definition: 'extended_carbs_delay_minutes INTEGER',
+    );
+    await _addMealAdvisorResultColumnIfMissing(
+      name: 'extended_carbs_duration_minutes',
+      definition: 'extended_carbs_duration_minutes INTEGER',
+    );
+  }
+
+  Future<void> _addMealAdvisorResultColumnIfMissing({
+    required String name,
+    required String definition,
+  }) async {
+    final columns = await customSelect(
+      'PRAGMA table_info(meal_advisor_result)',
+    ).get();
+    final hasColumn = columns.any((row) => row.data['name'] == name);
+
+    if (hasColumn) return;
+
+    await customStatement('''
+      ALTER TABLE meal_advisor_result
+      ADD COLUMN $definition
     ''');
   }
 

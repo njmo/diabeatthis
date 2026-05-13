@@ -8,9 +8,13 @@ CREATE TABLE meal_advisor_result (
   initial_wait_time INTEGER NOT NULL,
   final_wait_time INTEGER NOT NULL,
   wait_time_ignored BOOL NOT NULL,
+  extended_carbs_grams INTEGER NOT NULL DEFAULT 0,
+  extended_carbs_delivery_mode TEXT,
+  extended_carbs_delay_minutes INTEGER,
+  extended_carbs_duration_minutes INTEGER,
   decision_reason TEXT,
 
-  version INTEGER NOT NULL DEFAULT 1,
+  version INTEGER NOT NULL DEFAULT 2,
 
   is_synced BOOL NOT NULL DEFAULT 0,
 

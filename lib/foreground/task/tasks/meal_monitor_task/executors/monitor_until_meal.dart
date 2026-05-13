@@ -10,6 +10,8 @@ import '../../../../../core/notifications/providers/notifications_controller_pro
 import '../../../../../features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
 import '../../../../../features/dashboard/data/utils/nightscout_utils.dart';
+import '../../../../../features/meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
+import '../../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../../../features/meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../../event/internal/data_available_event.dart';
@@ -210,12 +212,17 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
   MealAdvice getMealAdvice(
     MealMacroSummary mealStatus,
     DeviceStatus deviceStatus,
+    ExtendedCarbsScheduleSettings extendedCarbsScheduleSettings,
   ) {
     final carbs = mealStatus.netCarbsGrams;
     final fatGrams = mealStatus.fatGrams;
     final fiberGrams = mealStatus.fiberGrams;
     final proteinGrams = mealStatus.proteinGrams;
-    return MealAdvisor().getMealAdvice(
+    return MealAdvisor(
+      config: MealAdvisorConfig(
+        extendedCarbsScheduleSettings: extendedCarbsScheduleSettings,
+      ),
+    ).getMealAdvice(
       bg: deviceStatus.bg,
       iob: deviceStatus.iob,
       cob: deviceStatus.cob,
@@ -340,6 +347,11 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             MealMonitorStateExecutor nextExecutor = MealMonitorStateIdle();
             var shouldAbort = false;
             MealAdvice? advice;
+            final extendedCarbsScheduleSettings =
+                runtimeContext.container
+                    .read(extendedCarbsScheduleSettingsProvider)
+                    .value ??
+                const ExtendedCarbsScheduleSettings.defaults();
 
             var iterationsLeft = (timeToMeal.inMinutes / 5).floor() + 2;
             do {
@@ -351,7 +363,11 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 logI(
                   'deviceStatus: $iterationsLeft date ${deviceStatus.date.toIso8601String()} now ${clock.now().toIso8601String()} meal planned at ${mealPlannedAt.toIso8601String()}',
                 );
-                advice = getMealAdvice(mealStatus, deviceStatus);
+                advice = getMealAdvice(
+                  mealStatus,
+                  deviceStatus,
+                  extendedCarbsScheduleSettings,
+                );
 
                 final iterationsRemaining = iterationsLeft - 1;
                 final minutesLeft = iterationsRemaining * 5;
@@ -428,6 +444,13 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 minutes: advice.wait?.recommendedMinutes ?? 0,
                 decision: advice.decision!,
                 carbs: mealStatus.netCarbsGrams.round(),
+                extendedCarbs: advice.extendedCarbs.grams,
+                extendedCarbsDeliveryMode:
+                    advice.extendedCarbs.scheduleSettings.deliveryMode,
+                extendedCarbsDelayMinutes:
+                    advice.extendedCarbs.scheduleSettings.delayMinutes,
+                extendedCarbsDurationMinutes:
+                    advice.extendedCarbs.scheduleSettings.durationMinutes,
               ),
             );
 

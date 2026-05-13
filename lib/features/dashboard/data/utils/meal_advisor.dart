@@ -9,6 +9,9 @@
 
 import 'package:clock/clock.dart';
 
+import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
+import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
+
 enum MealDecision {
   eatNowBolusLater, // in this version: "eat now, no bolus now; log carbs"
   bolusAndEatNow,
@@ -29,11 +32,28 @@ extension MealDecisionX on MealDecision {
 class MealAdvice {
   final MealDecision? decision;
   final WaitSuggestion? wait;
+  final WbtExtendedCarbsSuggestion extendedCarbs;
   final DateTime createdAt;
 
-  MealAdvice(this.decision, this.wait) : createdAt = clock.now();
-  MealAdvice.full(this.decision, this.wait, this.createdAt);
-  MealAdvice.empty() : decision = null, wait = null, createdAt = clock.now();
+  MealAdvice(
+    this.decision,
+    this.wait, {
+    WbtExtendedCarbsSuggestion? extendedCarbs,
+  }) : extendedCarbs = extendedCarbs ?? const WbtExtendedCarbsSuggestion.none(),
+       createdAt = clock.now();
+
+  MealAdvice.full(
+    this.decision,
+    this.wait,
+    this.createdAt, {
+    WbtExtendedCarbsSuggestion? extendedCarbs,
+  }) : extendedCarbs = extendedCarbs ?? const WbtExtendedCarbsSuggestion.none();
+
+  MealAdvice.empty()
+    : decision = null,
+      wait = null,
+      extendedCarbs = const WbtExtendedCarbsSuggestion.none(),
+      createdAt = clock.now();
 }
 
 class WaitSuggestion {
@@ -86,6 +106,9 @@ class MealAdvisorConfig {
   /// BG thresholds for high/normal logic
   final int highBgThreshold;
 
+  /// Default schedule for WBT-based extended carbs suggestions.
+  final ExtendedCarbsScheduleSettings extendedCarbsScheduleSettings;
+
   const MealAdvisorConfig({
     this.lowThreshold = 70,
     this.safetyMarginMin = 5,
@@ -103,6 +126,8 @@ class MealAdvisorConfig {
     this.iobDropRatePerU = 1.2,
     this.cobSupportRatePerGram = 0.03,
     this.highBgThreshold = 140,
+    this.extendedCarbsScheduleSettings =
+        const ExtendedCarbsScheduleSettings.defaults(),
   });
 }
 
@@ -128,6 +153,11 @@ class MealAdvisor {
       proteinG: proteinGrams,
       fiberG: fiberGrams,
     );
+    final extendedCarbsScheduleSettings = config.extendedCarbsScheduleSettings
+        .copyWith(deliveryMode: ExtendedCarbsDeliveryMode.extendedCarbs);
+    final extendedCarbs = const WbtExtendedCarbsCalculator()
+        .calculateFromMacros(fatGrams: fatGrams, proteinGrams: proteinGrams)
+        .withSchedule(extendedCarbsScheduleSettings);
 
     final ttl = calculateTtlMinutes(bg: bg, trend: trend, iob: iob, cob: cob);
 
@@ -146,10 +176,10 @@ class MealAdvisor {
         tafMinutes: taf,
         ttlMinutes: ttl,
       );
-      return MealAdvice(decision, wait);
+      return MealAdvice(decision, wait, extendedCarbs: extendedCarbs);
     }
 
-    return MealAdvice(decision, null);
+    return MealAdvice(decision, null, extendedCarbs: extendedCarbs);
   }
 
   /// Time-to-absorption-first (TAF): when carbs start noticeably affecting BG.

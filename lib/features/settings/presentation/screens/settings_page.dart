@@ -14,6 +14,7 @@ import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data/repository/nightscout_repository_impl.dart';
 import '../../../../core/logger/logger.dart';
 import '../widgets/database_settings_section.dart';
+import '../widgets/meal_advisor_settings_section.dart';
 import '../widgets/settings_section_card.dart';
 
 const _nightscoutUrlKey = 'nightscout_url';
@@ -239,6 +240,8 @@ class SettingsPage extends HookConsumerWidget with Logging {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    const MealAdvisorSettingsSection(),
                     const SizedBox(height: 16),
                     const DatabaseSettingsSection(),
                   ],

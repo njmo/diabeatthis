@@ -13,7 +13,6 @@
 import 'package:diabeatthis/features/dashboard/data/utils/meal_advisor.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-
 class MealTestCase {
   final String name;
 
@@ -78,7 +77,8 @@ void main() {
       // 2) Wciąż trawi się poprzedni posiłek: COB wysokie i IOB też obecne (spójne)
       //    Stabilny BG, brak spadku -> bolus i jedz (normalnie)
       MealTestCase(
-        name: 'Still digesting previous meal (COB high, IOB present) -> bolusAndEatNow',
+        name:
+            'Still digesting previous meal (COB high, IOB present) -> bolusAndEatNow',
         bg: 120,
         iob: 1.4,
         cob: 25,
@@ -122,7 +122,8 @@ void main() {
       // 5) Normalny lunch (kanapka): przed posiłkiem COB niskie i IOB małe
       //    -> klasycznie bolus i jedz
       MealTestCase(
-        name: 'Normal lunch sandwich, stable, low IOB, low COB -> bolusAndEatNow',
+        name:
+            'Normal lunch sandwich, stable, low IOB, low COB -> bolusAndEatNow',
         bg: 115,
         iob: 0.3,
         cob: 0,
@@ -170,7 +171,8 @@ void main() {
       // 8) Wysoki BG, trend 0, ale IOB już spore (po korektach) -> nadal waitThenEat,
       //    a wait wychodzi umiarkowanie (ok. 13) w tej konfiguracji.
       MealTestCase(
-        name: 'High BG flat + IOB from corrections -> bolusWaitThenEat (moderate wait)',
+        name:
+            'High BG flat + IOB from corrections -> bolusWaitThenEat (moderate wait)',
         bg: 160,
         iob: 1.7,
         cob: 0, // korekty bez jedzenia -> COB ~ 0
@@ -202,7 +204,8 @@ void main() {
       // 10) Sałatka "tłusta" (mało węgli, dużo tłuszczu) + BG wysokie i stabilnie:
       //     posiłek wolny, BG wysokie, trend nie spada -> waitThenEat, wait clamp do 15.
       MealTestCase(
-        name: 'Fatty low-carb salad + high BG stable -> bolusWaitThenEat (max wait)',
+        name:
+            'Fatty low-carb salad + high BG stable -> bolusWaitThenEat (max wait)',
         bg: 150,
         iob: 0.5,
         cob: 0,
@@ -220,7 +223,8 @@ void main() {
       // 11) "Słodka przekąska" z tłuszczem (np. baton) – węgle są, ale tłuszcz podbija TAF.
       //     BG średnie, IOB umiarkowane, trend lekko spada -> ostrożnie.
       MealTestCase(
-        name: 'Candy bar (carbs+fat) + moderate IOB + slight drop -> eatNowBolusLater',
+        name:
+            'Candy bar (carbs+fat) + moderate IOB + slight drop -> eatNowBolusLater',
         bg: 115,
         iob: 1.0,
         cob: 0,
@@ -249,42 +253,61 @@ void main() {
     ];
 
     for (final tc in cases) {
-      test(
-        tc.name,
-            () {
-          final advice = advisor.getMealAdvice(
-            bg: tc.bg,
-            iob: tc.iob,
-            cob: tc.cob,
-            trend: tc.trendPerMin,
-            mealCarbs: tc.carbsG,
-            fatGrams: tc.fatG,
-            proteinGrams: tc.proteinG,
-            fiberGrams: tc.fiberG,
-          );
+      test(tc.name, () {
+        final advice = advisor.getMealAdvice(
+          bg: tc.bg,
+          iob: tc.iob,
+          cob: tc.cob,
+          trend: tc.trendPerMin,
+          mealCarbs: tc.carbsG,
+          fatGrams: tc.fatG,
+          proteinGrams: tc.proteinG,
+          fiberGrams: tc.fiberG,
+        );
 
+        expect(
+          advice.decision,
+          tc.expectedDecision,
+          reason:
+              'Decision mismatch for "${tc.name}" (bg=${tc.bg}, iob=${tc.iob}, cob=${tc.cob}, trend=${tc.trendPerMin})',
+        );
+        final wbtKcal = tc.proteinG * 4 + tc.fatG * 9;
+        final expectedExtendedCarbs = wbtKcal > 100
+            ? (wbtKcal / 10).round()
+            : 0;
+        expect(advice.extendedCarbs.grams, expectedExtendedCarbs);
+
+        if (tc.expectedDecision != MealDecision.bolusWaitThenEat) {
           expect(
-            advice.decision,
-            tc.expectedDecision,
-            reason:
-            'Decision mismatch for "${tc.name}" (bg=${tc.bg}, iob=${tc.iob}, cob=${tc.cob}, trend=${tc.trendPerMin})',
+            advice.wait,
+            isNull,
+            reason: 'Wait should be null for "${tc.name}"',
           );
+          return;
+        }
 
-          if (tc.expectedDecision != MealDecision.bolusWaitThenEat) {
-            expect(advice.wait, isNull, reason: 'Wait should be null for "${tc.name}"');
-            return;
-          }
+        expect(
+          advice.wait,
+          isNotNull,
+          reason: 'Wait should not be null for "${tc.name}"',
+        );
 
-          expect(advice.wait, isNotNull, reason: 'Wait should not be null for "${tc.name}"');
-
-          expect(advice.wait!.recommendedMinutes, tc.expectedWaitRecommended,
-              reason: 'Recommended wait mismatch for "${tc.name}"');
-          expect(advice.wait!.minMinutes, tc.expectedWaitMin,
-              reason: 'Min wait mismatch for "${tc.name}"');
-          expect(advice.wait!.maxMinutes, tc.expectedWaitMax,
-              reason: 'Max wait mismatch for "${tc.name}"');
-        },
-      );
+        expect(
+          advice.wait!.recommendedMinutes,
+          tc.expectedWaitRecommended,
+          reason: 'Recommended wait mismatch for "${tc.name}"',
+        );
+        expect(
+          advice.wait!.minMinutes,
+          tc.expectedWaitMin,
+          reason: 'Min wait mismatch for "${tc.name}"',
+        );
+        expect(
+          advice.wait!.maxMinutes,
+          tc.expectedWaitMax,
+          reason: 'Max wait mismatch for "${tc.name}"',
+        );
+      });
     }
   });
 }

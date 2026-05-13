@@ -170,6 +170,10 @@ class MealAdvisorDecisionData {
   final int initialWaitTime;
   final int finalWaitTime;
   final bool waitTimeIgnored;
+  final int extendedCarbsGrams;
+  final String? extendedCarbsDeliveryMode;
+  final int? extendedCarbsDelayMinutes;
+  final int? extendedCarbsDurationMinutes;
   final String? decisionReason;
   final int version;
   final bool isSynced;
@@ -181,6 +185,10 @@ class MealAdvisorDecisionData {
     required this.initialWaitTime,
     required this.finalWaitTime,
     required this.waitTimeIgnored,
+    required this.extendedCarbsGrams,
+    required this.extendedCarbsDeliveryMode,
+    required this.extendedCarbsDelayMinutes,
+    required this.extendedCarbsDurationMinutes,
     required this.decisionReason,
     required this.version,
     required this.isSynced,

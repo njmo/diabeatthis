@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/meal_metric_view_data.dart';
 import '../../models/meal_page_state.dart';
+import '../../utils/meal_extended_carbs_warning.dart';
 import 'meal_detail_formatters.dart';
 import 'meal_detail_icons.dart';
 import 'meal_metric_components.dart';
@@ -51,6 +52,13 @@ class MealHeader extends StatelessWidget {
               icon: Icons.grain,
               label: 'Węglowodany',
               value: formatGrams(summary?.totalCarbsG),
+            ),
+            MealMetricTileData(
+              icon: Icons.more_time,
+              label: 'Węglowodany przedłużone',
+              value: formatGrams(
+                details.advisorDecision?.extendedCarbsGrams.toDouble(),
+              ),
             ),
             if (details.hasAddOn)
               MealMetricTileData(
@@ -124,6 +132,12 @@ class MealAnalysisProgressSummary extends StatelessWidget {
         detail: 'okno glikemii ${analysis.postMealWindow.inMinutes} min',
       ),
     );
+    if (shouldShowMissingExtendedCarbsWarning(
+      details: details,
+      analysis: analysis,
+    )) {
+      chips.add(const HeaderStatusChip.missingExtendedCarbs());
+    }
     if (details.advisorDecision?.waitTimeIgnored == true) {
       chips.add(const HeaderStatusChip.waitTimeIgnored());
     }
@@ -161,6 +175,11 @@ class HeaderStatusChip extends StatelessWidget {
     : icon = Icons.add_circle_outline,
       label = 'Dokładka',
       detail = 'uwzględniona w posiłku';
+
+  const HeaderStatusChip.missingExtendedCarbs({super.key})
+    : icon = Icons.warning_amber_rounded,
+      label = 'Nie podano extended carbs na WBT',
+      detail = null;
 
   const HeaderStatusChip.waitTimeIgnored({super.key})
     : icon = Icons.fast_forward_outlined,

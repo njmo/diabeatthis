@@ -3,6 +3,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/eat_now_event_notification.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
+import '../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
+import '../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
 import 'meal_dialog_state.dart';
 import 'providers/device_status_ui_provider.dart';
@@ -38,11 +41,16 @@ class MealDialogController extends _$MealDialogController with Logging {
     double fatGrams,
     double proteinGrams,
     double fiberGrams,
+    ExtendedCarbsScheduleSettings extendedCarbsScheduleSettings,
   ) async {
     final deviceStatusValue = ref.read(deviceStatusUiProvider);
     if (deviceStatusValue == null) return null;
 
-    return MealAdvisor().getMealAdvice(
+    return MealAdvisor(
+      config: MealAdvisorConfig(
+        extendedCarbsScheduleSettings: extendedCarbsScheduleSettings,
+      ),
+    ).getMealAdvice(
       bg: deviceStatusValue.bg,
       iob: deviceStatusValue.iob,
       cob: deviceStatusValue.cob,
@@ -60,28 +68,44 @@ class MealDialogController extends _$MealDialogController with Logging {
     );
 
     final carbs = mealStatus?.netCarbsGrams ?? 0;
-    final fatProteinExchanges = mealStatus?.proteinGrams ?? 0;
     final fatGrams = mealStatus?.fatGrams ?? 0;
     final fiberGrams = mealStatus?.fiberGrams ?? 0;
     final proteinGrams = mealStatus?.proteinGrams ?? 0;
+    final extendedCarbsScheduleSettings = await ref.read(
+      extendedCarbsScheduleSettingsProvider.future,
+    );
+    final advice =
+        await _getAdvice(
+          carbs,
+          fatGrams,
+          proteinGrams,
+          fiberGrams,
+          extendedCarbsScheduleSettings,
+        ) ??
+        MealAdvice.empty();
 
     state = state.copyWith(
       skipMeal: false,
       step: MealDialogStep.confirm,
       carbsGrams: carbs,
-      extendedCarbsGrams: fatProteinExchanges,
-      advice: await _getAdvice(carbs, proteinGrams, fatGrams, fiberGrams),
+      extendedCarbsGrams: advice.extendedCarbs.grams.toDouble(),
+      advice: advice,
     );
   }
 
   String? mealAdviceString() {
+    final extendedCarbs = state.extendedCarbsGrams.round();
+    final extendedCarbsText = extendedCarbs > 0
+        ? '\n${formatExtendedCarbsInstruction(extendedCarbs, settings: state.advice.extendedCarbs.scheduleSettings)}'
+        : '';
+
     switch (state.advice.decision) {
       case MealDecision.eatNowBolusLater:
-        return "Jedz teraz, insulinę podaj po jedzeniu w kalkulatorze ${state.carbsGrams}g";
+        return "Jedz teraz, insulinę podaj po jedzeniu w kalkulatorze ${state.carbsGrams}g$extendedCarbsText";
       case MealDecision.bolusAndEatNow:
-        return "Podaj insulinę insulinę w kalkulatorze ${state.carbsGrams}g i jedz";
+        return "Podaj insulinę w kalkulatorze ${state.carbsGrams}g i jedz$extendedCarbsText";
       case MealDecision.bolusWaitThenEat:
-        return "1. Pierw podaj insulinę w kalkulatorze ${state.carbsGrams}g,\n2. ${waitTimeMessage(state.advice.wait!)}i jedz";
+        return "1. Najpierw podaj insulinę w kalkulatorze ${state.carbsGrams}g,\n2. ${waitTimeMessage(state.advice.wait!)} i jedz$extendedCarbsText";
       case null:
         throw UnimplementedError();
       case MealDecision.bolus:
