@@ -7,7 +7,7 @@
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../core/data/provider/nightscout_repository_provider.dart';
+import '../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import '../../core/domain/model/device_status.dart';
 
 part 'device_status_stream_provider.g.dart';

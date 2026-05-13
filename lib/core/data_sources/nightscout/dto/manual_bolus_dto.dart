@@ -1,0 +1,15 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+// ignore_for_file: invalid_annotation_target
+part 'manual_bolus_dto.freezed.dart';
+part 'manual_bolus_dto.g.dart';
+
+@freezed
+abstract class ManualBolusDto with _$ManualBolusDto {
+  const factory ManualBolusDto({
+    @JsonKey(name: 'created_at') required String createdAt,
+    required double insulin,
+  }) = _ManualBolusDto;
+
+  factory ManualBolusDto.fromJson(Map<String, dynamic> json) =>
+      _$ManualBolusDtoFromJson(json);
+}

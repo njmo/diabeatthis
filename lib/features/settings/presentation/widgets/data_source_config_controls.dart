@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../common/data_sources/data_source_config.dart';
+import '../../../../core/data_sources/config/data_source_config.dart';
 import 'data_source_dropdown.dart';
 import 'data_source_mirror_switch.dart';
 import 'data_source_option_labels.dart';

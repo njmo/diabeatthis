@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import '../../../app/providers/app_lifecycle_state_provider.dart';
 import '../../../common/events/data/task/task_data_synchronization_payload.dart';
-import '../../../core/data/provider/nightscout_repository_provider.dart';
+import '../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import '../../../core/domain/model/temporary_target.dart';
 import '../../../core/logger/logger.dart';
 import '../../event/internal/treatment_available_event.dart';

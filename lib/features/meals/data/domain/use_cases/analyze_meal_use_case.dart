@@ -1,7 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../../core/data/provider/nightscout_repository_provider.dart';
+import '../../../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import '../../../../../core/domain/model/correction_bolus.dart';
 import '../../../../../core/domain/model/extended_carb.dart';
 import '../../../../../core/domain/model/manual_bolus.dart';

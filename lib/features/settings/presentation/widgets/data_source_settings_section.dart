@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/data/provider/data_source_config_provider.dart';
+import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import 'data_source_config_controls.dart';
 import 'settings_section_card.dart';
 

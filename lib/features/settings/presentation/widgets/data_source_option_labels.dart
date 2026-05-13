@@ -1,4 +1,4 @@
-import '../../../../common/data_sources/data_source_config.dart';
+import '../../../../core/data_sources/config/data_source_config.dart';
 
 extension BgSourceLabel on BgSource {
   String get label {

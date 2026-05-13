@@ -9,8 +9,8 @@ import '../common/events/data/app/execute_command_event.dart';
 import '../common/events/data/app/lifecycle_state_event.dart';
 import '../common/events/data/app_event_data.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
+import '../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../core/logger/logger.dart';
-import '../core/nightscout/providers/nightscout_url_provider.dart';
 import '../core/notifications/providers/notifications_controller_provider.dart';
 import '../features/dashboard/data/providers/blood_sugar_readings_list_provider.dart';
 import '../features/dashboard/data/providers/device_status_ui_provider.dart';
@@ -58,7 +58,6 @@ class _MyAppState extends ConsumerState<MyApp>
 
     _taskEventHandler = TaskEventHandler(ref);
 
-
     Future.microtask(() async {
       await prepareApp();
       await ref.read(notificationsControllerUiProvider).init();
@@ -102,12 +101,14 @@ class _MyAppState extends ConsumerState<MyApp>
     _foregroundBridge.reInitCommunicationPort();
 
     final appEventRouter = ref.read(appEventRouterProvider);
-    final bloodSugarReadings = ref.read(bloodSugarReadingsListProvider.notifier);
+    final bloodSugarReadings = ref.read(
+      bloodSugarReadingsListProvider.notifier,
+    );
     final deviceStatusProvider = ref.read(deviceStatusUiProvider.notifier);
     final syncList = [
-      if(bloodSugarReadings.syncNeeded()) 'glucose_list',
-      if(deviceStatusProvider.isUpdateNeeded()) 'device_status',
-      'temporary_target'
+      if (bloodSugarReadings.syncNeeded()) 'glucose_list',
+      if (deviceStatusProvider.isUpdateNeeded()) 'device_status',
+      'temporary_target',
     ];
     if (syncList.isNotEmpty) {
       logI("Sending sync command with $syncList");

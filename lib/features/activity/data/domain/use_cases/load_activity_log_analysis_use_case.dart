@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../../core/data/provider/nightscout_repository_provider.dart';
+import '../../../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
 import '../../models/activity_log_analysis_data.dart';
