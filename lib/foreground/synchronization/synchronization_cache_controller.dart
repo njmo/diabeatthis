@@ -25,6 +25,10 @@ class SynchronizationCache {
     glucoseReadingsCache.addHead(glucose);
   }
 
+  void invalidateGlucoseReadings() {
+    glucoseReadingsCache.clear();
+  }
+
   void cacheTarget(TemporaryTarget target) {
     targetCache = target;
   }
@@ -48,7 +52,34 @@ class SynchronizationCacheController {
     deviceStatusCache: null,
   );
 
+  Future<void>? _glucoseReadingsLoad;
+
   Future<void> init(ProviderContainer container) async {
+    await ensureGlucoseReadingsReady(container);
+  }
+
+  Future<void> ensureGlucoseReadingsReady(
+    ProviderContainer container, {
+    int minCount = 10,
+  }) async {
+    if (cache.glucoseReadingsCache.length >= minCount) {
+      return;
+    }
+
+    final currentLoad = _glucoseReadingsLoad;
+    if (currentLoad != null) {
+      await currentLoad;
+      return;
+    }
+
+    final load = _loadGlucoseReadings(container).whenComplete(() {
+      _glucoseReadingsLoad = null;
+    });
+    _glucoseReadingsLoad = load;
+    await load;
+  }
+
+  Future<void> _loadGlucoseReadings(ProviderContainer container) async {
     final repository = await container.read(
       glucoseSourceRepositoryProvider.future,
     );
@@ -61,12 +92,20 @@ class SynchronizationCacheController {
     cache.cacheGlucose(glucose);
   }
 
+  void invalidateGlucoseReadings() {
+    cache.invalidateGlucoseReadings();
+  }
+
   void cacheDeviceStatus(DeviceStatus deviceStatus) {
     cache.cacheDeviceStatus(deviceStatus);
   }
 
   void cacheTarget(TemporaryTarget target) {
     cache.cacheTarget(target);
+  }
+
+  void invalidateTargetCache() {
+    cache.invalidateTargetCache();
   }
 
   SynchronizationCache getCache() {

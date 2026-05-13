@@ -26,8 +26,8 @@ class DataSynchronizationBridge with Logging {
         _ref.read(deviceStatusUiProvider.notifier).update(data);
       },
       list: (List<TaskDataSynchronizationPayload> data) {
+        logI("Received list event count=${data.length}");
         for (final d in data) {
-          logI("Received list event $data");
           handle(d);
         }
       },

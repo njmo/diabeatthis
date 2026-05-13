@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/providers/app_lifecycle_state_provider.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
+import '../../../../common/events/data/app/sync_data_key.dart';
 import '../../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
@@ -39,44 +40,7 @@ class AppEventHandler with Logging {
         logI("Received execute command event");
         command.when(
           syncData: (final data) {
-            final events = <TaskDataSynchronizationPayload>[];
-
-            final cacheController = runtimeContext.container.read(
-              synchronizationCacheControllerProvider,
-            );
-            final cache = cacheController.getCache();
-            final router = runtimeContext.container.read(
-              taskEventRouterProvider,
-            );
-
-            for (final val in data) {
-              if (val == 'glucose_list') {
-                events.addAll(
-                  cache.glucoseReadingsCache.reversed.toList().map(
-                    (e) => TaskGlucoseSynchronization(data: e),
-                  ),
-                );
-              }
-              if (val == 'temporary_target') {
-                final target = cache.targetCache;
-                if (target != null) {
-                  final payload = TaskTargetSynchronization(data: target);
-                  events.add(payload);
-                }
-              }
-              if (val == 'device_status') {
-                final deviceStatus = cache.deviceStatusCache;
-                if (deviceStatus != null) {
-                  final payload = TaskDeviceStatusSynchronization(
-                    data: deviceStatus,
-                  );
-                  events.add(payload);
-                }
-              }
-            }
-            if (events.isNotEmpty) {
-              router.send(TaskDataSynchronizationPayload.list(data: events));
-            }
+            unawaited(_sendRequestedData(runtimeContext, data));
           },
           syncSettings: (Map<String, String> data) async {
             logI("Received sync settings command, reloading shared prefs");
@@ -94,6 +58,14 @@ class AppEventHandler with Logging {
             );
             runtimeContext.container.invalidate(
               deviceStatusSourceRepositoryProvider,
+            );
+            final cacheController = runtimeContext.container.read(
+              synchronizationCacheControllerProvider,
+            );
+            cacheController.invalidateGlucoseReadings();
+            cacheController.invalidateTargetCache();
+            unawaited(
+              _sendRequestedData(runtimeContext, SyncDataKey.dashboardStartup),
             );
           },
           collectTick: (String reason, int alarmId) async {
@@ -131,5 +103,59 @@ class AppEventHandler with Logging {
         );
       },
     );
+  }
+
+  Future<void> _sendRequestedData(
+    RuntimeContext runtimeContext,
+    List<String> data,
+  ) async {
+    final cacheController = runtimeContext.container.read(
+      synchronizationCacheControllerProvider,
+    );
+
+    if (data.contains(SyncDataKey.glucoseList)) {
+      try {
+        await cacheController.ensureGlucoseReadingsReady(
+          runtimeContext.container,
+        );
+      } catch (e, st) {
+        logW('Failed to prepare glucose cache for syncData: $e\n$st');
+      }
+    }
+
+    final events = <TaskDataSynchronizationPayload>[];
+    final cache = cacheController.getCache();
+    final router = runtimeContext.container.read(taskEventRouterProvider);
+
+    for (final val in data) {
+      switch (val) {
+        case SyncDataKey.glucoseList:
+          final glucoseReadings = cache.glucoseReadingsCache.reversed.toList();
+          events.addAll(
+            glucoseReadings.map((e) => TaskGlucoseSynchronization(data: e)),
+          );
+          break;
+        case SyncDataKey.temporaryTarget:
+          final target = cache.targetCache;
+          if (target != null) {
+            final payload = TaskTargetSynchronization(data: target);
+            events.add(payload);
+          }
+          break;
+        case SyncDataKey.deviceStatus:
+          final deviceStatus = cache.deviceStatusCache;
+          if (deviceStatus != null) {
+            final payload = TaskDeviceStatusSynchronization(data: deviceStatus);
+            events.add(payload);
+          }
+          break;
+        default:
+          logW('Unsupported sync data key: $val');
+      }
+    }
+
+    if (events.isNotEmpty) {
+      router.send(TaskDataSynchronizationPayload.list(data: events));
+    }
   }
 }

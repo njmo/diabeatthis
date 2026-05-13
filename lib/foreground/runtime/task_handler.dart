@@ -5,6 +5,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/router/observers/riverpod_debug_observer.dart';
+import '../../common/events/data/task/task_state_synchronization_payload.dart';
 import '../../core/logger/logger.dart';
 import '../collector/device_status_collector.dart';
 import '../collector/foreground_collector.dart';
@@ -14,6 +15,7 @@ import '../collector/next_activity_collector.dart';
 import '../collector/next_meal_collector.dart';
 import '../collector/treatments_collector.dart';
 import '../event/external/external_event_handler.dart';
+import '../providers/task_event_router_provider.dart';
 import '../synchronization/synchronization_cache_controller.dart';
 import '../task/base/collector_context.dart';
 import '../task/tasks/activity_monitor_task/activity_monitor_task.dart';
@@ -32,19 +34,29 @@ class MyTaskHandler extends TaskHandler with Logging {
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+    logI('onStart(starter: $starter)');
+
     _container = ProviderContainer(
       observers: [if (kDebugMode) RiverpodDebugObserver(env: 'fg')],
     );
 
     LogRuntimeConfig.configure(enableBuffer: true, capacity: 20000);
 
-    await _container!
-        .read(synchronizationCacheControllerProvider)
-        .init(_container!);
-
     _taskScheduler = WorkflowScheduler();
 
     final runtimeContext = _taskScheduler!.createContext(_container!);
+    _externalEventHandler = ExternalEventHandler(runtimeContext);
+    _container!
+        .read(taskEventRouterProvider)
+        .send(const TaskStateSynchronizationPayload.alive(data: true));
+
+    try {
+      await _container!
+          .read(synchronizationCacheControllerProvider)
+          .init(_container!);
+    } catch (e, st) {
+      logW('Initial synchronization cache load failed: $e\n$st');
+    }
 
     final collectorContext = CollectorContext.fromRuntimeContext(
       runtimeContext,
@@ -71,8 +83,6 @@ class MyTaskHandler extends TaskHandler with Logging {
     for (final collector in _collectors!) {
       collector.start(collectorContext);
     }
-
-    _externalEventHandler = ExternalEventHandler(runtimeContext);
 
     await FlutterForegroundTask.updateService(
       notificationTitle: 'Monitoring aktywny',

@@ -7,8 +7,10 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/providers/app_event_router_provider.dart';
 import '../../../../app/providers/app_foreground_bridge_provider.dart';
+import '../../../../app/providers/foreground_task_state_provider.dart';
 import '../../../../common/events/data/app/dump_logs_event.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
+import '../../../../common/events/data/app/sync_data_key.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import '../../../../core/data_sources/nightscout/repository/nightscout_repository_impl.dart';
@@ -89,20 +91,31 @@ class SettingsPage extends HookConsumerWidget with Logging {
 
             if (urlChanged) {
               final foregroundBridge = ref.read(appForegroundBridgeProvider);
+              final taskState = ref.read(foregroundTaskStateProvider.notifier);
 
-              if (oldUrl.isEmpty) {
-                logI("starting service");
-                foregroundBridge.startMonitoring();
-              } else {
-                logI("restarting service");
-                foregroundBridge.restartService();
+              Future<void> startOrRestartForeground() async {
+                if (oldUrl.isEmpty) {
+                  logI("starting service");
+                  await foregroundBridge.startMonitoring();
+                } else {
+                  logI("restarting service");
+                  await foregroundBridge.restartService();
+                }
               }
 
-              await Future.delayed(Duration(seconds: 4));
+              try {
+                await taskState.waitForNextAlive(startOrRestartForeground);
+              } catch (e, st) {
+                logW('Foreground alive wait timed out: $e\n$st');
+              }
 
               ref
                   .read(appEventRouterProvider)
-                  .send(ExecuteCommandEvent.syncData(data: []));
+                  .send(
+                    const ExecuteCommandEvent.syncData(
+                      data: SyncDataKey.dashboardStartup,
+                    ),
+                  );
             }
 
             if (context.mounted) {

@@ -7,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../common/events/data/app/execute_command_event.dart';
 import '../common/events/data/app/lifecycle_state_event.dart';
+import '../common/events/data/app/sync_data_key.dart';
 import '../common/events/data/app_event_data.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
 import '../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
@@ -19,6 +20,7 @@ import 'lifecycle/app_foreground_bridge.dart';
 import 'providers/app_event_router_provider.dart';
 import 'providers/app_foreground_bridge_provider.dart';
 import 'providers/app_lifecycle_state_provider.dart';
+import 'providers/foreground_task_state_provider.dart';
 import 'router/observers/router_debug_observer.dart';
 import 'router/providers/app_router_provider.dart';
 
@@ -38,6 +40,8 @@ class _MyAppState extends ConsumerState<MyApp>
     if (data is String) {
       final map = jsonDecode(data) as Map<String, dynamic>;
       _taskEventHandler!.handle(map);
+    } else {
+      logW('UI received unsupported task data ${data.runtimeType}');
     }
   }
 
@@ -73,8 +77,16 @@ class _MyAppState extends ConsumerState<MyApp>
             logI(
               "Starting foreground service, nightscout url configured properly",
             );
-            await _foregroundBridge.startMonitoring();
-            await Future.delayed(Duration(seconds: 1));
+            final taskState = ref.read(foregroundTaskStateProvider.notifier);
+            try {
+              await taskState.waitForNextAlive(
+                _foregroundBridge.startMonitoring,
+              );
+            } catch (e, st) {
+              logW('Foreground alive wait timed out: $e\n$st');
+            }
+
+            logI('Foreground task is alive, requesting data sync');
             sendSyncCommand();
           } else {
             logI(
@@ -106,9 +118,9 @@ class _MyAppState extends ConsumerState<MyApp>
     );
     final deviceStatusProvider = ref.read(deviceStatusUiProvider.notifier);
     final syncList = [
-      if (bloodSugarReadings.syncNeeded()) 'glucose_list',
-      if (deviceStatusProvider.isUpdateNeeded()) 'device_status',
-      'temporary_target',
+      if (bloodSugarReadings.syncNeeded()) SyncDataKey.glucoseList,
+      if (deviceStatusProvider.isUpdateNeeded()) SyncDataKey.deviceStatus,
+      SyncDataKey.temporaryTarget,
     ];
     if (syncList.isNotEmpty) {
       logI("Sending sync command with $syncList");

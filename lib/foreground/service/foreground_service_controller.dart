@@ -14,13 +14,20 @@ class ForegroundServiceController with Logging {
   }
 
   Future<void> startMonitoring() async {
-    logI("Started monitor task");
-    await FlutterForegroundTask.startService(
+    logI("Starting monitor task");
+    final result = await FlutterForegroundTask.startService(
       serviceId: 256,
       notificationTitle: 'Monitoring aktywny',
       notificationText: 'Uruchamianie...',
       callback: startCallback,
     );
+    logI("Start monitor task result: $result");
+  }
+
+  Future<void> restartMonitoring() async {
+    logI("Restarting monitor task");
+    final result = await FlutterForegroundTask.restartService();
+    logI("Restart monitor task result: $result");
   }
 
   Future<void> stop() async {

@@ -17,6 +17,10 @@ class BloodSugarReadingsListNotifier extends _$BloodSugarReadingsListNotifier {
   }
 
   void update(Glucose glucose) {
+    if (_buffer.any((reading) => reading.date.isAtSameMomentAs(glucose.date))) {
+      return;
+    }
+
     _buffer.addHead(glucose);
 
     if (_buffer.isFilled) {
@@ -28,6 +32,8 @@ class BloodSugarReadingsListNotifier extends _$BloodSugarReadingsListNotifier {
 
   bool syncNeeded() {
     final last = _buffer.firstOrNull;
-    return _buffer.isUnfilled || last == null || last.date.isBefore(clock.now().subtract(const Duration(minutes: 5)));
+    return _buffer.isUnfilled ||
+        last == null ||
+        last.date.isBefore(clock.now().subtract(const Duration(minutes: 5)));
   }
 }

@@ -1,8 +1,7 @@
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import '../../core/logger/logger.dart';
 import '../../foreground/service/foreground_service_controller.dart';
 
-class AppForegroundBridge with Logging {
+class AppForegroundBridge {
   AppForegroundBridge() : controller = ForegroundServiceController();
 
   final ForegroundServiceController controller;
@@ -24,7 +23,8 @@ class AppForegroundBridge with Logging {
   }
 
   Future<void> restartService() async {
-    await FlutterForegroundTask.restartService();
+    reInitCommunicationPort();
+    await controller.restartMonitoring();
   }
 
   Future<bool> isServiceRunning() async {
@@ -32,6 +32,7 @@ class AppForegroundBridge with Logging {
   }
 
   Future<void> startMonitoring() async {
+    reInitCommunicationPort();
     await controller.startMonitoring();
   }
 }
