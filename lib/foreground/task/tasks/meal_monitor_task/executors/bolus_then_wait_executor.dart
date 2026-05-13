@@ -74,13 +74,13 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
           Duration(minutes: 20),
         );
 
+    logI("Calculator response available, cancelling meal notifications");
+    await notificationProvider.cancelAll();
+
     if (calculatorResponse == null) {
       logI("Problem gathering calculator response, going to idle state");
       return MealMonitorStateIdle();
     }
-
-    logI("Calculator response available, cancelling meal notifications");
-    await notificationProvider.cancelAll();
 
     if (!triggeredByUser) {
       await runtimeContext.container.read(
