@@ -148,6 +148,7 @@ class PortionSearchTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
+        dense: true,
         onTap: onTap,
         leading: CircleAvatar(
           backgroundColor: selected

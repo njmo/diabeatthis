@@ -225,32 +225,14 @@ class _ActivityCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.chevron_right,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _MetaPill(
-                    icon: Icons.schedule,
-                    text: '1h przed: $percentagePre% mniej',
-                  ),
-                  _MetaPill(
-                    icon: Icons.sports_score,
-                    text: 'Po: $percentagePost% mniej',
-                  ),
+                  const SizedBox(width: 20),
                   _MetaPill(
                     icon: Icons.timer,
                     text: _formatDuration(durationMinutes),
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
             ],
           ),
         ),

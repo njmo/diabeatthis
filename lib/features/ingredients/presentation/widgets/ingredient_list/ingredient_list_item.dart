@@ -121,10 +121,6 @@ class _IngredientMacroChips extends StatelessWidget {
           icon: Icons.fitness_center,
           label: 'B ${_formatNumber(ingredient.proteinPer100g)} g',
         ),
-        _MetricChip(
-          icon: Icons.eco_outlined,
-          label: 'Bł ${_formatNumber(ingredient.fiberPer100g)} g',
-        ),
       ],
     );
   }
