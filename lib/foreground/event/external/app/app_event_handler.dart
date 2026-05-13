@@ -9,7 +9,9 @@ import '../../../../app/providers/app_lifecycle_state_provider.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
+import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
+import '../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../providers/task_event_router_provider.dart';
 import '../../../synchronization/synchronization_cache_controller.dart';
@@ -81,8 +83,18 @@ class AppEventHandler with Logging {
             final sharedPrefs = await runtimeContext.container.read(
               sharedPrefsProvider.future,
             );
-            sharedPrefs.reload();
+            await sharedPrefs.reload();
             runtimeContext.container.invalidate(nightscoutUrlProvider);
+            runtimeContext.container.invalidate(dataSourceConfigProvider);
+            runtimeContext.container.invalidate(
+              glucoseSourceRepositoryProvider,
+            );
+            runtimeContext.container.invalidate(
+              treatmentSourceRepositoryProvider,
+            );
+            runtimeContext.container.invalidate(
+              deviceStatusSourceRepositoryProvider,
+            );
           },
           collectTick: (String reason, int alarmId) async {
             logI(

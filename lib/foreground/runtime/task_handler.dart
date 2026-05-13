@@ -8,6 +8,7 @@ import '../../app/router/observers/riverpod_debug_observer.dart';
 import '../../core/logger/logger.dart';
 import '../collector/device_status_collector.dart';
 import '../collector/foreground_collector.dart';
+import '../collector/glucose_collector.dart';
 import '../collector/meal_status_collector.dart';
 import '../collector/next_activity_collector.dart';
 import '../collector/next_meal_collector.dart';
@@ -60,6 +61,7 @@ class MyTaskHandler extends TaskHandler with Logging {
     }
 
     _collectors = [
+      GlucoseCollector(),
       DeviceStatusCollector(),
       NextActivityCollector(),
       NextMealCollector(),

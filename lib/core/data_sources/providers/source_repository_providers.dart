@@ -9,23 +9,33 @@ import '../domain/data_source_exceptions.dart';
 import '../domain/device_status_source_repository.dart';
 import '../domain/glucose_source_repository.dart';
 import '../domain/treatment_source_repository.dart';
+import '../local_mirror/providers/local_mirror_writer_provider.dart';
+import '../local_mirror/repositories/mirroring_device_status_source_repository.dart';
+import '../local_mirror/repositories/mirroring_glucose_source_repository.dart';
+import '../local_mirror/repositories/mirroring_treatment_source_repository.dart';
+import '../local_mirror/services/local_mirror_writer.dart';
 import '../nightscout/providers/nightscout_repository_provider.dart';
-import '../nightscout/repository/nightscout_repository.dart';
 
 part 'source_repository_providers.g.dart';
 
-Future<NightscoutRepository> _nightscoutRepository(Ref ref) {
-  return ref.watch(nightscoutRepositoryProvider.future);
-}
-
-@riverpod
+@Riverpod(keepAlive: true)
 Future<GlucoseSourceRepository> glucoseSourceRepository(Ref ref) async {
+  final nightscoutRepositoryFuture = ref.watch(
+    nightscoutRepositoryProvider.future,
+  );
   final config = await ref.watch(dataSourceConfigProvider.future);
 
   switch (config.bgSource) {
     case BgSource.cloud:
-      final nightscoutRepository = await _nightscoutRepository(ref);
-      return CloudGlucoseSourceRepository(nightscoutRepository);
+      final nightscoutRepository = await nightscoutRepositoryFuture;
+      final repository = CloudGlucoseSourceRepository(nightscoutRepository);
+      if (!config.mirrorToLocal) return repository;
+
+      return MirroringGlucoseSourceRepository(
+        delegate: repository,
+        mirrorWriter: _localMirrorWriter(ref),
+        source: config.bgSource,
+      );
     case BgSource.aaps:
       throw const UnsupportedDataSourceException(
         'AAPS glucose source is not implemented yet',
@@ -37,14 +47,24 @@ Future<GlucoseSourceRepository> glucoseSourceRepository(Ref ref) async {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<TreatmentSourceRepository> treatmentSourceRepository(Ref ref) async {
+  final nightscoutRepositoryFuture = ref.watch(
+    nightscoutRepositoryProvider.future,
+  );
   final config = await ref.watch(dataSourceConfigProvider.future);
 
   switch (config.eventSource) {
     case EventSource.cloud:
-      final nightscoutRepository = await _nightscoutRepository(ref);
-      return CloudTreatmentSourceRepository(nightscoutRepository);
+      final nightscoutRepository = await nightscoutRepositoryFuture;
+      final repository = CloudTreatmentSourceRepository(nightscoutRepository);
+      if (!config.mirrorToLocal) return repository;
+
+      return MirroringTreatmentSourceRepository(
+        delegate: repository,
+        mirrorWriter: _localMirrorWriter(ref),
+        source: config.eventSource,
+      );
     case EventSource.aaps:
       throw const UnsupportedDataSourceException(
         'AAPS treatment source is not implemented yet',
@@ -52,19 +72,39 @@ Future<TreatmentSourceRepository> treatmentSourceRepository(Ref ref) async {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<DeviceStatusSourceRepository> deviceStatusSourceRepository(
   Ref ref,
 ) async {
+  final nightscoutRepositoryFuture = ref.watch(
+    nightscoutRepositoryProvider.future,
+  );
   final config = await ref.watch(dataSourceConfigProvider.future);
 
   switch (config.eventSource) {
     case EventSource.cloud:
-      final nightscoutRepository = await _nightscoutRepository(ref);
-      return CloudDeviceStatusSourceRepository(nightscoutRepository);
+      final nightscoutRepository = await nightscoutRepositoryFuture;
+      final repository = CloudDeviceStatusSourceRepository(
+        nightscoutRepository,
+      );
+      if (!config.mirrorToLocal) return repository;
+
+      return MirroringDeviceStatusSourceRepository(
+        delegate: repository,
+        mirrorWriter: _localMirrorWriter(ref),
+        source: config.eventSource,
+      );
     case EventSource.aaps:
       throw const UnsupportedDataSourceException(
         'AAPS device status source is not implemented yet',
       );
   }
+}
+
+LocalMirrorWriter _localMirrorWriter(Ref ref) {
+  if (!ref.mounted) {
+    throw StateError('Source repository provider was disposed while loading');
+  }
+
+  return ref.read(localMirrorWriterProvider);
 }

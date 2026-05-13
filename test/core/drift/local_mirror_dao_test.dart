@@ -18,7 +18,7 @@ void main() {
   test('upserts glucose readings and loads them by time range', () async {
     await db.localMirrorDao.upsertGlucoseReading(
       LocalGlucoseReadingCompanion.insert(
-        source: BgSource.cloud.name,
+        source: BgSource.cloud.storageValue,
         externalId: const Value('sgv-1'),
         recordedAt: 1000,
         sgv: 120,
@@ -29,7 +29,7 @@ void main() {
 
     await db.localMirrorDao.upsertGlucoseReading(
       LocalGlucoseReadingCompanion.insert(
-        source: BgSource.cloud.name,
+        source: BgSource.cloud.storageValue,
         externalId: const Value('sgv-1'),
         recordedAt: 1000,
         sgv: 121,
@@ -39,7 +39,7 @@ void main() {
     );
     await db.localMirrorDao.upsertGlucoseReading(
       LocalGlucoseReadingCompanion.insert(
-        source: BgSource.xdrip.name,
+        source: BgSource.xdrip.storageValue,
         recordedAt: 2000,
         sgv: 130,
       ),
@@ -48,7 +48,7 @@ void main() {
     final readings = await db.localMirrorDao.getGlucoseReadingsBetween(
       DateTime.fromMillisecondsSinceEpoch(0),
       DateTime.fromMillisecondsSinceEpoch(1500),
-      source: BgSource.cloud.name,
+      source: BgSource.cloud.storageValue,
     );
 
     expect(readings, hasLength(1));
@@ -59,7 +59,7 @@ void main() {
   test('stores treatment events by source and created time', () async {
     await db.localMirrorDao.upsertTreatmentEvent(
       LocalTreatmentEventCompanion.insert(
-        source: EventSource.aaps.name,
+        source: EventSource.aaps.storageValue,
         externalId: const Value('treatment-1'),
         treatmentType: 'Meal Bolus',
         createdAt: 1000,
@@ -69,7 +69,7 @@ void main() {
     );
     await db.localMirrorDao.upsertTreatmentEvent(
       LocalTreatmentEventCompanion.insert(
-        source: EventSource.cloud.name,
+        source: EventSource.cloud.storageValue,
         treatmentType: 'Temp Target',
         createdAt: 2000,
         targetBottom: const Value(90),
@@ -80,7 +80,7 @@ void main() {
     final events = await db.localMirrorDao.getTreatmentEventsBetween(
       DateTime.fromMillisecondsSinceEpoch(0),
       DateTime.fromMillisecondsSinceEpoch(1500),
-      source: EventSource.aaps.name,
+      source: EventSource.aaps.storageValue,
     );
 
     expect(events, hasLength(1));
@@ -92,7 +92,7 @@ void main() {
   test('stores device statuses by source and recorded time', () async {
     await db.localMirrorDao.upsertDeviceStatus(
       LocalDeviceStatusCompanion.insert(
-        source: EventSource.aaps.name,
+        source: EventSource.aaps.storageValue,
         externalId: const Value('status-1'),
         recordedAt: 1000,
         bg: const Value(110),
@@ -103,7 +103,7 @@ void main() {
     );
     await db.localMirrorDao.upsertDeviceStatus(
       LocalDeviceStatusCompanion.insert(
-        source: EventSource.cloud.name,
+        source: EventSource.cloud.storageValue,
         recordedAt: 2000,
         bg: const Value(140),
       ),
@@ -112,7 +112,7 @@ void main() {
     final statuses = await db.localMirrorDao.getDeviceStatusesBetween(
       DateTime.fromMillisecondsSinceEpoch(0),
       DateTime.fromMillisecondsSinceEpoch(1500),
-      source: EventSource.aaps.name,
+      source: EventSource.aaps.storageValue,
     );
 
     expect(statuses, hasLength(1));

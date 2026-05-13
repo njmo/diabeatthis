@@ -10,7 +10,7 @@ const dataSourceEventSourceKey = 'data-source-event-source';
 const dataSourceHistorySourceKey = 'data-source-history-source';
 const dataSourceMirrorToLocalKey = 'data-source-mirror-to-local';
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<DataSourceConfig> dataSourceConfig(Ref ref) async {
   final prefs = await ref.watch(sharedPrefsProvider.future);
 
@@ -26,7 +26,7 @@ Future<DataSourceConfig> dataSourceConfig(Ref ref) async {
   );
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 DataSourceConfigController dataSourceConfigController(Ref ref) {
   return DataSourceConfigController(ref);
 }
@@ -51,6 +51,8 @@ class DataSourceConfigController {
       ),
       prefs.setBool(dataSourceMirrorToLocalKey, config.mirrorToLocal),
     ]);
+
+    if (!_ref.mounted) return;
 
     _ref.invalidate(dataSourceConfigProvider);
   }

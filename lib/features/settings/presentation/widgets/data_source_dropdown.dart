@@ -19,6 +19,7 @@ class DataSourceDropdown<T extends Object> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
+      key: ValueKey(value),
       initialValue: value,
       decoration: InputDecoration(labelText: label),
       items: [
