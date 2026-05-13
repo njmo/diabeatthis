@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../data/models/meal_details_data.dart';
 import '../../models/meal_metric_view_data.dart';
 import '../../models/meal_page_state.dart';
 import '../../utils/meal_extended_carbs_warning.dart';
@@ -138,7 +139,7 @@ class MealAnalysisProgressSummary extends StatelessWidget {
     )) {
       chips.add(const HeaderStatusChip.missingExtendedCarbs());
     }
-    if (details.advisorDecision?.waitTimeIgnored == true) {
+    if (_shouldShowWaitTimeIgnoredChip(details.advisorDecision)) {
       chips.add(const HeaderStatusChip.waitTimeIgnored());
     }
     if (details.hasAddOn) {
@@ -146,6 +147,11 @@ class MealAnalysisProgressSummary extends StatelessWidget {
     }
     return MealHeaderStatusRow(chips: chips);
   }
+}
+
+bool _shouldShowWaitTimeIgnoredChip(MealAdvisorDecisionData? decision) {
+  return decision?.result == 'bolused-waiting' &&
+      decision?.waitTimeIgnored == true;
 }
 
 class MealHeaderStatusRow extends StatelessWidget {
