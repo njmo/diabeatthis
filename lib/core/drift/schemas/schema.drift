@@ -7,3 +7,4 @@ import 'tables/activity.drift';
 import 'tables/activity_log.drift';
 import 'tables/meal_snapshot.drift';
 import 'tables/meal_template_ingredients.drift';
+import 'tables/local_mirror.drift';
