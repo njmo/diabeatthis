@@ -3,10 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/platform/aaps_launcher.dart';
 import '../../../../core/domain/model/meal.dart';
+import '../../../../core/drift/providers/database_provider.dart';
+import '../../../../core/logger/logger.dart';
+import '../../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
+import '../../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../meal_summary/domain/use_cases/apply_meal_add_on_multiplier_use_case.dart';
 import '../../../meals/data/domain/use_cases/complete_bolus_wait_use_case.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
+import '../../data/providers/meal_advisor_result_provider.dart';
 import '../widgets/meal_status_dialog_result.dart';
 
 Future<void> handleMealStatusDialogResult({
@@ -24,6 +31,17 @@ Future<void> handleMealStatusDialogResult({
       }
 
       await ref.read(updateMealProvider(meal, status).future);
+      if (!context.mounted) {
+        return;
+      }
+
+      await openAapsAfterBolusStatusUpdateIfNeeded(
+        context: context,
+        ref: ref,
+        meal: meal,
+        status: status,
+      );
+
       if (context.mounted &&
           openSummaryAfterEaten &&
           shouldOpenSummaryAfterMealStatusUpdate(status)) {
@@ -37,6 +55,85 @@ Future<void> handleMealStatusDialogResult({
         choice: choice,
       );
   }
+}
+
+Future<void> openAapsAfterBolusStatusUpdateIfNeeded({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Meal meal,
+  required String status,
+}) async {
+  if (!shouldOpenAapsAfterMealStatusUpdate(status)) {
+    return;
+  }
+
+  final result = await ref.read(aapsLauncherProvider).openAaps();
+
+  if (result == AapsLaunchResult.opened) {
+    await showAapsBolusSuggestionNotification(
+      ref: ref,
+      meal: meal,
+      status: status,
+    );
+    return;
+  }
+
+  if (!context.mounted) {
+    return;
+  }
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Nie udało się otworzyć AAPS. Otwórz aplikację ręcznie.'),
+    ),
+  );
+}
+
+Future<void> showAapsBolusSuggestionNotification({
+  required WidgetRef ref,
+  required Meal meal,
+  required String status,
+}) async {
+  try {
+    final advice = await ref.read(getMealAdviceProvider(meal).future);
+    final extendedCarbs = advice?.extendedCarbs;
+    final carbs = await _carbsForAaps(ref, meal);
+    final event = AapsBolusSuggestionNotificationEvent(
+      mealId: meal.id,
+      mealName: meal.name,
+      carbs: carbs,
+      status: status,
+      waitMinutes: advice?.wait?.recommendedMinutes,
+      extendedCarbs: extendedCarbs?.grams.round() ?? 0,
+      extendedCarbsDeliveryMode:
+          extendedCarbs?.scheduleSettings.deliveryMode ??
+          ExtendedCarbsDeliveryMode.extendedCarbs,
+      extendedCarbsDelayMinutes:
+          extendedCarbs?.scheduleSettings.delayMinutes ?? 45,
+      extendedCarbsDurationMinutes:
+          extendedCarbs?.scheduleSettings.durationMinutes ?? 120,
+    );
+
+    await ref.read(notificationsControllerUiProvider).show(event);
+  } catch (e, st) {
+    Log.e(
+      'MealStatusDialogResultHandler',
+      'Could not show AAPS bolus suggestion notification',
+      error: e,
+      stackTrace: st,
+    );
+  }
+}
+
+Future<int> _carbsForAaps(WidgetRef ref, Meal meal) async {
+  final mealCarbs = meal.carbs;
+  if (mealCarbs != null && mealCarbs > 0) {
+    return mealCarbs;
+  }
+
+  final db = ref.read(databaseProvider);
+  final summary = await db.ingredientDao.totalsForMeal(meal.id);
+  return summary?.netCarbsGrams.round() ?? 0;
 }
 
 Future<void> handleMealAddOnChoice({
@@ -107,4 +204,8 @@ String _addOnMessage(String? mealStatus, MealAddOnMultiplierResult result) {
 
 bool shouldOpenSummaryAfterMealStatusUpdate(String status) {
   return status == 'eaten' || status == 'eaten-bolused';
+}
+
+bool shouldOpenAapsAfterMealStatusUpdate(String status) {
+  return status == 'bolused-eating' || status == 'bolused-waiting';
 }

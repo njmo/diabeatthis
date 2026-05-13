@@ -1,5 +1,1 @@
-enum NotificationChannelType {
-  meal,
-  activity,
-  target,
-}
+enum NotificationChannelType { meal, activity, target, aapsSuggestion }

@@ -8,13 +8,18 @@ import '../domain/models/notification_event.dart';
 import 'android_notification_action_mapper.dart';
 
 class AndroidNotificationDetailsMapper {
-  final NotificationDefinitionCatalog _catalog = NotificationDefinitionCatalogImpl();
-  final NotificationChannelDefinitionCatalog _channelCatalog = NotificationChannelDefinitionCatalogImpl();
-  final AndroidNotificationActionMapper _actionMapper = AndroidNotificationActionMapper();
+  final NotificationDefinitionCatalog _catalog =
+      NotificationDefinitionCatalogImpl();
+  final NotificationChannelDefinitionCatalog _channelCatalog =
+      NotificationChannelDefinitionCatalogImpl();
+  final AndroidNotificationActionMapper _actionMapper =
+      AndroidNotificationActionMapper();
 
   AndroidNotificationDetails map(NotificationEvent event) {
     final eventDefinition = _catalog.byType(event.type);
-    final channelDefinition = _channelCatalog.byType(eventDefinition.channelType);
+    final channelDefinition = _channelCatalog.byType(
+      eventDefinition.channelType,
+    );
 
     return AndroidNotificationDetails(
       channelDefinition.id,
@@ -25,11 +30,13 @@ class AndroidNotificationDetailsMapper {
       visibility: NotificationVisibility.public,
       category: AndroidNotificationCategory.reminder,
       groupKey: eventDefinition.categoryId,
+      styleInformation: BigTextStyleInformation(event.body),
       actions: eventDefinition.actions.map(_actionMapper.map).toList(),
     );
   }
 }
 
 extension NotificationEventExtensions on NotificationEvent {
-  AndroidNotificationDetails toAndroidNotificationDetails() => AndroidNotificationDetailsMapper().map(this);
+  AndroidNotificationDetails toAndroidNotificationDetails() =>
+      AndroidNotificationDetailsMapper().map(this);
 }

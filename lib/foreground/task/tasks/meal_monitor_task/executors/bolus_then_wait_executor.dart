@@ -79,9 +79,15 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       return MealMonitorStateIdle();
     }
 
+    logI("Calculator response available, cancelling meal notifications");
+    await notificationProvider.cancelAll();
+
     if (!triggeredByUser) {
       await runtimeContext.container.read(
-        updateMealProvider(mealMonitorContext.activeMeal!, 'bolused-waiting').future,
+        updateMealProvider(
+          mealMonitorContext.activeMeal!,
+          'bolused-waiting',
+        ).future,
       );
     }
 
@@ -165,7 +171,10 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       eating: (_) async {
         logI("Used agreed meal");
         await runtimeContext.container.read(
-          updateMealProvider(mealMonitorContext.activeMeal!, 'waited-eating').future,
+          updateMealProvider(
+            mealMonitorContext.activeMeal!,
+            'waited-eating',
+          ).future,
         );
       },
       dismiss: (_) {

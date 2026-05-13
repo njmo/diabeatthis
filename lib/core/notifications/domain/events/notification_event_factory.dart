@@ -1,5 +1,6 @@
 import '../models/notification_event.dart';
 import '../models/notification_event_type.dart';
+import 'aaps_bolus_suggestion_notification.dart';
 import 'activity_finished_notification.dart';
 import 'eat_now_event_notification.dart';
 import 'finished_eating_event_notification.dart';
@@ -27,6 +28,8 @@ class NotificationEventFactory {
         return ActivityFinishedNotificationEvent.fromPayload(data);
       case NotificationEventType.mealSummaryReminder:
         return MealSummaryReminderNotificationEvent.fromPayload(data);
+      case NotificationEventType.aapsBolusSuggestion:
+        return AapsBolusSuggestionNotificationEvent.fromPayload(data);
     }
   }
 }

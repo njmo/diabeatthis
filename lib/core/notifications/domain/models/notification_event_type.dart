@@ -5,4 +5,5 @@ enum NotificationEventType {
   activityFinished,
   mealSuggestion,
   mealSummaryReminder,
+  aapsBolusSuggestion,
 }

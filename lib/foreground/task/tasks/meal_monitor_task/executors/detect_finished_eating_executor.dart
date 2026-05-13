@@ -108,6 +108,9 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       } else {
         logI("Should not bolus");
         logI("Waiting for calculator use before moving to next step");
+        final notificationProvider = runtimeContext.container.read(
+          notificationsControllerForegroundProvider,
+        );
         final calculatorResponse = await runtimeContext
             .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<Meal>>(
               Duration(minutes: 20),
@@ -118,7 +121,8 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           return MealMonitorStateIdle();
         }
 
-        logI("Calculator response available");
+        logI("Calculator response available, cancelling meal notifications");
+        await notificationProvider.cancelAll();
         await runtimeContext.container.read(
           updateMealProvider(
             mealMonitorContext.activeMeal!,
@@ -201,7 +205,10 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       );
 
       await runtimeContext.waitForEvent<TreatmentAvailableEvent<Meal>>();
-      logI("Calculator response available, marking meal as bolused eaten");
+      logI(
+        "Calculator response available, cancelling notifications and marking meal as bolused eaten",
+      );
+      await notificationProvider.cancelAll();
 
       mealStatus = 'eaten-bolused';
     } else {
@@ -227,7 +234,10 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
         );
 
     if (calculatorResponse != null) {
-      logI("Add-on calculator response available");
+      logI("Add-on calculator response available, cancelling notifications");
+      await runtimeContext.container
+          .read(notificationsControllerForegroundProvider)
+          .cancelAll();
       return;
     }
 
@@ -249,10 +259,18 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           ),
         );
 
-    await runtimeContext
+    final reminderResponse = await runtimeContext
         .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<Meal>>(
           Duration(minutes: 20),
         );
+    if (reminderResponse != null) {
+      logI(
+        "Add-on calculator response available after reminder, cancelling notifications",
+      );
+      await runtimeContext.container
+          .read(notificationsControllerForegroundProvider)
+          .cancelAll();
+    }
   }
 
   Future<int> _resolveAddOnNetCarbs(
