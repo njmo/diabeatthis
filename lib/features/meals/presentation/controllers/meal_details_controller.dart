@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/domain/use_cases/analyze_meal_use_case.dart';
 import '../../data/domain/use_cases/load_meal_details_use_case.dart';
+import '../../data/providers/meal_database_provider.dart';
 import '../models/meal_page_state.dart';
 
 part 'meal_details_controller.g.dart';
@@ -32,5 +33,9 @@ class MealDetailsControllerNotifier extends _$MealDetailsControllerNotifier {
     final current = state.value;
     if (current == null) return;
     state = AsyncData(current.copyWith(clearSelectedTimestamp: true));
+  }
+
+  Future<void> deleteMeal() async {
+    await ref.read(removeMealByIdProvider(mealId).future);
   }
 }

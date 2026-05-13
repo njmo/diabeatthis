@@ -32,9 +32,9 @@ Stream<List<domain.Meal>> mealsStream(Ref ref) {
 }
 
 @riverpod
-Future<void> removeMealById(Ref ref, domain.Meal meal) async {
+Future<void> removeMealById(Ref ref, int mealId) async {
   final db = ref.watch(databaseProvider);
-  await db.deleteMealById(meal.id);
+  await db.mealDao.deleteMealAndGeneratedData(mealId);
 }
 
 @riverpod

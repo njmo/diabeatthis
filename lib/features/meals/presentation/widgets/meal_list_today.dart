@@ -82,7 +82,7 @@ class MealListToday extends ConsumerWidget {
                 trailing: (parentModeEnabled)
                     ? IconButton(
                         onPressed: () {
-                          ref.read(removeMealByIdProvider(meal));
+                          ref.read(removeMealByIdProvider(meal.id));
                         },
                         icon: Icon(Icons.remove_circle),
                         iconSize: 20,

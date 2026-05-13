@@ -36,6 +36,26 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.getSingleOrNull();
   }
 
+  Future<void> deleteMealAndGeneratedData(int id) async {
+    await transaction(() async {
+      await (delete(
+        db.mealAdvisorResult,
+      )..where((tbl) => tbl.mealId.equals(id))).go();
+      await (delete(
+        db.mealSnapshot,
+      )..where((tbl) => tbl.mealId.equals(id))).go();
+      await (delete(
+        db.mealIngredients,
+      )..where((tbl) => tbl.mealId.equals(id))).go();
+      await (delete(
+        db.mealStatusHistory,
+      )..where((tbl) => tbl.mealId.equals(id))).go();
+      await (update(db.meal)..where((tbl) => tbl.basedOnMealId.equals(id)))
+          .write(const MealCompanion(basedOnMealId: Value(null)));
+      await (delete(db.meal)..where((tbl) => tbl.id.equals(id))).go();
+    });
+  }
+
   Future<List<MealData>> getMealsBetween(
     DateTime start,
     DateTime end, {

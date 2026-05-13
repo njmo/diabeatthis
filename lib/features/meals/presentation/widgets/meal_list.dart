@@ -113,8 +113,18 @@ class MealList extends HookConsumerWidget {
             final meal = meals.value[index];
             return _MealCard(
               meal: meal,
-              onTap: () =>
-                  context.router.push(routes.MealRoute(mealId: meal.id)),
+              onTap: () async {
+                final deletedMealId = await context.router.push<int>(
+                  routes.MealRoute(mealId: meal.id),
+                );
+                if (!context.mounted || deletedMealId == null) {
+                  return;
+                }
+                meals.value = [
+                  for (final item in meals.value)
+                    if (item.id != deletedMealId) item,
+                ];
+              },
             );
           },
         ),
