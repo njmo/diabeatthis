@@ -5,6 +5,7 @@ import '../../core/data_sources/providers/source_repository_providers.dart';
 import '../../core/domain/model/device_status.dart';
 import '../../core/domain/model/glucose.dart';
 import '../../core/domain/model/temporary_target.dart';
+import '../../core/logger/logger.dart';
 
 part 'synchronization_cache_controller.g.dart';
 
@@ -25,8 +26,9 @@ class SynchronizationCache {
     glucoseReadingsCache.addHead(glucose);
   }
 
-  void invalidateGlucoseReadings() {
-    glucoseReadingsCache.clear();
+  void replaceGlucoseReadings(Iterable<Glucose> readings) {
+    glucoseReadingsCache = CircularBuffer<Glucose>(10);
+    readings.forEach(cacheGlucose);
   }
 
   void cacheTarget(TemporaryTarget target) {
@@ -40,6 +42,10 @@ class SynchronizationCache {
   void invalidateTargetCache() {
     targetCache = null;
   }
+
+  void invalidateDeviceStatusCache() {
+    deviceStatusCache = null;
+  }
 }
 
 @Riverpod(keepAlive: true)
@@ -47,7 +53,7 @@ SynchronizationCacheController synchronizationCacheController(Ref ref) {
   return SynchronizationCacheController();
 }
 
-class SynchronizationCacheController {
+class SynchronizationCacheController with Logging {
   final SynchronizationCache cache = SynchronizationCache(
     deviceStatusCache: null,
   );
@@ -55,45 +61,79 @@ class SynchronizationCacheController {
   Future<void>? _glucoseReadingsLoad;
 
   Future<void> init(ProviderContainer container) async {
-    await ensureGlucoseReadingsReady(container);
+    await _loadGlucoseReadings(
+      container,
+      fetchLabel: 'Initial glucose cache fetch',
+      storedLabel: 'Initial glucose cache stored',
+    );
   }
 
-  Future<void> ensureGlucoseReadingsReady(
+  Future<bool> ensureGlucoseReadingsReady(
     ProviderContainer container, {
     int minCount = 10,
   }) async {
-    if (cache.glucoseReadingsCache.length >= minCount) {
-      return;
-    }
+    if (cache.glucoseReadingsCache.length >= minCount) return true;
 
-    final currentLoad = _glucoseReadingsLoad;
-    if (currentLoad != null) {
-      await currentLoad;
-      return;
-    }
+    await _loadGlucoseReadings(
+      container,
+      fetchLabel: 'Requested glucose cache fetch',
+      storedLabel: 'Requested glucose cache stored',
+    );
 
-    final load = _loadGlucoseReadings(container).whenComplete(() {
-      _glucoseReadingsLoad = null;
-    });
-    _glucoseReadingsLoad = load;
-    await load;
+    return cache.glucoseReadingsCache.isNotEmpty;
   }
 
-  Future<void> _loadGlucoseReadings(ProviderContainer container) async {
-    final repository = await container.read(
-      glucoseSourceRepositoryProvider.future,
-    );
-    final glucoseReadings = await repository.fetchLastGlucoseWithLimit(10);
+  Future<void> _loadGlucoseReadings(
+    ProviderContainer container, {
+    required String fetchLabel,
+    required String storedLabel,
+  }) {
+    final currentLoad = _glucoseReadingsLoad;
+    if (currentLoad != null) return currentLoad;
 
-    glucoseReadings.reversed.forEach(cacheGlucose);
+    final load =
+        _loadGlucoseReadingsOnce(
+          container,
+          fetchLabel: fetchLabel,
+          storedLabel: storedLabel,
+        ).whenComplete(() {
+          _glucoseReadingsLoad = null;
+        });
+    _glucoseReadingsLoad = load;
+
+    return load;
+  }
+
+  Future<void> _loadGlucoseReadingsOnce(
+    ProviderContainer container, {
+    required String fetchLabel,
+    required String storedLabel,
+  }) async {
+    try {
+      final repository = await container.read(
+        glucoseSourceRepositoryProvider.future,
+      );
+      final glucoseReadings = await repository.fetchLastGlucoseWithLimit(10);
+
+      logI(_describeGlucoseReadings(fetchLabel, glucoseReadings));
+      cache.replaceGlucoseReadings(glucoseReadings.reversed);
+      logI(
+        _describeGlucoseReadings(
+          storedLabel,
+          cache.glucoseReadingsCache.toList(),
+        ),
+      );
+    } catch (e, st) {
+      logW('Synchronization cache load failed: $e\n$st');
+    }
   }
 
   void cacheGlucose(Glucose glucose) {
     cache.cacheGlucose(glucose);
   }
 
-  void invalidateGlucoseReadings() {
-    cache.invalidateGlucoseReadings();
+  void replaceGlucoseReadings(Iterable<Glucose> readings) {
+    cache.replaceGlucoseReadings(readings);
   }
 
   void cacheDeviceStatus(DeviceStatus deviceStatus) {
@@ -104,11 +144,22 @@ class SynchronizationCacheController {
     cache.cacheTarget(target);
   }
 
-  void invalidateTargetCache() {
+  void invalidateLiveData() {
+    cache.replaceGlucoseReadings(const []);
+    cache.invalidateDeviceStatusCache();
     cache.invalidateTargetCache();
   }
 
   SynchronizationCache getCache() {
     return cache;
+  }
+
+  String _describeGlucoseReadings(String label, Iterable<Glucose> readings) {
+    final list = readings.toList()..sort((a, b) => a.date.compareTo(b.date));
+    final values = list
+        .map((reading) => '${reading.sgv}@${reading.date.toIso8601String()}')
+        .join(', ');
+
+    return '$label count=${list.length} values=[$values]';
   }
 }

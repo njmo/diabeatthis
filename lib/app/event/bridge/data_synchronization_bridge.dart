@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../common/events/data/task/task_data_synchronization_payload.dart';
+import '../../../core/domain/model/glucose.dart';
 import '../../../core/domain/model/temporary_target.dart';
 import '../../../core/logger/logger.dart';
 import '../../../features/dashboard/data/providers/blood_sugar_readings_list_provider.dart';
@@ -27,8 +28,29 @@ class DataSynchronizationBridge with Logging {
       },
       list: (List<TaskDataSynchronizationPayload> data) {
         logI("Received list event count=${data.length}");
-        for (final d in data) {
-          handle(d);
+        final glucoseReadings = <TaskGlucoseSynchronization>[];
+
+        for (final event in data) {
+          switch (event) {
+            case TaskGlucoseSynchronization():
+              glucoseReadings.add(event);
+              break;
+            default:
+              handle(event);
+          }
+        }
+
+        if (glucoseReadings.isNotEmpty) {
+          final readings = glucoseReadings.map((event) => event.data).toList();
+          readings.sort((a, b) => b.date.compareTo(a.date));
+          logI(
+            _describeGlucoseReadings('Received glucose list in UI', readings),
+          );
+
+          _ref
+              .read(bloodSugarReadingsListProvider.notifier)
+              .replaceAll(readings);
+          _ref.read(bloodSugarValueProvider.notifier).update(readings.first);
         }
       },
       target: (TemporaryTarget data) {
@@ -36,5 +58,15 @@ class DataSynchronizationBridge with Logging {
         _ref.read(temporaryTargetUiProvider.notifier).update(data);
       },
     );
+  }
+
+  String _describeGlucoseReadings(String label, Iterable<Glucose> readings) {
+    final glucoseReadings = readings.toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    final values = glucoseReadings
+        .map((reading) => '${reading.sgv}@${reading.date.toIso8601String()}')
+        .join(', ');
+
+    return '$label count=${glucoseReadings.length} values=[$values]';
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -31,6 +32,7 @@ class MyTaskHandler extends TaskHandler with Logging {
   ExternalEventHandler? _externalEventHandler;
   WorkflowScheduler? _taskScheduler;
   List<ForegroundCollector>? _collectors;
+  final List<Object> _pendingData = [];
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
@@ -50,13 +52,11 @@ class MyTaskHandler extends TaskHandler with Logging {
         .read(taskEventRouterProvider)
         .send(const TaskStateSynchronizationPayload.alive(data: true));
 
-    try {
-      await _container!
-          .read(synchronizationCacheControllerProvider)
-          .init(_container!);
-    } catch (e, st) {
-      logW('Initial synchronization cache load failed: $e\n$st');
-    }
+    final cacheInit = _container!
+        .read(synchronizationCacheControllerProvider)
+        .init(_container!);
+    _flushPendingData();
+    unawaited(cacheInit);
 
     final collectorContext = CollectorContext.fromRuntimeContext(
       runtimeContext,
@@ -99,6 +99,7 @@ class MyTaskHandler extends TaskHandler with Logging {
     _container = null;
     _externalEventHandler = null;
     _taskScheduler = null;
+    _pendingData.clear();
 
     logI('onDestroy(isTimeout: $isTimeout)');
   }
@@ -108,8 +109,29 @@ class MyTaskHandler extends TaskHandler with Logging {
     logI('onReceiveData: $data');
 
     final handler = _externalEventHandler;
-    if (handler == null) return;
+    if (handler == null) {
+      logI('External event handler is not ready, queueing data');
+      _pendingData.add(data);
+      return;
+    }
 
+    _handleData(handler, data);
+  }
+
+  void _flushPendingData() {
+    final handler = _externalEventHandler;
+    if (handler == null || _pendingData.isEmpty) return;
+
+    logI('Flushing ${_pendingData.length} pending app events');
+    final data = List<Object>.from(_pendingData);
+    _pendingData.clear();
+
+    for (final item in data) {
+      _handleData(handler, item);
+    }
+  }
+
+  void _handleData(ExternalEventHandler handler, Object data) {
     try {
       if (data is String) {
         final map = jsonDecode(data) as Map<String, dynamic>;
@@ -130,11 +152,6 @@ class MyTaskHandler extends TaskHandler with Logging {
 
   @override
   void onNotificationPressed() {
-    logI('onNotificationPressed');
-  }
-
-  @override
-  void onNotificationDismissed() {
-    logI('onNotificationDismissed');
+    FlutterForegroundTask.launchApp('/');
   }
 }

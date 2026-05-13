@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers/app_event_router_provider.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
+import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
+import '../../../../core/logger/logger.dart';
 import 'data_source_config_controls.dart';
 import 'settings_section_card.dart';
 
-class DataSourceSettingsSection extends ConsumerWidget {
+class DataSourceSettingsSection extends ConsumerWidget with Logging {
   const DataSourceSettingsSection({super.key});
 
   @override
@@ -30,13 +32,25 @@ class DataSourceSettingsSection extends ConsumerWidget {
 
               await controller.save(next);
 
+              logI('Sending data source settings sync ${next.toSyncPayload()}');
               appEventRouter.send(
-                const ExecuteCommandEvent.syncSettings(data: {}),
+                ExecuteCommandEvent.syncSettings(data: next.toSyncPayload()),
               );
             },
           ),
         ),
       ],
     );
+  }
+}
+
+extension _DataSourceConfigSyncPayload on DataSourceConfig {
+  Map<String, String> toSyncPayload() {
+    return {
+      dataSourceBgSourceKey: bgSource.storageValue,
+      dataSourceEventSourceKey: eventSource.storageValue,
+      dataSourceHistorySourceKey: historySource.storageValue,
+      dataSourceMirrorToLocalKey: mirrorToLocal.toString(),
+    };
   }
 }

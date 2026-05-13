@@ -13,6 +13,7 @@ import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../../../../core/data_sources/providers/source_repository_providers.dart';
+import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../providers/task_event_router_provider.dart';
 import '../../../synchronization/synchronization_cache_controller.dart';
@@ -43,7 +44,9 @@ class AppEventHandler with Logging {
             unawaited(_sendRequestedData(runtimeContext, data));
           },
           syncSettings: (Map<String, String> data) async {
-            logI("Received sync settings command, reloading shared prefs");
+            logI(
+              "Received sync settings command, reloading shared prefs, data=$data",
+            );
             final sharedPrefs = await runtimeContext.container.read(
               sharedPrefsProvider.future,
             );
@@ -59,14 +62,12 @@ class AppEventHandler with Logging {
             runtimeContext.container.invalidate(
               deviceStatusSourceRepositoryProvider,
             );
+
             final cacheController = runtimeContext.container.read(
               synchronizationCacheControllerProvider,
             );
-            cacheController.invalidateGlucoseReadings();
-            cacheController.invalidateTargetCache();
-            unawaited(
-              _sendRequestedData(runtimeContext, SyncDataKey.dashboardStartup),
-            );
+            cacheController.invalidateLiveData();
+            await _sendLiveDataFromCurrentSources(runtimeContext);
           },
           collectTick: (String reason, int alarmId) async {
             logI(
@@ -114,13 +115,9 @@ class AppEventHandler with Logging {
     );
 
     if (data.contains(SyncDataKey.glucoseList)) {
-      try {
-        await cacheController.ensureGlucoseReadingsReady(
-          runtimeContext.container,
-        );
-      } catch (e, st) {
-        logW('Failed to prepare glucose cache for syncData: $e\n$st');
-      }
+      await cacheController.ensureGlucoseReadingsReady(
+        runtimeContext.container,
+      );
     }
 
     final events = <TaskDataSynchronizationPayload>[];
@@ -130,9 +127,15 @@ class AppEventHandler with Logging {
     for (final val in data) {
       switch (val) {
         case SyncDataKey.glucoseList:
-          final glucoseReadings = cache.glucoseReadingsCache.reversed.toList();
+          final cachedReadings = cache.glucoseReadingsCache.reversed.toList();
+          logI(
+            _describeGlucoseReadings(
+              'Sending cached glucose list to UI',
+              cachedReadings,
+            ),
+          );
           events.addAll(
-            glucoseReadings.map((e) => TaskGlucoseSynchronization(data: e)),
+            cachedReadings.map((e) => TaskGlucoseSynchronization(data: e)),
           );
           break;
         case SyncDataKey.temporaryTarget:
@@ -157,5 +160,96 @@ class AppEventHandler with Logging {
     if (events.isNotEmpty) {
       router.send(TaskDataSynchronizationPayload.list(data: events));
     }
+  }
+
+  Future<void> _sendLiveDataFromCurrentSources(
+    RuntimeContext runtimeContext,
+  ) async {
+    final events = <TaskDataSynchronizationPayload>[];
+    final cacheController = runtimeContext.container.read(
+      synchronizationCacheControllerProvider,
+    );
+
+    await _addGlucoseEvents(runtimeContext, cacheController, events);
+    await _addDeviceStatusEvent(runtimeContext, cacheController, events);
+    await _addTemporaryTargetEvent(runtimeContext, cacheController, events);
+
+    if (events.isEmpty) return;
+
+    runtimeContext.container
+        .read(taskEventRouterProvider)
+        .send(TaskDataSynchronizationPayload.list(data: events));
+  }
+
+  Future<void> _addGlucoseEvents(
+    RuntimeContext runtimeContext,
+    SynchronizationCacheController cacheController,
+    List<TaskDataSynchronizationPayload> events,
+  ) async {
+    try {
+      final repository = await runtimeContext.container.read(
+        glucoseSourceRepositoryProvider.future,
+      );
+      final readings = await repository.fetchLastGlucoseWithLimit(10);
+      logI(
+        _describeGlucoseReadings(
+          'Live glucose sync fetch after settings change',
+          readings,
+        ),
+      );
+      final orderedReadings = [...readings]
+        ..sort((a, b) => a.date.compareTo(b.date));
+
+      cacheController.replaceGlucoseReadings(orderedReadings);
+      events.addAll(
+        orderedReadings.map((data) => TaskGlucoseSynchronization(data: data)),
+      );
+    } catch (e, st) {
+      logW('Live glucose sync after settings change failed: $e\n$st');
+    }
+  }
+
+  Future<void> _addDeviceStatusEvent(
+    RuntimeContext runtimeContext,
+    SynchronizationCacheController cacheController,
+    List<TaskDataSynchronizationPayload> events,
+  ) async {
+    try {
+      final repository = await runtimeContext.container.read(
+        deviceStatusSourceRepositoryProvider.future,
+      );
+      final data = await repository.fetchLastDeviceStatus();
+      cacheController.cacheDeviceStatus(data);
+      events.add(TaskDeviceStatusSynchronization(data: data));
+    } catch (e, st) {
+      logW('Live device status sync after settings change failed: $e\n$st');
+    }
+  }
+
+  Future<void> _addTemporaryTargetEvent(
+    RuntimeContext runtimeContext,
+    SynchronizationCacheController cacheController,
+    List<TaskDataSynchronizationPayload> events,
+  ) async {
+    try {
+      final repository = await runtimeContext.container.read(
+        treatmentSourceRepositoryProvider.future,
+      );
+      final data = await repository.fetchLastTemporaryTarget();
+      cacheController.cacheTarget(data);
+      events.add(TaskTargetSynchronization(data: data));
+    } catch (e, st) {
+      logW('Live target sync after settings change failed: $e\n$st');
+    }
+  }
+
+  String _describeGlucoseReadings(String label, Iterable<Glucose> readings) {
+    final glucoseReadings = readings.toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    final values = glucoseReadings
+        .map((reading) => '${reading.sgv}@${reading.date.toIso8601String()}')
+        .join(', ');
+
+    return '$label count=${glucoseReadings.length} values=[$values]';
   }
 }

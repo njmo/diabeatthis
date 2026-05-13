@@ -13,6 +13,16 @@ class GlucoseMiniChart extends ConsumerWidget {
 
     return glucose.when(
       data: (glucose) {
+        if (glucose.length < 3) {
+          return const Center(
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
+
         return RepaintBoundary(
           child: CustomPaint(
             painter: _SlimGlucoseMiniChartPainter(glucose.reversed.toList()),
@@ -39,7 +49,7 @@ class _SlimGlucoseMiniChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final valuesList = values;
+    final valuesList = _normalizedValues(values);
     if (valuesList.isEmpty) return;
 
     final data = valuesList.length <= 10
@@ -49,15 +59,19 @@ class _SlimGlucoseMiniChartPainter extends CustomPainter {
     final minVal = data.map((e) => e.sgv).reduce((a, b) => a < b ? a : b);
     final maxVal = data.map((e) => e.sgv).reduce((a, b) => a > b ? a : b);
 
-    var minY = (minVal ).toDouble();
-    var maxY = (maxVal ).toDouble();
+    var minY = (minVal).toDouble();
+    var maxY = (maxVal).toDouble();
 
-    const minRange = 50.0;
+    const minRange = 16.0;
     final range = maxY - minY;
     if (range < minRange) {
       final mid = (minY + maxY) / 2;
       minY = mid - minRange / 2;
       maxY = mid + minRange / 2;
+    } else {
+      final padding = range * 0.12;
+      minY -= padding;
+      maxY += padding;
     }
 
     double clampY(int v) => v.clamp(minY, maxY).toDouble();
@@ -76,6 +90,10 @@ class _SlimGlucoseMiniChartPainter extends CustomPainter {
       return Offset(i * dx, y);
     }
 
+    if (data.length < 3) {
+      return;
+    }
+
     Paint segPaint(Color c) => Paint()
       ..color = c
       ..strokeWidth = 1.6
@@ -85,11 +103,7 @@ class _SlimGlucoseMiniChartPainter extends CustomPainter {
       ..isAntiAlias = true;
 
     for (var i = 0; i < data.length - 1; i++) {
-      canvas.drawLine(
-        p(i),
-        p(i + 1),
-        segPaint(_colorFor(data[i + 1].sgv)),
-      );
+      canvas.drawLine(p(i), p(i + 1), segPaint(_colorFor(data[i + 1].sgv)));
     }
   }
 
@@ -100,5 +114,19 @@ class _SlimGlucoseMiniChartPainter extends CustomPainter {
       if (oldDelegate.values[i] != values[i]) return true;
     }
     return false;
+  }
+
+  List<Glucose> _normalizedValues(List<Glucose> values) {
+    final byTimestamp = <int, Glucose>{};
+    for (final value in values) {
+      byTimestamp[value.date.millisecondsSinceEpoch] = value;
+    }
+
+    final normalized = byTimestamp.values.toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+
+    if (normalized.length <= 10) return normalized;
+
+    return normalized.sublist(normalized.length - 10);
   }
 }
