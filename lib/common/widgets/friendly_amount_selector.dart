@@ -51,11 +51,19 @@ class FriendlyAmountSelector extends StatelessWidget {
             child: Row(
               children: [
                 IconButton.filledTonal(
+                  padding: const EdgeInsets.all(15),
                   tooltip: 'Mniej',
                   onPressed: normalizedValue <= min
                       ? null
                       : () => onChanged(_normalize(normalizedValue - step)),
-                  icon: Text(_stepLabel(-step)),
+                  icon: Text(_stepLabel(-step), style: TextStyle(fontSize: 20)),
+                ),
+                IconButton.filledTonal(
+                  tooltip: 'Mniej',
+                  onPressed: normalizedValue <= min
+                      ? null
+                      : () => onChanged(_normalize(normalizedValue - 1)),
+                  icon: Text(_stepLabel(-1)),
                 ),
                 Expanded(
                   child: Text(
@@ -68,8 +76,16 @@ class FriendlyAmountSelector extends StatelessWidget {
                   tooltip: 'Więcej',
                   onPressed: max != null && normalizedValue >= max!
                       ? null
+                      : () => onChanged(_normalize(normalizedValue + 1)),
+                  icon: Text(_stepLabel(1)),
+                ),
+                IconButton.filledTonal(
+                  padding: const EdgeInsets.all(15),
+                  tooltip: 'Więcej',
+                  onPressed: max != null && normalizedValue >= max!
+                      ? null
                       : () => onChanged(_normalize(normalizedValue + step)),
-                  icon: Text(_stepLabel(step)),
+                  icon: Text(_stepLabel(step), style: TextStyle(fontSize: 20)),
                 ),
               ],
             ),
