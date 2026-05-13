@@ -50,6 +50,10 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
               ' przez ${formatExtendedCarbsScheduleMinutes(extendedCarbsDurationMinutes)}'
         : '';
 
+    if (status == 'eating-then-bolus') {
+      return 'Wpisz $carbsText teraz$extendedCarbsText, bez bolusa';
+    }
+
     return 'Podaj $carbsText teraz$extendedCarbsText';
   }
 

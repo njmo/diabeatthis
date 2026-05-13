@@ -67,14 +67,15 @@ Future<void> openAapsAfterBolusStatusUpdateIfNeeded({
     return;
   }
 
+  final event = await _aapsSuggestionNotificationEvent(ref, meal, status);
+  if (event == null) {
+    return;
+  }
+
   final result = await ref.read(aapsLauncherProvider).openAaps();
 
   if (result == AapsLaunchResult.opened) {
-    await showAapsBolusSuggestionNotification(
-      ref: ref,
-      meal: meal,
-      status: status,
-    );
+    await showAapsBolusSuggestionNotification(ref: ref, event: event);
     return;
   }
 
@@ -91,29 +92,9 @@ Future<void> openAapsAfterBolusStatusUpdateIfNeeded({
 
 Future<void> showAapsBolusSuggestionNotification({
   required WidgetRef ref,
-  required Meal meal,
-  required String status,
+  required AapsBolusSuggestionNotificationEvent event,
 }) async {
   try {
-    final advice = await ref.read(getMealAdviceProvider(meal).future);
-    final extendedCarbs = advice?.extendedCarbs;
-    final carbs = await _carbsForAaps(ref, meal);
-    final event = AapsBolusSuggestionNotificationEvent(
-      mealId: meal.id,
-      mealName: meal.name,
-      carbs: carbs,
-      status: status,
-      waitMinutes: advice?.wait?.recommendedMinutes,
-      extendedCarbs: extendedCarbs?.grams.round() ?? 0,
-      extendedCarbsDeliveryMode:
-          extendedCarbs?.scheduleSettings.deliveryMode ??
-          ExtendedCarbsDeliveryMode.extendedCarbs,
-      extendedCarbsDelayMinutes:
-          extendedCarbs?.scheduleSettings.delayMinutes ?? 45,
-      extendedCarbsDurationMinutes:
-          extendedCarbs?.scheduleSettings.durationMinutes ?? 120,
-    );
-
     await ref.read(notificationsControllerUiProvider).show(event);
   } catch (e, st) {
     Log.e(
@@ -125,13 +106,57 @@ Future<void> showAapsBolusSuggestionNotification({
   }
 }
 
-Future<int> _carbsForAaps(WidgetRef ref, Meal meal) async {
+Future<AapsBolusSuggestionNotificationEvent?> _aapsSuggestionNotificationEvent(
+  WidgetRef ref,
+  Meal meal,
+  String status,
+) async {
+  final advice = await ref.read(getMealAdviceProvider(meal).future);
+  final extendedCarbs = advice?.extendedCarbs;
+  final extendedCarbsGrams = extendedCarbs?.grams.round() ?? 0;
+
+  if (!shouldCreateAapsSuggestionForMealStatus(
+    status,
+    extendedCarbsGrams: extendedCarbsGrams,
+  )) {
+    return null;
+  }
+
+  final carbs = await _carbsForAaps(ref, meal, status);
+  return AapsBolusSuggestionNotificationEvent(
+    mealId: meal.id,
+    mealName: meal.name,
+    carbs: carbs,
+    status: status,
+    waitMinutes: advice?.wait?.recommendedMinutes,
+    extendedCarbs: extendedCarbsGrams,
+    extendedCarbsDeliveryMode:
+        extendedCarbs?.scheduleSettings.deliveryMode ??
+        ExtendedCarbsDeliveryMode.extendedCarbs,
+    extendedCarbsDelayMinutes:
+        extendedCarbs?.scheduleSettings.delayMinutes ?? 45,
+    extendedCarbsDurationMinutes:
+        extendedCarbs?.scheduleSettings.durationMinutes ?? 120,
+  );
+}
+
+Future<int> _carbsForAaps(WidgetRef ref, Meal meal, String status) async {
   final mealCarbs = meal.carbs;
   if (mealCarbs != null && mealCarbs > 0) {
     return mealCarbs;
   }
 
   final db = ref.read(databaseProvider);
+  if (status == 'eaten-bolused') {
+    final consumedSummary = await db.ingredientDao.totalsForMealConsumed(
+      meal.id,
+    );
+    final consumedCarbs = consumedSummary?.netCarbsGrams.round() ?? 0;
+    if (consumedCarbs > 0) {
+      return consumedCarbs;
+    }
+  }
+
   final summary = await db.ingredientDao.totalsForMeal(meal.id);
   return summary?.netCarbsGrams.round() ?? 0;
 }
@@ -207,5 +232,23 @@ bool shouldOpenSummaryAfterMealStatusUpdate(String status) {
 }
 
 bool shouldOpenAapsAfterMealStatusUpdate(String status) {
-  return status == 'bolused-eating' || status == 'bolused-waiting';
+  return status == 'eating-then-bolus' ||
+      status == 'bolused-eating' ||
+      status == 'bolused-waiting' ||
+      status == 'eaten-bolused';
+}
+
+bool shouldCreateAapsSuggestionForMealStatus(
+  String status, {
+  required int extendedCarbsGrams,
+}) {
+  if (!shouldOpenAapsAfterMealStatusUpdate(status)) {
+    return false;
+  }
+
+  if (status == 'eating-then-bolus') {
+    return extendedCarbsGrams > 0;
+  }
+
+  return true;
 }

@@ -15,15 +15,53 @@ void main() {
   });
 
   group('shouldOpenAapsAfterMealStatusUpdate', () {
-    test('opens AAPS for statuses started by bolus action', () {
+    test('opens AAPS for statuses that require AAPS entry', () {
+      expect(shouldOpenAapsAfterMealStatusUpdate('eating-then-bolus'), isTrue);
       expect(shouldOpenAapsAfterMealStatusUpdate('bolused-eating'), isTrue);
       expect(shouldOpenAapsAfterMealStatusUpdate('bolused-waiting'), isTrue);
+      expect(shouldOpenAapsAfterMealStatusUpdate('eaten-bolused'), isTrue);
     });
 
     test('does not open AAPS for non-bolus status confirmations', () {
       expect(shouldOpenAapsAfterMealStatusUpdate('eating'), isFalse);
       expect(shouldOpenAapsAfterMealStatusUpdate('eaten'), isFalse);
-      expect(shouldOpenAapsAfterMealStatusUpdate('eaten-bolused'), isFalse);
+      expect(shouldOpenAapsAfterMealStatusUpdate('waited-eating'), isFalse);
+    });
+  });
+
+  group('shouldCreateAapsSuggestionForMealStatus', () {
+    test('opens eat now bolus later only when extended carbs are present', () {
+      expect(
+        shouldCreateAapsSuggestionForMealStatus(
+          'eating-then-bolus',
+          extendedCarbsGrams: 0,
+        ),
+        isFalse,
+      );
+      expect(
+        shouldCreateAapsSuggestionForMealStatus(
+          'eating-then-bolus',
+          extendedCarbsGrams: 20,
+        ),
+        isTrue,
+      );
+    });
+
+    test('keeps regular bolus statuses independent from extended carbs', () {
+      expect(
+        shouldCreateAapsSuggestionForMealStatus(
+          'eaten-bolused',
+          extendedCarbsGrams: 0,
+        ),
+        isTrue,
+      );
+      expect(
+        shouldCreateAapsSuggestionForMealStatus(
+          'bolused-waiting',
+          extendedCarbsGrams: 0,
+        ),
+        isTrue,
+      );
     });
   });
 
@@ -39,6 +77,18 @@ void main() {
       expect(event.title, 'Podaj 45g teraz');
       expect(event.body, isEmpty);
       expect(event.toPayload(), isEmpty);
+    });
+
+    test('renders eat now bolus later as carbs entry without bolus', () {
+      const event = AapsBolusSuggestionNotificationEvent(
+        mealId: 1,
+        mealName: 'Obiad',
+        carbs: 45,
+        status: 'eating-then-bolus',
+      );
+
+      expect(event.title, 'Wpisz 45g teraz, bez bolusa');
+      expect(event.body, isEmpty);
     });
 
     test('renders bolus wait suggestion', () {
