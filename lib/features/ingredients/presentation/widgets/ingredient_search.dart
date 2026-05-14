@@ -28,7 +28,7 @@ class IngredientSearch extends HookConsumerWidget {
     final photoSearchResult = photoSearch?.result;
     final photoSearchCandidatesKey = photoSearchResult?.candidatesKey ?? '';
     final isPhotoSearchActive =
-        normalizedQuery.isEmpty && photoSearchCandidatesKey.isNotEmpty;
+        normalizedQuery.isEmpty && photoSearchResult != null;
     final ingredients = isPhotoSearchActive
         ? ref.watch(
             ingredientsByPhotoSearchCandidatesProvider(
@@ -36,6 +36,10 @@ class IngredientSearch extends HookConsumerWidget {
             ),
           )
         : ref.watch(ingredientsByQueryProvider(query.value));
+    final hasNoPhotoSearchMatches =
+        isPhotoSearchActive &&
+        ingredients.hasValue &&
+        (ingredients.asData?.value.isEmpty ?? false);
     final selectedIngredient = ref.watch(ingredientDraftProvider);
     final draft = ref.watch(ingredientDraftProvider.notifier);
     final formKey = ref.watch(mealIngredientFormKeyProvider);
@@ -57,7 +61,7 @@ class IngredientSearch extends HookConsumerWidget {
           const SizedBox(height: 8),
           Form(
             key: formKey,
-            autovalidateMode: AutovalidateMode.always,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             child: StringFormField(
               label: 'Nazwa',
               value: '',
@@ -72,7 +76,7 @@ class IngredientSearch extends HookConsumerWidget {
                   validator: (value) {
                     if (valuePicked.value < 0 &&
                         !selectedIngredient.hasSearchSelection) {
-                      return '';
+                      return 'Wybierz składnik albo dodaj nowy.';
                     }
                     return null;
                   },
@@ -109,14 +113,10 @@ class IngredientSearch extends HookConsumerWidget {
             const SizedBox(height: 8),
           ],
           if (normalizedQuery.isEmpty && photoSearchResult != null) ...[
-            IngredientPhotoSearchSummary(result: photoSearchResult),
-            const SizedBox(height: 8),
-          ],
-          if (isPhotoSearchActive &&
-              ingredients.hasValue &&
-              (ingredients.asData?.value.isEmpty ?? false)) ...[
-            IngredientPhotoSearchEmptyMessage(
-              onContinueWithScan:
+            IngredientPhotoSearchSummary(
+              result: photoSearchResult,
+              hasNoMatches: hasNoPhotoSearchMatches,
+              onAddNewIngredient:
                   addIngredientController.continuePhotoSearchAsFullScan,
             ),
             const SizedBox(height: 8),
@@ -345,8 +345,15 @@ class IngredientPhotoSearchProgressMessage extends StatelessWidget {
 
 class IngredientPhotoSearchSummary extends StatelessWidget {
   final IngredientPhotoSearchResult result;
+  final bool hasNoMatches;
+  final VoidCallback onAddNewIngredient;
 
-  const IngredientPhotoSearchSummary({required this.result, super.key});
+  const IngredientPhotoSearchSummary({
+    required this.result,
+    required this.hasNoMatches,
+    required this.onAddNewIngredient,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -360,71 +367,94 @@ class IngredientPhotoSearchSummary extends StatelessWidget {
       (false, null) => 'Rozpoznano zdjęcie produktu.',
     };
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.secondaryContainer,
+    return Material(
+      color: colors.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: colors.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.manage_search_outlined,
-              color: colors.onSecondaryContainer,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                recognizedText,
-                style: TextStyle(color: colors.onSecondaryContainer),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class IngredientPhotoSearchEmptyMessage extends StatelessWidget {
-  final VoidCallback onContinueWithScan;
-
-  const IngredientPhotoSearchEmptyMessage({
-    required this.onContinueWithScan,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, color: colors.onSurfaceVariant),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Brak wyniku w bazie.',
-                    style: TextStyle(color: colors.onSurfaceVariant),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: colors.primaryContainer,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.manage_search_outlined,
+                    color: colors.onPrimaryContainer,
+                    size: 20,
                   ),
                 ),
-                TextButton(
-                  onPressed: onContinueWithScan,
-                  child: const Text('Dodaj makro'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Wynik ze zdjęcia',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        recognizedText,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
+            ),
+            if (hasNoMatches) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: colors.onSurfaceVariant,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Brak pasującego składnika w bazie.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.tonalIcon(
+                onPressed: onAddNewIngredient,
+                icon: const Icon(Icons.add_box_outlined),
+                label: const Text('Dodaj nowy składnik'),
+              ),
             ),
           ],
         ),
