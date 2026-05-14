@@ -14,7 +14,8 @@ import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
 import 'package:diabeatthis/core/domain/model/treatment_base.dart';
-import 'package:diabeatthis/core/drift/database_impl.dart' hide Meal;
+import 'package:diabeatthis/core/drift/database_impl.dart'
+    hide DeviceStatus, Meal;
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

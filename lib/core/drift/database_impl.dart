@@ -34,7 +34,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -60,6 +60,10 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       }
       if (from < 4) {
         await _createLocalMirrorTablesIfMissing();
+      }
+      if (from < 5) {
+        await _renameLocalDeviceStatusTableIfNeeded();
+        await _addDeviceStatusSnapshotColumnsIfMissing();
       }
     },
     beforeOpen: (details) async {
@@ -173,7 +177,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     ''');
 
     await customStatement('''
-      CREATE TABLE IF NOT EXISTS local_device_status (
+      CREATE TABLE IF NOT EXISTS device_status (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
         external_id TEXT,
@@ -182,21 +186,109 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
         bg INTEGER CHECK (bg IS NULL OR bg >= 0),
         tick TEXT,
         iob REAL,
+        basal_iob REAL,
+        bolus_iob REAL,
+        insulin_activity REAL,
         cob REAL,
-        pump_json TEXT,
-        openaps_json TEXT,
-        raw_json TEXT,
+        carbs_req REAL,
+        carbs_req_within INTEGER,
+        sensitivity_ratio REAL,
+        isf_mgdl_for_carbs REAL,
+        base_basal_rate REAL,
+        temp_basal_remaining_minutes INTEGER,
+        last_bolus_amount REAL,
+        last_bolus_at TEXT,
         UNIQUE (source, recorded_at)
       )
     ''');
     await customStatement('''
-      CREATE UNIQUE INDEX IF NOT EXISTS uq_local_device_status_external_id
-      ON local_device_status(source, external_id)
+      CREATE UNIQUE INDEX IF NOT EXISTS uq_device_status_external_id
+      ON device_status(source, external_id)
       WHERE external_id IS NOT NULL
     ''');
     await customStatement('''
-      CREATE INDEX IF NOT EXISTS idx_local_device_status_recorded_at
-      ON local_device_status(recorded_at)
+      CREATE INDEX IF NOT EXISTS idx_device_status_recorded_at
+      ON device_status(recorded_at)
+    ''');
+  }
+
+  Future<void> _renameLocalDeviceStatusTableIfNeeded() async {
+    final hasDeviceStatus = await _tableExists('device_status');
+    if (hasDeviceStatus) return;
+
+    final hasLocalDeviceStatus = await _tableExists('local_device_status');
+    if (!hasLocalDeviceStatus) {
+      await _createLocalMirrorTablesIfMissing();
+      return;
+    }
+
+    await customStatement('''
+      ALTER TABLE local_device_status
+      RENAME TO device_status
+    ''');
+    await customStatement(
+      'DROP INDEX IF EXISTS uq_local_device_status_external_id',
+    );
+    await customStatement(
+      'DROP INDEX IF EXISTS idx_local_device_status_recorded_at',
+    );
+    await customStatement('''
+      CREATE UNIQUE INDEX IF NOT EXISTS uq_device_status_external_id
+      ON device_status(source, external_id)
+      WHERE external_id IS NOT NULL
+    ''');
+    await customStatement('''
+      CREATE INDEX IF NOT EXISTS idx_device_status_recorded_at
+      ON device_status(recorded_at)
+    ''');
+  }
+
+  Future<bool> _tableExists(String name) async {
+    final rows = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+      variables: [Variable(name)],
+    ).get();
+
+    return rows.isNotEmpty;
+  }
+
+  Future<void> _addDeviceStatusSnapshotColumnsIfMissing() async {
+    const columns = {
+      'basal_iob': 'basal_iob REAL',
+      'bolus_iob': 'bolus_iob REAL',
+      'insulin_activity': 'insulin_activity REAL',
+      'carbs_req': 'carbs_req REAL',
+      'carbs_req_within': 'carbs_req_within INTEGER',
+      'sensitivity_ratio': 'sensitivity_ratio REAL',
+      'isf_mgdl_for_carbs': 'isf_mgdl_for_carbs REAL',
+      'base_basal_rate': 'base_basal_rate REAL',
+      'temp_basal_remaining_minutes': 'temp_basal_remaining_minutes INTEGER',
+      'last_bolus_amount': 'last_bolus_amount REAL',
+      'last_bolus_at': 'last_bolus_at TEXT',
+    };
+
+    for (final entry in columns.entries) {
+      await _addDeviceStatusColumnIfMissing(
+        name: entry.key,
+        definition: entry.value,
+      );
+    }
+  }
+
+  Future<void> _addDeviceStatusColumnIfMissing({
+    required String name,
+    required String definition,
+  }) async {
+    final columns = await customSelect(
+      'PRAGMA table_info(device_status)',
+    ).get();
+    final hasColumn = columns.any((row) => row.data['name'] == name);
+
+    if (hasColumn) return;
+
+    await customStatement('''
+      ALTER TABLE device_status
+      ADD COLUMN $definition
     ''');
   }
 

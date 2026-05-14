@@ -3,7 +3,7 @@ import '../../../domain/model/glucose.dart';
 import '../../../domain/model/treatment_base.dart';
 import '../../../drift/dao/local_mirror_dao.dart';
 import '../../config/data_source_config.dart';
-import '../mappers/local_device_status_mirror_mapper.dart';
+import '../mappers/device_status_drift_mapper.dart';
 import '../mappers/local_glucose_mirror_mapper.dart';
 import '../mappers/local_treatment_mirror_mapper.dart';
 
@@ -33,12 +33,9 @@ class LocalMirrorWriter {
     }
   }
 
-  Future<void> mirrorDeviceStatuses(
-    Iterable<DeviceStatus> statuses,
-    EventSource source,
-  ) async {
+  Future<void> mirrorDeviceStatuses(Iterable<DeviceStatus> statuses) async {
     for (final status in statuses) {
-      await _dao.upsertDeviceStatus(status.toLocalMirrorCompanion(source));
+      await _dao.upsertDeviceStatus(status.toDriftCompanion());
     }
   }
 }

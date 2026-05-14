@@ -6,7 +6,9 @@ part 'device_status_dto.g.dart';
 @freezed
 abstract class DeviceStatusDto with _$DeviceStatusDto {
   const factory DeviceStatusDto({
+    @JsonKey(name: '_id') String? id,
     @JsonKey(name: 'created_at') required String createdAt,
+    Map<String, dynamic>? pump,
     Map<String, dynamic>? openaps,
   }) = _DeviceStatusDto;
 

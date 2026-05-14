@@ -4,9 +4,12 @@ import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
-import 'package:diabeatthis/core/drift/database_impl.dart' hide Meal;
+import 'package:diabeatthis/core/drift/database_impl.dart'
+    hide DeviceStatus, Meal;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../helpers/device_status_factory.dart';
 
 void main() {
   late DatabaseImpl db;
@@ -83,20 +86,51 @@ void main() {
     final date = DateTime.fromMillisecondsSinceEpoch(1000);
 
     await writer.mirrorDeviceStatuses([
-      DeviceStatus(id: 0, date: date, iob: 1.2, cob: 10, tick: '+1', bg: 110),
-      DeviceStatus(id: 0, date: date, iob: 1.4, cob: 9, tick: '+2', bg: 111),
-    ], EventSource.cloud);
+      testDeviceStatus(
+        id: 0,
+        date: date,
+        iob: 1.2,
+        cob: 10,
+        tick: '+1',
+        bg: 110,
+      ),
+      testDeviceStatus(
+        id: 0,
+        externalId: 'status-1',
+        source: DeviceStatusSource.aaps,
+        date: date,
+        iob: 1.4,
+        basalIob: -0.2,
+        bolusIob: 1.6,
+        insulinActivity: 0.01,
+        cob: 9,
+        tick: '+2',
+        bg: 111,
+        carbsReq: 4,
+        carbsReqWithin: 15,
+      ),
+    ]);
 
     final statuses = await db.localMirrorDao.getDeviceStatusesBetween(
       DateTime.fromMillisecondsSinceEpoch(0),
       DateTime.fromMillisecondsSinceEpoch(2000),
     );
 
-    expect(statuses, hasLength(1));
-    expect(statuses.single.source, EventSource.cloud.storageValue);
-    expect(statuses.single.bg, 111);
-    expect(statuses.single.iob, 1.4);
-    expect(statuses.single.cob, 9);
-    expect(statuses.single.tick, '+2');
+    expect(statuses, hasLength(2));
+
+    final aapsStatus = statuses.singleWhere(
+      (status) => status.source == DeviceStatusSource.aaps.storageValue,
+    );
+    expect(aapsStatus.source, DeviceStatusSource.aaps.storageValue);
+    expect(aapsStatus.bg, 111);
+    expect(aapsStatus.externalId, 'status-1');
+    expect(aapsStatus.iob, 1.4);
+    expect(aapsStatus.basalIob, -0.2);
+    expect(aapsStatus.bolusIob, 1.6);
+    expect(aapsStatus.insulinActivity, 0.01);
+    expect(aapsStatus.cob, 9);
+    expect(aapsStatus.tick, '+2');
+    expect(aapsStatus.carbsReq, 4);
+    expect(aapsStatus.carbsReqWithin, 15);
   });
 }

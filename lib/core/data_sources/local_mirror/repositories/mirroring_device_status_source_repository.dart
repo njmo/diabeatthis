@@ -1,6 +1,5 @@
 import '../../../domain/model/device_status.dart';
 import '../../../logger/logger.dart';
-import '../../config/data_source_config.dart';
 import '../../domain/device_status_source_repository.dart';
 import '../services/local_mirror_writer.dart';
 
@@ -10,14 +9,11 @@ class MirroringDeviceStatusSourceRepository
   const MirroringDeviceStatusSourceRepository({
     required DeviceStatusSourceRepository delegate,
     required LocalMirrorWriter mirrorWriter,
-    required EventSource source,
   }) : _delegate = delegate,
-       _mirrorWriter = mirrorWriter,
-       _source = source;
+       _mirrorWriter = mirrorWriter;
 
   final DeviceStatusSourceRepository _delegate;
   final LocalMirrorWriter _mirrorWriter;
-  final EventSource _source;
 
   @override
   Future<List<DeviceStatus>> fetchDeviceStatusBetween(
@@ -47,7 +43,7 @@ class MirroringDeviceStatusSourceRepository
 
   Future<void> _mirror(Iterable<DeviceStatus> statuses) async {
     try {
-      await _mirrorWriter.mirrorDeviceStatuses(statuses, _source);
+      await _mirrorWriter.mirrorDeviceStatuses(statuses);
     } catch (e, st) {
       logW('Device status local mirror write failed: $e\n$st');
     }

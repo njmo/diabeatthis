@@ -9,7 +9,8 @@ import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
-import 'package:diabeatthis/core/drift/database_impl.dart' hide Meal;
+import 'package:diabeatthis/core/drift/database_impl.dart'
+    hide DeviceStatus, Meal;
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
 import 'package:diabeatthis/core/notifications/definitions/event/meal_summary_reminder_notification_definition.dart';
@@ -42,6 +43,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/device_status_factory.dart';
 import '../utils/fake_notifications_controller.dart';
 import '../utils/fake_runtime_harness.dart';
 
@@ -547,7 +549,7 @@ void main() {
                   ),
                 ),
                 deviceStatusValueProvider.overrideWithValue(
-                  DeviceStatus(
+                  testDeviceStatus(
                     bg: 120,
                     iob: 100,
                     cob: 100,
@@ -614,7 +616,7 @@ void main() {
 
             expect(task.state, isA<MealMonitorStateExecutor>());
 
-            final deviceStatus = DeviceStatus(
+            final deviceStatus = testDeviceStatus(
               bg: 120,
               iob: 100,
               cob: 100,
@@ -667,7 +669,7 @@ void main() {
                   ),
                 ),
                 deviceStatusValueProvider.overrideWithValue(
-                  DeviceStatus(
+                  testDeviceStatus(
                     bg: 120,
                     iob: 100,
                     cob: 100,
@@ -760,7 +762,7 @@ void main() {
                 harness,
                 task,
                 container,
-                DeviceStatus(
+                testDeviceStatus(
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
@@ -840,7 +842,7 @@ void main() {
 
             var lastReadingDate = clock.now().subtract(Duration(minutes: 2));
 
-            final deviceStatus = DeviceStatus(
+            final deviceStatus = testDeviceStatus(
               bg: 118,
               iob: 10,
               cob: 10,
@@ -874,7 +876,7 @@ void main() {
                 harness,
                 task,
                 container,
-                DeviceStatus(
+                testDeviceStatus(
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
@@ -945,7 +947,7 @@ void main() {
 
             var lastReadingDate = clock.now().subtract(Duration(minutes: 2));
 
-            final deviceStatus = DeviceStatus(
+            final deviceStatus = testDeviceStatus(
               bg: 118,
               iob: 10,
               cob: 10,
@@ -979,7 +981,7 @@ void main() {
                 harness,
                 task,
                 container,
-                DeviceStatus(
+                testDeviceStatus(
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
@@ -1050,7 +1052,7 @@ void main() {
 
             var lastReadingDate = clock.now().subtract(Duration(minutes: 2));
 
-            final deviceStatus = DeviceStatus(
+            final deviceStatus = testDeviceStatus(
               bg: 118,
               iob: 10,
               cob: 10,
@@ -1084,7 +1086,7 @@ void main() {
                 harness,
                 task,
                 container,
-                DeviceStatus(
+                testDeviceStatus(
                   bg: 120 - i * 10,
                   iob: 10,
                   cob: 10,
@@ -1173,7 +1175,7 @@ void main() {
                 harness,
                 task,
                 container,
-                DeviceStatus(
+                testDeviceStatus(
                   bg: 190 + i * 4,
                   iob: 0,
                   cob: 0,
@@ -1223,7 +1225,7 @@ void main() {
                 harness,
                 task,
                 container,
-                DeviceStatus(
+                testDeviceStatus(
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
@@ -1301,7 +1303,7 @@ void main() {
 
             var lastReadingDate = clock.now().subtract(Duration(minutes: 2));
 
-            final deviceStatus = DeviceStatus(
+            final deviceStatus = testDeviceStatus(
               bg: 118,
               iob: 10,
               cob: 10,
@@ -1334,7 +1336,7 @@ void main() {
               harness,
               task,
               container,
-              DeviceStatus(
+              testDeviceStatus(
                 bg: 105,
                 iob: 10,
                 cob: 10,
@@ -1445,7 +1447,7 @@ void main() {
 
             var lastReadingDate = clock.now().subtract(Duration(minutes: 2));
 
-            final deviceStatus = DeviceStatus(
+            final deviceStatus = testDeviceStatus(
               bg: 118,
               iob: 10,
               cob: 10,
@@ -1479,7 +1481,7 @@ void main() {
                 harness,
                 task,
                 container,
-                DeviceStatus(
+                testDeviceStatus(
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
@@ -1581,7 +1583,7 @@ void main() {
                 harness,
                 task,
                 container,
-                DeviceStatus(
+                testDeviceStatus(
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
@@ -1866,7 +1868,7 @@ void main() {
 
           var lastReadingDate = clock.now().subtract(Duration(minutes: 2));
 
-          final deviceStatus = DeviceStatus(
+          final deviceStatus = testDeviceStatus(
             bg: 118,
             iob: 10,
             cob: 10,
@@ -1896,7 +1898,7 @@ void main() {
             harness,
             task,
             container,
-            DeviceStatus(
+            testDeviceStatus(
               bg: 105,
               iob: 10,
               cob: 10,
@@ -1991,7 +1993,7 @@ void main() {
             harness,
             task,
             container,
-            DeviceStatus(
+            testDeviceStatus(
               bg: 124,
               iob: 10,
               cob: 10,

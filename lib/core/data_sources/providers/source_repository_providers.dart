@@ -92,7 +92,6 @@ Future<DeviceStatusSourceRepository> deviceStatusSourceRepository(
       return MirroringDeviceStatusSourceRepository(
         delegate: repository,
         mirrorWriter: _localMirrorWriter(ref),
-        source: config.eventSource,
       );
     case EventSource.aaps:
       throw const UnsupportedDataSourceException(

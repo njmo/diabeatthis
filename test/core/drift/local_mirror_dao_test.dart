@@ -91,18 +91,28 @@ void main() {
 
   test('stores device statuses by source and recorded time', () async {
     await db.localMirrorDao.upsertDeviceStatus(
-      LocalDeviceStatusCompanion.insert(
+      DeviceStatusCompanion.insert(
         source: EventSource.aaps.storageValue,
         externalId: const Value('status-1'),
         recordedAt: 1000,
         bg: const Value(110),
         iob: const Value(1.3),
+        basalIob: const Value(-0.2),
+        bolusIob: const Value(1.5),
+        insulinActivity: const Value(0.01),
         cob: const Value(18),
-        pumpJson: const Value('{"battery":80}'),
+        carbsReq: const Value(4),
+        carbsReqWithin: const Value(15),
+        sensitivityRatio: const Value(0.95),
+        isfMgdlForCarbs: const Value(180),
+        baseBasalRate: const Value(0.4),
+        tempBasalRemainingMinutes: const Value(101),
+        lastBolusAmount: const Value(0.3),
+        lastBolusAt: const Value('14.05.2026 10:07'),
       ),
     );
     await db.localMirrorDao.upsertDeviceStatus(
-      LocalDeviceStatusCompanion.insert(
+      DeviceStatusCompanion.insert(
         source: EventSource.cloud.storageValue,
         recordedAt: 2000,
         bg: const Value(140),
@@ -118,7 +128,17 @@ void main() {
     expect(statuses, hasLength(1));
     expect(statuses.single.bg, 110);
     expect(statuses.single.iob, 1.3);
+    expect(statuses.single.basalIob, -0.2);
+    expect(statuses.single.bolusIob, 1.5);
+    expect(statuses.single.insulinActivity, 0.01);
     expect(statuses.single.cob, 18);
-    expect(statuses.single.pumpJson, '{"battery":80}');
+    expect(statuses.single.carbsReq, 4);
+    expect(statuses.single.carbsReqWithin, 15);
+    expect(statuses.single.sensitivityRatio, 0.95);
+    expect(statuses.single.isfMgdlForCarbs, 180);
+    expect(statuses.single.baseBasalRate, 0.4);
+    expect(statuses.single.tempBasalRemainingMinutes, 101);
+    expect(statuses.single.lastBolusAmount, 0.3);
+    expect(statuses.single.lastBolusAt, '14.05.2026 10:07');
   });
 }

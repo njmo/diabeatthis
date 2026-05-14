@@ -41,8 +41,8 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     );
   }
 
-  Future<void> upsertDeviceStatus(LocalDeviceStatusCompanion status) {
-    final table = db.localDeviceStatus;
+  Future<void> upsertDeviceStatus(DeviceStatusCompanion status) {
+    final table = db.deviceStatus;
 
     return into(table).insert(
       status,
@@ -99,12 +99,12 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     return query.get();
   }
 
-  Future<List<LocalDeviceStatusData>> getDeviceStatusesBetween(
+  Future<List<DeviceStatusData>> getDeviceStatusesBetween(
     DateTime start,
     DateTime end, {
     String? source,
   }) {
-    final query = select(db.localDeviceStatus)
+    final query = select(db.deviceStatus)
       ..where(
         (row) => row.recordedAt.isBetweenValues(
           start.millisecondsSinceEpoch,
