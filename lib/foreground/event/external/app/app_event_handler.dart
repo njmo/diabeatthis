@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:clock/clock.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/providers/app_lifecycle_state_provider.dart';
@@ -16,6 +15,7 @@ import '../../../../core/data_sources/providers/source_repository_providers.dart
 import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../alarm/foreground_alarm_bridge.dart';
+import '../../../power_monitor/collect_tick_wake_lock.dart';
 import '../../../providers/task_event_router_provider.dart';
 import '../../../synchronization/synchronization_cache_controller.dart';
 import '../../../task/base/runtime_context.dart';
@@ -74,34 +74,10 @@ class AppEventHandler with Logging {
             logI(
               "Received collect tick command with reason: $reason and alarmId: $alarmId",
             );
+            await const CollectTickWakeLock().acquire();
+
             final tickAt = clock.now();
             await ForegroundAlarmBridge.markCollectTickDelivered(tickAt);
-
-            await FlutterForegroundTask.updateService(
-              foregroundTaskOptions: ForegroundTaskOptions(
-                allowWakeLock: true,
-                allowWifiLock: true,
-                eventAction: ForegroundTaskEventAction.nothing(),
-              ),
-            );
-
-            logI("WakeLock ENABLED for collectTick");
-
-            Future.delayed(const Duration(seconds: 10), () async {
-              try {
-                await FlutterForegroundTask.updateService(
-                  foregroundTaskOptions: ForegroundTaskOptions(
-                    allowWakeLock: false,
-                    allowWifiLock: false,
-                    eventAction: ForegroundTaskEventAction.nothing(),
-                  ),
-                );
-                logI("WakeLock DISABLED after timeout (10)");
-              } catch (e, st) {
-                logW("Failed to disable WakeLock: $e\n$st");
-              }
-            });
-
             runtimeContext.tick(tickAt);
           },
         );

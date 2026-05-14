@@ -608,6 +608,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  foreground_power_lock:
+    dependency: "direct main"
+    description:
+      path: "packages/foreground_power_lock"
+      relative: true
+    source: path
+    version: "0.0.1"
   freezed:
     dependency: "direct dev"
     description:

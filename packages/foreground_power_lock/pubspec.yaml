@@ -1,0 +1,19 @@
+name: foreground_power_lock
+description: Android foreground power lock bridge for short collect tick wake windows.
+version: 0.0.1
+publish_to: 'none'
+
+environment:
+  sdk: ^3.9.2
+  flutter: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: pl.diabeatthis.foreground_power_lock
+        pluginClass: ForegroundPowerLockPlugin
