@@ -4,7 +4,7 @@ import '../../../domain/model/treatment_base.dart';
 import '../../../drift/dao/local_mirror_dao.dart';
 import '../../config/data_source_config.dart';
 import '../mappers/device_status_drift_mapper.dart';
-import '../mappers/local_glucose_mirror_mapper.dart';
+import '../mappers/glucose_drift_mapper.dart';
 import '../mappers/local_treatment_mirror_mapper.dart';
 
 class LocalMirrorWriter {
@@ -12,12 +12,9 @@ class LocalMirrorWriter {
 
   final LocalMirrorDao _dao;
 
-  Future<void> mirrorGlucose(
-    Iterable<Glucose> readings,
-    BgSource source,
-  ) async {
+  Future<void> mirrorGlucose(Iterable<Glucose> readings) async {
     for (final reading in readings) {
-      await _dao.upsertGlucoseReading(reading.toLocalMirrorCompanion(source));
+      await _dao.upsertGlucoseReading(reading.toDriftCompanion());
     }
   }
 

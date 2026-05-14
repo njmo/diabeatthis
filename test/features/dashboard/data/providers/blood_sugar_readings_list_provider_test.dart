@@ -20,6 +20,8 @@ void main() {
         .update(
           Glucose(
             id: 1,
+            externalId: null,
+            source: GlucoseSource.cloud,
             date: DateTime.fromMillisecondsSinceEpoch(1000),
             sgv: 120,
             direction: 'Flat',
@@ -42,24 +44,32 @@ void main() {
     notifier.replaceAll([
       Glucose(
         id: 1,
+        externalId: null,
+        source: GlucoseSource.cloud,
         date: DateTime.fromMillisecondsSinceEpoch(1000),
         sgv: 110,
         direction: 'Flat',
       ),
       Glucose(
         id: 2,
+        externalId: null,
+        source: GlucoseSource.cloud,
         date: DateTime.fromMillisecondsSinceEpoch(3000),
         sgv: 130,
         direction: 'SingleUp',
       ),
       Glucose(
         id: 3,
+        externalId: null,
+        source: GlucoseSource.cloud,
         date: DateTime.fromMillisecondsSinceEpoch(2000),
         sgv: 120,
         direction: 'Flat',
       ),
       Glucose(
         id: 4,
+        externalId: null,
+        source: GlucoseSource.cloud,
         date: DateTime.fromMillisecondsSinceEpoch(2000),
         sgv: 121,
         direction: 'FortyFiveUp',

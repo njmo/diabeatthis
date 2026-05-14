@@ -9,8 +9,8 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     with _$LocalMirrorDaoMixin {
   LocalMirrorDao(super.db);
 
-  Future<void> upsertGlucoseReading(LocalGlucoseReadingCompanion reading) {
-    final table = db.localGlucoseReading;
+  Future<void> upsertGlucoseReading(GlucoseReadingCompanion reading) {
+    final table = db.glucoseReading;
 
     return into(table).insert(
       reading,
@@ -57,12 +57,12 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     );
   }
 
-  Future<List<LocalGlucoseReadingData>> getGlucoseReadingsBetween(
+  Future<List<GlucoseReadingData>> getGlucoseReadingsBetween(
     DateTime start,
     DateTime end, {
     String? source,
   }) {
-    final query = select(db.localGlucoseReading)
+    final query = select(db.glucoseReading)
       ..where(
         (row) => row.recordedAt.isBetweenValues(
           start.millisecondsSinceEpoch,

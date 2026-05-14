@@ -17,7 +17,7 @@ void main() {
 
   test('upserts glucose readings and loads them by time range', () async {
     await db.localMirrorDao.upsertGlucoseReading(
-      LocalGlucoseReadingCompanion.insert(
+      GlucoseReadingCompanion.insert(
         source: BgSource.cloud.storageValue,
         externalId: const Value('sgv-1'),
         recordedAt: 1000,
@@ -28,7 +28,7 @@ void main() {
     );
 
     await db.localMirrorDao.upsertGlucoseReading(
-      LocalGlucoseReadingCompanion.insert(
+      GlucoseReadingCompanion.insert(
         source: BgSource.cloud.storageValue,
         externalId: const Value('sgv-1'),
         recordedAt: 1000,
@@ -38,7 +38,7 @@ void main() {
       ),
     );
     await db.localMirrorDao.upsertGlucoseReading(
-      LocalGlucoseReadingCompanion.insert(
+      GlucoseReadingCompanion.insert(
         source: BgSource.xdrip.storageValue,
         recordedAt: 2000,
         sgv: 130,

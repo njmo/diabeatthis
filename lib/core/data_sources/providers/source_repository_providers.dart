@@ -34,7 +34,6 @@ Future<GlucoseSourceRepository> glucoseSourceRepository(Ref ref) async {
       return MirroringGlucoseSourceRepository(
         delegate: repository,
         mirrorWriter: _localMirrorWriter(ref),
-        source: config.bgSource,
       );
     case BgSource.aaps:
       throw const UnsupportedDataSourceException(

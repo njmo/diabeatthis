@@ -10,34 +10,31 @@ void main() {
     fakeAsync((async) {
       final start = DateTime(2026, 3, 23, 12, 0);
 
-      withClock(
-        Clock(() => start.add(async.elapsed)),
-            () {
-          final container = ProviderContainer();
+      withClock(Clock(() => start.add(async.elapsed)), () {
+        final container = ProviderContainer();
 
-          final notifier = container.read(
-            bloodSugarValueProvider.notifier,
-          );
+        final notifier = container.read(bloodSugarValueProvider.notifier);
 
-          notifier.update(
-            Glucose(
-              id: 1,
-              date: start,
-              sgv: 110,
-              direction: 'Flat',
-            ),
-          );
+        notifier.update(
+          Glucose(
+            id: 1,
+            externalId: null,
+            source: GlucoseSource.cloud,
+            date: start,
+            sgv: 110,
+            direction: 'Flat',
+          ),
+        );
 
-          expect(container.read(bloodSugarValueProvider)?.sgv, 110);
+        expect(container.read(bloodSugarValueProvider)?.sgv, 110);
 
-          async.elapse(const Duration(minutes: 6));
-          async.flushMicrotasks();
+        async.elapse(const Duration(minutes: 6));
+        async.flushMicrotasks();
 
-          expect(container.read(bloodSugarValueProvider), isNull);
+        expect(container.read(bloodSugarValueProvider), isNull);
 
-          container.dispose();
-        },
-      );
+        container.dispose();
+      });
     });
   });
 }

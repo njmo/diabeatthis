@@ -116,6 +116,8 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
 
     final glucose = Glucose(
       id: data.id,
+      externalId: data.externalId,
+      source: GlucoseSource.fromStorage(data.source.storageValue),
       sgv: data.bg,
       date: data.date,
       direction: '',

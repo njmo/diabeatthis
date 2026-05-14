@@ -62,6 +62,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
         await _createLocalMirrorTablesIfMissing();
       }
       if (from < 5) {
+        await _renameLocalGlucoseReadingTableIfNeeded();
         await _renameLocalDeviceStatusTableIfNeeded();
         await _addDeviceStatusSnapshotColumnsIfMissing();
       }
@@ -124,7 +125,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
 
   Future<void> _createLocalMirrorTablesIfMissing() async {
     await customStatement('''
-      CREATE TABLE IF NOT EXISTS local_glucose_reading (
+      CREATE TABLE IF NOT EXISTS glucose_reading (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps', 'xdrip')),
         external_id TEXT,
@@ -132,19 +133,18 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
         received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
         sgv INTEGER NOT NULL CHECK (sgv >= 0),
         direction TEXT,
-        tick INTEGER,
         raw_json TEXT,
         UNIQUE (source, recorded_at, sgv)
       )
     ''');
     await customStatement('''
-      CREATE UNIQUE INDEX IF NOT EXISTS uq_local_glucose_reading_external_id
-      ON local_glucose_reading(source, external_id)
+      CREATE UNIQUE INDEX IF NOT EXISTS uq_glucose_reading_external_id
+      ON glucose_reading(source, external_id)
       WHERE external_id IS NOT NULL
     ''');
     await customStatement('''
-      CREATE INDEX IF NOT EXISTS idx_local_glucose_reading_recorded_at
-      ON local_glucose_reading(recorded_at)
+      CREATE INDEX IF NOT EXISTS idx_glucose_reading_recorded_at
+      ON glucose_reading(recorded_at)
     ''');
 
     await customStatement('''
@@ -240,6 +240,37 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     await customStatement('''
       CREATE INDEX IF NOT EXISTS idx_device_status_recorded_at
       ON device_status(recorded_at)
+    ''');
+  }
+
+  Future<void> _renameLocalGlucoseReadingTableIfNeeded() async {
+    final hasGlucoseReading = await _tableExists('glucose_reading');
+    if (hasGlucoseReading) return;
+
+    final hasLocalGlucoseReading = await _tableExists('local_glucose_reading');
+    if (!hasLocalGlucoseReading) {
+      await _createLocalMirrorTablesIfMissing();
+      return;
+    }
+
+    await customStatement('''
+      ALTER TABLE local_glucose_reading
+      RENAME TO glucose_reading
+    ''');
+    await customStatement(
+      'DROP INDEX IF EXISTS uq_local_glucose_reading_external_id',
+    );
+    await customStatement(
+      'DROP INDEX IF EXISTS idx_local_glucose_reading_recorded_at',
+    );
+    await customStatement('''
+      CREATE UNIQUE INDEX IF NOT EXISTS uq_glucose_reading_external_id
+      ON glucose_reading(source, external_id)
+      WHERE external_id IS NOT NULL
+    ''');
+    await customStatement('''
+      CREATE INDEX IF NOT EXISTS idx_glucose_reading_recorded_at
+      ON glucose_reading(recorded_at)
     ''');
   }
 

@@ -28,9 +28,23 @@ void main() {
     final date = DateTime.fromMillisecondsSinceEpoch(1000);
 
     await writer.mirrorGlucose([
-      Glucose(id: 0, date: date, sgv: 120, direction: 'Flat'),
-      Glucose(id: 0, date: date, sgv: 120, direction: 'FortyFiveUp'),
-    ], BgSource.cloud);
+      Glucose(
+        id: 0,
+        externalId: null,
+        source: GlucoseSource.cloud,
+        date: date,
+        sgv: 120,
+        direction: 'Flat',
+      ),
+      Glucose(
+        id: 0,
+        externalId: null,
+        source: GlucoseSource.cloud,
+        date: date,
+        sgv: 120,
+        direction: 'FortyFiveUp',
+      ),
+    ]);
 
     final readings = await db.localMirrorDao.getGlucoseReadingsBetween(
       DateTime.fromMillisecondsSinceEpoch(0),

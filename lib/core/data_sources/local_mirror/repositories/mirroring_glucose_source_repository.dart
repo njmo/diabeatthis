@@ -1,6 +1,5 @@
 import '../../../domain/model/glucose.dart';
 import '../../../logger/logger.dart';
-import '../../config/data_source_config.dart';
 import '../../domain/glucose_source_repository.dart';
 import '../services/local_mirror_writer.dart';
 
@@ -10,14 +9,11 @@ class MirroringGlucoseSourceRepository
   const MirroringGlucoseSourceRepository({
     required GlucoseSourceRepository delegate,
     required LocalMirrorWriter mirrorWriter,
-    required BgSource source,
   }) : _delegate = delegate,
-       _mirrorWriter = mirrorWriter,
-       _source = source;
+       _mirrorWriter = mirrorWriter;
 
   final GlucoseSourceRepository _delegate;
   final LocalMirrorWriter _mirrorWriter;
-  final BgSource _source;
 
   @override
   Future<List<Glucose>> fetchGlucoseAfter(DateTime after) async {
@@ -52,7 +48,7 @@ class MirroringGlucoseSourceRepository
 
   Future<void> _mirror(List<Glucose> readings) async {
     try {
-      await _mirrorWriter.mirrorGlucose(readings, _source);
+      await _mirrorWriter.mirrorGlucose(readings);
     } catch (e, st) {
       logW('Glucose local mirror write failed: $e\n$st');
     }
