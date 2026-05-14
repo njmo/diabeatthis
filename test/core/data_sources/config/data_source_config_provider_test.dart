@@ -21,6 +21,7 @@ void main() {
       SharedPreferences.setMockInitialValues({
         dataSourceBgSourceKey: 'xdrip',
         dataSourceEventSourceKey: 'aaps',
+        dataSourcePumpStatusSourceKey: 'aaps',
         dataSourceHistorySourceKey: 'local',
         dataSourceMirrorToLocalKey: true,
       });
@@ -33,6 +34,7 @@ void main() {
           const DataSourceConfig(
             bgSource: BgSource.xdrip,
             eventSource: EventSource.aaps,
+            pumpStatusSource: PumpStatusSource.aaps,
             historySource: HistorySource.local,
             mirrorToLocal: true,
           ),
@@ -48,6 +50,7 @@ void main() {
       const config = DataSourceConfig(
         bgSource: BgSource.aaps,
         eventSource: EventSource.aaps,
+        pumpStatusSource: PumpStatusSource.aaps,
         historySource: HistorySource.local,
         mirrorToLocal: true,
       );
@@ -57,6 +60,7 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString(dataSourceBgSourceKey), 'aaps');
       expect(prefs.getString(dataSourceEventSourceKey), 'aaps');
+      expect(prefs.getString(dataSourcePumpStatusSourceKey), 'aaps');
       expect(prefs.getString(dataSourceHistorySourceKey), 'local');
       expect(prefs.getBool(dataSourceMirrorToLocalKey), isTrue);
       await expectLater(

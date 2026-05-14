@@ -25,17 +25,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
 
     return into(table).insert(
       reading,
-      onConflict: UpsertMultiple([
-        DoUpdate(
-          (_) => reading,
-          target: [table.source, table.externalId],
-          targetCondition: (row) => row.externalId.isNotNull(),
-        ),
-        DoUpdate(
-          (_) => reading,
-          target: [table.source, table.recordedAt, table.sgv],
-        ),
-      ]),
+      onConflict: DoUpdate((_) => reading, target: [table.createdAt]),
     );
   }
 
@@ -44,11 +34,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
 
     return into(table).insert(
       event,
-      onConflict: DoUpdate(
-        (_) => event,
-        target: [table.source, table.externalId],
-        targetCondition: (row) => row.externalId.isNotNull(),
-      ),
+      onConflict: DoUpdate((_) => event, target: [table.createdAt]),
     );
   }
 
@@ -57,11 +43,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
 
     return into(table).insert(
       event,
-      onConflict: DoUpdate(
-        (_) => event,
-        target: [table.source, table.externalId],
-        targetCondition: (row) => row.externalId.isNotNull(),
-      ),
+      onConflict: DoUpdate((_) => event, target: [table.createdAt]),
     );
   }
 
@@ -70,11 +52,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
 
     return into(table).insert(
       event,
-      onConflict: DoUpdate(
-        (_) => event,
-        target: [table.source, table.externalId],
-        targetCondition: (row) => row.externalId.isNotNull(),
-      ),
+      onConflict: DoUpdate((_) => event, target: [table.createdAt]),
     );
   }
 
@@ -83,11 +61,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
 
     return into(table).insert(
       event,
-      onConflict: DoUpdate(
-        (_) => event,
-        target: [table.source, table.externalId],
-        targetCondition: (row) => row.externalId.isNotNull(),
-      ),
+      onConflict: DoUpdate((_) => event, target: [table.createdAt]),
     );
   }
 
@@ -96,11 +70,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
 
     return into(table).insert(
       event,
-      onConflict: DoUpdate(
-        (_) => event,
-        target: [table.source, table.externalId],
-        targetCondition: (row) => row.externalId.isNotNull(),
-      ),
+      onConflict: DoUpdate((_) => event, target: [table.createdAt]),
     );
   }
 
@@ -109,11 +79,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
 
     return into(table).insert(
       event,
-      onConflict: DoUpdate(
-        (_) => event,
-        target: [table.source, table.externalId],
-        targetCondition: (row) => row.externalId.isNotNull(),
-      ),
+      onConflict: DoUpdate((_) => event, target: [table.createdAt]),
     );
   }
 
@@ -122,14 +88,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
 
     return into(table).insert(
       status,
-      onConflict: UpsertMultiple([
-        DoUpdate(
-          (_) => status,
-          target: [table.source, table.externalId],
-          targetCondition: (row) => row.externalId.isNotNull(),
-        ),
-        DoUpdate((_) => status, target: [table.source, table.recordedAt]),
-      ]),
+      onConflict: DoUpdate((_) => status, target: [table.createdAt]),
     );
   }
 
@@ -140,12 +99,12 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
   }) {
     final query = select(db.glucoseReading)
       ..where(
-        (row) => row.recordedAt.isBetweenValues(
+        (row) => row.createdAt.isBetweenValues(
           start.millisecondsSinceEpoch,
           end.millisecondsSinceEpoch,
         ),
       )
-      ..orderBy([(row) => OrderingTerm.asc(row.recordedAt)]);
+      ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]);
 
     if (source != null) {
       query.where((row) => row.source.equals(source));
@@ -257,12 +216,12 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
   }) {
     final query = select(db.deviceStatus)
       ..where(
-        (row) => row.recordedAt.isBetweenValues(
+        (row) => row.createdAt.isBetweenValues(
           start.millisecondsSinceEpoch,
           end.millisecondsSinceEpoch,
         ),
       )
-      ..orderBy([(row) => OrderingTerm.asc(row.recordedAt)]);
+      ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]);
 
     if (source != null) {
       query.where((row) => row.source.equals(source));

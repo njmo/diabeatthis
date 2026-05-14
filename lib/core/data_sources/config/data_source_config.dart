@@ -31,6 +31,22 @@ enum EventSource {
   }
 }
 
+enum PumpStatusSource {
+  cloud('cloud'),
+  aaps('aaps');
+
+  const PumpStatusSource(this.storageValue);
+
+  final String storageValue;
+
+  static PumpStatusSource fromStorage(String? value) {
+    return PumpStatusSource.values.firstWhere(
+      (source) => source.storageValue == value,
+      orElse: () => PumpStatusSource.cloud,
+    );
+  }
+}
+
 enum HistorySource {
   cloud('cloud'),
   local('local');
@@ -51,6 +67,7 @@ class DataSourceConfig {
   const DataSourceConfig({
     required this.bgSource,
     required this.eventSource,
+    required this.pumpStatusSource,
     required this.historySource,
     required this.mirrorToLocal,
   });
@@ -58,23 +75,27 @@ class DataSourceConfig {
   const DataSourceConfig.defaults()
     : bgSource = BgSource.cloud,
       eventSource = EventSource.cloud,
+      pumpStatusSource = PumpStatusSource.cloud,
       historySource = HistorySource.cloud,
       mirrorToLocal = false;
 
   final BgSource bgSource;
   final EventSource eventSource;
+  final PumpStatusSource pumpStatusSource;
   final HistorySource historySource;
   final bool mirrorToLocal;
 
   DataSourceConfig copyWith({
     BgSource? bgSource,
     EventSource? eventSource,
+    PumpStatusSource? pumpStatusSource,
     HistorySource? historySource,
     bool? mirrorToLocal,
   }) {
     return DataSourceConfig(
       bgSource: bgSource ?? this.bgSource,
       eventSource: eventSource ?? this.eventSource,
+      pumpStatusSource: pumpStatusSource ?? this.pumpStatusSource,
       historySource: historySource ?? this.historySource,
       mirrorToLocal: mirrorToLocal ?? this.mirrorToLocal,
     );
@@ -86,12 +107,19 @@ class DataSourceConfig {
         other is DataSourceConfig &&
             bgSource == other.bgSource &&
             eventSource == other.eventSource &&
+            pumpStatusSource == other.pumpStatusSource &&
             historySource == other.historySource &&
             mirrorToLocal == other.mirrorToLocal;
   }
 
   @override
   int get hashCode {
-    return Object.hash(bgSource, eventSource, historySource, mirrorToLocal);
+    return Object.hash(
+      bgSource,
+      eventSource,
+      pumpStatusSource,
+      historySource,
+      mirrorToLocal,
+    );
   }
 }

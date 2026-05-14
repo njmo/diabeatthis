@@ -10,7 +10,7 @@ abstract class ManualBolus with _$ManualBolus implements Treatment {
   const ManualBolus._();
 
   const factory ManualBolus({
-    required int id,
+    required String? externalId,
     required DateTime createdAt,
     required double insulin,
   }) = _ManualBolus;

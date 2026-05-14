@@ -10,7 +10,7 @@ abstract class Treat with _$Treat implements Treatment {
   const Treat._();
 
   const factory Treat({
-    required int id,
+    required String? externalId,
     required DateTime createdAt,
     required int carbs,
   }) = _Treat;

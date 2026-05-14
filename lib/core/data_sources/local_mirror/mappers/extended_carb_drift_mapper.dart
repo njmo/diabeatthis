@@ -8,7 +8,10 @@ extension ExtendedCarbDriftMapper on domain.ExtendedCarb {
   drift.ExtendedCarbCompanion toCompanion(EventSource source) {
     return drift.ExtendedCarbCompanion.insert(
       source: source.storageValue,
-      createdAt: createdAt.millisecondsSinceEpoch,
+      externalId: externalId != null
+          ? Value(externalId!)
+          : const Value.absent(),
+      createdAt: Value(createdAt.millisecondsSinceEpoch),
       carbs: Value(carbs.toDouble()),
       durationMinutes: Value(Duration(milliseconds: duration).inMinutes),
     );
@@ -18,7 +21,7 @@ extension ExtendedCarbDriftMapper on domain.ExtendedCarb {
 extension ExtendedCarbDomainMapper on drift.ExtendedCarbData {
   domain.ExtendedCarb toDomain() {
     return domain.ExtendedCarb(
-      id: id,
+      externalId: externalId,
       createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
       carbs: carbs?.round() ?? 0,
       duration: Duration(minutes: durationMinutes ?? 0).inMilliseconds,

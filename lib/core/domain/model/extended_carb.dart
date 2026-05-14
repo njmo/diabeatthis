@@ -10,7 +10,7 @@ abstract class ExtendedCarb with _$ExtendedCarb implements Treatment {
   const ExtendedCarb._();
 
   const factory ExtendedCarb({
-    required int id,
+    required String? externalId,
     required DateTime createdAt,
     required int carbs,
     required int duration,

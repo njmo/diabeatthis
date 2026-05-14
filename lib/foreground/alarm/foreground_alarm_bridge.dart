@@ -32,7 +32,6 @@ class ForegroundAlarmBridge {
   ) async {
     WidgetsFlutterBinding.ensureInitialized();
     DartPluginRegistrant.ensureInitialized();
-    FlutterForegroundTask.initCommunicationPort();
 
     final payload = jsonEncode({
       'external_event': 'app_event',

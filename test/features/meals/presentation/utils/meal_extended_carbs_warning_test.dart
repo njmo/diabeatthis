@@ -29,7 +29,7 @@ void main() {
         analysis: _analysis(
           treatments: [
             ExtendedCarb(
-              id: 1,
+              externalId: null,
               createdAt: DateTime(2026, 5, 13, 12, 45),
               carbs: 12,
               duration: 120,

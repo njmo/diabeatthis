@@ -8,7 +8,10 @@ extension ManualBolusDriftMapper on domain.ManualBolus {
   drift.ManualBolusCompanion toCompanion(EventSource source) {
     return drift.ManualBolusCompanion.insert(
       source: source.storageValue,
-      createdAt: createdAt.millisecondsSinceEpoch,
+      externalId: externalId != null
+          ? Value(externalId!)
+          : const Value.absent(),
+      createdAt: Value(createdAt.millisecondsSinceEpoch),
       insulin: Value(insulin),
     );
   }
@@ -17,7 +20,7 @@ extension ManualBolusDriftMapper on domain.ManualBolus {
 extension ManualBolusDomainMapper on drift.ManualBolusData {
   domain.ManualBolus toDomain() {
     return domain.ManualBolus(
-      id: id,
+      externalId: externalId,
       createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
       insulin: insulin ?? 0,
     );

@@ -6,6 +6,7 @@ part 'extended_carb_dto.g.dart';
 @freezed
 abstract class ExtendedCarbDto with _$ExtendedCarbDto {
   const factory ExtendedCarbDto({
+    @JsonKey(name: '_id') required String? id,
     @JsonKey(name: 'created_at') required String createdAt,
     required int carbs,
     required int duration,

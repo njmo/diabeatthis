@@ -2,9 +2,9 @@ import '../../../domain/model/treat.dart';
 import '../dto/treat_dto.dart';
 
 extension TreatMapper on TreatDto {
-  Treat toDomain({int? localId}) {
+  Treat toDomain() {
     return Treat(
-      id: 0,
+      externalId: id,
       createdAt: DateTime.parse(createdAt).toLocal(),
       carbs: (carbs as num?)?.toInt() ?? 0,
     );

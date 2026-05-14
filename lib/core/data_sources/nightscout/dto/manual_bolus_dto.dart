@@ -6,6 +6,7 @@ part 'manual_bolus_dto.g.dart';
 @freezed
 abstract class ManualBolusDto with _$ManualBolusDto {
   const factory ManualBolusDto({
+    @JsonKey(name: '_id') required String? id,
     @JsonKey(name: 'created_at') required String createdAt,
     required double insulin,
   }) = _ManualBolusDto;

@@ -53,7 +53,6 @@ void withFakeClock(FakeAsync async, DateTime start, void Function() body) {
 }
 
 BolusWizard testBolusWizard({
-  int id = 0,
   DateTime? createdAt,
   int glucose = 100,
   double carbs = 10,
@@ -62,7 +61,6 @@ BolusWizard testBolusWizard({
   String? notes,
 }) {
   return BolusWizard(
-    id: id,
     nightscoutObjectId: nightscoutObjectId,
     createdAt: createdAt ?? clock.now(),
     date: createdAt ?? clock.now(),
@@ -81,6 +79,7 @@ BolusCalculatorResult testBolusCalculatorResult({
   double? totalInsulin,
 }) {
   return BolusCalculatorResult(
+    id: null,
     basalIob: null,
     bolusIob: null,
     carbs: carbs,
@@ -93,7 +92,6 @@ BolusCalculatorResult testBolusCalculatorResult({
     glucoseTrend: null,
     glucoseValue: null,
     ic: null,
-    id: null,
     isf: null,
     note: null,
     otherCorrection: null,
@@ -559,7 +557,7 @@ void main() {
 
             harness.dispatchEventToTask(
               task,
-              TreatmentAvailableEvent<BolusWizard>(testBolusWizard(id: 10)),
+              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
             );
             _settle(async);
 
@@ -618,7 +616,6 @@ void main() {
                     bg: 120,
                     iob: 100,
                     cob: 100,
-                    id: 0,
                     date: clock.now().subtract(Duration(minutes: 2)),
                     tick: '',
                   ),
@@ -685,7 +682,6 @@ void main() {
               bg: 120,
               iob: 100,
               cob: 100,
-              id: 0,
               date: clock.now().subtract(Duration(minutes: 2)),
               tick: '',
             );
@@ -738,7 +734,6 @@ void main() {
                     bg: 120,
                     iob: 100,
                     cob: 100,
-                    id: 0,
                     date: clock.now().subtract(Duration(minutes: 2)),
                     tick: '',
                   ),
@@ -831,7 +826,6 @@ void main() {
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
-                  id: 0,
                   date: clock.now().subtract(Duration(minutes: 2)),
                   tick: '',
                 ),
@@ -911,7 +905,6 @@ void main() {
               bg: 118,
               iob: 10,
               cob: 10,
-              id: 0,
               date: lastReadingDate,
               tick: '+0',
             );
@@ -945,7 +938,6 @@ void main() {
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
-                  id: 0,
                   date: lastReadingDate,
                   tick: '',
                 ),
@@ -1016,7 +1008,6 @@ void main() {
               bg: 118,
               iob: 10,
               cob: 10,
-              id: 0,
               date: lastReadingDate,
               tick: '+0',
             );
@@ -1050,7 +1041,6 @@ void main() {
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
-                  id: 0,
                   date: lastReadingDate,
                   tick: '',
                 ),
@@ -1121,7 +1111,6 @@ void main() {
               bg: 118,
               iob: 10,
               cob: 10,
-              id: 0,
               date: lastReadingDate,
               tick: '+0',
             );
@@ -1155,7 +1144,6 @@ void main() {
                   bg: 120 - i * 10,
                   iob: 10,
                   cob: 10,
-                  id: 0,
                   date: lastReadingDate,
                   tick: '-${i * 15}',
                 ),
@@ -1244,7 +1232,6 @@ void main() {
                   bg: 190 + i * 4,
                   iob: 0,
                   cob: 0,
-                  id: 0,
                   date: clock.now().subtract(Duration(minutes: 2)),
                   tick: '',
                 ),
@@ -1294,7 +1281,6 @@ void main() {
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
-                  id: 0,
                   date: lastReadingDate,
                   tick: '',
                 ),
@@ -1372,7 +1358,6 @@ void main() {
               bg: 118,
               iob: 10,
               cob: 10,
-              id: 0,
               date: lastReadingDate,
               tick: '+0',
             );
@@ -1405,7 +1390,6 @@ void main() {
                 bg: 105,
                 iob: 10,
                 cob: 10,
-                id: 0,
                 date: lastReadingDate,
                 tick: '-13',
               ),
@@ -1516,7 +1500,6 @@ void main() {
               bg: 118,
               iob: 10,
               cob: 10,
-              id: 0,
               date: lastReadingDate,
               tick: '+0',
             );
@@ -1550,7 +1533,6 @@ void main() {
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
-                  id: 0,
                   date: lastReadingDate,
                   tick: '',
                 ),
@@ -1652,7 +1634,6 @@ void main() {
                   bg: 120 + i * 4,
                   iob: 10,
                   cob: 10,
-                  id: 0,
                   date: clock.now().subtract(Duration(minutes: 2)),
                   tick: '',
                 ),
@@ -1937,7 +1918,6 @@ void main() {
             bg: 118,
             iob: 10,
             cob: 10,
-            id: 0,
             date: lastReadingDate,
             tick: '+0',
           );
@@ -1967,7 +1947,6 @@ void main() {
               bg: 105,
               iob: 10,
               cob: 10,
-              id: 0,
               date: lastReadingDate,
               tick: '-13',
             ),
@@ -2062,7 +2041,6 @@ void main() {
               bg: 124,
               iob: 10,
               cob: 10,
-              id: 0,
               date: clock.now().subtract(Duration(minutes: 2)),
               tick: '+4',
             ),
@@ -2091,7 +2069,6 @@ Future<void> _flushMicrotasks() async {
 
 TemporaryTarget _temporaryTarget(DateTime createdAt) {
   return TemporaryTarget(
-    id: 1,
     nightscoutId: 'target-1',
     createdAt: createdAt,
     durationInMiliseconds: const Duration(hours: 1).inMilliseconds,

@@ -11,7 +11,7 @@ extension TemporaryTargetDriftMapper on domain.TemporaryTarget {
       externalId: source == EventSource.cloud && nightscoutId.isNotEmpty
           ? Value(nightscoutId)
           : const Value.absent(),
-      createdAt: createdAt.millisecondsSinceEpoch,
+      createdAt: Value(createdAt.millisecondsSinceEpoch),
       nightscoutId: Value(nightscoutId),
       durationMinutes: Value(duration),
       targetBottom: Value(targetBottom.toDouble()),
@@ -25,7 +25,6 @@ extension TemporaryTargetDomainMapper on drift.TemporaryTargetData {
     final duration = durationMinutes ?? 0;
 
     return domain.TemporaryTarget(
-      id: id,
       nightscoutId: nightscoutId ?? externalId ?? '',
       createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
       durationInMiliseconds: Duration(minutes: duration).inMilliseconds,

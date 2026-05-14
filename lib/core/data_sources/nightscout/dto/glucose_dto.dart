@@ -6,6 +6,7 @@ part 'glucose_dto.g.dart';
 @freezed
 abstract class GlucoseDto with _$GlucoseDto {
   const factory GlucoseDto({
+    @JsonKey(name: '_id') required String id,
     @JsonKey(name: 'created_at') required String createdAt,
     required int sgv,
     required String direction,

@@ -20,7 +20,7 @@ void main() {
       GlucoseReadingCompanion.insert(
         source: BgSource.cloud.storageValue,
         externalId: const Value('sgv-1'),
-        recordedAt: 1000,
+        createdAt: const Value(1000),
         sgv: 120,
         direction: const Value('Flat'),
       ),
@@ -30,7 +30,7 @@ void main() {
       GlucoseReadingCompanion.insert(
         source: BgSource.cloud.storageValue,
         externalId: const Value('sgv-1'),
-        recordedAt: 1000,
+        createdAt: const Value(1000),
         sgv: 121,
         direction: const Value('FortyFiveUp'),
       ),
@@ -38,7 +38,7 @@ void main() {
     await db.localMirrorDao.upsertGlucoseReading(
       GlucoseReadingCompanion.insert(
         source: BgSource.xdrip.storageValue,
-        recordedAt: 2000,
+        createdAt: const Value(2000),
         sgv: 130,
       ),
     );
@@ -59,14 +59,14 @@ void main() {
       ManualBolusCompanion.insert(
         source: EventSource.aaps.storageValue,
         externalId: const Value('treatment-1'),
-        createdAt: 1000,
+        createdAt: const Value(1000),
         insulin: const Value(2.4),
       ),
     );
     await db.localMirrorDao.upsertTemporaryTarget(
       TemporaryTargetCompanion.insert(
         source: EventSource.cloud.storageValue,
-        createdAt: 2000,
+        createdAt: const Value(2000),
         durationMinutes: const Value(30),
         targetBottom: const Value(90),
         targetTop: const Value(120),
@@ -83,12 +83,12 @@ void main() {
     expect(events.single.insulin, 2.4);
   });
 
-  test('stores device statuses by source and recorded time', () async {
+  test('stores device statuses by source and created time', () async {
     await db.localMirrorDao.upsertDeviceStatus(
       DeviceStatusCompanion.insert(
         source: EventSource.aaps.storageValue,
         externalId: const Value('status-1'),
-        recordedAt: 1000,
+        createdAt: const Value(1000),
         bg: const Value(110),
         iob: const Value(1.3),
         basalIob: const Value(-0.2),
@@ -108,7 +108,7 @@ void main() {
     await db.localMirrorDao.upsertDeviceStatus(
       DeviceStatusCompanion.insert(
         source: EventSource.cloud.storageValue,
-        recordedAt: 2000,
+        createdAt: const Value(2000),
         bg: const Value(140),
       ),
     );

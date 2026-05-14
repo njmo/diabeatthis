@@ -80,8 +80,8 @@ Future<DeviceStatusSourceRepository> deviceStatusSourceRepository(
   );
   final config = await ref.watch(dataSourceConfigProvider.future);
 
-  switch (config.eventSource) {
-    case EventSource.cloud:
+  switch (config.pumpStatusSource) {
+    case PumpStatusSource.cloud:
       final nightscoutRepository = await nightscoutRepositoryFuture;
       final repository = CloudDeviceStatusSourceRepository(
         nightscoutRepository,
@@ -92,9 +92,9 @@ Future<DeviceStatusSourceRepository> deviceStatusSourceRepository(
         delegate: repository,
         mirrorWriter: _localMirrorWriter(ref),
       );
-    case EventSource.aaps:
+    case PumpStatusSource.aaps:
       throw const UnsupportedDataSourceException(
-        'AAPS device status source is not implemented yet',
+        'AAPS pump status source is not implemented yet',
       );
   }
 }

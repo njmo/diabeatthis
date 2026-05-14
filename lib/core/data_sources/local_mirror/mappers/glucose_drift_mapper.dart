@@ -9,10 +9,8 @@ extension GlucoseDriftMapper on domain.Glucose {
       source: source.storageValue,
       externalId: externalId != null
           ? Value(externalId!)
-          : id > 0
-          ? Value(id.toString())
           : const Value.absent(),
-      recordedAt: date.millisecondsSinceEpoch,
+      createdAt: Value(date.millisecondsSinceEpoch),
       sgv: sgv,
       direction: Value(direction),
     );

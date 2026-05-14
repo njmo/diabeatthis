@@ -3,11 +3,10 @@ import '../../../domain/model/bolus_wizard.dart';
 import '../dto/bolus_wizard_dto.dart';
 
 extension BolusWizardMapper on BolusWizardDto {
-  BolusWizard toDomain({int? localId}) {
+  BolusWizard toDomain() {
     final calculatorResult = bolusCalculatorResult?.toBolusCalculatorResult();
 
     return BolusWizard(
-      id: localId ?? 0,
       createdAt: DateTime.parse(createdAt).toLocal(),
       date: _dateTimeFromMilliseconds(date),
       nightscoutObjectId: id,

@@ -8,6 +8,7 @@ void main() {
 
       expect(config.bgSource, BgSource.cloud);
       expect(config.eventSource, EventSource.cloud);
+      expect(config.pumpStatusSource, PumpStatusSource.cloud);
       expect(config.historySource, HistorySource.cloud);
       expect(config.mirrorToLocal, isFalse);
     });
@@ -16,6 +17,7 @@ void main() {
       expect(BgSource.fromStorage('aaps'), BgSource.aaps);
       expect(BgSource.fromStorage('xdrip'), BgSource.xdrip);
       expect(EventSource.fromStorage('aaps'), EventSource.aaps);
+      expect(PumpStatusSource.fromStorage('aaps'), PumpStatusSource.aaps);
       expect(HistorySource.fromStorage('local'), HistorySource.local);
     });
 
@@ -24,6 +26,8 @@ void main() {
       expect(BgSource.fromStorage('unknown'), BgSource.cloud);
       expect(EventSource.fromStorage(null), EventSource.cloud);
       expect(EventSource.fromStorage('xdrip'), EventSource.cloud);
+      expect(PumpStatusSource.fromStorage(null), PumpStatusSource.cloud);
+      expect(PumpStatusSource.fromStorage('xdrip'), PumpStatusSource.cloud);
       expect(HistorySource.fromStorage(null), HistorySource.cloud);
       expect(HistorySource.fromStorage('unknown'), HistorySource.cloud);
     });

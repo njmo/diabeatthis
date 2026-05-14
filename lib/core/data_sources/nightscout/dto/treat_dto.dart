@@ -6,6 +6,7 @@ part 'treat_dto.g.dart';
 @freezed
 abstract class TreatDto with _$TreatDto {
   const factory TreatDto({
+    @JsonKey(name: '_id') required String? id,
     @JsonKey(name: 'created_at') required String createdAt,
     required int carbs,
   }) = _TreatDto;

@@ -362,7 +362,6 @@ Future<void> _seedActivityLog(
 
 domain.TemporaryTarget _temporaryTarget(DateTime createdAt) {
   return domain.TemporaryTarget(
-    id: 1,
     nightscoutId: 'target-1',
     createdAt: createdAt,
     durationInMiliseconds: const Duration(hours: 1).inMilliseconds,

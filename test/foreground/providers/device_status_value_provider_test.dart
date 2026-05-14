@@ -17,14 +17,7 @@ void main() {
         final notifier = container.read(deviceStatusValueProvider.notifier);
 
         notifier.update(
-          testDeviceStatus(
-            id: 1,
-            date: start,
-            bg: 110,
-            tick: '+12',
-            iob: 0,
-            cob: 0,
-          ),
+          testDeviceStatus(date: start, bg: 110, tick: '+12', iob: 0, cob: 0),
         );
 
         expect(container.read(deviceStatusValueProvider)?.bg, 110);

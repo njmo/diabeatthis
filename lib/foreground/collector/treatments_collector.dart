@@ -85,7 +85,7 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
   void _handleTreatment(CollectorContext context, Treatment data) {
     logI("New treatment reading available $data");
     logI(
-      "Detected change in treatment reading ${data.id} at "
+      "Detected change in treatment reading at "
       "${data.createdAt?.toIso8601String()}",
     );
 

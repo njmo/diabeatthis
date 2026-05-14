@@ -14,7 +14,7 @@ extension BolusWizardDriftMapper on domain.BolusWizard {
       externalId: source == EventSource.cloud && nightscoutObjectId != null
           ? Value(nightscoutObjectId!)
           : const Value.absent(),
-      createdAt: createdAt.millisecondsSinceEpoch,
+      createdAt: Value(createdAt.millisecondsSinceEpoch),
       nightscoutId: Value(nightscoutObjectId),
       glucose: Value(glucose),
       units: Value(units),
@@ -62,7 +62,6 @@ extension BolusWizardDriftMapper on domain.BolusWizard {
 extension BolusWizardDomainMapper on drift.BolusWizardData {
   domain.BolusWizard toDomain() {
     return domain.BolusWizard(
-      id: id,
       nightscoutObjectId: nightscoutId,
       createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
       date: DateTime.fromMillisecondsSinceEpoch(createdAt),

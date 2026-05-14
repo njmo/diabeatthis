@@ -72,9 +72,7 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
         try {
           final current = await _fetchLastDeviceStatus(context);
 
-          final isNewStatus =
-              current.date.isAfter(knownLast.date) ||
-              current.id != knownLast.id;
+          final isNewStatus = current.date.isAfter(knownLast.date);
 
           if (isNewStatus) {
             last = current;
@@ -104,7 +102,7 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
   void _handleDeviceStatus(CollectorContext context, DeviceStatus data) {
     logI("Device status reading available $data");
     logI(
-      "Detected change in device status reading ${data.id} at ${data.date.toIso8601String()} "
+      "Detected change in device status reading at ${data.date.toIso8601String()} "
       "with value ${data.bg} and tick ${data.tick}",
     );
 
@@ -115,7 +113,6 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
     ForegroundAlarmBridge.scheduleCollectTick(nextAlarm);
 
     final glucose = Glucose(
-      id: data.id,
       externalId: data.externalId,
       source: GlucoseSource.fromStorage(data.source.storageValue),
       sgv: data.bg,

@@ -7,6 +7,7 @@ part 'data_source_config_provider.g.dart';
 
 const dataSourceBgSourceKey = 'data-source-bg-source';
 const dataSourceEventSourceKey = 'data-source-event-source';
+const dataSourcePumpStatusSourceKey = 'data-source-pump-status-source';
 const dataSourceHistorySourceKey = 'data-source-history-source';
 const dataSourceMirrorToLocalKey = 'data-source-mirror-to-local';
 
@@ -18,6 +19,9 @@ Future<DataSourceConfig> dataSourceConfig(Ref ref) async {
     bgSource: BgSource.fromStorage(prefs.getString(dataSourceBgSourceKey)),
     eventSource: EventSource.fromStorage(
       prefs.getString(dataSourceEventSourceKey),
+    ),
+    pumpStatusSource: PumpStatusSource.fromStorage(
+      prefs.getString(dataSourcePumpStatusSourceKey),
     ),
     historySource: HistorySource.fromStorage(
       prefs.getString(dataSourceHistorySourceKey),
@@ -44,6 +48,10 @@ class DataSourceConfigController {
       prefs.setString(
         dataSourceEventSourceKey,
         config.eventSource.storageValue,
+      ),
+      prefs.setString(
+        dataSourcePumpStatusSourceKey,
+        config.pumpStatusSource.storageValue,
       ),
       prefs.setString(
         dataSourceHistorySourceKey,

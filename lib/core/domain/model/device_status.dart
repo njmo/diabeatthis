@@ -23,7 +23,6 @@ enum DeviceStatusSource {
 @freezed
 abstract class DeviceStatus with _$DeviceStatus {
   const factory DeviceStatus({
-    required int id,
     required String? externalId,
     required DeviceStatusSource source,
     required DateTime date,

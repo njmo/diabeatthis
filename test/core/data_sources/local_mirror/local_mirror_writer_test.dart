@@ -2,9 +2,13 @@ import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/services/local_mirror_writer.dart';
 import 'package:diabeatthis/core/domain/model/bolus_calculator_result.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart' as domain;
+import 'package:diabeatthis/core/domain/model/correction_bolus.dart' as domain;
 import 'package:diabeatthis/core/domain/model/device_status.dart' as domain;
+import 'package:diabeatthis/core/domain/model/extended_carb.dart' as domain;
 import 'package:diabeatthis/core/domain/model/glucose.dart' as domain;
+import 'package:diabeatthis/core/domain/model/manual_bolus.dart' as domain;
 import 'package:diabeatthis/core/domain/model/temporary_target.dart' as domain;
+import 'package:diabeatthis/core/domain/model/treat.dart' as domain;
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,7 +33,6 @@ void main() {
 
     await writer.mirrorGlucose([
       domain.Glucose(
-        id: 0,
         externalId: null,
         source: domain.GlucoseSource.cloud,
         date: date,
@@ -37,7 +40,6 @@ void main() {
         direction: 'Flat',
       ),
       domain.Glucose(
-        id: 0,
         externalId: null,
         source: domain.GlucoseSource.cloud,
         date: date,
@@ -62,7 +64,6 @@ void main() {
 
     await writer.mirrorTreatments([
       domain.BolusWizard(
-        id: 0,
         nightscoutObjectId: 'meal-1',
         createdAt: createdAt,
         date: createdAt,
@@ -75,13 +76,33 @@ void main() {
         ),
       ),
       domain.TemporaryTarget(
-        id: 0,
         nightscoutId: 'target-1',
         createdAt: createdAt.add(const Duration(minutes: 5)),
         durationInMiliseconds: 1800000,
         duration: 30,
         targetBottom: 90,
         targetTop: 120,
+      ),
+      domain.CorrectionBolus(
+        externalId: 'correction-1',
+        createdAt: createdAt.add(const Duration(minutes: 6)),
+        insulin: 0.7,
+      ),
+      domain.ManualBolus(
+        externalId: 'manual-1',
+        createdAt: createdAt.add(const Duration(minutes: 7)),
+        insulin: 1.2,
+      ),
+      domain.Treat(
+        externalId: 'treat-1',
+        createdAt: createdAt.add(const Duration(minutes: 8)),
+        carbs: 15,
+      ),
+      domain.ExtendedCarb(
+        externalId: 'extended-carb-1',
+        createdAt: createdAt.add(const Duration(minutes: 9)),
+        carbs: 18,
+        duration: const Duration(minutes: 90).inMilliseconds,
       ),
     ], EventSource.cloud);
 
@@ -92,6 +113,23 @@ void main() {
     final temporaryTargets = await db.localMirrorDao.getTemporaryTargetsBetween(
       DateTime.fromMillisecondsSinceEpoch(0),
       DateTime.fromMillisecondsSinceEpoch(400000),
+    );
+    final correctionBoluses = await db.localMirrorDao
+        .getCorrectionBolusesBetween(
+          DateTime.fromMillisecondsSinceEpoch(0),
+          DateTime.fromMillisecondsSinceEpoch(500000),
+        );
+    final manualBoluses = await db.localMirrorDao.getManualBolusesBetween(
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.fromMillisecondsSinceEpoch(600000),
+    );
+    final treats = await db.localMirrorDao.getTreatsBetween(
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.fromMillisecondsSinceEpoch(600000),
+    );
+    final extendedCarbs = await db.localMirrorDao.getExtendedCarbsBetween(
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.fromMillisecondsSinceEpoch(700000),
     );
 
     expect(bolusWizards, hasLength(1));
@@ -107,22 +145,32 @@ void main() {
     expect(temporaryTarget.externalId, 'target-1');
     expect(temporaryTarget.targetBottom, 90);
     expect(temporaryTarget.targetTop, 120);
+
+    expect(correctionBoluses, hasLength(1));
+    expect(correctionBoluses.single.externalId, 'correction-1');
+    expect(correctionBoluses.single.source, EventSource.cloud.storageValue);
+    expect(correctionBoluses.single.insulin, 0.7);
+
+    expect(manualBoluses, hasLength(1));
+    expect(manualBoluses.single.externalId, 'manual-1');
+    expect(manualBoluses.single.insulin, 1.2);
+
+    expect(treats, hasLength(1));
+    expect(treats.single.externalId, 'treat-1');
+    expect(treats.single.carbs, 15);
+
+    expect(extendedCarbs, hasLength(1));
+    expect(extendedCarbs.single.externalId, 'extended-carb-1');
+    expect(extendedCarbs.single.carbs, 18);
+    expect(extendedCarbs.single.durationMinutes, 90);
   });
 
   test('mirrors device statuses into local storage', () async {
     final date = DateTime.fromMillisecondsSinceEpoch(1000);
 
     await writer.mirrorDeviceStatuses([
+      testDeviceStatus(date: date, iob: 1.2, cob: 10, tick: '+1', bg: 110),
       testDeviceStatus(
-        id: 0,
-        date: date,
-        iob: 1.2,
-        cob: 10,
-        tick: '+1',
-        bg: 110,
-      ),
-      testDeviceStatus(
-        id: 0,
         externalId: 'status-1',
         source: domain.DeviceStatusSource.aaps,
         date: date,
@@ -143,11 +191,9 @@ void main() {
       DateTime.fromMillisecondsSinceEpoch(2000),
     );
 
-    expect(statuses, hasLength(2));
+    expect(statuses, hasLength(1));
 
-    final aapsStatus = statuses.singleWhere(
-      (status) => status.source == domain.DeviceStatusSource.aaps.storageValue,
-    );
+    final aapsStatus = statuses.single;
     expect(aapsStatus.source, domain.DeviceStatusSource.aaps.storageValue);
     expect(aapsStatus.bg, 111);
     expect(aapsStatus.externalId, 'status-1');
@@ -167,6 +213,7 @@ BolusCalculatorResult _testBolusCalculatorResult({
   double? totalInsulin,
 }) {
   return BolusCalculatorResult(
+    id: null,
     basalIob: null,
     bolusIob: null,
     carbs: carbs,
@@ -179,7 +226,6 @@ BolusCalculatorResult _testBolusCalculatorResult({
     glucoseTrend: null,
     glucoseValue: null,
     ic: null,
-    id: null,
     isf: null,
     note: null,
     otherCorrection: null,

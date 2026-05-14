@@ -11,7 +11,6 @@ abstract class BolusWizard with _$BolusWizard implements Treatment {
   const BolusWizard._();
 
   const factory BolusWizard({
-    required int id,
     required String? nightscoutObjectId,
     required DateTime createdAt,
     required DateTime? date,

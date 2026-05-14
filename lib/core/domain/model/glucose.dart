@@ -24,7 +24,6 @@ enum GlucoseSource {
 @freezed
 abstract class Glucose with _$Glucose {
   const factory Glucose({
-    required int id,
     required String? externalId,
     required GlucoseSource source,
     required DateTime date,

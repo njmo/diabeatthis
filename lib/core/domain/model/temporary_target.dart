@@ -12,7 +12,6 @@ abstract class TemporaryTarget with _$TemporaryTarget implements Treatment {
   const TemporaryTarget._();
 
   const factory TemporaryTarget({
-    required int id,
     required String nightscoutId,
     required DateTime createdAt,
     required int durationInMiliseconds,

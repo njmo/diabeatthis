@@ -1,7 +1,6 @@
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 
 DeviceStatus testDeviceStatus({
-  int id = 0,
   String? externalId,
   DeviceStatusSource source = DeviceStatusSource.cloud,
   required DateTime date,
@@ -22,7 +21,6 @@ DeviceStatus testDeviceStatus({
   String lastBolusAt = '',
 }) {
   return DeviceStatus(
-    id: id,
     externalId: externalId,
     source: source,
     date: date,

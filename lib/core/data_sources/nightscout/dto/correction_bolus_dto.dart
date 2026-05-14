@@ -6,6 +6,7 @@ part 'correction_bolus_dto.g.dart';
 @freezed
 abstract class CorrectionBolusDto with _$CorrectionBolusDto {
   const factory CorrectionBolusDto({
+    @JsonKey(name: '_id') required String? id,
     @JsonKey(name: 'created_at') required String createdAt,
     required double insulin,
   }) = _CorrectionBolusDto;

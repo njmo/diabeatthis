@@ -17,7 +17,6 @@ void main() {
 
         notifier.update(
           Glucose(
-            id: 1,
             externalId: null,
             source: GlucoseSource.cloud,
             date: start,

@@ -19,6 +19,15 @@ extension EventSourceLabel on EventSource {
   }
 }
 
+extension PumpStatusSourceLabel on PumpStatusSource {
+  String get label {
+    return switch (this) {
+      PumpStatusSource.cloud => 'Chmura (Nightscout)',
+      PumpStatusSource.aaps => 'AAPS lokalnie',
+    };
+  }
+}
+
 extension HistorySourceLabel on HistorySource {
   String get label {
     return switch (this) {

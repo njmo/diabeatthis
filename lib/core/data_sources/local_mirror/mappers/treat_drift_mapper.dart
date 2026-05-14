@@ -8,7 +8,10 @@ extension TreatDriftMapper on domain.Treat {
   drift.TreatCompanion toCompanion(EventSource source) {
     return drift.TreatCompanion.insert(
       source: source.storageValue,
-      createdAt: createdAt.millisecondsSinceEpoch,
+      externalId: externalId != null
+          ? Value(externalId!)
+          : const Value.absent(),
+      createdAt: Value(createdAt.millisecondsSinceEpoch),
       carbs: Value(carbs.toDouble()),
     );
   }
@@ -17,7 +20,7 @@ extension TreatDriftMapper on domain.Treat {
 extension TreatDomainMapper on drift.TreatData {
   domain.Treat toDomain() {
     return domain.Treat(
-      id: id,
+      externalId: externalId,
       createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
       carbs: carbs?.round() ?? 0,
     );

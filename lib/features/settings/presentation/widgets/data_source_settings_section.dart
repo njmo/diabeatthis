@@ -19,7 +19,7 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
     return SettingsSectionCard(
       icon: Icons.hub_outlined,
       title: 'Źródła danych',
-      subtitle: 'Wybierz źródło cukru, zdarzeń i historii.',
+      subtitle: 'Wybierz źródło cukru, zdarzeń, statusu pompy i historii.',
       children: [
         configAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -49,6 +49,7 @@ extension _DataSourceConfigSyncPayload on DataSourceConfig {
     return {
       dataSourceBgSourceKey: bgSource.storageValue,
       dataSourceEventSourceKey: eventSource.storageValue,
+      dataSourcePumpStatusSourceKey: pumpStatusSource.storageValue,
       dataSourceHistorySourceKey: historySource.storageValue,
       dataSourceMirrorToLocalKey: mirrorToLocal.toString(),
     };
