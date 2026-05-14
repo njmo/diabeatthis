@@ -10,7 +10,6 @@ abstract class Glucose with _$Glucose{
     required DateTime date,
     required int sgv,
     required String direction,
-    int? tick,
   }) = _Glucose;
 
   factory Glucose.fromJson(Map<String, dynamic> json) =>

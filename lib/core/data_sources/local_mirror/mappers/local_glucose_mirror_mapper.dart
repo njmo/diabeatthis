@@ -12,7 +12,6 @@ extension LocalGlucoseMirrorMapper on Glucose {
       recordedAt: date.millisecondsSinceEpoch,
       sgv: sgv,
       direction: Value(direction),
-      tick: Value(tick),
     );
   }
 }

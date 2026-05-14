@@ -19,8 +19,6 @@ class GlucoseDashboard extends ConsumerWidget {
     final oldReading = (lastUpdate?.inMinutes ?? 0) > 10;
     final bgColor = oldReading ? Colors.black : getColorForValue(glucose.sgv);
     final trendIcon = iconForDirection(glucose.direction);
-    final tick = glucose.tick;
-    final sign = tick != null && tick > 0 ? '+' : '';
 
     return RepaintBoundary(
       child: Column(
@@ -44,10 +42,6 @@ class GlucoseDashboard extends ConsumerWidget {
             ],
           ),
           const SizedBox(width: 160, height: 50, child: GlucoseMiniChart()),
-          if (tick != null)
-            Chip(
-              label: Text('$sign$tick mg/dl', style: TextStyle(fontSize: 12)),
-            ),
         ],
       ),
     );
