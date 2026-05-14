@@ -8,7 +8,7 @@ abstract class GlucoseDto with _$GlucoseDto {
   const factory GlucoseDto({
     @JsonKey(name: '_id') required String id,
     @JsonKey(name: 'created_at') required String createdAt,
-    required int date,
+    int? date,
     required int sgv,
     required String direction,
   }) = _GlucoseDto;

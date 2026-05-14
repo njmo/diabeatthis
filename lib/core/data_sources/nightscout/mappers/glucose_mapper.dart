@@ -6,7 +6,9 @@ extension GlucoseMapper on GlucoseDto {
     return Glucose(
       externalId: id,
       source: GlucoseSource.cloud,
-      date: DateTime.fromMillisecondsSinceEpoch(date),
+      date: date != null
+          ? DateTime.fromMillisecondsSinceEpoch(date!)
+          : DateTime.parse(createdAt).toLocal(),
       sgv: (sgv as num?)?.toInt() ?? 0,
       direction: direction,
     );
