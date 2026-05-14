@@ -67,54 +67,66 @@ void main() {
 
   group('AapsBolusSuggestionNotificationEvent', () {
     test('renders bolus and eat now suggestion', () {
-      const event = AapsBolusSuggestionNotificationEvent(
-        mealId: 1,
-        mealName: 'Obiad',
-        carbs: 45,
-        status: 'bolused-eating',
-      );
+      const event = AapsBolusSuggestionNotificationEvent(carbs: 45);
 
-      expect(event.title, 'Podaj 45g teraz');
+      expect(event.title, 'Podaj 45g');
       expect(event.body, isEmpty);
       expect(event.toPayload(), isEmpty);
+      expect(event.extendedCarbsDeliveryMode, isNull);
+      expect(event.extendedCarbsDelayMinutes, isNull);
+      expect(event.extendedCarbsDurationMinutes, isNull);
     });
 
-    test('renders eat now bolus later as carbs entry without bolus', () {
+    test(
+      'renders only extended carbs for eat now bolus later with e-carbs',
+      () {
+        const event = AapsBolusSuggestionNotificationEvent(
+          carbs: 0,
+          extendedCarbs: 25,
+          extendedCarbsDelayMinutes: 25,
+          extendedCarbsDurationMinutes: 120,
+        );
+
+        expect(event.title, 'Wpisz extended 25g za 25 min przez 2 godz.');
+      },
+    );
+
+    test('fails fast without carbs and e-carbs', () {
+      const event = AapsBolusSuggestionNotificationEvent(carbs: 0);
+
+      expect(() => event.title, throwsA(isA<StateError>()));
+    });
+
+    test('fails fast for e-carbs without schedule', () {
       const event = AapsBolusSuggestionNotificationEvent(
-        mealId: 1,
-        mealName: 'Obiad',
-        carbs: 45,
-        status: 'eating-then-bolus',
+        carbs: 0,
+        extendedCarbs: 25,
       );
 
-      expect(event.title, 'Wpisz 45g teraz, bez bolusa');
-      expect(event.body, isEmpty);
+      expect(() => event.title, throwsA(isA<StateError>()));
     });
 
     test('renders bolus wait suggestion', () {
-      const event = AapsBolusSuggestionNotificationEvent(
-        mealId: 1,
-        mealName: 'Obiad',
-        carbs: 45,
-        status: 'bolused-waiting',
-        waitMinutes: 15,
-      );
+      const event = AapsBolusSuggestionNotificationEvent(carbs: 45);
 
-      expect(event.title, 'Podaj 45g teraz');
+      expect(event.title, 'Podaj 45g');
     });
 
-    test('renders extended carbs schedule in title', () {
+    test('renders extended carbs grams in title', () {
       const event = AapsBolusSuggestionNotificationEvent(
-        mealId: 1,
-        mealName: 'Obiad',
         carbs: 15,
-        status: 'bolused-eating',
         extendedCarbs: 25,
         extendedCarbsDelayMinutes: 25,
         extendedCarbsDurationMinutes: 120,
       );
 
-      expect(event.title, 'Podaj 15g teraz i 25g za 25 min przez 2 godz.');
+      expect(event.title, 'Podaj 15g, extended 25g za 25 min przez 2 godz.');
+    });
+
+    test('renders negative carbs as carbs entry', () {
+      const event = AapsBolusSuggestionNotificationEvent(carbs: -8);
+
+      expect(event.title, 'Wpisz -8g');
     });
   });
 }

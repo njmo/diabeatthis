@@ -1,6 +1,17 @@
+import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../models/meal_summary_draft.dart';
+
+class MealSummaryAapsCarbs {
+  const MealSummaryAapsCarbs({
+    required this.carbs,
+    required this.extendedCarbs,
+  });
+
+  final int carbs;
+  final int extendedCarbs;
+}
 
 class MealSummaryCarbsDelta {
   const MealSummaryCarbsDelta({
@@ -45,19 +56,49 @@ MealSummaryCarbsDelta calculateMealSummaryCarbsDelta(MealSummaryDraft draft) {
   );
 }
 
+MealSummaryAapsCarbs calculateMealSummaryAapsCarbs(MealSummaryDraft draft) {
+  final delta = calculateMealSummaryCarbsDelta(draft);
+
+  final extraItemsMacros = draft.extraItems.fold(
+    (fatGrams: 0.0, proteinGrams: 0.0),
+    (sum, item) {
+      final grams = calculateMealIngredientDraftGrams(item);
+      return (
+        fatGrams: sum.fatGrams + grams * item.ingredient.fatPer100g / 100,
+        proteinGrams:
+            sum.proteinGrams + grams * item.ingredient.proteinPer100g / 100,
+      );
+    },
+  );
+
+  final extendedCarbs = const WbtExtendedCarbsCalculator().calculateFromMacros(
+    fatGrams: extraItemsMacros.fatGrams,
+    proteinGrams: extraItemsMacros.proteinGrams,
+  );
+
+  return MealSummaryAapsCarbs(
+    carbs: delta.roundedTotal,
+    extendedCarbs: extendedCarbs.grams,
+  );
+}
+
 double calculateExtraItemNetCarbs(MealIngredientsDraft item) {
   final netCarbsPer100g =
       item.ingredient.carbsPer100g - item.ingredient.fiberPer100g;
   final safeNetCarbsPer100g = netCarbsPer100g < 0
       ? 0.0
       : netCarbsPer100g.toDouble();
-  final grams = item.ingredient.isReference
+  final grams = calculateMealIngredientDraftGrams(item);
+
+  return grams * safeNetCarbsPer100g / 100;
+}
+
+double calculateMealIngredientDraftGrams(MealIngredientsDraft item) {
+  return item.ingredient.isReference
       ? item.amount * 100
       : item.ingredientPortion.portion.map(
           empty: (_) => item.amount,
           existing: (_) => item.amount * item.ingredientPortion.amount,
           draft: (_) => item.amount * item.ingredientPortion.amount,
         );
-
-  return grams * safeNetCarbsPer100g / 100;
 }

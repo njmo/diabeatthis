@@ -6,26 +6,21 @@ import '../models/notification_key.dart';
 
 class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   const AapsBolusSuggestionNotificationEvent({
-    required this.mealId,
-    required this.mealName,
     required this.carbs,
-    required this.status,
-    this.waitMinutes,
     this.extendedCarbs = 0,
-    this.extendedCarbsDeliveryMode = ExtendedCarbsDeliveryMode.extendedCarbs,
-    this.extendedCarbsDelayMinutes = 45,
-    this.extendedCarbsDurationMinutes = 120,
+    this.extendedCarbsDeliveryMode,
+    this.extendedCarbsDelayMinutes,
+    this.extendedCarbsDurationMinutes,
   });
 
-  final int mealId;
-  final String mealName;
   final int carbs;
-  final String status;
-  final int? waitMinutes;
   final int extendedCarbs;
-  final ExtendedCarbsDeliveryMode extendedCarbsDeliveryMode;
-  final int extendedCarbsDelayMinutes;
-  final int extendedCarbsDurationMinutes;
+  // TODO: Use delivery mode when rendering e-carbs text once MealAdvisor
+  // supports shifted bolus recommendations for extended carbs. Today the
+  // notification text only renders delay/duration.
+  final ExtendedCarbsDeliveryMode? extendedCarbsDeliveryMode;
+  final int? extendedCarbsDelayMinutes;
+  final int? extendedCarbsDurationMinutes;
 
   @override
   NotificationEventType get type => NotificationEventType.aapsBolusSuggestion;
@@ -34,7 +29,7 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   String get notificationResponseEvent => 'aaps_bolus_suggestion';
 
   @override
-  NotificationKey get key => NotificationKey(type: type, entityId: mealId);
+  NotificationKey get key => NotificationKey(type: type, entityId: 0);
 
   @override
   String get title => _calculatorInstruction;
@@ -45,16 +40,38 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   String get _calculatorInstruction {
     final carbsText = '${carbs}g';
     final extendedCarbsText = extendedCarbs > 0
-        ? ' i ${extendedCarbs}g za '
-              '${formatExtendedCarbsScheduleMinutes(extendedCarbsDelayMinutes)}'
-              ' przez ${formatExtendedCarbsScheduleMinutes(extendedCarbsDurationMinutes)}'
+        ? ', ${_extendedCarbsScheduleText()}'
         : '';
 
-    if (status == 'eating-then-bolus') {
-      return 'Wpisz $carbsText teraz$extendedCarbsText, bez bolusa';
+    if (carbs == 0) {
+      if (extendedCarbs <= 0) {
+        throw StateError('AAPS suggestion requires carbs or extended carbs.');
+      }
+
+      return 'Wpisz ${_extendedCarbsScheduleText()}';
     }
 
-    return 'Podaj $carbsText teraz$extendedCarbsText';
+    if (carbs <= 0) {
+      return 'Wpisz $carbsText$extendedCarbsText';
+    }
+
+    return 'Podaj $carbsText$extendedCarbsText';
+  }
+
+  String _extendedCarbsScheduleText() {
+    if (extendedCarbs <= 0) {
+      throw StateError('AAPS suggestion has no extended carbs schedule.');
+    }
+
+    final delayMinutes = extendedCarbsDelayMinutes;
+    final durationMinutes = extendedCarbsDurationMinutes;
+    if (delayMinutes == null || durationMinutes == null) {
+      throw StateError('AAPS extended carbs suggestion requires schedule.');
+    }
+
+    return 'extended ${extendedCarbs}g za '
+        '${formatExtendedCarbsScheduleMinutes(delayMinutes)}'
+        ' przez ${formatExtendedCarbsScheduleMinutes(durationMinutes)}';
   }
 
   @override
@@ -62,13 +79,9 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
 
   @override
   Map<String, Object?> toJson() => {
-    'mealId': mealId,
-    'mealName': mealName,
     'carbs': carbs,
-    'status': status,
-    'waitMinutes': waitMinutes,
     'extendedCarbs': extendedCarbs,
-    'extendedCarbsDeliveryMode': extendedCarbsDeliveryMode.name,
+    'extendedCarbsDeliveryMode': extendedCarbsDeliveryMode?.name,
     'extendedCarbsDelayMinutes': extendedCarbsDelayMinutes,
     'extendedCarbsDurationMinutes': extendedCarbsDurationMinutes,
   };
@@ -77,24 +90,23 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
     Map<String, dynamic> json,
   ) {
     return AapsBolusSuggestionNotificationEvent(
-      mealId: json['mealId'] as int,
-      mealName: json['mealName'] as String,
       carbs: json['carbs'] as int,
-      status: json['status'] as String,
-      waitMinutes: json['waitMinutes'] as int?,
       extendedCarbs: json['extendedCarbs'] as int? ?? 0,
       extendedCarbsDeliveryMode: _deliveryModeFromJson(
         json['extendedCarbsDeliveryMode'] as String?,
       ),
-      extendedCarbsDelayMinutes:
-          json['extendedCarbsDelayMinutes'] as int? ?? 45,
+      extendedCarbsDelayMinutes: json['extendedCarbsDelayMinutes'] as int?,
       extendedCarbsDurationMinutes:
-          json['extendedCarbsDurationMinutes'] as int? ?? 120,
+          json['extendedCarbsDurationMinutes'] as int?,
     );
   }
 }
 
-ExtendedCarbsDeliveryMode _deliveryModeFromJson(String? value) {
+ExtendedCarbsDeliveryMode? _deliveryModeFromJson(String? value) {
+  if (value == null) {
+    return null;
+  }
+
   return ExtendedCarbsDeliveryMode.values.firstWhere(
     (mode) => mode.name == value,
     orElse: () => ExtendedCarbsDeliveryMode.extendedCarbs,

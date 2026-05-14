@@ -137,6 +137,15 @@ class MealAdvisor {
   MealAdvisor({MealAdvisorConfig? config})
     : config = config ?? const MealAdvisorConfig();
 
+  // TODO: Accept post-meal context here when MealAdvisor starts analyzing
+  // delayed AAPS entries after summary, for example AAPS carbs/e-carbs, time
+  // since meal, BG, IOB and COB. Today this only exposes configured schedule.
+  ExtendedCarbsScheduleSettings getPostMealExtendedCarbsScheduleSettings() {
+    return config.extendedCarbsScheduleSettings.copyWith(
+      deliveryMode: ExtendedCarbsDeliveryMode.extendedCarbs,
+    );
+  }
+
   MealAdvice getMealAdvice({
     required int bg,
     required double iob,

@@ -2,12 +2,16 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/platform/aaps_suggestion_prompt.dart';
 import '../../../../common/widgets/form_section.dart';
+import '../../../dashboard/data/utils/meal_advisor.dart';
+import '../../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
 import '../../domain/use_cases/finalize_meal_summary_use_case.dart';
 import '../../domain/utils/meal_add_on_status.dart';
 import '../controllers/meal_summary_controller.dart';
 import '../models/meal_summary_draft.dart';
 import '../providers/meal_summary_item_ids_provider.dart';
+import '../utils/meal_summary_aaps_suggestion.dart';
 import '../utils/meal_summary_carbs_delta.dart';
 import '../widgets/meal_summary_carbs_hint_card.dart';
 import '../widgets/meal_summary_extra_items_section.dart';
@@ -89,6 +93,7 @@ class MealSummaryPage extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _saveSummary(
                       context: context,
+                      ref: ref,
                       notifier: notifier,
                       draft: draft,
                       mode: MealSummarySaveMode.continueEating,
@@ -104,6 +109,7 @@ class MealSummaryPage extends ConsumerWidget {
                 child: FilledButton.icon(
                   onPressed: () => _saveSummary(
                     context: context,
+                    ref: ref,
                     notifier: notifier,
                     draft: draft,
                     mode: MealSummarySaveMode.finishMeal,
@@ -122,6 +128,7 @@ class MealSummaryPage extends ConsumerWidget {
 
   Future<void> _saveSummary({
     required BuildContext context,
+    required WidgetRef ref,
     required MealSummaryControllerNotifier notifier,
     required MealSummaryDraft draft,
     required MealSummarySaveMode mode,
@@ -148,8 +155,58 @@ class MealSummaryPage extends ConsumerWidget {
     );
 
     if (context.mounted) {
+      await _openAapsForSummaryDelta(
+        context: context,
+        ref: ref,
+        draft: draft,
+        delta: delta,
+      );
+    }
+
+    if (context.mounted) {
       Navigator.pop(context);
     }
+  }
+
+  Future<void> _openAapsForSummaryDelta({
+    required BuildContext context,
+    required WidgetRef ref,
+    required MealSummaryDraft draft,
+    required MealSummaryCarbsDelta delta,
+  }) async {
+    final aapsCarbs = calculateMealSummaryAapsCarbs(draft);
+    if (!shouldOpenAapsForMealSummaryAapsCarbs(aapsCarbs)) {
+      return;
+    }
+
+    final extendedCarbsScheduleSettings = aapsCarbs.extendedCarbs > 0
+        ? MealAdvisor(
+            config: MealAdvisorConfig(
+              extendedCarbsScheduleSettings: await ref.read(
+                extendedCarbsScheduleSettingsProvider.future,
+              ),
+            ),
+          ).getPostMealExtendedCarbsScheduleSettings()
+        : null;
+    final event = buildMealSummaryAapsSuggestionEvent(
+      aapsCarbs: aapsCarbs,
+      extendedCarbsScheduleSettings: extendedCarbsScheduleSettings,
+    );
+
+    if (event == null || !context.mounted) {
+      return;
+    }
+
+    await openAapsWithSuggestionNotification(
+      context: context,
+      ref: ref,
+      event: event,
+    );
+
+    // TODO: If AAPS cannot be opened, this page is popped immediately after
+    // this method returns, so the fallback SnackBar can be easy to miss.
+    // Consider returning the launch result and keeping the summary visible on
+    // failure, or showing the fallback message in the parent route.
   }
 
   String _dialogTitle(MealSummaryCarbsDelta delta, MealSummaryDraft draft) {

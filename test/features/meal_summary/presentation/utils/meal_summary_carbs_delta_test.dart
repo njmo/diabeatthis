@@ -176,6 +176,36 @@ void main() {
       expect(delta.usesReportedBaseline, isTrue);
     },
   );
+
+  test('calculates AAPS carbs and e-carbs from summary draft', () {
+    final aapsCarbs = calculateMealSummaryAapsCarbs(
+      MealSummaryDraft(
+        mealId: 1,
+        mealStatus: 'eaten',
+        itemIds: const [1],
+        itemsById: {
+          1: _item(
+            id: 1,
+            plannedAmount: 1,
+            consumedAmount: 1.5,
+            netCarbsPerAmount: 10,
+          ),
+        },
+        extraItems: [
+          _extraItem(
+            amount: 100,
+            carbsPer100g: 30,
+            fiberPer100g: 5,
+            fatPer100g: 20,
+            proteinPer100g: 10,
+          ),
+        ],
+      ),
+    );
+
+    expect(aapsCarbs.carbs, 30);
+    expect(aapsCarbs.extendedCarbs, 22);
+  });
 }
 
 MealSummaryItemDraft _item({
@@ -201,6 +231,8 @@ MealIngredientsDraft _extraItem({
   required double amount,
   required double carbsPer100g,
   required double fiberPer100g,
+  double fatPer100g = 0,
+  double proteinPer100g = 0,
 }) {
   return MealIngredientsDraft(
     mealIngredientId: null,
@@ -208,9 +240,9 @@ MealIngredientsDraft _extraItem({
       id: 1,
       name: 'Extra',
       carbsPer100g: carbsPer100g,
-      fatPer100g: 0,
+      fatPer100g: fatPer100g,
       fiberPer100g: fiberPer100g,
-      proteinPer100g: 0,
+      proteinPer100g: proteinPer100g,
       nutritionConfidence: 1,
       isReference: false,
     ),

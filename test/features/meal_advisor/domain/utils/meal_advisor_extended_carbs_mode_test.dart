@@ -32,4 +32,22 @@ void main() {
     expect(advice.extendedCarbs.scheduleSettings.delayMinutes, 30);
     expect(advice.extendedCarbs.scheduleSettings.durationMinutes, 90);
   });
+
+  test('post-meal extended carbs schedule currently comes from settings', () {
+    final advisor = MealAdvisor(
+      config: const MealAdvisorConfig(
+        extendedCarbsScheduleSettings: ExtendedCarbsScheduleSettings(
+          deliveryMode: ExtendedCarbsDeliveryMode.extraBolus,
+          delayMinutes: 35,
+          durationMinutes: 150,
+        ),
+      ),
+    );
+
+    final settings = advisor.getPostMealExtendedCarbsScheduleSettings();
+
+    expect(settings.deliveryMode, ExtendedCarbsDeliveryMode.extendedCarbs);
+    expect(settings.delayMinutes, 35);
+    expect(settings.durationMinutes, 150);
+  });
 }

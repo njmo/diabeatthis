@@ -3,13 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
-import '../../../../common/platform/aaps_launcher.dart';
+import '../../../../common/platform/aaps_suggestion_prompt.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/drift/providers/database_provider.dart';
-import '../../../../core/logger/logger.dart';
 import '../../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
-import '../../../../core/notifications/providers/notifications_controller_provider.dart';
-import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../meal_summary/domain/use_cases/apply_meal_add_on_multiplier_use_case.dart';
 import '../../../meals/data/domain/use_cases/complete_bolus_wait_use_case.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
@@ -72,38 +69,15 @@ Future<void> openAapsAfterBolusStatusUpdateIfNeeded({
     return;
   }
 
-  final result = await ref.read(aapsLauncherProvider).openAaps();
-
-  if (result == AapsLaunchResult.opened) {
-    await showAapsBolusSuggestionNotification(ref: ref, event: event);
-    return;
-  }
-
   if (!context.mounted) {
     return;
   }
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Nie udało się otworzyć AAPS. Otwórz aplikację ręcznie.'),
-    ),
+  await openAapsWithSuggestionNotification(
+    context: context,
+    ref: ref,
+    event: event,
   );
-}
-
-Future<void> showAapsBolusSuggestionNotification({
-  required WidgetRef ref,
-  required AapsBolusSuggestionNotificationEvent event,
-}) async {
-  try {
-    await ref.read(notificationsControllerUiProvider).show(event);
-  } catch (e, st) {
-    Log.e(
-      'MealStatusDialogResultHandler',
-      'Could not show AAPS bolus suggestion notification',
-      error: e,
-      stackTrace: st,
-    );
-  }
 }
 
 Future<AapsBolusSuggestionNotificationEvent?> _aapsSuggestionNotificationEvent(
@@ -122,21 +96,21 @@ Future<AapsBolusSuggestionNotificationEvent?> _aapsSuggestionNotificationEvent(
     return null;
   }
 
-  final carbs = await _carbsForAaps(ref, meal, status);
+  final carbs = status == 'eating-then-bolus'
+      ? 0
+      : await _carbsForAaps(ref, meal, status);
   return AapsBolusSuggestionNotificationEvent(
-    mealId: meal.id,
-    mealName: meal.name,
     carbs: carbs,
-    status: status,
-    waitMinutes: advice?.wait?.recommendedMinutes,
     extendedCarbs: extendedCarbsGrams,
-    extendedCarbsDeliveryMode:
-        extendedCarbs?.scheduleSettings.deliveryMode ??
-        ExtendedCarbsDeliveryMode.extendedCarbs,
-    extendedCarbsDelayMinutes:
-        extendedCarbs?.scheduleSettings.delayMinutes ?? 45,
-    extendedCarbsDurationMinutes:
-        extendedCarbs?.scheduleSettings.durationMinutes ?? 120,
+    extendedCarbsDeliveryMode: extendedCarbsGrams > 0
+        ? extendedCarbs?.scheduleSettings.deliveryMode
+        : null,
+    extendedCarbsDelayMinutes: extendedCarbsGrams > 0
+        ? extendedCarbs?.scheduleSettings.delayMinutes
+        : null,
+    extendedCarbsDurationMinutes: extendedCarbsGrams > 0
+        ? extendedCarbs?.scheduleSettings.durationMinutes
+        : null,
   );
 }
 
