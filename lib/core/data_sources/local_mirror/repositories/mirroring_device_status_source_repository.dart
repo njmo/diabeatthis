@@ -16,28 +16,9 @@ class MirroringDeviceStatusSourceRepository
   final LocalMirrorWriter _mirrorWriter;
 
   @override
-  Future<List<DeviceStatus>> fetchDeviceStatusBetween(
-    DateTime start,
-    DateTime end,
-  ) async {
-    final statuses = await _delegate.fetchDeviceStatusBetween(start, end);
-    await _mirror(statuses);
-    return statuses;
-  }
-
-  @override
-  Future<DeviceStatus> fetchLastDeviceStatus() async {
-    final status = await _delegate.fetchLastDeviceStatus();
+  Future<DeviceStatus> pollDeviceStatus() async {
+    final status = await _delegate.pollDeviceStatus();
     await _mirror([status]);
-    return status;
-  }
-
-  @override
-  Future<DeviceStatus?> fetchLastDeviceStatusBefore(DateTime before) async {
-    final status = await _delegate.fetchLastDeviceStatusBefore(before);
-    if (status != null) {
-      await _mirror([status]);
-    }
     return status;
   }
 

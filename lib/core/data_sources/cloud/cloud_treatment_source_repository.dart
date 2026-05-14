@@ -1,46 +1,53 @@
-import '../../domain/model/bolus_wizard.dart';
-import '../../domain/model/temporary_target.dart';
+import 'package:clock/clock.dart';
+
 import '../../domain/model/treatment_base.dart';
 import '../domain/treatment_source_repository.dart';
 import '../nightscout/repository/nightscout_repository.dart';
+import 'nightscout_temporary_target_monitor.dart';
 
 class CloudTreatmentSourceRepository implements TreatmentSourceRepository {
-  const CloudTreatmentSourceRepository(this._nightscoutRepository);
+  CloudTreatmentSourceRepository(this._nightscoutRepository)
+    : _lastPollAt = clock.now(),
+      _temporaryTargetMonitor = NightscoutTemporaryTargetMonitor(
+        _nightscoutRepository,
+      );
 
   final NightscoutRepository _nightscoutRepository;
+  final NightscoutTemporaryTargetMonitor _temporaryTargetMonitor;
+  DateTime _lastPollAt;
 
   @override
-  Future<TemporaryTarget> fetchLastTemporaryTarget() {
-    return _nightscoutRepository.fetchLastTemporaryTarget();
-  }
+  Future<List<Treatment>> pollTreatments() async {
+    final polledTreatments = <Treatment>[
+      ...await _temporaryTargetMonitor.pollUpdates(),
+    ];
 
-  @override
-  Future<TemporaryTarget> fetchLastTemporaryTargetById(String id) {
-    return _nightscoutRepository.fetchLastTemporaryTargetById(id);
-  }
+    final treatments = await _nightscoutRepository.fetchTreatmentsAfter(
+      _lastPollAt,
+    );
+    _temporaryTargetMonitor.trackFromTreatments(treatments);
 
-  @override
-  Future<List<BolusWizard>> fetchBolusWizardsAfter(DateTime after) {
-    return _nightscoutRepository.fetchBolusWizardsAfter(after);
-  }
+    if (treatments.isEmpty && polledTreatments.isEmpty) return treatments;
 
-  @override
-  Future<List<BolusWizard>> fetchBolusWizardsOnDay(DateTime day) {
-    return _nightscoutRepository.fetchBolusWizardsOnDay(day);
-  }
+    final ordered = [...polledTreatments, ...treatments]
+      ..sort((a, b) {
+        final aCreatedAt =
+            a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bCreatedAt =
+            b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return aCreatedAt.compareTo(bCreatedAt);
+      });
+    final newestCreatedAt = treatments
+        .map((treatment) => treatment.createdAt)
+        .whereType<DateTime>()
+        .fold<DateTime?>(null, (newest, createdAt) {
+          if (newest == null || createdAt.isAfter(newest)) return createdAt;
+          return newest;
+        });
+    if (newestCreatedAt != null) {
+      _lastPollAt = newestCreatedAt.add(const Duration(seconds: 5));
+    }
 
-  @override
-  Future<List<Treatment>> fetchTreatmentsAfter(DateTime after) {
-    return _nightscoutRepository.fetchTreatmentsAfter(after);
-  }
-
-  @override
-  Future<List<Treatment>> fetchTreatmentsBetween(DateTime start, DateTime end) {
-    return _nightscoutRepository.fetchTreatmentsBetween(start, end);
-  }
-
-  @override
-  Future<List<Treatment>> fetchTreatmentsOnDay(DateTime day) {
-    return _nightscoutRepository.fetchTreatmentsOnDay(day);
+    return ordered;
   }
 }

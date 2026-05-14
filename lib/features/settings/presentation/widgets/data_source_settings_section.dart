@@ -10,7 +10,9 @@ import 'data_source_config_controls.dart';
 import 'settings_section_card.dart';
 
 class DataSourceSettingsSection extends ConsumerWidget with Logging {
-  const DataSourceSettingsSection({super.key});
+  const DataSourceSettingsSection({super.key, this.onChanged});
+
+  final ValueChanged<DataSourceConfig>? onChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,6 +38,7 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
               appEventRouter.send(
                 ExecuteCommandEvent.syncSettings(data: next.toSyncPayload()),
               );
+              onChanged?.call(next);
             },
           ),
         ),

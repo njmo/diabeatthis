@@ -29,3 +29,28 @@ extension DeviceStatusDriftMapper on domain.DeviceStatus {
     );
   }
 }
+
+extension DeviceStatusDomainMapper on DeviceStatusData {
+  domain.DeviceStatus toDomain() {
+    return domain.DeviceStatus(
+      externalId: externalId,
+      source: domain.DeviceStatusSource.fromStorage(source),
+      date: DateTime.fromMillisecondsSinceEpoch(createdAt),
+      iob: iob ?? 0,
+      basalIob: basalIob ?? 0,
+      bolusIob: bolusIob ?? 0,
+      insulinActivity: insulinActivity ?? 0,
+      cob: cob ?? 0,
+      tick: tick ?? '',
+      bg: bg ?? 0,
+      carbsReq: carbsReq ?? 0,
+      carbsReqWithin: carbsReqWithin ?? 0,
+      sensitivityRatio: sensitivityRatio ?? 0,
+      isfMgdlForCarbs: isfMgdlForCarbs ?? 0,
+      baseBasalRate: baseBasalRate ?? 0,
+      tempBasalRemainingMinutes: tempBasalRemainingMinutes ?? 0,
+      lastBolusAmount: lastBolusAmount ?? 0,
+      lastBolusAt: lastBolusAt ?? '',
+    );
+  }
+}

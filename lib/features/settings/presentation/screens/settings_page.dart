@@ -12,6 +12,9 @@ import '../../../../common/events/data/app/dump_logs_event.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../common/events/data/app/sync_data_key.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
+import '../../../../core/data_sources/config/data_source_config.dart';
+import '../../../../core/data_sources/config/data_source_config_provider.dart';
+import '../../../../core/data_sources/nightscout/nightscout_cloud_connection_tester.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import '../../../../core/data_sources/nightscout/repository/nightscout_repository_impl.dart';
 import '../../../../core/logger/logger.dart';
@@ -38,12 +41,21 @@ class SettingsPage extends HookConsumerWidget with Logging {
     final initialized = useState(false);
     final isSaving = useState(false);
     final submitError = useState<String?>(null);
+    final selectedDataSourceConfig = useState<DataSourceConfig?>(null);
 
     return prefsAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(body: Center(child: Text('Błąd: $e'))),
       data: (prefs) {
+        final dataSourceConfigAsync = ref.watch(dataSourceConfigProvider);
+        final visibleDataSourceConfig =
+            selectedDataSourceConfig.value ??
+            dataSourceConfigAsync.maybeWhen(
+              data: (config) => config,
+              orElse: () => null,
+            );
+
         if (!initialized.value) {
           urlController.text = prefs.getString(_nightscoutUrlKey) ?? '';
           childNameController.text = prefs.getString(_childNameKey) ?? '';
@@ -73,7 +85,14 @@ class SettingsPage extends HookConsumerWidget with Logging {
           try {
             if (urlChanged) {
               final repo = NightscoutRepositoryImpl(nightscoutUrl: newUrl);
-              await repo.fetchLastGlucoseWithLimit(1);
+              final selectedConfig = selectedDataSourceConfig.value;
+              final DataSourceConfig config;
+              if (selectedConfig != null) {
+                config = selectedConfig;
+              } else {
+                config = await ref.read(dataSourceConfigProvider.future);
+              }
+              await _validateNightscoutConnection(repo, config);
             }
 
             if (urlChanged) {
@@ -140,80 +159,87 @@ class SettingsPage extends HookConsumerWidget with Logging {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SettingsSectionCard(
-                      icon: Icons.cloud_outlined,
-                      title: 'Nightscout',
-                      subtitle:
-                          'Podaj adres swojego Nightscout. Bez niego nie możemy pobrać danych.',
-                      children: [
-                        TextFormField(
-                          controller: urlController,
-                          decoration: const InputDecoration(
-                            labelText: 'Nightscout URL',
-                            hintText: 'https://twoj-nightscout.com',
-                          ),
-                          keyboardType: TextInputType.url,
-                          autocorrect: false,
-                          validator: (value) {
-                            final text = value?.trim() ?? '';
-
-                            if (text.isEmpty) {
-                              return 'Podaj adres Nightscout';
-                            }
-
-                            final uri = Uri.tryParse(text);
-                            if (uri == null ||
-                                !uri.hasScheme ||
-                                (uri.scheme != 'http' &&
-                                    uri.scheme != 'https') ||
-                                uri.host.isEmpty) {
-                              return 'Podaj poprawny adres URL';
-                            }
-
-                            return null;
-                          },
-                          onChanged: (_) {
-                            if (submitError.value != null) {
-                              submitError.value = null;
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: childNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Imię dziecka',
-                            hintText: 'Oliwier',
-                          ),
-                          textCapitalization: TextCapitalization.words,
-                        ),
-                        if (submitError.value != null) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            submitError.value!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
+                    DataSourceSettingsSection(
+                      onChanged: (config) {
+                        selectedDataSourceConfig.value = config;
+                      },
+                    ),
+                    if (visibleDataSourceConfig != null &&
+                        _usesNightscout(visibleDataSourceConfig)) ...[
+                      const SizedBox(height: 16),
+                      SettingsSectionCard(
+                        icon: Icons.cloud_outlined,
+                        title: 'Nightscout',
+                        subtitle:
+                            'Podaj adres swojego Nightscout. Bez niego nie możemy pobrać danych.',
+                        children: [
+                          TextFormField(
+                            controller: urlController,
+                            decoration: const InputDecoration(
+                              labelText: 'Nightscout URL',
+                              hintText: 'https://twoj-nightscout.com',
                             ),
+                            keyboardType: TextInputType.url,
+                            autocorrect: false,
+                            validator: (value) {
+                              final text = value?.trim() ?? '';
+
+                              if (text.isEmpty) {
+                                return 'Podaj adres Nightscout';
+                              }
+
+                              final uri = Uri.tryParse(text);
+                              if (uri == null ||
+                                  !uri.hasScheme ||
+                                  (uri.scheme != 'http' &&
+                                      uri.scheme != 'https') ||
+                                  uri.host.isEmpty) {
+                                return 'Podaj poprawny adres URL';
+                              }
+
+                              return null;
+                            },
+                            onChanged: (_) {
+                              if (submitError.value != null) {
+                                submitError.value = null;
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: childNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Imię dziecka',
+                              hintText: 'Oliwier',
+                            ),
+                            textCapitalization: TextCapitalization.words,
+                          ),
+                          if (submitError.value != null) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              submitError.value!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 16),
+                          FilledButton.icon(
+                            onPressed: isSaving.value ? null : handleSave,
+                            icon: isSaving.value
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.save_outlined),
+                            label: const Text('Zapisz i przejdź dalej'),
                           ),
                         ],
-                        const SizedBox(height: 16),
-                        FilledButton.icon(
-                          onPressed: isSaving.value ? null : handleSave,
-                          icon: isSaving.value
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.save_outlined),
-                          label: const Text('Zapisz i przejdź dalej'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const DataSourceSettingsSection(),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     SettingsSectionCard(
                       icon: Icons.receipt_long_outlined,
@@ -268,5 +294,20 @@ class SettingsPage extends HookConsumerWidget with Logging {
         );
       },
     );
+  }
+
+  bool _usesNightscout(DataSourceConfig config) {
+    return config.bgSource == BgSource.cloud ||
+        config.eventSource == EventSource.cloud ||
+        config.pumpStatusSource == PumpStatusSource.cloud ||
+        config.historySource == HistorySource.cloud;
+  }
+
+  Future<void> _validateNightscoutConnection(
+    NightscoutRepositoryImpl repository,
+    DataSourceConfig config,
+  ) async {
+    if (!_usesNightscout(config)) return;
+    await NightscoutCloudConnectionTester(repository).testConnection();
   }
 }

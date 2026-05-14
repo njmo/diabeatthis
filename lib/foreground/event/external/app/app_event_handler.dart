@@ -15,6 +15,7 @@ import '../../../../core/data_sources/nightscout/providers/nightscout_url_provid
 import '../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../alarm/foreground_alarm_bridge.dart';
 import '../../../providers/task_event_router_provider.dart';
 import '../../../synchronization/synchronization_cache_controller.dart';
 import '../../../task/base/runtime_context.dart';
@@ -57,7 +58,7 @@ class AppEventHandler with Logging {
               glucoseSourceRepositoryProvider,
             );
             runtimeContext.container.invalidate(
-              treatmentSourceRepositoryProvider,
+              treatmentsSourceRepositoryProvider,
             );
             runtimeContext.container.invalidate(
               deviceStatusSourceRepositoryProvider,
@@ -73,6 +74,8 @@ class AppEventHandler with Logging {
             logI(
               "Received collect tick command with reason: $reason and alarmId: $alarmId",
             );
+            final tickAt = clock.now();
+            await ForegroundAlarmBridge.markCollectTickDelivered(tickAt);
 
             await FlutterForegroundTask.updateService(
               foregroundTaskOptions: ForegroundTaskOptions(
@@ -99,7 +102,7 @@ class AppEventHandler with Logging {
               }
             });
 
-            runtimeContext.tick(clock.now());
+            runtimeContext.tick(tickAt);
           },
         );
       },
@@ -172,7 +175,6 @@ class AppEventHandler with Logging {
 
     await _addGlucoseEvents(runtimeContext, cacheController, events);
     await _addDeviceStatusEvent(runtimeContext, cacheController, events);
-    await _addTemporaryTargetEvent(runtimeContext, cacheController, events);
 
     if (events.isEmpty) return;
 
@@ -188,17 +190,22 @@ class AppEventHandler with Logging {
   ) async {
     try {
       final repository = await runtimeContext.container.read(
-        glucoseSourceRepositoryProvider.future,
+        glucoseHistoryRepositoryProvider.future,
       );
-      final readings = await repository.fetchLastGlucoseWithLimit(10);
+      final now = clock.now();
+      final readings = await repository.fetchGlucoseBetween(
+        now.subtract(const Duration(hours: 2)),
+        now,
+      );
       logI(
         _describeGlucoseReadings(
-          'Live glucose sync fetch after settings change',
+          'Glucose history sync fetch after settings change',
           readings,
         ),
       );
-      final orderedReadings = [...readings]
-        ..sort((a, b) => a.date.compareTo(b.date));
+      final orderedReadings = ([
+        ...readings,
+      ]..sort((a, b) => b.date.compareTo(a.date))).take(10).toList().reversed;
 
       cacheController.replaceGlucoseReadings(orderedReadings);
       events.addAll(
@@ -218,28 +225,11 @@ class AppEventHandler with Logging {
       final repository = await runtimeContext.container.read(
         deviceStatusSourceRepositoryProvider.future,
       );
-      final data = await repository.fetchLastDeviceStatus();
+      final data = await repository.pollDeviceStatus();
       cacheController.cacheDeviceStatus(data);
       events.add(TaskDeviceStatusSynchronization(data: data));
     } catch (e, st) {
       logW('Live device status sync after settings change failed: $e\n$st');
-    }
-  }
-
-  Future<void> _addTemporaryTargetEvent(
-    RuntimeContext runtimeContext,
-    SynchronizationCacheController cacheController,
-    List<TaskDataSynchronizationPayload> events,
-  ) async {
-    try {
-      final repository = await runtimeContext.container.read(
-        treatmentSourceRepositoryProvider.future,
-      );
-      final data = await repository.fetchLastTemporaryTarget();
-      cacheController.cacheTarget(data);
-      events.add(TaskTargetSynchronization(data: data));
-    } catch (e, st) {
-      logW('Live target sync after settings change failed: $e\n$st');
     }
   }
 

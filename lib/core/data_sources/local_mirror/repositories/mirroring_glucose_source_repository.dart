@@ -16,34 +16,12 @@ class MirroringGlucoseSourceRepository
   final LocalMirrorWriter _mirrorWriter;
 
   @override
-  Future<List<Glucose>> fetchGlucoseAfter(DateTime after) async {
-    final readings = await _delegate.fetchGlucoseAfter(after);
-    await _mirror(readings);
-    return readings;
-  }
-
-  @override
-  Future<List<Glucose>> fetchGlucoseBetween(
-    DateTime start,
-    DateTime end,
-  ) async {
-    final readings = await _delegate.fetchGlucoseBetween(start, end);
-    await _mirror(readings);
-    return readings;
-  }
-
-  @override
-  Future<List<Glucose>> fetchGlucoseOnDay(DateTime day) async {
-    final readings = await _delegate.fetchGlucoseOnDay(day);
-    await _mirror(readings);
-    return readings;
-  }
-
-  @override
-  Future<List<Glucose>> fetchLastGlucoseWithLimit(int limit) async {
-    final readings = await _delegate.fetchLastGlucoseWithLimit(limit);
-    await _mirror(readings);
-    return readings;
+  Future<Glucose?> pollGlucose() async {
+    final reading = await _delegate.pollGlucose();
+    if (reading != null) {
+      await _mirror([reading]);
+    }
+    return reading;
   }
 
   Future<void> _mirror(List<Glucose> readings) async {

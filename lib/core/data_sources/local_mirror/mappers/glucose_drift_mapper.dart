@@ -16,3 +16,15 @@ extension GlucoseDriftMapper on domain.Glucose {
     );
   }
 }
+
+extension GlucoseDomainMapper on GlucoseReadingData {
+  domain.Glucose toDomain() {
+    return domain.Glucose(
+      externalId: externalId,
+      source: domain.GlucoseSource.fromStorage(source),
+      date: DateTime.fromMillisecondsSinceEpoch(createdAt),
+      sgv: sgv,
+      direction: direction ?? '',
+    );
+  }
+}

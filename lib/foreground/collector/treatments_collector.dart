@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:clock/clock.dart';
 
+import '../../app/providers/app_lifecycle_state_provider.dart';
+import '../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../core/data_sources/providers/source_repository_providers.dart';
 import '../../core/domain/model/bolus_wizard.dart';
 import '../../core/domain/model/correction_bolus.dart';
@@ -11,11 +14,16 @@ import '../../core/domain/model/temporary_target.dart';
 import '../../core/domain/model/treat.dart';
 import '../../core/domain/model/treatment_base.dart';
 import '../../core/logger/logger.dart';
+import '../alarm/foreground_alarm_bridge.dart';
 import '../event/internal/treatment_available_event.dart';
+import '../providers/task_event_router_provider.dart';
+import '../synchronization/synchronization_cache_controller.dart';
 import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
 class TreatmentsCollector extends ForegroundCollector with Logging {
+  static const _pollInterval = Duration(minutes: 1);
+
   bool _disposed = false;
   Future<void>? _runner;
 
@@ -26,60 +34,38 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
   }
 
   Future<void> _run(CollectorContext context) async {
-    var lastReadingDate = clock.now();
-
-    try {
-      final target = await _fetchLastTemporaryTarget(context);
-      if (target.createdAt
-          .add(Duration(minutes: target.duration))
-          .isAfter(lastReadingDate)) {
-        logI("Found active temp target");
-        _handleTreatment(context, target);
-      }
-    } catch (e, st) {
-      logW("Initial temp target read failed: $e\n$st");
-    }
-
     while (!_disposed) {
       var treatments = const <Treatment>[];
 
       try {
-        treatments = await _fetchTreatmentsAfter(context, lastReadingDate);
+        treatments = await _pollTreatments(context);
       } catch (e, st) {
         logW("Error fetching treatments $e\n$st");
       }
 
-      if (treatments.isEmpty) {
-        await context.durationWait(const Duration(minutes: 1)).future;
-        continue;
-      }
-
       for (final treatment in treatments.reversed) {
-        _handleTreatment(context, treatment);
+        try {
+          _handleTreatment(context, treatment);
+        } catch (e, st) {
+          logW("Error handling treatment $treatment: $e\n$st");
+        }
       }
 
-      lastReadingDate = treatments.first.createdAt ?? clock.now();
-      lastReadingDate = lastReadingDate.add(const Duration(seconds: 5));
+      await _waitForNextPoll(context);
     }
   }
 
-  Future<TemporaryTarget> _fetchLastTemporaryTarget(
-    CollectorContext context,
-  ) async {
+  Future<List<Treatment>> _pollTreatments(CollectorContext context) async {
     final repository = await context.container.read(
-      treatmentSourceRepositoryProvider.future,
+      treatmentsSourceRepositoryProvider.future,
     );
-    return repository.fetchLastTemporaryTarget();
+    return repository.pollTreatments();
   }
 
-  Future<List<Treatment>> _fetchTreatmentsAfter(
-    CollectorContext context,
-    DateTime after,
-  ) async {
-    final repository = await context.container.read(
-      treatmentSourceRepositoryProvider.future,
-    );
-    return repository.fetchTreatmentsAfter(after);
+  Future<void> _waitForNextPoll(CollectorContext context) async {
+    final nextPollAt = clock.now().add(_pollInterval);
+    await ForegroundAlarmBridge.scheduleCollectTick(nextPollAt);
+    await context.waitForDuration(_pollInterval);
   }
 
   void _handleTreatment(CollectorContext context, Treatment data) {
@@ -113,6 +99,7 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
       case TemporaryTarget():
         logI("Temporary target treatment");
         context.emitEvent(TreatmentAvailableEvent<TemporaryTarget>(data));
+        _syncTemporaryTarget(context, data);
         break;
       default:
         logI("Unknown treatment");
@@ -123,5 +110,20 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
   Future<void> dispose() async {
     _disposed = true;
     await _runner;
+  }
+
+  void _syncTemporaryTarget(CollectorContext context, TemporaryTarget target) {
+    final cache = context.container.read(
+      synchronizationCacheControllerProvider,
+    );
+    cache.cacheTarget(target);
+
+    if (context.container.read(appLifecycleProvider) !=
+        AppLifecycleState.resumed) {
+      return;
+    }
+
+    final payload = TaskTargetSynchronization(data: target);
+    context.container.read(taskEventRouterProvider).send(payload);
   }
 }

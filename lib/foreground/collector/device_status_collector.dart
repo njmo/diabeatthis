@@ -7,7 +7,6 @@ import '../../app/providers/app_lifecycle_state_provider.dart';
 import '../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../core/data_sources/providers/source_repository_providers.dart';
 import '../../core/domain/model/device_status.dart';
-import '../../core/domain/model/glucose.dart';
 import '../../core/logger/logger.dart';
 import '../alarm/foreground_alarm_bridge.dart';
 import '../event/internal/data_available_event.dart';
@@ -35,7 +34,7 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
     DeviceStatus? last;
 
     try {
-      last = await _fetchLastDeviceStatus(context);
+      last = await _pollDeviceStatus(context);
       _handleDeviceStatus(context, last);
     } catch (e, st) {
       logW("Initial device status read failed: $e\n$st");
@@ -44,14 +43,14 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
     while (!_disposed) {
       if (last == null) {
         try {
-          last = await _fetchLastDeviceStatus(context);
+          last = await _pollDeviceStatus(context);
           _handleDeviceStatus(context, last);
         } catch (e, st) {
           logW("Device status fetch failed: $e\n$st");
-          await context.waitForDuration(_fallbackWait);
           ForegroundAlarmBridge.scheduleCollectTick(
             clock.now().add(_fallbackWait),
           );
+          await context.waitForDuration(_fallbackWait);
           continue;
         }
       }
@@ -62,15 +61,15 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
       final waitUntilExpected = nextExpectedAt.difference(clock.now());
 
       if (waitUntilExpected > Duration.zero) {
-        await context.waitForDuration(waitUntilExpected);
         ForegroundAlarmBridge.scheduleCollectTick(
           clock.now().add(waitUntilExpected),
         );
+        await context.waitForDuration(waitUntilExpected);
       }
 
       while (!_disposed) {
         try {
-          final current = await _fetchLastDeviceStatus(context);
+          final current = await _pollDeviceStatus(context);
 
           final isNewStatus = current.date.isAfter(knownLast.date);
 
@@ -84,19 +83,19 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
           logW("Device status fetch failed: $e\n$st");
         }
 
-        await context.waitForDuration(_nearReadPollInterval);
         ForegroundAlarmBridge.scheduleCollectTick(
           clock.now().add(_nearReadPollInterval),
         );
+        await context.waitForDuration(_nearReadPollInterval);
       }
     }
   }
 
-  Future<DeviceStatus> _fetchLastDeviceStatus(CollectorContext context) async {
+  Future<DeviceStatus> _pollDeviceStatus(CollectorContext context) async {
     final repository = await context.container.read(
       deviceStatusSourceRepositoryProvider.future,
     );
-    return repository.fetchLastDeviceStatus();
+    return repository.pollDeviceStatus();
   }
 
   void _handleDeviceStatus(CollectorContext context, DeviceStatus data) {
@@ -112,29 +111,17 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
     logI("Scheduling next alarm on ${nextAlarm.toIso8601String()}");
     ForegroundAlarmBridge.scheduleCollectTick(nextAlarm);
 
-    final glucose = Glucose(
-      externalId: data.externalId,
-      source: GlucoseSource.fromStorage(data.source.storageValue),
-      sgv: data.bg,
-      date: data.date,
-      direction: '',
-    );
-
     if (context.container.read(appLifecycleProvider) ==
         AppLifecycleState.resumed) {
       context.container
           .read(taskEventRouterProvider)
           .send(TaskDeviceStatusSynchronization(data: data));
-      context.container
-          .read(taskEventRouterProvider)
-          .send(TaskGlucoseSynchronization(data: glucose));
     }
 
     final cache = context.container.read(
       synchronizationCacheControllerProvider,
     );
     cache.cacheDeviceStatus(data);
-    cache.cacheGlucose(glucose);
 
     context.container.read(deviceStatusValueProvider.notifier).update(data);
   }

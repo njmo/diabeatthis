@@ -41,13 +41,13 @@ class AnalyzeMealUseCase {
     final targetFetchStart = chartStart.subtract(const Duration(hours: 4));
 
     final glucoseRepository = await ref.read(
-      glucoseSourceRepositoryProvider.future,
+      glucoseHistoryRepositoryProvider.future,
     );
     final treatmentRepository = await ref.read(
-      treatmentSourceRepositoryProvider.future,
+      treatmentsHistoryRepositoryProvider.future,
     );
     final deviceStatusRepository = await ref.read(
-      deviceStatusSourceRepositoryProvider.future,
+      deviceStatusHistoryRepositoryProvider.future,
     );
     final glucose = await glucoseRepository.fetchGlucoseBetween(
       chartStart,

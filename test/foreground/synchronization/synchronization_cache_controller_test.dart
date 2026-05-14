@@ -1,3 +1,4 @@
+import 'package:diabeatthis/core/data_sources/domain/glucose_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/domain/glucose_source_repository.dart';
 import 'package:diabeatthis/core/data_sources/providers/source_repository_providers.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
@@ -10,7 +11,10 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         glucoseSourceRepositoryProvider.overrideWith(
-          (ref) async => _ThrowingGlucoseSourceRepository(),
+          (ref) async => _FakeGlucoseSourceRepository(),
+        ),
+        glucoseHistoryRepositoryProvider.overrideWith(
+          (ref) async => _ThrowingGlucoseHistoryRepository(),
         ),
       ],
     );
@@ -23,24 +27,19 @@ void main() {
   });
 }
 
-class _ThrowingGlucoseSourceRepository implements GlucoseSourceRepository {
+class _FakeGlucoseSourceRepository implements GlucoseSourceRepository {
   @override
-  Future<List<Glucose>> fetchGlucoseAfter(DateTime after) {
-    throw StateError('source unavailable');
-  }
+  Future<Glucose?> pollGlucose() async => null;
+}
 
+class _ThrowingGlucoseHistoryRepository implements GlucoseHistoryRepository {
   @override
   Future<List<Glucose>> fetchGlucoseBetween(DateTime start, DateTime end) {
-    throw StateError('source unavailable');
+    throw StateError('history unavailable');
   }
 
   @override
-  Future<List<Glucose>> fetchGlucoseOnDay(DateTime day) {
-    throw StateError('source unavailable');
-  }
-
-  @override
-  Future<List<Glucose>> fetchLastGlucoseWithLimit(int limit) {
-    throw StateError('source unavailable');
+  Future<List<Glucose>> fetchRecentGlucose(int limit) {
+    throw StateError('history unavailable');
   }
 }

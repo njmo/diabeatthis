@@ -33,7 +33,7 @@ class GlucoseCollector extends ForegroundCollector {
     Glucose? last;
 
     try {
-      last = await _fetchLastGlucose(context);
+      last = await _pollGlucose(context);
       if (last != null) {
         _handleGlucose(context, last);
       }
@@ -44,7 +44,7 @@ class GlucoseCollector extends ForegroundCollector {
     while (!_disposed) {
       if (last == null) {
         try {
-          last = await _fetchLastGlucose(context);
+          last = await _pollGlucose(context);
           if (last != null) {
             _handleGlucose(context, last);
           }
@@ -53,10 +53,10 @@ class GlucoseCollector extends ForegroundCollector {
         }
 
         if (last == null) {
-          await context.waitForDuration(_fallbackWait);
           ForegroundAlarmBridge.scheduleCollectTick(
             clock.now().add(_fallbackWait),
           );
+          await context.waitForDuration(_fallbackWait);
           continue;
         }
       }
@@ -66,15 +66,15 @@ class GlucoseCollector extends ForegroundCollector {
       final waitUntilExpected = nextExpectedAt.difference(clock.now());
 
       if (waitUntilExpected > Duration.zero) {
-        await context.waitForDuration(waitUntilExpected);
         ForegroundAlarmBridge.scheduleCollectTick(
           clock.now().add(waitUntilExpected),
         );
+        await context.waitForDuration(waitUntilExpected);
       }
 
       while (!_disposed) {
         try {
-          final current = await _fetchLastGlucose(context);
+          final current = await _pollGlucose(context);
           if (current != null && current.date.isAfter(knownLast.date)) {
             last = current;
             _handleGlucose(context, current);
@@ -84,20 +84,19 @@ class GlucoseCollector extends ForegroundCollector {
           logW('Glucose fetch failed: $e\n$st');
         }
 
-        await context.waitForDuration(_nearReadPollInterval);
         ForegroundAlarmBridge.scheduleCollectTick(
           clock.now().add(_nearReadPollInterval),
         );
+        await context.waitForDuration(_nearReadPollInterval);
       }
     }
   }
 
-  Future<Glucose?> _fetchLastGlucose(CollectorContext context) async {
+  Future<Glucose?> _pollGlucose(CollectorContext context) async {
     final repository = await context.container.read(
       glucoseSourceRepositoryProvider.future,
     );
-    final glucose = await repository.fetchLastGlucoseWithLimit(1);
-    return glucose.firstOrNull;
+    return repository.pollGlucose();
   }
 
   void _handleGlucose(CollectorContext context, Glucose data) {

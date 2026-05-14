@@ -9,20 +9,7 @@ class CloudDeviceStatusSourceRepository
   final NightscoutRepository _nightscoutRepository;
 
   @override
-  Future<List<DeviceStatus>> fetchDeviceStatusBetween(
-    DateTime start,
-    DateTime end,
-  ) {
-    return _nightscoutRepository.fetchDeviceStatusBetween(start, end);
-  }
-
-  @override
-  Future<DeviceStatus> fetchLastDeviceStatus() {
+  Future<DeviceStatus> pollDeviceStatus() {
     return _nightscoutRepository.fetchLastDeviceStatus();
-  }
-
-  @override
-  Future<DeviceStatus?> fetchLastDeviceStatusBefore(DateTime before) {
-    return _nightscoutRepository.fetchLastDeviceStatusBefore(before);
   }
 }

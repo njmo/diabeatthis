@@ -44,7 +44,7 @@ void main() {
         completion(isA<CloudGlucoseSourceRepository>()),
       );
       await expectLater(
-        container.read(treatmentSourceRepositoryProvider.future),
+        container.read(treatmentsSourceRepositoryProvider.future),
         completion(isA<CloudTreatmentSourceRepository>()),
       );
       await expectLater(
@@ -81,7 +81,7 @@ void main() {
         completion(isA<MirroringGlucoseSourceRepository>()),
       );
       await expectLater(
-        container.read(treatmentSourceRepositoryProvider.future),
+        container.read(treatmentsSourceRepositoryProvider.future),
         completion(isA<MirroringTreatmentSourceRepository>()),
       );
       await expectLater(
@@ -188,27 +188,24 @@ void main() {
         glucoseSourceRepositoryProvider.future,
       );
       final treatmentRepository = await container.read(
-        treatmentSourceRepositoryProvider.future,
+        treatmentsSourceRepositoryProvider.future,
       );
       final deviceStatusRepository = await container.read(
         deviceStatusSourceRepositoryProvider.future,
       );
 
-      final returnedGlucose = await glucoseRepository.fetchLastGlucoseWithLimit(
-        1,
-      );
-      final returnedTreatments = await treatmentRepository
-          .fetchTreatmentsBetween(now, now.add(const Duration(minutes: 10)));
-      final returnedDeviceStatuses = await deviceStatusRepository
-          .fetchDeviceStatusBetween(now, now.add(const Duration(minutes: 10)));
+      final returnedGlucose = await glucoseRepository.pollGlucose();
+      final returnedTreatments = await treatmentRepository.pollTreatments();
+      final returnedDeviceStatus = await deviceStatusRepository
+          .pollDeviceStatus();
 
-      expect(returnedGlucose, [glucose]);
+      expect(returnedGlucose, glucose);
       expect(returnedTreatments, [
         bolusWizard,
         temporaryTarget,
         correctionBolus,
       ]);
-      expect(returnedDeviceStatuses, [deviceStatus]);
+      expect(returnedDeviceStatus, deviceStatus);
 
       final mirroredGlucose = await db.localMirrorDao.getGlucoseReadingsBetween(
         DateTime.fromMillisecondsSinceEpoch(0),
@@ -307,15 +304,15 @@ class _FakeNightscoutRepository implements NightscoutRepository {
   }
 
   @override
-  Future<List<domain.Glucose>> fetchGlucoseAfter(DateTime after) {
-    return Future.value(glucoseReadings);
-  }
-
-  @override
   Future<List<domain.Glucose>> fetchGlucoseBetween(
     DateTime start,
     DateTime end,
   ) {
+    return Future.value(glucoseReadings);
+  }
+
+  @override
+  Future<List<domain.Glucose>> fetchGlucoseAfter(DateTime after) {
     return Future.value(glucoseReadings);
   }
 
@@ -345,15 +342,15 @@ class _FakeNightscoutRepository implements NightscoutRepository {
   }
 
   @override
-  Future<List<domain.Treatment>> fetchTreatmentsBetween(
-    DateTime start,
-    DateTime end,
-  ) {
+  Future<List<domain.Treatment>> fetchTreatmentsOnDay(DateTime day) {
     return Future.value(treatments);
   }
 
   @override
-  Future<List<domain.Treatment>> fetchTreatmentsOnDay(DateTime day) {
+  Future<List<domain.Treatment>> fetchTreatmentsBetween(
+    DateTime start,
+    DateTime end,
+  ) {
     return Future.value(treatments);
   }
 

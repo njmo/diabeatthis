@@ -1,14 +1,24 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../drift/providers/database_provider.dart';
 import '../cloud/cloud_device_status_source_repository.dart';
 import '../cloud/cloud_glucose_source_repository.dart';
 import '../cloud/cloud_treatment_source_repository.dart';
+import '../cloud/history/cloud_device_status_history_repository.dart';
+import '../cloud/history/cloud_glucose_history_repository.dart';
+import '../cloud/history/cloud_treatments_history_repository.dart';
 import '../config/data_source_config.dart';
 import '../config/data_source_config_provider.dart';
 import '../domain/data_source_exceptions.dart';
+import '../domain/device_status_history_repository.dart';
 import '../domain/device_status_source_repository.dart';
+import '../domain/glucose_history_repository.dart';
 import '../domain/glucose_source_repository.dart';
 import '../domain/treatment_source_repository.dart';
+import '../domain/treatments_history_repository.dart';
+import '../local_mirror/history/local_device_status_history_repository.dart';
+import '../local_mirror/history/local_glucose_history_repository.dart';
+import '../local_mirror/history/local_treatments_history_repository.dart';
 import '../local_mirror/providers/local_mirror_writer_provider.dart';
 import '../local_mirror/repositories/mirroring_device_status_source_repository.dart';
 import '../local_mirror/repositories/mirroring_glucose_source_repository.dart';
@@ -47,7 +57,7 @@ Future<GlucoseSourceRepository> glucoseSourceRepository(Ref ref) async {
 }
 
 @Riverpod(keepAlive: true)
-Future<TreatmentSourceRepository> treatmentSourceRepository(Ref ref) async {
+Future<TreatmentSourceRepository> treatmentsSourceRepository(Ref ref) async {
   final nightscoutRepositoryFuture = ref.watch(
     nightscoutRepositoryProvider.future,
   );
@@ -67,6 +77,59 @@ Future<TreatmentSourceRepository> treatmentSourceRepository(Ref ref) async {
     case EventSource.aaps:
       throw const UnsupportedDataSourceException(
         'AAPS treatment source is not implemented yet',
+      );
+  }
+}
+
+@Riverpod(keepAlive: true)
+Future<GlucoseHistoryRepository> glucoseHistoryRepository(Ref ref) async {
+  final config = await ref.watch(dataSourceConfigProvider.future);
+
+  switch (config.historySource) {
+    case HistorySource.cloud:
+      final nightscoutRepository = await ref.watch(
+        nightscoutRepositoryProvider.future,
+      );
+      return CloudGlucoseHistoryRepository(nightscoutRepository);
+    case HistorySource.local:
+      return LocalGlucoseHistoryRepository(
+        ref.watch(databaseProvider).localMirrorDao,
+      );
+  }
+}
+
+@Riverpod(keepAlive: true)
+Future<TreatmentsHistoryRepository> treatmentsHistoryRepository(Ref ref) async {
+  final config = await ref.watch(dataSourceConfigProvider.future);
+
+  switch (config.historySource) {
+    case HistorySource.cloud:
+      final nightscoutRepository = await ref.watch(
+        nightscoutRepositoryProvider.future,
+      );
+      return CloudTreatmentsHistoryRepository(nightscoutRepository);
+    case HistorySource.local:
+      return LocalTreatmentsHistoryRepository(
+        ref.watch(databaseProvider).localMirrorDao,
+      );
+  }
+}
+
+@Riverpod(keepAlive: true)
+Future<DeviceStatusHistoryRepository> deviceStatusHistoryRepository(
+  Ref ref,
+) async {
+  final config = await ref.watch(dataSourceConfigProvider.future);
+
+  switch (config.historySource) {
+    case HistorySource.cloud:
+      final nightscoutRepository = await ref.watch(
+        nightscoutRepositoryProvider.future,
+      );
+      return CloudDeviceStatusHistoryRepository(nightscoutRepository);
+    case HistorySource.local:
+      return LocalDeviceStatusHistoryRepository(
+        ref.watch(databaseProvider).localMirrorDao,
       );
   }
 }

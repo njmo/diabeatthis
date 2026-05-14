@@ -22,7 +22,6 @@ import '../task/base/collector_context.dart';
 import '../task/tasks/activity_monitor_task/activity_monitor_task.dart';
 import '../task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import '../task/tasks/service_status_updater_task.dart';
-import '../task/tasks/temp_target_monitor_task.dart';
 import 'workflow_scheduler.dart';
 
 class MyTaskHandler extends TaskHandler with Logging {
@@ -66,7 +65,6 @@ class MyTaskHandler extends TaskHandler with Logging {
       MealMonitorTask(),
       ActivityMonitorTask(),
       ServiceStatusUpdaterTask(),
-      TempTargetMonitorTask(),
     ];
     for (final task in tasks) {
       _taskScheduler!.startTask(task, runtimeContext);

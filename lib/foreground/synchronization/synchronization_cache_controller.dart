@@ -111,12 +111,15 @@ class SynchronizationCacheController with Logging {
   }) async {
     try {
       final repository = await container.read(
-        glucoseSourceRepositoryProvider.future,
+        glucoseHistoryRepositoryProvider.future,
       );
-      final glucoseReadings = await repository.fetchLastGlucoseWithLimit(10);
+      final glucoseReadings = await repository.fetchRecentGlucose(10);
+      final latestReadings = [...glucoseReadings]
+        ..sort((a, b) => b.date.compareTo(a.date));
+      final limitedReadings = latestReadings.take(10).toList();
 
-      logI(_describeGlucoseReadings(fetchLabel, glucoseReadings));
-      cache.replaceGlucoseReadings(glucoseReadings.reversed);
+      logI(_describeGlucoseReadings(fetchLabel, limitedReadings));
+      cache.replaceGlucoseReadings(limitedReadings.reversed);
       logI(
         _describeGlucoseReadings(
           storedLabel,

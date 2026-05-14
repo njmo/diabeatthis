@@ -45,6 +45,11 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
     return (startUtc: startUtc, endUtc: endUtc);
   }
 
+  Future<void> fetchStatus() async {
+    final url = _buildUri('/api/v1/status.json', const {});
+    await service.fetchNightscoutData(url);
+  }
+
   @override
   Future<List<Treatment>> fetchTreatmentsOnDay(DateTime day) async {
     final r = _dayRangeUtc(day);

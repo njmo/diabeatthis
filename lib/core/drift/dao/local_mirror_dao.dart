@@ -113,6 +113,16 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     return query.get();
   }
 
+  Future<List<GlucoseReadingData>> getRecentGlucoseReadings(int limit) async {
+    final rows =
+        await (select(db.glucoseReading)
+              ..orderBy([(row) => OrderingTerm.desc(row.createdAt)])
+              ..limit(limit))
+            .get();
+
+    return rows.reversed.toList();
+  }
+
   Future<List<BolusWizardData>> getBolusWizardsBetween(
     DateTime start,
     DateTime end, {
@@ -228,6 +238,18 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     }
 
     return query.get();
+  }
+
+  Future<DeviceStatusData?> getLastDeviceStatusBefore(DateTime before) {
+    final query = select(db.deviceStatus)
+      ..where(
+        (row) =>
+            row.createdAt.isSmallerThanValue(before.millisecondsSinceEpoch),
+      )
+      ..orderBy([(row) => OrderingTerm.desc(row.createdAt)])
+      ..limit(1);
+
+    return query.getSingleOrNull();
   }
 }
 

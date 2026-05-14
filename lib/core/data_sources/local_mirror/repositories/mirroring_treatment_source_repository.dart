@@ -1,5 +1,3 @@
-import '../../../domain/model/bolus_wizard.dart';
-import '../../../domain/model/temporary_target.dart';
 import '../../../domain/model/treatment_base.dart';
 import '../../../logger/logger.dart';
 import '../../config/data_source_config.dart';
@@ -22,53 +20,8 @@ class MirroringTreatmentSourceRepository
   final EventSource _source;
 
   @override
-  Future<TemporaryTarget> fetchLastTemporaryTarget() async {
-    final target = await _delegate.fetchLastTemporaryTarget();
-    await _mirror([target]);
-    return target;
-  }
-
-  @override
-  Future<TemporaryTarget> fetchLastTemporaryTargetById(String id) async {
-    final target = await _delegate.fetchLastTemporaryTargetById(id);
-    await _mirror([target]);
-    return target;
-  }
-
-  @override
-  Future<List<BolusWizard>> fetchBolusWizardsAfter(DateTime after) async {
-    final bolusWizards = await _delegate.fetchBolusWizardsAfter(after);
-    await _mirror(bolusWizards);
-    return bolusWizards;
-  }
-
-  @override
-  Future<List<BolusWizard>> fetchBolusWizardsOnDay(DateTime day) async {
-    final bolusWizards = await _delegate.fetchBolusWizardsOnDay(day);
-    await _mirror(bolusWizards);
-    return bolusWizards;
-  }
-
-  @override
-  Future<List<Treatment>> fetchTreatmentsAfter(DateTime after) async {
-    final treatments = await _delegate.fetchTreatmentsAfter(after);
-    await _mirror(treatments);
-    return treatments;
-  }
-
-  @override
-  Future<List<Treatment>> fetchTreatmentsBetween(
-    DateTime start,
-    DateTime end,
-  ) async {
-    final treatments = await _delegate.fetchTreatmentsBetween(start, end);
-    await _mirror(treatments);
-    return treatments;
-  }
-
-  @override
-  Future<List<Treatment>> fetchTreatmentsOnDay(DateTime day) async {
-    final treatments = await _delegate.fetchTreatmentsOnDay(day);
+  Future<List<Treatment>> pollTreatments() async {
+    final treatments = await _delegate.pollTreatments();
     await _mirror(treatments);
     return treatments;
   }
