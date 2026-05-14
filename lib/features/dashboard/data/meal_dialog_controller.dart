@@ -94,6 +94,7 @@ class MealDialogController extends _$MealDialogController with Logging {
   }
 
   String? mealAdviceString() {
+    final carbsText = _formatCarbsForCalculator(state.carbsGrams);
     final extendedCarbs = state.extendedCarbsGrams.round();
     final extendedCarbsText = extendedCarbs > 0
         ? '\n${formatExtendedCarbsInstruction(extendedCarbs, settings: state.advice.extendedCarbs.scheduleSettings)}'
@@ -101,11 +102,11 @@ class MealDialogController extends _$MealDialogController with Logging {
 
     switch (state.advice.decision) {
       case MealDecision.eatNowBolusLater:
-        return "Jedz teraz, insulinę podaj po jedzeniu w kalkulatorze ${state.carbsGrams}g$extendedCarbsText";
+        return "Jedz teraz, insulinę podaj po jedzeniu w kalkulatorze ${carbsText}g$extendedCarbsText";
       case MealDecision.bolusAndEatNow:
-        return "Podaj insulinę w kalkulatorze ${state.carbsGrams}g i jedz$extendedCarbsText";
+        return "Podaj insulinę w kalkulatorze ${carbsText}g i jedz$extendedCarbsText";
       case MealDecision.bolusWaitThenEat:
-        return "1. Najpierw podaj insulinę w kalkulatorze ${state.carbsGrams}g,\n2. ${waitTimeMessage(state.advice.wait!)} i jedz$extendedCarbsText";
+        return "1. Najpierw podaj insulinę w kalkulatorze ${carbsText}g,\n2. ${waitTimeMessage(state.advice.wait!)} i jedz$extendedCarbsText";
       case null:
         throw UnimplementedError();
       case MealDecision.bolus:
@@ -144,4 +145,8 @@ class MealDialogController extends _$MealDialogController with Logging {
       logE('Error scheduling notification: $e');
     }
   }
+}
+
+String _formatCarbsForCalculator(double grams) {
+  return grams.round().toString();
 }
