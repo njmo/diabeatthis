@@ -1,12 +1,11 @@
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/services/local_mirror_writer.dart';
 import 'package:diabeatthis/core/domain/model/bolus_calculator_result.dart';
-import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
-import 'package:diabeatthis/core/domain/model/device_status.dart';
-import 'package:diabeatthis/core/domain/model/glucose.dart';
-import 'package:diabeatthis/core/domain/model/temporary_target.dart';
-import 'package:diabeatthis/core/drift/database_impl.dart'
-    hide DeviceStatus, Meal;
+import 'package:diabeatthis/core/domain/model/bolus_wizard.dart' as domain;
+import 'package:diabeatthis/core/domain/model/device_status.dart' as domain;
+import 'package:diabeatthis/core/domain/model/glucose.dart' as domain;
+import 'package:diabeatthis/core/domain/model/temporary_target.dart' as domain;
+import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -29,18 +28,18 @@ void main() {
     final date = DateTime.fromMillisecondsSinceEpoch(1000);
 
     await writer.mirrorGlucose([
-      Glucose(
+      domain.Glucose(
         id: 0,
         externalId: null,
-        source: GlucoseSource.cloud,
+        source: domain.GlucoseSource.cloud,
         date: date,
         sgv: 120,
         direction: 'Flat',
       ),
-      Glucose(
+      domain.Glucose(
         id: 0,
         externalId: null,
-        source: GlucoseSource.cloud,
+        source: domain.GlucoseSource.cloud,
         date: date,
         sgv: 120,
         direction: 'FortyFiveUp',
@@ -62,7 +61,7 @@ void main() {
     final createdAt = DateTime.fromMillisecondsSinceEpoch(1000);
 
     await writer.mirrorTreatments([
-      BolusWizard(
+      domain.BolusWizard(
         id: 0,
         nightscoutObjectId: 'meal-1',
         createdAt: createdAt,
@@ -75,7 +74,7 @@ void main() {
           totalInsulin: 2.5,
         ),
       ),
-      TemporaryTarget(
+      domain.TemporaryTarget(
         id: 0,
         nightscoutId: 'target-1',
         createdAt: createdAt.add(const Duration(minutes: 5)),
@@ -86,20 +85,28 @@ void main() {
       ),
     ], EventSource.cloud);
 
-    final events = await db.localMirrorDao.getTreatmentEventsBetween(
+    final bolusWizards = await db.localMirrorDao.getBolusWizardsBetween(
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.fromMillisecondsSinceEpoch(400000),
+    );
+    final temporaryTargets = await db.localMirrorDao.getTemporaryTargetsBetween(
       DateTime.fromMillisecondsSinceEpoch(0),
       DateTime.fromMillisecondsSinceEpoch(400000),
     );
 
-    expect(events, hasLength(2));
-    expect(events.first.externalId, 'meal-1');
-    expect(events.first.treatmentType, 'Bolus Wizard');
-    expect(events.first.carbs, 30);
-    expect(events.first.insulin, 2.5);
-    expect(events.last.externalId, 'target-1');
-    expect(events.last.treatmentType, 'Temporary Target');
-    expect(events.last.targetBottom, 90);
-    expect(events.last.targetTop, 120);
+    expect(bolusWizards, hasLength(1));
+    final bolusWizard = bolusWizards.single;
+    expect(bolusWizard.nightscoutId, 'meal-1');
+    expect(bolusWizard.externalId, 'meal-1');
+    expect(bolusWizard.carbs, 30);
+    expect(bolusWizard.insulin, 2.5);
+
+    expect(temporaryTargets, hasLength(1));
+    final temporaryTarget = temporaryTargets.single;
+    expect(temporaryTarget.nightscoutId, 'target-1');
+    expect(temporaryTarget.externalId, 'target-1');
+    expect(temporaryTarget.targetBottom, 90);
+    expect(temporaryTarget.targetTop, 120);
   });
 
   test('mirrors device statuses into local storage', () async {
@@ -117,7 +124,7 @@ void main() {
       testDeviceStatus(
         id: 0,
         externalId: 'status-1',
-        source: DeviceStatusSource.aaps,
+        source: domain.DeviceStatusSource.aaps,
         date: date,
         iob: 1.4,
         basalIob: -0.2,
@@ -139,9 +146,9 @@ void main() {
     expect(statuses, hasLength(2));
 
     final aapsStatus = statuses.singleWhere(
-      (status) => status.source == DeviceStatusSource.aaps.storageValue,
+      (status) => status.source == domain.DeviceStatusSource.aaps.storageValue,
     );
-    expect(aapsStatus.source, DeviceStatusSource.aaps.storageValue);
+    expect(aapsStatus.source, domain.DeviceStatusSource.aaps.storageValue);
     expect(aapsStatus.bg, 111);
     expect(aapsStatus.externalId, 'status-1');
     expect(aapsStatus.iob, 1.4);

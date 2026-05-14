@@ -1,0 +1,21 @@
+CREATE TABLE temporary_target (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+
+  source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
+  external_id TEXT,
+
+  created_at INTEGER NOT NULL,
+  received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+
+  nightscout_id TEXT,
+  duration_minutes INTEGER,
+  target_bottom REAL,
+  target_top REAL
+);
+
+CREATE UNIQUE INDEX uq_temporary_target_external_id
+ON temporary_target(source, external_id)
+WHERE external_id IS NOT NULL;
+
+CREATE INDEX idx_temporary_target_created_at
+ON temporary_target(created_at);

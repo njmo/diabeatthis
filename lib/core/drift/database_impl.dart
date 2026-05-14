@@ -124,6 +124,12 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
   }
 
   Future<void> _createLocalMirrorTablesIfMissing() async {
+    await _createGlucoseReadingTableIfMissing();
+    await _createTreatmentMirrorTablesIfMissing();
+    await _createDeviceStatusTableIfMissing();
+  }
+
+  Future<void> _createGlucoseReadingTableIfMissing() async {
     await customStatement('''
       CREATE TABLE IF NOT EXISTS glucose_reading (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -133,7 +139,6 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
         received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
         sgv INTEGER NOT NULL CHECK (sgv >= 0),
         direction TEXT,
-        raw_json TEXT,
         UNIQUE (source, recorded_at, sgv)
       )
     ''');
@@ -146,36 +151,9 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       CREATE INDEX IF NOT EXISTS idx_glucose_reading_recorded_at
       ON glucose_reading(recorded_at)
     ''');
+  }
 
-    await customStatement('''
-      CREATE TABLE IF NOT EXISTS local_treatment_event (
-        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
-        external_id TEXT,
-        treatment_type TEXT NOT NULL,
-        created_at INTEGER NOT NULL,
-        received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
-        nightscout_id TEXT,
-        carbs REAL,
-        insulin REAL,
-        duration_minutes INTEGER,
-        target_bottom REAL,
-        target_top REAL,
-        units TEXT,
-        notes TEXT,
-        raw_json TEXT
-      )
-    ''');
-    await customStatement('''
-      CREATE UNIQUE INDEX IF NOT EXISTS uq_local_treatment_event_external_id
-      ON local_treatment_event(source, external_id)
-      WHERE external_id IS NOT NULL
-    ''');
-    await customStatement('''
-      CREATE INDEX IF NOT EXISTS idx_local_treatment_event_created_at
-      ON local_treatment_event(created_at)
-    ''');
-
+  Future<void> _createDeviceStatusTableIfMissing() async {
     await customStatement('''
       CREATE TABLE IF NOT EXISTS device_status (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -209,6 +187,161 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     await customStatement('''
       CREATE INDEX IF NOT EXISTS idx_device_status_recorded_at
       ON device_status(recorded_at)
+    ''');
+  }
+
+  Future<void> _createTreatmentMirrorTablesIfMissing() async {
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS bolus_wizard (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
+        external_id TEXT,
+        created_at INTEGER NOT NULL,
+        received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+        nightscout_id TEXT,
+        glucose INTEGER,
+        units TEXT,
+        carbs REAL,
+        insulin REAL,
+        basal_iob REAL,
+        bolus_iob REAL,
+        carbs_insulin REAL,
+        cob REAL,
+        cob_insulin REAL,
+        calculator_created_at INTEGER,
+        glucose_difference REAL,
+        glucose_insulin REAL,
+        glucose_trend REAL,
+        glucose_value REAL,
+        ic REAL,
+        calculator_id INTEGER,
+        isf REAL,
+        calculator_note TEXT,
+        other_correction REAL,
+        percentage_correction INTEGER,
+        profile_name TEXT,
+        superbolus_insulin REAL,
+        target_bg_high REAL,
+        target_bg_low REAL,
+        calculator_timestamp INTEGER,
+        trend_insulin REAL,
+        utc_offset INTEGER,
+        calculator_version INTEGER,
+        was_basal_iob_used BOOLEAN,
+        was_bolus_iob_used BOOLEAN,
+        was_cob_used BOOLEAN,
+        was_glucose_used BOOLEAN,
+        was_superbolus_used BOOLEAN,
+        was_temp_target_used BOOLEAN,
+        was_trend_used BOOLEAN,
+        were_carbs_used BOOLEAN,
+        notes TEXT
+      )
+    ''');
+    await _createTreatmentIndexes(
+      table: 'bolus_wizard',
+      externalIdIndex: 'uq_bolus_wizard_external_id',
+      createdAtIndex: 'idx_bolus_wizard_created_at',
+    );
+
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS temporary_target (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
+        external_id TEXT,
+        created_at INTEGER NOT NULL,
+        received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+        nightscout_id TEXT,
+        duration_minutes INTEGER,
+        target_bottom REAL,
+        target_top REAL
+      )
+    ''');
+    await _createTreatmentIndexes(
+      table: 'temporary_target',
+      externalIdIndex: 'uq_temporary_target_external_id',
+      createdAtIndex: 'idx_temporary_target_created_at',
+    );
+
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS correction_bolus (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
+        external_id TEXT,
+        created_at INTEGER NOT NULL,
+        received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+        insulin REAL
+      )
+    ''');
+    await _createTreatmentIndexes(
+      table: 'correction_bolus',
+      externalIdIndex: 'uq_correction_bolus_external_id',
+      createdAtIndex: 'idx_correction_bolus_created_at',
+    );
+
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS manual_bolus (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
+        external_id TEXT,
+        created_at INTEGER NOT NULL,
+        received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+        insulin REAL
+      )
+    ''');
+    await _createTreatmentIndexes(
+      table: 'manual_bolus',
+      externalIdIndex: 'uq_manual_bolus_external_id',
+      createdAtIndex: 'idx_manual_bolus_created_at',
+    );
+
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS treat (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
+        external_id TEXT,
+        created_at INTEGER NOT NULL,
+        received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+        carbs REAL
+      )
+    ''');
+    await _createTreatmentIndexes(
+      table: 'treat',
+      externalIdIndex: 'uq_treat_external_id',
+      createdAtIndex: 'idx_treat_created_at',
+    );
+
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS extended_carb (
+        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
+        external_id TEXT,
+        created_at INTEGER NOT NULL,
+        received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+        carbs REAL,
+        duration_minutes INTEGER
+      )
+    ''');
+    await _createTreatmentIndexes(
+      table: 'extended_carb',
+      externalIdIndex: 'uq_extended_carb_external_id',
+      createdAtIndex: 'idx_extended_carb_created_at',
+    );
+  }
+
+  Future<void> _createTreatmentIndexes({
+    required String table,
+    required String externalIdIndex,
+    required String createdAtIndex,
+  }) async {
+    await customStatement('''
+      CREATE UNIQUE INDEX IF NOT EXISTS $externalIdIndex
+      ON $table(source, external_id)
+      WHERE external_id IS NOT NULL
+    ''');
+    await customStatement('''
+      CREATE INDEX IF NOT EXISTS $createdAtIndex
+      ON $table(created_at)
     ''');
   }
 

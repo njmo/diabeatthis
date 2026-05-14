@@ -9,13 +9,12 @@ import 'package:diabeatthis/core/data_sources/local_mirror/repositories/mirrorin
 import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/repository/nightscout_repository.dart';
 import 'package:diabeatthis/core/data_sources/providers/source_repository_providers.dart';
-import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
-import 'package:diabeatthis/core/domain/model/device_status.dart';
-import 'package:diabeatthis/core/domain/model/glucose.dart';
-import 'package:diabeatthis/core/domain/model/temporary_target.dart';
-import 'package:diabeatthis/core/domain/model/treatment_base.dart';
-import 'package:diabeatthis/core/drift/database_impl.dart'
-    hide DeviceStatus, Meal;
+import 'package:diabeatthis/core/domain/model/bolus_wizard.dart' as domain;
+import 'package:diabeatthis/core/domain/model/device_status.dart' as domain;
+import 'package:diabeatthis/core/domain/model/glucose.dart' as domain;
+import 'package:diabeatthis/core/domain/model/temporary_target.dart' as domain;
+import 'package:diabeatthis/core/domain/model/treatment_base.dart' as domain;
+import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -90,27 +89,27 @@ void main() {
 
 class _FakeNightscoutRepository implements NightscoutRepository {
   @override
-  Future<DeviceStatus?> fetchLastDeviceStatusBefore(DateTime before) {
+  Future<domain.DeviceStatus?> fetchLastDeviceStatusBefore(DateTime before) {
     throw UnimplementedError();
   }
 
   @override
-  Future<DeviceStatus> fetchLastDeviceStatus() {
+  Future<domain.DeviceStatus> fetchLastDeviceStatus() {
     throw UnimplementedError();
   }
 
   @override
-  Future<TemporaryTarget> fetchLastTemporaryTarget() {
+  Future<domain.TemporaryTarget> fetchLastTemporaryTarget() {
     throw UnimplementedError();
   }
 
   @override
-  Future<TemporaryTarget> fetchLastTemporaryTargetById(String id) {
+  Future<domain.TemporaryTarget> fetchLastTemporaryTargetById(String id) {
     throw UnimplementedError();
   }
 
   @override
-  Future<List<DeviceStatus>> fetchDeviceStatusBetween(
+  Future<List<domain.DeviceStatus>> fetchDeviceStatusBetween(
     DateTime start,
     DateTime end,
   ) {
@@ -118,47 +117,53 @@ class _FakeNightscoutRepository implements NightscoutRepository {
   }
 
   @override
-  Future<List<Glucose>> fetchGlucoseAfter(DateTime after) {
+  Future<List<domain.Glucose>> fetchGlucoseAfter(DateTime after) {
     throw UnimplementedError();
   }
 
   @override
-  Future<List<Glucose>> fetchGlucoseBetween(DateTime start, DateTime end) {
+  Future<List<domain.Glucose>> fetchGlucoseBetween(
+    DateTime start,
+    DateTime end,
+  ) {
     throw UnimplementedError();
   }
 
   @override
-  Future<List<Glucose>> fetchGlucoseOnDay(DateTime day) {
+  Future<List<domain.Glucose>> fetchGlucoseOnDay(DateTime day) {
     throw UnimplementedError();
   }
 
   @override
-  Future<List<Glucose>> fetchLastGlucoseWithLimit(int limit) {
+  Future<List<domain.Glucose>> fetchLastGlucoseWithLimit(int limit) {
     throw UnimplementedError();
   }
 
   @override
-  Future<List<BolusWizard>> fetchBolusWizardsAfter(DateTime after) {
+  Future<List<domain.BolusWizard>> fetchBolusWizardsAfter(DateTime after) {
     throw UnimplementedError();
   }
 
   @override
-  Future<List<BolusWizard>> fetchBolusWizardsOnDay(DateTime day) {
+  Future<List<domain.BolusWizard>> fetchBolusWizardsOnDay(DateTime day) {
     throw UnimplementedError();
   }
 
   @override
-  Future<List<Treatment>> fetchTreatmentsAfter(DateTime after) {
+  Future<List<domain.Treatment>> fetchTreatmentsAfter(DateTime after) {
     throw UnimplementedError();
   }
 
   @override
-  Future<List<Treatment>> fetchTreatmentsBetween(DateTime start, DateTime end) {
+  Future<List<domain.Treatment>> fetchTreatmentsBetween(
+    DateTime start,
+    DateTime end,
+  ) {
     throw UnimplementedError();
   }
 
   @override
-  Future<List<Treatment>> fetchTreatmentsOnDay(DateTime day) {
+  Future<List<domain.Treatment>> fetchTreatmentsOnDay(DateTime day) {
     throw UnimplementedError();
   }
 

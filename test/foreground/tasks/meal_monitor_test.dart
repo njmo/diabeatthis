@@ -11,8 +11,7 @@ import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
-import 'package:diabeatthis/core/drift/database_impl.dart'
-    hide DeviceStatus, Meal;
+import 'package:diabeatthis/core/drift/database_impl.dart' as drift;
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
 import 'package:diabeatthis/core/notifications/definitions/event/meal_summary_reminder_notification_definition.dart';
@@ -261,7 +260,7 @@ void main() {
     });
 
     test('summary reminder action saves planned amount as consumed', () async {
-      final db = DatabaseImpl(NativeDatabase.memory());
+      final db = drift.DatabaseImpl(NativeDatabase.memory());
       addTearDown(db.close);
       await _seedPlannedMeal(db);
 
@@ -290,7 +289,7 @@ void main() {
     });
 
     test('summary reminder ok action leaves meal unchanged', () async {
-      final db = DatabaseImpl(NativeDatabase.memory());
+      final db = drift.DatabaseImpl(NativeDatabase.memory());
       addTearDown(db.close);
       await _seedPlannedMeal(db);
 
@@ -317,7 +316,7 @@ void main() {
     });
 
     test('summary reminder skips meal that was already summarized', () async {
-      final db = DatabaseImpl(NativeDatabase.memory());
+      final db = drift.DatabaseImpl(NativeDatabase.memory());
       addTearDown(db.close);
       await _seedPlannedMeal(db);
       await db.mealDao.updateMealStatus(1, 'summarized');
@@ -2102,7 +2101,7 @@ TemporaryTarget _temporaryTarget(DateTime createdAt) {
   );
 }
 
-Future<void> _seedPlannedMeal(DatabaseImpl db) async {
+Future<void> _seedPlannedMeal(drift.DatabaseImpl db) async {
   await db.customInsert('''
     INSERT INTO ingredient (
       id,

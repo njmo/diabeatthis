@@ -23,7 +23,6 @@ void main() {
         recordedAt: 1000,
         sgv: 120,
         direction: const Value('Flat'),
-        rawJson: const Value('{"sgv":120}'),
       ),
     );
 
@@ -34,7 +33,6 @@ void main() {
         recordedAt: 1000,
         sgv: 121,
         direction: const Value('FortyFiveUp'),
-        rawJson: const Value('{"sgv":121}'),
       ),
     );
     await db.localMirrorDao.upsertGlucoseReading(
@@ -57,35 +55,31 @@ void main() {
   });
 
   test('stores treatment events by source and created time', () async {
-    await db.localMirrorDao.upsertTreatmentEvent(
-      LocalTreatmentEventCompanion.insert(
+    await db.localMirrorDao.upsertManualBolus(
+      ManualBolusCompanion.insert(
         source: EventSource.aaps.storageValue,
         externalId: const Value('treatment-1'),
-        treatmentType: 'Meal Bolus',
         createdAt: 1000,
-        carbs: const Value(24),
         insulin: const Value(2.4),
       ),
     );
-    await db.localMirrorDao.upsertTreatmentEvent(
-      LocalTreatmentEventCompanion.insert(
+    await db.localMirrorDao.upsertTemporaryTarget(
+      TemporaryTargetCompanion.insert(
         source: EventSource.cloud.storageValue,
-        treatmentType: 'Temp Target',
         createdAt: 2000,
+        durationMinutes: const Value(30),
         targetBottom: const Value(90),
         targetTop: const Value(120),
       ),
     );
 
-    final events = await db.localMirrorDao.getTreatmentEventsBetween(
+    final events = await db.localMirrorDao.getManualBolusesBetween(
       DateTime.fromMillisecondsSinceEpoch(0),
       DateTime.fromMillisecondsSinceEpoch(1500),
       source: EventSource.aaps.storageValue,
     );
 
     expect(events, hasLength(1));
-    expect(events.single.treatmentType, 'Meal Bolus');
-    expect(events.single.carbs, 24);
     expect(events.single.insulin, 2.4);
   });
 

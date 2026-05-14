@@ -1,0 +1,34 @@
+CREATE TABLE device_status (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+
+  source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
+  external_id TEXT,
+
+  recorded_at INTEGER NOT NULL,
+  received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+
+  bg INTEGER CHECK (bg IS NULL OR bg >= 0),
+  tick TEXT,
+  iob REAL,
+  basal_iob REAL,
+  bolus_iob REAL,
+  insulin_activity REAL,
+  cob REAL,
+  carbs_req REAL,
+  carbs_req_within INTEGER,
+  sensitivity_ratio REAL,
+  isf_mgdl_for_carbs REAL,
+  base_basal_rate REAL,
+  temp_basal_remaining_minutes INTEGER,
+  last_bolus_amount REAL,
+  last_bolus_at TEXT,
+
+  UNIQUE (source, recorded_at)
+);
+
+CREATE UNIQUE INDEX uq_device_status_external_id
+ON device_status(source, external_id)
+WHERE external_id IS NOT NULL;
+
+CREATE INDEX idx_device_status_recorded_at
+ON device_status(recorded_at);

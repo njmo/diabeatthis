@@ -1,0 +1,21 @@
+CREATE TABLE glucose_reading (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+
+  source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps', 'xdrip')),
+  external_id TEXT,
+
+  recorded_at INTEGER NOT NULL,
+  received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+
+  sgv INTEGER NOT NULL CHECK (sgv >= 0),
+  direction TEXT,
+
+  UNIQUE (source, recorded_at, sgv)
+);
+
+CREATE UNIQUE INDEX uq_glucose_reading_external_id
+ON glucose_reading(source, external_id)
+WHERE external_id IS NOT NULL;
+
+CREATE INDEX idx_glucose_reading_recorded_at
+ON glucose_reading(recorded_at);

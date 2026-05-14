@@ -1,0 +1,18 @@
+CREATE TABLE treat (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+
+  source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
+  external_id TEXT,
+
+  created_at INTEGER NOT NULL,
+  received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+
+  carbs REAL
+);
+
+CREATE UNIQUE INDEX uq_treat_external_id
+ON treat(source, external_id)
+WHERE external_id IS NOT NULL;
+
+CREATE INDEX idx_treat_created_at
+ON treat(created_at);

@@ -1,0 +1,27 @@
+import 'package:drift/drift.dart';
+
+import '../../../domain/model/extended_carb.dart' as domain;
+import '../../../drift/database_impl.dart' as drift;
+import '../../config/data_source_config.dart';
+
+extension ExtendedCarbDriftMapper on domain.ExtendedCarb {
+  drift.ExtendedCarbCompanion toCompanion(EventSource source) {
+    return drift.ExtendedCarbCompanion.insert(
+      source: source.storageValue,
+      createdAt: createdAt.millisecondsSinceEpoch,
+      carbs: Value(carbs.toDouble()),
+      durationMinutes: Value(Duration(milliseconds: duration).inMinutes),
+    );
+  }
+}
+
+extension ExtendedCarbDomainMapper on drift.ExtendedCarbData {
+  domain.ExtendedCarb toDomain() {
+    return domain.ExtendedCarb(
+      id: id,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
+      carbs: carbs?.round() ?? 0,
+      duration: Duration(minutes: durationMinutes ?? 0).inMilliseconds,
+    );
+  }
+}

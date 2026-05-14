@@ -4,7 +4,18 @@ import '../database_impl.dart';
 
 part 'local_mirror_dao.g.dart';
 
-@DriftAccessor(include: {'../schemas/tables/local_mirror.drift'})
+@DriftAccessor(
+  include: {
+    '../schemas/tables/glucose_reading.drift',
+    '../schemas/tables/device_status.drift',
+    '../schemas/tables/bolus_wizard.drift',
+    '../schemas/tables/temporary_target.drift',
+    '../schemas/tables/correction_bolus.drift',
+    '../schemas/tables/manual_bolus.drift',
+    '../schemas/tables/treat.drift',
+    '../schemas/tables/extended_carb.drift',
+  },
+)
 class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     with _$LocalMirrorDaoMixin {
   LocalMirrorDao(super.db);
@@ -28,8 +39,73 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     );
   }
 
-  Future<void> upsertTreatmentEvent(LocalTreatmentEventCompanion event) {
-    final table = db.localTreatmentEvent;
+  Future<void> upsertBolusWizard(BolusWizardCompanion event) {
+    final table = db.bolusWizard;
+
+    return into(table).insert(
+      event,
+      onConflict: DoUpdate(
+        (_) => event,
+        target: [table.source, table.externalId],
+        targetCondition: (row) => row.externalId.isNotNull(),
+      ),
+    );
+  }
+
+  Future<void> upsertTemporaryTarget(TemporaryTargetCompanion event) {
+    final table = db.temporaryTarget;
+
+    return into(table).insert(
+      event,
+      onConflict: DoUpdate(
+        (_) => event,
+        target: [table.source, table.externalId],
+        targetCondition: (row) => row.externalId.isNotNull(),
+      ),
+    );
+  }
+
+  Future<void> upsertCorrectionBolus(CorrectionBolusCompanion event) {
+    final table = db.correctionBolus;
+
+    return into(table).insert(
+      event,
+      onConflict: DoUpdate(
+        (_) => event,
+        target: [table.source, table.externalId],
+        targetCondition: (row) => row.externalId.isNotNull(),
+      ),
+    );
+  }
+
+  Future<void> upsertManualBolus(ManualBolusCompanion event) {
+    final table = db.manualBolus;
+
+    return into(table).insert(
+      event,
+      onConflict: DoUpdate(
+        (_) => event,
+        target: [table.source, table.externalId],
+        targetCondition: (row) => row.externalId.isNotNull(),
+      ),
+    );
+  }
+
+  Future<void> upsertTreat(TreatCompanion event) {
+    final table = db.treat;
+
+    return into(table).insert(
+      event,
+      onConflict: DoUpdate(
+        (_) => event,
+        target: [table.source, table.externalId],
+        targetCondition: (row) => row.externalId.isNotNull(),
+      ),
+    );
+  }
+
+  Future<void> upsertExtendedCarb(ExtendedCarbCompanion event) {
+    final table = db.extendedCarb;
 
     return into(table).insert(
       event,
@@ -78,18 +154,93 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     return query.get();
   }
 
-  Future<List<LocalTreatmentEventData>> getTreatmentEventsBetween(
+  Future<List<BolusWizardData>> getBolusWizardsBetween(
     DateTime start,
     DateTime end, {
     String? source,
   }) {
-    final query = select(db.localTreatmentEvent)
-      ..where(
-        (row) => row.createdAt.isBetweenValues(
-          start.millisecondsSinceEpoch,
-          end.millisecondsSinceEpoch,
-        ),
-      )
+    final query = select(db.bolusWizard)
+      ..where((row) => _createdAtBetween(row.createdAt, start, end))
+      ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]);
+
+    if (source != null) {
+      query.where((row) => row.source.equals(source));
+    }
+
+    return query.get();
+  }
+
+  Future<List<TemporaryTargetData>> getTemporaryTargetsBetween(
+    DateTime start,
+    DateTime end, {
+    String? source,
+  }) {
+    final query = select(db.temporaryTarget)
+      ..where((row) => _createdAtBetween(row.createdAt, start, end))
+      ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]);
+
+    if (source != null) {
+      query.where((row) => row.source.equals(source));
+    }
+
+    return query.get();
+  }
+
+  Future<List<CorrectionBolusData>> getCorrectionBolusesBetween(
+    DateTime start,
+    DateTime end, {
+    String? source,
+  }) {
+    final query = select(db.correctionBolus)
+      ..where((row) => _createdAtBetween(row.createdAt, start, end))
+      ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]);
+
+    if (source != null) {
+      query.where((row) => row.source.equals(source));
+    }
+
+    return query.get();
+  }
+
+  Future<List<ManualBolusData>> getManualBolusesBetween(
+    DateTime start,
+    DateTime end, {
+    String? source,
+  }) {
+    final query = select(db.manualBolus)
+      ..where((row) => _createdAtBetween(row.createdAt, start, end))
+      ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]);
+
+    if (source != null) {
+      query.where((row) => row.source.equals(source));
+    }
+
+    return query.get();
+  }
+
+  Future<List<TreatData>> getTreatsBetween(
+    DateTime start,
+    DateTime end, {
+    String? source,
+  }) {
+    final query = select(db.treat)
+      ..where((row) => _createdAtBetween(row.createdAt, start, end))
+      ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]);
+
+    if (source != null) {
+      query.where((row) => row.source.equals(source));
+    }
+
+    return query.get();
+  }
+
+  Future<List<ExtendedCarbData>> getExtendedCarbsBetween(
+    DateTime start,
+    DateTime end, {
+    String? source,
+  }) {
+    final query = select(db.extendedCarb)
+      ..where((row) => _createdAtBetween(row.createdAt, start, end))
       ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]);
 
     if (source != null) {
@@ -119,4 +270,15 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
 
     return query.get();
   }
+}
+
+Expression<bool> _createdAtBetween(
+  GeneratedColumn<int> column,
+  DateTime start,
+  DateTime end,
+) {
+  return column.isBetweenValues(
+    start.millisecondsSinceEpoch,
+    end.millisecondsSinceEpoch,
+  );
 }

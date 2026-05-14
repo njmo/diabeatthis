@@ -1,0 +1,19 @@
+CREATE TABLE extended_carb (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+
+  source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
+  external_id TEXT,
+
+  created_at INTEGER NOT NULL,
+  received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+
+  carbs REAL,
+  duration_minutes INTEGER
+);
+
+CREATE UNIQUE INDEX uq_extended_carb_external_id
+ON extended_carb(source, external_id)
+WHERE external_id IS NOT NULL;
+
+CREATE INDEX idx_extended_carb_created_at
+ON extended_carb(created_at);

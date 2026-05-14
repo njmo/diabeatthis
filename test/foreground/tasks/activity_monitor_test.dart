@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/events/data/notification/activity_finished_response_event.dart';
-import 'package:diabeatthis/core/domain/model/temporary_target.dart';
+import 'package:diabeatthis/core/domain/model/temporary_target.dart' as domain;
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
@@ -53,7 +53,9 @@ void main() {
         );
 
         harness.dispatchEvent(
-          TreatmentAvailableEvent<TemporaryTarget>(_temporaryTarget(now)),
+          TreatmentAvailableEvent<domain.TemporaryTarget>(
+            _temporaryTarget(now),
+          ),
         );
         await _settle();
 
@@ -151,7 +153,9 @@ void main() {
           expect(notifications.shownEvents, hasLength(2));
 
           harness.dispatchEvent(
-            TreatmentAvailableEvent<TemporaryTarget>(_temporaryTarget(now)),
+            TreatmentAvailableEvent<domain.TemporaryTarget>(
+              _temporaryTarget(now),
+            ),
           );
           await _settle();
 
@@ -356,8 +360,8 @@ Future<void> _seedActivityLog(
   );
 }
 
-TemporaryTarget _temporaryTarget(DateTime createdAt) {
-  return TemporaryTarget(
+domain.TemporaryTarget _temporaryTarget(DateTime createdAt) {
+  return domain.TemporaryTarget(
     id: 1,
     nightscoutId: 'target-1',
     createdAt: createdAt,

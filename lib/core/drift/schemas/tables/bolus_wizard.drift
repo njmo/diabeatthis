@@ -1,0 +1,55 @@
+CREATE TABLE bolus_wizard (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+
+  source TEXT NOT NULL CHECK (source IN ('cloud', 'aaps')),
+  external_id TEXT,
+
+  created_at INTEGER NOT NULL,
+  received_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+
+  nightscout_id TEXT,
+  glucose INTEGER,
+  units TEXT,
+  carbs REAL,
+  insulin REAL,
+  basal_iob REAL,
+  bolus_iob REAL,
+  carbs_insulin REAL,
+  cob REAL,
+  cob_insulin REAL,
+  calculator_created_at INTEGER,
+  glucose_difference REAL,
+  glucose_insulin REAL,
+  glucose_trend REAL,
+  glucose_value REAL,
+  ic REAL,
+  calculator_id INTEGER,
+  isf REAL,
+  calculator_note TEXT,
+  other_correction REAL,
+  percentage_correction INTEGER,
+  profile_name TEXT,
+  superbolus_insulin REAL,
+  target_bg_high REAL,
+  target_bg_low REAL,
+  calculator_timestamp INTEGER,
+  trend_insulin REAL,
+  utc_offset INTEGER,
+  calculator_version INTEGER,
+  was_basal_iob_used BOOLEAN,
+  was_bolus_iob_used BOOLEAN,
+  was_cob_used BOOLEAN,
+  was_glucose_used BOOLEAN,
+  was_superbolus_used BOOLEAN,
+  was_temp_target_used BOOLEAN,
+  was_trend_used BOOLEAN,
+  were_carbs_used BOOLEAN,
+  notes TEXT
+);
+
+CREATE UNIQUE INDEX uq_bolus_wizard_external_id
+ON bolus_wizard(source, external_id)
+WHERE external_id IS NOT NULL;
+
+CREATE INDEX idx_bolus_wizard_created_at
+ON bolus_wizard(created_at);

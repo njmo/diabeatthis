@@ -4,7 +4,7 @@ import '../../../domain/model/glucose.dart' as domain;
 import '../../../drift/database_impl.dart';
 
 extension GlucoseDriftMapper on domain.Glucose {
-  GlucoseReadingCompanion toDriftCompanion() {
+  GlucoseReadingCompanion toCompanion() {
     return GlucoseReadingCompanion.insert(
       source: source.storageValue,
       externalId: externalId != null

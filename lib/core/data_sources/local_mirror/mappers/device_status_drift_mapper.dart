@@ -4,7 +4,7 @@ import '../../../domain/model/device_status.dart' as domain;
 import '../../../drift/database_impl.dart';
 
 extension DeviceStatusDriftMapper on domain.DeviceStatus {
-  DeviceStatusCompanion toDriftCompanion() {
+  DeviceStatusCompanion toCompanion() {
     return DeviceStatusCompanion.insert(
       source: source.storageValue,
       externalId: externalId != null
