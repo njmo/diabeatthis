@@ -1,6 +1,6 @@
 import '../../../../../common/events/data/notification/finished_eating_response_event.dart';
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
-import '../../../../../core/domain/model/meal.dart';
+import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/domain/events/finished_eating_event_notification.dart';
@@ -112,9 +112,9 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           notificationsControllerForegroundProvider,
         );
         final calculatorResponse = await runtimeContext
-            .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<Meal>>(
-              Duration(minutes: 20),
-            );
+            .waitForEventWithTimeoutOrNull<
+              TreatmentAvailableEvent<BolusWizard>
+            >(Duration(minutes: 20));
 
         if (calculatorResponse == null) {
           logI("Problem gathering calculator response, going to idle state");
@@ -204,7 +204,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
         },
       );
 
-      await runtimeContext.waitForEvent<TreatmentAvailableEvent<Meal>>();
+      await runtimeContext.waitForEvent<TreatmentAvailableEvent<BolusWizard>>();
       logI(
         "Calculator response available, cancelling notifications and marking meal as bolused eaten",
       );
@@ -229,7 +229,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
   ) async {
     logI("Waiting for add-on calculator response");
     final calculatorResponse = await runtimeContext
-        .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<Meal>>(
+        .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<BolusWizard>>(
           Duration(minutes: 10),
         );
 
@@ -260,7 +260,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
         );
 
     final reminderResponse = await runtimeContext
-        .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<Meal>>(
+        .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<BolusWizard>>(
           Duration(minutes: 20),
         );
     if (reminderResponse != null) {

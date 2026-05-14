@@ -1,9 +1,9 @@
 import 'package:drift/drift.dart';
 
+import '../../../domain/model/bolus_wizard.dart';
 import '../../../domain/model/correction_bolus.dart';
 import '../../../domain/model/extended_carb.dart';
 import '../../../domain/model/manual_bolus.dart';
-import '../../../domain/model/meal.dart';
 import '../../../domain/model/temporary_target.dart';
 import '../../../domain/model/treat.dart';
 import '../../../domain/model/treatment_base.dart';
@@ -48,7 +48,7 @@ extension LocalTreatmentMirrorMapper on Treatment {
 
   String get _treatmentType {
     return switch (this) {
-      Meal() => 'Bolus Wizard',
+      BolusWizard() => 'Bolus Wizard',
       TemporaryTarget() => 'Temporary Target',
       CorrectionBolus() => 'Correction Bolus',
       ManualBolus() => 'Meal Bolus',
@@ -60,7 +60,7 @@ extension LocalTreatmentMirrorMapper on Treatment {
 
   String? get _nightscoutId {
     return switch (this) {
-      Meal(:final nightscoutObjectId) => nightscoutObjectId,
+      BolusWizard(:final nightscoutObjectId) => nightscoutObjectId,
       TemporaryTarget(:final nightscoutId) => nightscoutId,
       _ => null,
     };
@@ -68,7 +68,7 @@ extension LocalTreatmentMirrorMapper on Treatment {
 
   double? get _carbs {
     return switch (this) {
-      Meal(:final carbs) => carbs?.toDouble(),
+      BolusWizard(:final carbs) => carbs.toDouble(),
       Treat(:final carbs) => carbs.toDouble(),
       ExtendedCarb(:final carbs) => carbs.toDouble(),
       _ => null,
@@ -77,7 +77,7 @@ extension LocalTreatmentMirrorMapper on Treatment {
 
   double? get _insulin {
     return switch (this) {
-      Meal(:final insulin) => insulin,
+      BolusWizard(:final insulin) => insulin,
       CorrectionBolus(:final insulin) => insulin,
       ManualBolus(:final insulin) => insulin,
       _ => null,
@@ -110,7 +110,7 @@ extension LocalTreatmentMirrorMapper on Treatment {
 
   String? get _notes {
     return switch (this) {
-      Meal(:final notes) => notes,
+      BolusWizard(:final notes) => notes,
       _ => null,
     };
   }

@@ -1,8 +1,8 @@
+import '../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../core/domain/model/correction_bolus.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/manual_bolus.dart';
-import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../../core/domain/model/treatment_base.dart';
@@ -101,20 +101,20 @@ class MealAnalysisData {
       if (treatment is CorrectionBolus) {
         return sum + treatment.insulin;
       }
-      if (treatment is Meal) {
-        return sum + (treatment.insulin ?? 0);
+      if (treatment is BolusWizard) {
+        return sum + treatment.insulin;
       }
       return sum;
     });
   }
 
-  int get totalTreatmentCarbs {
-    return treatments.fold<int>(0, (sum, treatment) {
+  double get totalTreatmentCarbs {
+    return treatments.fold<double>(0, (sum, treatment) {
       if (treatment is Treat) {
         return sum + treatment.carbs;
       }
-      if (treatment is Meal) {
-        return sum + (treatment.carbs ?? 0);
+      if (treatment is BolusWizard) {
+        return sum + treatment.carbs;
       }
       return sum;
     });

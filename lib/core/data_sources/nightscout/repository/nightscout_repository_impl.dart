@@ -1,19 +1,19 @@
 import 'package:clock/clock.dart';
 
+import '../../../domain/model/bolus_wizard.dart';
 import '../../../domain/model/device_status.dart';
 import '../../../domain/model/glucose.dart';
-import '../../../domain/model/meal.dart';
 import '../../../domain/model/temporary_target.dart';
 import '../../../domain/model/treatment_base.dart';
 import '../../../logger/logger.dart';
+import '../dto/bolus_wizard_dto.dart';
 import '../dto/device_status_dto.dart';
 import '../dto/glucose_dto.dart';
-import '../dto/meal_dto.dart';
 import '../dto/temporary_target_dto.dart';
 import '../helpers/treatments_factory.dart';
+import '../mappers/bolus_wizard_mapper.dart';
 import '../mappers/device_status_mapper.dart';
 import '../mappers/glucose_mapper.dart';
-import '../mappers/meal_mapper.dart';
 import '../mappers/temporary_target_mapper.dart';
 import '../services/nightscout_service.dart';
 import 'nightscout_repository.dart';
@@ -62,7 +62,7 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
   }
 
   @override
-  Future<List<Meal>> fetchMealsOnDay(DateTime day) async {
+  Future<List<BolusWizard>> fetchBolusWizardsOnDay(DateTime day) async {
     final r = _dayRangeUtc(day);
     final qp = {
       'find[created_at][\$gte]': r.startUtc.toIso8601String(),
@@ -71,18 +71,22 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
     };
     final url = _buildUri('/api/v1/treatments.json', qp);
     final data = await service.fetchNightscoutData(url);
-    return (data as List).map((e) => MealDto.fromJson(e).toDomain()).toList();
+    return (data as List)
+        .map((e) => BolusWizardDto.fromJson(e).toDomain())
+        .toList();
   }
 
   @override
-  Future<List<Meal>> fetchMealsAfter(DateTime after) async {
+  Future<List<BolusWizard>> fetchBolusWizardsAfter(DateTime after) async {
     final qp = {
       'find[created_at][\$gte]': after.toUtc().toIso8601String(),
       'find[eventType]': 'Bolus Wizard',
     };
     final url = _buildUri('/api/v1/treatments.json', qp);
     final data = await service.fetchNightscoutData(url);
-    return (data as List).map((e) => MealDto.fromJson(e).toDomain()).toList();
+    return (data as List)
+        .map((e) => BolusWizardDto.fromJson(e).toDomain())
+        .toList();
   }
 
   @override

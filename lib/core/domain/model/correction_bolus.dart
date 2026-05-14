@@ -12,18 +12,19 @@ abstract class CorrectionBolus with _$CorrectionBolus implements Treatment {
   const factory CorrectionBolus({
     required int id,
     required DateTime createdAt,
-    required double insulin
+    required double insulin,
   }) = _CorrectionBolus;
 
-@override
-String getParts() => "💉${insulin.toStringAsFixed(2)}U";
+  @override
+  String getParts() => "💉${insulin.toStringAsFixed(2)}U";
 
-@override
-IconData getIcon() => Icons.vaccines;
+  @override
+  IconData getIcon() => Icons.vaccines;
 
-@override
-Color getColor() => Colors.blue;
+  @override
+  Color getColor() => Colors.blue;
 }
+
 /*
 
   Map<String, dynamic> toMap() {

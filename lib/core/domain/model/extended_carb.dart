@@ -36,11 +36,11 @@ abstract class ExtendedCarb with _$ExtendedCarb implements Treatment {
    */
 
   @override
-  String getParts() => "🍖 ${carbs}g \n dur: ${duration/60000}min";
+  String getParts() => "🍖 ${carbs}g \n dur: ${duration / 60000}min";
 
   @override
   IconData getIcon() => Icons.restaurant;
 
   @override
-  Color getColor() =>Colors.deepPurpleAccent;
+  Color getColor() => Colors.deepPurpleAccent;
 }

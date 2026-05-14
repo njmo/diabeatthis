@@ -12,7 +12,7 @@ class TestPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sensorAge = ref.watch(sensorAgeProvider);
     final canulaAge = ref.watch(canulaAgeProvider);
-    final meals = ref.watch(mealsProvider);
+    final bolusWizards = ref.watch(bolusWizardsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Test Page')),
@@ -43,18 +43,27 @@ class TestPage extends ConsumerWidget {
                 loading: () => const CircularProgressIndicator(),
                 error: (error, _) => Text('Błąd: $error'),
               ),
-              meals.when(
-                data: (mealsList) {
-                  return ListView.builder(itemBuilder: (context, index) {
-                    final meal = mealsList[index];
-                    return Card(
-                      child: ListTile(
-                        leading: Icon(meal.getIcon(), color: meal.getColor()),
-                        title: Text(meal.getParts()),
-                        subtitle: Text('Data: ${meal.eatenAt?.toLocal().toIso8601String()}'),
-                      ),
-                    );
-                  }, itemCount: mealsList.length, shrinkWrap: true,);
+              bolusWizards.when(
+                data: (bolusWizardList) {
+                  return ListView.builder(
+                    itemBuilder: (context, index) {
+                      final bolusWizard = bolusWizardList[index];
+                      return Card(
+                        child: ListTile(
+                          leading: Icon(
+                            bolusWizard.getIcon(),
+                            color: bolusWizard.getColor(),
+                          ),
+                          title: Text(bolusWizard.getParts()),
+                          subtitle: Text(
+                            'Data: ${bolusWizard.createdAt.toLocal().toIso8601String()}',
+                          ),
+                        ),
+                      );
+                    },
+                    itemCount: bolusWizardList.length,
+                    shrinkWrap: true,
+                  );
                 },
                 loading: () => const CircularProgressIndicator(),
                 error: (error, _) => Text('Błąd: $error'),

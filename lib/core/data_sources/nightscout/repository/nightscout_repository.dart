@@ -1,15 +1,15 @@
+import '../../../domain/model/bolus_wizard.dart';
 import '../../../domain/model/device_status.dart';
 import '../../../domain/model/glucose.dart';
-import '../../../domain/model/meal.dart';
 import '../../../domain/model/temporary_target.dart';
 import '../../../domain/model/treatment_base.dart';
 
 abstract class NightscoutRepository {
   Future<List<Treatment>> fetchTreatmentsOnDay(DateTime day);
 
-  Future<List<Meal>> fetchMealsOnDay(DateTime day);
+  Future<List<BolusWizard>> fetchBolusWizardsOnDay(DateTime day);
 
-  Future<List<Meal>> fetchMealsAfter(DateTime after);
+  Future<List<BolusWizard>> fetchBolusWizardsAfter(DateTime after);
   Future<List<Treatment>> fetchTreatmentsBetween(DateTime start, DateTime end);
   Future<List<Treatment>> fetchTreatmentsAfter(DateTime after);
   Future<List<Glucose>> fetchGlucoseOnDay(DateTime day);

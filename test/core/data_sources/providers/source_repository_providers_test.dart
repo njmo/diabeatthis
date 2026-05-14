@@ -9,9 +9,9 @@ import 'package:diabeatthis/core/data_sources/local_mirror/repositories/mirrorin
 import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/repository/nightscout_repository.dart';
 import 'package:diabeatthis/core/data_sources/providers/source_repository_providers.dart';
+import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
-import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
 import 'package:diabeatthis/core/domain/model/treatment_base.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart'
@@ -138,12 +138,12 @@ class _FakeNightscoutRepository implements NightscoutRepository {
   }
 
   @override
-  Future<List<Meal>> fetchMealsAfter(DateTime after) {
+  Future<List<BolusWizard>> fetchBolusWizardsAfter(DateTime after) {
     throw UnimplementedError();
   }
 
   @override
-  Future<List<Meal>> fetchMealsOnDay(DateTime day) {
+  Future<List<BolusWizard>> fetchBolusWizardsOnDay(DateTime day) {
     throw UnimplementedError();
   }
 

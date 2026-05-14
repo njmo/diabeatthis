@@ -1,4 +1,4 @@
-import '../../../domain/model/meal.dart';
+import '../../../domain/model/bolus_wizard.dart';
 import '../../../domain/model/temporary_target.dart';
 import '../../../domain/model/treatment_base.dart';
 import '../../../logger/logger.dart';
@@ -36,17 +36,17 @@ class MirroringTreatmentSourceRepository
   }
 
   @override
-  Future<List<Meal>> fetchMealsAfter(DateTime after) async {
-    final meals = await _delegate.fetchMealsAfter(after);
-    await _mirror(meals);
-    return meals;
+  Future<List<BolusWizard>> fetchBolusWizardsAfter(DateTime after) async {
+    final bolusWizards = await _delegate.fetchBolusWizardsAfter(after);
+    await _mirror(bolusWizards);
+    return bolusWizards;
   }
 
   @override
-  Future<List<Meal>> fetchMealsOnDay(DateTime day) async {
-    final meals = await _delegate.fetchMealsOnDay(day);
-    await _mirror(meals);
-    return meals;
+  Future<List<BolusWizard>> fetchBolusWizardsOnDay(DateTime day) async {
+    final bolusWizards = await _delegate.fetchBolusWizardsOnDay(day);
+    await _mirror(bolusWizards);
+    return bolusWizards;
   }
 
   @override

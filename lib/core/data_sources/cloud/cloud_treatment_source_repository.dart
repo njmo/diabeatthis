@@ -1,4 +1,4 @@
-import '../../domain/model/meal.dart';
+import '../../domain/model/bolus_wizard.dart';
 import '../../domain/model/temporary_target.dart';
 import '../../domain/model/treatment_base.dart';
 import '../domain/treatment_source_repository.dart';
@@ -20,13 +20,13 @@ class CloudTreatmentSourceRepository implements TreatmentSourceRepository {
   }
 
   @override
-  Future<List<Meal>> fetchMealsAfter(DateTime after) {
-    return _nightscoutRepository.fetchMealsAfter(after);
+  Future<List<BolusWizard>> fetchBolusWizardsAfter(DateTime after) {
+    return _nightscoutRepository.fetchBolusWizardsAfter(after);
   }
 
   @override
-  Future<List<Meal>> fetchMealsOnDay(DateTime day) {
-    return _nightscoutRepository.fetchMealsOnDay(day);
+  Future<List<BolusWizard>> fetchBolusWizardsOnDay(DateTime day) {
+    return _nightscoutRepository.fetchBolusWizardsOnDay(day);
   }
 
   @override

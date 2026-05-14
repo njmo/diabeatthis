@@ -1,8 +1,9 @@
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/services/local_mirror_writer.dart';
+import 'package:diabeatthis/core/domain/model/bolus_calculator_result.dart';
+import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
-import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart'
     hide DeviceStatus, Meal;
@@ -61,13 +62,18 @@ void main() {
     final createdAt = DateTime.fromMillisecondsSinceEpoch(1000);
 
     await writer.mirrorTreatments([
-      Meal(
+      BolusWizard(
         id: 0,
-        name: '',
         nightscoutObjectId: 'meal-1',
         createdAt: createdAt,
-        carbs: 30,
-        insulin: 2.5,
+        date: createdAt,
+        glucose: 100,
+        units: 'mg/dl',
+        notes: null,
+        calculatorResult: _testBolusCalculatorResult(
+          carbs: 30,
+          totalInsulin: 2.5,
+        ),
       ),
       TemporaryTarget(
         id: 0,
@@ -147,4 +153,46 @@ void main() {
     expect(aapsStatus.carbsReq, 4);
     expect(aapsStatus.carbsReqWithin, 15);
   });
+}
+
+BolusCalculatorResult _testBolusCalculatorResult({
+  double? carbs,
+  double? totalInsulin,
+}) {
+  return BolusCalculatorResult(
+    basalIob: null,
+    bolusIob: null,
+    carbs: carbs,
+    carbsInsulin: null,
+    cob: null,
+    cobInsulin: null,
+    dateCreated: null,
+    glucoseDifference: null,
+    glucoseInsulin: null,
+    glucoseTrend: null,
+    glucoseValue: null,
+    ic: null,
+    id: null,
+    isf: null,
+    note: null,
+    otherCorrection: null,
+    percentageCorrection: null,
+    profileName: null,
+    superbolusInsulin: null,
+    targetBGHigh: null,
+    targetBGLow: null,
+    timestamp: null,
+    totalInsulin: totalInsulin,
+    trendInsulin: null,
+    utcOffset: null,
+    version: null,
+    wasBasalIOBUsed: null,
+    wasBolusIOBUsed: null,
+    wasCOBUsed: null,
+    wasGlucoseUsed: null,
+    wasSuperbolusUsed: null,
+    wasTempTargetUsed: null,
+    wasTrendUsed: null,
+    wereCarbsUsed: null,
+  );
 }

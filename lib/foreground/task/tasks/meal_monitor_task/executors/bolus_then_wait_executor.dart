@@ -1,7 +1,7 @@
 import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/eat_now_response_event.dart';
-import '../../../../../core/domain/model/meal.dart';
+import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/domain/events/eat_now_event_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -70,7 +70,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
 
     logI("Waiting for calculator use before moving to next step");
     final calculatorResponse = await runtimeContext
-        .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<Meal>>(
+        .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<BolusWizard>>(
           Duration(minutes: 20),
         );
 

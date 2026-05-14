@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:clock/clock.dart';
 
 import '../../core/data_sources/providers/source_repository_providers.dart';
+import '../../core/domain/model/bolus_wizard.dart';
 import '../../core/domain/model/correction_bolus.dart';
 import '../../core/domain/model/extended_carb.dart';
 import '../../core/domain/model/manual_bolus.dart';
-import '../../core/domain/model/meal.dart';
 import '../../core/domain/model/temporary_target.dart';
 import '../../core/domain/model/treat.dart';
 import '../../core/domain/model/treatment_base.dart';
@@ -90,9 +90,9 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
     );
 
     switch (data) {
-      case Meal():
-        logI("Meal treatment");
-        context.emitEvent(TreatmentAvailableEvent<Meal>(data));
+      case BolusWizard():
+        logI("Bolus wizard treatment");
+        context.emitEvent(TreatmentAvailableEvent<BolusWizard>(data));
         break;
       case CorrectionBolus():
         logI("Correction bolus treatment");

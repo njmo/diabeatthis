@@ -3,9 +3,9 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../domain/model/bolus_wizard.dart';
 import '../../../domain/model/device_status.dart';
 import '../../../domain/model/glucose.dart';
-import '../../../domain/model/meal.dart';
 import '../../../domain/model/temporary_target.dart';
 import '../../../domain/model/treatment_base.dart';
 import '../repository/nightscout_repository.dart';
@@ -51,9 +51,9 @@ Future<TemporaryTarget> temporaryTargetById(Ref ref, String id) async {
 }
 
 @riverpod
-Future<List<Meal>> meals(Ref ref) async {
+Future<List<BolusWizard>> bolusWizards(Ref ref) async {
   final repository = await ref.watch(nightscoutRepositoryProvider.future);
-  return await repository.fetchMealsOnDay(clock.now());
+  return await repository.fetchBolusWizardsOnDay(clock.now());
 }
 
 @riverpod

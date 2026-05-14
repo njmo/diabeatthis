@@ -5,6 +5,8 @@ import 'package:diabeatthis/common/events/data/notification/meal_suggestion_resp
 import 'package:diabeatthis/common/events/data/notification/meal_summary_reminder_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/temp_target_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/temp_target_type.dart';
+import 'package:diabeatthis/core/domain/model/bolus_calculator_result.dart';
+import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
@@ -49,6 +51,72 @@ import '../utils/fake_runtime_harness.dart';
 
 void withFakeClock(FakeAsync async, DateTime start, void Function() body) {
   withClock(Clock(() => start.add(async.elapsed)), body);
+}
+
+BolusWizard testBolusWizard({
+  int id = 0,
+  DateTime? createdAt,
+  int glucose = 100,
+  double carbs = 10,
+  double insulin = 1,
+  String? nightscoutObjectId,
+  String? notes,
+}) {
+  return BolusWizard(
+    id: id,
+    nightscoutObjectId: nightscoutObjectId,
+    createdAt: createdAt ?? clock.now(),
+    date: createdAt ?? clock.now(),
+    glucose: glucose,
+    units: 'mg/dl',
+    notes: notes,
+    calculatorResult: testBolusCalculatorResult(
+      carbs: carbs,
+      totalInsulin: insulin,
+    ),
+  );
+}
+
+BolusCalculatorResult testBolusCalculatorResult({
+  double? carbs,
+  double? totalInsulin,
+}) {
+  return BolusCalculatorResult(
+    basalIob: null,
+    bolusIob: null,
+    carbs: carbs,
+    carbsInsulin: null,
+    cob: null,
+    cobInsulin: null,
+    dateCreated: null,
+    glucoseDifference: null,
+    glucoseInsulin: null,
+    glucoseTrend: null,
+    glucoseValue: null,
+    ic: null,
+    id: null,
+    isf: null,
+    note: null,
+    otherCorrection: null,
+    percentageCorrection: null,
+    profileName: null,
+    superbolusInsulin: null,
+    targetBGHigh: null,
+    targetBGLow: null,
+    timestamp: null,
+    totalInsulin: totalInsulin,
+    trendInsulin: null,
+    utcOffset: null,
+    version: null,
+    wasBasalIOBUsed: null,
+    wasBolusIOBUsed: null,
+    wasCOBUsed: null,
+    wasGlucoseUsed: null,
+    wasSuperbolusUsed: null,
+    wasTempTargetUsed: null,
+    wasTrendUsed: null,
+    wereCarbsUsed: null,
+  );
 }
 
 void emitDeviceStatus(
@@ -492,9 +560,7 @@ void main() {
 
             harness.dispatchEventToTask(
               task,
-              TreatmentAvailableEvent<Meal>(
-                Meal(id: 10, name: 'AAPS add-on', plannedAt: clock.now()),
-              ),
+              TreatmentAvailableEvent<BolusWizard>(testBolusWizard(id: 10)),
             );
             _settle(async);
 
@@ -866,7 +932,7 @@ void main() {
 
             harness.dispatchEventToTask(
               task,
-              TreatmentAvailableEvent<Meal>(testMeal),
+              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
             );
             _settle(async);
 
@@ -971,7 +1037,7 @@ void main() {
 
             harness.dispatchEventToTask(
               task,
-              TreatmentAvailableEvent<Meal>(testMeal),
+              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
             );
             _settle(async);
 
@@ -1076,7 +1142,7 @@ void main() {
 
             harness.dispatchEventToTask(
               task,
-              TreatmentAvailableEvent<Meal>(testMeal),
+              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
             );
             _settle(async);
 
@@ -1207,7 +1273,7 @@ void main() {
 
             harness.dispatchEventToTask(
               task,
-              TreatmentAvailableEvent<Meal>(Meal(id: 0, name: '')),
+              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
             );
             _settle(async);
 
@@ -1327,7 +1393,7 @@ void main() {
 
             harness.dispatchEventToTask(
               task,
-              TreatmentAvailableEvent<Meal>(testMeal),
+              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
             );
             _settle(async);
 
@@ -1471,7 +1537,7 @@ void main() {
 
             harness.dispatchEventToTask(
               task,
-              TreatmentAvailableEvent<Meal>(testMeal),
+              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
             );
             _settle(async);
 
@@ -1645,7 +1711,7 @@ void main() {
 
             harness.dispatchEventToTask(
               task,
-              TreatmentAvailableEvent<Meal>(Meal(id: 0, name: '')),
+              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
             );
             _settle(async);
 
@@ -1744,7 +1810,7 @@ void main() {
 
           harness.dispatchEventToTask(
             task,
-            TreatmentAvailableEvent<Meal>(Meal(id: 0, name: '')),
+            TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
           );
           _settle(async);
 
@@ -1793,7 +1859,7 @@ void main() {
 
           harness.dispatchEventToTask(
             task,
-            TreatmentAvailableEvent<Meal>(Meal(id: 0, name: '')),
+            TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
           );
           _settle(async);
 
@@ -1889,7 +1955,7 @@ void main() {
 
           harness.dispatchEventToTask(
             task,
-            TreatmentAvailableEvent<Meal>(testMeal),
+            TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
           );
           _settle(async);
 

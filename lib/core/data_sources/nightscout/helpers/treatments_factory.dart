@@ -1,15 +1,15 @@
 import '../../../domain/model/treatment_base.dart';
 import '../../../logger/logger.dart';
+import '../dto/bolus_wizard_dto.dart';
 import '../dto/correction_bolus_dto.dart';
 import '../dto/extended_carb_dto.dart';
 import '../dto/manual_bolus_dto.dart';
-import '../dto/meal_dto.dart';
 import '../dto/temporary_target_dto.dart';
 import '../dto/treat_dto.dart';
+import '../mappers/bolus_wizard_mapper.dart';
 import '../mappers/correction_bolus_mapper.dart';
 import '../mappers/extended_carb_mapper.dart';
 import '../mappers/manual_bolus_mapper.dart';
-import '../mappers/meal_mapper.dart';
 import '../mappers/temporary_target_mapper.dart';
 import '../mappers/treat_mapper.dart';
 
@@ -28,7 +28,7 @@ class TreatmentFactory with Logging {
         continue;
       }
       if (type.contains('bolus wizard')) {
-        list.add(MealDto.fromJson(t).toDomain());
+        list.add(BolusWizardDto.fromJson(t).toDomain());
         ignoreNextBolus = true;
         continue;
       }

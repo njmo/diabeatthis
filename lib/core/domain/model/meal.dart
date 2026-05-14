@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import 'treatment_base.dart';
-
 part 'meal.freezed.dart';
 
 @freezed
-abstract class Meal with _$Meal implements Treatment {
+abstract class Meal with _$Meal {
   const Meal._();
 
   const factory Meal({
@@ -25,12 +23,10 @@ abstract class Meal with _$Meal implements Treatment {
     int? mealTemplateId,
   }) = _Meal;
 
-  @override
-  String getParts() => "🍽️ ${carbs?.toStringAsFixed(2) ?? 0}g \n 💉${insulin?.toStringAsFixed(2)}U";
+  String getParts() =>
+      "🍽️ ${carbs?.toStringAsFixed(2) ?? 0}g \n 💉${insulin?.toStringAsFixed(2)}U";
 
-  @override
   IconData getIcon() => Icons.dinner_dining;
 
-  @override
   Color getColor() => Colors.orange;
 }
