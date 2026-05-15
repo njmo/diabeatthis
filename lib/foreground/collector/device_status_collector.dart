@@ -96,10 +96,9 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
   }
 
   void _handleDeviceStatus(CollectorContext context, DeviceStatus data) {
-    logI("Device status reading available $data");
     logI(
-      "Detected change in device status reading at ${data.date.toIso8601String()} "
-      "with value ${data.bg} and tick ${data.tick}",
+      "Device status reading available bg=${data.bg} tick=${data.tick} "
+      "at ${data.date.toIso8601String()}",
     );
 
     context.emitEvent(DataAvailableEvent<DeviceStatus>(data));

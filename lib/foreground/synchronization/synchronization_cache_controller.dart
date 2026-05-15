@@ -159,10 +159,11 @@ class SynchronizationCacheController with Logging {
 
   String _describeGlucoseReadings(String label, Iterable<Glucose> readings) {
     final list = readings.toList()..sort((a, b) => a.date.compareTo(b.date));
-    final values = list
-        .map((reading) => '${reading.sgv}@${reading.date.toIso8601String()}')
-        .join(', ');
+    final first = list.isEmpty ? null : list.first;
+    final last = list.isEmpty ? null : list.last;
 
-    return '$label count=${list.length} values=[$values]';
+    return '$label count=${list.length}'
+        '${first == null ? '' : ' from=${first.date.toIso8601String()}'}'
+        '${last == null ? '' : ' to=${last.date.toIso8601String()}'}';
   }
 }

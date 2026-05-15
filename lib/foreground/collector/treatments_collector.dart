@@ -69,35 +69,28 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
   }
 
   void _handleTreatment(CollectorContext context, Treatment data) {
-    logI("New treatment reading available $data");
     logI(
-      "Detected change in treatment reading at "
+      "${data.runtimeType} treatment available at "
       "${data.createdAt?.toIso8601String()}",
     );
 
     switch (data) {
       case BolusWizard():
-        logI("Bolus wizard treatment");
         context.emitEvent(TreatmentAvailableEvent<BolusWizard>(data));
         break;
       case CorrectionBolus():
-        logI("Correction bolus treatment");
         context.emitEvent(TreatmentAvailableEvent<CorrectionBolus>(data));
         break;
       case Treat():
-        logI("Treat treatment");
         context.emitEvent(TreatmentAvailableEvent<Treat>(data));
         break;
       case ExtendedCarb():
-        logI("Extended carb treatment");
         context.emitEvent(TreatmentAvailableEvent<ExtendedCarb>(data));
         break;
       case ManualBolus():
-        logI("Manual bolus treatment");
         context.emitEvent(TreatmentAvailableEvent<ManualBolus>(data));
         break;
       case TemporaryTarget():
-        logI("Temporary target treatment");
         context.emitEvent(TreatmentAvailableEvent<TemporaryTarget>(data));
         _syncTemporaryTarget(context, data);
         break;

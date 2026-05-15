@@ -104,8 +104,6 @@ class MyTaskHandler extends TaskHandler with Logging {
 
   @override
   void onReceiveData(Object data) {
-    logI('onReceiveData: $data');
-
     final handler = _externalEventHandler;
     if (handler == null) {
       logI('External event handler is not ready, queueing data');

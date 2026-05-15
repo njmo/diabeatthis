@@ -10,7 +10,6 @@ class CollectTickWakeLock with Logging {
   Future<void> acquire() async {
     try {
       await ForegroundPowerLock.acquireCollectTick(timeout: _timeout);
-      logI('Native collect tick wake lock acquired for 5 seconds');
     } catch (e, st) {
       logW('Failed to acquire native collect tick wake lock: $e\n$st');
     }

@@ -39,7 +39,6 @@ class AppEventHandler with Logging {
         SharePlus.instance.share(ShareParams(files: [XFile(file.path)]));
       },
       executeCommand: (final command) {
-        logI("Received execute command event");
         command.when(
           syncData: (final data) {
             unawaited(_sendRequestedData(runtimeContext, data));
@@ -71,9 +70,6 @@ class AppEventHandler with Logging {
             await _sendLiveDataFromCurrentSources(runtimeContext);
           },
           collectTick: (String reason, int alarmId) async {
-            logI(
-              "Received collect tick command with reason: $reason and alarmId: $alarmId",
-            );
             await const CollectTickWakeLock().acquire();
 
             final tickAt = clock.now();
@@ -212,10 +208,11 @@ class AppEventHandler with Logging {
   String _describeGlucoseReadings(String label, Iterable<Glucose> readings) {
     final glucoseReadings = readings.toList()
       ..sort((a, b) => a.date.compareTo(b.date));
-    final values = glucoseReadings
-        .map((reading) => '${reading.sgv}@${reading.date.toIso8601String()}')
-        .join(', ');
+    final first = glucoseReadings.isEmpty ? null : glucoseReadings.first;
+    final last = glucoseReadings.isEmpty ? null : glucoseReadings.last;
 
-    return '$label count=${glucoseReadings.length} values=[$values]';
+    return '$label count=${glucoseReadings.length}'
+        '${first == null ? '' : ' from=${first.date.toIso8601String()}'}'
+        '${last == null ? '' : ' to=${last.date.toIso8601String()}'}';
   }
 }
