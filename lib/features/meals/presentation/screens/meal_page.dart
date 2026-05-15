@@ -2,8 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../../app/router/app_router.dart' as routes;
-import '../../../../common/widgets/delete_confirmation_dialog.dart';
 import '../controllers/meal_details_controller.dart';
 import '../models/meal_page_state.dart';
 import '../widgets/meal_details/meal_activity_analysis_section.dart';
@@ -31,12 +29,6 @@ class MealPage extends ConsumerWidget {
           data: (value) => Text(value.details.meal.name),
           orElse: () => Text(''),
         ),
-        actions: state.maybeWhen(
-          data: (value) => [
-            MealDeleteAction(mealId: mealId, mealName: value.details.meal.name),
-          ],
-          orElse: () => const [],
-        ),
       ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -44,68 +36,6 @@ class MealPage extends ConsumerWidget {
         data: (value) => MealPageBody(state: value),
       ),
     );
-  }
-}
-
-class MealDeleteAction extends ConsumerWidget {
-  final int mealId;
-  final String mealName;
-
-  const MealDeleteAction({
-    super.key,
-    required this.mealId,
-    required this.mealName,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return IconButton(
-      tooltip: 'Usuń posiłek',
-      icon: const Icon(Icons.delete_outline),
-      onPressed: () => _confirmAndDeleteMeal(context, ref),
-    );
-  }
-
-  Future<void> _confirmAndDeleteMeal(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    final confirmed = await showDeleteConfirmationDialog(
-      context,
-      title: 'Usunąć posiłek?',
-      message:
-          'Posiłek "$mealName" zostanie usunięty razem ze składnikami, podsumowaniem i wynikami analizy.',
-      confirmLabel: 'Usuń posiłek',
-    );
-    if (!confirmed || !context.mounted) {
-      return;
-    }
-
-    final messenger = ScaffoldMessenger.of(context);
-    final router = context.router;
-
-    try {
-      await ref
-          .read(mealDetailsControllerProvider(mealId).notifier)
-          .deleteMeal();
-      if (!context.mounted) {
-        return;
-      }
-      final didPop = await router.maybePop(mealId);
-      if (!didPop) {
-        await router.replace(const routes.DashboardRoute());
-      }
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Posiłek został usunięty')),
-      );
-    } catch (error) {
-      if (!context.mounted) {
-        return;
-      }
-      messenger.showSnackBar(
-        SnackBar(content: Text('Nie udało się usunąć posiłku: $error')),
-      );
-    }
   }
 }
 

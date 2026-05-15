@@ -160,6 +160,74 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.watch();
   }
 
+  Future<List<MealData>> getRecentMealsPage({int page = 0, int pageSize = 10}) {
+    final query = select(db.meal)
+      ..orderBy([
+        (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
+      ])
+      ..limit(pageSize, offset: page * pageSize);
+    return query.get();
+  }
+
+  Future<List<MealData>> searchMealsPageByName({
+    required String queryString,
+    int page = 0,
+    int pageSize = 10,
+  }) {
+    final normalizedQuery = queryString.trim().toLowerCase();
+    final query = select(db.meal)
+      ..where((tbl) => tbl.name.like('%$normalizedQuery%'))
+      ..orderBy([
+        (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
+      ])
+      ..limit(pageSize, offset: page * pageSize);
+    return query.get();
+  }
+
+  Future<List<MealData>> getMealsPageByIngredientIds({
+    required List<int> ingredientIds,
+    int page = 0,
+    int pageSize = 10,
+  }) async {
+    final distinctIngredientIds = ingredientIds.toSet().toList(growable: false);
+    if (distinctIngredientIds.isEmpty) {
+      return getRecentMealsPage(page: page, pageSize: pageSize);
+    }
+
+    final mealIngredientMealId = db.mealIngredients.mealId;
+    final mealIngredientIngredientId = db.mealIngredients.ingredientId;
+    final distinctIngredientCount = mealIngredientIngredientId.count(
+      distinct: true,
+    );
+
+    final mealIdRows =
+        await (selectOnly(db.mealIngredients)
+              ..addColumns([mealIngredientMealId])
+              ..where(mealIngredientIngredientId.isIn(distinctIngredientIds))
+              ..groupBy(
+                [mealIngredientMealId],
+                having: distinctIngredientCount.equals(
+                  distinctIngredientIds.length,
+                ),
+              ))
+            .get();
+    final mealIds = mealIdRows
+        .map((row) => row.read(mealIngredientMealId))
+        .whereType<int>()
+        .toList(growable: false);
+    if (mealIds.isEmpty) {
+      return const [];
+    }
+
+    final query = select(db.meal)
+      ..where((tbl) => tbl.id.isIn(mealIds))
+      ..orderBy([
+        (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
+      ])
+      ..limit(pageSize, offset: page * pageSize);
+    return query.get();
+  }
+
   Future<List<MealData>> searchMealsByName(String queryString) {
     final query = select(db.meal)
       ..where((tbl) => tbl.name.like('%$queryString%'))

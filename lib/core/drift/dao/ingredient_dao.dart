@@ -31,6 +31,17 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     return query.get();
   }
 
+  Future<List<IngredientData>> getLatestIngredients({int limit = 10}) {
+    final query = select(db.ingredient)
+      ..orderBy([
+        (tbl) =>
+            OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.desc),
+      ])
+      ..limit(limit);
+
+    return query.get();
+  }
+
   Future<List<IngredientData>> searchIngredientsByNamesOrBrand({
     required List<String> names,
     required String? brand,

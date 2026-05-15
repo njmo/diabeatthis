@@ -64,7 +64,6 @@ class IngredientList extends HookConsumerWidget {
           ? IngredientListContent(
               ingredients: ingredients.value,
               queryController: queryController,
-              query: query.value,
               isLoading: isLoading.value && ingredients.value.isEmpty,
               isLoadingMore: isLoading.value && ingredients.value.isNotEmpty,
               hasMore: hasMore.value,
@@ -83,7 +82,6 @@ class IngredientList extends HookConsumerWidget {
               loading: () => IngredientListContent(
                 ingredients: const [],
                 queryController: queryController,
-                query: query.value,
                 isLoading: true,
                 hasMore: false,
                 onQueryChanged: (value) => query.value = value,
@@ -101,7 +99,6 @@ class IngredientList extends HookConsumerWidget {
                 return IngredientListContent(
                   ingredients: items,
                   queryController: queryController,
-                  query: query.value,
                   hasMore: false,
                   onQueryChanged: (value) => query.value = value,
                   onClearQuery: () {

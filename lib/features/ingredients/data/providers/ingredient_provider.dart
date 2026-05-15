@@ -28,6 +28,15 @@ final ingredientListPageProvider = FutureProvider.autoDispose
       return ingredients.toDomainList();
     });
 
+final latestIngredientsProvider =
+    FutureProvider.autoDispose<List<domain.Ingredient>>((ref) async {
+      final db = ref.watch(databaseProvider);
+      final ingredients = await db.ingredientDao.getLatestIngredients(
+        limit: 10,
+      );
+      return ingredients.toDomainList();
+    });
+
 @riverpod
 Future<domain.Ingredient> ingredientById(Ref ref, int id) async {
   final db = ref.watch(databaseProvider);

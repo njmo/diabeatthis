@@ -35,10 +35,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return AlertDialog(
-      icon: Icon(Icons.delete_outline, color: scheme.error),
       title: Text(title),
       content: Text(message),
       actions: [
@@ -46,14 +43,9 @@ class DeleteConfirmationDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(false),
           child: Text(cancelLabel),
         ),
-        FilledButton.icon(
-          style: FilledButton.styleFrom(
-            backgroundColor: scheme.error,
-            foregroundColor: scheme.onError,
-          ),
+        FilledButton.tonal(
           onPressed: () => Navigator.of(context).pop(true),
-          icon: const Icon(Icons.delete_outline),
-          label: Text(confirmLabel),
+          child: Text(confirmLabel),
         ),
       ],
     );

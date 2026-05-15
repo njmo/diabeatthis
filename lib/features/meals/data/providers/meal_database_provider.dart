@@ -11,8 +11,6 @@ import '../mapper/meal_draft_drift_mapper.dart';
 
 part 'meal_database_provider.g.dart';
 
-const mealListPageSize = 10;
-
 @Riverpod(keepAlive: true)
 Future<void> updateMeal(Ref ref, domain.Meal meal, String status) async {
   final db = ref.read(databaseProvider);

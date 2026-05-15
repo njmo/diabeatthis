@@ -1,0 +1,1 @@
+const ingredientFilterSelectionLimit = 4;

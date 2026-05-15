@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/widgets/search_text_field.dart';
 import '../../../../../core/domain/model/ingredient.dart';
 import 'ingredient_empty_state.dart';
 import 'ingredient_list_item.dart';
-import 'ingredient_search_field.dart';
 
 class IngredientListContent extends StatelessWidget {
   final List<Ingredient> ingredients;
   final TextEditingController queryController;
-  final String query;
   final bool isLoading;
   final bool isLoadingMore;
   final bool hasMore;
@@ -22,7 +21,6 @@ class IngredientListContent extends StatelessWidget {
     super.key,
     required this.ingredients,
     required this.queryController,
-    required this.query,
     this.isLoading = false,
     this.isLoadingMore = false,
     this.hasMore = true,
@@ -56,9 +54,9 @@ class IngredientListContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  IngredientSearchField(
+                  SearchTextField(
                     controller: queryController,
-                    query: query,
+                    hintText: 'Szukaj po nazwie lub marce',
                     onChanged: onQueryChanged,
                     onClear: onClearQuery,
                   ),
