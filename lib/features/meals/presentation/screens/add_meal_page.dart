@@ -98,14 +98,12 @@ class AddMealPage extends HookConsumerWidget {
 
   void _saveSource(WidgetRef ref, CopiedMealType? value) {
     final draft = ref.read(mealDraftProvider.notifier);
-    if (value?.copiedFromMealId != null ||
-        value?.copiedFromTemplateId != null) {
-      draft.setBasedOnMealId(value!.copiedFromMealId);
-      draft.setMealTemplateId(value.copiedFromTemplateId);
-    } else if (value is CopiedMealFromTemplate) {
+    if (value is CopiedMealFromTemplate) {
       draft.setMealTemplateId(value.id);
+      draft.setBasedOnMealId(value.copiedFromMealId);
     } else if (value is CopiedMealFromMeal) {
-      draft.setBasedOnMealId(value.id);
+      draft.setBasedOnMealId(value.copiedFromMealId ?? value.id);
+      draft.setMealTemplateId(value.copiedFromTemplateId);
     }
   }
 

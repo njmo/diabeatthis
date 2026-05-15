@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/copied_meal_provider.dart';
+import '../screens/meal_page.dart';
 
 class CopiedMealPicker extends HookConsumerWidget {
   const CopiedMealPicker({super.key});
@@ -11,10 +12,12 @@ class CopiedMealPicker extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final query = useState('');
-    final templates = ref.watch(copiedFromMealByQueryProvider(query.value));
-    final meals = ref.watch(copiedFromMealTemplateByQueryProvider(query.value));
+    final meals = ref.watch(copiedFromMealByQueryProvider(query.value));
+    final templates = ref.watch(
+      copiedFromMealTemplateByQueryProvider(query.value),
+    );
 
-    final copiedMeals = [...?templates.value, ...?meals.value];
+    final copiedMeals = [...?meals.value, ...?templates.value];
     copiedMeals.sort((a, b) => b.date.compareTo(a.date));
 
     return Padding(
@@ -47,20 +50,105 @@ class CopiedMealPicker extends HookConsumerWidget {
               itemCount: copiedMeals.length,
               itemBuilder: (BuildContext context, int index) {
                 final copiedMeal = copiedMeals[index];
-                final name = copiedMeal is CopiedMealFromMeal
-                    ? 'Posiłek - ${copiedMeal.name}'
-                    : 'Szablon - ${copiedMeal.name}';
-                return ListTile(
-                  title: Text(name),
-                  subtitle: Text(copiedMeal.date.toIso8601String()),
-                  onTap: () {
-                    Navigator.of(context).pop(copiedMeal);
-                  },
+                return CopiedMealPickerTile(
+                  copiedMeal: copiedMeal,
+                  onPick: () => Navigator.of(context).pop(copiedMeal),
                 );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class CopiedMealPickerTile extends ConsumerWidget {
+  final CopiedMealType copiedMeal;
+  final VoidCallback onPick;
+
+  const CopiedMealPickerTile({
+    super.key,
+    required this.copiedMeal,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final canPreview = copiedMeal is CopiedMealFromMeal;
+
+    return ListTile(
+      title: CopiedMealPickerTitle(copiedMeal: copiedMeal),
+      subtitle: Text(copiedMeal.date.toIso8601String()),
+      trailing: canPreview
+          ? TextButton(
+              onPressed: () => _openPreview(context, ref),
+              child: const Text('Podgląd'),
+            )
+          : null,
+      onTap: onPick,
+    );
+  }
+
+  Future<void> _openPreview(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final previewMealId = await ref.read(
+      copiedMealPreviewTargetProvider(copiedMeal).future,
+    );
+    if (!context.mounted) {
+      return;
+    }
+    if (previewMealId == null) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Brak posiłku do podglądu')),
+      );
+      return;
+    }
+
+    await Navigator.of(context, rootNavigator: true).push<void>(
+      MaterialPageRoute(builder: (_) => MealPage(mealId: previewMealId)),
+    );
+  }
+}
+
+class CopiedMealPickerTitle extends StatelessWidget {
+  final CopiedMealType copiedMeal;
+
+  const CopiedMealPickerTitle({super.key, required this.copiedMeal});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        CopiedMealPickerTypeBadge(copiedMeal: copiedMeal),
+        const SizedBox(width: 8),
+        Expanded(child: Text(copiedMeal.name)),
+      ],
+    );
+  }
+}
+
+class CopiedMealPickerTypeBadge extends StatelessWidget {
+  final CopiedMealType copiedMeal;
+
+  const CopiedMealPickerTypeBadge({super.key, required this.copiedMeal});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isMeal = copiedMeal is CopiedMealFromMeal;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        isMeal ? 'Posiłek' : 'Szablon',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: scheme.onSecondaryContainer,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

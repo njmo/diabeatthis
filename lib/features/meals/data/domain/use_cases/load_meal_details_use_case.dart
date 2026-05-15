@@ -57,6 +57,8 @@ class LoadMealDetailsUseCase {
               ..where((tbl) => tbl.mealId.equals(mealId))
               ..orderBy([(tbl) => OrderingTerm.asc(tbl.createdAt)]))
             .get();
+    final copySource = await _loadCopySource(db, meal);
+    final copyUsages = await _loadCopyUsages(db, meal);
 
     return MealDetailsData(
       meal: _mapMeal(meal),
@@ -71,6 +73,76 @@ class LoadMealDetailsUseCase {
           ? null
           : _mapSnapshot(consumedSnapshot),
       statusHistory: statusHistory.map(_mapStatusHistory).toList(),
+      copySource: copySource,
+      copyUsages: copyUsages,
+    );
+  }
+
+  Future<MealCopySourceData?> _loadCopySource(
+    DatabaseImpl db,
+    MealData meal,
+  ) async {
+    final basedOnMealId = meal.basedOnMealId;
+    if (basedOnMealId == null) {
+      return null;
+    }
+
+    final source = await db.mealDao.getMealById(basedOnMealId);
+    if (source == null) {
+      return null;
+    }
+    return MealCopySourceData(id: source.id, name: source.name);
+  }
+
+  Future<List<MealCopyUsageData>> _loadCopyUsages(
+    DatabaseImpl db,
+    MealData meal,
+  ) async {
+    final usages = <int, MealCopyUsageData>{};
+
+    final directCopies = await db.mealDao.getMealsBasedOnMeal(meal.id);
+    for (final copy in directCopies) {
+      if (copy.id == meal.id) {
+        continue;
+      }
+      usages[copy.id] = _mapCopyUsage(copy, 'Kopia posiłku');
+    }
+
+    final templates = await (db.select(
+      db.mealTemplate,
+    )..where((tbl) => tbl.createdFromMealId.equals(meal.id))).get();
+    final templateIds = templates.map((template) => template.id).toSet();
+    if (templateIds.isNotEmpty) {
+      final templateMeals =
+          await (db.select(db.meal)
+                ..where((tbl) => tbl.mealTemplateId.isIn(templateIds))
+                ..orderBy([
+                  (tbl) => OrderingTerm(
+                    expression: tbl.plannedAt,
+                    mode: OrderingMode.desc,
+                  ),
+                ]))
+              .get();
+      for (final copy in templateMeals) {
+        if (copy.id == meal.id) {
+          continue;
+        }
+        usages[copy.id] = _mapCopyUsage(copy, 'Z szablonu');
+      }
+    }
+
+    final sorted = usages.values.toList()
+      ..sort((a, b) => b.plannedAt.compareTo(a.plannedAt));
+    return sorted;
+  }
+
+  MealCopyUsageData _mapCopyUsage(MealData meal, String sourceType) {
+    return MealCopyUsageData(
+      id: meal.id,
+      name: meal.name,
+      plannedAt: _date(meal.plannedAt),
+      status: meal.status,
+      sourceType: sourceType,
     );
   }
 

@@ -88,7 +88,7 @@ class MealAnalysisProgressSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final details = state.details;
     final analysis = state.analysis;
-    final chips = <HeaderStatusChip>[];
+    final chips = [if (details.isCopied) const HeaderStatusChip.copied()];
     if (!details.meal.isEaten) {
       chips.add(
         HeaderStatusChip(
@@ -181,6 +181,11 @@ class HeaderStatusChip extends StatelessWidget {
     : icon = Icons.add_circle_outline,
       label = 'Dokładka',
       detail = 'uwzględniona w posiłku';
+
+  const HeaderStatusChip.copied({super.key})
+    : icon = Icons.content_copy,
+      label = 'Skopiowany',
+      detail = null;
 
   const HeaderStatusChip.missingExtendedCarbs({super.key})
     : icon = Icons.warning_amber_rounded,

@@ -33,3 +33,21 @@ class CopiedMealFromTemplate extends CopiedMealType {
   });
 }
 
+extension CopiedMealTypeSource on CopiedMealType {
+  int? get previewBaseMealId {
+    if (this is CopiedMealFromMeal) {
+      return copiedFromMealId ?? id;
+    }
+    return copiedFromMealId;
+  }
+
+  int? get previewTemplateId {
+    if (this is CopiedMealFromTemplate) {
+      return id;
+    }
+    if (this is CopiedMealFromMeal && copiedFromMealId != null) {
+      return null;
+    }
+    return copiedFromTemplateId;
+  }
+}

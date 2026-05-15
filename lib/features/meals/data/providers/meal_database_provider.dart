@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart' show FutureProvider;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart' as domain;
@@ -53,12 +52,12 @@ Stream<List<domain.Meal>> allMealsStream(Ref ref) {
   return db.mealDao.getAllMeals().map((e) => e.toDomainList());
 }
 
-final mealListPageProvider = FutureProvider.autoDispose
-    .family<List<domain.Meal>, int>((ref, page) async {
-      final db = ref.watch(databaseProvider);
-      final meals = await db.mealDao.getAllMeals(page: page).first;
-      return meals.toDomainList();
-    });
+@riverpod
+Future<List<domain.Meal>> mealListPage(Ref ref, int page) async {
+  final db = ref.watch(databaseProvider);
+  final meals = await db.mealDao.getAllMeals(page: page).first;
+  return meals.toDomainList();
+}
 
 @riverpod
 Future<void> insertMealIngredient(

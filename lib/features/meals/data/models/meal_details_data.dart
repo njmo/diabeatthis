@@ -1,4 +1,4 @@
-import '../../../../core/domain/model/meal.dart';
+import '../../../../core/domain/model/meal.dart' as domain;
 
 class MealDetailsData {
   final MealRecordData meal;
@@ -7,6 +7,8 @@ class MealDetailsData {
   final MealSnapshotDetailsData? plannedSnapshot;
   final MealSnapshotDetailsData? consumedSnapshot;
   final List<MealStatusHistoryEntryData> statusHistory;
+  final MealCopySourceData? copySource;
+  final List<MealCopyUsageData> copyUsages;
 
   const MealDetailsData({
     required this.meal,
@@ -15,9 +17,14 @@ class MealDetailsData {
     required this.plannedSnapshot,
     required this.consumedSnapshot,
     required this.statusHistory,
+    this.copySource,
+    this.copyUsages = const [],
   });
 
   bool get hasConsumedData => consumedSnapshot != null;
+
+  bool get isCopied =>
+      meal.basedOnMealId != null || meal.mealTemplateId != null;
 
   MealSnapshotDetailsData? get preferredSummarySnapshot {
     return consumedSnapshot ?? plannedSnapshot;
@@ -104,6 +111,29 @@ class MealDetailsData {
   }
 }
 
+class MealCopySourceData {
+  final int id;
+  final String name;
+
+  const MealCopySourceData({required this.id, required this.name});
+}
+
+class MealCopyUsageData {
+  final int id;
+  final String name;
+  final DateTime plannedAt;
+  final String status;
+  final String sourceType;
+
+  const MealCopyUsageData({
+    required this.id,
+    required this.name,
+    required this.plannedAt,
+    required this.status,
+    required this.sourceType,
+  });
+}
+
 class MealRecordData {
   final int id;
   final String name;
@@ -152,8 +182,8 @@ class MealRecordData {
     return status == 'eating-extra' || status == 'eaten-extra';
   }
 
-  Meal toDomainTreatment() {
-    return Meal(
+  domain.Meal toDomainTreatment() {
+    return domain.Meal(
       id: id,
       name: name,
       plannedAt: plannedAt,

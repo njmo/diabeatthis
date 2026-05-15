@@ -228,6 +228,46 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.get();
   }
 
+  Future<List<MealData>> getMealsBasedOnMeal(int mealId) {
+    final query = select(db.meal)
+      ..where((tbl) => tbl.basedOnMealId.equals(mealId))
+      ..orderBy([
+        (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
+      ]);
+    return query.get();
+  }
+
+  Future<MealData?> getLatestMealForCopySource({
+    int? baseMealId,
+    int? mealTemplateId,
+  }) async {
+    if (baseMealId == null && mealTemplateId == null) {
+      return null;
+    }
+
+    final query = select(db.meal)
+      ..where((tbl) {
+        Expression<bool>? condition;
+        if (baseMealId != null) {
+          condition =
+              tbl.id.equals(baseMealId) | tbl.basedOnMealId.equals(baseMealId);
+        }
+        if (mealTemplateId != null) {
+          final templateCondition = tbl.mealTemplateId.equals(mealTemplateId);
+          condition = condition == null
+              ? templateCondition
+              : condition | templateCondition;
+        }
+        return condition ?? const Constant(false);
+      })
+      ..orderBy([
+        (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
+      ])
+      ..limit(1);
+
+    return query.getSingleOrNull();
+  }
+
   Future<List<MealData>> searchMealsByName(String queryString) {
     final query = select(db.meal)
       ..where((tbl) => tbl.name.like('%$queryString%'))

@@ -37,7 +37,13 @@ class MealBasicInfoSection extends StatelessWidget {
           label: 'Synchronizacja',
           value: meal.isSynced ? 'Zsynchronizowany' : 'Lokalny',
         ),
-        BasedOnMealRow(meal: meal),
+        if (meal.basedOnMealId != null)
+          BasedOnMealRow(meal: meal, source: details.copySource),
+        if (meal.mealTemplateId != null)
+          MealInfoRow(
+            label: 'Szablon bazowy',
+            value: '#${meal.mealTemplateId}',
+          ),
       ],
     );
   }
@@ -45,21 +51,23 @@ class MealBasicInfoSection extends StatelessWidget {
 
 class BasedOnMealRow extends StatelessWidget {
   final MealRecordData meal;
+  final MealCopySourceData? source;
 
-  const BasedOnMealRow({super.key, required this.meal});
+  const BasedOnMealRow({super.key, required this.meal, required this.source});
 
   @override
   Widget build(BuildContext context) {
     final basedOnMealId = meal.basedOnMealId;
     if (basedOnMealId == null) {
-      return const MealInfoRow(label: 'Na podstawie posiłku', value: '-');
+      return const SizedBox.shrink();
     }
+    final sourceName = source?.name ?? '#$basedOnMealId';
 
     return ListTile(
       dense: true,
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.copy_all),
-      title: const Text('Na podstawie posiłku'),
+      title: Text('Na podstawie posiłku: $sourceName'),
       trailing: TextButton.icon(
         icon: const Icon(Icons.open_in_new),
         label: Text('#$basedOnMealId'),
