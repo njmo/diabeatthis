@@ -20,7 +20,7 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
   bool _disposed = false;
   Future<void>? _runner;
 
-  static const _expectedInterval = Duration(minutes: 5);
+  static const _expectedInterval = Duration(minutes: 5, seconds: 10);
   static const _nearReadPollInterval = Duration(seconds: 10);
   static const _fallbackWait = Duration(seconds: 30);
 
@@ -61,9 +61,6 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
       final waitUntilExpected = nextExpectedAt.difference(clock.now());
 
       if (waitUntilExpected > Duration.zero) {
-        ForegroundAlarmBridge.scheduleCollectTick(
-          clock.now().add(waitUntilExpected),
-        );
         await context.waitForDuration(waitUntilExpected);
       }
 
@@ -107,9 +104,7 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
 
     context.emitEvent(DataAvailableEvent<DeviceStatus>(data));
 
-    final nextAlarm = data.date.add(const Duration(minutes: 5, seconds: 30));
-    logI("Scheduling next alarm on ${nextAlarm.toIso8601String()}");
-    ForegroundAlarmBridge.scheduleCollectTick(nextAlarm);
+    ForegroundAlarmBridge.scheduleCollectTick(data.date.add(_expectedInterval));
 
     if (context.container.read(appLifecycleProvider) ==
         AppLifecycleState.resumed) {

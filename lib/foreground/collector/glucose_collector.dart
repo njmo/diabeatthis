@@ -19,7 +19,7 @@ class GlucoseCollector extends ForegroundCollector {
   bool _disposed = false;
   Future<void>? _runner;
 
-  static const _expectedInterval = Duration(minutes: 5);
+  static const _expectedInterval = Duration(minutes: 5, seconds: 10);
   static const _nearReadPollInterval = Duration(seconds: 10);
   static const _fallbackWait = Duration(seconds: 30);
 
@@ -66,9 +66,6 @@ class GlucoseCollector extends ForegroundCollector {
       final waitUntilExpected = nextExpectedAt.difference(clock.now());
 
       if (waitUntilExpected > Duration.zero) {
-        ForegroundAlarmBridge.scheduleCollectTick(
-          clock.now().add(waitUntilExpected),
-        );
         await context.waitForDuration(waitUntilExpected);
       }
 
@@ -106,8 +103,7 @@ class GlucoseCollector extends ForegroundCollector {
 
     context.emitEvent(DataAvailableEvent<Glucose>(data));
 
-    final nextAlarm = data.date.add(const Duration(minutes: 5, seconds: 30));
-    ForegroundAlarmBridge.scheduleCollectTick(nextAlarm);
+    ForegroundAlarmBridge.scheduleCollectTick(data.date.add(_expectedInterval));
 
     if (context.container.read(appLifecycleProvider) ==
         AppLifecycleState.resumed) {

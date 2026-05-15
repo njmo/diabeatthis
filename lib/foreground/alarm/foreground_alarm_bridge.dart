@@ -8,7 +8,8 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 @pragma('vm:entry-point')
 class ForegroundAlarmBridge {
-  static const int collectAlarmId = 0x424242;
+  static const int collectAlarmId = 0xBABE;
+  static const Duration _collectTickCoalesceWindow = Duration(seconds: 10);
   static final List<DateTime> _collectTickDeadlines = [];
   static DateTime? _scheduledCollectTickAt;
 
@@ -45,10 +46,19 @@ class ForegroundAlarmBridge {
 
   static void _addCollectTickDeadline(DateTime at) {
     final deadline = at.isBefore(clock.now()) ? clock.now() : at;
-    final exists = _collectTickDeadlines.any(
-      (current) => current.isAtSameMomentAs(deadline),
+
+    final matchingIndex = _collectTickDeadlines.indexWhere(
+      (current) =>
+          current.difference(deadline).abs() <= _collectTickCoalesceWindow,
     );
-    if (exists) return;
+    if (matchingIndex != -1) {
+      final current = _collectTickDeadlines[matchingIndex];
+      // Keep the later deadline so every merged waiter is ready when the tick fires.
+      _collectTickDeadlines[matchingIndex] = deadline.isAfter(current)
+          ? deadline
+          : current;
+      return;
+    }
 
     _collectTickDeadlines.add(deadline);
   }
