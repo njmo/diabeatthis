@@ -9,8 +9,8 @@ import '../common/events/data/app/execute_command_event.dart';
 import '../common/events/data/app/lifecycle_state_event.dart';
 import '../common/events/data/app/sync_data_key.dart';
 import '../common/events/data/app_event_data.dart';
+import '../core/data/provider/initial_configuration_provider.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
-import '../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../core/logger/logger.dart';
 import '../core/notifications/providers/notifications_controller_provider.dart';
 import '../features/dashboard/data/providers/blood_sugar_readings_list_provider.dart';
@@ -71,17 +71,16 @@ class _MyAppState extends ConsumerState<MyApp>
       if (enabled) {
         final isServiceRunning = await _foregroundBridge.isServiceRunning();
         if (!isServiceRunning) {
-          final isNightscoutUrlConfigured =
-              (await ref.read(nightscoutUrlProvider.future) != null);
-          if (isNightscoutUrlConfigured) {
-            logI(
-              "Starting foreground service, nightscout url configured properly",
-            );
+          final isInitialConfigurationDone = await ref.read(
+            initialConfigurationDoneProvider.future,
+          );
+
+          if (isInitialConfigurationDone) {
+            logI("Starting foreground service");
             final taskState = ref.read(foregroundTaskStateProvider.notifier);
             try {
-              await taskState.waitForNextAlive(
-                _foregroundBridge.startMonitoring,
-              );
+              await _foregroundBridge.startMonitoring();
+              await taskState.waitForStartupMessage();
             } catch (e, st) {
               logW('Foreground alive wait timed out: $e\n$st');
             }
@@ -90,7 +89,7 @@ class _MyAppState extends ConsumerState<MyApp>
             sendSyncCommand();
           } else {
             logI(
-              "Not starting foreground service, nightscout url not configured",
+              "Not starting foreground service, initial configuration is not done",
             );
           }
         } else {

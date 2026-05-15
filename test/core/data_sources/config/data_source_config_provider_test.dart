@@ -1,5 +1,6 @@
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
+import 'package:diabeatthis/core/data_sources/config/helpers/data_source_config_storer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -55,9 +56,10 @@ void main() {
         mirrorToLocal: true,
       );
 
-      await container.read(dataSourceConfigControllerProvider).save(config);
-
       final prefs = await SharedPreferences.getInstance();
+      final storer = DataSourceConfigStorer(prefs);
+      await storer.save(config);
+
       expect(prefs.getString(dataSourceBgSourceKey), 'aaps');
       expect(prefs.getString(dataSourceEventSourceKey), 'aaps');
       expect(prefs.getString(dataSourcePumpStatusSourceKey), 'aaps');

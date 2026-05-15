@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers/app_event_router_provider.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
+import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
+import '../../../../core/data_sources/config/helpers/data_source_config_storer.dart';
 import '../../../../core/logger/logger.dart';
 import 'data_source_config_controls.dart';
 import 'settings_section_card.dart';
@@ -29,10 +31,12 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
           data: (config) => DataSourceConfigControls(
             config: config,
             onChanged: (next) async {
-              final controller = ref.read(dataSourceConfigControllerProvider);
+              final prefs = await ref.read(sharedPrefsProvider.future);
+              final storer = DataSourceConfigStorer(prefs);
               final appEventRouter = ref.read(appEventRouterProvider);
 
-              await controller.save(next);
+              await storer.save(next);
+              ref.invalidate(sharedPrefsProvider);
 
               logI('Sending data source settings sync ${next.toSyncPayload()}');
               appEventRouter.send(

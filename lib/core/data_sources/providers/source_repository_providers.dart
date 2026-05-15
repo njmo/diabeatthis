@@ -30,14 +30,13 @@ part 'source_repository_providers.g.dart';
 
 @Riverpod(keepAlive: true)
 Future<GlucoseSourceRepository> glucoseSourceRepository(Ref ref) async {
-  final nightscoutRepositoryFuture = ref.watch(
-    nightscoutRepositoryProvider.future,
-  );
   final config = await ref.watch(dataSourceConfigProvider.future);
 
   switch (config.bgSource) {
     case BgSource.cloud:
-      final nightscoutRepository = await nightscoutRepositoryFuture;
+      final nightscoutRepository = await ref.watch(
+        nightscoutRepositoryProvider.future,
+      );
       final repository = CloudGlucoseSourceRepository(nightscoutRepository);
       if (!config.mirrorToLocal) return repository;
 
@@ -58,14 +57,13 @@ Future<GlucoseSourceRepository> glucoseSourceRepository(Ref ref) async {
 
 @Riverpod(keepAlive: true)
 Future<TreatmentSourceRepository> treatmentsSourceRepository(Ref ref) async {
-  final nightscoutRepositoryFuture = ref.watch(
-    nightscoutRepositoryProvider.future,
-  );
   final config = await ref.watch(dataSourceConfigProvider.future);
 
   switch (config.eventSource) {
     case EventSource.cloud:
-      final nightscoutRepository = await nightscoutRepositoryFuture;
+      final nightscoutRepository = await ref.watch(
+        nightscoutRepositoryProvider.future,
+      );
       final repository = CloudTreatmentSourceRepository(nightscoutRepository);
       if (!config.mirrorToLocal) return repository;
 
@@ -138,14 +136,13 @@ Future<DeviceStatusHistoryRepository> deviceStatusHistoryRepository(
 Future<DeviceStatusSourceRepository> deviceStatusSourceRepository(
   Ref ref,
 ) async {
-  final nightscoutRepositoryFuture = ref.watch(
-    nightscoutRepositoryProvider.future,
-  );
   final config = await ref.watch(dataSourceConfigProvider.future);
 
   switch (config.pumpStatusSource) {
     case PumpStatusSource.cloud:
-      final nightscoutRepository = await nightscoutRepositoryFuture;
+      final nightscoutRepository = await ref.watch(
+        nightscoutRepositoryProvider.future,
+      );
       final repository = CloudDeviceStatusSourceRepository(
         nightscoutRepository,
       );

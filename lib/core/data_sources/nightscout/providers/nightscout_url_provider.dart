@@ -7,7 +7,7 @@ part 'nightscout_url_provider.g.dart';
 const _nightscoutUrlKey = 'nightscout_url';
 
 @Riverpod(keepAlive: true)
-Future<String?> nightscoutUrl(Ref ref) async {
+Future<String> nightscoutUrl(Ref ref) async {
   final prefs = await ref.watch(sharedPrefsProvider.future);
-  return prefs.getString(_nightscoutUrlKey);
+  return prefs.getString(_nightscoutUrlKey) ?? '';
 }

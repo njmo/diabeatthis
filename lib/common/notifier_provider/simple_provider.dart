@@ -71,11 +71,12 @@ int age(Ref ref) {
 const _childNameKey = 'main-user-name';
 
 @riverpod
-Future<String?> name(Ref ref) async{
+Future<String> name(Ref ref) async {
   //return ref.watch(humanProvider.select((h) => h.name));
   final prefs = await ref.watch(sharedPrefsProvider.future);
-  return prefs.getString(_childNameKey);
+  return prefs.getString(_childNameKey) ?? '';
 }
+
 @riverpod
 int number(Ref ref) {
   return ref.watch(humanProvider.select((h) => h.num));

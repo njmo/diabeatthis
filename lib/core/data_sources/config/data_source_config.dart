@@ -85,6 +85,13 @@ class DataSourceConfig {
   final HistorySource historySource;
   final bool mirrorToLocal;
 
+  bool get usesCloud {
+    return bgSource == BgSource.cloud ||
+        eventSource == EventSource.cloud ||
+        pumpStatusSource == PumpStatusSource.cloud ||
+        historySource == HistorySource.cloud;
+  }
+
   DataSourceConfig copyWith({
     BgSource? bgSource,
     EventSource? eventSource,

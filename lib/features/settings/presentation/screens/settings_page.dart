@@ -123,7 +123,8 @@ class SettingsPage extends HookConsumerWidget with Logging {
               }
 
               try {
-                await taskState.waitForNextAlive(startOrRestartForeground);
+                await startOrRestartForeground();
+                await taskState.waitForStartupMessage();
               } catch (e, st) {
                 logW('Foreground alive wait timed out: $e\n$st');
               }

@@ -34,19 +34,12 @@ class ForegroundTaskState extends _$ForegroundTaskState {
     }
   }
 
-  Future<void> waitForAlive({Duration timeout = const Duration(seconds: 10)}) {
+  Future<void> waitForStartupMessage({
+    Duration timeout = const Duration(seconds: 10),
+  }) {
     if (state.alive) return Future.value();
 
     _aliveCompleter ??= Completer<void>();
     return _aliveCompleter!.future.timeout(timeout);
-  }
-
-  Future<void> waitForNextAlive(
-    Future<void> Function() startForeground, {
-    Duration timeout = const Duration(seconds: 10),
-  }) async {
-    setAlive(false);
-    await startForeground();
-    await waitForAlive(timeout: timeout);
   }
 }

@@ -29,39 +29,3 @@ Future<DataSourceConfig> dataSourceConfig(Ref ref) async {
     mirrorToLocal: prefs.getBool(dataSourceMirrorToLocalKey) ?? false,
   );
 }
-
-@Riverpod(keepAlive: true)
-DataSourceConfigController dataSourceConfigController(Ref ref) {
-  return DataSourceConfigController(ref);
-}
-
-class DataSourceConfigController {
-  const DataSourceConfigController(this._ref);
-
-  final Ref _ref;
-
-  Future<void> save(DataSourceConfig config) async {
-    final prefs = await _ref.read(sharedPrefsProvider.future);
-
-    await Future.wait([
-      prefs.setString(dataSourceBgSourceKey, config.bgSource.storageValue),
-      prefs.setString(
-        dataSourceEventSourceKey,
-        config.eventSource.storageValue,
-      ),
-      prefs.setString(
-        dataSourcePumpStatusSourceKey,
-        config.pumpStatusSource.storageValue,
-      ),
-      prefs.setString(
-        dataSourceHistorySourceKey,
-        config.historySource.storageValue,
-      ),
-      prefs.setBool(dataSourceMirrorToLocalKey, config.mirrorToLocal),
-    ]);
-
-    if (!_ref.mounted) return;
-
-    _ref.invalidate(dataSourceConfigProvider);
-  }
-}

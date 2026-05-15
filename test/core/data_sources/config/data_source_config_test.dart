@@ -31,5 +31,26 @@ void main() {
       expect(HistorySource.fromStorage(null), HistorySource.cloud);
       expect(HistorySource.fromStorage('unknown'), HistorySource.cloud);
     });
+
+    test('detects when any configured source uses Nightscout', () {
+      const localOnly = DataSourceConfig(
+        bgSource: BgSource.aaps,
+        eventSource: EventSource.aaps,
+        pumpStatusSource: PumpStatusSource.aaps,
+        historySource: HistorySource.local,
+        mirrorToLocal: false,
+      );
+      const cloudHistory = DataSourceConfig(
+        bgSource: BgSource.aaps,
+        eventSource: EventSource.aaps,
+        pumpStatusSource: PumpStatusSource.aaps,
+        historySource: HistorySource.cloud,
+        mirrorToLocal: false,
+      );
+
+      expect(localOnly.usesCloud, isFalse);
+      expect(cloudHistory.usesCloud, isTrue);
+      expect(const DataSourceConfig.defaults().usesCloud, isTrue);
+    });
   });
 }

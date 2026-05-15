@@ -1,8 +1,15 @@
 import 'package:diabeatthis/core/data_sources/cloud/cloud_device_status_source_repository.dart';
 import 'package:diabeatthis/core/data_sources/cloud/cloud_glucose_source_repository.dart';
 import 'package:diabeatthis/core/data_sources/cloud/cloud_treatment_source_repository.dart';
+import 'package:diabeatthis/core/data_sources/cloud/history/cloud_device_status_history_repository.dart';
+import 'package:diabeatthis/core/data_sources/cloud/history/cloud_glucose_history_repository.dart';
+import 'package:diabeatthis/core/data_sources/cloud/history/cloud_treatments_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
+import 'package:diabeatthis/core/data_sources/domain/data_source_exceptions.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/history/local_device_status_history_repository.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/history/local_glucose_history_repository.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/history/local_treatments_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/repositories/mirroring_device_status_source_repository.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/repositories/mirroring_glucose_source_repository.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/repositories/mirroring_treatment_source_repository.dart';
@@ -113,6 +120,109 @@ void main() {
         container.read(deviceStatusSourceRepositoryProvider.future),
         completion(isA<CloudDeviceStatusSourceRepository>()),
       );
+    });
+
+    test('uses history source independently from live sources', () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      const localHistoryConfig = DataSourceConfig(
+        bgSource: BgSource.cloud,
+        eventSource: EventSource.cloud,
+        pumpStatusSource: PumpStatusSource.cloud,
+        historySource: HistorySource.local,
+        mirrorToLocal: false,
+      );
+      final container = ProviderContainer(
+        overrides: [
+          dataSourceConfigProvider.overrideWithValue(
+            const AsyncData(localHistoryConfig),
+          ),
+          databaseProvider.overrideWithValue(db),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await expectLater(
+        container.read(glucoseHistoryRepositoryProvider.future),
+        completion(isA<LocalGlucoseHistoryRepository>()),
+      );
+      await expectLater(
+        container.read(treatmentsHistoryRepositoryProvider.future),
+        completion(isA<LocalTreatmentsHistoryRepository>()),
+      );
+      await expectLater(
+        container.read(deviceStatusHistoryRepositoryProvider.future),
+        completion(isA<LocalDeviceStatusHistoryRepository>()),
+      );
+    });
+
+    test('uses cloud history repositories for cloud history config', () async {
+      const config = DataSourceConfig(
+        bgSource: BgSource.aaps,
+        eventSource: EventSource.aaps,
+        pumpStatusSource: PumpStatusSource.aaps,
+        historySource: HistorySource.cloud,
+        mirrorToLocal: false,
+      );
+      final container = ProviderContainer(
+        overrides: [
+          dataSourceConfigProvider.overrideWithValue(const AsyncData(config)),
+          nightscoutRepositoryProvider.overrideWithValue(
+            AsyncData(_FakeNightscoutRepository()),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await expectLater(
+        container.read(glucoseHistoryRepositoryProvider.future),
+        completion(isA<CloudGlucoseHistoryRepository>()),
+      );
+      await expectLater(
+        container.read(treatmentsHistoryRepositoryProvider.future),
+        completion(isA<CloudTreatmentsHistoryRepository>()),
+      );
+      await expectLater(
+        container.read(deviceStatusHistoryRepositoryProvider.future),
+        completion(isA<CloudDeviceStatusHistoryRepository>()),
+      );
+    });
+
+    test('non-cloud source providers do not depend on Nightscout', () async {
+      var nightscoutReads = 0;
+      const config = DataSourceConfig(
+        bgSource: BgSource.aaps,
+        eventSource: EventSource.aaps,
+        pumpStatusSource: PumpStatusSource.aaps,
+        historySource: HistorySource.local,
+        mirrorToLocal: false,
+      );
+      final container = ProviderContainer(
+        retry: (_, _) => null,
+        overrides: [
+          dataSourceConfigProvider.overrideWithValue(const AsyncData(config)),
+          nightscoutRepositoryProvider.overrideWith((ref) async {
+            nightscoutReads++;
+            return _FakeNightscoutRepository();
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await expectLater(
+        container.read(glucoseSourceRepositoryProvider.future),
+        throwsA(isA<UnsupportedDataSourceException>()),
+      );
+      await expectLater(
+        container.read(treatmentsSourceRepositoryProvider.future),
+        throwsA(isA<UnsupportedDataSourceException>()),
+      );
+      await expectLater(
+        container.read(deviceStatusSourceRepositoryProvider.future),
+        throwsA(isA<UnsupportedDataSourceException>()),
+      );
+      expect(nightscoutReads, 0);
     });
 
     test('mirrors cloud reads into local storage when enabled', () async {
