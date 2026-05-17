@@ -87,6 +87,19 @@ class AddIngredientSummaryContent extends StatelessWidget {
         : totalGrams == null
         ? 'Brak wagi porcji'
         : '${totalGrams.formattedAmount} g';
+    final carbsLabel = isLoadingPortionAmount
+        ? 'Ładuję...'
+        : totalGrams == null
+        ? '-'
+        : '+${(draft.ingredient.carbsPer100g * totalGrams / 100).formattedAmount} g';
+    final wbtKcalPer100g =
+        draft.ingredient.wbtKcalPer100g ??
+        (draft.ingredient.proteinPer100g * 4 + draft.ingredient.fatPer100g * 9);
+    final extendedCarbsLabel = isLoadingPortionAmount
+        ? 'Ładuję...'
+        : totalGrams == null
+        ? '-'
+        : '+${(wbtKcalPer100g * totalGrams / 100 / 10).formattedAmount} g';
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -114,6 +127,8 @@ class AddIngredientSummaryContent extends StatelessWidget {
                   ? '-'
                   : '${gramsPerPortion!.formattedAmount} ${draft.portionWeightUnitLabel}',
               totalGramsLabel: totalGramsLabel,
+              carbsLabel: carbsLabel,
+              extendedCarbsLabel: extendedCarbsLabel,
             ),
           ],
         ),
@@ -181,12 +196,16 @@ class SummaryMetricGrid extends StatelessWidget {
   final String portionWeightTitle;
   final String portionWeightLabel;
   final String totalGramsLabel;
+  final String carbsLabel;
+  final String extendedCarbsLabel;
 
   const SummaryMetricGrid({
     required this.amountLabel,
     required this.portionWeightTitle,
     required this.portionWeightLabel,
     required this.totalGramsLabel,
+    required this.carbsLabel,
+    required this.extendedCarbsLabel,
     super.key,
   });
 
@@ -219,6 +238,26 @@ class SummaryMetricGrid extends StatelessWidget {
           label: 'Łącznie',
           value: totalGramsLabel,
           emphasized: true,
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: SummaryMetricTile(
+                icon: Icons.grain,
+                label: 'Carbs',
+                value: carbsLabel,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: SummaryMetricTile(
+                icon: Icons.schedule_outlined,
+                label: 'eCarbs',
+                value: extendedCarbsLabel,
+              ),
+            ),
+          ],
         ),
       ],
     );
