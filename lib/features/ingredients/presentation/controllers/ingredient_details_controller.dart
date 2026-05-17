@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/domain/use_cases/load_ingredient_details_use_case.dart';
 import '../../data/domain/use_cases/update_ingredient_details_use_case.dart';
 import '../../data/mappers/ingredient_details_mapper.dart';
@@ -28,6 +29,7 @@ class IngredientDetailsControllerNotifier
     ref
         .read(ingredientDraftProvider.notifier)
         .overrideDraft(current.data.ingredient.toDomainIngredient());
+    ref.invalidate(mealIngredientFormKeyProvider);
     state = AsyncData(current.copyWith(isEditing: true));
   }
 

@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/providers/ingredient_provider.dart';
 import '../controllers/ingredient_details_controller.dart';
 import '../widgets/ingredient_detail_sections.dart';
 import '../widgets/ingredient_details_view.dart';
@@ -15,6 +16,7 @@ class IngredientPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(ingredientDraftProvider.notifier);
     final state = ref.watch(ingredientDetailsControllerProvider(ingredientId));
     final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
 
