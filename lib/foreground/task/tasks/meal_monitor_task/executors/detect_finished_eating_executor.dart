@@ -156,8 +156,8 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           .waitForEvent<FinishedEatingResponseEvent>();
       logI("Got response from user");
 
-      response.when(
-        agree: (int mealId) {
+      await response.when<Future<void>>(
+        agree: (int mealId) async {
           logI("User agreed he finished eating");
           shouldContinue = false;
         },
@@ -165,7 +165,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           logI("Snoozing for 5 more minutes");
           await runtimeContext.waitForDuration(Duration(minutes: 5));
         },
-        empty: (int mealId) {
+        empty: (int mealId) async {
           logI("User clicked on notification probably by mistake, show again");
         },
       );
