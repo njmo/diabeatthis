@@ -1,29 +1,30 @@
 import '../../../domain/model/treatment_base.dart';
 import '../../config/data_source_config.dart';
-import '../../domain/treatment_source_repository.dart';
+import '../../domain/treatments_history_repository.dart';
 import '../services/local_mirror_writer.dart';
 import 'local_repository_mirroring.dart';
 
-class MirroringTreatmentSourceRepository implements TreatmentSourceRepository {
-  MirroringTreatmentSourceRepository({
-    required TreatmentSourceRepository delegate,
+class MirroringTreatmentsHistoryRepository
+    implements TreatmentsHistoryRepository {
+  MirroringTreatmentsHistoryRepository({
+    required TreatmentsHistoryRepository delegate,
     required LocalMirrorWriter mirrorWriter,
     required EventSource source,
   }) : _delegate = delegate,
        _mirroring = LocalRepositoryMirroring(mirrorWriter),
        _source = source;
 
-  final TreatmentSourceRepository _delegate;
+  final TreatmentsHistoryRepository _delegate;
   final LocalRepositoryMirroring _mirroring;
   final EventSource _source;
 
   @override
-  Future<List<Treatment>> pollTreatments() {
+  Future<List<Treatment>> fetchTreatmentsBetween(DateTime start, DateTime end) {
     return _mirroring.treatments(
-      read: _delegate.pollTreatments,
+      read: () => _delegate.fetchTreatmentsBetween(start, end),
       extract: (treatments) => treatments,
       source: _source,
-      operation: 'Treatment',
+      operation: 'Treatments history',
     );
   }
 }

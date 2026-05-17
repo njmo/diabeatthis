@@ -20,9 +20,12 @@ import '../local_mirror/history/local_device_status_history_repository.dart';
 import '../local_mirror/history/local_glucose_history_repository.dart';
 import '../local_mirror/history/local_treatments_history_repository.dart';
 import '../local_mirror/providers/local_mirror_writer_provider.dart';
+import '../local_mirror/repositories/mirroring_device_status_history_repository.dart';
 import '../local_mirror/repositories/mirroring_device_status_source_repository.dart';
+import '../local_mirror/repositories/mirroring_glucose_history_repository.dart';
 import '../local_mirror/repositories/mirroring_glucose_source_repository.dart';
 import '../local_mirror/repositories/mirroring_treatment_source_repository.dart';
+import '../local_mirror/repositories/mirroring_treatments_history_repository.dart';
 import '../local_mirror/services/local_mirror_writer.dart';
 import '../nightscout/providers/nightscout_repository_provider.dart';
 
@@ -88,7 +91,13 @@ Future<GlucoseHistoryRepository> glucoseHistoryRepository(Ref ref) async {
       final nightscoutRepository = await ref.watch(
         nightscoutRepositoryProvider.future,
       );
-      return CloudGlucoseHistoryRepository(nightscoutRepository);
+      final repository = CloudGlucoseHistoryRepository(nightscoutRepository);
+      if (!config.mirrorToLocal) return repository;
+
+      return MirroringGlucoseHistoryRepository(
+        delegate: repository,
+        mirrorWriter: _localMirrorWriter(ref),
+      );
     case HistorySource.local:
       return LocalGlucoseHistoryRepository(
         ref.watch(databaseProvider).localMirrorDao,
@@ -105,7 +114,14 @@ Future<TreatmentsHistoryRepository> treatmentsHistoryRepository(Ref ref) async {
       final nightscoutRepository = await ref.watch(
         nightscoutRepositoryProvider.future,
       );
-      return CloudTreatmentsHistoryRepository(nightscoutRepository);
+      final repository = CloudTreatmentsHistoryRepository(nightscoutRepository);
+      if (!config.mirrorToLocal) return repository;
+
+      return MirroringTreatmentsHistoryRepository(
+        delegate: repository,
+        mirrorWriter: _localMirrorWriter(ref),
+        source: EventSource.cloud,
+      );
     case HistorySource.local:
       return LocalTreatmentsHistoryRepository(
         ref.watch(databaseProvider).localMirrorDao,
@@ -124,7 +140,15 @@ Future<DeviceStatusHistoryRepository> deviceStatusHistoryRepository(
       final nightscoutRepository = await ref.watch(
         nightscoutRepositoryProvider.future,
       );
-      return CloudDeviceStatusHistoryRepository(nightscoutRepository);
+      final repository = CloudDeviceStatusHistoryRepository(
+        nightscoutRepository,
+      );
+      if (!config.mirrorToLocal) return repository;
+
+      return MirroringDeviceStatusHistoryRepository(
+        delegate: repository,
+        mirrorWriter: _localMirrorWriter(ref),
+      );
     case HistorySource.local:
       return LocalDeviceStatusHistoryRepository(
         ref.watch(databaseProvider).localMirrorDao,
