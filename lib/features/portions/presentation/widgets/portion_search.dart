@@ -81,6 +81,8 @@ class PortionSearch extends HookConsumerWidget with Logging {
               return SizedBox(
                 height: 240,
                 child: ListView.separated(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   itemBuilder: (context, index) {
                     final portion = data[index];
                     final selected = valuePicked.value == index;

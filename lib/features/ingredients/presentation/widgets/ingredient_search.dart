@@ -124,6 +124,7 @@ class IngredientSearch extends HookConsumerWidget {
           SizedBox(
             height: 240,
             child: ListView.separated(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               itemBuilder: (context, index) {
                 final ingredient = ingredients.asData?.value[index];
                 if (ingredient == null) {
