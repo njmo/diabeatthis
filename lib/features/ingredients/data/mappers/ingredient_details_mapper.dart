@@ -1,0 +1,23 @@
+import '../../../../core/domain/model/ingredient.dart' as domain;
+import '../models/ingredient_details_data.dart' as details;
+
+extension IngredientDetailsToDomainMapper on details.Ingredient {
+  domain.Ingredient toDomainIngredient() {
+    return domain.Ingredient.existing(
+      id: id,
+      name: name,
+      carbsPer100g: carbsPer100g,
+      fatPer100g: fatPer100g,
+      fiberPer100g: fiberPer100g,
+      proteinPer100g: proteinPer100g,
+      nutritionConfidence: nutritionConfidence,
+      isReference: isReference,
+      netKcalPer100g: netKcalPer100g,
+      kcalPer100g: kcalPer100g,
+      wbtKcalPer100g: wbtKcalPer100g,
+      ig: ig,
+      preparation: preparation,
+      brand: brand,
+    );
+  }
+}

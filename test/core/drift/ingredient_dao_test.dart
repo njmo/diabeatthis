@@ -35,6 +35,8 @@ void main() {
       fiberPer100g: 0.5,
       proteinPer100g: 2.9,
       nutritionConfidence: 0.75,
+      isReference: false,
+      brand: null,
     );
 
     final historyAfterMacroChange = await db.ingredientDao
@@ -55,6 +57,8 @@ void main() {
       fiberPer100g: 0.5,
       proteinPer100g: 2.9,
       nutritionConfidence: 0.75,
+      isReference: false,
+      brand: null,
     );
 
     final historyAfterNameChange = await db.ingredientDao

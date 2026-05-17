@@ -96,11 +96,13 @@ Future<domain.Ingredient> insertIngredient(
       if (name.isEmpty) {
         throw ArgumentError('Ingredient name cannot be empty');
       }
+      final fiberPer100g = draft.isReference ? 0.0 : draft.fiberPer100g;
+      final ingredient = draft.copyWith(name: name, fiberPer100g: fiberPer100g);
 
       final db = ref.watch(databaseProvider);
       final value = await db
           .into(db.ingredient)
-          .insertReturningOrNull(draft.copyWith(name: name).toCompanion());
+          .insertReturningOrNull(ingredient.toCompanion());
       if (value != null) {
         return value.toDomain();
       } else {

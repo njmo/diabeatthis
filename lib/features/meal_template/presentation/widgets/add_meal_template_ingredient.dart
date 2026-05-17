@@ -24,152 +24,158 @@ class AddMealTemplateIngredient extends ConsumerWidget {
     );
 
     return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 16,
-          right: 16,
-          top: 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            switch (addingStage) {
-              AddMealTemplateIngredientStage.ingredientSearch =>
-                  _textWithSearchTransition(
-                    'Ingredient search',
-                    Icon(Icons.add_box),
-                    addingStateNotifier,
-                  ),
-              AddMealTemplateIngredientStage.ingredientForm =>
-                  _textWithSearchTransition(
-                    'Ingredient form',
-                    Icon(Icons.search),
-                    addingStateNotifier,
-                  ),
-              AddMealTemplateIngredientStage.portionAddNewSearch =>
-                  _textWithSearchTransition(
-                    'Portion add new portion to ingredient',
-                    Icon(Icons.add),
-                    addingStateNotifier,
-                  ),
-              AddMealTemplateIngredientStage.definedPortionsSearch =>
-                  _textWithSearchTransition(
-                    'Portion search existing portions',
-                    Icon(Icons.add_box),
-                    addingStateNotifier,
-                  ),
-              AddMealTemplateIngredientStage.amountForm => Text('Amount form'),
-              AddMealTemplateIngredientStage.summary => Text('Summary'),
-              AddMealTemplateIngredientStage.portionSpecifyAmount => Text(
-                'Ingredient amount in portion',
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 16,
+        right: 16,
+        top: 16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          switch (addingStage) {
+            AddMealTemplateIngredientStage.ingredientSearch =>
+              _textWithSearchTransition(
+                'Ingredient search',
+                Icon(Icons.add_box),
+                addingStateNotifier,
               ),
-              AddMealTemplateIngredientStage.portionAddNewForm =>
-                  _textWithSearchTransition(
-                    'Portion add new portion',
-                    Icon(Icons.search),
-                    addingStateNotifier,
-                  ),
+            AddMealTemplateIngredientStage.ingredientForm =>
+              _textWithSearchTransition(
+                'Ingredient form',
+                Icon(Icons.search),
+                addingStateNotifier,
+              ),
+            AddMealTemplateIngredientStage.portionAddNewSearch =>
+              _textWithSearchTransition(
+                'Portion add new portion to ingredient',
+                Icon(Icons.add),
+                addingStateNotifier,
+              ),
+            AddMealTemplateIngredientStage.definedPortionsSearch =>
+              _textWithSearchTransition(
+                'Portion search existing portions',
+                Icon(Icons.add_box),
+                addingStateNotifier,
+              ),
+            AddMealTemplateIngredientStage.amountForm => Text('Amount form'),
+            AddMealTemplateIngredientStage.summary => Text('Summary'),
+            AddMealTemplateIngredientStage.portionSpecifyAmount => Text(
+              'Ingredient amount in portion',
+            ),
+            AddMealTemplateIngredientStage.portionAddNewForm =>
+              _textWithSearchTransition(
+                'Portion add new portion',
+                Icon(Icons.search),
+                addingStateNotifier,
+              ),
+          },
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: switch (addingStage) {
+              AddMealTemplateIngredientStage.ingredientSearch =>
+                IngredientSearch(),
+              AddMealTemplateIngredientStage.ingredientForm =>
+                const SingleChildScrollView(child: IngredientForm()),
+              AddMealTemplateIngredientStage.portionAddNewSearch =>
+                PortionSearch(),
+              AddMealTemplateIngredientStage.definedPortionsSearch =>
+                PortionSearch(),
+              AddMealTemplateIngredientStage.amountForm => AmountTemplateForm(),
+              AddMealTemplateIngredientStage.summary => AddIngredientSummary(),
+              AddMealTemplateIngredientStage.portionSpecifyAmount =>
+                IngredientPortionAmountForm(),
+              AddMealTemplateIngredientStage.portionAddNewForm => PortionForm(),
             },
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              switchInCurve: Curves.easeOut,
-              switchOutCurve: Curves.easeIn,
-              child: switch (addingStage) {
-                AddMealTemplateIngredientStage.ingredientSearch => IngredientSearch(),
-                AddMealTemplateIngredientStage.ingredientForm => IngredientForm(),
-                AddMealTemplateIngredientStage.portionAddNewSearch => PortionSearch(),
-                AddMealTemplateIngredientStage.definedPortionsSearch => PortionSearch(),
-                AddMealTemplateIngredientStage.amountForm => AmountTemplateForm(),
-                AddMealTemplateIngredientStage.summary => AddIngredientSummary(),
-                AddMealTemplateIngredientStage.portionSpecifyAmount =>
-                    IngredientPortionAmountForm(),
-                AddMealTemplateIngredientStage.portionAddNewForm => PortionForm(),
-              },
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (addingStage == AddMealTemplateIngredientStage.summary) {
-                        Navigator.of(
-                          context,
-                        ).pop(ref.read(mealTemplateIngredientsDraftProvider));
-                      } else {
-                        final formKey = ref.read(mealIngredientFormKeyProvider);
-                        if (formKey.currentState!.validate()) {
-                          addingStateNotifier.nextStage();
-                          formKey.currentState!.reset();
-                        }
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (addingStage == AddMealTemplateIngredientStage.summary) {
+                      Navigator.of(
+                        context,
+                      ).pop(ref.read(mealTemplateIngredientsDraftProvider));
+                    } else {
+                      final formKey = ref.read(mealIngredientFormKeyProvider);
+                      if (formKey.currentState!.validate()) {
+                        addingStateNotifier.nextStage();
+                        formKey.currentState!.reset();
                       }
-                    },
-                    child: (addingStage == AddMealTemplateIngredientStage.summary)
-                        ? Text('Add')
-                        : Text('Next'),
-                  ),
+                    }
+                  },
+                  child: (addingStage == AddMealTemplateIngredientStage.summary)
+                      ? Text('Add')
+                      : Text('Next'),
                 ),
-                addingStage != AddMealTemplateIngredientStage.definedPortionsSearch &&
-                    addingStage !=
-                        AddMealTemplateIngredientStage.portionAddNewSearch
-                    ? SizedBox.shrink()
-                    : Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      addingStateNotifier.setOverride();
-                    },
-                    child: Text('Add by grams'),
-                  ),
-                ),
-                addingStage != AddMealTemplateIngredientStage.summary
-                    ? SizedBox.shrink()
-                    : Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final result = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Discard changes?'),
-                          content: const Text(
-                            'Are you sure you want to discard changes?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop(true);
-                              },
-                              child: Text('Yes'),
+              ),
+              addingStage !=
+                          AddMealTemplateIngredientStage
+                              .definedPortionsSearch &&
+                      addingStage !=
+                          AddMealTemplateIngredientStage.portionAddNewSearch
+                  ? SizedBox.shrink()
+                  : Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          addingStateNotifier.setOverride();
+                        },
+                        child: Text('Add by grams'),
+                      ),
+                    ),
+              addingStage != AddMealTemplateIngredientStage.summary
+                  ? SizedBox.shrink()
+                  : Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final result = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Discard changes?'),
+                              content: const Text(
+                                'Are you sure you want to discard changes?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(true);
+                                  },
+                                  child: Text('Yes'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false);
+                                  },
+                                  child: Text('No'),
+                                ),
+                              ],
                             ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop(false);
-                              },
-                              child: Text('No'),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (result == true) {
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      }
-                    },
-                    child: Text('Discard'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+                          );
+                          if (result == true) {
+                            if (context.mounted) {
+                              Navigator.of(context).pop();
+                            }
+                          }
+                        },
+                        child: Text('Discard'),
+                      ),
+                    ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _textWithSearchTransition(
-      String text,
-      Icon icon,
-      AddMealTemplateIngredientStageNotifier notifier,
-      ) {
+    String text,
+    Icon icon,
+    AddMealTemplateIngredientStageNotifier notifier,
+  ) {
     return Row(
       children: [
         Align(

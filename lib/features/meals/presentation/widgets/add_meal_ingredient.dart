@@ -116,7 +116,9 @@ class AddMealIngredient extends ConsumerWidget {
         child: switch (addingStage) {
           AddMealIngredientStage.ingredientSearch => IngredientSearch(),
           AddMealIngredientStage.ingredientPhotoScan => IngredientPhotoScan(),
-          AddMealIngredientStage.ingredientForm => IngredientForm(),
+          AddMealIngredientStage.ingredientForm => const SingleChildScrollView(
+            child: IngredientForm(),
+          ),
           AddMealIngredientStage.portionAddNewSearch => PortionSearch(),
           AddMealIngredientStage.definedPortionsSearch => PortionSearch(),
           AddMealIngredientStage.amountForm => AmountForm(),

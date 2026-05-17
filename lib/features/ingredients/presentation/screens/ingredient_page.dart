@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models/ingredient_edit_draft.dart';
 import '../controllers/ingredient_details_controller.dart';
 import '../widgets/ingredient_detail_sections.dart';
 import '../widgets/ingredient_details_view.dart';
@@ -59,7 +58,6 @@ class IngredientPage extends ConsumerWidget {
             children: [
               if (s.isEditing)
                 IngredientEditMode(
-                  ingredient: s.data.ingredient,
                   isSaving: s.isSaving,
                   onCancel: () => ref
                       .read(
@@ -68,7 +66,7 @@ class IngredientPage extends ConsumerWidget {
                         ).notifier,
                       )
                       .cancelEditing(),
-                  onSave: (draft) => _saveDraft(context, ref, draft),
+                  onSave: () => _saveIngredient(context, ref),
                 )
               else
                 IngredientDetailsView(data: s.data),
@@ -85,15 +83,11 @@ class IngredientPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _saveDraft(
-    BuildContext context,
-    WidgetRef ref,
-    IngredientEditDraft draft,
-  ) async {
+  Future<void> _saveIngredient(BuildContext context, WidgetRef ref) async {
     try {
       await ref
           .read(ingredientDetailsControllerProvider(ingredientId).notifier)
-          .save(draft);
+          .save();
       if (!context.mounted) {
         return;
       }

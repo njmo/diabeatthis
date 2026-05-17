@@ -100,6 +100,8 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     required double fiberPer100g,
     required double proteinPer100g,
     required double nutritionConfidence,
+    required bool isReference,
+    required String? brand,
   }) async {
     final updatedRows =
         await (update(
@@ -112,6 +114,8 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
             fiberPer100g: Value(fiberPer100g),
             proteinPer100g: Value(proteinPer100g),
             nutritionConfidence: Value(nutritionConfidence),
+            isReference: Value(isReference ? 1 : 0),
+            brand: Value(brand),
           ),
         );
 
