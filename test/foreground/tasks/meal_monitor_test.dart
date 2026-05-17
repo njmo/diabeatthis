@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/events/data/notification/eat_now_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/finished_eating_response_event.dart';
@@ -37,6 +39,7 @@ import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/fi
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/idle_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/meal_monitor_state_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/monitor_until_meal.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_context.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import 'package:drift/native.dart';
 import 'package:fake_async/fake_async.dart';
@@ -552,6 +555,143 @@ void main() {
           final (meal, status) = calls.single;
           expect(meal.id, 1);
           expect(status, 'eaten');
+        });
+      });
+    });
+    test('eat now confirmation waits until meal status update completes', () {
+      fakeAsync((async) {
+        final start = DateTime(2026, 3, 23, 12, 0);
+        withFakeClock(async, start, () {
+          final notifications = FakeNotificationsController();
+          final updateWaitedEating = Completer<void>();
+          final calls = <(Meal, String)>[];
+          final meal = Meal(
+            id: 1,
+            name: 'asd',
+            plannedAt: clock.now().add(Duration(minutes: 15)),
+          );
+          final container = ProviderContainer(
+            overrides: [
+              notificationsControllerForegroundProvider.overrideWithValue(
+                notifications,
+              ),
+              updateMealProvider.overrideWith((ref, args) async {
+                final (meal, status) = args;
+                calls.add((meal, status));
+                if (status == 'waited-eating') {
+                  await updateWaitedEating.future;
+                }
+              }),
+            ],
+          );
+          final harness = FakeRuntimeHarness(container: container);
+          final executor = BolusThenWaitExecutor(recommendedMinutes: 0);
+          var completed = false;
+          MealMonitorStateExecutor? nextExecutor;
+
+          executor
+              .execute(
+                harness.runtimeContext,
+                MealMonitorContext(activeMeal: meal),
+              )
+              .then((value) {
+                completed = true;
+                nextExecutor = value;
+              });
+          _settle(async);
+
+          harness.dispatchEvent(
+            TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
+          );
+          _settle(async);
+
+          expect(calls, hasLength(1));
+          expect(calls.single.$2, 'bolused-waiting');
+          expect(notifications.shownEvents, hasLength(1));
+          expect(
+            notifications.shownEvents.single,
+            isA<EatNowNotificationEvent>(),
+          );
+          notifications.shownEvents.clear();
+
+          harness.dispatchEvent(EatNowResponseEvent.eating(mealId: 1));
+          _settle(async);
+
+          expect(calls, hasLength(2));
+          expect(calls.last.$2, 'waited-eating');
+          expect(completed, isFalse);
+
+          updateWaitedEating.complete();
+          _settle(async);
+
+          expect(completed, isTrue);
+          expect(nextExecutor, isA<DetectFinishedEatingExecutor>());
+        });
+      });
+    });
+    test('bolus suggestion skip after eating returns to idle', () {
+      fakeAsync((async) {
+        final start = DateTime(2026, 3, 23, 12, 0);
+        withFakeClock(async, start, () {
+          final notifications = FakeNotificationsController();
+          final calls = <(Meal, String)>[];
+          final meal = Meal(id: 1, name: 'asd', plannedAt: clock.now());
+          final container = ProviderContainer(
+            overrides: [
+              notificationsControllerForegroundProvider.overrideWithValue(
+                notifications,
+              ),
+              updateMealProvider.overrideWith((ref, args) async {
+                final (meal, status) = args;
+                calls.add((meal, status));
+              }),
+            ],
+          );
+          final harness = FakeRuntimeHarness(container: container);
+          final executor = DetectFinishedEatingExecutor(
+            shouldBolus: true,
+            grams: 10,
+            bolusWaited: true,
+          );
+          var completed = false;
+          MealMonitorStateExecutor? nextExecutor;
+
+          executor
+              .execute(
+                harness.runtimeContext,
+                MealMonitorContext(activeMeal: meal),
+              )
+              .then((value) {
+                completed = true;
+                nextExecutor = value;
+              });
+          _settle(async);
+
+          _advanceMinutes(harness, async, 5);
+
+          expect(notifications.shownEvents, hasLength(1));
+          expect(
+            notifications.shownEvents.single,
+            isA<FinishedEatingNotificationEvent>(),
+          );
+          notifications.shownEvents.clear();
+
+          harness.dispatchEvent(FinishedEatingResponseEvent.agree(mealId: 1));
+          _settle(async);
+
+          expect(notifications.shownEvents, hasLength(1));
+          expect(
+            notifications.shownEvents.single,
+            isA<MealSuggestionNotificationEvent>(),
+          );
+          notifications.shownEvents.clear();
+
+          harness.dispatchEvent(MealSuggestionResponseEvent.skip(mealId: 1));
+          _settle(async);
+
+          expect(completed, isTrue);
+          expect(nextExecutor, isA<MealMonitorStateIdle>());
+          expect(calls, isEmpty);
         });
       });
     });

@@ -167,7 +167,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
     }
 
     logI("Received response from user");
-    response.when(
+    return response.when<Future<MealMonitorStateExecutor>>(
       eating: (_) async {
         logI("Used agreed meal");
         await runtimeContext.container.read(
@@ -176,19 +176,21 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
             'waited-eating',
           ).future,
         );
+        return DetectFinishedEatingExecutor(
+          shouldBolus: false,
+          bolusWaited: true,
+        );
       },
-      dismiss: (_) {
+      dismiss: (_) async {
         logI("Used dismissed meal, clicked on notification");
         return MealMonitorStateIdle();
       },
-      empty: (_) {
+      empty: (_) async {
         logI(
           "User manually clicked on notification, he will probably continue in-app",
         );
         return MealMonitorStateIdle();
       },
     );
-
-    return DetectFinishedEatingExecutor(shouldBolus: false, bolusWaited: true);
   }
 }

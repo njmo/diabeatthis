@@ -188,9 +188,10 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           .waitForEvent<MealSuggestionResponseEvent>();
       logI("Got response from user");
 
-      response.when(
+      final nextExecutor = response.when<MealMonitorStateExecutor?>(
         agree: (e) {
           logI("User agreed to bolus");
+          return null;
         },
         skip: (int mealId) {
           logI("User skipped meal suggestion");
@@ -198,11 +199,16 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
         },
         snooze: (int mealId, String input) {
           logI("User snoozed meal suggestion");
+          return null;
         },
         empty: (int mealId) {
           logI("User clicked on notification probably by mistake");
+          return null;
         },
       );
+      if (nextExecutor != null) {
+        return nextExecutor;
+      }
 
       await runtimeContext.waitForEvent<TreatmentAvailableEvent<BolusWizard>>();
       logI(
