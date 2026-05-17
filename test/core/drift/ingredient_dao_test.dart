@@ -13,7 +13,7 @@ void main() {
     await db.close();
   });
 
-  test('macro update creates history but name-only update does not', () async {
+  test('macro update stores previous values in history', () async {
     final ingredient = await db
         .into(db.ingredient)
         .insertReturning(
@@ -43,11 +43,11 @@ void main() {
         .getIngredientStatusHistory(ingredient.id);
 
     expect(historyAfterMacroChange, hasLength(1));
-    expect(historyAfterMacroChange.single.carbsPer100g, 30);
-    expect(historyAfterMacroChange.single.fatPer100g, 0.4);
-    expect(historyAfterMacroChange.single.fiberPer100g, 0.5);
-    expect(historyAfterMacroChange.single.proteinPer100g, 2.9);
-    expect(historyAfterMacroChange.single.nutritionConfidence, 0.75);
+    expect(historyAfterMacroChange.single.carbsPer100g, 28);
+    expect(historyAfterMacroChange.single.fatPer100g, 0.3);
+    expect(historyAfterMacroChange.single.fiberPer100g, 0.4);
+    expect(historyAfterMacroChange.single.proteinPer100g, 2.7);
+    expect(historyAfterMacroChange.single.nutritionConfidence, 0.5);
 
     await db.ingredientDao.updateIngredientDetails(
       ingredientId: ingredient.id,

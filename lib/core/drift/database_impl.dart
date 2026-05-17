@@ -53,6 +53,10 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
+      await customStatement(
+        'DROP TRIGGER IF EXISTS ingredient_nutrition_changed',
+      );
+      await customStatement(createIngredientNutritionChangedTrigger);
     },
   );
 
@@ -69,3 +73,34 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     }
   }
 }
+
+const createIngredientNutritionChangedTrigger = '''
+CREATE TRIGGER ingredient_nutrition_changed
+AFTER UPDATE OF carbs_per_100g, fat_per_100g, fiber_per_100g, protein_per_100g, nutrition_confidence
+ON ingredient
+FOR EACH ROW
+WHEN
+  OLD.carbs_per_100g IS NOT NEW.carbs_per_100g OR
+  OLD.fat_per_100g IS NOT NEW.fat_per_100g OR
+  OLD.fiber_per_100g IS NOT NEW.fiber_per_100g OR
+  OLD.protein_per_100g IS NOT NEW.protein_per_100g OR
+  OLD.nutrition_confidence IS NOT NEW.nutrition_confidence
+BEGIN
+  INSERT INTO ingredient_status_history (
+    ingredient_id,
+    carbs_per_100g,
+    fat_per_100g,
+    fiber_per_100g,
+    protein_per_100g,
+    nutrition_confidence
+  )
+  VALUES (
+    OLD.id,
+    OLD.carbs_per_100g,
+    OLD.fat_per_100g,
+    OLD.fiber_per_100g,
+    OLD.protein_per_100g,
+    OLD.nutrition_confidence
+  );
+END;
+''';

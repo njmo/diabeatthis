@@ -54,12 +54,12 @@ BEGIN
     nutrition_confidence
   )
   VALUES (
-    NEW.id,
-    NEW.carbs_per_100g,
-    NEW.fat_per_100g,
-    NEW.fiber_per_100g,
-    NEW.protein_per_100g,
-    NEW.nutrition_confidence
+    OLD.id,
+    OLD.carbs_per_100g,
+    OLD.fat_per_100g,
+    OLD.fiber_per_100g,
+    OLD.protein_per_100g,
+    OLD.nutrition_confidence
   );
 END;
 
