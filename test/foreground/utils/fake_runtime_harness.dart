@@ -20,6 +20,7 @@ class FakeRuntimeHarness {
 
   final List<ForegroundEvent> emittedEvents = [];
   final List<String> emittedSignals = [];
+  final List<DateTime> emittedTicks = [];
   final List<String> logs = [];
 
   final List<RuntimeWaiter> _waiters = [];
@@ -42,7 +43,7 @@ class FakeRuntimeHarness {
       signalWaitFactory: _createSignalWaitHandle,
       deadlineWaitFactory: _createDeadlineWaitHandle,
       container: this.container,
-      tick: (DateTime now) {},
+      tick: _emitTick,
     );
   }
 
@@ -53,6 +54,11 @@ class FakeRuntimeHarness {
   void _emitSignal(String signalKey) {
     emittedSignals.add(signalKey);
     _deliverInput(RuntimeSignalInput(signalKey));
+  }
+
+  void _emitTick(DateTime now) {
+    emittedTicks.add(now);
+    _deliverInput(RuntimeTickInput(now));
   }
 
   void log(String message) {

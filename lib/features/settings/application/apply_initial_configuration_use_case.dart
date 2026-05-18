@@ -12,6 +12,7 @@ import '../../../core/data_sources/config/data_source_config.dart';
 import '../../../core/data_sources/config/data_source_config_sync_payload.dart';
 import '../../../core/data_sources/config/helpers/data_source_config_storer.dart';
 import '../../../core/data_sources/nightscout/nightscout_cloud_connection_tester.dart';
+import '../../../core/data_sources/xdrip/providers/xdrip_receiver_controller_provider.dart';
 import '../data/settings_storage_keys.dart';
 
 part 'apply_initial_configuration_use_case.g.dart';
@@ -47,6 +48,10 @@ class ApplyInitialConfigurationUseCase {
       prefs.setString(childNameKey, childName.trim()),
       prefs.setBool(initialConfigurationDoneKey, true),
     ]);
+    final xdripReceiverController = _ref.read(xdripReceiverControllerProvider);
+    if (config.bgSource == BgSource.xdrip) {
+      await xdripReceiverController.setEnabled();
+    }
 
     if (!_ref.mounted) return;
 

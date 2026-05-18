@@ -240,6 +240,37 @@ void main() {
       expect(nightscoutReads, 0);
     });
 
+    test(
+      'xDrip source provider is push-based and does not depend on Nightscout',
+      () async {
+        var nightscoutReads = 0;
+        const config = DataSourceConfig(
+          bgSource: BgSource.xdrip,
+          eventSource: EventSource.aaps,
+          pumpStatusSource: PumpStatusSource.aaps,
+          historySource: HistorySource.local,
+          mirrorToLocal: false,
+        );
+        final container = ProviderContainer(
+          retry: (_, _) => null,
+          overrides: [
+            dataSourceConfigProvider.overrideWithValue(const AsyncData(config)),
+            nightscoutRepositoryProvider.overrideWith((ref) async {
+              nightscoutReads++;
+              return _FakeNightscoutRepository();
+            }),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await expectLater(
+          container.read(glucoseSourceRepositoryProvider.future),
+          throwsA(isA<UnsupportedDataSourceException>()),
+        );
+        expect(nightscoutReads, 0);
+      },
+    );
+
     test('mirrors cloud reads into local storage when enabled', () async {
       final db = DatabaseImpl(NativeDatabase.memory());
       addTearDown(db.close);

@@ -1,4 +1,5 @@
 import 'package:circular_buffer/circular_buffer.dart';
+import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/data_sources/providers/source_repository_providers.dart';
@@ -59,13 +60,21 @@ class SynchronizationCacheController with Logging {
   );
 
   Future<void>? _glucoseReadingsLoad;
+  Future<void>? _deviceStatusLoad;
 
   Future<void> init(ProviderContainer container) async {
-    await _loadGlucoseReadings(
-      container,
-      fetchLabel: 'Initial glucose cache fetch',
-      storedLabel: 'Initial glucose cache stored',
-    );
+    await Future.wait([
+      _loadGlucoseReadings(
+        container,
+        fetchLabel: 'Initial glucose cache fetch',
+        storedLabel: 'Initial glucose cache stored',
+      ),
+      _loadDeviceStatus(
+        container,
+        fetchLabel: 'Initial device status cache fetch',
+        storedLabel: 'Initial device status cache stored',
+      ),
+    ]);
   }
 
   Future<bool> ensureGlucoseReadingsReady(
@@ -114,7 +123,7 @@ class SynchronizationCacheController with Logging {
         glucoseHistoryRepositoryProvider.future,
       );
       final glucoseReadings = await repository.fetchRecentGlucose(10);
-      final latestReadings = [...glucoseReadings]
+      final latestReadings = [...glucoseReadings, ...cache.glucoseReadingsCache]
         ..sort((a, b) => b.date.compareTo(a.date));
       final limitedReadings = latestReadings.take(10).toList();
 
@@ -128,6 +137,50 @@ class SynchronizationCacheController with Logging {
       );
     } catch (e, st) {
       logW('Synchronization cache load failed: $e\n$st');
+    }
+  }
+
+  Future<void> _loadDeviceStatus(
+    ProviderContainer container, {
+    required String fetchLabel,
+    required String storedLabel,
+  }) {
+    final currentLoad = _deviceStatusLoad;
+    if (currentLoad != null) return currentLoad;
+
+    final load =
+        _loadDeviceStatusOnce(
+          container,
+          fetchLabel: fetchLabel,
+          storedLabel: storedLabel,
+        ).whenComplete(() {
+          _deviceStatusLoad = null;
+        });
+    _deviceStatusLoad = load;
+
+    return load;
+  }
+
+  Future<void> _loadDeviceStatusOnce(
+    ProviderContainer container, {
+    required String fetchLabel,
+    required String storedLabel,
+  }) async {
+    try {
+      final repository = await container.read(
+        deviceStatusHistoryRepositoryProvider.future,
+      );
+      final deviceStatus = await repository.fetchLastDeviceStatusBefore(
+        clock.now(),
+      );
+
+      logI(_describeDeviceStatus(fetchLabel, deviceStatus));
+      if (deviceStatus == null) return;
+
+      cache.cacheDeviceStatus(deviceStatus);
+      logI(_describeDeviceStatus(storedLabel, cache.deviceStatusCache));
+    } catch (e, st) {
+      logW('Synchronization device status cache load failed: $e\n$st');
     }
   }
 
@@ -165,5 +218,10 @@ class SynchronizationCacheController with Logging {
     return '$label count=${list.length}'
         '${first == null ? '' : ' from=${first.date.toIso8601String()}'}'
         '${last == null ? '' : ' to=${last.date.toIso8601String()}'}';
+  }
+
+  String _describeDeviceStatus(String label, DeviceStatus? deviceStatus) {
+    return '$label'
+        '${deviceStatus == null ? ' empty' : ' at=${deviceStatus.date.toIso8601String()} bg=${deviceStatus.bg} tick=${deviceStatus.tick}'}';
   }
 }

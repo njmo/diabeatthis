@@ -13,6 +13,13 @@ enum BgSource {
       orElse: () => BgSource.cloud,
     );
   }
+
+  bool get isPushBased {
+    return switch (this) {
+      BgSource.cloud => false,
+      BgSource.aaps || BgSource.xdrip => true,
+    };
+  }
 }
 
 enum EventSource {

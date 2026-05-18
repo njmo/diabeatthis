@@ -5,6 +5,8 @@ import 'package:clock/clock.dart';
 
 import '../../app/providers/app_lifecycle_state_provider.dart';
 import '../../common/events/data/task/task_data_synchronization_payload.dart';
+import '../../core/data_sources/config/data_source_config.dart';
+import '../../core/data_sources/config/data_source_config_provider.dart';
 import '../../core/data_sources/providers/source_repository_providers.dart';
 import '../../core/domain/model/glucose.dart';
 import '../alarm/foreground_alarm_bridge.dart';
@@ -31,22 +33,17 @@ class GlucoseCollector extends ForegroundCollector {
   }
 
   Future<void> _run(CollectorContext context) async {
-    var last = await _loadInitialGlucoseFromHistory(context);
-    if (last != null) {
-      _handleGlucose(context, last);
+    final bgSource = await _readBgSource(context);
+
+    if (bgSource.isPushBased) {
+      logI(
+        'Glucose source ${bgSource.storageValue} is push-based; '
+        'collector will stop',
+      );
+      return;
     }
 
-    if (last == null) {
-      try {
-        last = await _pollGlucose(context);
-        if (last != null) {
-          _handleGlucose(context, last);
-        }
-      } catch (e, st) {
-        logW('Initial glucose read failed: $e\n$st');
-      }
-    }
-
+    Glucose? last;
     while (!_disposed) {
       if (last == null) {
         try {
@@ -95,30 +92,11 @@ class GlucoseCollector extends ForegroundCollector {
     }
   }
 
-  Future<Glucose?> _loadInitialGlucoseFromHistory(
-    CollectorContext context,
-  ) async {
-    try {
-      final repository = await context.container.read(
-        glucoseHistoryRepositoryProvider.future,
-      );
-      final readings = await repository.fetchRecentGlucose(1);
-      if (readings.isEmpty) return null;
-
-      final latest = ([
-        ...readings,
-      ]..sort((a, b) => b.date.compareTo(a.date))).first;
-
-      logI(
-        'Initial glucose history seed available ${latest.sgv} '
-        'at ${latest.date.toIso8601String()}',
-      );
-
-      return latest;
-    } catch (e, st) {
-      logW('Initial glucose history seed failed: $e\n$st');
-      return null;
-    }
+  Future<BgSource> _readBgSource(CollectorContext context) async {
+    final config = await context.container.read(
+      dataSourceConfigProvider.future,
+    );
+    return config.bgSource;
   }
 
   Future<Glucose?> _pollGlucose(CollectorContext context) async {

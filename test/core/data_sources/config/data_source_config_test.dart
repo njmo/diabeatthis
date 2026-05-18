@@ -32,6 +32,12 @@ void main() {
       expect(HistorySource.fromStorage('unknown'), HistorySource.cloud);
     });
 
+    test('detects push-based glucose sources', () {
+      expect(BgSource.cloud.isPushBased, isFalse);
+      expect(BgSource.aaps.isPushBased, isTrue);
+      expect(BgSource.xdrip.isPushBased, isTrue);
+    });
+
     test('detects when any configured source uses Nightscout', () {
       const localOnly = DataSourceConfig(
         bgSource: BgSource.aaps,

@@ -7,6 +7,7 @@ import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/config/helpers/data_source_config_storer.dart';
+import '../../../../core/data_sources/xdrip/providers/xdrip_receiver_controller_provider.dart';
 import '../../../../core/logger/logger.dart';
 import 'data_source_config_controls.dart';
 import 'settings_section_card.dart';
@@ -36,6 +37,16 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
               final appEventRouter = ref.read(appEventRouterProvider);
 
               await storer.save(next);
+              final xdripReceiverController = ref.read(
+                xdripReceiverControllerProvider,
+              );
+              final wasXdrip = config.bgSource == BgSource.xdrip;
+              final isXdrip = next.bgSource == BgSource.xdrip;
+              if (isXdrip && !wasXdrip) {
+                await xdripReceiverController.setEnabled();
+              } else if (!isXdrip && wasXdrip) {
+                await xdripReceiverController.setDisabled();
+              }
               ref.invalidate(sharedPrefsProvider);
 
               logI('Sending data source settings sync ${next.toSyncPayload()}');

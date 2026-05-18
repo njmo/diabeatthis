@@ -53,7 +53,7 @@ Future<GlucoseSourceRepository> glucoseSourceRepository(Ref ref) async {
       );
     case BgSource.xdrip:
       throw const UnsupportedDataSourceException(
-        'xDrip+ glucose source is not implemented yet',
+        'xDrip+ glucose source is push-based and cannot be polled',
       );
   }
 }

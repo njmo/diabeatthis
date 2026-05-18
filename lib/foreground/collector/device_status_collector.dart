@@ -32,20 +32,7 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
   }
 
   Future<void> _run(CollectorContext context) async {
-    var last = await _loadInitialDeviceStatusFromHistory(context);
-    if (last != null) {
-      _handleDeviceStatus(context, last);
-    }
-
-    if (last == null) {
-      try {
-        last = await _pollDeviceStatus(context);
-        _handleDeviceStatus(context, last);
-      } catch (e, st) {
-        logW("Initial device status read failed: $e\n$st");
-      }
-    }
-
+    DeviceStatus? last;
     while (!_disposed) {
       if (last == null) {
         try {
@@ -99,28 +86,6 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
       deviceStatusSourceRepositoryProvider.future,
     );
     return repository.pollDeviceStatus();
-  }
-
-  Future<DeviceStatus?> _loadInitialDeviceStatusFromHistory(
-    CollectorContext context,
-  ) async {
-    try {
-      final repository = await context.container.read(
-        deviceStatusHistoryRepositoryProvider.future,
-      );
-      final latest = await repository.fetchLastDeviceStatusBefore(clock.now());
-      if (latest == null) return null;
-
-      logI(
-        'Initial device status history seed available bg=${latest.bg} '
-        'tick=${latest.tick} at ${latest.date.toIso8601String()}',
-      );
-
-      return latest;
-    } catch (e, st) {
-      logW("Initial device status history seed failed: $e\n$st");
-      return null;
-    }
   }
 
   void _handleDeviceStatus(CollectorContext context, DeviceStatus data) {
