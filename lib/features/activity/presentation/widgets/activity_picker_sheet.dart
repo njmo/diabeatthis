@@ -23,12 +23,6 @@ class ActivityPickerSheet extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    useEffect(() {
-      ref.read(activityDraftProvider.notifier).reset();
-      ref.read(activityDialogControllerProvider.notifier).initialState();
-      return null;
-    }, const []);
-
     final searchAutofocus = useState(false);
     final state = ref.watch(activityDialogControllerProvider);
     final controller = ref.read(activityDialogControllerProvider.notifier);

@@ -88,10 +88,10 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     return into(db.activityLog).insertReturning(activityLog);
   }
 
-  Future<ActivityLogData> getActiveActivityLog() {
+  Future<ActivityLogData?> getActiveActivityLogOrNull() {
     return (select(
       db.activityLog,
-    )..where((tbl) => tbl.endedAt.isNull())).getSingle();
+    )..where((tbl) => tbl.endedAt.isNull())).getSingleOrNull();
   }
 
   Future<ActivityLogData?> getNearestActivityLog() {

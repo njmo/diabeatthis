@@ -279,8 +279,9 @@ Future<void> stopActivity(Ref ref, ActivityLog activityLog) async {
 @riverpod
 Future<ActivityLog?> getPendingActivity(Ref ref) async {
   final db = ref.watch(databaseProvider);
-  final value = await db.activityDao.getActiveActivityLog();
+  final value = await db.activityDao.getActiveActivityLogOrNull();
   Log.i('getPendingActivityProvider', 'value: $value');
+  if (value == null) return null;
 
   final activity = await db.activityDao.getActivityById(value.activityId);
   return ActivityLog.view(
