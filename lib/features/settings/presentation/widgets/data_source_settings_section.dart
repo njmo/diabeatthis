@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers/app_event_router_provider.dart';
+import '../../../../app/providers/app_foreground_bridge_provider.dart';
+import '../../../../app/providers/foreground_task_state_provider.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
+import '../../../../core/data/provider/monitor_service_enabled_provider.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
@@ -48,8 +51,8 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
                 await xdripReceiverController.setDisabled();
               }
               ref.invalidate(sharedPrefsProvider);
+              await _restartForegroundTaskIfNeeded(ref, config, next);
 
-              logI('Sending data source settings sync ${next.toSyncPayload()}');
               appEventRouter.send(
                 ExecuteCommandEvent.syncSettings(data: next.toSyncPayload()),
               );
@@ -59,6 +62,41 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
         ),
       ],
     );
+  }
+
+  Future<void> _restartForegroundTaskIfNeeded(
+    WidgetRef ref,
+    DataSourceConfig previous,
+    DataSourceConfig next,
+  ) async {
+    if (!_foregroundSourcesChanged(previous, next)) return;
+    if (!ref.read(monitorServiceEnabledProvider)) return;
+
+    final foregroundBridge = ref.read(appForegroundBridgeProvider);
+    final taskState = ref.read(foregroundTaskStateProvider.notifier);
+
+    try {
+      taskState.setAlive(false);
+      final isRunning = await foregroundBridge.isServiceRunning();
+      if (isRunning) {
+        await foregroundBridge.restartService();
+      } else {
+        await foregroundBridge.startMonitoring();
+      }
+      await taskState.waitForStartupMessage();
+    } catch (e, st) {
+      logW('Foreground restart after data source change failed: $e\n$st');
+    }
+  }
+
+  bool _foregroundSourcesChanged(
+    DataSourceConfig previous,
+    DataSourceConfig next,
+  ) {
+    return previous.bgSource != next.bgSource ||
+        previous.eventSource != next.eventSource ||
+        previous.pumpStatusSource != next.pumpStatusSource ||
+        previous.historySource != next.historySource;
   }
 }
 
