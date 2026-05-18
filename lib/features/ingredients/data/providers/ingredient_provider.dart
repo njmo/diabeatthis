@@ -23,10 +23,11 @@ Stream<List<domain.Ingredient>> ingredientsStream(Ref ref) {
 }
 
 @riverpod
-Future<List<domain.Ingredient>> ingredientListPage(Ref ref, int page) async {
+Stream<List<domain.Ingredient>> ingredientListStream(Ref ref) {
   final db = ref.watch(databaseProvider);
-  final ingredients = await db.ingredientDao.getIngredientsPage(page: page);
-  return ingredients.toDomainList();
+  return db.ingredientDao.watchIngredients().map(
+    (ingredients) => ingredients.toDomainList(),
+  );
 }
 
 @riverpod
@@ -51,6 +52,17 @@ Future<List<domain.Ingredient>> ingredientsByQuery(
   final db = ref.watch(databaseProvider);
   final ing = await db.ingredientDao.searchIngredientsByName(query, 6).get();
   return ing.map((e) => e.toDomain()).toList();
+}
+
+@riverpod
+Stream<List<domain.Ingredient>> ingredientsByQueryStream(
+  Ref ref,
+  String query,
+) {
+  final db = ref.watch(databaseProvider);
+  return db.ingredientDao
+      .watchIngredientsByQuery(queryString: query, limit: 10)
+      .map((ingredients) => ingredients.toDomainList());
 }
 
 @riverpod

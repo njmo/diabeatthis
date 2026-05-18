@@ -160,19 +160,18 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.watch();
   }
 
-  Future<List<MealData>> getRecentMealsPage({int page = 0, int pageSize = 10}) {
+  Stream<List<MealData>> watchRecentMeals({required int limit}) {
     final query = select(db.meal)
       ..orderBy([
         (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
       ])
-      ..limit(pageSize, offset: page * pageSize);
-    return query.get();
+      ..limit(limit);
+    return query.watch();
   }
 
-  Future<List<MealData>> searchMealsPageByName({
+  Stream<List<MealData>> watchMealsByName({
     required String queryString,
-    int page = 0,
-    int pageSize = 10,
+    required int limit,
   }) {
     final normalizedQuery = queryString.trim().toLowerCase();
     final query = select(db.meal)
@@ -180,52 +179,47 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       ..orderBy([
         (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
       ])
-      ..limit(pageSize, offset: page * pageSize);
-    return query.get();
+      ..limit(limit);
+    return query.watch();
   }
 
-  Future<List<MealData>> getMealsPageByIngredientIds({
+  Stream<List<MealData>> watchMealsByIngredientIds({
     required List<int> ingredientIds,
-    int page = 0,
-    int pageSize = 10,
-  }) async {
+    required int limit,
+  }) {
     final distinctIngredientIds = ingredientIds.toSet().toList(growable: false);
     if (distinctIngredientIds.isEmpty) {
-      return getRecentMealsPage(page: page, pageSize: pageSize);
+      return watchRecentMeals(limit: limit);
     }
 
-    final mealIngredientMealId = db.mealIngredients.mealId;
-    final mealIngredientIngredientId = db.mealIngredients.ingredientId;
-    final distinctIngredientCount = mealIngredientIngredientId.count(
+    final distinctIngredientCount = db.mealIngredients.ingredientId.count(
       distinct: true,
     );
+    final query =
+        select(db.meal).join([
+            innerJoin(
+              db.mealIngredients,
+              db.mealIngredients.mealId.equalsExp(db.meal.id),
+            ),
+          ])
+          ..where(db.mealIngredients.ingredientId.isIn(distinctIngredientIds))
+          ..groupBy(
+            [db.meal.id],
+            having: distinctIngredientCount.equals(
+              distinctIngredientIds.length,
+            ),
+          )
+          ..orderBy([
+            OrderingTerm(
+              expression: db.meal.plannedAt,
+              mode: OrderingMode.desc,
+            ),
+          ])
+          ..limit(limit);
 
-    final mealIdRows =
-        await (selectOnly(db.mealIngredients)
-              ..addColumns([mealIngredientMealId])
-              ..where(mealIngredientIngredientId.isIn(distinctIngredientIds))
-              ..groupBy(
-                [mealIngredientMealId],
-                having: distinctIngredientCount.equals(
-                  distinctIngredientIds.length,
-                ),
-              ))
-            .get();
-    final mealIds = mealIdRows
-        .map((row) => row.read(mealIngredientMealId))
-        .whereType<int>()
-        .toList(growable: false);
-    if (mealIds.isEmpty) {
-      return const [];
-    }
-
-    final query = select(db.meal)
-      ..where((tbl) => tbl.id.isIn(mealIds))
-      ..orderBy([
-        (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
-      ])
-      ..limit(pageSize, offset: page * pageSize);
-    return query.get();
+    return query.watch().map(
+      (rows) => rows.map((row) => row.readTable(db.meal)).toList(),
+    );
   }
 
   Future<List<MealData>> getMealsBasedOnMeal(int mealId) {

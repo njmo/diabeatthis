@@ -23,12 +23,31 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     return query.getSingle();
   }
 
-  Future<List<IngredientData>> getIngredientsPage({int page = 0}) {
+  Stream<List<IngredientData>> watchIngredients({int? limit}) {
     final query = select(db.ingredient)
-      ..orderBy([(tbl) => OrderingTerm.asc(tbl.name)])
-      ..limit(10, offset: page * 10);
+      ..orderBy([(tbl) => OrderingTerm.asc(tbl.name)]);
+    if (limit != null) {
+      query.limit(limit);
+    }
 
-    return query.get();
+    return query.watch();
+  }
+
+  Stream<List<IngredientData>> watchIngredientsByQuery({
+    required String queryString,
+    required int limit,
+  }) {
+    final normalizedQuery = _normalizeSearchTerm(queryString);
+    final query = select(db.ingredient)
+      ..where(
+        (tbl) =>
+            tbl.name.like('%$normalizedQuery%') |
+            tbl.brand.like('%$normalizedQuery%'),
+      )
+      ..orderBy([(tbl) => OrderingTerm.asc(tbl.name)])
+      ..limit(limit);
+
+    return query.watch();
   }
 
   Future<List<IngredientData>> getLatestIngredients({int limit = 10}) {

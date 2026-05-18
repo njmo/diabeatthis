@@ -12,133 +12,107 @@ class ActivityList extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activities = useState<List<Activity>>(const []);
-    final nextPage = useState(0);
-    final isLoading = useState(false);
-    final hasMore = useState(true);
-    final error = useState<Object?>(null);
+    final visibleLimit = useState(activityListPageSize);
+    final activitiesState = ref.watch(activityListStreamProvider);
 
-    Future<void> loadNextPage() async {
-      if (isLoading.value || !hasMore.value) {
-        return;
-      }
-
-      isLoading.value = true;
-      try {
-        await Future<void>.delayed(const Duration(milliseconds: 250));
-        if (!context.mounted) return;
-
-        final page = await ref.read(
-          activityListPageProvider(nextPage.value).future,
-        );
-        if (!context.mounted) return;
-
-        activities.value = [...activities.value, ...page];
-        nextPage.value += 1;
-        hasMore.value = page.length == activityListPageSize;
-        error.value = null;
-      } catch (e) {
-        if (!context.mounted) return;
-        error.value = e;
-      } finally {
-        if (context.mounted) {
-          isLoading.value = false;
-        }
-      }
-    }
-
-    useEffect(() {
-      loadNextPage();
-      return null;
-    }, const []);
-
-    if (activities.value.isEmpty && isLoading.value) {
-      return const SafeArea(
+    return activitiesState.when(
+      loading: () => const SafeArea(
         top: false,
         child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (activities.value.isEmpty && error.value != null) {
-      return SafeArea(
+      ),
+      error: (error, _) => SafeArea(
         top: false,
         child: Center(
           child: TextButton.icon(
-            onPressed: loadNextPage,
+            onPressed: () => ref.invalidate(activityListStreamProvider),
             icon: const Icon(Icons.refresh),
             label: const Text('Spróbuj ponownie'),
           ),
         ),
-      );
-    }
+      ),
+      data: (activities) {
+        final visibleActivities = activities
+            .take(visibleLimit.value)
+            .toList(growable: false);
+        final hasMore = visibleActivities.length < activities.length;
 
-    if (activities.value.isEmpty) {
-      return const SafeArea(
-        top: false,
-        child: Center(child: Text('Brak aktywności')),
-      );
-    }
+        void loadNextPage() {
+          if (!hasMore) {
+            return;
+          }
+          visibleLimit.value += activityListPageSize;
+        }
 
-    final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
+        if (activities.isEmpty) {
+          return const SafeArea(
+            top: false,
+            child: Center(child: Text('Brak aktywności')),
+          );
+        }
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            final isUserScroll =
-                notification is ScrollUpdateNotification ||
-                notification is OverscrollNotification;
-            if (isUserScroll && notification.metrics.extentAfter < 120) {
-              loadNextPage();
-            }
-            return false;
-          },
-          child: ListView.separated(
-            padding: EdgeInsets.only(bottom: bottomPadding),
-            cacheExtent: 0,
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            separatorBuilder: (_, _) => const SizedBox(height: 8),
-            itemCount: activities.value.length + 1,
-            itemBuilder: (context, index) {
-              if (index == activities.value.length) {
-                return _ActivityListTail(
-                  isLoading: isLoading.value,
-                  hasMore: hasMore.value,
-                  hasError: error.value != null,
-                  onRetry: loadNextPage,
-                );
-              }
+        final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
 
-              final activity = activities.value[index];
-              return activity.whenOrNull(
-                    existing:
-                        (
-                          id,
-                          name,
-                          percentagePre,
-                          percentagePost,
-                          durationMinutes,
-                        ) {
-                          return _ActivityCard(
-                            name: name,
-                            percentagePre: percentagePre,
-                            percentagePost: percentagePost,
-                            durationMinutes: durationMinutes,
-                            onTap: () {
-                              context.router.push(
-                                routes.ActivityRoute(activityId: id),
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                final isUserScroll =
+                    notification is ScrollUpdateNotification ||
+                    notification is OverscrollNotification;
+                if (isUserScroll && notification.metrics.extentAfter < 120) {
+                  loadNextPage();
+                }
+                return false;
+              },
+              child: ListView.separated(
+                padding: EdgeInsets.only(bottom: bottomPadding),
+                cacheExtent: 0,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemCount: visibleActivities.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == visibleActivities.length) {
+                    return _ActivityListTail(
+                      isLoading: false,
+                      hasMore: hasMore,
+                      hasError: false,
+                      onRetry: loadNextPage,
+                    );
+                  }
+
+                  final activity = visibleActivities[index];
+                  return activity.whenOrNull(
+                        existing:
+                            (
+                              id,
+                              name,
+                              percentagePre,
+                              percentagePost,
+                              durationMinutes,
+                            ) {
+                              return _ActivityCard(
+                                name: name,
+                                percentagePre: percentagePre,
+                                percentagePost: percentagePost,
+                                durationMinutes: durationMinutes,
+                                onTap: () {
+                                  context.router.push(
+                                    routes.ActivityRoute(activityId: id),
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
-                  ) ??
-                  const SizedBox.shrink();
-            },
+                      ) ??
+                      const SizedBox.shrink();
+                },
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

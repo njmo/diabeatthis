@@ -16,139 +16,111 @@ class ActivityLogList extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activityLogs = useState<List<ActivityLog>>(const []);
-    final nextPage = useState(0);
-    final isLoading = useState(false);
-    final hasMore = useState(true);
-    final error = useState<Object?>(null);
+    final visibleLimit = useState(activityLogListPageSize);
+    final activityLogsState = ref.watch(
+      activityLogListStreamProvider(activityId: activityId),
+    );
 
-    Future<void> loadNextPage() async {
-      if (isLoading.value || !hasMore.value) {
-        return;
-      }
-
-      isLoading.value = true;
-      try {
-        await Future<void>.delayed(const Duration(milliseconds: 250));
-        if (!context.mounted) return;
-
-        final activityId = this.activityId;
-        final page = activityId == null
-            ? await ref.read(activityLogListPageProvider(nextPage.value).future)
-            : await ref.read(
-                activityLogListForActivityPageProvider(
-                  activityId: activityId,
-                  page: nextPage.value,
-                ).future,
-              );
-        if (!context.mounted) return;
-
-        activityLogs.value = [...activityLogs.value, ...page];
-        nextPage.value += 1;
-        hasMore.value = page.length == activityLogListPageSize;
-        error.value = null;
-      } catch (e) {
-        if (!context.mounted) return;
-        error.value = e;
-      } finally {
-        if (context.mounted) {
-          isLoading.value = false;
-        }
-      }
-    }
-
-    useEffect(() {
-      loadNextPage();
-      return null;
-    }, [activityId]);
-
-    if (activityLogs.value.isEmpty && isLoading.value) {
-      return const SafeArea(
+    return activityLogsState.when(
+      loading: () => const SafeArea(
         top: false,
         child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (activityLogs.value.isEmpty && error.value != null) {
-      return SafeArea(
+      ),
+      error: (error, _) => SafeArea(
         top: false,
         child: Center(
           child: TextButton.icon(
-            onPressed: loadNextPage,
+            onPressed: () => ref.invalidate(
+              activityLogListStreamProvider(activityId: activityId),
+            ),
             icon: const Icon(Icons.refresh),
             label: const Text('Spróbuj ponownie'),
           ),
         ),
-      );
-    }
+      ),
+      data: (activityLogs) {
+        final visibleActivityLogs = activityLogs
+            .take(visibleLimit.value)
+            .toList(growable: false);
+        final hasMore = visibleActivityLogs.length < activityLogs.length;
 
-    if (activityLogs.value.isEmpty) {
-      return const SafeArea(
-        top: false,
-        child: Center(child: Text('Brak logów aktywności')),
-      );
-    }
+        void loadNextPage() {
+          if (!hasMore) {
+            return;
+          }
+          visibleLimit.value += activityLogListPageSize;
+        }
 
-    final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
+        if (activityLogs.isEmpty) {
+          return const SafeArea(
+            top: false,
+            child: Center(child: Text('Brak logów aktywności')),
+          );
+        }
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            final isUserScroll =
-                notification is ScrollUpdateNotification ||
-                notification is OverscrollNotification;
-            if (isUserScroll && notification.metrics.extentAfter < 120) {
-              loadNextPage();
-            }
-            return false;
-          },
-          child: ListView.separated(
-            padding: EdgeInsets.only(bottom: bottomPadding),
-            cacheExtent: 0,
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            separatorBuilder: (_, _) => const SizedBox(height: 8),
-            itemCount: activityLogs.value.length + 1,
-            itemBuilder: (context, index) {
-              if (index == activityLogs.value.length) {
-                return ActivityLogListTail(
-                  isLoading: isLoading.value,
-                  hasMore: hasMore.value,
-                  hasError: error.value != null,
-                  onRetry: loadNextPage,
-                );
-              }
+        final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
 
-              final activityLog = activityLogs.value[index];
-              return activityLog.whenOrNull(
-                    view:
-                        (
-                          id,
-                          name,
-                          activityId,
-                          startedAt,
-                          endedAt,
-                          durationMinutes,
-                        ) {
-                          return ActivityLogCard(
-                            name: name,
-                            startedAt: startedAt,
-                            endedAt: endedAt,
-                            onTap: () {
-                              context.router.push(
-                                routes.ActivityLogRoute(activityLogId: id),
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                final isUserScroll =
+                    notification is ScrollUpdateNotification ||
+                    notification is OverscrollNotification;
+                if (isUserScroll && notification.metrics.extentAfter < 120) {
+                  loadNextPage();
+                }
+                return false;
+              },
+              child: ListView.separated(
+                padding: EdgeInsets.only(bottom: bottomPadding),
+                cacheExtent: 0,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemCount: visibleActivityLogs.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == visibleActivityLogs.length) {
+                    return ActivityLogListTail(
+                      isLoading: false,
+                      hasMore: hasMore,
+                      hasError: false,
+                      onRetry: loadNextPage,
+                    );
+                  }
+
+                  final activityLog = visibleActivityLogs[index];
+                  return activityLog.whenOrNull(
+                        view:
+                            (
+                              id,
+                              name,
+                              activityId,
+                              startedAt,
+                              endedAt,
+                              durationMinutes,
+                            ) {
+                              return ActivityLogCard(
+                                name: name,
+                                startedAt: startedAt,
+                                endedAt: endedAt,
+                                onTap: () {
+                                  context.router.push(
+                                    routes.ActivityLogRoute(activityLogId: id),
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
-                  ) ??
-                  const SizedBox.shrink();
-            },
+                      ) ??
+                      const SizedBox.shrink();
+                },
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

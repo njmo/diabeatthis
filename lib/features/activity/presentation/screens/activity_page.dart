@@ -19,7 +19,7 @@ class ActivityPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isEditing = useState(false);
     final isSaving = useState(false);
-    final activityState = ref.watch(getActivityByIdProvider(activityId));
+    final activityState = ref.watch(activityByIdStreamProvider(activityId));
 
     return Scaffold(
       appBar: AppBar(
@@ -74,12 +74,6 @@ class ActivityPage extends HookConsumerWidget {
                                                     values.durationMinutes,
                                               ),
                                             );
-                                        ref.invalidate(
-                                          getActivityByIdProvider(activityId),
-                                        );
-                                        ref.invalidate(
-                                          activityListPageProvider(0),
-                                        );
                                         isEditing.value = false;
                                         if (context.mounted) {
                                           ScaffoldMessenger.of(

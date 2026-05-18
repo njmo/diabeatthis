@@ -15,67 +15,72 @@ class IngredientList extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final queryController = useTextEditingController();
     final query = useState('');
+    final visibleLimit = useState(ingredientListPageSize);
     final normalizedQuery = query.value.trim();
     final searchResults = normalizedQuery.isEmpty
         ? null
-        : ref.watch(ingredientsByQueryProvider(normalizedQuery));
-    final ingredients = useState<List<Ingredient>>(const []);
-    final nextPage = useState(0);
-    final isLoading = useState(false);
-    final hasMore = useState(true);
-    final error = useState<Object?>(null);
-
-    Future<void> loadNextPage() async {
-      if (isLoading.value || !hasMore.value) {
-        return;
-      }
-
-      isLoading.value = true;
-      try {
-        await Future<void>.delayed(const Duration(milliseconds: 250));
-        if (!context.mounted) return;
-
-        final page = await ref.read(
-          ingredientListPageProvider(nextPage.value).future,
-        );
-        if (!context.mounted) return;
-
-        ingredients.value = [...ingredients.value, ...page];
-        nextPage.value += 1;
-        hasMore.value = page.length == ingredientListPageSize;
-        error.value = null;
-      } catch (e) {
-        if (!context.mounted) return;
-        error.value = e;
-      } finally {
-        if (context.mounted) {
-          isLoading.value = false;
-        }
-      }
-    }
-
-    useEffect(() {
-      loadNextPage();
-      return null;
-    }, const []);
+        : ref.watch(ingredientsByQueryStreamProvider(normalizedQuery));
+    final ingredientsState = ref.watch(ingredientListStreamProvider);
 
     return SafeArea(
       child: searchResults == null
-          ? IngredientListContent(
-              ingredients: ingredients.value,
-              queryController: queryController,
-              isLoading: isLoading.value && ingredients.value.isEmpty,
-              isLoadingMore: isLoading.value && ingredients.value.isNotEmpty,
-              hasMore: hasMore.value,
-              hasError: error.value != null,
-              onLoadMore: loadNextPage,
-              onQueryChanged: (value) => query.value = value,
-              onClearQuery: () {
-                queryController.clear();
-                query.value = '';
-              },
-              onIngredientTap: (ingredient) {
-                _openIngredientDetails(context, ingredient);
+          ? ingredientsState.when(
+              loading: () => IngredientListContent(
+                ingredients: const [],
+                queryController: queryController,
+                isLoading: true,
+                hasMore: false,
+                onQueryChanged: (value) => query.value = value,
+                onClearQuery: () {
+                  queryController.clear();
+                  query.value = '';
+                },
+                onIngredientTap: (ingredient) {
+                  _openIngredientDetails(context, ingredient);
+                },
+              ),
+              error: (error, _) => IngredientListContent(
+                ingredients: const [],
+                queryController: queryController,
+                hasMore: false,
+                hasError: true,
+                onLoadMore: () => ref.invalidate(ingredientListStreamProvider),
+                onQueryChanged: (value) => query.value = value,
+                onClearQuery: () {
+                  queryController.clear();
+                  query.value = '';
+                },
+                onIngredientTap: (ingredient) {
+                  _openIngredientDetails(context, ingredient);
+                },
+              ),
+              data: (ingredients) {
+                final visibleIngredients = ingredients
+                    .take(visibleLimit.value)
+                    .toList(growable: false);
+                final hasMore = visibleIngredients.length < ingredients.length;
+
+                void loadNextPage() {
+                  if (!hasMore) {
+                    return;
+                  }
+                  visibleLimit.value += ingredientListPageSize;
+                }
+
+                return IngredientListContent(
+                  ingredients: visibleIngredients,
+                  queryController: queryController,
+                  hasMore: hasMore,
+                  onLoadMore: loadNextPage,
+                  onQueryChanged: (value) => query.value = value,
+                  onClearQuery: () {
+                    queryController.clear();
+                    query.value = '';
+                  },
+                  onIngredientTap: (ingredient) {
+                    _openIngredientDetails(context, ingredient);
+                  },
+                );
               },
             )
           : searchResults.when(

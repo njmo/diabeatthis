@@ -7,8 +7,8 @@ import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/widgets/delete_confirmation_dialog.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../ingredients/presentation/widgets/ingredient_multi_picker_sheet.dart';
+import '../../data/domain/use_cases/load_meal_page_by_filter_use_case.dart';
 import '../controllers/meal_list_controller.dart';
-import '../models/meal_list_state.dart';
 import 'meal_list/meal_list_content.dart';
 import 'meal_list/meal_list_filters.dart';
 
@@ -18,9 +18,14 @@ class MealList extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final queryController = useTextEditingController();
-    final asyncState = ref.watch(mealListControllerProvider);
+    final listState = ref.watch(mealListControllerProvider);
     final controller = ref.read(mealListControllerProvider.notifier);
-    final listState = asyncState.value ?? const MealListState.initial();
+    final mealsState = ref.watch(
+      mealListWindowProvider(
+        filter: listState.filter,
+        limit: listState.visibleLimit,
+      ),
+    );
 
     useEffect(() {
       final query = listState.query;
@@ -41,17 +46,11 @@ class MealList extends HookConsumerWidget {
       if (selected == null) {
         return;
       }
-      await controller.setIngredients(selected);
+      controller.setIngredients(selected);
     }
 
     Future<void> openMealDetails(domain.Meal meal) async {
-      final deletedMealId = await context.router.push<int>(
-        routes.MealRoute(mealId: meal.id),
-      );
-      if (!context.mounted || deletedMealId == null) {
-        return;
-      }
-      controller.removeMealFromList(deletedMealId);
+      await context.router.push<int>(routes.MealRoute(mealId: meal.id));
     }
 
     return SafeArea(
@@ -72,24 +71,23 @@ class MealList extends HookConsumerWidget {
           ),
           Expanded(
             child: MealListContent(
-              meals: listState.meals,
+              meals: mealsState.value ?? const [],
               isInitialLoading:
-                  (asyncState.isLoading && asyncState.value == null) ||
-                  (listState.meals.isEmpty && listState.isRefreshing),
-              isLoadingMore: listState.isLoadingMore,
-              hasMore: listState.hasMore,
-              hasError: asyncState.hasError || listState.loadMoreError != null,
+                  mealsState.isLoading && (mealsState.value?.isEmpty ?? true),
+              isLoadingMore:
+                  mealsState.isLoading &&
+                  (mealsState.value?.isNotEmpty ?? false),
+              hasMore:
+                  (mealsState.value?.length ?? 0) == listState.visibleLimit,
+              hasError: mealsState.hasError,
               onLoadMore: controller.loadNextPage,
               onRetry: () {
-                if (asyncState.hasError) {
-                  ref.invalidate(mealListControllerProvider);
-                  return;
-                }
-                if (listState.meals.isEmpty) {
-                  controller.retryCurrentFilter();
-                  return;
-                }
-                controller.loadNextPage();
+                ref.invalidate(
+                  mealListWindowProvider(
+                    filter: listState.filter,
+                    limit: listState.visibleLimit,
+                  ),
+                );
               },
               onMealTap: openMealDetails,
               onMealDelete: (meal) => _confirmAndDeleteMeal(

@@ -47,7 +47,7 @@ class ActivityEditForm extends HookWidget {
                 maxLength: 30,
                 validator: (value) {
                   final text = value?.trim() ?? '';
-                  if (text.length < 4) {
+                  if (text.length < 2) {
                     return 'Podaj nazwę aktywności';
                   }
                   return null;

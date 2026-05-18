@@ -22,29 +22,40 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     return getActivityById(activity.id.value);
   }
 
-  Future<List<ActivityData>> getActivities({int page = 0}) async {
-    return (select(db.activity)
-          ..orderBy([(activity) => OrderingTerm.asc(activity.name)])
-          ..limit(10, offset: page * 10))
-        .get();
+  Stream<List<ActivityData>> watchActivities({int? limit}) {
+    final query = select(db.activity)
+      ..orderBy([(activity) => OrderingTerm.asc(activity.name)]);
+    if (limit != null) {
+      query.limit(limit);
+    }
+    return query.watch();
   }
 
-  Future<List<ActivityLogData>> getActivityLogs({int page = 0}) async {
-    return (select(db.activityLog)
-          ..orderBy([(log) => OrderingTerm.desc(log.startedAt)])
-          ..limit(10, offset: page * 10))
-        .get();
-  }
+  Stream<List<TypedResult>> watchActivityLogViews({
+    int? activityId,
+    int? limit,
+  }) {
+    final query =
+        select(db.activityLog).join([
+          innerJoin(
+            db.activity,
+            db.activity.id.equalsExp(db.activityLog.activityId),
+          ),
+        ])..orderBy([
+          OrderingTerm(
+            expression: db.activityLog.startedAt,
+            mode: OrderingMode.desc,
+          ),
+        ]);
 
-  Future<List<ActivityLogData>> getActivityLogsForActivity(
-    int activityId, {
-    int page = 0,
-  }) async {
-    return (select(db.activityLog)
-          ..where((log) => log.activityId.equals(activityId))
-          ..orderBy([(log) => OrderingTerm.desc(log.startedAt)])
-          ..limit(10, offset: page * 10))
-        .get();
+    if (activityId != null) {
+      query.where(db.activityLog.activityId.equals(activityId));
+    }
+    if (limit != null) {
+      query.limit(limit);
+    }
+
+    return query.watch();
   }
 
   Future<List<TypedResult>> getActivityLogsOverlapping(
@@ -113,6 +124,12 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
 
   Future<ActivityData> getActivityById(int id) {
     return (select(db.activity)..where((tbl) => tbl.id.equals(id))).getSingle();
+  }
+
+  Stream<ActivityData?> watchActivityById(int id) {
+    return (select(
+      db.activity,
+    )..where((tbl) => tbl.id.equals(id))).watchSingleOrNull();
   }
 
   Future<void> updateActivityLog(ActivityLogCompanion activityLog) async {

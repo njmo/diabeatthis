@@ -53,13 +53,6 @@ Stream<List<domain.Meal>> allMealsStream(Ref ref) {
 }
 
 @riverpod
-Future<List<domain.Meal>> mealListPage(Ref ref, int page) async {
-  final db = ref.watch(databaseProvider);
-  final meals = await db.mealDao.getAllMeals(page: page).first;
-  return meals.toDomainList();
-}
-
-@riverpod
 Future<void> insertMealIngredient(
   Ref ref,
   domain.Ingredient ingredient,

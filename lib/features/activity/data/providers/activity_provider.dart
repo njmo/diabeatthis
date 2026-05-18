@@ -1,8 +1,9 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/domain/model/activity.dart';
-import '../../../../core/domain/model/activity_log.dart';
+import '../../../../core/domain/model/activity.dart' as domain;
+import '../../../../core/domain/model/activity_log.dart' as domain;
+import '../../../../core/drift/database_impl.dart' as db;
 import '../../../../core/drift/mappers/activity_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
@@ -15,15 +16,15 @@ const activityListPageSize = 10;
 @riverpod
 class ActivityDraftNotifier extends _$ActivityDraftNotifier {
   @override
-  Activity build() {
-    return Activity.empty();
+  domain.Activity build() {
+    return domain.Activity.empty();
   }
 
   void setName(String value) {
     state = state.map(
       existing: (a) => a.copyWith(name: value),
       draft: (a) => a.copyWith(name: value),
-      empty: (_) => Activity.draft(
+      empty: (_) => domain.Activity.draft(
         name: value,
         percentagePre: 0,
         percentagePost: 0,
@@ -36,7 +37,7 @@ class ActivityDraftNotifier extends _$ActivityDraftNotifier {
     state = state.map(
       existing: (a) => a.copyWith(percentagePre: int.tryParse(value) ?? 0),
       draft: (a) => a.copyWith(percentagePre: int.tryParse(value) ?? 0),
-      empty: (_) => Activity.draft(
+      empty: (_) => domain.Activity.draft(
         name: '',
         percentagePre: int.tryParse(value) ?? 0,
         percentagePost: 0,
@@ -49,7 +50,7 @@ class ActivityDraftNotifier extends _$ActivityDraftNotifier {
     state = state.map(
       existing: (a) => a.copyWith(percentagePost: int.tryParse(value) ?? 0),
       draft: (a) => a.copyWith(percentagePost: int.tryParse(value) ?? 0),
-      empty: (_) => Activity.draft(
+      empty: (_) => domain.Activity.draft(
         name: '',
         percentagePre: 0,
         percentagePost: int.tryParse(value) ?? 0,
@@ -64,7 +65,7 @@ class ActivityDraftNotifier extends _$ActivityDraftNotifier {
     state = state.map(
       existing: (a) => a.copyWith(durationMinutes: duration),
       draft: (a) => a.copyWith(durationMinutes: duration),
-      empty: (_) => Activity.draft(
+      empty: (_) => domain.Activity.draft(
         name: '',
         percentagePre: 0,
         percentagePost: 0,
@@ -77,19 +78,21 @@ class ActivityDraftNotifier extends _$ActivityDraftNotifier {
     state = state.map(
       existing: (a) => a.copyWith(
         durationMinutes: value
-            ? a.durationMinutes ?? defaultPlannedActivityDurationMinutes
+            ? a.durationMinutes ?? domain.defaultPlannedActivityDurationMinutes
             : null,
       ),
       draft: (a) => a.copyWith(
         durationMinutes: value
-            ? a.durationMinutes ?? defaultPlannedActivityDurationMinutes
+            ? a.durationMinutes ?? domain.defaultPlannedActivityDurationMinutes
             : null,
       ),
-      empty: (_) => Activity.draft(
+      empty: (_) => domain.Activity.draft(
         name: '',
         percentagePre: 0,
         percentagePost: 0,
-        durationMinutes: value ? defaultPlannedActivityDurationMinutes : null,
+        durationMinutes: value
+            ? domain.defaultPlannedActivityDurationMinutes
+            : null,
       ),
     );
   }
@@ -124,9 +127,9 @@ class ActivityDraftNotifier extends _$ActivityDraftNotifier {
     empty: (_) => false,
   );
 
-  void reset() => state = Activity.empty();
+  void reset() => state = domain.Activity.empty();
 
-  void overrideDraft(Activity activity) => state = activity;
+  void overrideDraft(domain.Activity activity) => state = activity;
 }
 
 @riverpod
@@ -136,7 +139,10 @@ class ActivityControllerNotifier extends _$ActivityControllerNotifier {
     return;
   }
 
-  Future<Activity?> saveActivity(Activity act, [DateTime? date]) async {
+  Future<domain.Activity?> saveActivity(
+    domain.Activity act, [
+    DateTime? date,
+  ]) async {
     final db = ref.watch(databaseProvider);
     final isDraft = act.maybeMap(draft: (_) => true, orElse: () => false);
     if (isDraft) {
@@ -148,7 +154,7 @@ class ActivityControllerNotifier extends _$ActivityControllerNotifier {
     }
   }
 
-  Future<Activity> updateActivity(Activity activity) async {
+  Future<domain.Activity> updateActivity(domain.Activity activity) async {
     final db = ref.watch(databaseProvider);
     final value = await db.activityDao.updateActivity(activity.toCompanion());
     return value.toDomain();
@@ -156,21 +162,24 @@ class ActivityControllerNotifier extends _$ActivityControllerNotifier {
 }
 
 @riverpod
-Future<List<Activity>> activitiesByQuery(Ref ref, String query) async {
+Future<List<domain.Activity>> activitiesByQuery(Ref ref, String query) async {
   final db = ref.watch(databaseProvider);
   final act = await db.activityDao.searchActivitiesByName(query, 6).get();
   return act.map((e) => e.toDomain()).toList();
 }
 
 @riverpod
-Future<List<Activity>> activitiyLogByQuery(Ref ref, String query) async {
+Future<List<domain.Activity>> activitiyLogByQuery(Ref ref, String query) async {
   final db = ref.watch(databaseProvider);
   final act = await db.activityDao.searchActivitiesByName(query, 6).get();
   return act.map((e) => e.toDomain()).toList();
 }
 
 @riverpod
-Future<ActivityLog> insertActivityLog(Ref ref, ActivityLog activityLog) async {
+Future<domain.ActivityLog> insertActivityLog(
+  Ref ref,
+  domain.ActivityLog activityLog,
+) async {
   final db = ref.watch(databaseProvider);
   return await db.activityDao
       .insertActivityLog(activityLog.toCompanion())
@@ -178,90 +187,30 @@ Future<ActivityLog> insertActivityLog(Ref ref, ActivityLog activityLog) async {
 }
 
 @riverpod
-Future<List<ActivityLog>> getActivityLogs(Ref ref) async {
+Stream<List<domain.Activity>> activityListStream(Ref ref) {
   final db = ref.watch(databaseProvider);
-  final value = await db.activityDao.getActivityLogs();
-  final activityLogs = <ActivityLog>[];
-  for (final log in value) {
-    final activity = await db.activityDao.getActivityById(log.activityId);
-    activityLogs.add(
-      ActivityLog.view(
-        id: log.id,
-        activityName: activity.name,
-        startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
-        endedAt: log.endedAt == null
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
-        activityId: activity.id,
-        durationMinutes: activity.durationMinutes,
-      ),
-    );
-  }
-  return activityLogs;
+  return db.activityDao.watchActivities().map((value) => value.toDomainList());
 }
 
 @riverpod
-Future<List<ActivityLog>> activityLogListPage(Ref ref, int page) async {
-  final db = ref.watch(databaseProvider);
-  final value = await db.activityDao.getActivityLogs(page: page);
-  final activityLogs = <ActivityLog>[];
-  for (final log in value) {
-    final activity = await db.activityDao.getActivityById(log.activityId);
-    activityLogs.add(
-      ActivityLog.view(
-        id: log.id,
-        activityName: activity.name,
-        startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
-        endedAt: log.endedAt == null
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
-        activityId: activity.id,
-        durationMinutes: activity.durationMinutes,
-      ),
-    );
-  }
-  return activityLogs;
-}
-
-@riverpod
-Future<List<Activity>> activityListPage(Ref ref, int page) async {
-  final db = ref.watch(databaseProvider);
-  final value = await db.activityDao.getActivities(page: page);
-  return value.toDomainList();
-}
-
-@riverpod
-Future<List<ActivityLog>> activityLogListForActivityPage(
+Stream<List<domain.ActivityLog>> activityLogListStream(
   Ref ref, {
-  required int activityId,
-  required int page,
-}) async {
+  required int? activityId,
+}) {
   final db = ref.watch(databaseProvider);
-  final value = await db.activityDao.getActivityLogsForActivity(
-    activityId,
-    page: page,
-  );
-  final activityLogs = <ActivityLog>[];
-  for (final log in value) {
-    final activity = await db.activityDao.getActivityById(log.activityId);
-    activityLogs.add(
-      ActivityLog.view(
-        id: log.id,
-        activityName: activity.name,
-        startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
-        endedAt: log.endedAt == null
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
-        activityId: activity.id,
-        durationMinutes: activity.durationMinutes,
-      ),
-    );
-  }
-  return activityLogs;
+  return db.activityDao
+      .watchActivityLogViews(activityId: activityId)
+      .map(
+        (rows) => rows.map((row) {
+          final log = row.readTable(db.activityLog);
+          final activity = row.readTable(db.activity);
+          return _activityLogView(log: log, activity: activity);
+        }).toList(),
+      );
 }
 
 @riverpod
-Future<void> stopActivity(Ref ref, ActivityLog activityLog) async {
+Future<void> stopActivity(Ref ref, domain.ActivityLog activityLog) async {
   final db = ref.watch(databaseProvider);
   final updated = activityLog.map(
     existing: (a) => a.copyWith(endedAt: clock.now()),
@@ -277,14 +226,14 @@ Future<void> stopActivity(Ref ref, ActivityLog activityLog) async {
 }
 
 @riverpod
-Future<ActivityLog?> getPendingActivity(Ref ref) async {
+Future<domain.ActivityLog?> getPendingActivity(Ref ref) async {
   final db = ref.watch(databaseProvider);
   final value = await db.activityDao.getActiveActivityLogOrNull();
   Log.i('getPendingActivityProvider', 'value: $value');
   if (value == null) return null;
 
   final activity = await db.activityDao.getActivityById(value.activityId);
-  return ActivityLog.view(
+  return domain.ActivityLog.view(
     id: value.id,
     activityName: activity.name,
     startedAt: DateTime.fromMillisecondsSinceEpoch(value.startedAt),
@@ -297,10 +246,16 @@ Future<ActivityLog?> getPendingActivity(Ref ref) async {
 }
 
 @riverpod
-Future<Activity?> getActivityById(Ref ref, int id) async {
+Future<domain.Activity?> getActivityById(Ref ref, int id) async {
   final db = ref.watch(databaseProvider);
   final value = await db.activityDao.getActivityById(id);
   return value.toDomain();
+}
+
+@riverpod
+Stream<domain.Activity?> activityByIdStream(Ref ref, int id) {
+  final db = ref.watch(databaseProvider);
+  return db.activityDao.watchActivityById(id).map((value) => value?.toDomain());
 }
 
 enum ActivityPickerStep { initial, add, search }
@@ -328,4 +283,20 @@ class ActivityDialogController extends _$ActivityDialogController {
         break;
     }
   }
+}
+
+domain.ActivityLog _activityLogView({
+  required db.ActivityLogData log,
+  required db.ActivityData activity,
+}) {
+  return domain.ActivityLog.view(
+    id: log.id,
+    activityName: activity.name,
+    startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
+    endedAt: log.endedAt == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
+    activityId: activity.id,
+    durationMinutes: activity.durationMinutes,
+  );
 }
