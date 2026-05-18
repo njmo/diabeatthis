@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../data/providers/time_now_provider.dart';
 import '../../data/utils/nightscout_utils.dart';
-import 'glucose_custom_painter.dart';
+import 'mini_glucose_chart.dart';
 
 class GlucoseDashboard extends ConsumerWidget {
   const GlucoseDashboard({super.key, required this.glucose});
@@ -41,7 +41,7 @@ class GlucoseDashboard extends ConsumerWidget {
               Icon(trendIcon, size: 66, color: bgColor),
             ],
           ),
-          const SizedBox(width: 160, height: 50, child: GlucoseMiniChart()),
+          const SizedBox(width: 160, height: 50, child: MiniGlucoseChart()),
         ],
       ),
     );

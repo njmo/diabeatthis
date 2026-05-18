@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../data/providers/old_reading_provider.dart';
 import '../../data/utils/nightscout_utils.dart';
-import 'glucose_custom_painter.dart';
+import 'mini_glucose_chart.dart';
 
 class DeviceStatusDashboard extends ConsumerWidget {
   final DeviceStatus deviceStatus;
@@ -48,7 +48,7 @@ class DeviceStatusDashboard extends ConsumerWidget {
               Icon(trendIcon, size: 66, color: bgColor),
             ],
           ),
-          SizedBox(width: 160, height: 50, child: const GlucoseMiniChart()),
+          SizedBox(width: 160, height: 50, child: const MiniGlucoseChart()),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
