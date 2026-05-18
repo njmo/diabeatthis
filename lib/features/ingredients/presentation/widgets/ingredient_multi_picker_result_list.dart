@@ -33,19 +33,15 @@ class IngredientMultiPickerResultList extends StatelessWidget {
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final ingredient = items[index];
-              final data = ingredient.mapOrNull(existing: (e) => e);
-              if (data == null) {
-                return const SizedBox.shrink();
-              }
-              final selected = selectedIngredientIds.contains(data.id);
+              final selected = selectedIngredientIds.contains(ingredient.id);
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(
                   selected ? Icons.check_circle : Icons.add_circle_outline,
                 ),
-                title: Text(data.name),
+                title: Text(ingredient.name),
                 subtitle: Text(
-                  '${data.kcalPer100g?.round() ?? '-'} kcal / 100 g',
+                  '${ingredient.kcalPer100g?.round() ?? '-'} kcal / 100 g',
                 ),
                 onTap: () => onToggleIngredient(ingredient),
               );

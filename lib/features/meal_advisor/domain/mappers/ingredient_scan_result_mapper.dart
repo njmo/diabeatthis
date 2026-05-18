@@ -1,11 +1,11 @@
-import '../../../../core/domain/model/ingredient.dart';
+import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../data/models/ingredient_scan_result.dart';
 
 extension IngredientScanResultMapper on IngredientScanResult {
-  Ingredient toIngredientDraft() {
+  IngredientDraft toIngredientDraft() {
     final nutrition = nutritionPer100g;
 
-    return Ingredient.draft(
+    return IngredientDraft.draft(
       name: name ?? '',
       brand: brand,
       carbsPer100g: nutrition?.carbs ?? 0,

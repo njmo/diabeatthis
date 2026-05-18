@@ -1,9 +1,9 @@
-import '../../../../core/domain/model/ingredient.dart' as domain;
+import '../drafts/ingredient_draft.dart';
 import '../models/ingredient_details_data.dart' as details;
 
-extension IngredientDetailsToDomainMapper on details.Ingredient {
-  domain.Ingredient toDomainIngredient() {
-    return domain.Ingredient.existing(
+extension IngredientDetailsDraftMapper on details.Ingredient {
+  IngredientDraft toDraft() {
+    return IngredientDraft.existing(
       id: id,
       name: name,
       carbsPer100g: carbsPer100g,

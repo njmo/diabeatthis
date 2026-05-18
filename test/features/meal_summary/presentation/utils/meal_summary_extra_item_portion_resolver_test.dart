@@ -1,4 +1,4 @@
-import 'package:diabeatthis/core/domain/model/ingredient.dart';
+import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import 'package:diabeatthis/features/meal_summary/presentation/utils/meal_summary_carbs_delta.dart';
 import 'package:diabeatthis/features/meal_summary/presentation/utils/meal_summary_extra_item_portion_resolver.dart';
@@ -11,7 +11,7 @@ void main() {
     'resolves existing portion grams before calculating extra carbs',
     () async {
       final item = MealIngredientsDraft(
-        ingredient: Ingredient.existing(
+        ingredient: IngredientDraft.existing(
           id: 1,
           name: 'Jabłko',
           carbsPer100g: 12,

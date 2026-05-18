@@ -1,14 +1,15 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-import '../../../../core/domain/model/ingredient.dart';
+import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 
 part 'template_meal_draft.freezed.dart';
 
 @freezed
-abstract class MealTemplateIngredientsDraft with _$MealTemplateIngredientsDraft {
+abstract class MealTemplateIngredientsDraft
+    with _$MealTemplateIngredientsDraft {
   const factory MealTemplateIngredientsDraft({
-    required Ingredient ingredient,
+    required IngredientDraft ingredient,
     required IngredientPortionDraft ingredientPortion,
     required double defaultAmount,
     required bool isOptional,

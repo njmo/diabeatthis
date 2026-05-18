@@ -41,8 +41,7 @@ class IngredientMultiPickerSheet extends HookConsumerWidget {
         ? ref.watch(latestIngredientsProvider)
         : ref.watch(ingredientsByQueryProvider(normalizedQuery));
     final pickedIngredientIds = pickedIngredients.value
-        .map(ingredientIdOf)
-        .whereType<int>()
+        .map((ingredient) => ingredient.id)
         .toSet();
 
     void clearQuery() {
@@ -51,15 +50,12 @@ class IngredientMultiPickerSheet extends HookConsumerWidget {
     }
 
     void toggleIngredient(Ingredient ingredient) {
-      final ingredientId = ingredientIdOf(ingredient);
-      if (ingredientId == null) {
-        return;
-      }
+      final ingredientId = ingredient.id;
       final isSelected = pickedIngredientIds.contains(ingredientId);
       if (isSelected) {
         pickedIngredients.value = [
           for (final item in pickedIngredients.value)
-            if (ingredientIdOf(item) != ingredientId) item,
+            if (item.id != ingredientId) item,
         ];
         return;
       }
@@ -79,7 +75,7 @@ class IngredientMultiPickerSheet extends HookConsumerWidget {
     void removeIngredient(int ingredientId) {
       pickedIngredients.value = [
         for (final ingredient in pickedIngredients.value)
-          if (ingredientIdOf(ingredient) != ingredientId) ingredient,
+          if (ingredient.id != ingredientId) ingredient,
       ];
     }
 

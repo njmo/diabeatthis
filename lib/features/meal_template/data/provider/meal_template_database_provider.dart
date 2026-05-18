@@ -36,28 +36,27 @@ Future<void> insertMealTemplateIngredient(
   domain.Portion? portion,
   double amount,
   double nutritionConfidence,
-    bool isOptional,
+  bool isOptional,
 ) async {
   final db = ref.watch(databaseProvider);
-  final ingredientId = ingredient.map(
-    existing: (e) => e.id,
-    draft: (_) => throw Exception('Cannot get id for draft'),
-  );
   await db.insertMealTemplateIngredient(
     meal.id,
-    ingredientId,
+    ingredient.id,
     portion?.id,
     amount,
     isOptional,
     nutritionConfidence,
     null,
     null,
-    false
+    false,
   );
 }
 
 @riverpod
-Future<domain.MealTemplate> insertMealTemplate(Ref ref, MealTemplateDraft meal) async {
+Future<domain.MealTemplate> insertMealTemplate(
+  Ref ref,
+  MealTemplateDraft meal,
+) async {
   final db = ref.watch(databaseProvider);
   final value = await db
       .into(db.mealTemplate)

@@ -6,6 +6,7 @@ import '../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
+import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/mappers/portion_draft_mapper.dart';
@@ -38,7 +39,7 @@ Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMeal(
       list.add(
         MealIngredientsDraft(
           mealIngredientId: mealIngredient.id,
-          ingredient: ingredient.toDomain(),
+          ingredient: ingredient.toDomain().toDraft(),
           ingredientPortion: IngredientPortionDraft(
             portion: PortionSelection.empty(),
             amount: 100,
@@ -74,7 +75,7 @@ Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMeal(
     list.add(
       MealIngredientsDraft(
         mealIngredientId: mealIngredient.id,
-        ingredient: ingredient.toDomain(),
+        ingredient: ingredient.toDomain().toDraft(),
         ingredientPortion: ingredientPortion,
         amount: mealIngredient.amount,
         quantityConfidence: mealIngredient.quantityConfidence,
@@ -88,7 +89,10 @@ Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMeal(
 }
 
 @riverpod
-Future<MealMacroSummary?> mealMacronutrientsConsumedSummary(Ref ref, int mealId) async {
+Future<MealMacroSummary?> mealMacronutrientsConsumedSummary(
+  Ref ref,
+  int mealId,
+) async {
   final db = ref.read(databaseProvider);
   final mealStatus = await db.ingredientDao.totalsForMealConsumed(mealId);
   return mealStatus;
@@ -135,7 +139,7 @@ Future<Macronutrients> calculatedMacronutrients(Ref ref) async {
         portionAmount = 1;
       }
     } else if (portionAmount == 0) {
-      final ingredientDomain = mi.ingredient;
+      final ingredientDomain = mi.ingredient.toDomain();
       final portionDomain = mi.ingredientPortion.portion.toDomain();
 
       final fetched = await ref.read(

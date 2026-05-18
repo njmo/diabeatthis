@@ -116,9 +116,5 @@ class IngredientList extends HookConsumerWidget {
 }
 
 void _openIngredientDetails(BuildContext context, Ingredient ingredient) {
-  ingredient.mapOrNull(
-    existing: (data) {
-      context.router.push(routes.IngredientRoute(ingredientId: data.id));
-    },
-  );
+  context.router.push(routes.IngredientRoute(ingredientId: ingredient.id));
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/domain/model/ingredient.dart';
+import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
@@ -28,7 +28,8 @@ GlobalKey<FormState> mealTemplateIngredientFormKey(Ref ref) {
 }
 
 @riverpod
-class AddMealTemplateIngredientStageNotifier extends _$AddMealTemplateIngredientStageNotifier {
+class AddMealTemplateIngredientStageNotifier
+    extends _$AddMealTemplateIngredientStageNotifier {
   late AddMealTemplateIngredientStage prev;
   @override
   AddMealTemplateIngredientStage build() {
@@ -61,10 +62,7 @@ class AddMealTemplateIngredientStageNotifier extends _$AddMealTemplateIngredient
           final portionsFilter = ref.read(portionFilterProvider.notifier);
           portionsFilter.setFilter(
             PortionFilter.byQueryForIngredient(
-              ingredientId: ingredientDraft.map(
-                draft: (draft) => 0,
-                existing: (existing) => existing.id,
-              ),
+              ingredientId: ingredientDraft.toDomain().id,
             ),
           );
 
@@ -144,10 +142,7 @@ class AddMealTemplateIngredientStageNotifier extends _$AddMealTemplateIngredient
         final portionsFilter = ref.read(portionFilterProvider.notifier);
         portionsFilter.setFilter(
           PortionFilter.allUnassignedForIngredient(
-            ingredientId: ingredientDraft.map(
-              draft: (draft) => 0,
-              existing: (existing) => existing.id,
-            ),
+            ingredientId: ingredientDraft.toDomain().id,
           ),
         );
         state = AddMealTemplateIngredientStage.portionAddNewSearch;
@@ -166,7 +161,7 @@ class AddMealTemplateIngredientStageNotifier extends _$AddMealTemplateIngredient
       case AddMealTemplateIngredientStage.amountForm:
       case AddMealTemplateIngredientStage.summary:
       case AddMealTemplateIngredientStage.portionSpecifyAmount:
-      // TODO: Handle this case.
+        // TODO: Handle this case.
         throw UnimplementedError();
     }
   }

@@ -53,12 +53,10 @@ class MealListController extends _$MealListController {
   Future<void> setIngredients(List<Ingredient> ingredients) async {
     _queryDebounceTimer?.cancel();
     final limitedIngredients = ingredients
-        .where((ingredient) => _ingredientId(ingredient) != null)
         .take(mealIngredientFilterLimit)
         .toList(growable: false);
     final ingredientIds = limitedIngredients
-        .map(_ingredientId)
-        .whereType<int>()
+        .map((ingredient) => ingredient.id)
         .toList(growable: false);
     final filter = ingredientIds.isEmpty
         ? const MealListFilter.recent()
@@ -73,7 +71,7 @@ class MealListController extends _$MealListController {
     }
     final ingredients = [
       for (final ingredient in current.selectedIngredients)
-        if (_ingredientId(ingredient) != ingredientId) ingredient,
+        if (ingredient.id != ingredientId) ingredient,
     ];
     await setIngredients(ingredients);
   }
@@ -233,16 +231,12 @@ class MealListController extends _$MealListController {
   }
 }
 
-int? _ingredientId(Ingredient ingredient) {
-  return ingredient.mapOrNull(existing: (value) => value.id);
-}
-
 bool _sameIngredientSelection(List<Ingredient> left, List<Ingredient> right) {
   if (left.length != right.length) {
     return false;
   }
   for (var index = 0; index < left.length; index += 1) {
-    if (_ingredientId(left[index]) != _ingredientId(right[index])) {
+    if (left[index].id != right[index].id) {
       return false;
     }
   }

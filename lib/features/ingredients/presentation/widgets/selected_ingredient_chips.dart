@@ -50,26 +50,12 @@ class SelectedIngredientChips extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             padding: const EdgeInsets.symmetric(horizontal: 4),
             labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-            label: Text(_ingredientName(ingredient)),
+            label: Text(ingredient.name),
             onPressed: () {
-              final ingredientId = ingredientIdOf(ingredient);
-              if (ingredientId != null) {
-                onRemove(ingredientId);
-              }
+              onRemove(ingredient.id);
             },
           ),
       ],
     );
   }
-}
-
-int? ingredientIdOf(Ingredient ingredient) {
-  return ingredient.mapOrNull(existing: (value) => value.id);
-}
-
-String _ingredientName(Ingredient ingredient) {
-  return ingredient.map(
-    existing: (value) => value.name,
-    draft: (value) => value.name,
-  );
 }

@@ -1,4 +1,4 @@
-import 'package:diabeatthis/core/domain/model/ingredient.dart';
+import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import 'package:diabeatthis/features/meal_summary/presentation/models/meal_summary_draft.dart';
 import 'package:diabeatthis/features/meal_summary/presentation/models/meal_summary_item_draft.dart';
@@ -236,7 +236,7 @@ MealIngredientsDraft _extraItem({
 }) {
   return MealIngredientsDraft(
     mealIngredientId: null,
-    ingredient: Ingredient.existing(
+    ingredient: IngredientDraft.existing(
       id: 1,
       name: 'Extra',
       carbsPer100g: carbsPer100g,

@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/domain/model/ingredient.dart' as domain;
+import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
@@ -38,7 +38,7 @@ class MealTemplateIngredientsDraftNotifier
   @override
   MealTemplateIngredientsDraft build() {
     return MealTemplateIngredientsDraft(
-      ingredient: domain.Ingredient.draft(
+      ingredient: IngredientDraft.draft(
         name: '',
         carbsPer100g: 0,
         fatPer100g: 0,
@@ -59,7 +59,7 @@ class MealTemplateIngredientsDraftNotifier
     );
   }
 
-  void setIngredient(domain.Ingredient ingredient) =>
+  void setIngredient(IngredientDraft ingredient) =>
       state = state.copyWith(ingredient: ingredient);
   void setIngredientPortion(PortionSelection portion) => state = state.copyWith(
     ingredientPortion: state.ingredientPortion.copyWith(portion: portion),
@@ -67,12 +67,15 @@ class MealTemplateIngredientsDraftNotifier
   void setIngredientPortionAmount(double amount) => state = state.copyWith(
     ingredientPortion: state.ingredientPortion.copyWith(amount: amount),
   );
-  void setDefaultAmount(double amount) => state = state.copyWith(defaultAmount: amount);
+  void setDefaultAmount(double amount) =>
+      state = state.copyWith(defaultAmount: amount);
   void setQuantityConfidence(ConfidenceLevel confidence) =>
       state = state.copyWith(quantityConfidence: confidence.toDouble01());
-  void setPrepMethod(String prepMethod) => state = state.copyWith(prepMethod: prepMethod);
+  void setPrepMethod(String prepMethod) =>
+      state = state.copyWith(prepMethod: prepMethod);
   void setNotes(String notes) => state = state.copyWith(notes: notes);
-  void setIsOptional(bool isOptional) => state = state.copyWith(isOptional: isOptional);
+  void setIsOptional(bool isOptional) =>
+      state = state.copyWith(isOptional: isOptional);
 }
 
 @riverpod
@@ -89,19 +92,25 @@ class MealTemplateDraftNotifier extends _$MealTemplateDraftNotifier {
 
   void setName(String name) => state = state.copyWith(name: name);
 
-  void removeMealTemplateIngredient(MealTemplateIngredientsDraft mealIngredient) =>
+  void removeMealTemplateIngredient(
+    MealTemplateIngredientsDraft mealIngredient,
+  ) => state = state.copyWith(
+    mealIngredients: state.mealIngredients
+        .where((element) => element != mealIngredient)
+        .toList(),
+  );
+  void addMealTemplateIngredient(MealTemplateIngredientsDraft mealIngredient) =>
       state = state.copyWith(
-        mealIngredients: state.mealIngredients
-            .where((element) => element != mealIngredient)
-            .toList(),
+        mealIngredients: [...state.mealIngredients, mealIngredient],
       );
-  void addMealTemplateIngredient(MealTemplateIngredientsDraft mealIngredient) => state = state
-      .copyWith(mealIngredients: [...state.mealIngredients, mealIngredient]);
-  void addMealTemplateIngredients(List<MealTemplateIngredientsDraft> mealIngredients) =>
-      state = state.copyWith(
-        mealIngredients: [...state.mealIngredients, ...mealIngredients],
-      );
+  void addMealTemplateIngredients(
+    List<MealTemplateIngredientsDraft> mealIngredients,
+  ) => state = state.copyWith(
+    mealIngredients: [...state.mealIngredients, ...mealIngredients],
+  );
   void setNotes(String notes) => state = state.copyWith(notes: notes);
-  void setIsFavorite(bool isFavorite) => state = state.copyWith(isFavorite: isFavorite);
-  void setCreatedFromMealId(int createdFromMealId) => state = state.copyWith(createdFromMealId: createdFromMealId);
+  void setIsFavorite(bool isFavorite) =>
+      state = state.copyWith(isFavorite: isFavorite);
+  void setCreatedFromMealId(int createdFromMealId) =>
+      state = state.copyWith(createdFromMealId: createdFromMealId);
 }

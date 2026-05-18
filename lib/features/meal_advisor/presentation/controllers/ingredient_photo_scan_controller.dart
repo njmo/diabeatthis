@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/domain/model/ingredient.dart';
+import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../data/models/ingredient_scan_result.dart';
 import '../../data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../domain/mappers/ingredient_scan_result_mapper.dart';
@@ -17,7 +17,7 @@ class IngredientPhotoScanController extends _$IngredientPhotoScanController {
     return null;
   }
 
-  Future<Ingredient?> scanIngredient() async {
+  Future<IngredientDraft?> scanIngredient() async {
     final input = ref.read(ingredientPhotoScanCaptureControllerProvider);
     if (!input.hasRequiredPhotos) {
       state = const AsyncData(null);
@@ -40,7 +40,7 @@ class IngredientPhotoScanController extends _$IngredientPhotoScanController {
     }
   }
 
-  Ingredient? draftFromCurrentResult() {
+  IngredientDraft? draftFromCurrentResult() {
     final result = state.when(
       data: (value) => value,
       error: (_, _) => null,

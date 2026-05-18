@@ -10,6 +10,8 @@ import '../../../../core/media/providers/camera_permission_service_provider.dart
 import '../../../meal_advisor/data/models/ingredient_photo_search_result.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_search_controller.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
+import '../../data/drafts/ingredient_draft.dart';
+import '../../data/mappers/ingredient_draft_mapper.dart';
 import '../../data/providers/ingredient_provider.dart';
 import 'ingredient_photo_scan.dart';
 
@@ -139,7 +141,7 @@ class IngredientSearch extends HookConsumerWidget {
                   isReference: ingredient.isReference,
                   selected: selected,
                   onTap: () {
-                    draft.overrideDraft(ingredient);
+                    draft.overrideDraft(ingredient.toDraft());
                     valuePicked.value = index;
                   },
                 );
@@ -518,7 +520,7 @@ String _photoSearchErrorMessage(Object error) {
   return 'Nie udało się wyszukać produktu ze zdjęcia. Spróbuj ponownie.';
 }
 
-extension IngredientSearchSelectionX on domain.Ingredient {
+extension IngredientSearchSelectionX on IngredientDraft {
   bool get hasSearchSelection => map(
     draft: (draft) => draft.name.trim().isNotEmpty,
     existing: (_) => true,
@@ -526,16 +528,9 @@ extension IngredientSearchSelectionX on domain.Ingredient {
 
   bool matchesSearchResult(domain.Ingredient ingredient) {
     return map(
-      draft: (draft) => ingredient.map(
-        draft: (other) =>
-            draft.name == other.name && draft.brand == other.brand,
-        existing: (other) =>
-            draft.name == other.name && draft.brand == other.brand,
-      ),
-      existing: (existing) => ingredient.map(
-        draft: (_) => false,
-        existing: (other) => existing.id == other.id,
-      ),
+      draft: (draft) =>
+          draft.name == ingredient.name && draft.brand == ingredient.brand,
+      existing: (existing) => existing.id == ingredient.id,
     );
   }
 }

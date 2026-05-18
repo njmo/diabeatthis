@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/domain/model/ingredient.dart';
+import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
@@ -105,10 +105,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
           final portionsFilter = ref.read(portionFilterProvider.notifier);
           portionsFilter.setFilter(
             PortionFilter.byQueryForIngredient(
-              ingredientId: ingredientDraft.map(
-                draft: (draft) => 0,
-                existing: (existing) => existing.id,
-              ),
+              ingredientId: ingredientDraft.toDomain().id,
             ),
           );
 
@@ -206,10 +203,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         final portionsFilter = ref.read(portionFilterProvider.notifier);
         portionsFilter.setFilter(
           PortionFilter.allUnassignedForIngredient(
-            ingredientId: ingredientDraft.map(
-              draft: (draft) => 0,
-              existing: (existing) => existing.id,
-            ),
+            ingredientId: ingredientDraft.toDomain().id,
           ),
         );
         state = AddMealIngredientStage.portionAddNewSearch;

@@ -69,13 +69,9 @@ Future<void> insertMealIngredient(
   double nutritionConfidence,
 ) async {
   final db = ref.watch(databaseProvider);
-  final ingredientId = ingredient.map(
-    existing: (e) => e.id,
-    draft: (_) => throw Exception('Cannot get id for draft'),
-  );
   await db.insertMealIngredient(
     meal.id,
-    ingredientId,
+    ingredient.id,
     portion?.id,
     amount,
     null,
@@ -94,13 +90,9 @@ Future<void> insertExtraMealIngredient(
   double consumedQuantityConfidence,
 ) async {
   final db = ref.watch(databaseProvider);
-  final ingredientId = ingredient.map(
-    existing: (e) => e.id,
-    draft: (_) => throw Exception('Cannot get id for draft'),
-  );
   await db.insertExtraMealIngredient(
     mealId,
-    ingredientId,
+    ingredient.id,
     portion?.id,
     0,
     null,

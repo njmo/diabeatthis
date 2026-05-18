@@ -7,6 +7,8 @@ import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../meal_advisor/data/models/ingredient_photo_search_result.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
+import '../drafts/ingredient_draft.dart';
+import '../mappers/ingredient_draft_mapper.dart';
 
 part 'ingredient_provider.g.dart';
 
@@ -88,7 +90,7 @@ class IngredientPortionAmountDraftNotifier
 @riverpod
 Future<domain.Ingredient> insertIngredient(
   Ref ref,
-  domain.Ingredient ingredient,
+  IngredientDraft ingredient,
 ) async {
   return ingredient.map(
     draft: (draft) async {
@@ -109,7 +111,7 @@ Future<domain.Ingredient> insertIngredient(
         throw Exception('Could not insert ingredient');
       }
     },
-    existing: (existing) => existing,
+    existing: (_) => ingredient.toDomain(),
   );
 }
 
@@ -124,11 +126,7 @@ Future<void> insertIngredientPortion(
     return;
   }
   final db = ref.watch(databaseProvider);
-  final ingredientId = ingredient.map(
-    existing: (e) => e.id,
-    draft: (_) => throw Exception('Cannot get id for draft'),
-  );
-  await db.insertIngredientPortion(ingredientId, portion.id, amount);
+  await db.insertIngredientPortion(ingredient.id, portion.id, amount);
 }
 
 @riverpod
@@ -138,20 +136,16 @@ Future<double?> getAmountForPortionIngredient(
   domain.Portion portion,
 ) async {
   final db = ref.watch(databaseProvider);
-  final ingredientId = ingredient.map(
-    existing: (e) => e.id,
-    draft: (_) => throw Exception('Cannot get id for draft'),
-  );
   return await db
-      .amountIngredientPortion(ingredientId, portion.id)
+      .amountIngredientPortion(ingredient.id, portion.id)
       .getSingleOrNull();
 }
 
 @riverpod
 class IngredientDraftNotifier extends _$IngredientDraftNotifier {
   @override
-  domain.Ingredient build() {
-    return domain.Ingredient.draft(
+  IngredientDraft build() {
+    return IngredientDraft.draft(
       name: '',
       carbsPer100g: 0,
       fatPer100g: 0,
@@ -173,29 +167,9 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
   void setName(String value) => state = state.copyWith(name: value);
   void setNutritionConfidence(ConfidenceLevel value) =>
       state = state.copyWith(nutritionConfidence: value.toDouble01());
-  void overrideDraft(domain.Ingredient ingredient) => state = ingredient;
+  void overrideDraft(IngredientDraft ingredient) => state = ingredient;
 
   String getName() => state.map(draft: (d) => d.name, existing: (e) => e.name);
-  String getCarbsPer100g() => state
-      .map(draft: (d) => d.carbsPer100g, existing: (e) => e.carbsPer100g)
-      .formatDraftNumber();
-
-  String getFatPer100g() => state
-      .map(draft: (d) => d.fatPer100g, existing: (e) => e.fatPer100g)
-      .formatDraftNumber();
-
-  String getFiberPer100g() => state
-      .map(draft: (d) => d.fiberPer100g, existing: (e) => e.fiberPer100g)
-      .formatDraftNumber();
-
-  String getProteinPer100g() => state
-      .map(draft: (d) => d.proteinPer100g, existing: (e) => e.proteinPer100g)
-      .formatDraftNumber();
-
-  ConfidenceLevel getNutritionConfidence() => state.map(
-    draft: (d) => ConfidenceLevelX.fromDouble01(d.nutritionConfidence),
-    existing: (e) => e.nutritionConfidence as ConfidenceLevel,
-  );
 
   String? getBrand() =>
       state.map(draft: (d) => d.brand, existing: (e) => e.brand);
@@ -207,13 +181,4 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
 double _parseDraftNumber(String value) {
   final normalized = value.trim().replaceAll(',', '.');
   return double.tryParse(normalized) ?? 0.0;
-}
-
-extension on double {
-  String formatDraftNumber() {
-    if (this == roundToDouble()) {
-      return toStringAsFixed(0);
-    }
-    return toStringAsFixed(2);
-  }
 }

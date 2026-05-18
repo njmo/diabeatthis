@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../../core/drift/providers/database_provider.dart';
+import '../../drafts/ingredient_draft.dart';
 
 part 'update_ingredient_details_use_case.g.dart';
 
@@ -15,7 +15,7 @@ class UpdateIngredientDetailsUseCase {
 
   UpdateIngredientDetailsUseCase({required this.ref});
 
-  Future<void> call(domain.Ingredient ingredient) async {
+  Future<void> call(IngredientDraft ingredient) async {
     final existing = ingredient.map(
       existing: (value) => value,
       draft: (_) =>
