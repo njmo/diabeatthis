@@ -14,14 +14,15 @@ import '../providers/task_event_router_provider.dart';
 import '../synchronization/synchronization_cache_controller.dart';
 import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
+import 'helpers/collector_next_reading_helper.dart';
 
 class GlucoseCollector extends ForegroundCollector {
   bool _disposed = false;
   Future<void>? _runner;
 
-  static const _expectedInterval = Duration(minutes: 5, seconds: 10);
   static const _nearReadPollInterval = Duration(seconds: 10);
   static const _fallbackWait = Duration(seconds: 30);
+  static const _nextReadingHelper = CollectorNextReadingHelper();
 
   @override
   void start(CollectorContext context) {
@@ -30,15 +31,20 @@ class GlucoseCollector extends ForegroundCollector {
   }
 
   Future<void> _run(CollectorContext context) async {
-    Glucose? last;
+    var last = await _loadInitialGlucoseFromHistory(context);
+    if (last != null) {
+      _handleGlucose(context, last);
+    }
 
-    try {
-      last = await _pollGlucose(context);
-      if (last != null) {
-        _handleGlucose(context, last);
+    if (last == null) {
+      try {
+        last = await _pollGlucose(context);
+        if (last != null) {
+          _handleGlucose(context, last);
+        }
+      } catch (e, st) {
+        logW('Initial glucose read failed: $e\n$st');
       }
-    } catch (e, st) {
-      logW('Initial glucose read failed: $e\n$st');
     }
 
     while (!_disposed) {
@@ -62,7 +68,7 @@ class GlucoseCollector extends ForegroundCollector {
       }
 
       final knownLast = last;
-      final nextExpectedAt = knownLast.date.add(_expectedInterval);
+      final nextExpectedAt = _nextExpectedAt(knownLast.date);
       final waitUntilExpected = nextExpectedAt.difference(clock.now());
 
       if (waitUntilExpected > Duration.zero) {
@@ -89,6 +95,32 @@ class GlucoseCollector extends ForegroundCollector {
     }
   }
 
+  Future<Glucose?> _loadInitialGlucoseFromHistory(
+    CollectorContext context,
+  ) async {
+    try {
+      final repository = await context.container.read(
+        glucoseHistoryRepositoryProvider.future,
+      );
+      final readings = await repository.fetchRecentGlucose(1);
+      if (readings.isEmpty) return null;
+
+      final latest = ([
+        ...readings,
+      ]..sort((a, b) => b.date.compareTo(a.date))).first;
+
+      logI(
+        'Initial glucose history seed available ${latest.sgv} '
+        'at ${latest.date.toIso8601String()}',
+      );
+
+      return latest;
+    } catch (e, st) {
+      logW('Initial glucose history seed failed: $e\n$st');
+      return null;
+    }
+  }
+
   Future<Glucose?> _pollGlucose(CollectorContext context) async {
     final repository = await context.container.read(
       glucoseSourceRepositoryProvider.future,
@@ -103,7 +135,7 @@ class GlucoseCollector extends ForegroundCollector {
 
     context.emitEvent(DataAvailableEvent<Glucose>(data));
 
-    ForegroundAlarmBridge.scheduleCollectTick(data.date.add(_expectedInterval));
+    ForegroundAlarmBridge.scheduleCollectTick(_nextExpectedAt(data.date));
 
     if (context.container.read(appLifecycleProvider) ==
         AppLifecycleState.resumed) {
@@ -118,6 +150,13 @@ class GlucoseCollector extends ForegroundCollector {
     cache.cacheGlucose(data);
 
     context.container.read(bloodSugarValueProvider.notifier).update(data);
+  }
+
+  DateTime _nextExpectedAt(DateTime readingDate) {
+    return _nextReadingHelper.nextExpectedAt(
+      readingDate: readingDate,
+      now: clock.now(),
+    );
   }
 
   @override

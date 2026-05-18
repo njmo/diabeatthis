@@ -15,14 +15,15 @@ import '../providers/task_event_router_provider.dart';
 import '../synchronization/synchronization_cache_controller.dart';
 import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
+import 'helpers/collector_next_reading_helper.dart';
 
 class DeviceStatusCollector extends ForegroundCollector with Logging {
   bool _disposed = false;
   Future<void>? _runner;
 
-  static const _expectedInterval = Duration(minutes: 5, seconds: 10);
   static const _nearReadPollInterval = Duration(seconds: 10);
   static const _fallbackWait = Duration(seconds: 30);
+  static const _nextReadingHelper = CollectorNextReadingHelper();
 
   @override
   void start(CollectorContext context) {
@@ -31,13 +32,18 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
   }
 
   Future<void> _run(CollectorContext context) async {
-    DeviceStatus? last;
-
-    try {
-      last = await _pollDeviceStatus(context);
+    var last = await _loadInitialDeviceStatusFromHistory(context);
+    if (last != null) {
       _handleDeviceStatus(context, last);
-    } catch (e, st) {
-      logW("Initial device status read failed: $e\n$st");
+    }
+
+    if (last == null) {
+      try {
+        last = await _pollDeviceStatus(context);
+        _handleDeviceStatus(context, last);
+      } catch (e, st) {
+        logW("Initial device status read failed: $e\n$st");
+      }
     }
 
     while (!_disposed) {
@@ -57,7 +63,7 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
 
       final knownLast = last;
 
-      final nextExpectedAt = knownLast.date.add(_expectedInterval);
+      final nextExpectedAt = _nextExpectedAt(knownLast.date);
       final waitUntilExpected = nextExpectedAt.difference(clock.now());
 
       if (waitUntilExpected > Duration.zero) {
@@ -95,6 +101,28 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
     return repository.pollDeviceStatus();
   }
 
+  Future<DeviceStatus?> _loadInitialDeviceStatusFromHistory(
+    CollectorContext context,
+  ) async {
+    try {
+      final repository = await context.container.read(
+        deviceStatusHistoryRepositoryProvider.future,
+      );
+      final latest = await repository.fetchLastDeviceStatusBefore(clock.now());
+      if (latest == null) return null;
+
+      logI(
+        'Initial device status history seed available bg=${latest.bg} '
+        'tick=${latest.tick} at ${latest.date.toIso8601String()}',
+      );
+
+      return latest;
+    } catch (e, st) {
+      logW("Initial device status history seed failed: $e\n$st");
+      return null;
+    }
+  }
+
   void _handleDeviceStatus(CollectorContext context, DeviceStatus data) {
     logI(
       "Device status reading available bg=${data.bg} tick=${data.tick} "
@@ -103,7 +131,7 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
 
     context.emitEvent(DataAvailableEvent<DeviceStatus>(data));
 
-    ForegroundAlarmBridge.scheduleCollectTick(data.date.add(_expectedInterval));
+    ForegroundAlarmBridge.scheduleCollectTick(_nextExpectedAt(data.date));
 
     if (context.container.read(appLifecycleProvider) ==
         AppLifecycleState.resumed) {
@@ -118,6 +146,13 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
     cache.cacheDeviceStatus(data);
 
     context.container.read(deviceStatusValueProvider.notifier).update(data);
+  }
+
+  DateTime _nextExpectedAt(DateTime readingDate) {
+    return _nextReadingHelper.nextExpectedAt(
+      readingDate: readingDate,
+      now: clock.now(),
+    );
   }
 
   @override
