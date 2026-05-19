@@ -24,12 +24,13 @@ class DataSourceConfigControls extends StatelessWidget {
       labelFor: (source) => source.label,
       onChanged: (source) => onChanged(config.copyWith(bgSource: source)),
     );
-    final eventDropdown = DataSourceDropdown<EventSource>(
+    final treatmentsDropdown = DataSourceDropdown<TreatmentsSource>(
       label: 'Zdarzenia',
-      value: config.eventSource,
-      values: EventSource.values,
+      value: config.treatmentsSource,
+      values: TreatmentsSource.values,
       labelFor: (source) => source.label,
-      onChanged: (source) => onChanged(config.copyWith(eventSource: source)),
+      onChanged: (source) =>
+          onChanged(config.copyWith(treatmentsSource: source)),
     );
     final pumpStatusDropdown = DataSourceDropdown<PumpStatusSource>(
       label: 'Status pompy',
@@ -67,7 +68,7 @@ class DataSourceConfigControls extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(child: eventDropdown),
+              Expanded(child: treatmentsDropdown),
               const SizedBox(width: 12),
               Expanded(child: pumpStatusDropdown),
               const SizedBox(width: 12),
@@ -80,7 +81,7 @@ class DataSourceConfigControls extends StatelessWidget {
           children: [
             bgDropdown,
             const SizedBox(height: 12),
-            eventDropdown,
+            treatmentsDropdown,
             const SizedBox(height: 12),
             pumpStatusDropdown,
             const SizedBox(height: 12),

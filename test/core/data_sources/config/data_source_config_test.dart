@@ -7,7 +7,7 @@ void main() {
       const config = DataSourceConfig.defaults();
 
       expect(config.bgSource, BgSource.cloud);
-      expect(config.eventSource, EventSource.cloud);
+      expect(config.treatmentsSource, TreatmentsSource.cloud);
       expect(config.pumpStatusSource, PumpStatusSource.cloud);
       expect(config.historySource, HistorySource.cloud);
       expect(config.mirrorToLocal, isFalse);
@@ -16,7 +16,7 @@ void main() {
     test('parses known storage values', () {
       expect(BgSource.fromStorage('aaps'), BgSource.aaps);
       expect(BgSource.fromStorage('xdrip'), BgSource.xdrip);
-      expect(EventSource.fromStorage('aaps'), EventSource.aaps);
+      expect(TreatmentsSource.fromStorage('aaps'), TreatmentsSource.aaps);
       expect(PumpStatusSource.fromStorage('aaps'), PumpStatusSource.aaps);
       expect(HistorySource.fromStorage('local'), HistorySource.local);
     });
@@ -24,8 +24,8 @@ void main() {
     test('falls back to cloud for missing or unknown values', () {
       expect(BgSource.fromStorage(null), BgSource.cloud);
       expect(BgSource.fromStorage('unknown'), BgSource.cloud);
-      expect(EventSource.fromStorage(null), EventSource.cloud);
-      expect(EventSource.fromStorage('xdrip'), EventSource.cloud);
+      expect(TreatmentsSource.fromStorage(null), TreatmentsSource.cloud);
+      expect(TreatmentsSource.fromStorage('xdrip'), TreatmentsSource.cloud);
       expect(PumpStatusSource.fromStorage(null), PumpStatusSource.cloud);
       expect(PumpStatusSource.fromStorage('xdrip'), PumpStatusSource.cloud);
       expect(HistorySource.fromStorage(null), HistorySource.cloud);
@@ -46,14 +46,14 @@ void main() {
     test('detects when any configured source uses Nightscout', () {
       const localOnly = DataSourceConfig(
         bgSource: BgSource.aaps,
-        eventSource: EventSource.aaps,
+        treatmentsSource: TreatmentsSource.aaps,
         pumpStatusSource: PumpStatusSource.aaps,
         historySource: HistorySource.local,
         mirrorToLocal: false,
       );
       const cloudHistory = DataSourceConfig(
         bgSource: BgSource.aaps,
-        eventSource: EventSource.aaps,
+        treatmentsSource: TreatmentsSource.aaps,
         pumpStatusSource: PumpStatusSource.aaps,
         historySource: HistorySource.cloud,
         mirrorToLocal: false,

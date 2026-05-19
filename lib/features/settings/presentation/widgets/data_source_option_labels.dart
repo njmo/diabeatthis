@@ -10,11 +10,11 @@ extension BgSourceLabel on BgSource {
   }
 }
 
-extension EventSourceLabel on EventSource {
+extension TreatmentsSourceLabel on TreatmentsSource {
   String get label {
     return switch (this) {
-      EventSource.cloud => 'Chmura (Nightscout)',
-      EventSource.aaps => 'AAPS lokalnie',
+      TreatmentsSource.cloud => 'Chmura (Nightscout)',
+      TreatmentsSource.aaps => 'AAPS lokalnie',
     };
   }
 }

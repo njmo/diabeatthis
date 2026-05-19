@@ -5,7 +5,7 @@ import '../../../drift/database_impl.dart' as drift;
 import '../../config/data_source_config.dart';
 
 extension ExtendedCarbDriftMapper on domain.ExtendedCarb {
-  drift.ExtendedCarbCompanion toCompanion(EventSource source) {
+  drift.ExtendedCarbCompanion toCompanion(TreatmentsSource source) {
     return drift.ExtendedCarbCompanion.insert(
       source: source.storageValue,
       externalId: externalId != null

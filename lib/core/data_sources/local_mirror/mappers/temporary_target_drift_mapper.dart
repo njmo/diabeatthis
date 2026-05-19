@@ -5,10 +5,10 @@ import '../../../drift/database_impl.dart' as drift;
 import '../../config/data_source_config.dart';
 
 extension TemporaryTargetDriftMapper on domain.TemporaryTarget {
-  drift.TemporaryTargetCompanion toCompanion(EventSource source) {
+  drift.TemporaryTargetCompanion toCompanion(TreatmentsSource source) {
     return drift.TemporaryTargetCompanion.insert(
       source: source.storageValue,
-      externalId: source == EventSource.cloud && nightscoutId.isNotEmpty
+      externalId: source == TreatmentsSource.cloud && nightscoutId.isNotEmpty
           ? Value(nightscoutId)
           : const Value.absent(),
       createdAt: Value(createdAt.millisecondsSinceEpoch),

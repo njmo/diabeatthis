@@ -22,18 +22,18 @@ enum BgSource {
   }
 }
 
-enum EventSource {
+enum TreatmentsSource {
   cloud('cloud'),
   aaps('aaps');
 
-  const EventSource(this.storageValue);
+  const TreatmentsSource(this.storageValue);
 
   final String storageValue;
 
-  static EventSource fromStorage(String? value) {
-    return EventSource.values.firstWhere(
+  static TreatmentsSource fromStorage(String? value) {
+    return TreatmentsSource.values.firstWhere(
       (source) => source.storageValue == value,
-      orElse: () => EventSource.cloud,
+      orElse: () => TreatmentsSource.cloud,
     );
   }
 }
@@ -80,7 +80,7 @@ enum HistorySource {
 class DataSourceConfig {
   const DataSourceConfig({
     required this.bgSource,
-    required this.eventSource,
+    required this.treatmentsSource,
     required this.pumpStatusSource,
     required this.historySource,
     required this.mirrorToLocal,
@@ -88,34 +88,34 @@ class DataSourceConfig {
 
   const DataSourceConfig.defaults()
     : bgSource = BgSource.cloud,
-      eventSource = EventSource.cloud,
+      treatmentsSource = TreatmentsSource.cloud,
       pumpStatusSource = PumpStatusSource.cloud,
       historySource = HistorySource.cloud,
       mirrorToLocal = false;
 
   final BgSource bgSource;
-  final EventSource eventSource;
+  final TreatmentsSource treatmentsSource;
   final PumpStatusSource pumpStatusSource;
   final HistorySource historySource;
   final bool mirrorToLocal;
 
   bool get usesCloud {
     return bgSource == BgSource.cloud ||
-        eventSource == EventSource.cloud ||
+        treatmentsSource == TreatmentsSource.cloud ||
         pumpStatusSource == PumpStatusSource.cloud ||
         historySource == HistorySource.cloud;
   }
 
   DataSourceConfig copyWith({
     BgSource? bgSource,
-    EventSource? eventSource,
+    TreatmentsSource? treatmentsSource,
     PumpStatusSource? pumpStatusSource,
     HistorySource? historySource,
     bool? mirrorToLocal,
   }) {
     return DataSourceConfig(
       bgSource: bgSource ?? this.bgSource,
-      eventSource: eventSource ?? this.eventSource,
+      treatmentsSource: treatmentsSource ?? this.treatmentsSource,
       pumpStatusSource: pumpStatusSource ?? this.pumpStatusSource,
       historySource: historySource ?? this.historySource,
       mirrorToLocal: mirrorToLocal ?? this.mirrorToLocal,
@@ -127,7 +127,7 @@ class DataSourceConfig {
     return identical(this, other) ||
         other is DataSourceConfig &&
             bgSource == other.bgSource &&
-            eventSource == other.eventSource &&
+            treatmentsSource == other.treatmentsSource &&
             pumpStatusSource == other.pumpStatusSource &&
             historySource == other.historySource &&
             mirrorToLocal == other.mirrorToLocal;
@@ -137,7 +137,7 @@ class DataSourceConfig {
   int get hashCode {
     return Object.hash(
       bgSource,
-      eventSource,
+      treatmentsSource,
       pumpStatusSource,
       historySource,
       mirrorToLocal,

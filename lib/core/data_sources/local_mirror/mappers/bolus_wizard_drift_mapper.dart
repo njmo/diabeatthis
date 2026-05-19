@@ -6,12 +6,12 @@ import '../../../drift/database_impl.dart' as drift;
 import '../../config/data_source_config.dart';
 
 extension BolusWizardDriftMapper on domain.BolusWizard {
-  drift.BolusWizardCompanion toCompanion(EventSource source) {
+  drift.BolusWizardCompanion toCompanion(TreatmentsSource source) {
     final calculator = calculatorResult;
 
     return drift.BolusWizardCompanion.insert(
       source: source.storageValue,
-      externalId: source == EventSource.cloud && nightscoutObjectId != null
+      externalId: source == TreatmentsSource.cloud && nightscoutObjectId != null
           ? Value(nightscoutObjectId!)
           : const Value.absent(),
       createdAt: Value(createdAt.millisecondsSinceEpoch),

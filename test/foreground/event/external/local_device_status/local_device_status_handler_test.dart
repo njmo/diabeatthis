@@ -49,7 +49,7 @@ void main() {
               const AsyncData(
                 DataSourceConfig(
                   bgSource: BgSource.cloud,
-                  eventSource: EventSource.cloud,
+                  treatmentsSource: TreatmentsSource.cloud,
                   pumpStatusSource: PumpStatusSource.aaps,
                   historySource: HistorySource.cloud,
                   mirrorToLocal: false,

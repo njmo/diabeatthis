@@ -299,7 +299,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
 
   bool _usesNightscout(DataSourceConfig config) {
     return config.bgSource == BgSource.cloud ||
-        config.eventSource == EventSource.cloud ||
+        config.treatmentsSource == TreatmentsSource.cloud ||
         config.pumpStatusSource == PumpStatusSource.cloud ||
         config.historySource == HistorySource.cloud;
   }

@@ -12,8 +12,8 @@ class DataSourceConfigStorer {
     await Future.wait([
       _prefs.setString(dataSourceBgSourceKey, config.bgSource.storageValue),
       _prefs.setString(
-        dataSourceEventSourceKey,
-        config.eventSource.storageValue,
+        dataSourceTreatmentsSourceKey,
+        config.treatmentsSource.storageValue,
       ),
       _prefs.setString(
         dataSourcePumpStatusSourceKey,

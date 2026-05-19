@@ -121,13 +121,13 @@ void main() {
 
 DataSourceConfig _config({
   BgSource bgSource = BgSource.cloud,
-  EventSource eventSource = EventSource.cloud,
+  TreatmentsSource treatmentsSource = TreatmentsSource.cloud,
   PumpStatusSource pumpStatusSource = PumpStatusSource.cloud,
   HistorySource historySource = HistorySource.cloud,
 }) {
   return DataSourceConfig(
     bgSource: bgSource,
-    eventSource: eventSource,
+    treatmentsSource: treatmentsSource,
     pumpStatusSource: pumpStatusSource,
     historySource: historySource,
     mirrorToLocal: false,

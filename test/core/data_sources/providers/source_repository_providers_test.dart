@@ -69,7 +69,7 @@ void main() {
 
       const config = DataSourceConfig(
         bgSource: BgSource.cloud,
-        eventSource: EventSource.cloud,
+        treatmentsSource: TreatmentsSource.cloud,
         pumpStatusSource: PumpStatusSource.cloud,
         historySource: HistorySource.cloud,
         mirrorToLocal: true,
@@ -112,30 +112,33 @@ void main() {
       );
     });
 
-    test('uses pump status source independently from event source', () async {
-      const config = DataSourceConfig(
-        bgSource: BgSource.cloud,
-        eventSource: EventSource.aaps,
-        pumpStatusSource: PumpStatusSource.cloud,
-        historySource: HistorySource.cloud,
-        mirrorToLocal: false,
-      );
-      final nightscoutRepository = _FakeNightscoutRepository();
-      final container = ProviderContainer(
-        overrides: [
-          dataSourceConfigProvider.overrideWithValue(const AsyncData(config)),
-          nightscoutRepositoryProvider.overrideWithValue(
-            AsyncData(nightscoutRepository),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
+    test(
+      'uses pump status source independently from treatments source',
+      () async {
+        const config = DataSourceConfig(
+          bgSource: BgSource.cloud,
+          treatmentsSource: TreatmentsSource.aaps,
+          pumpStatusSource: PumpStatusSource.cloud,
+          historySource: HistorySource.cloud,
+          mirrorToLocal: false,
+        );
+        final nightscoutRepository = _FakeNightscoutRepository();
+        final container = ProviderContainer(
+          overrides: [
+            dataSourceConfigProvider.overrideWithValue(const AsyncData(config)),
+            nightscoutRepositoryProvider.overrideWithValue(
+              AsyncData(nightscoutRepository),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      await expectLater(
-        container.read(deviceStatusSourceRepositoryProvider.future),
-        completion(isA<CloudDeviceStatusSourceRepository>()),
-      );
-    });
+        await expectLater(
+          container.read(deviceStatusSourceRepositoryProvider.future),
+          completion(isA<CloudDeviceStatusSourceRepository>()),
+        );
+      },
+    );
 
     test('uses history source independently from live sources', () async {
       final db = DatabaseImpl(NativeDatabase.memory());
@@ -143,7 +146,7 @@ void main() {
 
       const localHistoryConfig = DataSourceConfig(
         bgSource: BgSource.cloud,
-        eventSource: EventSource.cloud,
+        treatmentsSource: TreatmentsSource.cloud,
         pumpStatusSource: PumpStatusSource.cloud,
         historySource: HistorySource.local,
         mirrorToLocal: false,
@@ -175,7 +178,7 @@ void main() {
     test('uses cloud history repositories for cloud history config', () async {
       const config = DataSourceConfig(
         bgSource: BgSource.aaps,
-        eventSource: EventSource.aaps,
+        treatmentsSource: TreatmentsSource.aaps,
         pumpStatusSource: PumpStatusSource.aaps,
         historySource: HistorySource.cloud,
         mirrorToLocal: false,
@@ -208,7 +211,7 @@ void main() {
       var nightscoutReads = 0;
       const config = DataSourceConfig(
         bgSource: BgSource.aaps,
-        eventSource: EventSource.aaps,
+        treatmentsSource: TreatmentsSource.aaps,
         pumpStatusSource: PumpStatusSource.aaps,
         historySource: HistorySource.local,
         mirrorToLocal: false,
@@ -246,7 +249,7 @@ void main() {
         var nightscoutReads = 0;
         const config = DataSourceConfig(
           bgSource: BgSource.xdrip,
-          eventSource: EventSource.aaps,
+          treatmentsSource: TreatmentsSource.aaps,
           pumpStatusSource: PumpStatusSource.aaps,
           historySource: HistorySource.local,
           mirrorToLocal: false,
@@ -319,7 +322,7 @@ void main() {
 
       const config = DataSourceConfig(
         bgSource: BgSource.cloud,
-        eventSource: EventSource.cloud,
+        treatmentsSource: TreatmentsSource.cloud,
         pumpStatusSource: PumpStatusSource.cloud,
         historySource: HistorySource.cloud,
         mirrorToLocal: true,
@@ -409,7 +412,7 @@ void main() {
       expect(mirroredCorrectionBoluses.single.externalId, 'correction-1');
       expect(
         mirroredCorrectionBoluses.single.source,
-        EventSource.cloud.storageValue,
+        TreatmentsSource.cloud.storageValue,
       );
       expect(mirroredCorrectionBoluses.single.insulin, 0.7);
     });
@@ -464,7 +467,7 @@ void main() {
 
         const config = DataSourceConfig(
           bgSource: BgSource.cloud,
-          eventSource: EventSource.cloud,
+          treatmentsSource: TreatmentsSource.cloud,
           pumpStatusSource: PumpStatusSource.cloud,
           historySource: HistorySource.cloud,
           mirrorToLocal: true,
@@ -580,7 +583,7 @@ void main() {
         );
         expect(
           mirroredCorrectionBoluses.single.source,
-          EventSource.cloud.storageValue,
+          TreatmentsSource.cloud.storageValue,
         );
         expect(mirroredCorrectionBoluses.single.insulin, 0.8);
       },

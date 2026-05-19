@@ -36,7 +36,7 @@ void main() {
               const AsyncData(
                 DataSourceConfig(
                   bgSource: BgSource.xdrip,
-                  eventSource: EventSource.cloud,
+                  treatmentsSource: TreatmentsSource.cloud,
                   pumpStatusSource: PumpStatusSource.cloud,
                   historySource: HistorySource.cloud,
                   mirrorToLocal: false,

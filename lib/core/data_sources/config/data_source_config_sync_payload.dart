@@ -5,7 +5,7 @@ extension DataSourceConfigSyncPayload on DataSourceConfig {
   Map<String, String> toSyncPayload() {
     return {
       dataSourceBgSourceKey: bgSource.storageValue,
-      dataSourceEventSourceKey: eventSource.storageValue,
+      dataSourceTreatmentsSourceKey: treatmentsSource.storageValue,
       dataSourcePumpStatusSourceKey: pumpStatusSource.storageValue,
       dataSourceHistorySourceKey: historySource.storageValue,
       dataSourceMirrorToLocalKey: mirrorToLocal.toString(),

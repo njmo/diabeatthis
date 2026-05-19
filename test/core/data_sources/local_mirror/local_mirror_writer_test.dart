@@ -104,7 +104,7 @@ void main() {
         carbs: 18,
         duration: const Duration(minutes: 90).inMilliseconds,
       ),
-    ], EventSource.cloud);
+    ], TreatmentsSource.cloud);
 
     final bolusWizards = await db.localMirrorDao.getBolusWizardsBetween(
       DateTime.fromMillisecondsSinceEpoch(0),
@@ -148,7 +148,10 @@ void main() {
 
     expect(correctionBoluses, hasLength(1));
     expect(correctionBoluses.single.externalId, 'correction-1');
-    expect(correctionBoluses.single.source, EventSource.cloud.storageValue);
+    expect(
+      correctionBoluses.single.source,
+      TreatmentsSource.cloud.storageValue,
+    );
     expect(correctionBoluses.single.insulin, 0.7);
 
     expect(manualBoluses, hasLength(1));

@@ -57,7 +57,7 @@ void main() {
   test('stores treatment events by source and created time', () async {
     await db.localMirrorDao.upsertManualBolus(
       ManualBolusCompanion.insert(
-        source: EventSource.aaps.storageValue,
+        source: TreatmentsSource.aaps.storageValue,
         externalId: const Value('treatment-1'),
         createdAt: const Value(1000),
         insulin: const Value(2.4),
@@ -65,7 +65,7 @@ void main() {
     );
     await db.localMirrorDao.upsertTemporaryTarget(
       TemporaryTargetCompanion.insert(
-        source: EventSource.cloud.storageValue,
+        source: TreatmentsSource.cloud.storageValue,
         createdAt: const Value(2000),
         durationMinutes: const Value(30),
         targetBottom: const Value(90),
@@ -76,7 +76,7 @@ void main() {
     final events = await db.localMirrorDao.getManualBolusesBetween(
       DateTime.fromMillisecondsSinceEpoch(0),
       DateTime.fromMillisecondsSinceEpoch(1500),
-      source: EventSource.aaps.storageValue,
+      source: TreatmentsSource.aaps.storageValue,
     );
 
     expect(events, hasLength(1));
@@ -86,7 +86,7 @@ void main() {
   test('stores device statuses by source and created time', () async {
     await db.localMirrorDao.upsertDeviceStatus(
       DeviceStatusCompanion.insert(
-        source: EventSource.aaps.storageValue,
+        source: TreatmentsSource.aaps.storageValue,
         externalId: const Value('status-1'),
         createdAt: const Value(1000),
         bg: const Value(110),
@@ -107,7 +107,7 @@ void main() {
     );
     await db.localMirrorDao.upsertDeviceStatus(
       DeviceStatusCompanion.insert(
-        source: EventSource.cloud.storageValue,
+        source: TreatmentsSource.cloud.storageValue,
         createdAt: const Value(2000),
         bg: const Value(140),
       ),
@@ -116,7 +116,7 @@ void main() {
     final statuses = await db.localMirrorDao.getDeviceStatusesBetween(
       DateTime.fromMillisecondsSinceEpoch(0),
       DateTime.fromMillisecondsSinceEpoch(1500),
-      source: EventSource.aaps.storageValue,
+      source: TreatmentsSource.aaps.storageValue,
     );
 
     expect(statuses, hasLength(1));

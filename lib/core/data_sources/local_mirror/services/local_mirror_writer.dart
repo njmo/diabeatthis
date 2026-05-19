@@ -31,7 +31,7 @@ class LocalMirrorWriter {
 
   Future<void> mirrorTreatments(
     Iterable<Treatment> treatments,
-    EventSource source,
+    TreatmentsSource source,
   ) async {
     for (final treatment in treatments) {
       switch (treatment) {

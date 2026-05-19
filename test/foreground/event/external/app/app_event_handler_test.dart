@@ -187,7 +187,7 @@ void main() {
               const AsyncData(
                 DataSourceConfig(
                   bgSource: BgSource.cloud,
-                  eventSource: EventSource.cloud,
+                  treatmentsSource: TreatmentsSource.cloud,
                   pumpStatusSource: PumpStatusSource.cloud,
                   historySource: HistorySource.local,
                   mirrorToLocal: false,

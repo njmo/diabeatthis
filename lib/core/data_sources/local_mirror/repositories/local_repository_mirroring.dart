@@ -25,7 +25,7 @@ class LocalRepositoryMirroring with Logging {
   Future<T> treatments<T>({
     required Future<T> Function() read,
     required Iterable<Treatment> Function(T result) extract,
-    required EventSource source,
+    required TreatmentsSource source,
     required String operation,
   }) {
     return mirrorAfter(

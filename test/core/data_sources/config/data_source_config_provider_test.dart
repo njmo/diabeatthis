@@ -18,10 +18,23 @@ void main() {
       );
     });
 
+    test('ignores legacy event source preference', () async {
+      SharedPreferences.setMockInitialValues({
+        'data-source-event-source': 'aaps',
+      });
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      await expectLater(
+        container.read(dataSourceConfigProvider.future),
+        completion(const DataSourceConfig.defaults()),
+      );
+    });
+
     test('reads stored source config', () async {
       SharedPreferences.setMockInitialValues({
         dataSourceBgSourceKey: 'xdrip',
-        dataSourceEventSourceKey: 'aaps',
+        dataSourceTreatmentsSourceKey: 'aaps',
         dataSourcePumpStatusSourceKey: 'aaps',
         dataSourceHistorySourceKey: 'local',
         dataSourceMirrorToLocalKey: true,
@@ -34,7 +47,7 @@ void main() {
         completion(
           const DataSourceConfig(
             bgSource: BgSource.xdrip,
-            eventSource: EventSource.aaps,
+            treatmentsSource: TreatmentsSource.aaps,
             pumpStatusSource: PumpStatusSource.aaps,
             historySource: HistorySource.local,
             mirrorToLocal: true,
@@ -50,7 +63,7 @@ void main() {
 
       const config = DataSourceConfig(
         bgSource: BgSource.aaps,
-        eventSource: EventSource.aaps,
+        treatmentsSource: TreatmentsSource.aaps,
         pumpStatusSource: PumpStatusSource.aaps,
         historySource: HistorySource.local,
         mirrorToLocal: true,
@@ -61,7 +74,7 @@ void main() {
       await storer.save(config);
 
       expect(prefs.getString(dataSourceBgSourceKey), 'aaps');
-      expect(prefs.getString(dataSourceEventSourceKey), 'aaps');
+      expect(prefs.getString(dataSourceTreatmentsSourceKey), 'aaps');
       expect(prefs.getString(dataSourcePumpStatusSourceKey), 'aaps');
       expect(prefs.getString(dataSourceHistorySourceKey), 'local');
       expect(prefs.getBool(dataSourceMirrorToLocalKey), isTrue);

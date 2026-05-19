@@ -91,7 +91,7 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
     DataSourceConfig next,
   ) {
     return previous.bgSource != next.bgSource ||
-        previous.eventSource != next.eventSource ||
+        previous.treatmentsSource != next.treatmentsSource ||
         previous.pumpStatusSource != next.pumpStatusSource ||
         previous.historySource != next.historySource;
   }
@@ -101,7 +101,7 @@ extension _DataSourceConfigSyncPayload on DataSourceConfig {
   Map<String, String> toSyncPayload() {
     return {
       dataSourceBgSourceKey: bgSource.storageValue,
-      dataSourceEventSourceKey: eventSource.storageValue,
+      dataSourceTreatmentsSourceKey: treatmentsSource.storageValue,
       dataSourcePumpStatusSourceKey: pumpStatusSource.storageValue,
       dataSourceHistorySourceKey: historySource.storageValue,
       dataSourceMirrorToLocalKey: mirrorToLocal.toString(),

@@ -62,8 +62,8 @@ Future<GlucoseSourceRepository> glucoseSourceRepository(Ref ref) async {
 Future<TreatmentSourceRepository> treatmentsSourceRepository(Ref ref) async {
   final config = await ref.watch(dataSourceConfigProvider.future);
 
-  switch (config.eventSource) {
-    case EventSource.cloud:
+  switch (config.treatmentsSource) {
+    case TreatmentsSource.cloud:
       final nightscoutRepository = await ref.watch(
         nightscoutRepositoryProvider.future,
       );
@@ -73,9 +73,9 @@ Future<TreatmentSourceRepository> treatmentsSourceRepository(Ref ref) async {
       return MirroringTreatmentSourceRepository(
         delegate: repository,
         mirrorWriter: _localMirrorWriter(ref),
-        source: config.eventSource,
+        source: config.treatmentsSource,
       );
-    case EventSource.aaps:
+    case TreatmentsSource.aaps:
       throw const UnsupportedDataSourceException(
         'AAPS treatment source is not implemented yet',
       );
@@ -120,7 +120,7 @@ Future<TreatmentsHistoryRepository> treatmentsHistoryRepository(Ref ref) async {
       return MirroringTreatmentsHistoryRepository(
         delegate: repository,
         mirrorWriter: _localMirrorWriter(ref),
-        source: EventSource.cloud,
+        source: TreatmentsSource.cloud,
       );
     case HistorySource.local:
       return LocalTreatmentsHistoryRepository(

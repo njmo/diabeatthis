@@ -9,14 +9,14 @@ class MirroringTreatmentsHistoryRepository
   MirroringTreatmentsHistoryRepository({
     required TreatmentsHistoryRepository delegate,
     required LocalMirrorWriter mirrorWriter,
-    required EventSource source,
+    required TreatmentsSource source,
   }) : _delegate = delegate,
        _mirroring = LocalRepositoryMirroring(mirrorWriter),
        _source = source;
 
   final TreatmentsHistoryRepository _delegate;
   final LocalRepositoryMirroring _mirroring;
-  final EventSource _source;
+  final TreatmentsSource _source;
 
   @override
   Future<List<Treatment>> fetchTreatmentsBetween(DateTime start, DateTime end) {

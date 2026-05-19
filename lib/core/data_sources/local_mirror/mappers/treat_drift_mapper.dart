@@ -5,7 +5,7 @@ import '../../../drift/database_impl.dart' as drift;
 import '../../config/data_source_config.dart';
 
 extension TreatDriftMapper on domain.Treat {
-  drift.TreatCompanion toCompanion(EventSource source) {
+  drift.TreatCompanion toCompanion(TreatmentsSource source) {
     return drift.TreatCompanion.insert(
       source: source.storageValue,
       externalId: externalId != null

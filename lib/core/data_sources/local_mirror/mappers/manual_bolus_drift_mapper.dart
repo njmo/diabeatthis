@@ -5,7 +5,7 @@ import '../../../drift/database_impl.dart' as drift;
 import '../../config/data_source_config.dart';
 
 extension ManualBolusDriftMapper on domain.ManualBolus {
-  drift.ManualBolusCompanion toCompanion(EventSource source) {
+  drift.ManualBolusCompanion toCompanion(TreatmentsSource source) {
     return drift.ManualBolusCompanion.insert(
       source: source.storageValue,
       externalId: externalId != null
