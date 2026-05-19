@@ -2,13 +2,17 @@ import 'package:diabeatthis/common/events/data/task/task_data_synchronization_pa
 import 'package:diabeatthis/common/events/task_event_payload.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
-import 'package:diabeatthis/core/domain/model/temporary_target.dart';
+import 'package:diabeatthis/core/domain/model/temporary_target.dart' as domain;
+import 'package:diabeatthis/core/drift/database_impl.dart';
+import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/foreground/event/external/local_treatments/local_treatments_event.dart';
 import 'package:diabeatthis/foreground/event/external/local_treatments/local_treatments_handler.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/event/router/task_event_router.dart';
 import 'package:diabeatthis/foreground/providers/task_event_router_provider.dart';
 import 'package:diabeatthis/foreground/synchronization/synchronization_cache_controller.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -19,7 +23,7 @@ void main() {
     test(
       'emits treatment event and syncs temporary target for AAPS source',
       () async {
-        final target = TemporaryTarget(
+        final target = domain.TemporaryTarget(
           nightscoutId: 'target-1',
           createdAt: DateTime(2026, 5, 18, 21, 12),
           durationInMiliseconds: 1800000,
@@ -52,7 +56,7 @@ void main() {
         );
 
         expect(harness.emittedEvents, [
-          isA<TreatmentAvailableEvent<TemporaryTarget>>(),
+          isA<TreatmentAvailableEvent<domain.TemporaryTarget>>(),
         ]);
         expect(
           container
@@ -68,7 +72,7 @@ void main() {
     );
 
     test('ignores treatments when configured source is not AAPS', () async {
-      final target = TemporaryTarget(
+      final target = domain.TemporaryTarget(
         nightscoutId: 'target-1',
         createdAt: DateTime(2026, 5, 18, 21, 12),
         durationInMiliseconds: 1800000,
@@ -101,6 +105,116 @@ void main() {
 
       await harness.dispose();
     });
+
+    test(
+      'updates mirrored AAPS treatment from repeated local broadcast',
+      () async {
+        final db = DatabaseImpl(NativeDatabase.memory());
+        final router = RecordingTaskEventRouter();
+        final container = ProviderContainer(
+          overrides: [
+            databaseProvider.overrideWithValue(db),
+            dataSourceConfigProvider.overrideWithValue(
+              const AsyncData(
+                DataSourceConfig(
+                  bgSource: BgSource.cloud,
+                  treatmentsSource: TreatmentsSource.aaps,
+                  pumpStatusSource: PumpStatusSource.cloud,
+                  historySource: HistorySource.cloud,
+                  mirrorToLocal: true,
+                ),
+              ),
+            ),
+            taskEventRouterProvider.overrideWithValue(router),
+          ],
+        );
+        final harness = FakeRuntimeHarness(container: container);
+
+        await db.localMirrorDao.upsertTemporaryTarget(
+          TemporaryTargetCompanion.insert(
+            source: TreatmentsSource.aaps.storageValue,
+            externalId: const Value('target-1'),
+            createdAt: Value(_targetCreatedAt.millisecondsSinceEpoch),
+            durationMinutes: const Value(30),
+            targetBottom: const Value(90),
+            targetTop: const Value(120),
+          ),
+        );
+
+        await LocalTreatmentsHandler().handle(
+          LocalTreatmentsEvent.fromJson({
+            'data': [_temporaryTargetPayload(duration: 5, targetTop: 100)],
+          }),
+          harness.runtimeContext,
+        );
+
+        final targets = await db.localMirrorDao.getTemporaryTargetsBetween(
+          DateTime.fromMillisecondsSinceEpoch(0),
+          DateTime.fromMillisecondsSinceEpoch(2000000000000),
+          source: TreatmentsSource.aaps.storageValue,
+        );
+
+        expect(targets, hasLength(1));
+        expect(targets.single.externalId, 'target-1');
+        expect(targets.single.durationMinutes, 5);
+        expect(targets.single.targetTop, 100);
+        expect(harness.emittedEvents, [
+          isA<TreatmentAvailableEvent<domain.TemporaryTarget>>(),
+        ]);
+
+        await harness.dispose();
+        await db.close();
+      },
+    );
+
+    test('removes invalidated AAPS treatment from local mirror', () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          dataSourceConfigProvider.overrideWithValue(
+            const AsyncData(
+              DataSourceConfig(
+                bgSource: BgSource.cloud,
+                treatmentsSource: TreatmentsSource.aaps,
+                pumpStatusSource: PumpStatusSource.cloud,
+                historySource: HistorySource.local,
+                mirrorToLocal: true,
+              ),
+            ),
+          ),
+        ],
+      );
+      final harness = FakeRuntimeHarness(container: container);
+
+      await db.localMirrorDao.upsertManualBolus(
+        ManualBolusCompanion.insert(
+          source: TreatmentsSource.aaps.storageValue,
+          externalId: const Value('manual-1'),
+          createdAt: Value(_manualBolusCreatedAt.millisecondsSinceEpoch),
+          insulin: const Value(1.2),
+        ),
+      );
+
+      await LocalTreatmentsHandler().handle(
+        LocalTreatmentsEvent.fromJson({
+          'data': [_manualBolusPayload(isValid: false)],
+        }),
+        harness.runtimeContext,
+      );
+
+      final manualBoluses = await db.localMirrorDao.getManualBolusesBetween(
+        DateTime.fromMillisecondsSinceEpoch(0),
+        DateTime.fromMillisecondsSinceEpoch(2000000000000),
+        source: TreatmentsSource.aaps.storageValue,
+      );
+
+      expect(manualBoluses, isEmpty);
+      expect(harness.emittedEvents, isEmpty);
+
+      await harness.dispose();
+      await db.close();
+    });
   });
 }
 
@@ -111,4 +225,32 @@ class RecordingTaskEventRouter extends TaskEventRouter {
   void send(TaskEventPayload payload) {
     payloads.add(payload);
   }
+}
+
+final _targetCreatedAt = DateTime.utc(2026, 5, 18, 21, 12);
+final _manualBolusCreatedAt = DateTime.utc(2026, 5, 18, 21, 20);
+
+Map<String, dynamic> _temporaryTargetPayload({
+  int duration = 30,
+  int targetTop = 110,
+}) {
+  return {
+    '_id': 'target-1',
+    'eventType': 'Temporary Target',
+    'created_at': _targetCreatedAt.toIso8601String(),
+    'durationInMilliseconds': Duration(minutes: duration).inMilliseconds,
+    'duration': duration,
+    'targetBottom': 90,
+    'targetTop': targetTop,
+  };
+}
+
+Map<String, dynamic> _manualBolusPayload({required bool isValid}) {
+  return {
+    '_id': 'manual-1',
+    'eventType': 'Meal Bolus',
+    'created_at': _manualBolusCreatedAt.toIso8601String(),
+    'insulin': 1.2,
+    'isValid': isValid,
+  };
 }

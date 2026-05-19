@@ -31,6 +31,8 @@ class LocalTreatmentsHandler with Logging {
     }
 
     for (final treatment in event.data) {
+      if (!treatment.isValid) continue;
+
       _treatmentEventDispatcher.dispatch(
         container: container,
         emitEvent: runtimeContext.emitEvent,

@@ -1,5 +1,6 @@
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
+import 'package:diabeatthis/core/domain/model/temporary_target.dart';
 import 'package:diabeatthis/foreground/event/external/native_receiver/native_receiver_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -58,6 +59,32 @@ void main() {
           expect(data.data.bg, 249);
         },
         treatments: (_) => fail('Expected device status receiver event'),
+      );
+    });
+
+    test('parses treatments receiver event', () {
+      final event = NativeReceiverEvent.fromJson({
+        'kind': 'treatments',
+        'data': {
+          'data': {
+            '_id': 'target-1',
+            'eventType': 'Temporary Target',
+            'created_at': '2026-05-18T21:12:00.000Z',
+            'durationInMilliseconds': 300000,
+            'duration': 5,
+            'targetBottom': 90,
+            'targetTop': 110,
+          },
+        },
+      });
+
+      event.when(
+        glucose: (_) => fail('Expected treatments receiver event'),
+        deviceStatus: (_) => fail('Expected treatments receiver event'),
+        treatments: (data) {
+          expect(data.data.single, isA<TemporaryTarget>());
+          expect(data.rawPayloads.single['_id'], 'target-1');
+        },
       );
     });
   });

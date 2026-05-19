@@ -8,7 +8,7 @@ extension TemporaryTargetDriftMapper on domain.TemporaryTarget {
   drift.TemporaryTargetCompanion toCompanion(TreatmentsSource source) {
     return drift.TemporaryTargetCompanion.insert(
       source: source.storageValue,
-      externalId: source == TreatmentsSource.cloud && nightscoutId.isNotEmpty
+      externalId: nightscoutId.isNotEmpty
           ? Value(nightscoutId)
           : const Value.absent(),
       createdAt: Value(createdAt.millisecondsSinceEpoch),

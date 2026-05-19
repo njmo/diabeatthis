@@ -83,6 +83,54 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     );
   }
 
+  Future<void> deleteBolusWizardByCreatedAt(DateTime? createdAt) async {
+    final table = db.bolusWizard;
+    final reference = _matchesTreatmentReference(table.createdAt, createdAt);
+    if (reference == null) return;
+
+    await (delete(table)..where((row) => reference)).go();
+  }
+
+  Future<void> deleteTemporaryTargetByCreatedAt(DateTime? createdAt) async {
+    final table = db.temporaryTarget;
+    final reference = _matchesTreatmentReference(table.createdAt, createdAt);
+    if (reference == null) return;
+
+    await (delete(table)..where((row) => reference)).go();
+  }
+
+  Future<void> deleteCorrectionBolusByCreatedAt(DateTime? createdAt) async {
+    final table = db.correctionBolus;
+    final reference = _matchesTreatmentReference(table.createdAt, createdAt);
+    if (reference == null) return;
+
+    await (delete(table)..where((row) => reference)).go();
+  }
+
+  Future<void> deleteManualBolusByCreatedAt(DateTime? createdAt) async {
+    final table = db.manualBolus;
+    final reference = _matchesTreatmentReference(table.createdAt, createdAt);
+    if (reference == null) return;
+
+    await (delete(table)..where((row) => reference)).go();
+  }
+
+  Future<void> deleteTreatByCreatedAt(DateTime? createdAt) async {
+    final table = db.treat;
+    final reference = _matchesTreatmentReference(table.createdAt, createdAt);
+    if (reference == null) return;
+
+    await (delete(table)..where((row) => reference)).go();
+  }
+
+  Future<void> deleteExtendedCarbByCreatedAt(DateTime? createdAt) async {
+    final table = db.extendedCarb;
+    final reference = _matchesTreatmentReference(table.createdAt, createdAt);
+    if (reference == null) return;
+
+    await (delete(table)..where((row) => reference)).go();
+  }
+
   Future<void> upsertDeviceStatus(DeviceStatusCompanion status) {
     final table = db.deviceStatus;
 
@@ -270,4 +318,17 @@ Expression<bool> _createdAtBetween(
     start.millisecondsSinceEpoch,
     end.millisecondsSinceEpoch,
   );
+}
+
+Expression<bool>? _matchesTreatmentReference(
+  GeneratedColumn<int> createdAtColumn,
+  DateTime? createdAt,
+) {
+  final createdAtValue = createdAt?.millisecondsSinceEpoch;
+
+  if (createdAtValue != null) {
+    return createdAtColumn.equals(createdAtValue);
+  }
+
+  return null;
 }

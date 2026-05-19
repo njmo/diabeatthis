@@ -36,17 +36,41 @@ class LocalMirrorWriter {
     for (final treatment in treatments) {
       switch (treatment) {
         case BolusWizard():
-          await _dao.upsertBolusWizard(treatment.toCompanion(source));
+          if (treatment.isValid) {
+            await _dao.upsertBolusWizard(treatment.toCompanion(source));
+          } else {
+            await _dao.deleteBolusWizardByCreatedAt(treatment.createdAt);
+          }
         case TemporaryTarget():
-          await _dao.upsertTemporaryTarget(treatment.toCompanion(source));
+          if (treatment.isValid) {
+            await _dao.upsertTemporaryTarget(treatment.toCompanion(source));
+          } else {
+            await _dao.deleteTemporaryTargetByCreatedAt(treatment.createdAt);
+          }
         case CorrectionBolus():
-          await _dao.upsertCorrectionBolus(treatment.toCompanion(source));
+          if (treatment.isValid) {
+            await _dao.upsertCorrectionBolus(treatment.toCompanion(source));
+          } else {
+            await _dao.deleteCorrectionBolusByCreatedAt(treatment.createdAt);
+          }
         case ManualBolus():
-          await _dao.upsertManualBolus(treatment.toCompanion(source));
+          if (treatment.isValid) {
+            await _dao.upsertManualBolus(treatment.toCompanion(source));
+          } else {
+            await _dao.deleteManualBolusByCreatedAt(treatment.createdAt);
+          }
         case Treat():
-          await _dao.upsertTreat(treatment.toCompanion(source));
+          if (treatment.isValid) {
+            await _dao.upsertTreat(treatment.toCompanion(source));
+          } else {
+            await _dao.deleteTreatByCreatedAt(treatment.createdAt);
+          }
         case ExtendedCarb():
-          await _dao.upsertExtendedCarb(treatment.toCompanion(source));
+          if (treatment.isValid) {
+            await _dao.upsertExtendedCarb(treatment.toCompanion(source));
+          } else {
+            await _dao.deleteExtendedCarbByCreatedAt(treatment.createdAt);
+          }
         default:
           continue;
       }

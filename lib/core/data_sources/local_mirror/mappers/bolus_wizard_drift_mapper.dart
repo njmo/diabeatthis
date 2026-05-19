@@ -11,7 +11,7 @@ extension BolusWizardDriftMapper on domain.BolusWizard {
 
     return drift.BolusWizardCompanion.insert(
       source: source.storageValue,
-      externalId: source == TreatmentsSource.cloud && nightscoutObjectId != null
+      externalId: nightscoutObjectId != null
           ? Value(nightscoutObjectId!)
           : const Value.absent(),
       createdAt: Value(createdAt.millisecondsSinceEpoch),

@@ -55,12 +55,10 @@ class AapsTreatmentReceiver : BroadcastReceiver() {
         }
 
         private val SUPPORTED_ACTIONS = setOf(
-            ACTION_NEW_TREATMENT,
-            ACTION_CHANGED_TREATMENT,
+            ACTION_NEW_FOOD,
         )
 
-        const val ACTION_NEW_TREATMENT = "info.nightscout.client.NEW_TREATMENT"
-        const val ACTION_CHANGED_TREATMENT = "info.nightscout.client.CHANGED_TREATMENT"
+        const val ACTION_NEW_FOOD = "info.nightscout.client.NEW_FOOD"
         const val EXTRA_TREATMENT = "treatment"
         const val EXTRA_TREATMENTS = "treatments"
     }

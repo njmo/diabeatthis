@@ -168,6 +168,190 @@ void main() {
     expect(extendedCarbs.single.durationMinutes, 90);
   });
 
+  test('mirrors AAPS treatments with external ids', () async {
+    final createdAt = DateTime.fromMillisecondsSinceEpoch(1000);
+
+    await writer.mirrorTreatments([
+      domain.TemporaryTarget(
+        nightscoutId: 'target-1',
+        createdAt: createdAt,
+        durationInMiliseconds: 1800000,
+        duration: 30,
+        targetBottom: 90,
+        targetTop: 120,
+      ),
+      domain.BolusWizard(
+        nightscoutObjectId: 'wizard-1',
+        createdAt: createdAt.add(const Duration(minutes: 1)),
+        date: createdAt.add(const Duration(minutes: 1)),
+        glucose: 100,
+        units: 'mg/dl',
+        notes: null,
+        calculatorResult: _testBolusCalculatorResult(
+          carbs: 30,
+          totalInsulin: 2.5,
+        ),
+      ),
+    ], TreatmentsSource.aaps);
+
+    final temporaryTargets = await db.localMirrorDao.getTemporaryTargetsBetween(
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.fromMillisecondsSinceEpoch(120000),
+    );
+    final bolusWizards = await db.localMirrorDao.getBolusWizardsBetween(
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.fromMillisecondsSinceEpoch(120000),
+    );
+
+    expect(temporaryTargets.single.externalId, 'target-1');
+    expect(bolusWizards.single.externalId, 'wizard-1');
+  });
+
+  test('removes invalidated AAPS treatments by created date', () async {
+    final createdAt = DateTime.fromMillisecondsSinceEpoch(1000);
+
+    await writer.mirrorTreatments([
+      domain.ManualBolus(
+        externalId: 'manual-1',
+        createdAt: createdAt,
+        insulin: 1.2,
+      ),
+    ], TreatmentsSource.aaps);
+    await writer.mirrorTreatments([
+      domain.ManualBolus(
+        externalId: 'manual-1',
+        createdAt: createdAt.add(const Duration(minutes: 1)),
+        insulin: 1.2,
+      ),
+      domain.ManualBolus(
+        externalId: 'manual-1',
+        createdAt: createdAt.add(const Duration(minutes: 2)),
+        insulin: 1.4,
+      ),
+    ], TreatmentsSource.cloud);
+    await writer.mirrorTreatments([
+      domain.ManualBolus(
+        externalId: 'manual-1',
+        createdAt: createdAt.add(const Duration(minutes: 2)),
+        insulin: 1.4,
+      ),
+    ], TreatmentsSource.aaps);
+
+    await writer.mirrorTreatments([
+      domain.ManualBolus(
+        externalId: 'manual-1',
+        createdAt: createdAt,
+        insulin: 1.2,
+        isValid: false,
+      ),
+    ], TreatmentsSource.aaps);
+
+    final aapsBoluses = await db.localMirrorDao.getManualBolusesBetween(
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.fromMillisecondsSinceEpoch(120000),
+      source: TreatmentsSource.aaps.storageValue,
+    );
+    final laterAapsBoluses = await db.localMirrorDao.getManualBolusesBetween(
+      DateTime.fromMillisecondsSinceEpoch(120000),
+      DateTime.fromMillisecondsSinceEpoch(180000),
+      source: TreatmentsSource.aaps.storageValue,
+    );
+    final cloudBoluses = await db.localMirrorDao.getManualBolusesBetween(
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.fromMillisecondsSinceEpoch(180000),
+      source: TreatmentsSource.cloud.storageValue,
+    );
+
+    expect(aapsBoluses, isEmpty);
+    expect(laterAapsBoluses, hasLength(1));
+    expect(cloudBoluses, hasLength(1));
+  });
+
+  test('removes invalid treatment while mirroring treatment list', () async {
+    final createdAt = DateTime.fromMillisecondsSinceEpoch(1000);
+
+    await writer.mirrorTreatments([
+      domain.ManualBolus(
+        externalId: 'manual-1',
+        createdAt: createdAt,
+        insulin: 1.2,
+      ),
+    ], TreatmentsSource.aaps);
+
+    await writer.mirrorTreatments([
+      domain.ManualBolus(
+        externalId: 'manual-1',
+        createdAt: createdAt,
+        insulin: 1.2,
+        isValid: false,
+      ),
+    ], TreatmentsSource.aaps);
+
+    final manualBoluses = await db.localMirrorDao.getManualBolusesBetween(
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.fromMillisecondsSinceEpoch(2000),
+      source: TreatmentsSource.aaps.storageValue,
+    );
+
+    expect(manualBoluses, isEmpty);
+  });
+
+  test('removes previous cloud treatment after switching to AAPS', () async {
+    final createdAt = DateTime.fromMillisecondsSinceEpoch(1000);
+
+    await writer.mirrorTreatments([
+      domain.ManualBolus(
+        externalId: 'manual-1',
+        createdAt: createdAt,
+        insulin: 1.2,
+      ),
+    ], TreatmentsSource.cloud);
+
+    await writer.mirrorTreatments([
+      domain.ManualBolus(
+        externalId: 'manual-1',
+        createdAt: createdAt,
+        insulin: 1.2,
+        isValid: false,
+      ),
+    ], TreatmentsSource.aaps);
+
+    final manualBoluses = await db.localMirrorDao.getManualBolusesBetween(
+      DateTime.fromMillisecondsSinceEpoch(0),
+      DateTime.fromMillisecondsSinceEpoch(2000),
+    );
+
+    expect(manualBoluses, isEmpty);
+  });
+
+  test(
+    'removes invalidated AAPS treatments by created date fallback',
+    () async {
+      final createdAt = DateTime.fromMillisecondsSinceEpoch(1000);
+
+      await writer.mirrorTreatments([
+        domain.Treat(externalId: null, createdAt: createdAt, carbs: 12),
+      ], TreatmentsSource.aaps);
+
+      await writer.mirrorTreatments([
+        domain.Treat(
+          externalId: null,
+          createdAt: createdAt,
+          carbs: 12,
+          isValid: false,
+        ),
+      ], TreatmentsSource.aaps);
+
+      final treats = await db.localMirrorDao.getTreatsBetween(
+        DateTime.fromMillisecondsSinceEpoch(0),
+        DateTime.fromMillisecondsSinceEpoch(2000),
+        source: TreatmentsSource.aaps.storageValue,
+      );
+
+      expect(treats, isEmpty);
+    },
+  );
+
   test('mirrors device statuses into local storage', () async {
     final date = DateTime.fromMillisecondsSinceEpoch(1000);
 

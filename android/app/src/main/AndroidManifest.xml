@@ -71,8 +71,7 @@
             android:enabled="false"
             android:exported="true">
             <intent-filter>
-                <action android:name="info.nightscout.client.NEW_TREATMENT"/>
-                <action android:name="info.nightscout.client.CHANGED_TREATMENT"/>
+                <action android:name="info.nightscout.client.NEW_FOOD"/>
             </intent-filter>
         </receiver>
         <service
