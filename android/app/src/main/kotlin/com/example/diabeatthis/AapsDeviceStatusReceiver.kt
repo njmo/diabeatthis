@@ -26,6 +26,7 @@ class AapsDeviceStatusReceiver : BroadcastReceiver() {
                     .put("data", data),
             )
 
+        NativeReceiverWakeLock.acquire(context)
         ForegroundService.sendData(eventPayload.toString())
     }
 

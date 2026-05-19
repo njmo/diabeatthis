@@ -65,6 +65,7 @@ void main() {
               .targetCache,
           target,
         );
+        expect(harness.emittedTicks, isEmpty);
         expect(router.payloads, [TaskTargetSynchronization(data: target)]);
 
         await harness.dispose();

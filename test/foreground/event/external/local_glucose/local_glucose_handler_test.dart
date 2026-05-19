@@ -19,7 +19,7 @@ import '../../../utils/fake_runtime_harness.dart';
 void main() {
   group('LocalGlucoseHandler', () {
     test(
-      'updates live state and ticks runtime for matching local source',
+      'updates live state without ticking runtime for matching local source',
       () async {
         final now = DateTime(2026, 5, 18, 12, 30);
         final glucose = Glucose(
@@ -65,7 +65,7 @@ void main() {
           glucose,
         );
         expect(harness.emittedEvents, [isA<DataAvailableEvent<Glucose>>()]);
-        expect(harness.emittedTicks, [now]);
+        expect(harness.emittedTicks, isEmpty);
         expect(router.payloads, [
           TaskDataSynchronizationPayload.glucose(data: glucose),
         ]);

@@ -32,6 +32,7 @@ class XdripBgEstimateReceiver : BroadcastReceiver() {
                     .put("data", glucosePayload),
             )
 
+        NativeReceiverWakeLock.acquire(context)
         ForegroundService.sendData(eventPayload.toString())
     }
 

@@ -1,7 +1,5 @@
 import 'dart:ui';
 
-import 'package:clock/clock.dart';
-
 import '../../../../app/providers/app_lifecycle_state_provider.dart';
 import '../../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
@@ -42,8 +40,6 @@ class LocalGlucoseHandler with Logging {
         .cacheGlucose(glucose);
     container.read(bloodSugarValueProvider.notifier).update(glucose);
     runtimeContext.emitEvent(DataAvailableEvent<Glucose>(glucose));
-    final tickAt = clock.now();
-    runtimeContext.tick(tickAt);
     if (container.read(appLifecycleProvider) == AppLifecycleState.resumed) {
       container
           .read(taskEventRouterProvider)

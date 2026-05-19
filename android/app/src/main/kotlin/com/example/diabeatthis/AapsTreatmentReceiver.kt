@@ -29,6 +29,7 @@ class AapsTreatmentReceiver : BroadcastReceiver() {
                     .put("data", JSONObject().put("data", data)),
             )
 
+        NativeReceiverWakeLock.acquire(context)
         ForegroundService.sendData(eventPayload.toString())
     }
 
