@@ -50,6 +50,14 @@
                 <action android:name="com.eveningoutpost.dexdrip.BgEstimate"/>
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".AapsDeviceStatusReceiver"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="info.nightscout.client.NEW_DEVICESTATUS"/>
+            </intent-filter>
+        </receiver>
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
             android:foregroundServiceType="health"

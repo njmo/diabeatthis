@@ -67,5 +67,18 @@ void main() {
       expect(status.bolusIob, 0.3);
       expect(status.insulinActivity, 0);
     });
+
+    test('uses explicit source when provided', () {
+      const dto = DeviceStatusDto(
+        createdAt: '2026-05-14T08:42:16.418Z',
+        openaps: {
+          'suggested': {'IOB': 0.3},
+        },
+      );
+
+      final status = dto.toDomain(source: DeviceStatusSource.aaps);
+
+      expect(status.source, DeviceStatusSource.aaps);
+    });
   });
 }

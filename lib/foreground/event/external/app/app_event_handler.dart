@@ -9,6 +9,7 @@ import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../common/events/data/app/sync_data_key.dart';
 import '../../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
+import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../../../../core/data_sources/providers/source_repository_providers.dart';
@@ -62,12 +63,9 @@ class AppEventHandler with Logging {
             runtimeContext.container.invalidate(
               deviceStatusSourceRepositoryProvider,
             );
-
-            final cacheController = runtimeContext.container.read(
-              synchronizationCacheControllerProvider,
+            await _reloadLiveCacheFromCloudHistoryAfterSettingsChange(
+              runtimeContext,
             );
-            cacheController.invalidateLiveData();
-            await _sendLiveDataFromCurrentSources(runtimeContext);
           },
           collectTick: (String reason, int alarmId) async {
             await const CollectTickWakeLock().acquire();
@@ -95,6 +93,14 @@ class AppEventHandler with Logging {
       );
     }
 
+    _sendCachedData(runtimeContext, data, cacheController);
+  }
+
+  void _sendCachedData(
+    RuntimeContext runtimeContext,
+    List<String> data,
+    SynchronizationCacheController cacheController,
+  ) {
     final events = <TaskDataSynchronizationPayload>[];
     final cache = cacheController.getCache();
     final router = runtimeContext.container.read(taskEventRouterProvider);
@@ -137,72 +143,30 @@ class AppEventHandler with Logging {
     }
   }
 
-  Future<void> _sendLiveDataFromCurrentSources(
+  Future<void> _reloadLiveCacheFromCloudHistoryAfterSettingsChange(
     RuntimeContext runtimeContext,
   ) async {
-    final events = <TaskDataSynchronizationPayload>[];
     final cacheController = runtimeContext.container.read(
       synchronizationCacheControllerProvider,
     );
+    cacheController.invalidateLiveData();
 
-    await _addGlucoseEvents(runtimeContext, cacheController, events);
-    await _addDeviceStatusEvent(runtimeContext, cacheController, events);
-
-    if (events.isEmpty) return;
-
-    runtimeContext.container
-        .read(taskEventRouterProvider)
-        .send(TaskDataSynchronizationPayload.list(data: events));
-  }
-
-  Future<void> _addGlucoseEvents(
-    RuntimeContext runtimeContext,
-    SynchronizationCacheController cacheController,
-    List<TaskDataSynchronizationPayload> events,
-  ) async {
-    try {
-      final repository = await runtimeContext.container.read(
-        glucoseHistoryRepositoryProvider.future,
-      );
-      final now = clock.now();
-      final readings = await repository.fetchGlucoseBetween(
-        now.subtract(const Duration(hours: 2)),
-        now,
-      );
+    final config = await runtimeContext.container.read(
+      dataSourceConfigProvider.future,
+    );
+    if (config.historySource != HistorySource.cloud) {
       logI(
-        _describeGlucoseReadings(
-          'Glucose history sync fetch after settings change',
-          readings,
-        ),
+        'Skipping live cache refresh after settings change because '
+        'history source is ${config.historySource.storageValue}',
       );
-      final orderedReadings = ([
-        ...readings,
-      ]..sort((a, b) => b.date.compareTo(a.date))).take(10).toList().reversed;
-
-      cacheController.replaceGlucoseReadings(orderedReadings);
-      events.addAll(
-        orderedReadings.map((data) => TaskGlucoseSynchronization(data: data)),
-      );
-    } catch (e, st) {
-      logW('Live glucose sync after settings change failed: $e\n$st');
+      return;
     }
-  }
 
-  Future<void> _addDeviceStatusEvent(
-    RuntimeContext runtimeContext,
-    SynchronizationCacheController cacheController,
-    List<TaskDataSynchronizationPayload> events,
-  ) async {
-    try {
-      final repository = await runtimeContext.container.read(
-        deviceStatusSourceRepositoryProvider.future,
-      );
-      final data = await repository.pollDeviceStatus();
-      cacheController.cacheDeviceStatus(data);
-      events.add(TaskDeviceStatusSynchronization(data: data));
-    } catch (e, st) {
-      logW('Live device status sync after settings change failed: $e\n$st');
-    }
+    await cacheController.init(runtimeContext.container);
+    _sendCachedData(runtimeContext, [
+      SyncDataKey.glucoseList,
+      SyncDataKey.deviceStatus,
+    ], cacheController);
   }
 
   String _describeGlucoseReadings(String label, Iterable<Glucose> readings) {

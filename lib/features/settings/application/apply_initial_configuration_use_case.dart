@@ -8,6 +8,7 @@ import '../../../common/events/data/app/sync_data_key.dart';
 import '../../../core/data/provider/initial_configuration_provider.dart';
 import '../../../core/data/provider/monitor_service_enabled_provider.dart';
 import '../../../core/data/provider/shared_prefs_provider.dart';
+import '../../../core/data_sources/aaps/providers/aaps_receiver_controller_provider.dart';
 import '../../../core/data_sources/config/data_source_config.dart';
 import '../../../core/data_sources/config/data_source_config_sync_payload.dart';
 import '../../../core/data_sources/config/helpers/data_source_config_storer.dart';
@@ -51,6 +52,10 @@ class ApplyInitialConfigurationUseCase {
     final xdripReceiverController = _ref.read(xdripReceiverControllerProvider);
     if (config.bgSource == BgSource.xdrip) {
       await xdripReceiverController.setEnabled();
+    }
+    final aapsReceiverController = _ref.read(aapsReceiverControllerProvider);
+    if (config.pumpStatusSource == PumpStatusSource.aaps) {
+      await aapsReceiverController.setEnabled();
     }
 
     if (!_ref.mounted) return;

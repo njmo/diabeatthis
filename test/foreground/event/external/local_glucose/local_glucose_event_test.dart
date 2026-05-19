@@ -45,6 +45,7 @@ void main() {
           expect(data.data.source, GlucoseSource.xdrip);
           expect(data.data.sgv, 143);
         },
+        localDeviceStatus: (_) => fail('Expected local glucose event'),
       );
     });
   });

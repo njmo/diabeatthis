@@ -52,6 +52,13 @@ enum PumpStatusSource {
       orElse: () => PumpStatusSource.cloud,
     );
   }
+
+  bool get isPushBased {
+    return switch (this) {
+      PumpStatusSource.cloud => false,
+      PumpStatusSource.aaps => true,
+    };
+  }
 }
 
 enum HistorySource {

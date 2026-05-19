@@ -2,7 +2,9 @@ import '../../../domain/model/device_status.dart';
 import '../dto/device_status_dto.dart';
 
 extension DeviceStatusMapper on DeviceStatusDto {
-  DeviceStatus toDomain() {
+  DeviceStatus toDomain({
+    DeviceStatusSource source = DeviceStatusSource.cloud,
+  }) {
     final suggested =
         (openaps?['suggested'] as Map<String, dynamic>?) ?? const {};
     final iobData = _iobData(openaps?['iob']);
@@ -15,7 +17,7 @@ extension DeviceStatusMapper on DeviceStatusDto {
 
     return DeviceStatus(
       externalId: id,
-      source: DeviceStatusSource.cloud,
+      source: source,
       date: DateTime.parse(createdAt).toLocal(),
       iob: totalIob,
       basalIob: basalIob,

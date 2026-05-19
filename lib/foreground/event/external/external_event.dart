@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'app/app_event.dart';
+import 'local_device_status/local_device_status_event.dart';
 import 'local_glucose/local_glucose_event.dart';
 import 'notification/notification_response_event.dart';
 
@@ -20,6 +21,10 @@ sealed class ExternalEvent with _$ExternalEvent {
 
   const factory ExternalEvent.localGlucose({required LocalGlucoseEvent data}) =
       _ExternalLocalGlucoseEvent;
+
+  const factory ExternalEvent.localDeviceStatus({
+    required LocalDeviceStatusEvent data,
+  }) = _ExternalLocalDeviceStatusEvent;
 
   factory ExternalEvent.fromJson(Map<String, dynamic> json) =>
       _$ExternalEventFromJson(json);

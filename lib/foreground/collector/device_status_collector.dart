@@ -5,6 +5,8 @@ import 'package:clock/clock.dart';
 
 import '../../app/providers/app_lifecycle_state_provider.dart';
 import '../../common/events/data/task/task_data_synchronization_payload.dart';
+import '../../core/data_sources/config/data_source_config.dart';
+import '../../core/data_sources/config/data_source_config_provider.dart';
 import '../../core/data_sources/providers/source_repository_providers.dart';
 import '../../core/domain/model/device_status.dart';
 import '../../core/logger/logger.dart';
@@ -32,6 +34,15 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
   }
 
   Future<void> _run(CollectorContext context) async {
+    final source = await _readPumpStatusSource(context);
+    if (source.isPushBased) {
+      logI(
+        'Device status collector is idle because ${source.storageValue} '
+        'is push-based',
+      );
+      return;
+    }
+
     DeviceStatus? last;
     while (!_disposed) {
       if (last == null) {
@@ -86,6 +97,15 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
       deviceStatusSourceRepositoryProvider.future,
     );
     return repository.pollDeviceStatus();
+  }
+
+  Future<PumpStatusSource> _readPumpStatusSource(
+    CollectorContext context,
+  ) async {
+    final config = await context.container.read(
+      dataSourceConfigProvider.future,
+    );
+    return config.pumpStatusSource;
   }
 
   void _handleDeviceStatus(CollectorContext context, DeviceStatus data) {

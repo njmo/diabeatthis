@@ -178,7 +178,7 @@ Future<DeviceStatusSourceRepository> deviceStatusSourceRepository(
       );
     case PumpStatusSource.aaps:
       throw const UnsupportedDataSourceException(
-        'AAPS pump status source is not implemented yet',
+        'AAPS pump status source is push-based and cannot be polled',
       );
   }
 }

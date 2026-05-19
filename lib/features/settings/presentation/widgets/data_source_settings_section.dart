@@ -7,6 +7,7 @@ import '../../../../app/providers/foreground_task_state_provider.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../core/data/provider/monitor_service_enabled_provider.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
+import '../../../../core/data_sources/aaps/providers/aaps_receiver_controller_provider.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/config/helpers/data_source_config_storer.dart';
@@ -49,6 +50,18 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
                 await xdripReceiverController.setEnabled();
               } else if (!isXdrip && wasXdrip) {
                 await xdripReceiverController.setDisabled();
+              }
+              final aapsReceiverController = ref.read(
+                aapsReceiverControllerProvider,
+              );
+              final wasAapsPumpStatus =
+                  config.pumpStatusSource == PumpStatusSource.aaps;
+              final isAapsPumpStatus =
+                  next.pumpStatusSource == PumpStatusSource.aaps;
+              if (isAapsPumpStatus && !wasAapsPumpStatus) {
+                await aapsReceiverController.setEnabled();
+              } else if (!isAapsPumpStatus && wasAapsPumpStatus) {
+                await aapsReceiverController.setDisabled();
               }
               ref.invalidate(sharedPrefsProvider);
               await _restartForegroundTaskIfNeeded(ref, config, next);

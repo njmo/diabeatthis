@@ -38,6 +38,11 @@ void main() {
       expect(BgSource.xdrip.isPushBased, isTrue);
     });
 
+    test('detects push-based pump status sources', () {
+      expect(PumpStatusSource.cloud.isPushBased, isFalse);
+      expect(PumpStatusSource.aaps.isPushBased, isTrue);
+    });
+
     test('detects when any configured source uses Nightscout', () {
       const localOnly = DataSourceConfig(
         bgSource: BgSource.aaps,

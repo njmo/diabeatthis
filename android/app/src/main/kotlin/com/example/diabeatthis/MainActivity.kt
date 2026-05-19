@@ -26,9 +26,29 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            AAPS_RECEIVER_CHANNEL,
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "setEnabled" -> {
+                    AapsDeviceStatusReceiver.setEnabled(this)
+                    result.success(null)
+                }
+
+                "setDisabled" -> {
+                    AapsDeviceStatusReceiver.setDisabled(this)
+                    result.success(null)
+                }
+
+                else -> result.notImplemented()
+            }
+        }
     }
 
     private companion object {
+        const val AAPS_RECEIVER_CHANNEL = "pl.diabeatthis.app/aaps_receiver"
         const val XDRIP_RECEIVER_CHANNEL = "pl.diabeatthis.app/xdrip_receiver"
     }
 }
