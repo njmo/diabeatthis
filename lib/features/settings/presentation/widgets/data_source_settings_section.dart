@@ -7,11 +7,10 @@ import '../../../../app/providers/foreground_task_state_provider.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../core/data/provider/monitor_service_enabled_provider.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
-import '../../../../core/data_sources/aaps/providers/aaps_receiver_controller_provider.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/config/helpers/data_source_config_storer.dart';
-import '../../../../core/data_sources/xdrip/providers/xdrip_receiver_controller_provider.dart';
+import '../../../../core/data_sources/receiver/providers/data_receiver_activation_controller_provider.dart';
 import '../../../../core/logger/logger.dart';
 import 'data_source_config_controls.dart';
 import 'settings_section_card.dart';
@@ -39,30 +38,15 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
               final prefs = await ref.read(sharedPrefsProvider.future);
               final storer = DataSourceConfigStorer(prefs);
               final appEventRouter = ref.read(appEventRouterProvider);
+              final receiverActivationController = ref.read(
+                dataReceiverActivationControllerProvider,
+              );
 
               await storer.save(next);
-              final xdripReceiverController = ref.read(
-                xdripReceiverControllerProvider,
+              await receiverActivationController.applyConfigChange(
+                previous: config,
+                next: next,
               );
-              final wasXdrip = config.bgSource == BgSource.xdrip;
-              final isXdrip = next.bgSource == BgSource.xdrip;
-              if (isXdrip && !wasXdrip) {
-                await xdripReceiverController.setEnabled();
-              } else if (!isXdrip && wasXdrip) {
-                await xdripReceiverController.setDisabled();
-              }
-              final aapsReceiverController = ref.read(
-                aapsReceiverControllerProvider,
-              );
-              final wasAapsPumpStatus =
-                  config.pumpStatusSource == PumpStatusSource.aaps;
-              final isAapsPumpStatus =
-                  next.pumpStatusSource == PumpStatusSource.aaps;
-              if (isAapsPumpStatus && !wasAapsPumpStatus) {
-                await aapsReceiverController.setEnabled();
-              } else if (!isAapsPumpStatus && wasAapsPumpStatus) {
-                await aapsReceiverController.setDisabled();
-              }
               ref.invalidate(sharedPrefsProvider);
               await _restartForegroundTaskIfNeeded(ref, config, next);
 

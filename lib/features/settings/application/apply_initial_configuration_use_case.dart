@@ -8,12 +8,11 @@ import '../../../common/events/data/app/sync_data_key.dart';
 import '../../../core/data/provider/initial_configuration_provider.dart';
 import '../../../core/data/provider/monitor_service_enabled_provider.dart';
 import '../../../core/data/provider/shared_prefs_provider.dart';
-import '../../../core/data_sources/aaps/providers/aaps_receiver_controller_provider.dart';
 import '../../../core/data_sources/config/data_source_config.dart';
 import '../../../core/data_sources/config/data_source_config_sync_payload.dart';
 import '../../../core/data_sources/config/helpers/data_source_config_storer.dart';
 import '../../../core/data_sources/nightscout/nightscout_cloud_connection_tester.dart';
-import '../../../core/data_sources/xdrip/providers/xdrip_receiver_controller_provider.dart';
+import '../../../core/data_sources/receiver/providers/data_receiver_activation_controller_provider.dart';
 import '../data/settings_storage_keys.dart';
 
 part 'apply_initial_configuration_use_case.g.dart';
@@ -49,14 +48,9 @@ class ApplyInitialConfigurationUseCase {
       prefs.setString(childNameKey, childName.trim()),
       prefs.setBool(initialConfigurationDoneKey, true),
     ]);
-    final xdripReceiverController = _ref.read(xdripReceiverControllerProvider);
-    if (config.bgSource == BgSource.xdrip) {
-      await xdripReceiverController.setEnabled();
-    }
-    final aapsReceiverController = _ref.read(aapsReceiverControllerProvider);
-    if (config.pumpStatusSource == PumpStatusSource.aaps) {
-      await aapsReceiverController.setEnabled();
-    }
+    await _ref
+        .read(dataReceiverActivationControllerProvider)
+        .enableConfiguredReceivers(config);
 
     if (!_ref.mounted) return;
 
