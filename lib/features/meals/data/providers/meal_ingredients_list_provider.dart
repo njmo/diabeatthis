@@ -107,7 +107,6 @@ Future<MealMacroSummary?> mealMacronutrientsSummary(Ref ref, int mealId) async {
 
 @freezed
 abstract class Macronutrients with _$Macronutrients {
-  @override
   const factory Macronutrients({
     required int carbsTotal,
     required int fatTotal,

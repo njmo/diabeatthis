@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../../../../common/widgets/search_text_field.dart';
 import '../../../../../core/domain/model/ingredient.dart';
@@ -46,7 +47,7 @@ class IngredientListContent extends StatelessWidget {
         return false;
       },
       child: CustomScrollView(
-        cacheExtent: 0,
+        scrollCacheExtent: const ScrollCacheExtent.pixels(0),
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),

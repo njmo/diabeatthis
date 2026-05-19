@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../../../../core/domain/model/meal.dart' as domain;
 import 'meal_list_item.dart';
@@ -61,7 +62,7 @@ class MealListContent extends StatelessWidget {
       },
       child: ListView.separated(
         padding: EdgeInsets.fromLTRB(16, 4, 16, bottomPadding),
-        cacheExtent: 0,
+        scrollCacheExtent: const ScrollCacheExtent.pixels(0),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         separatorBuilder: (_, _) => const SizedBox(height: 10),
         itemCount: meals.length + 1,
