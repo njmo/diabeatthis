@@ -34,11 +34,13 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "setEnabled" -> {
                     AapsDeviceStatusReceiver.setEnabled(this)
+                    AapsGlucoseReceiver.setEnabled(this)
                     result.success(null)
                 }
 
                 "setDisabled" -> {
                     AapsDeviceStatusReceiver.setDisabled(this)
+                    AapsGlucoseReceiver.setDisabled(this)
                     result.success(null)
                 }
 

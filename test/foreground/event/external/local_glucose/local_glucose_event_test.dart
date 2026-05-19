@@ -24,6 +24,24 @@ void main() {
       expect(event.data.direction, 'FortyFiveUp');
     });
 
+    test('maps AAPS receiver payload to glucose reading', () {
+      final timestamp = DateTime(2026, 5, 18, 12, 30).millisecondsSinceEpoch;
+
+      final event = LocalGlucoseEvent.fromJson({
+        'externalId': 'aaps-$timestamp',
+        'source': 'aaps',
+        'timestamp': timestamp,
+        'sgv': 118,
+        'direction': 'Flat',
+      });
+
+      expect(event.data.externalId, 'aaps-$timestamp');
+      expect(event.data.source, GlucoseSource.aaps);
+      expect(event.data.date, DateTime.fromMillisecondsSinceEpoch(timestamp));
+      expect(event.data.sgv, 118);
+      expect(event.data.direction, 'Flat');
+    });
+
     test('parses external event wrapper', () {
       final timestamp = DateTime(2026, 5, 18, 12, 30).millisecondsSinceEpoch;
 

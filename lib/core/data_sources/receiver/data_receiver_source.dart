@@ -2,13 +2,14 @@ import '../config/data_source_config.dart';
 
 enum DataReceiverSource {
   xdripGlucose,
-  aapsDeviceStatus;
+  aaps;
 
   bool isActive(DataSourceConfig config) {
     return switch (this) {
       DataReceiverSource.xdripGlucose => config.bgSource == BgSource.xdrip,
-      DataReceiverSource.aapsDeviceStatus =>
-        config.pumpStatusSource == PumpStatusSource.aaps,
+      DataReceiverSource.aaps =>
+        config.bgSource == BgSource.aaps ||
+            config.pumpStatusSource == PumpStatusSource.aaps,
     };
   }
 }

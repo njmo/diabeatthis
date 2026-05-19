@@ -1,10 +1,8 @@
 package com.example.diabeatthis
 
 import android.content.BroadcastReceiver
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import com.pravera.flutter_foreground_task.service.ForegroundService
 import org.json.JSONObject
 
@@ -41,17 +39,10 @@ class AapsDeviceStatusReceiver : BroadcastReceiver() {
         }
 
         private fun setEnabledState(context: Context, enabled: Boolean) {
-            val component = ComponentName(context, AapsDeviceStatusReceiver::class.java)
-            val state = if (enabled) {
-                PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            } else {
-                PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-            }
-
-            context.packageManager.setComponentEnabledSetting(
-                component,
-                state,
-                PackageManager.DONT_KILL_APP,
+            setReceiverEnabledState(
+                context,
+                AapsDeviceStatusReceiver::class.java,
+                enabled,
             )
         }
 

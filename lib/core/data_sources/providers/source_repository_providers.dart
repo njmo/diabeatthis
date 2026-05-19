@@ -49,7 +49,7 @@ Future<GlucoseSourceRepository> glucoseSourceRepository(Ref ref) async {
       );
     case BgSource.aaps:
       throw const UnsupportedDataSourceException(
-        'AAPS glucose source is not implemented yet',
+        'AAPS glucose source is push-based and cannot be polled',
       );
     case BgSource.xdrip:
       throw const UnsupportedDataSourceException(

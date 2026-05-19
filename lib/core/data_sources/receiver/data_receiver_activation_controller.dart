@@ -12,7 +12,7 @@ class DataReceiverActivationController {
            controller: xdripReceiverController,
          ),
          DataReceiverRegistration(
-           source: DataReceiverSource.aapsDeviceStatus,
+           source: DataReceiverSource.aaps,
            controller: aapsReceiverController,
          ),
        ];

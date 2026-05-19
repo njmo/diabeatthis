@@ -24,6 +24,22 @@ void main() {
       expect(aaps.calls, [DataReceiverCall.enabled]);
     });
 
+    test('enables AAPS receiver for AAPS glucose source', () async {
+      final xdrip = RecordingDataReceiverController();
+      final aaps = RecordingDataReceiverController();
+      final controller = DataReceiverActivationController(
+        xdripReceiverController: xdrip,
+        aapsReceiverController: aaps,
+      );
+
+      await controller.enableConfiguredReceivers(
+        _config(bgSource: BgSource.aaps),
+      );
+
+      expect(xdrip.calls, isEmpty);
+      expect(aaps.calls, [DataReceiverCall.enabled]);
+    });
+
     test('does not touch inactive receivers during initial enable', () async {
       final xdrip = RecordingDataReceiverController();
       final aaps = RecordingDataReceiverController();
@@ -80,6 +96,26 @@ void main() {
       expect(xdrip.calls, isEmpty);
       expect(aaps.calls, isEmpty);
     });
+
+    test(
+      'keeps AAPS receiver enabled when switching between AAPS sources',
+      () async {
+        final xdrip = RecordingDataReceiverController();
+        final aaps = RecordingDataReceiverController();
+        final controller = DataReceiverActivationController(
+          xdripReceiverController: xdrip,
+          aapsReceiverController: aaps,
+        );
+
+        await controller.applyConfigChange(
+          previous: _config(bgSource: BgSource.aaps),
+          next: _config(pumpStatusSource: PumpStatusSource.aaps),
+        );
+
+        expect(xdrip.calls, isEmpty);
+        expect(aaps.calls, isEmpty);
+      },
+    );
   });
 }
 

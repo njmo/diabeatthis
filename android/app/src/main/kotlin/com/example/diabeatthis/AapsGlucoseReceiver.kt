@@ -7,20 +7,28 @@ import com.pravera.flutter_foreground_task.service.ForegroundService
 import org.json.JSONObject
 import kotlin.math.roundToInt
 
-class XdripBgEstimateReceiver : BroadcastReceiver() {
+class AapsGlucoseReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != ACTION_NEW_BG_ESTIMATE) return
+        if (intent.action != ACTION_NEW_SGV) return
 
-        val timestamp = intent.getLongExtra(EXTRA_TIMESTAMP, 0L)
-        val bgEstimate = intent.getDoubleExtra(EXTRA_BG_ESTIMATE, Double.NaN)
-        if (timestamp <= 0L || bgEstimate.isNaN() || bgEstimate <= 0.0) return
+        val sgvJson = intent.getStringExtra(EXTRA_SGV) ?: return
+        val data = try {
+            JSONObject(sgvJson)
+        } catch (_: Exception) {
+            return
+        }
 
-        val direction = intent.getStringExtra(EXTRA_BG_SLOPE_NAME).orEmpty()
+        val timestamp = data.optLong("date", 0L)
+        val sgv = data.optDouble("sgv", Double.NaN)
+        if (timestamp <= 0L || sgv.isNaN() || sgv <= 0.0) return
+
+        val externalId = data.optString("_id").ifBlank { "aaps-$timestamp" }
+        val direction = data.optString("direction").ifBlank { "Flat" }
         val glucosePayload = JSONObject()
-            .put("externalId", "xdrip-$timestamp")
-            .put("source", "xdrip")
+            .put("externalId", externalId)
+            .put("source", "aaps")
             .put("timestamp", timestamp)
-            .put("sgv", bgEstimate.roundToInt())
+            .put("sgv", sgv.roundToInt())
             .put("direction", direction)
 
         val eventPayload = JSONObject()
@@ -45,12 +53,10 @@ class XdripBgEstimateReceiver : BroadcastReceiver() {
         }
 
         private fun setEnabledState(context: Context, enabled: Boolean) {
-            setReceiverEnabledState(context, XdripBgEstimateReceiver::class.java, enabled)
+            setReceiverEnabledState(context, AapsGlucoseReceiver::class.java, enabled)
         }
 
-        const val ACTION_NEW_BG_ESTIMATE = "com.eveningoutpost.dexdrip.BgEstimate"
-        const val EXTRA_BG_ESTIMATE = "com.eveningoutpost.dexdrip.Extras.BgEstimate"
-        const val EXTRA_BG_SLOPE_NAME = "com.eveningoutpost.dexdrip.Extras.BgSlopeName"
-        const val EXTRA_TIMESTAMP = "com.eveningoutpost.dexdrip.Extras.Time"
+        const val ACTION_NEW_SGV = "info.nightscout.client.NEW_SGV"
+        const val EXTRA_SGV = "sgv"
     }
 }
