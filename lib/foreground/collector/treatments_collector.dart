@@ -1,29 +1,20 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:clock/clock.dart';
 
-import '../../app/providers/app_lifecycle_state_provider.dart';
-import '../../common/events/data/task/task_data_synchronization_payload.dart';
+import '../../core/data_sources/config/data_source_config_provider.dart';
 import '../../core/data_sources/providers/source_repository_providers.dart';
-import '../../core/domain/model/bolus_wizard.dart';
-import '../../core/domain/model/correction_bolus.dart';
-import '../../core/domain/model/extended_carb.dart';
-import '../../core/domain/model/manual_bolus.dart';
-import '../../core/domain/model/temporary_target.dart';
-import '../../core/domain/model/treat.dart';
 import '../../core/domain/model/treatment_base.dart';
 import '../../core/logger/logger.dart';
 import '../alarm/foreground_alarm_bridge.dart';
-import '../event/internal/treatment_available_event.dart';
-import '../providers/task_event_router_provider.dart';
-import '../synchronization/synchronization_cache_controller.dart';
+import '../event/internal/treatment_event_dispatcher.dart';
 import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
 class TreatmentsCollector extends ForegroundCollector with Logging {
   static const _pollInterval = Duration(minutes: 1);
 
+  final _treatmentEventDispatcher = TreatmentEventDispatcher();
   bool _disposed = false;
   Future<void>? _runner;
 
@@ -34,6 +25,18 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
   }
 
   Future<void> _run(CollectorContext context) async {
+    final config = await context.container.read(
+      dataSourceConfigProvider.future,
+    );
+    final treatmentsSource = config.treatmentsSource;
+    if (treatmentsSource.isPushBased) {
+      logI(
+        'Treatments collector is idle because ${treatmentsSource.storageValue} '
+        'is push-based',
+      );
+      return;
+    }
+
     while (!_disposed) {
       var treatments = const <Treatment>[];
 
@@ -69,54 +72,16 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
   }
 
   void _handleTreatment(CollectorContext context, Treatment data) {
-    logI(
-      "${data.runtimeType} treatment available at "
-      "${data.createdAt?.toIso8601String()}",
+    _treatmentEventDispatcher.dispatch(
+      container: context.container,
+      emitEvent: context.emitEvent,
+      treatment: data,
     );
-
-    switch (data) {
-      case BolusWizard():
-        context.emitEvent(TreatmentAvailableEvent<BolusWizard>(data));
-        break;
-      case CorrectionBolus():
-        context.emitEvent(TreatmentAvailableEvent<CorrectionBolus>(data));
-        break;
-      case Treat():
-        context.emitEvent(TreatmentAvailableEvent<Treat>(data));
-        break;
-      case ExtendedCarb():
-        context.emitEvent(TreatmentAvailableEvent<ExtendedCarb>(data));
-        break;
-      case ManualBolus():
-        context.emitEvent(TreatmentAvailableEvent<ManualBolus>(data));
-        break;
-      case TemporaryTarget():
-        context.emitEvent(TreatmentAvailableEvent<TemporaryTarget>(data));
-        _syncTemporaryTarget(context, data);
-        break;
-      default:
-        logI("Unknown treatment");
-    }
   }
 
   @override
   Future<void> dispose() async {
     _disposed = true;
     await _runner;
-  }
-
-  void _syncTemporaryTarget(CollectorContext context, TemporaryTarget target) {
-    final cache = context.container.read(
-      synchronizationCacheControllerProvider,
-    );
-    cache.cacheTarget(target);
-
-    if (context.container.read(appLifecycleProvider) !=
-        AppLifecycleState.resumed) {
-      return;
-    }
-
-    final payload = TaskTargetSynchronization(data: target);
-    context.container.read(taskEventRouterProvider).send(payload);
   }
 }

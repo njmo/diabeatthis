@@ -7,9 +7,12 @@ import 'package:diabeatthis/core/data_sources/config/data_source_config_provider
 import 'package:diabeatthis/core/data_sources/domain/device_status_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/domain/device_status_source_repository.dart';
 import 'package:diabeatthis/core/data_sources/domain/glucose_history_repository.dart';
+import 'package:diabeatthis/core/data_sources/domain/treatments_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/providers/source_repository_providers.dart';
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
+import 'package:diabeatthis/core/domain/model/temporary_target.dart';
+import 'package:diabeatthis/core/domain/model/treatment_base.dart';
 import 'package:diabeatthis/foreground/event/external/app/app_event.dart';
 import 'package:diabeatthis/foreground/event/external/app/app_event_handler.dart';
 import 'package:diabeatthis/foreground/event/router/task_event_router.dart';
@@ -52,6 +55,9 @@ void main() {
           ),
           deviceStatusHistoryRepositoryProvider.overrideWith(
             (_) async => const _EmptyDeviceStatusHistoryRepository(),
+          ),
+          treatmentsHistoryRepositoryProvider.overrideWith(
+            (_) async => const _EmptyTreatmentsHistoryRepository(),
           ),
           deviceStatusSourceRepositoryProvider.overrideWith(
             (_) async => const _ThrowingDeviceStatusSourceRepository(),
@@ -121,6 +127,9 @@ void main() {
             ),
             deviceStatusHistoryRepositoryProvider.overrideWith(
               (_) async => deviceStatusHistoryRepository,
+            ),
+            treatmentsHistoryRepositoryProvider.overrideWith(
+              (_) async => const _EmptyTreatmentsHistoryRepository(),
             ),
             deviceStatusSourceRepositoryProvider.overrideWith(
               (_) async => const _ThrowingDeviceStatusSourceRepository(),
@@ -226,6 +235,63 @@ void main() {
         expect(router.payloads, isEmpty);
         expect(cacheController.getCache().glucoseReadingsCache, isEmpty);
         expect(cacheController.getCache().deviceStatusCache, isNull);
+
+        await harness.dispose();
+      },
+    );
+
+    test(
+      'syncs temporary target from history after clearing settings cache',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final now = DateTime(2026, 5, 18, 21, 30);
+        final target = _temporaryTarget(
+          id: 'target-1',
+          createdAt: now.subtract(const Duration(minutes: 10)),
+          duration: 30,
+        );
+        final router = RecordingTaskEventRouter();
+        final container = ProviderContainer(
+          overrides: [
+            glucoseHistoryRepositoryProvider.overrideWith(
+              (_) async => const _EmptyGlucoseHistoryRepository(),
+            ),
+            deviceStatusHistoryRepositoryProvider.overrideWith(
+              (_) async => const _EmptyDeviceStatusHistoryRepository(),
+            ),
+            treatmentsHistoryRepositoryProvider.overrideWith(
+              (_) async => _FakeTreatmentsHistoryRepository(target),
+            ),
+            deviceStatusSourceRepositoryProvider.overrideWith(
+              (_) async => const _ThrowingDeviceStatusSourceRepository(),
+            ),
+            taskEventRouterProvider.overrideWithValue(router),
+          ],
+        );
+        final harness = FakeRuntimeHarness(container: container);
+
+        await withClock(Clock.fixed(now), () async {
+          AppEventHandler().handle(
+            const AppEvent.executeCommand(
+              data: ExecuteCommandEvent.syncSettings(data: {}),
+            ),
+            harness.runtimeContext,
+          );
+          await _waitForPayload(router);
+        });
+
+        expect(router.payloads, [
+          TaskDataSynchronizationPayload.list(
+            data: [TaskTargetSynchronization(data: target)],
+          ),
+        ]);
+        expect(
+          container
+              .read(synchronizationCacheControllerProvider)
+              .getCache()
+              .targetCache,
+          target,
+        );
 
         await harness.dispose();
       },
@@ -359,6 +425,36 @@ class _ThrowingDeviceStatusHistoryRepository
   }
 }
 
+class _FakeTreatmentsHistoryRepository implements TreatmentsHistoryRepository {
+  const _FakeTreatmentsHistoryRepository(this._target);
+
+  final TemporaryTarget? _target;
+
+  @override
+  Future<List<Treatment>> fetchTreatmentsBetween(DateTime start, DateTime end) {
+    throw StateError('temporary target cache should not fetch treatment lists');
+  }
+
+  @override
+  Future<TemporaryTarget?> fetchLastTemporaryTarget() {
+    return Future.value(_target);
+  }
+}
+
+class _EmptyTreatmentsHistoryRepository implements TreatmentsHistoryRepository {
+  const _EmptyTreatmentsHistoryRepository();
+
+  @override
+  Future<List<Treatment>> fetchTreatmentsBetween(DateTime start, DateTime end) {
+    return Future.value(const []);
+  }
+
+  @override
+  Future<TemporaryTarget?> fetchLastTemporaryTarget() {
+    return Future.value(null);
+  }
+}
+
 class _ThrowingDeviceStatusSourceRepository
     implements DeviceStatusSourceRepository {
   const _ThrowingDeviceStatusSourceRepository();
@@ -367,4 +463,19 @@ class _ThrowingDeviceStatusSourceRepository
   Future<DeviceStatus> pollDeviceStatus() {
     throw StateError('Device status sync should use history, not polling');
   }
+}
+
+TemporaryTarget _temporaryTarget({
+  required String id,
+  required DateTime createdAt,
+  required int duration,
+}) {
+  return TemporaryTarget(
+    nightscoutId: id,
+    createdAt: createdAt,
+    durationInMiliseconds: duration * 60 * 1000,
+    duration: duration,
+    targetBottom: 90,
+    targetTop: 110,
+  );
 }

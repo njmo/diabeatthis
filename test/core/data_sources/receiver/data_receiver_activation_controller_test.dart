@@ -40,6 +40,22 @@ void main() {
       expect(aaps.calls, [DataReceiverCall.enabled]);
     });
 
+    test('enables AAPS receiver for AAPS treatment source', () async {
+      final xdrip = RecordingDataReceiverController();
+      final aaps = RecordingDataReceiverController();
+      final controller = DataReceiverActivationController(
+        xdripReceiverController: xdrip,
+        aapsReceiverController: aaps,
+      );
+
+      await controller.enableConfiguredReceivers(
+        _config(treatmentsSource: TreatmentsSource.aaps),
+      );
+
+      expect(xdrip.calls, isEmpty);
+      expect(aaps.calls, [DataReceiverCall.enabled]);
+    });
+
     test('does not touch inactive receivers during initial enable', () async {
       final xdrip = RecordingDataReceiverController();
       final aaps = RecordingDataReceiverController();
@@ -109,7 +125,7 @@ void main() {
 
         await controller.applyConfigChange(
           previous: _config(bgSource: BgSource.aaps),
-          next: _config(pumpStatusSource: PumpStatusSource.aaps),
+          next: _config(treatmentsSource: TreatmentsSource.aaps),
         );
 
         expect(xdrip.calls, isEmpty);

@@ -44,6 +44,7 @@ void main() {
             expect(data.data.source, DeviceStatusSource.aaps);
             expect(data.data.bg, 249);
           },
+          treatments: (_) => fail('Expected local device status event'),
         ),
       );
     });

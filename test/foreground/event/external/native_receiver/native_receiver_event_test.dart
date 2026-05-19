@@ -25,6 +25,7 @@ void main() {
           expect(data.data.sgv, 143);
         },
         deviceStatus: (_) => fail('Expected glucose receiver event'),
+        treatments: (_) => fail('Expected glucose receiver event'),
       );
     });
 
@@ -56,6 +57,7 @@ void main() {
           expect(data.data.source, DeviceStatusSource.aaps);
           expect(data.data.bg, 249);
         },
+        treatments: (_) => fail('Expected device status receiver event'),
       );
     });
   });

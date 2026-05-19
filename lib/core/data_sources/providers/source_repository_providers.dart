@@ -77,7 +77,7 @@ Future<TreatmentSourceRepository> treatmentsSourceRepository(Ref ref) async {
       );
     case TreatmentsSource.aaps:
       throw const UnsupportedDataSourceException(
-        'AAPS treatment source is not implemented yet',
+        'AAPS treatment source is push-based and cannot be polled',
       );
   }
 }

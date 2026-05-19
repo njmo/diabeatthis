@@ -69,6 +69,7 @@ void main() {
             expect(data.data.sgv, 143);
           },
           deviceStatus: (_) => fail('Expected local glucose event'),
+          treatments: (_) => fail('Expected local glucose event'),
         ),
       );
     });

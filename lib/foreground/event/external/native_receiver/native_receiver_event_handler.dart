@@ -4,18 +4,13 @@ import '../../../../core/logger/logger.dart';
 import '../../../task/base/runtime_context.dart';
 import '../local_device_status/local_device_status_handler.dart';
 import '../local_glucose/local_glucose_handler.dart';
+import '../local_treatments/local_treatments_handler.dart';
 import 'native_receiver_event.dart';
 
 class NativeReceiverEventHandler with Logging {
-  final LocalDeviceStatusHandler _localDeviceStatusHandler;
-  final LocalGlucoseHandler _localGlucoseHandler;
-
-  NativeReceiverEventHandler({
-    LocalDeviceStatusHandler? localDeviceStatusHandler,
-    LocalGlucoseHandler? localGlucoseHandler,
-  }) : _localDeviceStatusHandler =
-           localDeviceStatusHandler ?? LocalDeviceStatusHandler(),
-       _localGlucoseHandler = localGlucoseHandler ?? LocalGlucoseHandler();
+  final _localDeviceStatusHandler = LocalDeviceStatusHandler();
+  final _localGlucoseHandler = LocalGlucoseHandler();
+  final _localTreatmentsHandler = LocalTreatmentsHandler();
 
   void handle(NativeReceiverEvent event, RuntimeContext runtimeContext) {
     event.when(
@@ -38,6 +33,18 @@ class NativeReceiverEventHandler with Logging {
         ) {
           logE(
             'Native device status receiver event handling failed',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }),
+      ),
+      treatments: (data) => unawaited(
+        _localTreatmentsHandler.handle(data, runtimeContext).catchError((
+          Object error,
+          StackTrace stackTrace,
+        ) {
+          logE(
+            'Native treatments receiver event handling failed',
             error: error,
             stackTrace: stackTrace,
           );

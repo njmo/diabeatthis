@@ -35,12 +35,14 @@ class MainActivity : FlutterActivity() {
                 "setEnabled" -> {
                     AapsDeviceStatusReceiver.setEnabled(this)
                     AapsGlucoseReceiver.setEnabled(this)
+                    AapsTreatmentReceiver.setEnabled(this)
                     result.success(null)
                 }
 
                 "setDisabled" -> {
                     AapsDeviceStatusReceiver.setDisabled(this)
                     AapsGlucoseReceiver.setDisabled(this)
+                    AapsTreatmentReceiver.setDisabled(this)
                     result.success(null)
                 }
 

@@ -36,6 +36,13 @@ enum TreatmentsSource {
       orElse: () => TreatmentsSource.cloud,
     );
   }
+
+  bool get isPushBased {
+    return switch (this) {
+      TreatmentsSource.cloud => false,
+      TreatmentsSource.aaps => true,
+    };
+  }
 }
 
 enum PumpStatusSource {

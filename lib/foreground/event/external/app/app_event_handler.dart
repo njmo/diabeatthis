@@ -166,6 +166,7 @@ class AppEventHandler with Logging {
     _sendCachedData(runtimeContext, [
       SyncDataKey.glucoseList,
       SyncDataKey.deviceStatus,
+      SyncDataKey.temporaryTarget,
     ], cacheController);
   }
 

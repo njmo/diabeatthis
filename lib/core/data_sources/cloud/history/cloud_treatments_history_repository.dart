@@ -1,3 +1,4 @@
+import '../../../domain/model/temporary_target.dart';
 import '../../../domain/model/treatment_base.dart';
 import '../../domain/treatments_history_repository.dart';
 import '../../nightscout/repository/nightscout_repository.dart';
@@ -10,5 +11,14 @@ class CloudTreatmentsHistoryRepository implements TreatmentsHistoryRepository {
   @override
   Future<List<Treatment>> fetchTreatmentsBetween(DateTime start, DateTime end) {
     return _nightscoutRepository.fetchTreatmentsBetween(start, end);
+  }
+
+  @override
+  Future<TemporaryTarget?> fetchLastTemporaryTarget() async {
+    try {
+      return await _nightscoutRepository.fetchLastTemporaryTarget();
+    } catch (_) {
+      return null;
+    }
   }
 }

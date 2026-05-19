@@ -66,6 +66,15 @@
                 <action android:name="info.nightscout.client.NEW_SGV"/>
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".AapsTreatmentReceiver"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="info.nightscout.client.NEW_TREATMENT"/>
+                <action android:name="info.nightscout.client.CHANGED_TREATMENT"/>
+            </intent-filter>
+        </receiver>
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
             android:foregroundServiceType="health"

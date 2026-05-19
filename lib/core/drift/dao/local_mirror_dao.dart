@@ -155,6 +155,14 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     return query.get();
   }
 
+  Future<TemporaryTargetData?> getLastTemporaryTarget() {
+    final query = select(db.temporaryTarget)
+      ..orderBy([(row) => OrderingTerm.desc(row.createdAt)])
+      ..limit(1);
+
+    return query.getSingleOrNull();
+  }
+
   Future<List<CorrectionBolusData>> getCorrectionBolusesBetween(
     DateTime start,
     DateTime end, {

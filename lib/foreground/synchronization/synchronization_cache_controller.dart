@@ -60,7 +60,6 @@ class SynchronizationCacheController with Logging {
   );
 
   Future<void>? _glucoseReadingsLoad;
-  Future<void>? _deviceStatusLoad;
 
   Future<void> init(ProviderContainer container) async {
     await Future.wait([
@@ -69,11 +68,8 @@ class SynchronizationCacheController with Logging {
         fetchLabel: 'Initial glucose cache fetch',
         storedLabel: 'Initial glucose cache stored',
       ),
-      _loadDeviceStatus(
-        container,
-        fetchLabel: 'Initial device status cache fetch',
-        storedLabel: 'Initial device status cache stored',
-      ),
+      _loadDeviceStatus(container),
+      _loadTemporaryTarget(container),
     ]);
   }
 
@@ -140,32 +136,7 @@ class SynchronizationCacheController with Logging {
     }
   }
 
-  Future<void> _loadDeviceStatus(
-    ProviderContainer container, {
-    required String fetchLabel,
-    required String storedLabel,
-  }) {
-    final currentLoad = _deviceStatusLoad;
-    if (currentLoad != null) return currentLoad;
-
-    final load =
-        _loadDeviceStatusOnce(
-          container,
-          fetchLabel: fetchLabel,
-          storedLabel: storedLabel,
-        ).whenComplete(() {
-          _deviceStatusLoad = null;
-        });
-    _deviceStatusLoad = load;
-
-    return load;
-  }
-
-  Future<void> _loadDeviceStatusOnce(
-    ProviderContainer container, {
-    required String fetchLabel,
-    required String storedLabel,
-  }) async {
+  Future<void> _loadDeviceStatus(ProviderContainer container) async {
     try {
       final repository = await container.read(
         deviceStatusHistoryRepositoryProvider.future,
@@ -174,13 +145,51 @@ class SynchronizationCacheController with Logging {
         clock.now(),
       );
 
-      logI(_describeDeviceStatus(fetchLabel, deviceStatus));
+      logI(
+        _describeDeviceStatus(
+          'Initial device status cache fetch',
+          deviceStatus,
+        ),
+      );
       if (deviceStatus == null) return;
 
       cache.cacheDeviceStatus(deviceStatus);
-      logI(_describeDeviceStatus(storedLabel, cache.deviceStatusCache));
+      logI(
+        _describeDeviceStatus(
+          'Initial device status cache stored',
+          cache.deviceStatusCache,
+        ),
+      );
     } catch (e, st) {
       logW('Synchronization device status cache load failed: $e\n$st');
+    }
+  }
+
+  Future<void> _loadTemporaryTarget(ProviderContainer container) async {
+    try {
+      final repository = await container.read(
+        treatmentsHistoryRepositoryProvider.future,
+      );
+      final lastTarget = await repository.fetchLastTemporaryTarget();
+      final activeTarget = lastTarget?.isActive() == true ? lastTarget : null;
+
+      logI(
+        _describeTemporaryTarget(
+          'Initial temporary target cache fetch',
+          activeTarget,
+        ),
+      );
+      if (activeTarget == null) return;
+
+      cache.cacheTarget(activeTarget);
+      logI(
+        _describeTemporaryTarget(
+          'Initial temporary target cache stored',
+          cache.targetCache,
+        ),
+      );
+    } catch (e, st) {
+      logW('Synchronization temporary target cache load failed: $e\n$st');
     }
   }
 
@@ -223,5 +232,10 @@ class SynchronizationCacheController with Logging {
   String _describeDeviceStatus(String label, DeviceStatus? deviceStatus) {
     return '$label'
         '${deviceStatus == null ? ' empty' : ' at=${deviceStatus.date.toIso8601String()} bg=${deviceStatus.bg} tick=${deviceStatus.tick}'}';
+  }
+
+  String _describeTemporaryTarget(String label, TemporaryTarget? target) {
+    return '$label'
+        '${target == null ? ' empty' : ' at=${target.createdAt.toIso8601String()} duration=${target.duration}'}';
   }
 }

@@ -1,3 +1,4 @@
+import '../../../domain/model/temporary_target.dart';
 import '../../../domain/model/treatment_base.dart';
 import '../../../drift/dao/local_mirror_dao.dart';
 import '../../domain/treatments_history_repository.dart';
@@ -53,5 +54,10 @@ class LocalTreatmentsHistoryRepository implements TreatmentsHistoryRepository {
         });
 
     return treatments;
+  }
+
+  @override
+  Future<TemporaryTarget?> fetchLastTemporaryTarget() async {
+    return (await _dao.getLastTemporaryTarget())?.toDomain();
   }
 }

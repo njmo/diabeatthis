@@ -1,3 +1,4 @@
+import '../../../domain/model/temporary_target.dart';
 import '../../../domain/model/treatment_base.dart';
 import '../../config/data_source_config.dart';
 import '../../domain/treatments_history_repository.dart';
@@ -25,6 +26,16 @@ class MirroringTreatmentsHistoryRepository
       extract: (treatments) => treatments,
       source: _source,
       operation: 'Treatments history',
+    );
+  }
+
+  @override
+  Future<TemporaryTarget?> fetchLastTemporaryTarget() {
+    return _mirroring.treatments(
+      read: _delegate.fetchLastTemporaryTarget,
+      extract: (target) => target == null ? const [] : [target],
+      source: _source,
+      operation: 'Temporary target history',
     );
   }
 }
