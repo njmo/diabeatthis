@@ -33,7 +33,7 @@ MealMonitorStateExecutor? mealStatusChangedEventToExecutor(
     eatenBolused: (MealFinishedEatingBolusedEvent value) =>
         FinalizeMealExecutor(),
     planned: (MealPlannedEvent value) => MonitorUntilMeal(),
-    waitedEating: (WaitedEatingEvent value) =>
+    waitedEating: (MealWaitedEatingEvent value) =>
         DetectFinishedEatingExecutor(shouldBolus: false, bolusWaited: true),
   );
 }

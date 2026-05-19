@@ -3,18 +3,20 @@ import 'package:clock/clock.dart';
 import '../../../../../common/events/data/notification/eat_now_response_event.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/logger/logger.dart';
+import '../../../../../core/notifications/base/notifications_controller.dart';
 import '../../../../../core/notifications/domain/events/eat_now_event_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../../features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import '../../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../../event/internal/meal_status_changed_event.dart';
 import '../../../../event/internal/treatment_available_event.dart';
+import '../../../../event/model/foreground_event.dart';
 import '../../../../providers/device_status_value_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
 import 'detect_finished_eating_executor.dart';
-import 'idle_executor.dart';
 import 'meal_monitor_state_executor.dart';
+import 'new_meal_check_executor.dart';
 
 class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
   int? recommendedMinutes;
@@ -22,7 +24,22 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
   BolusThenWaitExecutor({this.recommendedMinutes});
 
   @override
-  List<Type> get interruptableEvents => [MealStartedEatingEvent];
+  List<Type> get interruptableEvents => [
+    MealStartedEatingEvent,
+    MealWaitedEatingEvent,
+  ];
+
+  @override
+  bool shouldInterrupt(
+    ForegroundEvent event,
+    MealMonitorContext mealMonitorContext,
+  ) {
+    logI("BolusThenWaitExecutor shouldInterrupt ${event.runtimeType}");
+    if (event is MealStatusChangedEvent) {
+      return event.mealId == mealMonitorContext.activeMeal!.id;
+    }
+    return true;
+  }
 
   @override
   Future<void> cleanup(
@@ -54,8 +71,8 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
         getMealAdviceProvider(mealMonitorContext.activeMeal!).future,
       );
       if (mealAdvice == null) {
-        logI("Problem gathering meal advice, going to idle state");
-        return MealMonitorStateIdle();
+        logI("Problem gathering meal advice, checking next meal");
+        return NewMealCheckExecutor();
       }
       //time passed from advice
       final timePassed = mealAdvice.createdAt.difference(clock.now());
@@ -78,8 +95,8 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
     await notificationProvider.cancelAll();
 
     if (calculatorResponse == null) {
-      logI("Problem gathering calculator response, going to idle state");
-      return MealMonitorStateIdle();
+      logI("Problem gathering calculator response, checking next meal");
+      return NewMealCheckExecutor();
     }
 
     if (!triggeredByUser) {
@@ -144,26 +161,23 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
     }
 
     logI("triggered by user: $triggeredByUser, wait ended: $waitEnded");
-    if (!triggeredByUser || waitEnded) {
+    final shouldShowInitialEatNowNotification = !triggeredByUser || waitEnded;
+    if (shouldShowInitialEatNowNotification) {
       logI(
         "Waiting time shortened due to the condition $waitEnded or triggered by user $triggeredByUser, showing notification",
-      );
-      notificationProvider.show(
-        EatNowNotificationEvent(
-          mealId: mealMonitorContext.activeMeal!.id,
-          minutes: 0,
-        ),
       );
     }
 
     logI("Waiting for response");
-    final response = await runtimeContext
-        .waitForEventWithTimeoutOrNull<EatNowResponseEvent>(
-          Duration(minutes: 10),
-        );
+    final response = await _waitForEatNowResponse(
+      runtimeContext: runtimeContext,
+      notificationProvider: notificationProvider,
+      mealId: mealMonitorContext.activeMeal!.id,
+      showInitialNotification: shouldShowInitialEatNowNotification,
+    );
     if (response == null) {
-      logI("No response from user, going to idle state");
-      return MealMonitorStateIdle();
+      logI("No response from user, checking next meal");
+      return NewMealCheckExecutor();
     }
 
     logI("Received response from user");
@@ -183,14 +197,43 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       },
       dismiss: (_) async {
         logI("Used dismissed meal, clicked on notification");
-        return MealMonitorStateIdle();
+        return NewMealCheckExecutor();
       },
       empty: (_) async {
         logI(
           "User manually clicked on notification, he will probably continue in-app",
         );
-        return MealMonitorStateIdle();
+        return NewMealCheckExecutor();
       },
     );
+  }
+
+  Future<EatNowResponseEvent?> _waitForEatNowResponse({
+    required RuntimeContext runtimeContext,
+    required NotificationsController notificationProvider,
+    required int mealId,
+    required bool showInitialNotification,
+  }) async {
+    const maxAttempts = 3;
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      final shouldShowNotification = attempt > 0 || showInitialNotification;
+      if (shouldShowNotification) {
+        logI("Showing eat now notification attempt ${attempt + 1}");
+        await notificationProvider.cancelAll();
+        await notificationProvider.show(
+          EatNowNotificationEvent(mealId: mealId, minutes: 0),
+        );
+      }
+
+      final response = await runtimeContext
+          .waitForEventWithTimeoutOrNull<EatNowResponseEvent>(
+            Duration(minutes: 10),
+          );
+      if (response != null) {
+        return response;
+      }
+    }
+    await notificationProvider.cancelAll();
+    return null;
   }
 }

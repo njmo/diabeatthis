@@ -27,6 +27,7 @@ import 'bolus_then_wait_executor.dart';
 import 'detect_finished_eating_executor.dart';
 import 'idle_executor.dart';
 import 'meal_monitor_state_executor.dart';
+import 'new_meal_check_executor.dart';
 
 enum PathDecision {
   waitUntilMealMonitorWindow,
@@ -261,7 +262,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       );
     } on WaitTimeoutException catch (_) {
       logI("Problem normalizing meal time");
-      return MealMonitorStateIdle();
+      return NewMealCheckExecutor();
     }
 
     final timeToMealNormalized = normalizedMealTime.difference(clock.now());
@@ -290,8 +291,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       try {
         switch (pathDecision) {
           case PathDecision.abort:
-            logI("No path decision available going to idle state");
-            return MealMonitorStateIdle();
+            logI("No path decision available, checking next meal");
+            return NewMealCheckExecutor();
           case PathDecision.waitUntilMealMonitorWindow:
             logI(
               "Duration till meal ${timeToMeal.inMinutes} waiting for monitoring window",
@@ -341,7 +342,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             if (mealStatus == null) {
               logI("Problem gathering meal macronutrients status");
               // notify to use phone
-              return MealMonitorStateIdle();
+              return NewMealCheckExecutor();
             }
 
             MealMonitorStateExecutor nextExecutor = MealMonitorStateIdle();
@@ -430,8 +431,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             // if advice is null means we don't have advice available
             // but we don't want to show advice when device status is old
             if (advice == null || deviceStatus == null) {
-              logI("No advice available going to idle state");
-              return MealMonitorStateIdle();
+              logI("No advice available, checking next meal");
+              return NewMealCheckExecutor();
             }
 
             // notify user about suggestion (if any)

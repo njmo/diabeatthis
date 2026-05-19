@@ -17,6 +17,7 @@ import '../meal_monitor_context.dart';
 import 'finalize_meal_executor.dart';
 import 'idle_executor.dart';
 import 'meal_monitor_state_executor.dart';
+import 'new_meal_check_executor.dart';
 
 class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     with Logging {
@@ -99,8 +100,8 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
             ).future,
           );
           if (mealSummary == null) {
-            logI("Problem gathering meal advice, going to idle state");
-            return MealMonitorStateIdle();
+            logI("Problem gathering meal advice, checking next meal");
+            return NewMealCheckExecutor();
           }
           grams = mealSummary.netCarbsGrams.round();
           logI("Meal summary available with $grams grams of carbs");
@@ -117,8 +118,8 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
             >(Duration(minutes: 20));
 
         if (calculatorResponse == null) {
-          logI("Problem gathering calculator response, going to idle state");
-          return MealMonitorStateIdle();
+          logI("Problem gathering calculator response, checking next meal");
+          return NewMealCheckExecutor();
         }
 
         logI("Calculator response available, cancelling meal notifications");
