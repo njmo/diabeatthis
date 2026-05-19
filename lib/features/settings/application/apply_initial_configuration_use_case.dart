@@ -10,6 +10,7 @@ import '../../../core/data/provider/monitor_service_enabled_provider.dart';
 import '../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../core/data_sources/config/data_source_config.dart';
 import '../../../core/data_sources/config/data_source_config_sync_payload.dart';
+import '../../../core/data_sources/config/data_source_option_availability.dart';
 import '../../../core/data_sources/config/helpers/data_source_config_storer.dart';
 import '../../../core/data_sources/nightscout/nightscout_cloud_connection_tester.dart';
 import '../../../core/data_sources/receiver/providers/data_receiver_activation_controller_provider.dart';
@@ -32,6 +33,11 @@ class ApplyInitialConfigurationUseCase {
     required String nightscoutUrl,
     required String childName,
   }) async {
+    final availability = await _ref.read(
+      dataSourceOptionAvailabilityProvider.future,
+    );
+    availability.ensureConfigAvailable(config);
+
     if (config.usesCloud) {
       await NightscoutCloudConnectionTester.fromUrl(
         nightscoutUrl,

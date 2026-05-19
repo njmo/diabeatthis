@@ -5,10 +5,12 @@ import '../../../../app/providers/app_event_router_provider.dart';
 import '../../../../app/providers/app_foreground_bridge_provider.dart';
 import '../../../../app/providers/foreground_task_state_provider.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
+import '../../../../common/platform/external_app_installation_checker.dart';
 import '../../../../core/data/provider/monitor_service_enabled_provider.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
+import '../../../../core/data_sources/config/data_source_option_availability.dart';
 import '../../../../core/data_sources/config/helpers/data_source_config_storer.dart';
 import '../../../../core/data_sources/receiver/providers/data_receiver_activation_controller_provider.dart';
 import '../../../../core/logger/logger.dart';
@@ -23,6 +25,7 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final configAsync = ref.watch(dataSourceConfigProvider);
+    final availabilityAsync = ref.watch(dataSourceOptionAvailabilityProvider);
 
     return SettingsSectionCard(
       icon: Icons.hub_outlined,
@@ -32,29 +35,50 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
         configAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => Text('Błąd źródeł danych: $error'),
-          data: (config) => DataSourceConfigControls(
-            config: config,
-            onChanged: (next) async {
-              final prefs = await ref.read(sharedPrefsProvider.future);
-              final storer = DataSourceConfigStorer(prefs);
-              final appEventRouter = ref.read(appEventRouterProvider);
-              final receiverActivationController = ref.read(
-                dataReceiverActivationControllerProvider,
-              );
+          data: (config) => availabilityAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => Text('Błąd dostępności źródeł: $error'),
+            data: (availability) => DataSourceConfigControls(
+              config: config,
+              availability: availability,
+              onChanged: (next) async {
+                if (next == config) return;
 
-              await storer.save(next);
-              await receiverActivationController.applyConfigChange(
-                previous: config,
-                next: next,
-              );
-              ref.invalidate(sharedPrefsProvider);
-              await _restartForegroundTaskIfNeeded(ref, config, next);
+                try {
+                  final availability = await ref.read(
+                    dataSourceOptionAvailabilityProvider.future,
+                  );
+                  availability.ensureConfigAvailable(next);
+                } on DataSourceConfigUnavailableException catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(_unavailableSourceMessage(e))),
+                    );
+                  }
+                  return;
+                }
 
-              appEventRouter.send(
-                ExecuteCommandEvent.syncSettings(data: next.toSyncPayload()),
-              );
-              onChanged?.call(next);
-            },
+                final prefs = await ref.read(sharedPrefsProvider.future);
+                final storer = DataSourceConfigStorer(prefs);
+                final appEventRouter = ref.read(appEventRouterProvider);
+                final receiverActivationController = ref.read(
+                  dataReceiverActivationControllerProvider,
+                );
+
+                await storer.save(next);
+                await receiverActivationController.applyConfigChange(
+                  previous: config,
+                  next: next,
+                );
+                ref.invalidate(sharedPrefsProvider);
+                await _restartForegroundTaskIfNeeded(ref, config, next);
+
+                appEventRouter.send(
+                  ExecuteCommandEvent.syncSettings(data: next.toSyncPayload()),
+                );
+                onChanged?.call(next);
+              },
+            ),
           ),
         ),
       ],
@@ -94,6 +118,18 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
         previous.treatmentsSource != next.treatmentsSource ||
         previous.pumpStatusSource != next.pumpStatusSource ||
         previous.historySource != next.historySource;
+  }
+
+  String _unavailableSourceMessage(DataSourceConfigUnavailableException error) {
+    final appNames = error.missingApps.map(_externalDataAppName).join(', ');
+    return 'Nie można wybrać tego źródła. Brak aplikacji: $appNames.';
+  }
+
+  String _externalDataAppName(ExternalDataApp app) {
+    return switch (app) {
+      ExternalDataApp.aaps => 'AAPS',
+      ExternalDataApp.xdrip => 'xDrip+',
+    };
   }
 }
 

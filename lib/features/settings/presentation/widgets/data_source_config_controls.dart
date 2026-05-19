@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/data_sources/config/data_source_config.dart';
+import '../../../../core/data_sources/config/data_source_option_availability.dart';
 import 'data_source_dropdown.dart';
 import 'data_source_mirror_switch.dart';
 import 'data_source_option_labels.dart';
@@ -10,46 +11,52 @@ class DataSourceConfigControls extends StatelessWidget {
     super.key,
     required this.config,
     required this.onChanged,
+    required this.availability,
   });
 
   final DataSourceConfig config;
   final ValueChanged<DataSourceConfig> onChanged;
+  final DataSourceOptionAvailability availability;
 
   @override
   Widget build(BuildContext context) {
+    final visibleConfig = availability.visibleConfigFor(config);
     final bgDropdown = DataSourceDropdown<BgSource>(
       label: 'Cukier',
-      value: config.bgSource,
-      values: BgSource.values,
+      value: visibleConfig.bgSource,
+      values: availability.availableBgSources,
       labelFor: (source) => source.label,
-      onChanged: (source) => onChanged(config.copyWith(bgSource: source)),
+      onChanged: (source) =>
+          onChanged(visibleConfig.copyWith(bgSource: source)),
     );
     final treatmentsDropdown = DataSourceDropdown<TreatmentsSource>(
       label: 'Zdarzenia',
-      value: config.treatmentsSource,
-      values: TreatmentsSource.values,
+      value: visibleConfig.treatmentsSource,
+      values: availability.availableTreatmentsSources,
       labelFor: (source) => source.label,
       onChanged: (source) =>
-          onChanged(config.copyWith(treatmentsSource: source)),
+          onChanged(visibleConfig.copyWith(treatmentsSource: source)),
     );
     final pumpStatusDropdown = DataSourceDropdown<PumpStatusSource>(
       label: 'Status pompy',
-      value: config.pumpStatusSource,
-      values: PumpStatusSource.values,
+      value: visibleConfig.pumpStatusSource,
+      values: availability.availablePumpStatusSources,
       labelFor: (source) => source.label,
       onChanged: (source) =>
-          onChanged(config.copyWith(pumpStatusSource: source)),
+          onChanged(visibleConfig.copyWith(pumpStatusSource: source)),
     );
     final historyDropdown = DataSourceDropdown<HistorySource>(
       label: 'Historia',
-      value: config.historySource,
+      value: visibleConfig.historySource,
       values: HistorySource.values,
       labelFor: (source) => source.label,
-      onChanged: (source) => onChanged(config.copyWith(historySource: source)),
+      onChanged: (source) =>
+          onChanged(visibleConfig.copyWith(historySource: source)),
     );
     final mirrorSwitch = DataSourceMirrorSwitch(
-      value: config.mirrorToLocal,
-      onChanged: (value) => onChanged(config.copyWith(mirrorToLocal: value)),
+      value: visibleConfig.mirrorToLocal,
+      onChanged: (value) =>
+          onChanged(visibleConfig.copyWith(mirrorToLocal: value)),
     );
 
     return LayoutBuilder(

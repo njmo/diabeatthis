@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../core/data_sources/config/data_source_option_availability.dart';
 import '../controllers/initial_configuration_controller.dart';
 import '../widgets/data_source_config_controls.dart';
 import '../widgets/settings_section_card.dart';
@@ -17,6 +18,7 @@ class InitialConfigurationPage extends HookConsumerWidget {
       initialConfigurationControllerProvider.notifier,
     );
     final stateAsync = ref.watch(initialConfigurationControllerProvider);
+    final availabilityAsync = ref.watch(dataSourceOptionAvailabilityProvider);
     final formKey = useMemoized(GlobalKey<FormState>.new);
 
     return Scaffold(
@@ -41,9 +43,16 @@ class InitialConfigurationPage extends HookConsumerWidget {
                     subtitle:
                         'Wybierz źródło cukru, zdarzeń, statusu pompy i historii.',
                     children: [
-                      DataSourceConfigControls(
-                        config: state.config,
-                        onChanged: controller.setDataSourceConfig,
+                      availabilityAsync.when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (error, _) =>
+                            Text('Błąd dostępności źródeł: $error'),
+                        data: (availability) => DataSourceConfigControls(
+                          config: state.config,
+                          availability: availability,
+                          onChanged: controller.setDataSourceConfig,
+                        ),
                       ),
                     ],
                   ),

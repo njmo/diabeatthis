@@ -28,6 +28,7 @@ class DataSourceDropdown<T extends Object> extends StatelessWidget {
       ],
       onChanged: (value) {
         if (value == null) return;
+        if (value == this.value) return;
         onChanged(value);
       },
     );
