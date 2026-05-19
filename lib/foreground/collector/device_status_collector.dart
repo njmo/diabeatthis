@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:ui';
-
 import 'package:clock/clock.dart';
 
-import '../../app/providers/app_lifecycle_state_provider.dart';
 import '../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../core/data_sources/config/data_source_config.dart';
 import '../../core/data_sources/config/data_source_config_provider.dart';
@@ -118,12 +115,9 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
 
     ForegroundAlarmBridge.scheduleCollectTick(_nextExpectedAt(data.date));
 
-    if (context.container.read(appLifecycleProvider) ==
-        AppLifecycleState.resumed) {
-      context.container
-          .read(taskEventRouterProvider)
-          .send(TaskDeviceStatusSynchronization(data: data));
-    }
+    context.container
+        .read(taskEventRouterProvider)
+        .send(TaskDeviceStatusSynchronization(data: data));
 
     final cache = context.container.read(
       synchronizationCacheControllerProvider,

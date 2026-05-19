@@ -1,8 +1,5 @@
-import 'dart:ui';
-
 import 'package:clock/clock.dart';
 
-import '../../../../app/providers/app_lifecycle_state_provider.dart';
 import '../../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
@@ -52,11 +49,9 @@ class LocalDeviceStatusHandler with Logging {
     runtimeContext.emitEvent(DataAvailableEvent<DeviceStatus>(deviceStatus));
     final tickAt = clock.now();
     runtimeContext.tick(tickAt);
-    if (container.read(appLifecycleProvider) == AppLifecycleState.resumed) {
-      container
-          .read(taskEventRouterProvider)
-          .send(TaskDeviceStatusSynchronization(data: deviceStatus));
-    }
+    container
+        .read(taskEventRouterProvider)
+        .send(TaskDeviceStatusSynchronization(data: deviceStatus));
     await _scheduleSafetyTick(tickAt);
   }
 
