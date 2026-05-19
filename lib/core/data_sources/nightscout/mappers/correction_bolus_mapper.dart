@@ -7,6 +7,7 @@ extension CorrectionBolusMapper on CorrectionBolusDto {
       externalId: id,
       createdAt: DateTime.parse(createdAt).toLocal(),
       insulin: (insulin as num?)?.toDouble() ?? 0,
+      isValid: isValid,
     );
   }
 }

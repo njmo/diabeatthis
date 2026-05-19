@@ -25,6 +25,23 @@ void main() {
       expect(event.data.last, isA<Treat>());
     });
 
+    test('parses invalidated treatment as invalid domain data', () {
+      final event = LocalTreatmentsEvent.fromJson({
+        'data': [
+          _carbCorrectionPayload(),
+          {
+            ..._carbCorrectionPayload(),
+            '_id': 'removed-treat-1',
+            'isValid': false,
+          },
+        ],
+      });
+
+      expect(event.data, hasLength(2));
+      expect(event.data.first.isValid, isTrue);
+      expect(event.data.last.isValid, isFalse);
+    });
+
     test('parses native receiver wrapper', () {
       final event = ExternalEvent.fromJson({
         'external_event': 'native_receiver',

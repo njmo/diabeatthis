@@ -5,6 +5,7 @@ abstract class Treatment {
 
   const Treatment({this.createdAt});
 
+  bool get isValid;
   String getParts();
   IconData getIcon();
   Color getColor();

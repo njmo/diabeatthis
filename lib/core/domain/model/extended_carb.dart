@@ -14,6 +14,7 @@ abstract class ExtendedCarb with _$ExtendedCarb implements Treatment {
     required DateTime createdAt,
     required int carbs,
     required int duration,
+    @Default(true) bool isValid,
   }) = _ExtendedCarb;
 
   /*

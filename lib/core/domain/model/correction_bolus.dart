@@ -13,6 +13,7 @@ abstract class CorrectionBolus with _$CorrectionBolus implements Treatment {
     required String? externalId,
     required DateTime createdAt,
     required double insulin,
+    @Default(true) bool isValid,
   }) = _CorrectionBolus;
 
   @override

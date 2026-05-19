@@ -7,6 +7,7 @@ extension TreatMapper on TreatDto {
       externalId: id,
       createdAt: DateTime.parse(createdAt).toLocal(),
       carbs: (carbs as num?)?.toInt() ?? 0,
+      isValid: isValid,
     );
   }
 }

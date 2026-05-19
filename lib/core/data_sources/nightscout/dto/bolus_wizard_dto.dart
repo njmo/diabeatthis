@@ -16,6 +16,7 @@ abstract class BolusWizardDto with _$BolusWizardDto {
     String? notes,
     int? mills,
     Map<String, dynamic>? bolusCalculatorResult,
+    @Default(true) bool isValid,
   }) = _BolusWizardDto;
 
   factory BolusWizardDto.fromJson(Map<String, dynamic> json) => BolusWizardDto(
@@ -29,6 +30,7 @@ abstract class BolusWizardDto with _$BolusWizardDto {
     bolusCalculatorResult: _decodeBolusCalculatorResult(
       json['bolusCalculatorResult'],
     ),
+    isValid: (json['isValid'] as bool?) ?? true,
   );
 }
 

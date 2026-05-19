@@ -13,6 +13,7 @@ abstract class ManualBolus with _$ManualBolus implements Treatment {
     required String? externalId,
     required DateTime createdAt,
     required double insulin,
+    @Default(true) bool isValid,
   }) = _ManualBolus;
   /*
 

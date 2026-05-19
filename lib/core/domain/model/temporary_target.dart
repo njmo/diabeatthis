@@ -18,6 +18,7 @@ abstract class TemporaryTarget with _$TemporaryTarget implements Treatment {
     required int duration,
     required int targetBottom,
     required int targetTop,
+    @Default(true) bool isValid,
   }) = _TemporaryTarget;
 
   factory TemporaryTarget.fromJson(Map<String, dynamic> json) =>

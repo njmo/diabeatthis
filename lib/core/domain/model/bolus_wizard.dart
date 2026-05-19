@@ -18,6 +18,7 @@ abstract class BolusWizard with _$BolusWizard implements Treatment {
     required String? units,
     required String? notes,
     required BolusCalculatorResult? calculatorResult,
+    @Default(true) bool isValid,
   }) = _BolusWizard;
 
   double get carbs => calculatorResult?.carbs ?? 0;

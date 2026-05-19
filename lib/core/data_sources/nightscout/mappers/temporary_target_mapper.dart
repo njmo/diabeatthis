@@ -10,6 +10,7 @@ extension TemporaryTargetMapper on TemporaryTargetDto {
       duration: duration,
       targetBottom: targetBottom,
       targetTop: targetTop,
+      isValid: isValid,
     );
   }
 }

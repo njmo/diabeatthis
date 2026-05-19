@@ -8,6 +8,7 @@ extension ExtendedCarbMapper on ExtendedCarbDto {
       createdAt: DateTime.parse(createdAt).toLocal(),
       carbs: (carbs as num?)?.toInt() ?? 0,
       duration: (duration as num?)?.toInt() ?? 0,
+      isValid: isValid,
     );
   }
 }

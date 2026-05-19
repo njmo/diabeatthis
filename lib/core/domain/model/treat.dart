@@ -13,6 +13,7 @@ abstract class Treat with _$Treat implements Treatment {
     required String? externalId,
     required DateTime createdAt,
     required int carbs,
+    @Default(true) bool isValid,
   }) = _Treat;
 
   @override

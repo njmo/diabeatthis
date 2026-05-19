@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+
 // ignore_for_file: invalid_annotation_target
 part 'temporary_target_dto.freezed.dart';
 part 'temporary_target_dto.g.dart';
@@ -12,6 +13,7 @@ abstract class TemporaryTargetDto with _$TemporaryTargetDto {
     required int duration,
     required int targetBottom,
     required int targetTop,
+    @Default(true) bool isValid,
   }) = _TemporaryTargetDto;
 
   factory TemporaryTargetDto.fromJson(Map<String, dynamic> json) =>

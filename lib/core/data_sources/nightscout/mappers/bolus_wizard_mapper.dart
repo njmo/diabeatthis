@@ -14,6 +14,7 @@ extension BolusWizardMapper on BolusWizardDto {
       units: units,
       notes: notes,
       calculatorResult: calculatorResult,
+      isValid: isValid,
     );
   }
 }
