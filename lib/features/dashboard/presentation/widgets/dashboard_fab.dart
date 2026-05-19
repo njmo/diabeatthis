@@ -5,9 +5,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/widgets/fab_action_option.dart';
-import '../../../../core/domain/model/activity.dart';
-import '../../../../core/domain/model/activity_log.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../activity/data/drafts/activity_log_draft.dart';
 import '../../../activity/data/providers/activity_provider.dart';
 import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
@@ -117,37 +116,22 @@ class DashboardFAB extends HookConsumerWidget with Logging {
     WidgetRef ref,
     DashboardActivityAction action,
   ) async {
-    final c = ref.read(activityControllerProvider.notifier);
-    Activity? act;
     try {
-      act = await c.saveActivity(action.activity);
-      if (act == null) {
-        throw Exception('Something went wrong with adding activity');
-      }
+      logI('Adding activity log');
+      await ref.read(
+        insertActivityLogProvider(
+          ActivityLogDraft(
+            activity: action.activity,
+            startedAt: action.startedAt,
+          ),
+        ).future,
+      );
+      ref.invalidate(getPendingActivityProvider);
     } catch (e) {
       if (context.mounted) {
         await showActivityAddFailedDialog(context);
       }
-      return;
     }
-
-    await act.whenOrNull(
-      existing: (id, name, pre, post, durationMinutes) async {
-        logI('Adding activity: $id $name');
-        try {
-          await ref.read(
-            insertActivityLogProvider(
-              ActivityLog.draft(activityId: id, startedAt: action.startedAt),
-            ).future,
-          );
-          ref.invalidate(getPendingActivityProvider);
-        } catch (e) {
-          if (context.mounted) {
-            await showActivityInProgressDialog(context);
-          }
-        }
-      },
-    );
   }
 
   Future<void> showActivityInProgressDialog(BuildContext context) {

@@ -5,7 +5,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
-import '../../../../core/domain/model/activity.dart';
 import '../../data/providers/activity_provider.dart';
 
 class ActivityList extends HookConsumerWidget {
@@ -85,29 +84,17 @@ class ActivityList extends HookConsumerWidget {
                   }
 
                   final activity = visibleActivities[index];
-                  return activity.whenOrNull(
-                        existing:
-                            (
-                              id,
-                              name,
-                              percentagePre,
-                              percentagePost,
-                              durationMinutes,
-                            ) {
-                              return _ActivityCard(
-                                name: name,
-                                percentagePre: percentagePre,
-                                percentagePost: percentagePost,
-                                durationMinutes: durationMinutes,
-                                onTap: () {
-                                  context.router.push(
-                                    routes.ActivityRoute(activityId: id),
-                                  );
-                                },
-                              );
-                            },
-                      ) ??
-                      const SizedBox.shrink();
+                  return _ActivityCard(
+                    name: activity.name,
+                    percentagePre: activity.percentagePre,
+                    percentagePost: activity.percentagePost,
+                    durationMinutes: activity.durationMinutes,
+                    onTap: () {
+                      context.router.push(
+                        routes.ActivityRoute(activityId: activity.id),
+                      );
+                    },
+                  );
                 },
               ),
             ),

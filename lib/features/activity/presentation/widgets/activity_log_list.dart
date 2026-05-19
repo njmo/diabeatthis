@@ -5,7 +5,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
-import '../../../../core/domain/model/activity_log.dart';
 import '../../data/providers/activity_provider.dart';
 import 'activity_log_card.dart';
 import 'activity_log_list_tail.dart';
@@ -93,29 +92,16 @@ class ActivityLogList extends HookConsumerWidget {
                   }
 
                   final activityLog = visibleActivityLogs[index];
-                  return activityLog.whenOrNull(
-                        view:
-                            (
-                              id,
-                              name,
-                              activityId,
-                              startedAt,
-                              endedAt,
-                              durationMinutes,
-                            ) {
-                              return ActivityLogCard(
-                                name: name,
-                                startedAt: startedAt,
-                                endedAt: endedAt,
-                                onTap: () {
-                                  context.router.push(
-                                    routes.ActivityLogRoute(activityLogId: id),
-                                  );
-                                },
-                              );
-                            },
-                      ) ??
-                      const SizedBox.shrink();
+                  return ActivityLogCard(
+                    name: activityLog.activityName,
+                    startedAt: activityLog.startedAt,
+                    endedAt: activityLog.endedAt,
+                    onTap: () {
+                      context.router.push(
+                        routes.ActivityLogRoute(activityLogId: activityLog.id),
+                      );
+                    },
+                  );
                 },
               ),
             ),

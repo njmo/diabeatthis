@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/forms.dart';
 import '../../../../core/domain/model/activity.dart';
+import '../../data/mappers/activity_draft_mapper.dart';
 import '../../data/providers/activity_provider.dart';
 
 class ActivitySearch extends HookConsumerWidget {
@@ -125,7 +126,7 @@ class ActivitySearch extends HookConsumerWidget {
                               )
                             : const Icon(Icons.chevron_right),
                         onTap: () {
-                          draft.overrideDraft(activity);
+                          draft.overrideDraft(activity.toDraft());
                           valuePicked.value = index;
                         },
                       ),
@@ -146,20 +147,11 @@ class ActivitySearch extends HookConsumerWidget {
   }
 
   static String _activityName(Activity activity) {
-    return activity.when(
-      existing: (_, name, _, _, _) => name,
-      draft: (name, _, _, _) => name,
-      empty: () => '',
-    );
+    return activity.name;
   }
 
   static String _activitySubtitle(Activity activity) {
-    final durationMinutes = activity.when(
-      existing: (_, _, _, _, durationMinutes) => durationMinutes,
-      draft: (_, _, _, durationMinutes) => durationMinutes,
-      empty: () => null,
-    );
-    return _formatDuration(durationMinutes);
+    return _formatDuration(activity.durationMinutes);
   }
 
   static String _formatDuration(int? minutes) {

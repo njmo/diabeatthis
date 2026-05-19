@@ -4,22 +4,13 @@ part 'activity.freezed.dart';
 
 const defaultPlannedActivityDurationMinutes = 30;
 
-@Freezed(unionKey: 'kind')
+@freezed
 abstract class Activity with _$Activity {
-  const factory Activity.existing({
+  const factory Activity({
     required int id,
     required String name,
     required int percentagePre,
     required int percentagePost,
     required int? durationMinutes,
-  }) = _ActivityExisting;
-
-  const factory Activity.draft({
-    required String name,
-    required int percentagePre,
-    required int percentagePost,
-    required int? durationMinutes,
-  }) = _ActivityDraft;
-
-  const factory Activity.empty() = _ActivityEmpty;
+  }) = _Activity;
 }

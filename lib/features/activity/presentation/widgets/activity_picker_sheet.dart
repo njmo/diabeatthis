@@ -3,14 +3,14 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
-import '../../../../core/domain/model/activity.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
+import '../../data/drafts/activity_draft.dart';
 import '../../data/providers/activity_provider.dart';
 import 'activity_form.dart';
 import 'activity_search.dart';
 
-Future<Activity?> showActivityPickerSheet(BuildContext context) {
-  return showModalBottomSheet<Activity?>(
+Future<ActivityDraft?> showActivityPickerSheet(BuildContext context) {
+  return showModalBottomSheet<ActivityDraft?>(
     context: context,
     useRootNavigator: false,
     isScrollControlled: true,
@@ -28,13 +28,7 @@ class ActivityPickerSheet extends HookConsumerWidget {
     final controller = ref.read(activityDialogControllerProvider.notifier);
     final canPick = state == ActivityPickerStep.add
         ? true
-        : ref
-                  .watch(activityDraftProvider)
-                  .whenOrNull(
-                    existing: (_, _, _, _, _) => true,
-                    draft: (_, _, _, _) => true,
-                  ) ??
-              false;
+        : ref.watch(activityDraftProvider) != null;
     final isInitial = state == ActivityPickerStep.initial;
     final isAdding = state == ActivityPickerStep.add;
     final isSearching = state == ActivityPickerStep.search;
@@ -82,6 +76,7 @@ class ActivityPickerSheet extends HookConsumerWidget {
               final next = selection.first;
               if (next == ActivityPickerStep.add) {
                 searchAutofocus.value = false;
+                ref.read(activityDraftProvider.notifier).reset();
                 controller.addState();
               } else {
                 searchAutofocus.value = true;

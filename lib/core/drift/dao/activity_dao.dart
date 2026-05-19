@@ -105,6 +105,21 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     )..where((tbl) => tbl.endedAt.isNull())).getSingleOrNull();
   }
 
+  Stream<List<TypedResult>> watchActiveActivityLogView() {
+    final query =
+        select(db.activityLog).join([
+            innerJoin(
+              db.activity,
+              db.activity.id.equalsExp(db.activityLog.activityId),
+            ),
+          ])
+          ..where(db.activityLog.endedAt.isNull())
+          ..orderBy([OrderingTerm.asc(db.activityLog.startedAt)])
+          ..limit(1);
+
+    return query.watch();
+  }
+
   Future<ActivityLogData?> getNearestActivityLog() {
     final query = select(db.activityLog)
       ..where((tbl) => tbl.endedAt.isNull())

@@ -5,7 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/date_time_picker.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
-import '../../../../core/domain/model/activity.dart';
+import '../../../activity/data/drafts/activity_draft.dart';
 import '../../../activity/presentation/widgets/activity_picker_sheet.dart';
 
 class DashboardActivityAction {
@@ -15,7 +15,7 @@ class DashboardActivityAction {
     required this.isScheduled,
   });
 
-  final Activity activity;
+  final ActivityDraft activity;
   final DateTime startedAt;
   final bool isScheduled;
 }
@@ -25,7 +25,7 @@ class DashboardActivitySheet extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedActivity = useState<Activity?>(null);
+    final selectedActivity = useState<ActivityDraft?>(null);
     final scheduled = useState(false);
     final startAt = useState(clock.now());
     final selected = selectedActivity.value;
@@ -159,7 +159,7 @@ class SelectedDashboardActivityCard extends StatelessWidget {
     required this.onChange,
   });
 
-  final Activity activity;
+  final ActivityDraft activity;
   final VoidCallback onChange;
 
   @override
@@ -227,19 +227,17 @@ class SelectedDashboardActivityCard extends StatelessWidget {
     );
   }
 
-  static String _activityName(Activity activity) {
-    return activity.when(
-      existing: (_, name, _, _, _) => name,
-      draft: (name, _, _, _) => name,
-      empty: () => 'Aktywność',
+  static String _activityName(ActivityDraft activity) {
+    return activity.map(
+      existing: (activity) => activity.name,
+      draft: (activity) => activity.name,
     );
   }
 
-  static int? _activityDurationMinutes(Activity activity) {
-    return activity.when(
-      existing: (_, _, _, _, durationMinutes) => durationMinutes,
-      draft: (_, _, _, durationMinutes) => durationMinutes,
-      empty: () => null,
+  static int? _activityDurationMinutes(ActivityDraft activity) {
+    return activity.map(
+      existing: (activity) => activity.durationMinutes,
+      draft: (activity) => activity.durationMinutes,
     );
   }
 

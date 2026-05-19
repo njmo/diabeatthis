@@ -7,6 +7,11 @@ import '../../../../core/drift/database_impl.dart' as db;
 import '../../../../core/drift/mappers/activity_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
+import '../drafts/activity_draft.dart';
+import '../drafts/activity_log_draft.dart';
+import '../mappers/activity_draft_mapper.dart';
+import '../mappers/activity_log_draft_mapper.dart';
+import '../models/activity_log_summary_data.dart';
 
 part 'activity_provider.g.dart';
 
@@ -16,120 +21,124 @@ const activityListPageSize = 10;
 @riverpod
 class ActivityDraftNotifier extends _$ActivityDraftNotifier {
   @override
-  domain.Activity build() {
-    return domain.Activity.empty();
-  }
+  ActivityDraft? build() => null;
 
   void setName(String value) {
-    state = state.map(
-      existing: (a) => a.copyWith(name: value),
-      draft: (a) => a.copyWith(name: value),
-      empty: (_) => domain.Activity.draft(
-        name: value,
-        percentagePre: 0,
-        percentagePost: 0,
-        durationMinutes: null,
-      ),
-    );
+    state =
+        state?.map(
+          existing: (a) => a.copyWith(name: value),
+          draft: (a) => a.copyWith(name: value),
+        ) ??
+        ActivityDraft.draft(
+          name: value,
+          percentagePre: 0,
+          percentagePost: 0,
+          durationMinutes: null,
+        );
   }
 
   void setPercentagePre(String value) {
-    state = state.map(
-      existing: (a) => a.copyWith(percentagePre: int.tryParse(value) ?? 0),
-      draft: (a) => a.copyWith(percentagePre: int.tryParse(value) ?? 0),
-      empty: (_) => domain.Activity.draft(
-        name: '',
-        percentagePre: int.tryParse(value) ?? 0,
-        percentagePost: 0,
-        durationMinutes: null,
-      ),
-    );
+    state =
+        state?.map(
+          existing: (a) => a.copyWith(percentagePre: int.tryParse(value) ?? 0),
+          draft: (a) => a.copyWith(percentagePre: int.tryParse(value) ?? 0),
+        ) ??
+        ActivityDraft.draft(
+          name: '',
+          percentagePre: int.tryParse(value) ?? 0,
+          percentagePost: 0,
+          durationMinutes: null,
+        );
   }
 
   void setPercentagePost(String value) {
-    state = state.map(
-      existing: (a) => a.copyWith(percentagePost: int.tryParse(value) ?? 0),
-      draft: (a) => a.copyWith(percentagePost: int.tryParse(value) ?? 0),
-      empty: (_) => domain.Activity.draft(
-        name: '',
-        percentagePre: 0,
-        percentagePost: int.tryParse(value) ?? 0,
-        durationMinutes: null,
-      ),
-    );
+    state =
+        state?.map(
+          existing: (a) => a.copyWith(percentagePost: int.tryParse(value) ?? 0),
+          draft: (a) => a.copyWith(percentagePost: int.tryParse(value) ?? 0),
+        ) ??
+        ActivityDraft.draft(
+          name: '',
+          percentagePre: 0,
+          percentagePost: int.tryParse(value) ?? 0,
+          durationMinutes: null,
+        );
   }
 
   void setDurationMinutes(String value) {
     final trimmedValue = value.trim();
     final duration = trimmedValue.isEmpty ? null : int.tryParse(trimmedValue);
-    state = state.map(
-      existing: (a) => a.copyWith(durationMinutes: duration),
-      draft: (a) => a.copyWith(durationMinutes: duration),
-      empty: (_) => domain.Activity.draft(
-        name: '',
-        percentagePre: 0,
-        percentagePost: 0,
-        durationMinutes: duration,
-      ),
-    );
+    state =
+        state?.map(
+          existing: (a) => a.copyWith(durationMinutes: duration),
+          draft: (a) => a.copyWith(durationMinutes: duration),
+        ) ??
+        ActivityDraft.draft(
+          name: '',
+          percentagePre: 0,
+          percentagePost: 0,
+          durationMinutes: duration,
+        );
   }
 
   void setHasPlannedDuration(bool value) {
-    state = state.map(
-      existing: (a) => a.copyWith(
-        durationMinutes: value
-            ? a.durationMinutes ?? domain.defaultPlannedActivityDurationMinutes
-            : null,
-      ),
-      draft: (a) => a.copyWith(
-        durationMinutes: value
-            ? a.durationMinutes ?? domain.defaultPlannedActivityDurationMinutes
-            : null,
-      ),
-      empty: (_) => domain.Activity.draft(
-        name: '',
-        percentagePre: 0,
-        percentagePost: 0,
-        durationMinutes: value
-            ? domain.defaultPlannedActivityDurationMinutes
-            : null,
-      ),
-    );
+    state =
+        state?.map(
+          existing: (a) => a.copyWith(
+            durationMinutes: value
+                ? a.durationMinutes ??
+                      domain.defaultPlannedActivityDurationMinutes
+                : null,
+          ),
+          draft: (a) => a.copyWith(
+            durationMinutes: value
+                ? a.durationMinutes ??
+                      domain.defaultPlannedActivityDurationMinutes
+                : null,
+          ),
+        ) ??
+        ActivityDraft.draft(
+          name: '',
+          percentagePre: 0,
+          percentagePost: 0,
+          durationMinutes: value
+              ? domain.defaultPlannedActivityDurationMinutes
+              : null,
+        );
   }
 
-  String? getName() => state.map(
-    existing: (a) => a.name,
-    draft: (a) => a.name,
-    empty: (_) => '',
-  );
+  String? getName() =>
+      state?.map(existing: (a) => a.name, draft: (a) => a.name) ?? '';
 
-  int? getPercentagePre() => state.map(
-    existing: (a) => a.percentagePre,
-    draft: (a) => a.percentagePre,
-    empty: (_) => 0,
-  );
+  int? getPercentagePre() =>
+      state?.map(
+        existing: (a) => a.percentagePre,
+        draft: (a) => a.percentagePre,
+      ) ??
+      0;
 
-  int? getPercentagePost() => state.map(
-    existing: (a) => a.percentagePost,
-    draft: (a) => a.percentagePost,
-    empty: (_) => 0,
-  );
+  int? getPercentagePost() =>
+      state?.map(
+        existing: (a) => a.percentagePost,
+        draft: (a) => a.percentagePost,
+      ) ??
+      0;
 
-  int? getDurationMinutes() => state.map(
+  int? getDurationMinutes() => state?.map(
     existing: (a) => a.durationMinutes,
     draft: (a) => a.durationMinutes,
-    empty: (_) => null,
   );
 
-  bool hasPlannedDuration() => state.map(
-    existing: (a) => a.durationMinutes != null,
-    draft: (a) => a.durationMinutes != null,
-    empty: (_) => false,
-  );
+  bool hasPlannedDuration() =>
+      state?.map(
+        existing: (a) => a.durationMinutes != null,
+        draft: (a) => a.durationMinutes != null,
+      ) ??
+      false;
 
-  void reset() => state = domain.Activity.empty();
+  void reset() => state = null;
 
-  void overrideDraft(domain.Activity activity) => state = activity;
+  void overrideDraft(ActivityDraft activity) => state = activity;
 }
 
 @riverpod
@@ -139,24 +148,11 @@ class ActivityControllerNotifier extends _$ActivityControllerNotifier {
     return;
   }
 
-  Future<domain.Activity?> saveActivity(
-    domain.Activity act, [
-    DateTime? date,
-  ]) async {
+  Future<domain.Activity> updateActivity(ActivityDraft activity) async {
     final db = ref.watch(databaseProvider);
-    final isDraft = act.maybeMap(draft: (_) => true, orElse: () => false);
-    if (isDraft) {
-      final value = await db.activityDao.insertActivity(act.toCompanion());
-      if (value == null) return null;
-      return value.toDomain();
-    } else {
-      return act;
-    }
-  }
-
-  Future<domain.Activity> updateActivity(domain.Activity activity) async {
-    final db = ref.watch(databaseProvider);
-    final value = await db.activityDao.updateActivity(activity.toCompanion());
+    final value = await db.activityDao.updateActivity(
+      activity.toDomain().toCompanion(),
+    );
     return value.toDomain();
   }
 }
@@ -178,12 +174,18 @@ Future<List<domain.Activity>> activitiyLogByQuery(Ref ref, String query) async {
 @riverpod
 Future<domain.ActivityLog> insertActivityLog(
   Ref ref,
-  domain.ActivityLog activityLog,
+  ActivityLogDraft activityLog,
 ) async {
   final db = ref.watch(databaseProvider);
-  return await db.activityDao
-      .insertActivityLog(activityLog.toCompanion())
-      .then((value) => value.toDomain());
+  return db.transaction(() async {
+    final activity = await _saveActivityDraft(db, activityLog.activity);
+    if (activity == null) {
+      throw Exception('Could not insert activity');
+    }
+    return await db.activityDao
+        .insertActivityLog(activityLog.toCompanion(activityId: activity.id))
+        .then((value) => value.toDomain());
+  });
 }
 
 @riverpod
@@ -193,7 +195,7 @@ Stream<List<domain.Activity>> activityListStream(Ref ref) {
 }
 
 @riverpod
-Stream<List<domain.ActivityLog>> activityLogListStream(
+Stream<List<ActivityLogSummaryData>> activityLogListStream(
   Ref ref, {
   required int? activityId,
 }) {
@@ -210,13 +212,13 @@ Stream<List<domain.ActivityLog>> activityLogListStream(
 }
 
 @riverpod
-Future<void> stopActivity(Ref ref, domain.ActivityLog activityLog) async {
+Future<void> stopActivity(Ref ref, ActivityLogSummaryData activityLog) async {
   final db = ref.watch(databaseProvider);
-  final updated = activityLog.map(
-    existing: (a) => a.copyWith(endedAt: clock.now()),
-    view: (a) => a.copyWith(endedAt: clock.now()),
-    draft: (a) =>
-        throw StateError('Nie można zakończyć draftu – brak id i endedAt'),
+  final updated = domain.ActivityLog(
+    id: activityLog.id,
+    activityId: activityLog.activityId,
+    startedAt: activityLog.startedAt,
+    endedAt: clock.now(),
   );
   if (activityLog.startedAt.isBefore(clock.now())) {
     await db.activityDao.updateActivityLog(updated.toCompanion());
@@ -226,23 +228,20 @@ Future<void> stopActivity(Ref ref, domain.ActivityLog activityLog) async {
 }
 
 @riverpod
-Future<domain.ActivityLog?> getPendingActivity(Ref ref) async {
+Stream<ActivityLogSummaryData?> getPendingActivity(Ref ref) {
   final db = ref.watch(databaseProvider);
-  final value = await db.activityDao.getActiveActivityLogOrNull();
-  Log.i('getPendingActivityProvider', 'value: $value');
-  if (value == null) return null;
+  return db.activityDao.watchActiveActivityLogView().map((rows) {
+    if (rows.isEmpty) {
+      Log.i('getPendingActivityProvider', 'value: null');
+      return null;
+    }
 
-  final activity = await db.activityDao.getActivityById(value.activityId);
-  return domain.ActivityLog.view(
-    id: value.id,
-    activityName: activity.name,
-    startedAt: DateTime.fromMillisecondsSinceEpoch(value.startedAt),
-    endedAt: value.endedAt == null
-        ? null
-        : DateTime.fromMillisecondsSinceEpoch(value.endedAt!),
-    activityId: activity.id,
-    durationMinutes: activity.durationMinutes,
-  );
+    final row = rows.first;
+    final log = row.readTable(db.activityLog);
+    final activity = row.readTable(db.activity);
+    Log.i('getPendingActivityProvider', 'value: $log');
+    return _activityLogView(log: log, activity: activity);
+  });
 }
 
 @riverpod
@@ -285,11 +284,11 @@ class ActivityDialogController extends _$ActivityDialogController {
   }
 }
 
-domain.ActivityLog _activityLogView({
+ActivityLogSummaryData _activityLogView({
   required db.ActivityLogData log,
   required db.ActivityData activity,
 }) {
-  return domain.ActivityLog.view(
+  return ActivityLogSummaryData(
     id: log.id,
     activityName: activity.name,
     startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
@@ -298,5 +297,24 @@ domain.ActivityLog _activityLogView({
         : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
     activityId: activity.id,
     durationMinutes: activity.durationMinutes,
+  );
+}
+
+Future<domain.Activity?> _saveActivityDraft(
+  db.DatabaseImpl db,
+  ActivityDraft activity,
+) {
+  return activity.map(
+    draft: (draft) async {
+      final name = draft.name.trim();
+      if (name.isEmpty) {
+        throw ArgumentError('Activity name cannot be empty');
+      }
+      final value = await db.activityDao.insertActivity(
+        draft.copyWith(name: name).toCompanion(),
+      );
+      return value?.toDomain();
+    },
+    existing: (_) async => activity.toDomain(),
   );
 }

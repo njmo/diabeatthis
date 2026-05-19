@@ -5,7 +5,7 @@ import '../../domain/model/activity_log.dart';
 import '../entity/activity.dart';
 
 extension ActivityLogDataToDomain on ActivityLogData {
-  ActivityLog toDomain() => ActivityLog.existing(
+  ActivityLog toDomain() => ActivityLog(
     id: id,
     activityId: activityId,
     startedAt: DateTime.fromMillisecondsSinceEpoch(startedAt),
@@ -16,7 +16,7 @@ extension ActivityLogDataToDomain on ActivityLogData {
 }
 
 extension ActivityDataToDomain on ActivityData {
-  Activity toDomain() => Activity.existing(
+  Activity toDomain() => Activity(
     id: id,
     name: name,
     percentagePre: percentagePre,
@@ -35,46 +35,23 @@ extension ActivityLogDataIterableToDomain on Iterable<ActivityLogData> {
 
 extension ActivityLogToCompanion on ActivityLog {
   ActivityLogCompanion toCompanion() {
-    return map(
-      draft: (e) => ActivityLogCompanion(
-        id: d.Value<int>.absent(),
-        activityId: d.Value(e.activityId),
-        startedAt: d.Value(e.startedAt.millisecondsSinceEpoch),
-      ),
-      existing: (e) => ActivityLogCompanion(
-        id: d.Value(e.id),
-        activityId: d.Value(e.activityId),
-        startedAt: d.Value(e.startedAt.millisecondsSinceEpoch),
-        endedAt: d.Value(e.endedAt!.millisecondsSinceEpoch),
-      ),
-      view: (e) => ActivityLogCompanion(
-        id: d.Value(e.id),
-        activityId: d.Value(e.activityId),
-        startedAt: d.Value(e.startedAt.millisecondsSinceEpoch),
-        endedAt: d.Value(e.endedAt!.millisecondsSinceEpoch),
-      ),
+    return ActivityLogCompanion(
+      id: d.Value(id),
+      activityId: d.Value(activityId),
+      startedAt: d.Value(startedAt.millisecondsSinceEpoch),
+      endedAt: d.Value(endedAt?.millisecondsSinceEpoch),
     );
   }
 }
 
 extension ActivityToCompanion on Activity {
   ActivityCompanion toCompanion() {
-    return map(
-      draft: (e) => ActivityCompanion(
-        id: d.Value<int>.absent(),
-        name: d.Value(e.name),
-        percentagePre: d.Value(e.percentagePre),
-        percentagePost: d.Value(e.percentagePost),
-        durationMinutes: d.Value(e.durationMinutes),
-      ),
-      existing: (e) => ActivityCompanion(
-        id: d.Value(e.id),
-        name: d.Value(e.name),
-        percentagePre: d.Value(e.percentagePre),
-        percentagePost: d.Value(e.percentagePost),
-        durationMinutes: d.Value(e.durationMinutes),
-      ),
-      empty: (_) => throw StateError("Empty should not be pushed"),
+    return ActivityCompanion(
+      id: d.Value(id),
+      name: d.Value(name),
+      percentagePre: d.Value(percentagePre),
+      percentagePost: d.Value(percentagePost),
+      durationMinutes: d.Value(durationMinutes),
     );
   }
 }

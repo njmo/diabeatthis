@@ -2,10 +2,10 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../../core/domain/model/activity.dart';
-import '../../../../core/domain/model/activity_log.dart';
 import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../activity/data/drafts/activity_log_draft.dart';
+import '../../../activity/data/models/activity_log_summary_data.dart';
 import '../../../activity/data/providers/activity_provider.dart';
 import '../../../activity/presentation/widgets/activity_picker_sheet.dart';
 import '../../data/providers/temporary_target_ui_provider.dart';
@@ -50,27 +50,24 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
     return (seconds / Duration.secondsPerMinute).ceil();
   }
 
-  bool _isActivityPlanned(ActivityLog activity, DateTime now) {
+  bool _isActivityPlanned(ActivityLogSummaryData activity, DateTime now) {
     return activity.startedAt.isAfter(now);
   }
 
   bool _isActivityLinkedToTarget(
-    ActivityLog? pendingActivity,
+    ActivityLogSummaryData? pendingActivity,
     TemporaryTarget target,
   ) {
     if (pendingActivity == null) return false;
     return pendingActivity.startedAt == target.createdAt;
   }
 
-  String _activityName(ActivityLog activity) {
-    return activity.whenOrNull(view: (_, name, _, _, _, _) => name) ??
-        'Aktywność';
+  String _activityName(ActivityLogSummaryData activity) {
+    return activity.activityName;
   }
 
-  int? _activityDurationMinutes(ActivityLog activity) {
-    return activity.whenOrNull(
-      view: (_, _, _, _, _, durationMinutes) => durationMinutes,
-    );
+  int? _activityDurationMinutes(ActivityLogSummaryData activity) {
+    return activity.durationMinutes;
   }
 
   String _targetSubtitle(TemporaryTarget target, DateTime now) {
@@ -79,7 +76,7 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
   }
 
   String _activitySubtitle(
-    ActivityLog activity,
+    ActivityLogSummaryData activity,
     DateTime now, {
     TemporaryTarget? linkedTarget,
   }) {
@@ -189,18 +186,16 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
                         if (activity == null) return;
                         if (!context.mounted) return;
 
-                        final controller = ref.read(
-                          activityControllerProvider.notifier,
-                        );
-
-                        Activity? act;
                         try {
-                          act = await controller.saveActivity(activity);
-                          if (act == null) {
-                            throw Exception(
-                              'Something went wrong with adding activity',
-                            );
-                          }
+                          await ref.read(
+                            insertActivityLogProvider(
+                              ActivityLogDraft(
+                                activity: activity,
+                                startedAt: target.createdAt,
+                              ),
+                            ).future,
+                          );
+                          ref.invalidate(getPendingActivityProvider);
                         } catch (e, st) {
                           logE('Błąd dodawania aktywności $e, $st');
                           if (context.mounted) {
@@ -208,28 +203,6 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
                           }
                           return;
                         }
-
-                        await act.whenOrNull(
-                          existing:
-                              (id, name, pre, post, durationMinutes) async {
-                                logI('Starting activity: $id $name');
-                                try {
-                                  await ref.read(
-                                    insertActivityLogProvider(
-                                      ActivityLog.draft(
-                                        activityId: id,
-                                        startedAt: target.createdAt,
-                                      ),
-                                    ).future,
-                                  );
-                                  ref.invalidate(getPendingActivityProvider);
-                                } catch (_) {
-                                  if (context.mounted) {
-                                    await showActivityInProgressDialog(context);
-                                  }
-                                }
-                              },
-                        );
                       },
                       icon: const Icon(Icons.app_registration),
                       label: const Text('Podepnij aktywność'),
