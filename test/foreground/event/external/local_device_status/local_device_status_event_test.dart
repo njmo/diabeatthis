@@ -1,6 +1,7 @@
 import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/foreground/event/external/external_event.dart';
 import 'package:diabeatthis/foreground/event/external/local_device_status/local_device_status_event.dart';
+import 'package:diabeatthis/foreground/event/external/native_receiver/native_receiver_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -30,18 +31,20 @@ void main() {
 
     test('parses external event wrapper', () {
       final event = ExternalEvent.fromJson({
-        'external_event': 'local_device_status',
-        'data': _deviceStatusJson(),
+        'external_event': 'native_receiver',
+        'data': {'kind': 'device_status', 'data': _deviceStatusJson()},
       });
 
       event.when(
         appEvent: (_) => fail('Expected local device status event'),
         notificationEvent: (_) => fail('Expected local device status event'),
-        localGlucose: (_) => fail('Expected local device status event'),
-        localDeviceStatus: (data) {
-          expect(data.data.source, DeviceStatusSource.aaps);
-          expect(data.data.bg, 249);
-        },
+        nativeReceiver: (data) => data.when(
+          glucose: (_) => fail('Expected local device status event'),
+          deviceStatus: (data) {
+            expect(data.data.source, DeviceStatusSource.aaps);
+            expect(data.data.bg, 249);
+          },
+        ),
       );
     });
   });

@@ -20,8 +20,13 @@ class AapsDeviceStatusReceiver : BroadcastReceiver() {
         }
 
         val eventPayload = JSONObject()
-            .put("external_event", "local_device_status")
-            .put("data", data)
+            .put("external_event", "native_receiver")
+            .put(
+                "data",
+                JSONObject()
+                    .put("kind", "device_status")
+                    .put("data", data),
+            )
 
         ForegroundService.sendData(eventPayload.toString())
     }

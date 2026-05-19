@@ -26,8 +26,13 @@ class XdripBgEstimateReceiver : BroadcastReceiver() {
             .put("direction", direction)
 
         val eventPayload = JSONObject()
-            .put("external_event", "local_glucose")
-            .put("data", glucosePayload)
+            .put("external_event", "native_receiver")
+            .put(
+                "data",
+                JSONObject()
+                    .put("kind", "glucose")
+                    .put("data", glucosePayload),
+            )
 
         ForegroundService.sendData(eventPayload.toString())
     }

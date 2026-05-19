@@ -1,6 +1,7 @@
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/foreground/event/external/external_event.dart';
 import 'package:diabeatthis/foreground/event/external/local_glucose/local_glucose_event.dart';
+import 'package:diabeatthis/foreground/event/external/native_receiver/native_receiver_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -27,13 +28,16 @@ void main() {
       final timestamp = DateTime(2026, 5, 18, 12, 30).millisecondsSinceEpoch;
 
       final event = ExternalEvent.fromJson({
-        'external_event': 'local_glucose',
+        'external_event': 'native_receiver',
         'data': {
-          'externalId': 'xdrip-$timestamp',
-          'source': 'xdrip',
-          'timestamp': timestamp,
-          'sgv': 143,
-          'direction': 'FortyFiveUp',
+          'kind': 'glucose',
+          'data': {
+            'externalId': 'xdrip-$timestamp',
+            'source': 'xdrip',
+            'timestamp': timestamp,
+            'sgv': 143,
+            'direction': 'FortyFiveUp',
+          },
         },
       });
 
@@ -41,11 +45,13 @@ void main() {
       event.when(
         appEvent: (_) => fail('Expected local glucose event'),
         notificationEvent: (_) => fail('Expected local glucose event'),
-        localGlucose: (data) {
-          expect(data.data.source, GlucoseSource.xdrip);
-          expect(data.data.sgv, 143);
-        },
-        localDeviceStatus: (_) => fail('Expected local glucose event'),
+        nativeReceiver: (data) => data.when(
+          glucose: (data) {
+            expect(data.data.source, GlucoseSource.xdrip);
+            expect(data.data.sgv, 143);
+          },
+          deviceStatus: (_) => fail('Expected local glucose event'),
+        ),
       );
     });
   });
