@@ -8,8 +8,8 @@ extension TemporaryTargetDriftMapper on domain.TemporaryTarget {
   drift.TemporaryTargetCompanion toCompanion(TreatmentsSource source) {
     return drift.TemporaryTargetCompanion.insert(
       source: source.storageValue,
-      externalId: nightscoutId.isNotEmpty
-          ? Value(nightscoutId)
+      externalId: nightscoutId != null
+          ? Value(nightscoutId!)
           : const Value.absent(),
       createdAt: Value(createdAt.millisecondsSinceEpoch),
       nightscoutId: Value(nightscoutId),
@@ -25,7 +25,7 @@ extension TemporaryTargetDomainMapper on drift.TemporaryTargetData {
     final duration = durationMinutes ?? 0;
 
     return domain.TemporaryTarget(
-      nightscoutId: nightscoutId ?? externalId ?? '',
+      nightscoutId: nightscoutId,
       createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
       durationInMiliseconds: Duration(minutes: duration).inMilliseconds,
       duration: duration,

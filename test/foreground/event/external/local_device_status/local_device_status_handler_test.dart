@@ -131,6 +131,74 @@ void main() {
         await harness.dispose();
       },
     );
+
+    test('ignores empty AAPS device status payload', () async {
+      final now = DateTime(2026, 5, 18, 12, 30);
+      final router = RecordingTaskEventRouter();
+      final container = ProviderContainer(
+        overrides: [
+          dataSourceConfigProvider.overrideWithValue(
+            const AsyncData(
+              DataSourceConfig(
+                bgSource: BgSource.cloud,
+                treatmentsSource: TreatmentsSource.cloud,
+                pumpStatusSource: PumpStatusSource.aaps,
+                historySource: HistorySource.cloud,
+                mirrorToLocal: false,
+              ),
+            ),
+          ),
+          taskEventRouterProvider.overrideWithValue(router),
+        ],
+      );
+      final harness = FakeRuntimeHarness(container: container);
+
+      await withClock(Clock.fixed(now), () async {
+        await LocalDeviceStatusHandler().handle(
+          LocalDeviceStatusEvent(
+            data: DeviceStatus(
+              externalId: null,
+              source: DeviceStatusSource.aaps,
+              date: now,
+              iob: 0,
+              basalIob: 0,
+              bolusIob: 0,
+              insulinActivity: 0,
+              cob: 0,
+              tick: '',
+              bg: 0,
+              carbsReq: 0,
+              carbsReqWithin: 0,
+              sensitivityRatio: 1,
+              isfMgdlForCarbs: 0,
+              baseBasalRate: 0,
+              tempBasalRemainingMinutes: 0,
+              lastBolusAmount: 0,
+              lastBolusAt: '',
+            ),
+          ),
+          harness.runtimeContext,
+        );
+      });
+
+      expect(container.read(deviceStatusValueProvider), isNull);
+      expect(
+        container
+            .read(synchronizationCacheControllerProvider)
+            .getCache()
+            .deviceStatusCache,
+        isNull,
+      );
+      expect(harness.emittedEvents, isEmpty);
+      expect(harness.emittedTicks, isEmpty);
+      expect(router.payloads, isEmpty);
+      expect(
+        alarmCalls.where((call) => call.method == 'Alarm.oneShotAt'),
+        isEmpty,
+      );
+
+      await harness.dispose();
+    });
   });
 }
 

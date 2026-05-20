@@ -46,3 +46,22 @@ abstract class DeviceStatus with _$DeviceStatus {
   factory DeviceStatus.fromJson(Map<String, dynamic> json) =>
       _$DeviceStatusFromJson(json);
 }
+
+extension DeviceStatusDataQuality on DeviceStatus {
+  bool get hasPumpData {
+    return bg > 0 ||
+        tick.isNotEmpty ||
+        iob != 0 ||
+        basalIob != 0 ||
+        bolusIob != 0 ||
+        insulinActivity != 0 ||
+        cob != 0 ||
+        carbsReq != 0 ||
+        carbsReqWithin != 0 ||
+        isfMgdlForCarbs != 0 ||
+        baseBasalRate != 0 ||
+        tempBasalRemainingMinutes != 0 ||
+        lastBolusAmount != 0 ||
+        lastBolusAt.isNotEmpty;
+  }
+}

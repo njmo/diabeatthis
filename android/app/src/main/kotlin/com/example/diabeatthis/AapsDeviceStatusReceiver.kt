@@ -8,9 +8,11 @@ import org.json.JSONObject
 
 class AapsDeviceStatusReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != ACTION_NEW_DEVICE_STATUS) return
+        if (intent.action !in SUPPORTED_ACTIONS) return
 
-        val deviceStatus = intent.getStringExtra(EXTRA_DEVICE_STATUS) ?: return
+        val deviceStatus = intent.getStringExtra(EXTRA_DEVICE_STATUS)
+            ?: intent.getStringExtra(EXTRA_PAYLOAD)
+            ?: return
         val data = try {
             JSONObject(deviceStatus)
         } catch (_: Exception) {
@@ -48,6 +50,14 @@ class AapsDeviceStatusReceiver : BroadcastReceiver() {
         }
 
         const val ACTION_NEW_DEVICE_STATUS = "info.nightscout.client.NEW_DEVICESTATUS"
+        const val ACTION_EXTERNAL_NEW_DEVICE_STATUS =
+            "app.aaps.intent.action.NEW_DEVICE_STATUS"
         const val EXTRA_DEVICE_STATUS = "devicestatus"
+        const val EXTRA_PAYLOAD = "payload"
+
+        private val SUPPORTED_ACTIONS = setOf(
+            ACTION_NEW_DEVICE_STATUS,
+            ACTION_EXTERNAL_NEW_DEVICE_STATUS,
+        )
     }
 }

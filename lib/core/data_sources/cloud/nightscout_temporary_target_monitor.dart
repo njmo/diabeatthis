@@ -49,8 +49,11 @@ class NightscoutTemporaryTargetMonitor {
     }
 
     try {
+      final trackedId = tracked.nightscoutId;
+      if (trackedId == null) return;
+
       final current = await _nightscoutRepository.fetchLastTemporaryTargetById(
-        tracked.nightscoutId,
+        trackedId,
       );
       if (current != tracked || !current.isActive()) {
         updates.add(current);

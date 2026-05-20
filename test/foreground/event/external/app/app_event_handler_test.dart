@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/events/data/app/execute_command_event.dart';
+import 'package:diabeatthis/common/events/data/app/sync_data_key.dart';
 import 'package:diabeatthis/common/events/data/task/task_data_synchronization_payload.dart';
 import 'package:diabeatthis/common/events/task_event_payload.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
@@ -171,74 +172,163 @@ void main() {
     );
 
     test(
-      'skips history refresh for local history after settings change',
+      'loads requested device status from history when cache is empty',
       () async {
         SharedPreferences.setMockInitialValues({});
         final now = DateTime(2026, 5, 18, 21, 30);
-        final cachedGlucose = Glucose(
-          externalId: 'cached-glucose',
-          source: GlucoseSource.cloud,
-          date: now.subtract(const Duration(minutes: 5)),
-          sgv: 112,
-          direction: 'Flat',
-        );
-        final cachedDeviceStatus = testDeviceStatus(
-          date: now.subtract(const Duration(minutes: 8)),
-          iob: 0.5,
-          cob: 10,
-          tick: '+2',
-          bg: 101,
+        final historyDeviceStatus = testDeviceStatus(
+          date: now.subtract(const Duration(minutes: 4)),
+          iob: 0.7,
+          cob: 13,
+          tick: '+5',
+          bg: 105,
         );
         final router = RecordingTaskEventRouter();
+        final deviceStatusHistoryRepository =
+            _FakeDeviceStatusHistoryRepository(historyDeviceStatus);
         final container = ProviderContainer(
           overrides: [
-            dataSourceConfigProvider.overrideWithValue(
-              const AsyncData(
-                DataSourceConfig(
-                  bgSource: BgSource.cloud,
-                  treatmentsSource: TreatmentsSource.cloud,
-                  pumpStatusSource: PumpStatusSource.cloud,
-                  historySource: HistorySource.local,
-                  mirrorToLocal: false,
-                ),
-              ),
-            ),
-            glucoseHistoryRepositoryProvider.overrideWith(
-              (_) async => const _ThrowingGlucoseHistoryRepository(),
-            ),
             deviceStatusHistoryRepositoryProvider.overrideWith(
-              (_) async => const _ThrowingDeviceStatusHistoryRepository(),
-            ),
-            deviceStatusSourceRepositoryProvider.overrideWith(
-              (_) async => const _ThrowingDeviceStatusSourceRepository(),
+              (_) async => deviceStatusHistoryRepository,
             ),
             taskEventRouterProvider.overrideWithValue(router),
           ],
         );
-        final cacheController = container.read(
-          synchronizationCacheControllerProvider,
-        );
-        cacheController.cacheGlucose(cachedGlucose);
-        cacheController.cacheDeviceStatus(cachedDeviceStatus);
         final harness = FakeRuntimeHarness(container: container);
 
         await withClock(Clock.fixed(now), () async {
           AppEventHandler().handle(
             const AppEvent.executeCommand(
-              data: ExecuteCommandEvent.syncSettings(data: {}),
+              data: ExecuteCommandEvent.syncData(
+                data: [SyncDataKey.deviceStatus],
+              ),
             ),
             harness.runtimeContext,
           );
-          await _flushAsyncWork();
+          await _waitForPayload(router);
         });
 
-        expect(router.payloads, isEmpty);
-        expect(cacheController.getCache().glucoseReadingsCache, isEmpty);
-        expect(cacheController.getCache().deviceStatusCache, isNull);
+        expect(router.payloads, [
+          TaskDataSynchronizationPayload.list(
+            data: [TaskDeviceStatusSynchronization(data: historyDeviceStatus)],
+          ),
+        ]);
+        expect(deviceStatusHistoryRepository.requestedBefore, now);
 
         await harness.dispose();
       },
     );
+
+    test(
+      'loads requested temporary target from history when cache is empty',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final now = DateTime(2026, 5, 18, 21, 30);
+        final target = _temporaryTarget(
+          id: 'target-1',
+          createdAt: now.subtract(const Duration(minutes: 10)),
+          duration: 30,
+        );
+        final router = RecordingTaskEventRouter();
+        final container = ProviderContainer(
+          overrides: [
+            treatmentsHistoryRepositoryProvider.overrideWith(
+              (_) async => _FakeTreatmentsHistoryRepository(target),
+            ),
+            taskEventRouterProvider.overrideWithValue(router),
+          ],
+        );
+        final harness = FakeRuntimeHarness(container: container);
+
+        await withClock(Clock.fixed(now), () async {
+          AppEventHandler().handle(
+            const AppEvent.executeCommand(
+              data: ExecuteCommandEvent.syncData(
+                data: [SyncDataKey.temporaryTarget],
+              ),
+            ),
+            harness.runtimeContext,
+          );
+          await _waitForPayload(router);
+        });
+
+        expect(router.payloads, [
+          TaskDataSynchronizationPayload.list(
+            data: [TaskTargetSynchronization(data: target)],
+          ),
+        ]);
+
+        await harness.dispose();
+      },
+    );
+
+    test('syncs local history after settings change', () async {
+      SharedPreferences.setMockInitialValues({});
+      final now = DateTime(2026, 5, 18, 21, 30);
+      final historyDeviceStatus = testDeviceStatus(
+        date: now.subtract(const Duration(minutes: 6)),
+        iob: 0.6,
+        cob: 12,
+        tick: '+4',
+        bg: 104,
+      );
+      final router = RecordingTaskEventRouter();
+      final deviceStatusHistoryRepository = _FakeDeviceStatusHistoryRepository(
+        historyDeviceStatus,
+      );
+      final container = ProviderContainer(
+        overrides: [
+          dataSourceConfigProvider.overrideWithValue(
+            const AsyncData(
+              DataSourceConfig(
+                bgSource: BgSource.cloud,
+                treatmentsSource: TreatmentsSource.cloud,
+                pumpStatusSource: PumpStatusSource.cloud,
+                historySource: HistorySource.local,
+                mirrorToLocal: false,
+              ),
+            ),
+          ),
+          glucoseHistoryRepositoryProvider.overrideWith(
+            (_) async => const _EmptyGlucoseHistoryRepository(),
+          ),
+          deviceStatusHistoryRepositoryProvider.overrideWith(
+            (_) async => deviceStatusHistoryRepository,
+          ),
+          treatmentsHistoryRepositoryProvider.overrideWith(
+            (_) async => const _EmptyTreatmentsHistoryRepository(),
+          ),
+          deviceStatusSourceRepositoryProvider.overrideWith(
+            (_) async => const _ThrowingDeviceStatusSourceRepository(),
+          ),
+          taskEventRouterProvider.overrideWithValue(router),
+        ],
+      );
+      final cacheController = container.read(
+        synchronizationCacheControllerProvider,
+      );
+      final harness = FakeRuntimeHarness(container: container);
+
+      await withClock(Clock.fixed(now), () async {
+        AppEventHandler().handle(
+          const AppEvent.executeCommand(
+            data: ExecuteCommandEvent.syncSettings(data: {}),
+          ),
+          harness.runtimeContext,
+        );
+        await _waitForPayload(router);
+      });
+
+      expect(router.payloads, [
+        TaskDataSynchronizationPayload.list(
+          data: [TaskDeviceStatusSynchronization(data: historyDeviceStatus)],
+        ),
+      ]);
+      expect(cacheController.getCache().glucoseReadingsCache, isEmpty);
+      expect(cacheController.getCache().deviceStatusCache, historyDeviceStatus);
+
+      await harness.dispose();
+    });
 
     test(
       'syncs temporary target from history after clearing settings cache',
@@ -306,12 +396,6 @@ Future<void> _waitForPayload(RecordingTaskEventRouter router) async {
   }
 }
 
-Future<void> _flushAsyncWork() async {
-  for (var i = 0; i < 10; i++) {
-    await Future<void>.delayed(Duration.zero);
-  }
-}
-
 class RecordingTaskEventRouter extends TaskEventRouter {
   final List<TaskEventPayload> payloads = [];
 
@@ -332,20 +416,6 @@ class _EmptyGlucoseHistoryRepository implements GlucoseHistoryRepository {
   @override
   Future<List<Glucose>> fetchRecentGlucose(int limit) {
     return Future.value(const []);
-  }
-}
-
-class _ThrowingGlucoseHistoryRepository implements GlucoseHistoryRepository {
-  const _ThrowingGlucoseHistoryRepository();
-
-  @override
-  Future<List<Glucose>> fetchGlucoseBetween(DateTime start, DateTime end) {
-    throw StateError('Cloud history refresh should be skipped');
-  }
-
-  @override
-  Future<List<Glucose>> fetchRecentGlucose(int limit) {
-    throw StateError('Cloud history refresh should be skipped');
   }
 }
 
@@ -404,24 +474,6 @@ class _FakeDeviceStatusHistoryRepository
   Future<DeviceStatus?> fetchLastDeviceStatusBefore(DateTime before) {
     requestedBefore = before;
     return Future.value(_deviceStatus);
-  }
-}
-
-class _ThrowingDeviceStatusHistoryRepository
-    implements DeviceStatusHistoryRepository {
-  const _ThrowingDeviceStatusHistoryRepository();
-
-  @override
-  Future<List<DeviceStatus>> fetchDeviceStatusBetween(
-    DateTime start,
-    DateTime end,
-  ) {
-    throw StateError('Cloud history refresh should be skipped');
-  }
-
-  @override
-  Future<DeviceStatus?> fetchLastDeviceStatusBefore(DateTime before) {
-    throw StateError('Cloud history refresh should be skipped');
   }
 }
 

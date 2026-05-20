@@ -13,6 +13,7 @@ class AapsTreatmentReceiver : BroadcastReceiver() {
 
         val treatmentsJson = intent.getStringExtra(EXTRA_TREATMENT)
             ?: intent.getStringExtra(EXTRA_TREATMENTS)
+            ?: intent.getStringExtra(EXTRA_PAYLOAD)
             ?: return
         val data = try {
             parseTreatments(treatmentsJson)
@@ -57,10 +58,16 @@ class AapsTreatmentReceiver : BroadcastReceiver() {
 
         private val SUPPORTED_ACTIONS = setOf(
             ACTION_NEW_FOOD,
+            ACTION_NEW_TREATMENT,
+            ACTION_EXTERNAL_NEW_TREATMENTS,
         )
 
         const val ACTION_NEW_FOOD = "info.nightscout.client.NEW_FOOD"
+        const val ACTION_NEW_TREATMENT = "info.nightscout.client.NEW_TREATMENT"
+        const val ACTION_EXTERNAL_NEW_TREATMENTS =
+            "app.aaps.intent.action.NEW_TREATMENTS"
         const val EXTRA_TREATMENT = "treatment"
         const val EXTRA_TREATMENTS = "treatments"
+        const val EXTRA_PAYLOAD = "payload"
     }
 }

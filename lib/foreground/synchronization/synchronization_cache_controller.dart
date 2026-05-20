@@ -55,21 +55,21 @@ SynchronizationCacheController synchronizationCacheController(Ref ref) {
 }
 
 class SynchronizationCacheController with Logging {
+  static const _initialLoad = 'Initial';
+  static const _requestedLoad = 'Requested';
+
   final SynchronizationCache cache = SynchronizationCache(
     deviceStatusCache: null,
   );
 
   Future<void>? _glucoseReadingsLoad;
+  Future<void>? _deviceStatusLoad;
 
   Future<void> init(ProviderContainer container) async {
     await Future.wait([
-      _loadGlucoseReadings(
-        container,
-        fetchLabel: 'Initial glucose cache fetch',
-        storedLabel: 'Initial glucose cache stored',
-      ),
-      _loadDeviceStatus(container),
-      _loadTemporaryTarget(container),
+      _loadGlucoseReadings(container, reason: _initialLoad),
+      _loadDeviceStatus(container, reason: _initialLoad),
+      _loadTemporaryTarget(container, reason: _initialLoad),
     ]);
   }
 
@@ -79,29 +79,36 @@ class SynchronizationCacheController with Logging {
   }) async {
     if (cache.glucoseReadingsCache.length >= minCount) return true;
 
-    await _loadGlucoseReadings(
-      container,
-      fetchLabel: 'Requested glucose cache fetch',
-      storedLabel: 'Requested glucose cache stored',
-    );
+    await _loadGlucoseReadings(container, reason: _requestedLoad);
 
     return cache.glucoseReadingsCache.isNotEmpty;
   }
 
+  Future<bool> ensureDeviceStatusReady(ProviderContainer container) async {
+    if (cache.deviceStatusCache != null) return true;
+
+    await _loadDeviceStatus(container, reason: _requestedLoad);
+
+    return cache.deviceStatusCache != null;
+  }
+
+  Future<bool> ensureTemporaryTargetReady(ProviderContainer container) async {
+    if (cache.targetCache != null) return true;
+
+    await _loadTemporaryTarget(container, reason: _requestedLoad);
+
+    return cache.targetCache != null;
+  }
+
   Future<void> _loadGlucoseReadings(
     ProviderContainer container, {
-    required String fetchLabel,
-    required String storedLabel,
+    required String reason,
   }) {
     final currentLoad = _glucoseReadingsLoad;
     if (currentLoad != null) return currentLoad;
 
-    final load =
-        _loadGlucoseReadingsOnce(
-          container,
-          fetchLabel: fetchLabel,
-          storedLabel: storedLabel,
-        ).whenComplete(() {
+    final load = _loadGlucoseReadingsOnce(container, reason: reason)
+        .whenComplete(() {
           _glucoseReadingsLoad = null;
         });
     _glucoseReadingsLoad = load;
@@ -111,8 +118,7 @@ class SynchronizationCacheController with Logging {
 
   Future<void> _loadGlucoseReadingsOnce(
     ProviderContainer container, {
-    required String fetchLabel,
-    required String storedLabel,
+    required String reason,
   }) async {
     try {
       final repository = await container.read(
@@ -123,11 +129,16 @@ class SynchronizationCacheController with Logging {
         ..sort((a, b) => b.date.compareTo(a.date));
       final limitedReadings = latestReadings.take(10).toList();
 
-      logI(_describeGlucoseReadings(fetchLabel, limitedReadings));
+      logI(
+        _describeGlucoseReadings(
+          _cacheFetchLabel(reason, 'glucose'),
+          limitedReadings,
+        ),
+      );
       cache.replaceGlucoseReadings(limitedReadings.reversed);
       logI(
         _describeGlucoseReadings(
-          storedLabel,
+          _cacheStoredLabel(reason, 'glucose'),
           cache.glucoseReadingsCache.toList(),
         ),
       );
@@ -136,7 +147,27 @@ class SynchronizationCacheController with Logging {
     }
   }
 
-  Future<void> _loadDeviceStatus(ProviderContainer container) async {
+  Future<void> _loadDeviceStatus(
+    ProviderContainer container, {
+    required String reason,
+  }) {
+    final currentLoad = _deviceStatusLoad;
+    if (currentLoad != null) return currentLoad;
+
+    final load = _loadDeviceStatusOnce(container, reason: reason).whenComplete(
+      () {
+        _deviceStatusLoad = null;
+      },
+    );
+    _deviceStatusLoad = load;
+
+    return load;
+  }
+
+  Future<void> _loadDeviceStatusOnce(
+    ProviderContainer container, {
+    required String reason,
+  }) async {
     try {
       final repository = await container.read(
         deviceStatusHistoryRepositoryProvider.future,
@@ -147,7 +178,7 @@ class SynchronizationCacheController with Logging {
 
       logI(
         _describeDeviceStatus(
-          'Initial device status cache fetch',
+          _cacheFetchLabel(reason, 'device status'),
           deviceStatus,
         ),
       );
@@ -156,7 +187,7 @@ class SynchronizationCacheController with Logging {
       cache.cacheDeviceStatus(deviceStatus);
       logI(
         _describeDeviceStatus(
-          'Initial device status cache stored',
+          _cacheStoredLabel(reason, 'device status'),
           cache.deviceStatusCache,
         ),
       );
@@ -165,7 +196,10 @@ class SynchronizationCacheController with Logging {
     }
   }
 
-  Future<void> _loadTemporaryTarget(ProviderContainer container) async {
+  Future<void> _loadTemporaryTarget(
+    ProviderContainer container, {
+    required String reason,
+  }) async {
     try {
       final repository = await container.read(
         treatmentsHistoryRepositoryProvider.future,
@@ -175,7 +209,7 @@ class SynchronizationCacheController with Logging {
 
       logI(
         _describeTemporaryTarget(
-          'Initial temporary target cache fetch',
+          _cacheFetchLabel(reason, 'temporary target'),
           activeTarget,
         ),
       );
@@ -184,7 +218,7 @@ class SynchronizationCacheController with Logging {
       cache.cacheTarget(activeTarget);
       logI(
         _describeTemporaryTarget(
-          'Initial temporary target cache stored',
+          _cacheStoredLabel(reason, 'temporary target'),
           cache.targetCache,
         ),
       );
@@ -217,6 +251,14 @@ class SynchronizationCacheController with Logging {
 
   SynchronizationCache getCache() {
     return cache;
+  }
+
+  String _cacheFetchLabel(String reason, String cacheName) {
+    return '$reason $cacheName cache fetch';
+  }
+
+  String _cacheStoredLabel(String reason, String cacheName) {
+    return '$reason $cacheName cache stored';
   }
 
   String _describeGlucoseReadings(String label, Iterable<Glucose> readings) {

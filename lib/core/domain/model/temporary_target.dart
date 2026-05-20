@@ -12,7 +12,7 @@ abstract class TemporaryTarget with _$TemporaryTarget implements Treatment {
   const TemporaryTarget._();
 
   const factory TemporaryTarget({
-    required String nightscoutId,
+    required String? nightscoutId,
     required DateTime createdAt,
     required int durationInMiliseconds,
     required int duration,

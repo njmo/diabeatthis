@@ -56,6 +56,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="info.nightscout.client.NEW_DEVICESTATUS"/>
+                <action android:name="app.aaps.intent.action.NEW_DEVICE_STATUS"/>
             </intent-filter>
         </receiver>
         <receiver
@@ -64,6 +65,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="info.nightscout.client.NEW_SGV"/>
+                <action android:name="app.aaps.intent.action.NEW_GLUCOSE"/>
             </intent-filter>
         </receiver>
         <receiver
@@ -72,6 +74,8 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="info.nightscout.client.NEW_FOOD"/>
+                <action android:name="info.nightscout.client.NEW_TREATMENT"/>
+                <action android:name="app.aaps.intent.action.NEW_TREATMENTS"/>
             </intent-filter>
         </receiver>
         <service

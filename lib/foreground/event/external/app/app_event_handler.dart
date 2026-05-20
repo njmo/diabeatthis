@@ -9,7 +9,6 @@ import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../common/events/data/app/sync_data_key.dart';
 import '../../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
-import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../../../../core/data_sources/providers/source_repository_providers.dart';
@@ -58,12 +57,21 @@ class AppEventHandler with Logging {
               glucoseSourceRepositoryProvider,
             );
             runtimeContext.container.invalidate(
+              glucoseHistoryRepositoryProvider,
+            );
+            runtimeContext.container.invalidate(
               treatmentsSourceRepositoryProvider,
+            );
+            runtimeContext.container.invalidate(
+              treatmentsHistoryRepositoryProvider,
             );
             runtimeContext.container.invalidate(
               deviceStatusSourceRepositoryProvider,
             );
-            await _reloadLiveCacheFromCloudHistoryAfterSettingsChange(
+            runtimeContext.container.invalidate(
+              deviceStatusHistoryRepositoryProvider,
+            );
+            await _reloadLiveCacheFromHistoryAfterSettingsChange(
               runtimeContext,
             );
           },
@@ -89,6 +97,16 @@ class AppEventHandler with Logging {
 
     if (data.contains(SyncDataKey.glucoseList)) {
       await cacheController.ensureGlucoseReadingsReady(
+        runtimeContext.container,
+      );
+    }
+
+    if (data.contains(SyncDataKey.deviceStatus)) {
+      await cacheController.ensureDeviceStatusReady(runtimeContext.container);
+    }
+
+    if (data.contains(SyncDataKey.temporaryTarget)) {
+      await cacheController.ensureTemporaryTargetReady(
         runtimeContext.container,
       );
     }
@@ -143,7 +161,7 @@ class AppEventHandler with Logging {
     }
   }
 
-  Future<void> _reloadLiveCacheFromCloudHistoryAfterSettingsChange(
+  Future<void> _reloadLiveCacheFromHistoryAfterSettingsChange(
     RuntimeContext runtimeContext,
   ) async {
     final cacheController = runtimeContext.container.read(
@@ -154,13 +172,10 @@ class AppEventHandler with Logging {
     final config = await runtimeContext.container.read(
       dataSourceConfigProvider.future,
     );
-    if (config.historySource != HistorySource.cloud) {
-      logI(
-        'Skipping live cache refresh after settings change because '
-        'history source is ${config.historySource.storageValue}',
-      );
-      return;
-    }
+    logI(
+      'Reloading live cache after settings change from '
+      '${config.historySource.storageValue} history',
+    );
 
     await cacheController.init(runtimeContext.container);
     _sendCachedData(runtimeContext, [

@@ -36,6 +36,15 @@ class LocalDeviceStatusHandler with Logging {
       return;
     }
 
+    if (deviceStatus.source == DeviceStatusSource.aaps &&
+        !deviceStatus.hasPumpData) {
+      logW(
+        'Ignoring empty local device status from aaps at '
+        '${deviceStatus.date.toIso8601String()}',
+      );
+      return;
+    }
+
     if (config.mirrorToLocal) {
       await container.read(localMirrorWriterProvider).mirrorDeviceStatuses([
         deviceStatus,
