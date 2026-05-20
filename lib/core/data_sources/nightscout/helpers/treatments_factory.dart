@@ -13,8 +13,6 @@ import '../mappers/temporary_target_mapper.dart';
 import '../mappers/treat_mapper.dart';
 
 class TreatmentFactory {
-  bool ignoreNextBolus = false;
-
   List<Treatment> parseTreatments(List<dynamic> treatments) {
     final list = <Treatment>[];
 
@@ -28,24 +26,16 @@ class TreatmentFactory {
       }
       if (type.contains('bolus wizard')) {
         list.add(BolusWizardDto.fromJson(t).toDomain());
-        ignoreNextBolus = true;
         continue;
       }
-      if (t is Map<String, dynamic> && t.containsKey('duration')) {
+      if (t is Map<String, dynamic> &&
+          t.containsKey('duration') &&
+          t.containsKey('carbs')) {
         list.add(ExtendedCarbDto.fromJson(t).toDomain());
         continue;
       }
       // sms bolus
       if (type.contains('meal bolus') || type.contains('carb correction')) {
-        final isBolusWizardNearby = [i - 1, i + 1].any(
-          (index) =>
-              index >= 0 &&
-              index < treatments.length &&
-              treatments[index]['eventType'] == 'Bolus Wizard',
-        );
-
-        if (isBolusWizardNearby) continue;
-
         if (t['carbs'] == null) {
           list.add(ManualBolusDto.fromJson(t).toDomain());
           continue;

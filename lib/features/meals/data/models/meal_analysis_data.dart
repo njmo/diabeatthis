@@ -101,9 +101,6 @@ class MealAnalysisData {
       if (treatment is CorrectionBolus) {
         return sum + treatment.insulin;
       }
-      if (treatment is BolusWizard) {
-        return sum + treatment.insulin;
-      }
       return sum;
     });
   }

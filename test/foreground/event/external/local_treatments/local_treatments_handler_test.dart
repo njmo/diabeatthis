@@ -2,7 +2,10 @@ import 'package:diabeatthis/common/events/data/task/task_data_synchronization_pa
 import 'package:diabeatthis/common/events/task_event_payload.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
+import 'package:diabeatthis/core/domain/model/bolus_wizard.dart' as domain;
+import 'package:diabeatthis/core/domain/model/manual_bolus.dart' as domain;
 import 'package:diabeatthis/core/domain/model/temporary_target.dart' as domain;
+import 'package:diabeatthis/core/domain/model/treat.dart' as domain;
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/foreground/event/external/local_treatments/local_treatments_event.dart';
@@ -168,6 +171,146 @@ void main() {
       },
     );
 
+    test(
+      'preserves bolus wizard related treatments from separate broadcasts',
+      () async {
+        final db = DatabaseImpl(NativeDatabase.memory());
+        final container = ProviderContainer(
+          overrides: [
+            databaseProvider.overrideWithValue(db),
+            dataSourceConfigProvider.overrideWithValue(
+              const AsyncData(
+                DataSourceConfig(
+                  bgSource: BgSource.cloud,
+                  treatmentsSource: TreatmentsSource.aaps,
+                  pumpStatusSource: PumpStatusSource.cloud,
+                  historySource: HistorySource.local,
+                  mirrorToLocal: true,
+                ),
+              ),
+            ),
+          ],
+        );
+        final harness = FakeRuntimeHarness(container: container);
+        final handler = LocalTreatmentsHandler();
+
+        await handler.handle(
+          LocalTreatmentsEvent.fromJson({
+            'data': [_bolusWizardPayload()],
+          }),
+          harness.runtimeContext,
+        );
+
+        await handler.handle(
+          LocalTreatmentsEvent.fromJson({
+            'data': [
+              _manualBolusPayload(isValid: true, insulin: 2.95),
+              _treatPayload(),
+            ],
+          }),
+          harness.runtimeContext,
+        );
+
+        final start = DateTime.fromMillisecondsSinceEpoch(0);
+        final end = DateTime.fromMillisecondsSinceEpoch(2000000000000);
+        final bolusWizards = await db.localMirrorDao.getBolusWizardsBetween(
+          start,
+          end,
+          source: TreatmentsSource.aaps.storageValue,
+        );
+        final manualBoluses = await db.localMirrorDao.getManualBolusesBetween(
+          start,
+          end,
+          source: TreatmentsSource.aaps.storageValue,
+        );
+        final treats = await db.localMirrorDao.getTreatsBetween(
+          start,
+          end,
+          source: TreatmentsSource.aaps.storageValue,
+        );
+
+        expect(bolusWizards, hasLength(1));
+        expect(manualBoluses, hasLength(1));
+        expect(treats, hasLength(1));
+        expect(harness.emittedEvents, [
+          isA<TreatmentAvailableEvent<domain.BolusWizard>>(),
+          isA<TreatmentAvailableEvent<domain.ManualBolus>>(),
+          isA<TreatmentAvailableEvent<domain.Treat>>(),
+        ]);
+
+        await harness.dispose();
+        await db.close();
+      },
+    );
+
+    test(
+      'preserves treatment received before matching bolus wizard record',
+      () async {
+        final db = DatabaseImpl(NativeDatabase.memory());
+        final container = ProviderContainer(
+          overrides: [
+            databaseProvider.overrideWithValue(db),
+            dataSourceConfigProvider.overrideWithValue(
+              const AsyncData(
+                DataSourceConfig(
+                  bgSource: BgSource.cloud,
+                  treatmentsSource: TreatmentsSource.aaps,
+                  pumpStatusSource: PumpStatusSource.cloud,
+                  historySource: HistorySource.local,
+                  mirrorToLocal: true,
+                ),
+              ),
+            ),
+          ],
+        );
+        final harness = FakeRuntimeHarness(container: container);
+        final handler = LocalTreatmentsHandler();
+
+        await handler.handle(
+          LocalTreatmentsEvent.fromJson({
+            'data': [_treatPayload()],
+          }),
+          harness.runtimeContext,
+        );
+
+        await handler.handle(
+          LocalTreatmentsEvent.fromJson({
+            'data': [
+              _bolusWizardPayload(),
+              _manualBolusPayload(isValid: true, insulin: 2.95),
+            ],
+          }),
+          harness.runtimeContext,
+        );
+
+        final start = DateTime.fromMillisecondsSinceEpoch(0);
+        final end = DateTime.fromMillisecondsSinceEpoch(2000000000000);
+        final bolusWizards = await db.localMirrorDao.getBolusWizardsBetween(
+          start,
+          end,
+          source: TreatmentsSource.aaps.storageValue,
+        );
+        final manualBoluses = await db.localMirrorDao.getManualBolusesBetween(
+          start,
+          end,
+          source: TreatmentsSource.aaps.storageValue,
+        );
+        final treats = await db.localMirrorDao.getTreatsBetween(
+          start,
+          end,
+          source: TreatmentsSource.aaps.storageValue,
+        );
+
+        expect(bolusWizards, hasLength(1));
+        expect(manualBoluses, hasLength(1));
+        expect(treats, hasLength(1));
+        expect(treats.single.externalId, 'treat-1');
+
+        await harness.dispose();
+        await db.close();
+      },
+    );
+
     test('removes invalidated AAPS treatment from local mirror', () async {
       final db = DatabaseImpl(NativeDatabase.memory());
       final container = ProviderContainer(
@@ -229,7 +372,9 @@ class RecordingTaskEventRouter extends TaskEventRouter {
 }
 
 final _targetCreatedAt = DateTime.utc(2026, 5, 18, 21, 12);
-final _manualBolusCreatedAt = DateTime.utc(2026, 5, 18, 21, 20);
+final _bolusWizardCreatedAt = DateTime.utc(2026, 5, 18, 21, 20, 23, 210);
+final _manualBolusCreatedAt = DateTime.utc(2026, 5, 18, 21, 20, 23, 207);
+final _treatCreatedAt = DateTime.utc(2026, 5, 18, 21, 20, 21, 919);
 
 Map<String, dynamic> _temporaryTargetPayload({
   int duration = 30,
@@ -246,12 +391,38 @@ Map<String, dynamic> _temporaryTargetPayload({
   };
 }
 
-Map<String, dynamic> _manualBolusPayload({required bool isValid}) {
+Map<String, dynamic> _manualBolusPayload({
+  required bool isValid,
+  double insulin = 1.2,
+}) {
   return {
     '_id': 'manual-1',
     'eventType': 'Meal Bolus',
     'created_at': _manualBolusCreatedAt.toIso8601String(),
-    'insulin': 1.2,
+    'insulin': insulin,
     'isValid': isValid,
+  };
+}
+
+Map<String, dynamic> _bolusWizardPayload() {
+  return {
+    '_id': 'wizard-1',
+    'eventType': 'Bolus Wizard',
+    'created_at': _bolusWizardCreatedAt.toIso8601String(),
+    'date': _bolusWizardCreatedAt.millisecondsSinceEpoch,
+    'glucose': 98,
+    'units': 'mg/dl',
+    'bolusCalculatorResult': {'carbs': 42, 'totalInsulin': 2.95},
+    'isValid': true,
+  };
+}
+
+Map<String, dynamic> _treatPayload() {
+  return {
+    '_id': 'treat-1',
+    'eventType': 'Carb Correction',
+    'created_at': _treatCreatedAt.toIso8601String(),
+    'carbs': 42,
+    'isValid': true,
   };
 }

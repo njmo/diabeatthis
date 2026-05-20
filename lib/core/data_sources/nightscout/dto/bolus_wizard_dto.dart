@@ -8,7 +8,7 @@ part 'bolus_wizard_dto.g.dart';
 @freezed
 abstract class BolusWizardDto with _$BolusWizardDto {
   const factory BolusWizardDto({
-    required String id,
+    required String? id,
     @JsonKey(name: 'created_at') required String createdAt,
     int? date,
     required int glucose,
@@ -20,7 +20,10 @@ abstract class BolusWizardDto with _$BolusWizardDto {
   }) = _BolusWizardDto;
 
   factory BolusWizardDto.fromJson(Map<String, dynamic> json) => BolusWizardDto(
-    id: json['_id'],
+    id: switch (json['_id']) {
+      final String id when id.isNotEmpty => id,
+      _ => null,
+    },
     createdAt: json['created_at'],
     date: (json['date'] as num?)?.toInt(),
     glucose: (json['glucose'] as num).toInt(),

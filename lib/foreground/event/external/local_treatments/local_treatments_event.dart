@@ -8,8 +8,12 @@ class LocalTreatmentsEvent {
   final List<Map<String, dynamic>> rawPayloads;
 
   factory LocalTreatmentsEvent.fromJson(Map<String, dynamic> json) {
-    final rawPayloads = _rawTreatmentPayloads(json);
+    return LocalTreatmentsEvent.fromRawPayloads(_rawTreatmentPayloads(json));
+  }
 
+  factory LocalTreatmentsEvent.fromRawPayloads(
+    List<Map<String, dynamic>> rawPayloads,
+  ) {
     return LocalTreatmentsEvent(
       data: TreatmentFactory().parseTreatments(rawPayloads),
       rawPayloads: rawPayloads,
