@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/domain/model/device_status.dart';
+import '../../../low_treatment/presentation/widgets/low_treatment_suggestion_card.dart';
 import '../../data/providers/old_reading_provider.dart';
 import '../../data/utils/nightscout_utils.dart';
 import 'mini_glucose_chart.dart';
@@ -10,16 +11,11 @@ import 'mini_glucose_chart.dart';
 class DeviceStatusDashboard extends ConsumerWidget {
   final DeviceStatus deviceStatus;
 
-  const DeviceStatusDashboard({
-    super.key,
-    required this.deviceStatus,
-  });
+  const DeviceStatusDashboard({super.key, required this.deviceStatus});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final oldReading = ref.watch(
-      isReadingOldProvider.select((v) => v),
-    );
+    final oldReading = ref.watch(isReadingOldProvider.select((v) => v));
     final bg = deviceStatus.bg;
     final tick = parseTick(deviceStatus.tick);
     final bgColor = (oldReading) ? Colors.black : getColorForValue(bg);
@@ -58,10 +54,7 @@ class DeviceStatusDashboard extends ConsumerWidget {
               ),
               const SizedBox(width: 5),
               Chip(
-                avatar: const Icon(
-                  Icons.bakery_dining,
-                  size: 20,
-                ),
+                avatar: const Icon(Icons.bakery_dining, size: 20),
                 label: Text(
                   '${deviceStatus.cob.toStringAsFixed(2)}g',
                   style: TextStyle(fontSize: 12),
@@ -69,10 +62,7 @@ class DeviceStatusDashboard extends ConsumerWidget {
               ),
               const SizedBox(width: 5),
               Chip(
-                avatar: const Icon(
-                  Icons.vaccines,
-                  size: 20,
-                ),
+                avatar: const Icon(Icons.vaccines, size: 20),
                 label: Text(
                   '${deviceStatus.iob.toStringAsFixed(2)}U',
                   style: TextStyle(fontSize: 12),
@@ -80,6 +70,12 @@ class DeviceStatusDashboard extends ConsumerWidget {
               ),
             ],
           ),
+          if (deviceStatus.carbsReq > 0)
+            LowTreatmentSuggestionCard(
+              carbsReq: deviceStatus.carbsReq,
+              carbsReqWithin: deviceStatus.carbsReqWithin,
+              onAdd: () {},
+            ),
         ],
       ),
     );
