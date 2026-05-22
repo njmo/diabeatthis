@@ -1,4 +1,8 @@
+import 'package:diabeatthis/core/domain/model/ingredient.dart' as domain;
 import 'package:diabeatthis/core/domain/model/low_treatment_context.dart';
+import 'package:diabeatthis/core/domain/model/portion.dart' as domain;
+import 'package:diabeatthis/core/domain/model/quick_low_treatment_item.dart'
+    as domain;
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
@@ -101,6 +105,44 @@ void main() {
       container.read(lowTreatmentContextControllerProvider).mealIngredients,
       isEmpty,
     );
+  });
+
+  test('sets low treatment draft ingredient from quick item', () {
+    final controller = container.read(
+      lowTreatmentContextControllerProvider.notifier,
+    );
+    const quickItem = domain.QuickLowTreatmentItem(
+      id: 1,
+      name: 'Dextro',
+      ingredient: domain.Ingredient(
+        id: 12,
+        name: 'Dextro',
+        carbsPer100g: 90,
+        fatPer100g: 0,
+        fiberPer100g: 0,
+        proteinPer100g: 0,
+        nutritionConfidence: 1,
+        isReference: false,
+      ),
+      portion: domain.Portion(id: 4, name: 'cukierek', unitHint: 'szt.'),
+      amount: 2,
+      sortOrder: 1,
+      isActive: true,
+      gramsPerPortion: 3,
+    );
+
+    controller.setQuickLowTreatmentItem(quickItem);
+
+    final ingredients = container.read(
+      lowTreatmentContextControllerProvider.select(
+        (state) => state.mealIngredients,
+      ),
+    );
+
+    expect(ingredients, hasLength(1));
+    expect(ingredients.single.ingredient.name, 'Dextro');
+    expect(ingredients.single.amount, 2);
+    expect(ingredients.single.ingredientPortion.amount, 3);
   });
 
   test('saves current low treatment draft with ingredients', () async {

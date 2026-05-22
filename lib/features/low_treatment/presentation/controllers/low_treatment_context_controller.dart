@@ -4,11 +4,13 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart';
+import '../../../../core/domain/model/quick_low_treatment_item.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../foreground/providers/device_status_value_provider.dart';
 import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../data/drafts/low_treatment_context_draft.dart';
+import '../../data/mappers/quick_low_treatment_item_mapper.dart';
 import '../../data/models/low_treatment_sheet_state.dart';
 import '../../domain/use_cases/add_low_treatment_context_entry_use_case.dart';
 
@@ -95,6 +97,14 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
       return meal.copyWith(
         mealIngredients: [...meal.mealIngredients, mealIngredient],
       );
+    });
+
+    state = state.copyWith(contextDraft: contextDraft);
+  }
+
+  void setQuickLowTreatmentItem(QuickLowTreatmentItem item) {
+    final contextDraft = _updateDraftMeal((meal) {
+      return meal.copyWith(mealIngredients: [item.toMealIngredientDraft()]);
     });
 
     state = state.copyWith(contextDraft: contextDraft);
