@@ -3,6 +3,7 @@ import 'tables/portion.drift';
 import 'tables/ingredient_portions.drift';
 import 'tables/meal_ingredients.drift';
 import 'tables/low_treatment_context.drift';
+import 'tables/quick_low_treatment_item.drift';
 import 'tables/meal_advisor_result.drift';
 import 'tables/activity.drift';
 import 'tables/activity_log.drift';
