@@ -45,6 +45,15 @@ class LocalDeviceStatusHandler with Logging {
       return;
     }
 
+    if (deviceStatus.source == DeviceStatusSource.aaps &&
+        deviceStatus.bg <= 0) {
+      logW(
+        'Ignoring local device status from aaps with invalid bg=${deviceStatus.bg} '
+        'at ${deviceStatus.date.toIso8601String()}',
+      );
+      return;
+    }
+
     if (config.mirrorToLocal) {
       await container.read(localMirrorWriterProvider).mirrorDeviceStatuses([
         deviceStatus,

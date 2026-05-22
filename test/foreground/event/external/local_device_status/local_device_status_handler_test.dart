@@ -199,6 +199,106 @@ void main() {
 
       await harness.dispose();
     });
+
+    test('ignores partial AAPS device status payload with bg zero', () async {
+      final previousAt = DateTime(2026, 5, 22, 14, 20, 38, 105);
+      final now = DateTime(2026, 5, 22, 19, 58, 19, 261);
+      final previousStatus = DeviceStatus(
+        externalId: null,
+        source: DeviceStatusSource.aaps,
+        date: previousAt,
+        iob: 0.26,
+        basalIob: -0.031,
+        bolusIob: 0.291,
+        insulinActivity: 0.0001,
+        cob: 0,
+        tick: '+42',
+        bg: 195,
+        carbsReq: 0,
+        carbsReqWithin: 0,
+        sensitivityRatio: 1,
+        isfMgdlForCarbs: 190,
+        baseBasalRate: 0.3,
+        tempBasalRemainingMinutes: 29,
+        lastBolusAmount: 0.2,
+        lastBolusAt: '22.05.2026 14:10',
+      );
+      final invalidStatus = DeviceStatus(
+        externalId: null,
+        source: DeviceStatusSource.aaps,
+        date: now,
+        iob: 0,
+        basalIob: 0,
+        bolusIob: 0,
+        insulinActivity: 0,
+        cob: 0,
+        tick: '',
+        bg: 0,
+        carbsReq: 0,
+        carbsReqWithin: 0,
+        sensitivityRatio: 1,
+        isfMgdlForCarbs: 0,
+        baseBasalRate: 0.3,
+        tempBasalRemainingMinutes: 0,
+        lastBolusAmount: 0.2,
+        lastBolusAt: '22.05.2026 14:10',
+      );
+      final router = RecordingTaskEventRouter();
+      final container = ProviderContainer(
+        overrides: [
+          dataSourceConfigProvider.overrideWithValue(
+            const AsyncData(
+              DataSourceConfig(
+                bgSource: BgSource.cloud,
+                treatmentsSource: TreatmentsSource.cloud,
+                pumpStatusSource: PumpStatusSource.aaps,
+                historySource: HistorySource.cloud,
+                mirrorToLocal: false,
+              ),
+            ),
+          ),
+          taskEventRouterProvider.overrideWithValue(router),
+        ],
+      );
+      final harness = FakeRuntimeHarness(container: container);
+      final handler = LocalDeviceStatusHandler();
+
+      await withClock(Clock.fixed(previousAt), () async {
+        await handler.handle(
+          LocalDeviceStatusEvent(data: previousStatus),
+          harness.runtimeContext,
+        );
+      });
+      router.payloads.clear();
+      harness.emittedEvents.clear();
+      harness.emittedTicks.clear();
+      alarmCalls.clear();
+
+      await withClock(Clock.fixed(now), () async {
+        await handler.handle(
+          LocalDeviceStatusEvent(data: invalidStatus),
+          harness.runtimeContext,
+        );
+      });
+
+      expect(container.read(deviceStatusValueProvider), previousStatus);
+      expect(
+        container
+            .read(synchronizationCacheControllerProvider)
+            .getCache()
+            .deviceStatusCache,
+        previousStatus,
+      );
+      expect(harness.emittedEvents, isEmpty);
+      expect(harness.emittedTicks, isEmpty);
+      expect(router.payloads, isEmpty);
+      expect(
+        alarmCalls.where((call) => call.method == 'Alarm.oneShotAt'),
+        isEmpty,
+      );
+
+      await harness.dispose();
+    });
   });
 }
 
