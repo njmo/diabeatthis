@@ -8,6 +8,7 @@ import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
+import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/mappers/portion_draft_mapper.dart';
 import '../drafts/meal_draft.dart';
@@ -115,9 +116,27 @@ abstract class Macronutrients with _$Macronutrients {
   }) = _Macronutrients;
 }
 
+extension MacronutrientsExtendedCarbs on Macronutrients {
+  int get extendedCarbsTotal {
+    return const WbtExtendedCarbsCalculator()
+        .calculateFromMacros(
+          fatGrams: fatTotal.toDouble(),
+          proteinGrams: proteinTotal.toDouble(),
+        )
+        .grams;
+  }
+}
+
 @riverpod
 Future<Macronutrients> calculatedMacronutrients(Ref ref) async {
   final ingredients = ref.watch(mealDraftIngredientsProvider);
+  return calculateMealIngredientsMacronutrients(ref, ingredients);
+}
+
+Future<Macronutrients> calculateMealIngredientsMacronutrients(
+  Ref ref,
+  List<MealIngredientsDraft> ingredients,
+) async {
   var carbsTotal = 0;
   var fatTotal = 0;
   var fiberTotal = 0;

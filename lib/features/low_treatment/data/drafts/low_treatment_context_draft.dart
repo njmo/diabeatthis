@@ -15,8 +15,7 @@ abstract class LowTreatmentContextDraft with _$LowTreatmentContextDraft {
     int? suggestedWithinMinutes,
     DateTime? suggestionAt,
     DateTime? deviceStatusDate,
-    LowTreatmentReason? reason,
-    String? deviceStatusHash,
+    required LowTreatmentReason reason,
   }) = _LowTreatmentContextDraftNew;
 
   const factory LowTreatmentContextDraft.existing({
@@ -27,7 +26,6 @@ abstract class LowTreatmentContextDraft with _$LowTreatmentContextDraft {
     int? suggestedWithinMinutes,
     DateTime? suggestionAt,
     DateTime? deviceStatusDate,
-    LowTreatmentReason? reason,
-    String? deviceStatusHash,
+    required LowTreatmentReason reason,
   }) = _LowTreatmentContextDraftExisting;
 }

@@ -62,7 +62,7 @@ void main() {
       relatedMealId: relatedMeal.id,
     );
     final context = await controller.save(draft);
-    final lowTreatment = await db.mealDao.getMealById(context!.mealId);
+    final lowTreatment = await db.mealDao.getMealById(context.mealId);
 
     expect(lowTreatment?.purpose, 'lowTreatment');
     expect(lowTreatment?.status, 'confirmed');

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -10,6 +8,7 @@ import '../../../../foreground/providers/device_status_value_provider.dart';
 import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../data/drafts/low_treatment_context_draft.dart';
+import '../../data/models/low_treatment_sheet_state.dart';
 import '../../domain/use_cases/add_low_treatment_context_entry_use_case.dart';
 
 part 'low_treatment_context_controller.g.dart';
@@ -20,10 +19,30 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
   late AddLowTreatmentContextEntryUseCase _addContextUseCase;
 
   @override
-  FutureOr<LowTreatmentContext?> build() {
+  LowTreatmentSheetState build() {
     _addMealUseCase = ref.read(addMealUseCaseProvider);
     _addContextUseCase = ref.read(addLowTreatmentContextEntryUseCaseProvider);
-    return null;
+
+    final deviceStatus = ref.read(deviceStatusValueProvider);
+    final hasAapsSuggestion = (deviceStatus?.carbsReq ?? 0) > 0;
+    final reason = hasAapsSuggestion
+        ? LowTreatmentReason.carbsReq
+        : LowTreatmentReason.lowGlucose;
+
+    return LowTreatmentSheetState(
+      contextDraft: composeDraft(
+        meal: MealDraft(
+          name: '',
+          mealIngredients: const [],
+          plannedAt: clock.now(),
+          purpose: MealPurpose.lowTreatment,
+          status: 'confirmed',
+        ),
+        source: LowTreatmentContextSource.dashboardAction,
+        deviceStatus: deviceStatus,
+        reason: reason,
+      ),
+    );
   }
 
   LowTreatmentContextDraft composeDashboardDraft({
@@ -36,6 +55,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
       relatedMealId: relatedMealId,
       source: LowTreatmentContextSource.dashboardAction,
       deviceStatus: deviceStatus,
+      reason: _defaultReason(deviceStatus),
     );
   }
 
@@ -44,8 +64,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     int? relatedMealId,
     required LowTreatmentContextSource source,
     DeviceStatus? deviceStatus,
-    LowTreatmentReason? reason,
-    String? deviceStatusHash,
+    required LowTreatmentReason reason,
   }) {
     final activeSuggestion = _activeSuggestion(deviceStatus);
 
@@ -58,36 +77,54 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
       source: source,
       suggestedCarbs: activeSuggestion?.carbsReq,
       suggestedWithinMinutes: activeSuggestion?.carbsReqWithin,
-      suggestionAt: activeSuggestion == null ? null : clock.now(),
+      suggestionAt: activeSuggestion?.date ?? clock.now(),
       deviceStatusDate: activeSuggestion?.date,
-      reason: activeSuggestion == null
-          ? null
-          : reason ?? LowTreatmentReason.carbsReq,
-      deviceStatusHash: activeSuggestion == null ? null : deviceStatusHash,
+      reason: reason,
     );
   }
 
-  Future<LowTreatmentContext?> save(LowTreatmentContextDraft draft) async {
-    state = const AsyncLoading();
+  void setReason(LowTreatmentReason reason) {
+    final contextDraft = state.contextDraft.copyWith(reason: reason);
 
-    try {
-      final mealId = await draft.map(
-        draft: (draft) async {
-          final meal = await _addMealUseCase.call(
-            _lowTreatmentMealDraft(draft.meal),
-          );
-          return meal.id;
-        },
-        existing: (existing) async => existing.mealId,
-      );
+    state = state.copyWith(contextDraft: contextDraft);
+  }
 
-      final context = await _addContextUseCase.call(draft, mealId: mealId);
-      state = AsyncData(context);
-      return context;
-    } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
-      return null;
-    }
+  void removeMealIngredient(MealIngredientsDraft mealIngredient) {
+    final contextDraft = state.contextDraft.map(
+      draft: (draft) {
+        final meal = draft.meal.copyWith(
+          mealIngredients: draft.meal.mealIngredients
+              .where((element) => element != mealIngredient)
+              .toList(),
+        );
+        return draft.copyWith(meal: meal);
+      },
+      existing: (_) {
+        throw StateError(
+          'Low treatment sheet does not support existing context editing yet.',
+        );
+      },
+    );
+
+    state = state.copyWith(contextDraft: contextDraft);
+  }
+
+  Future<LowTreatmentContext> save(LowTreatmentContextDraft draft) async {
+    final mealId = await draft.map(
+      draft: (draft) async {
+        final meal = await _addMealUseCase.call(
+          _lowTreatmentMealDraft(draft.meal),
+        );
+        return meal.id;
+      },
+      existing: (existing) async => existing.mealId,
+    );
+
+    return _addContextUseCase.call(draft, mealId: mealId);
+  }
+
+  Future<LowTreatmentContext> saveCurrentDraft() {
+    return save(state.contextDraft);
   }
 
   MealDraft _lowTreatmentMealDraft(MealDraft meal) {
@@ -102,5 +139,11 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
       return null;
     }
     return deviceStatus;
+  }
+
+  LowTreatmentReason _defaultReason(DeviceStatus? deviceStatus) {
+    return _activeSuggestion(deviceStatus) == null
+        ? LowTreatmentReason.lowGlucose
+        : LowTreatmentReason.carbsReq;
   }
 }

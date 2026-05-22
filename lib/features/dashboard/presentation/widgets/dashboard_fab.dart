@@ -8,6 +8,7 @@ import '../../../../common/widgets/fab_action_option.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../activity/data/drafts/activity_log_draft.dart';
 import '../../../activity/data/providers/activity_provider.dart';
+import '../../../low_treatment/presentation/widgets/low_treatment_sheet.dart';
 import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
@@ -45,6 +46,15 @@ class DashboardFAB extends HookConsumerWidget with Logging {
               if (!context.mounted) return;
 
               await _saveActivityLog(context, ref, action);
+            },
+          ),
+          const SizedBox(height: 8),
+          FabActionOption(
+            icon: Icons.local_drink_outlined,
+            label: 'Dosłodź się',
+            onTap: () async {
+              open.value = false;
+              await showLowTreatmentSheet(context);
             },
           ),
           const SizedBox(height: 8),

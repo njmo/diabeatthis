@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/domain/model/device_status.dart';
+import '../../../low_treatment/presentation/widgets/low_treatment_sheet.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_suggestion_card.dart';
 import '../../data/providers/old_reading_provider.dart';
 import '../../data/utils/nightscout_utils.dart';
@@ -74,7 +75,7 @@ class DeviceStatusDashboard extends ConsumerWidget {
             LowTreatmentSuggestionCard(
               carbsReq: deviceStatus.carbsReq,
               carbsReqWithin: deviceStatus.carbsReqWithin,
-              onAdd: () {},
+              onAdd: () => showLowTreatmentSheet(context),
             ),
         ],
       ),

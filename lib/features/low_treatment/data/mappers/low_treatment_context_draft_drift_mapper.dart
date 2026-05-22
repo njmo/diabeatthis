@@ -15,7 +15,6 @@ extension LowTreatmentContextToDraft on domain.LowTreatmentContext {
       suggestionAt: suggestionAt,
       deviceStatusDate: deviceStatusDate,
       reason: reason,
-      deviceStatusHash: deviceStatusHash,
     );
   }
 }
@@ -32,7 +31,6 @@ extension LowTreatmentContextDraftToCompanion on LowTreatmentContextDraft {
         suggestionAt: draft.suggestionAt,
         deviceStatusDate: draft.deviceStatusDate,
         reason: draft.reason,
-        deviceStatusHash: draft.deviceStatusHash,
       ),
       existing: (existing) => _toCompanion(
         mealId: mealId ?? existing.mealId,
@@ -43,7 +41,6 @@ extension LowTreatmentContextDraftToCompanion on LowTreatmentContextDraft {
         suggestionAt: existing.suggestionAt,
         deviceStatusDate: existing.deviceStatusDate,
         reason: existing.reason,
-        deviceStatusHash: existing.deviceStatusHash,
       ),
     );
   }
@@ -56,8 +53,7 @@ extension LowTreatmentContextDraftToCompanion on LowTreatmentContextDraft {
     required int? suggestedWithinMinutes,
     required DateTime? suggestionAt,
     required DateTime? deviceStatusDate,
-    required domain.LowTreatmentReason? reason,
-    required String? deviceStatusHash,
+    required domain.LowTreatmentReason reason,
   }) {
     if (mealId == null) {
       throw StateError('Low treatment context draft requires mealId.');
@@ -71,8 +67,7 @@ extension LowTreatmentContextDraftToCompanion on LowTreatmentContextDraft {
       suggestedWithinMinutes: d.Value(suggestedWithinMinutes),
       suggestionAt: d.Value(suggestionAt?.millisecondsSinceEpoch),
       deviceStatusDate: d.Value(deviceStatusDate?.millisecondsSinceEpoch),
-      reason: d.Value(reason?.storageValue),
-      deviceStatusHash: d.Value(deviceStatusHash),
+      reason: d.Value(reason.storageValue),
     );
   }
 }

@@ -48,7 +48,6 @@ void main() {
           suggestionAt: suggestionAt,
           deviceStatusDate: deviceStatusDate,
           reason: LowTreatmentReason.carbsReq,
-          deviceStatusHash: 'status-hash',
         ).toCompanion(mealId: lowTreatment.id),
       );
 
@@ -69,7 +68,6 @@ void main() {
       expect(context?.suggestionAt, suggestionAt);
       expect(context?.deviceStatusDate, deviceStatusDate);
       expect(context?.reason, LowTreatmentReason.carbsReq);
-      expect(context?.deviceStatusHash, 'status-hash');
       expect(context?.isSynced, isFalse);
 
       final relatedContexts = await db.lowTreatmentContextDao

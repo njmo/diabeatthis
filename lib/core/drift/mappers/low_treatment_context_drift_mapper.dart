@@ -11,10 +11,7 @@ extension LowTreatmentContextDataToDomain on LowTreatmentContextData {
       suggestedWithinMinutes: suggestedWithinMinutes,
       suggestionAt: _date(suggestionAt),
       deviceStatusDate: _date(deviceStatusDate),
-      reason: reason == null
-          ? null
-          : domain.LowTreatmentReason.fromStorage(reason!),
-      deviceStatusHash: deviceStatusHash,
+      reason: domain.LowTreatmentReason.fromStorage(reason),
       isSynced: isSynced,
       createdAt: _date(createdAt),
       updatedAt: _date(updatedAt),
