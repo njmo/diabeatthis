@@ -34,7 +34,7 @@ void main() {
       final deviceStatusDate = DateTime.fromMillisecondsSinceEpoch(1400);
 
       await db.lowTreatmentContextDao.upsertContextForMeal(
-        LowTreatmentContextDraft.draft(
+        LowTreatmentContextDraft(
           meal: MealDraft(
             name: 'Dosłodzenie',
             mealIngredients: const [],
@@ -48,7 +48,7 @@ void main() {
           suggestionAt: suggestionAt,
           deviceStatusDate: deviceStatusDate,
           reason: LowTreatmentReason.carbsReq,
-        ).toCompanion(mealId: lowTreatment.id),
+        ).copyWith(mealId: lowTreatment.id).toCompanion(),
       );
 
       final storedTreatment = await db.mealDao.getMealById(lowTreatment.id);

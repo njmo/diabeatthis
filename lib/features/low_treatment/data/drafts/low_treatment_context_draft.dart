@@ -5,9 +5,10 @@ import '../../../meals/data/drafts/meal_draft.dart';
 
 part 'low_treatment_context_draft.freezed.dart';
 
-@Freezed(unionKey: 'kind')
+@freezed
 abstract class LowTreatmentContextDraft with _$LowTreatmentContextDraft {
-  const factory LowTreatmentContextDraft.draft({
+  const factory LowTreatmentContextDraft({
+    int? mealId,
     required MealDraft meal,
     int? relatedMealId,
     required LowTreatmentContextSource source,
@@ -16,16 +17,5 @@ abstract class LowTreatmentContextDraft with _$LowTreatmentContextDraft {
     DateTime? suggestionAt,
     DateTime? deviceStatusDate,
     required LowTreatmentReason reason,
-  }) = _LowTreatmentContextDraftNew;
-
-  const factory LowTreatmentContextDraft.existing({
-    required int mealId,
-    int? relatedMealId,
-    required LowTreatmentContextSource source,
-    double? suggestedCarbs,
-    int? suggestedWithinMinutes,
-    DateTime? suggestionAt,
-    DateTime? deviceStatusDate,
-    required LowTreatmentReason reason,
-  }) = _LowTreatmentContextDraftExisting;
+  }) = _LowTreatmentContextDraft;
 }

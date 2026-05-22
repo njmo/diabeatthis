@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
-import '../../data/drafts/meal_draft.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
 import 'add_meal_ingredient.dart';
@@ -55,11 +54,9 @@ class MealIngredientsListEditor extends ConsumerWidget {
   }
 
   Future<void> _addIngredient(BuildContext context, WidgetRef ref) async {
-    final mealIngredient = await showModalBottomSheet<MealIngredientsDraft>(
+    final mealIngredient = await showAddMealIngredientSheet(
       context: context,
-      useRootNavigator: false,
-      isScrollControlled: true,
-      builder: (_) => const AddMealIngredient(),
+      ref: ref,
     );
     if (mealIngredient != null) {
       ref.read(mealDraftProvider.notifier).addMealIngredient(mealIngredient);

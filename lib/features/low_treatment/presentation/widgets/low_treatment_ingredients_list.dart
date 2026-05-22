@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../meals/data/drafts/meal_draft.dart';
+import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../../meals/presentation/widgets/meal_ingredient_preview_tile.dart';
 import '../controllers/low_treatment_context_controller.dart';
 
@@ -43,8 +45,28 @@ class LowTreatmentIngredientsList extends ConsumerWidget {
           MealIngredientPreviewTile(
             draft: ingredient,
             onRemove: () => controller.removeMealIngredient(ingredient),
+            onEdit: () => _editIngredient(context, ref, ingredient),
           ),
       ],
     );
+  }
+
+  Future<void> _editIngredient(
+    BuildContext context,
+    WidgetRef ref,
+    MealIngredientsDraft draft,
+  ) async {
+    final mealIngredient = await showAddMealIngredientSheet(
+      context: context,
+      ref: ref,
+      initialDraft: draft,
+    );
+    if (mealIngredient == null) {
+      return;
+    }
+
+    ref
+        .read(lowTreatmentContextControllerProvider.notifier)
+        .updateMealIngredient(draft, mealIngredient);
   }
 }

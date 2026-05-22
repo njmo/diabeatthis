@@ -3,9 +3,13 @@ import '../../../meals/data/drafts/meal_draft.dart';
 import '../drafts/low_treatment_context_draft.dart';
 
 class LowTreatmentSheetState {
-  const LowTreatmentSheetState({required this.contextDraft});
+  const LowTreatmentSheetState({
+    required this.contextDraft,
+    this.isSaving = false,
+  });
 
   final LowTreatmentContextDraft contextDraft;
+  final bool isSaving;
 
   double get suggestedCarbs {
     return contextDraft.suggestedCarbs ?? 0;
@@ -19,20 +23,18 @@ class LowTreatmentSheetState {
 
   bool get hasAapsSuggestion => suggestedCarbs > 0;
 
-  List<MealIngredientsDraft> get mealIngredients {
-    return contextDraft.map(
-      draft: (draft) => draft.meal.mealIngredients,
-      existing: (_) {
-        throw StateError(
-          'Low treatment sheet does not support existing context editing yet.',
-        );
-      },
-    );
-  }
+  bool get canSave => mealIngredients.isNotEmpty && !isSaving;
 
-  LowTreatmentSheetState copyWith({LowTreatmentContextDraft? contextDraft}) {
+  List<MealIngredientsDraft> get mealIngredients =>
+      contextDraft.meal.mealIngredients;
+
+  LowTreatmentSheetState copyWith({
+    LowTreatmentContextDraft? contextDraft,
+    bool? isSaving,
+  }) {
     return LowTreatmentSheetState(
       contextDraft: contextDraft ?? this.contextDraft,
+      isSaving: isSaving ?? this.isSaving,
     );
   }
 }

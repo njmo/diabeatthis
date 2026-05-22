@@ -28,9 +28,12 @@ class LowTreatmentContextDao extends DatabaseAccessor<DatabaseImpl>
     return rows.map((row) => row.toDomain()).toList(growable: false);
   }
 
-  Future<void> upsertContextForMeal(
+  Future<domain.LowTreatmentContext> upsertContextForMeal(
     LowTreatmentContextCompanion context,
   ) async {
-    await into(db.lowTreatmentContext).insertOnConflictUpdate(context);
+    final row = await into(
+      db.lowTreatmentContext,
+    ).insertReturning(context, onConflict: DoUpdate((_) => context));
+    return row.toDomain();
   }
 }

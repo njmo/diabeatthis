@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart';
+import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../foreground/providers/device_status_value_provider.dart';
 import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
@@ -20,8 +21,8 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
 
   @override
   LowTreatmentSheetState build() {
-    _addMealUseCase = ref.read(addMealUseCaseProvider);
-    _addContextUseCase = ref.read(addLowTreatmentContextEntryUseCaseProvider);
+    _addMealUseCase = ref.watch(addMealUseCaseProvider);
+    _addContextUseCase = ref.watch(addLowTreatmentContextEntryUseCaseProvider);
 
     final deviceStatus = ref.read(deviceStatusValueProvider);
     final hasAapsSuggestion = (deviceStatus?.carbsReq ?? 0) > 0;
@@ -32,7 +33,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     return LowTreatmentSheetState(
       contextDraft: composeDraft(
         meal: MealDraft(
-          name: '',
+          name: 'Dosłodzenie',
           mealIngredients: const [],
           plannedAt: clock.now(),
           purpose: MealPurpose.lowTreatment,
@@ -68,7 +69,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
   }) {
     final activeSuggestion = _activeSuggestion(deviceStatus);
 
-    return LowTreatmentContextDraft.draft(
+    return LowTreatmentContextDraft(
       meal: meal.copyWith(
         purpose: MealPurpose.lowTreatment,
         status: meal.status == 'draft' ? 'confirmed' : meal.status,
@@ -89,42 +90,97 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     state = state.copyWith(contextDraft: contextDraft);
   }
 
+  void addMealIngredient(MealIngredientsDraft mealIngredient) {
+    final contextDraft = _updateDraftMeal((meal) {
+      return meal.copyWith(
+        mealIngredients: [...meal.mealIngredients, mealIngredient],
+      );
+    });
+
+    state = state.copyWith(contextDraft: contextDraft);
+  }
+
+  void updateMealIngredient(
+    MealIngredientsDraft oldMealIngredient,
+    MealIngredientsDraft newMealIngredient,
+  ) {
+    final contextDraft = _updateDraftMeal((meal) {
+      return meal.copyWith(
+        mealIngredients: meal.mealIngredients.map((mealIngredient) {
+          if (mealIngredient == oldMealIngredient) {
+            return newMealIngredient;
+          }
+          return mealIngredient;
+        }).toList(),
+      );
+    });
+
+    state = state.copyWith(contextDraft: contextDraft);
+  }
+
   void removeMealIngredient(MealIngredientsDraft mealIngredient) {
-    final contextDraft = state.contextDraft.map(
-      draft: (draft) {
-        final meal = draft.meal.copyWith(
-          mealIngredients: draft.meal.mealIngredients
-              .where((element) => element != mealIngredient)
-              .toList(),
-        );
-        return draft.copyWith(meal: meal);
-      },
-      existing: (_) {
-        throw StateError(
-          'Low treatment sheet does not support existing context editing yet.',
-        );
-      },
-    );
+    final contextDraft = _updateDraftMeal((meal) {
+      return meal.copyWith(
+        mealIngredients: meal.mealIngredients
+            .where((element) => element != mealIngredient)
+            .toList(),
+      );
+    });
 
     state = state.copyWith(contextDraft: contextDraft);
   }
 
   Future<LowTreatmentContext> save(LowTreatmentContextDraft draft) async {
-    final mealId = await draft.map(
-      draft: (draft) async {
-        final meal = await _addMealUseCase.call(
-          _lowTreatmentMealDraft(draft.meal),
-        );
-        return meal.id;
-      },
-      existing: (existing) async => existing.mealId,
-    );
+    if (draft.mealId != null) {
+      return _saveContext(draft, mealId: draft.mealId!);
+    }
 
-    return _addContextUseCase.call(draft, mealId: mealId);
+    final db = ref.read(databaseProvider);
+    final result = await db.transaction(() async {
+      final mealDraft = draft.meal.copyWith(plannedAt: clock.now());
+      final mealId = await _createLowTreatmentMeal(mealDraft);
+      final contextDraft = draft.copyWith(mealId: mealId, meal: mealDraft);
+      final context = await _saveContext(contextDraft, mealId: mealId);
+
+      return (context: context, contextDraft: contextDraft);
+    });
+
+    if (state.contextDraft == draft) {
+      state = state.copyWith(contextDraft: result.contextDraft);
+    }
+
+    return result.context;
   }
 
-  Future<LowTreatmentContext> saveCurrentDraft() {
-    return save(state.contextDraft);
+  Future<LowTreatmentContext> saveCurrentDraft() async {
+    if (state.isSaving) {
+      throw StateError('Low treatment save is already in progress.');
+    }
+
+    state = state.copyWith(isSaving: true);
+    try {
+      return await save(state.contextDraft);
+    } finally {
+      state = state.copyWith(isSaving: false);
+    }
+  }
+
+  LowTreatmentContextDraft _updateDraftMeal(
+    MealDraft Function(MealDraft meal) update,
+  ) {
+    return state.contextDraft.copyWith(meal: update(state.contextDraft.meal));
+  }
+
+  Future<int> _createLowTreatmentMeal(MealDraft mealDraft) async {
+    final meal = await _addMealUseCase.call(_lowTreatmentMealDraft(mealDraft));
+    return meal.id;
+  }
+
+  Future<LowTreatmentContext> _saveContext(
+    LowTreatmentContextDraft draft, {
+    required int mealId,
+  }) {
+    return _addContextUseCase.call(draft, mealId: mealId);
   }
 
   MealDraft _lowTreatmentMealDraft(MealDraft meal) {

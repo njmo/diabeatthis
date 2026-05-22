@@ -3,7 +3,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../data/drafts/meal_draft.dart';
-import '../../data/providers/add_ingredients_provider.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
 import 'add_meal_ingredient.dart';
 import 'meal_ingredient_preview_tile.dart';
@@ -37,20 +36,10 @@ class MealIngredientsList extends ConsumerWidget {
     WidgetRef ref,
     MealIngredientsDraft draft,
   ) async {
-    final addingStateNotifier = ref.watch(
-      addMealIngredientStageProvider.notifier,
-    );
-    final mealIngredientDraft = ref.watch(
-      mealIngredientsDraftProvider.notifier,
-    );
-    mealIngredientDraft.overrideMealIngredient(draft);
-    addingStateNotifier.modifyIngredientStage(draft.ingredient.isReference);
-
-    final mealIngredient = await showModalBottomSheet<MealIngredientsDraft>(
+    final mealIngredient = await showAddMealIngredientSheet(
       context: context,
-      useRootNavigator: false,
-      isScrollControlled: true,
-      builder: (_) => const AddMealIngredient(),
+      ref: ref,
+      initialDraft: draft,
     );
     if (mealIngredient != null) {
       final mealDraft = ref.read(mealDraftProvider.notifier);

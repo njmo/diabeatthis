@@ -1,8 +1,11 @@
 import 'package:diabeatthis/core/domain/model/low_treatment_context.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
+import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
+import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import 'package:diabeatthis/features/low_treatment/presentation/controllers/low_treatment_context_controller.dart';
 import 'package:diabeatthis/features/meals/data/drafts/meal_draft.dart';
+import 'package:diabeatthis/features/portions/data/drafts/portion_draft.dart';
 import 'package:diabeatthis/foreground/providers/device_status_value_provider.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -73,4 +76,116 @@ void main() {
     expect(context.deviceStatusDate, deviceStatusDate);
     expect(context.reason, LowTreatmentReason.carbsReq);
   });
+
+  test('updates low treatment draft ingredients', () {
+    final controller = container.read(
+      lowTreatmentContextControllerProvider.notifier,
+    );
+    final first = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
+    final second = _ingredientDraft(name: 'Sok', carbsPer100g: 11);
+
+    controller.addMealIngredient(first);
+    expect(
+      container.read(lowTreatmentContextControllerProvider).mealIngredients,
+      [first],
+    );
+
+    controller.updateMealIngredient(first, second);
+    expect(
+      container.read(lowTreatmentContextControllerProvider).mealIngredients,
+      [second],
+    );
+
+    controller.removeMealIngredient(second);
+    expect(
+      container.read(lowTreatmentContextControllerProvider).mealIngredients,
+      isEmpty,
+    );
+  });
+
+  test('saves current low treatment draft with ingredients', () async {
+    final controller = container.read(
+      lowTreatmentContextControllerProvider.notifier,
+    );
+    final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
+
+    controller.addMealIngredient(ingredient);
+    final context = await controller.saveCurrentDraft();
+
+    final lowTreatment = await db.mealDao.getMealById(context.mealId);
+    final mealIngredients = await db.mealIngredientsDao
+        .getMealIngredientsForMeal(context.mealId);
+
+    expect(lowTreatment?.name, 'Dosłodzenie');
+    expect(lowTreatment?.purpose, 'lowTreatment');
+    expect(lowTreatment?.status, 'confirmed');
+    expect(context.source, LowTreatmentContextSource.dashboardAction);
+    expect(context.reason, LowTreatmentReason.lowGlucose);
+    expect(mealIngredients, hasLength(1));
+  });
+
+  test('keeps use case providers alive while saving context', () async {
+    final subscription = container.listen(
+      lowTreatmentContextControllerProvider,
+      (_, _) {},
+    );
+    final controller = container.read(
+      lowTreatmentContextControllerProvider.notifier,
+    );
+    final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
+
+    await container.pump();
+    controller.addMealIngredient(ingredient);
+    final context = await controller.saveCurrentDraft();
+
+    final storedContext = await db.lowTreatmentContextDao.getContextForMeal(
+      context.mealId,
+    );
+
+    expect(storedContext, isNotNull);
+    subscription.close();
+  });
+
+  test('blocks saving current low treatment draft while saving', () async {
+    final controller = container.read(
+      lowTreatmentContextControllerProvider.notifier,
+    );
+    final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
+
+    controller.addMealIngredient(ingredient);
+    final firstSave = controller.saveCurrentDraft();
+    expect(controller.saveCurrentDraft, throwsA(isA<StateError>()));
+    final context = await firstSave;
+
+    final meals = await db.select(db.meal).get();
+
+    expect(context.mealId, isPositive);
+    expect(meals.where((meal) => meal.purpose == 'lowTreatment'), hasLength(1));
+  });
+}
+
+MealIngredientsDraft _ingredientDraft({
+  required String name,
+  required double carbsPer100g,
+}) {
+  return MealIngredientsDraft(
+    ingredient: IngredientDraft.draft(
+      name: name,
+      carbsPer100g: carbsPer100g,
+      fatPer100g: 0,
+      fiberPer100g: 0,
+      proteinPer100g: 0,
+      nutritionConfidence: 1,
+      isReference: false,
+    ),
+    ingredientPortion: IngredientPortionDraft(
+      portion: PortionSelection.empty(),
+      amount: 1,
+    ),
+    amount: 10,
+    quantityConfidence: 1,
+    entryType: 'planned',
+    consumedAmount: null,
+    consumedConfidence: null,
+  );
 }

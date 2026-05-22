@@ -20,37 +20,16 @@ class AddLowTreatmentContextEntryUseCase with Logging {
 
   Future<LowTreatmentContext> call(
     LowTreatmentContextDraft draft, {
-    int? mealId,
+    required int mealId,
   }) async {
     final db = ref.read(databaseProvider);
-    final resolvedMealId = _resolveMealId(draft, mealId: mealId);
+    final contextDraft = draft.copyWith(mealId: mealId);
 
-    await db.lowTreatmentContextDao.upsertContextForMeal(
-      draft.toCompanion(mealId: resolvedMealId),
+    final context = await db.lowTreatmentContextDao.upsertContextForMeal(
+      contextDraft.toCompanion(),
     );
 
-    final context = await db.lowTreatmentContextDao.getContextForMeal(
-      resolvedMealId,
-    );
-    if (context == null) {
-      throw StateError('Could not load low treatment context $resolvedMealId.');
-    }
-    logI('Saved low treatment context for meal $resolvedMealId');
+    logI('Saved low treatment context for meal $mealId');
     return context;
-  }
-
-  int _resolveMealId(LowTreatmentContextDraft draft, {int? mealId}) {
-    if (mealId != null) {
-      return mealId;
-    }
-
-    return draft.map(
-      draft: (_) {
-        throw StateError(
-          'Draft low treatment context requires persisted mealId.',
-        );
-      },
-      existing: (existing) => existing.mealId,
-    );
   }
 }

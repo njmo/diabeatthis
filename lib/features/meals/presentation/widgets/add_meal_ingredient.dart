@@ -15,10 +15,36 @@ import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_con
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../../portions/presentation/widgets/portion_form.dart';
 import '../../../portions/presentation/widgets/portion_search.dart';
+import '../../data/drafts/meal_draft.dart';
 import '../../data/providers/add_ingredients_provider.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import 'amount_form.dart';
 import 'summary.dart';
+
+Future<MealIngredientsDraft?> showAddMealIngredientSheet({
+  required BuildContext context,
+  required WidgetRef ref,
+  MealIngredientsDraft? initialDraft,
+}) {
+  ref.invalidate(addMealIngredientStageProvider);
+  ref.invalidate(mealIngredientsDraftProvider);
+  ref.invalidate(mealIngredientAmountDraftProvider);
+  ref.invalidate(mealIngredientConfidenceDraftProvider);
+
+  if (initialDraft != null) {
+    final mealIngredientDraft = ref.read(mealIngredientsDraftProvider.notifier);
+    final stageNotifier = ref.read(addMealIngredientStageProvider.notifier);
+    mealIngredientDraft.overrideMealIngredient(initialDraft);
+    stageNotifier.modifyIngredientStage(initialDraft.ingredient.isReference);
+  }
+
+  return showModalBottomSheet<MealIngredientsDraft>(
+    context: context,
+    useRootNavigator: false,
+    isScrollControlled: true,
+    builder: (_) => const AddMealIngredient(),
+  );
+}
 
 class AddMealIngredient extends ConsumerWidget {
   const AddMealIngredient({super.key});

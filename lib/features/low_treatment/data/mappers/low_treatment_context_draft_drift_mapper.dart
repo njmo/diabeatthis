@@ -2,12 +2,14 @@ import 'package:drift/drift.dart' as d;
 
 import '../../../../core/domain/model/low_treatment_context.dart' as domain;
 import '../../../../core/drift/database_impl.dart';
+import '../../../meals/data/drafts/meal_draft.dart';
 import '../drafts/low_treatment_context_draft.dart';
 
 extension LowTreatmentContextToDraft on domain.LowTreatmentContext {
-  LowTreatmentContextDraft toDraft() {
-    return LowTreatmentContextDraft.existing(
+  LowTreatmentContextDraft toDraft({required MealDraft meal}) {
+    return LowTreatmentContextDraft(
       mealId: mealId,
+      meal: meal,
       relatedMealId: relatedMealId,
       source: source,
       suggestedCarbs: suggestedCarbs,
@@ -20,47 +22,14 @@ extension LowTreatmentContextToDraft on domain.LowTreatmentContext {
 }
 
 extension LowTreatmentContextDraftToCompanion on LowTreatmentContextDraft {
-  LowTreatmentContextCompanion toCompanion({int? mealId}) {
-    return map(
-      draft: (draft) => _toCompanion(
-        mealId: mealId,
-        relatedMealId: draft.relatedMealId,
-        source: draft.source,
-        suggestedCarbs: draft.suggestedCarbs,
-        suggestedWithinMinutes: draft.suggestedWithinMinutes,
-        suggestionAt: draft.suggestionAt,
-        deviceStatusDate: draft.deviceStatusDate,
-        reason: draft.reason,
-      ),
-      existing: (existing) => _toCompanion(
-        mealId: mealId ?? existing.mealId,
-        relatedMealId: existing.relatedMealId,
-        source: existing.source,
-        suggestedCarbs: existing.suggestedCarbs,
-        suggestedWithinMinutes: existing.suggestedWithinMinutes,
-        suggestionAt: existing.suggestionAt,
-        deviceStatusDate: existing.deviceStatusDate,
-        reason: existing.reason,
-      ),
-    );
-  }
-
-  LowTreatmentContextCompanion _toCompanion({
-    required int? mealId,
-    required int? relatedMealId,
-    required domain.LowTreatmentContextSource source,
-    required double? suggestedCarbs,
-    required int? suggestedWithinMinutes,
-    required DateTime? suggestionAt,
-    required DateTime? deviceStatusDate,
-    required domain.LowTreatmentReason reason,
-  }) {
-    if (mealId == null) {
+  LowTreatmentContextCompanion toCompanion() {
+    final persistedMealId = mealId;
+    if (persistedMealId == null) {
       throw StateError('Low treatment context draft requires mealId.');
     }
 
     return LowTreatmentContextCompanion.insert(
-      mealId: d.Value(mealId),
+      mealId: d.Value(persistedMealId),
       relatedMealId: d.Value(relatedMealId),
       source: source.storageValue,
       suggestedCarbs: d.Value(suggestedCarbs),
