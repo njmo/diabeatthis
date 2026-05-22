@@ -3,6 +3,23 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'meal.freezed.dart';
 
+@JsonEnum(valueField: 'storageValue')
+enum MealPurpose {
+  meal('meal'),
+  lowTreatment('lowTreatment');
+
+  const MealPurpose(this.storageValue);
+
+  final String storageValue;
+
+  static MealPurpose fromStorage(String? value) {
+    return MealPurpose.values.firstWhere(
+      (purpose) => purpose.storageValue == value,
+      orElse: () => MealPurpose.meal,
+    );
+  }
+}
+
 @freezed
 abstract class Meal with _$Meal {
   const Meal._();
@@ -18,6 +35,7 @@ abstract class Meal with _$Meal {
     DateTime? updatedAt,
     DateTime? plannedAt,
     DateTime? eatenAt,
+    @Default(MealPurpose.meal) MealPurpose purpose,
     String? status,
     String? notes,
     int? mealTemplateId,

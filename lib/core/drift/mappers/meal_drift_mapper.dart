@@ -8,10 +8,11 @@ extension MealDataToDomain on MealData {
     id: id,
     name: name,
     status: status,
+    purpose: MealPurpose.fromStorage(purpose),
     plannedAt: DateTime.fromMillisecondsSinceEpoch(plannedAt),
     createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
     updatedAt: DateTime.fromMillisecondsSinceEpoch(updatedAt),
-    mealTemplateId: mealTemplateId
+    mealTemplateId: mealTemplateId,
   );
 }
 
@@ -25,6 +26,7 @@ extension DomainMealToCompanion on Meal {
       id: d.Value(id),
       name: d.Value(name),
       plannedAt: d.Value(plannedAt!.millisecondsSinceEpoch),
+      purpose: d.Value(purpose.storageValue),
       mealTemplateId: d.Value(mealTemplateId),
     );
   }

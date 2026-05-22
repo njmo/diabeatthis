@@ -16,6 +16,23 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     );
   }
 
+  Future<MealData> createLowTreatmentEntry({
+    required String name,
+    required DateTime eatenAt,
+    String? notes,
+  }) {
+    return into(db.meal).insertReturning(
+      MealCompanion.insert(
+        name: name,
+        plannedAt: eatenAt.millisecondsSinceEpoch,
+        summarizedAt: Value(eatenAt.millisecondsSinceEpoch),
+        purpose: const Value('lowTreatment'),
+        status: const Value('confirmed'),
+        notes: Value(notes),
+      ),
+    );
+  }
+
   Stream<List<MealData>> getAllMealForToday() {
     final now = clock.now().toUtc();
     final todayMillisecondsSinceEpoch = DateTime(
@@ -27,6 +44,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       ..where(
         (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
       )
+      ..where((tbl) => tbl.purpose.equals('meal'))
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)]);
     return query.watch();
   }
@@ -96,6 +114,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       ..where(
         (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
       )
+      ..where((tbl) => tbl.purpose.equals('meal'))
       ..where((tbl) => tbl.status.equals('planned'))
       ..orderBy([
         (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.asc),
@@ -145,6 +164,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       ..where(
         (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
       )
+      ..where((tbl) => tbl.purpose.equals('meal'))
       ..where((tbl) => tbl.status.equals('skipped').not())
       ..where((tbl) => tbl.status.equals('summarized').not())
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)]);

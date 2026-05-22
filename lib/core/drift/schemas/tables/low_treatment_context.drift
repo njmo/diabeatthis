@@ -1,0 +1,52 @@
+import 'meal.drift';
+
+CREATE TABLE low_treatment_context (
+  meal_id INTEGER NOT NULL PRIMARY KEY
+    REFERENCES meal(id) ON DELETE CASCADE,
+  related_meal_id INTEGER
+    REFERENCES meal(id) ON DELETE SET NULL,
+
+  source TEXT NOT NULL CHECK (source IN ('manual', 'aapsSuggestion', 'dashboardAction')),
+  suggested_carbs REAL,
+  suggested_within_minutes INTEGER,
+  suggestion_at INTEGER,
+  device_status_date INTEGER,
+  reason TEXT CHECK (
+    reason IS NULL OR
+    reason IN (
+      'carbsReq',
+      'lowGlucose',
+      'fallingTrend',
+      'bgMismatch',
+      'unplannedActivity',
+      'plannedActivity',
+      'symptoms',
+      'manual',
+      'other'
+    )
+  ),
+  device_status_hash TEXT,
+
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+  updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+
+  is_synced BOOL NOT NULL DEFAULT 0
+);
+
+CREATE TRIGGER low_treatment_context_set_updated_at
+AFTER UPDATE ON low_treatment_context
+FOR EACH ROW
+WHEN NEW.updated_at = OLD.updated_at
+BEGIN
+  UPDATE low_treatment_context
+  SET updated_at = (CAST(strftime('%s','now') AS INTEGER) * 1000)
+  WHERE meal_id = NEW.meal_id;
+END;
+
+CREATE TRIGGER low_treatment_context_any_change_marks_unsynced
+AFTER UPDATE ON low_treatment_context
+FOR EACH ROW
+WHEN NEW.is_synced <> 0
+BEGIN
+  UPDATE low_treatment_context SET is_synced = 0 WHERE meal_id = NEW.meal_id;
+END;

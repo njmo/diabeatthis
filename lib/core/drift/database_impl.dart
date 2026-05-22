@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dao/activity_dao.dart';
 import 'dao/ingredient_dao.dart';
 import 'dao/local_mirror_dao.dart';
+import 'dao/low_treatment_context_dao.dart';
 import 'dao/meal_advisor_result_dao.dart';
 import 'dao/meal_dao.dart';
 import 'dao/meal_ingredients_dao.dart';
@@ -27,6 +28,7 @@ part 'database_impl.g.dart';
     MealTemplateDao,
     MealIngredientsDao,
     MealTemplateIngredientsDao,
+    LowTreatmentContextDao,
   ],
 )
 class DatabaseImpl extends _$DatabaseImpl implements Database {
@@ -34,7 +36,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -50,6 +52,12 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
+    },
+    onUpgrade: (m, from, to) async {
+      if (from < 9) {
+        await m.addColumn(meal, meal.purpose);
+        await m.createTable(lowTreatmentContext);
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');

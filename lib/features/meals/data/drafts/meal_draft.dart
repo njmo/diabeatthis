@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../core/domain/model/meal.dart';
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 
@@ -25,6 +26,7 @@ abstract class MealDraft with _$MealDraft {
     required String name,
     required List<MealIngredientsDraft> mealIngredients,
     required DateTime plannedAt,
+    @Default(MealPurpose.meal) MealPurpose purpose,
     required String status,
     String? notes,
     int? mealTemplateId,
