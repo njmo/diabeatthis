@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/drafts/ingredient_draft_validation.dart';
 import '../../data/providers/ingredient_provider.dart';
 import 'nutrition_value_text_form_field.dart';
 
@@ -21,6 +22,9 @@ class IngredientMacroForm extends ConsumerWidget {
                 label: 'Ilość węglowodanów na 100g',
                 initialValue: _formatInput(value.carbsPer100g),
                 onChanged: draft.setCarbsPer100g,
+                validator: (_) => value.hasEnergyMacros
+                    ? null
+                    : 'Uzupełnij węglowodany, tłuszcz albo białko',
               ),
             ),
             const SizedBox(width: 10),

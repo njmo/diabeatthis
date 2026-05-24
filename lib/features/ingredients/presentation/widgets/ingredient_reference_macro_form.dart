@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../data/drafts/ingredient_draft.dart';
+import '../../data/drafts/ingredient_draft_validation.dart';
 import '../../data/providers/ingredient_provider.dart';
 import '../utils/reference_ingredient_macro_calculator.dart';
 import 'nutrition_value_text_form_field.dart';
@@ -41,7 +43,8 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
                 ),
                 icon: Icons.grain,
                 onChanged: draft.setCarbsPer100g,
-                validator: _validateRequiredMacro,
+                validator: (value) =>
+                    _validateRequiredEnergyMacro(value, ingredient),
               ),
             ),
             const SizedBox(width: 10),
@@ -117,6 +120,20 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
       ],
     );
   }
+}
+
+String? _validateRequiredEnergyMacro(
+  String? value,
+  IngredientDraft ingredient,
+) {
+  final valueError = _validateRequiredMacro(value);
+  if (valueError != null) {
+    return valueError;
+  }
+  if (!ingredient.hasEnergyMacros) {
+    return 'Uzupełnij carbs albo ecarbs';
+  }
+  return null;
 }
 
 String? _validateRequiredMacro(String? value) {

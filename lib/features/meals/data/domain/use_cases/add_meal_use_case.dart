@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/logger/logger.dart';
+import '../../../../ingredients/data/drafts/ingredient_draft_validation.dart';
 import '../../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../../portions/data/providers/portion_provider.dart';
 import '../../drafts/meal_draft.dart';
@@ -21,6 +22,8 @@ class AddMealUseCase with Logging {
   const AddMealUseCase({required this.ref});
 
   Future<Meal> call(MealDraft draft) async {
+    _validateMealDraft(draft);
+
     final db = ref.read(databaseProvider);
 
     return db.transaction(() async {
@@ -63,5 +66,19 @@ class AddMealUseCase with Logging {
 
       return meal;
     });
+  }
+
+  void _validateMealDraft(MealDraft draft) {
+    if (draft.mealIngredients.isEmpty) {
+      throw ArgumentError('Posiłek musi zawierać co najmniej jeden składnik.');
+    }
+
+    for (final mealIngredient in draft.mealIngredients) {
+      if (!mealIngredient.ingredient.hasEnergyMacros) {
+        throw ArgumentError(
+          'Składnik musi mieć uzupełnione węglowodany, tłuszcz albo białko.',
+        );
+      }
+    }
   }
 }
