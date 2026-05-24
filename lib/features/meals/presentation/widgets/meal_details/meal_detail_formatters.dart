@@ -85,7 +85,6 @@ String formatNutritionValue(double value, String unit) {
 
 String mealStatusLabel(String status) {
   return switch (status) {
-    'draft' => 'Szkic',
     'planned' => 'Zaplanowany',
     'bolused-waiting' => 'Bolus podany, oczekiwanie',
     'bolused-eating' => 'Bolus podany, jedzenie',

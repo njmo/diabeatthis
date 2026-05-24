@@ -94,7 +94,7 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
       name: '',
       mealIngredients: [],
       plannedAt: clock.now(),
-      status: 'draft',
+      status: 'planned',
     );
   }
 
