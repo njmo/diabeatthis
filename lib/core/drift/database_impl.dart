@@ -12,6 +12,7 @@ import 'dao/meal_ingredients_dao.dart';
 import 'dao/meal_template_dao.dart';
 import 'dao/meal_template_ingredients_dao.dart';
 import 'dao/portion_dao.dart';
+import 'dao/quick_low_treatment_item_dao.dart';
 import 'database.dart';
 
 part 'database_impl.g.dart';
@@ -29,6 +30,7 @@ part 'database_impl.g.dart';
     MealIngredientsDao,
     MealTemplateIngredientsDao,
     LowTreatmentContextDao,
+    QuickLowTreatmentItemDao,
   ],
 )
 class DatabaseImpl extends _$DatabaseImpl implements Database {

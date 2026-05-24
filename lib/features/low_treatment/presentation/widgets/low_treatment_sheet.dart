@@ -44,6 +44,9 @@ class LowTreatmentSheet extends HookConsumerWidget {
             onPressed: sheetState.isSaving
                 ? null
                 : () {
+                    if (mode.value == LowTreatmentInputMode.quick) {
+                      controller.clearMealIngredients();
+                    }
                     mode.value = mode.value == LowTreatmentInputMode.quick
                         ? LowTreatmentInputMode.advanced
                         : LowTreatmentInputMode.quick;

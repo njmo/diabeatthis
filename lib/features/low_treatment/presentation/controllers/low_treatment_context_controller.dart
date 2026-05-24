@@ -102,9 +102,22 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     state = state.copyWith(contextDraft: contextDraft);
   }
 
-  void setQuickLowTreatmentItem(QuickLowTreatmentItem item) {
+  void clearMealIngredients() {
     final contextDraft = _updateDraftMeal((meal) {
-      return meal.copyWith(mealIngredients: [item.toMealIngredientDraft()]);
+      return meal.copyWith(mealIngredients: const []);
+    });
+
+    state = state.copyWith(contextDraft: contextDraft);
+  }
+
+  void setQuickLowTreatmentItem(
+    QuickLowTreatmentItem item, [
+    int quantity = 1,
+  ]) {
+    final contextDraft = _updateDraftMeal((meal) {
+      return meal.copyWith(
+        mealIngredients: [item.toMealIngredientDraft(quantity: quantity)],
+      );
     });
 
     state = state.copyWith(contextDraft: contextDraft);

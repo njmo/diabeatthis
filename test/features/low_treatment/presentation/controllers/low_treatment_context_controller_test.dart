@@ -100,6 +100,13 @@ void main() {
       [second],
     );
 
+    controller.clearMealIngredients();
+    expect(
+      container.read(lowTreatmentContextControllerProvider).mealIngredients,
+      isEmpty,
+    );
+
+    controller.addMealIngredient(second);
     controller.removeMealIngredient(second);
     expect(
       container.read(lowTreatmentContextControllerProvider).mealIngredients,
@@ -127,11 +134,10 @@ void main() {
       portion: domain.Portion(id: 4, name: 'cukierek', unitHint: 'szt.'),
       amount: 2,
       sortOrder: 1,
-      isActive: true,
       gramsPerPortion: 3,
     );
 
-    controller.setQuickLowTreatmentItem(quickItem);
+    controller.setQuickLowTreatmentItem(quickItem, 2);
 
     final ingredients = container.read(
       lowTreatmentContextControllerProvider.select(
@@ -141,7 +147,7 @@ void main() {
 
     expect(ingredients, hasLength(1));
     expect(ingredients.single.ingredient.name, 'Dextro');
-    expect(ingredients.single.amount, 2);
+    expect(ingredients.single.amount, 4);
     expect(ingredients.single.ingredientPortion.amount, 3);
   });
 

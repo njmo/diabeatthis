@@ -11,7 +11,6 @@ class QuickLowTreatmentItem {
     required this.portion,
     required this.amount,
     required this.sortOrder,
-    required this.isActive,
     required this.gramsPerPortion,
   });
 
@@ -21,7 +20,6 @@ class QuickLowTreatmentItem {
   final Portion? portion;
   final double amount;
   final int sortOrder;
-  final bool isActive;
   final double? gramsPerPortion;
 
   QuickLowTreatmentItem copyWith({int? sortOrder}) {
@@ -32,7 +30,6 @@ class QuickLowTreatmentItem {
       portion: portion,
       amount: amount,
       sortOrder: sortOrder ?? this.sortOrder,
-      isActive: isActive,
       gramsPerPortion: gramsPerPortion,
     );
   }

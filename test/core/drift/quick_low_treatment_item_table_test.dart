@@ -49,7 +49,6 @@ void main() {
     expect(item.ingredientId, ingredient.id);
     expect(item.portionId, portion.id);
     expect(item.amount, 1);
-    expect(item.isActive, isTrue);
     expect(item.isSynced, isFalse);
   });
 }
