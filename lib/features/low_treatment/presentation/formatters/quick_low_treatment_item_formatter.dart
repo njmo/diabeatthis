@@ -5,17 +5,28 @@ String formatQuickLowTreatmentItemDetails(QuickLowTreatmentItem item) {
   final amount = _formatQuickLowTreatmentAmount(item.amount);
 
   if (item.portion == null) {
-    return '$amount g • $carbs g WW';
+    if (item.ingredient.isReference) {
+      return '$amount x ${_referencePortionLabel(item.amount)} • $carbs g węglowodanów';
+    }
+    return '$amount g • $carbs g węglowodanów';
   }
 
-  return '$amount x ${item.portion!.name} • $carbs g WW';
+  return '$amount x ${item.portion!.name} • $carbs g węglowodanów';
 }
 
 double _calculateQuickLowTreatmentCarbs(QuickLowTreatmentItem item) {
-  final grams = item.portion == null
-      ? item.amount
-      : item.amount * (item.gramsPerPortion ?? 0);
+  final grams = _quickLowTreatmentItemGrams(item);
   return grams * item.ingredient.carbsPer100g / 100;
+}
+
+double _quickLowTreatmentItemGrams(QuickLowTreatmentItem item) {
+  if (item.portion != null) {
+    return item.amount * (item.gramsPerPortion ?? 0);
+  }
+  if (item.ingredient.isReference) {
+    return item.amount * 100;
+  }
+  return item.amount;
 }
 
 String _formatQuickLowTreatmentAmount(double value) {
@@ -23,4 +34,14 @@ String _formatQuickLowTreatmentAmount(double value) {
     return value.round().toString();
   }
   return value.toStringAsFixed(1);
+}
+
+String _referencePortionLabel(double amount) {
+  if (amount == 1) {
+    return 'porcja';
+  }
+  if (amount == amount.roundToDouble() && amount >= 2 && amount <= 4) {
+    return 'porcje';
+  }
+  return 'porcji';
 }

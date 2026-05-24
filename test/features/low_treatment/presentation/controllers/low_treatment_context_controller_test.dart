@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:diabeatthis/core/domain/model/ingredient.dart' as domain;
 import 'package:diabeatthis/core/domain/model/low_treatment_context.dart';
 import 'package:diabeatthis/core/domain/model/portion.dart' as domain;
@@ -5,12 +6,13 @@ import 'package:diabeatthis/core/domain/model/quick_low_treatment_item.dart'
     as domain;
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
+import 'package:diabeatthis/features/dashboard/data/providers/device_status_ui_provider.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import 'package:diabeatthis/features/low_treatment/presentation/controllers/low_treatment_context_controller.dart';
 import 'package:diabeatthis/features/meals/data/drafts/meal_draft.dart';
 import 'package:diabeatthis/features/portions/data/drafts/portion_draft.dart';
-import 'package:diabeatthis/foreground/providers/device_status_value_provider.dart';
+import 'package:drift/drift.dart' as drift;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -41,7 +43,7 @@ void main() {
       DateTime.now().millisecondsSinceEpoch,
     );
     container
-        .read(deviceStatusValueProvider.notifier)
+        .read(deviceStatusUiProvider.notifier)
         .update(
           testDeviceStatus(
             date: deviceStatusDate,
@@ -56,9 +58,9 @@ void main() {
 
     final mealDraft = MealDraft(
       name: 'Dosłodzenie',
-      mealIngredients: const [],
+      mealIngredients: [_ingredientDraft(name: 'Glukoza', carbsPer100g: 100)],
       plannedAt: DateTime.fromMillisecondsSinceEpoch(2000),
-      status: 'draft',
+      status: 'confirmed',
     );
     final controller = container.read(
       lowTreatmentContextControllerProvider.notifier,
@@ -170,6 +172,80 @@ void main() {
     expect(context.source, LowTreatmentContextSource.dashboardAction);
     expect(context.reason, LowTreatmentReason.lowGlucose);
     expect(mealIngredients, hasLength(1));
+  });
+
+  test('auto attaches latest meal from last three hours', () async {
+    final now = DateTime(2026, 5, 24, 11, 30);
+    await db
+        .into(db.meal)
+        .insert(
+          MealCompanion.insert(
+            name: 'Stary posiłek',
+            plannedAt: now
+                .subtract(const Duration(hours: 3, minutes: 1))
+                .millisecondsSinceEpoch,
+          ),
+        );
+    final relatedMeal = await db
+        .into(db.meal)
+        .insertReturning(
+          MealCompanion.insert(
+            name: 'Obiad',
+            plannedAt: now
+                .subtract(const Duration(minutes: 45))
+                .millisecondsSinceEpoch,
+            status: const drift.Value('summarized'),
+          ),
+        );
+    await db
+        .into(db.meal)
+        .insert(
+          MealCompanion.insert(
+            name: 'Zaplanowany posiłek',
+            plannedAt: now
+                .subtract(const Duration(minutes: 5))
+                .millisecondsSinceEpoch,
+          ),
+        );
+    final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
+
+    final context = await withClock(Clock.fixed(now), () async {
+      final controller = container.read(
+        lowTreatmentContextControllerProvider.notifier,
+      );
+
+      controller.addMealIngredient(ingredient);
+      return controller.saveCurrentDraft();
+    });
+
+    expect(context.relatedMealId, relatedMeal.id);
+  });
+
+  test('does not auto attach latest meal after detaching it', () async {
+    final now = DateTime(2026, 5, 24, 11, 30);
+    await db
+        .into(db.meal)
+        .insert(
+          MealCompanion.insert(
+            name: 'Obiad',
+            plannedAt: now
+                .subtract(const Duration(minutes: 45))
+                .millisecondsSinceEpoch,
+          ),
+        );
+    final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
+
+    final context = await withClock(Clock.fixed(now), () async {
+      final controller = container.read(
+        lowTreatmentContextControllerProvider.notifier,
+      );
+
+      controller.detachRelatedMeal();
+      controller.addMealIngredient(ingredient);
+      return controller.saveCurrentDraft();
+    });
+
+    expect(context.relatedMealId, isNull);
   });
 
   test('keeps use case providers alive while saving context', () async {

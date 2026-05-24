@@ -149,13 +149,32 @@ Future<void> _addOrEditQuickLowTreatmentItem({
     return;
   }
 
-  await ref
-      .read(quickLowTreatmentItemsControllerProvider.notifier)
-      .upsertSlot(
-        slot: slot.slot,
-        mealIngredient: mealIngredient,
-        existingItem: slot.item,
-      );
+  try {
+    await ref
+        .read(quickLowTreatmentItemsControllerProvider.notifier)
+        .upsertSlot(
+          slot: slot.slot,
+          mealIngredient: mealIngredient,
+          existingItem: slot.item,
+        );
+  } catch (error) {
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(_quickItemSaveErrorMessage(error))));
+  }
+}
+
+String _quickItemSaveErrorMessage(Object error) {
+  if (error is ArgumentError) {
+    final message = error.message;
+    if (message != null) {
+      return message.toString();
+    }
+  }
+  return 'Nie udało się zapisać szybkiego dosłodzenia.';
 }
 
 class QuickLowTreatmentEmptySlotCard extends StatelessWidget {

@@ -93,6 +93,36 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.get();
   }
 
+  Future<MealData?> getLatestMealBefore(
+    DateTime before, {
+    required Duration maxAge,
+  }) {
+    final start = before.subtract(maxAge);
+    final query = select(db.meal)
+      ..where(
+        (tbl) => tbl.plannedAt.isBetweenValues(
+          start.millisecondsSinceEpoch,
+          before.millisecondsSinceEpoch,
+        ),
+      )
+      ..where((tbl) => tbl.purpose.equals('meal'))
+      ..where(
+        (tbl) => tbl.status.isIn([
+          'eaten',
+          'eaten-extra',
+          'eaten-bolused',
+          'summarized',
+        ]),
+      )
+      ..orderBy([
+        (tbl) =>
+            OrderingTerm(expression: tbl.plannedAt, mode: OrderingMode.desc),
+      ])
+      ..limit(1);
+
+    return query.getSingleOrNull();
+  }
+
   Future<List<MealData>> getMealsForIngredient(int ingredientId) {
     final query =
         select(db.meal).join([

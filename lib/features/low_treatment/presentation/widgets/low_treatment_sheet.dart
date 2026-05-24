@@ -8,6 +8,7 @@ import '../controllers/low_treatment_context_controller.dart';
 import 'low_treatment_carbs_summary.dart';
 import 'low_treatment_ingredients_list.dart';
 import 'low_treatment_reason_selector.dart';
+import 'low_treatment_related_meal_field.dart';
 import 'low_treatment_suggestion_summary.dart';
 import 'quick_low_treatment_selector.dart';
 
@@ -73,6 +74,15 @@ class LowTreatmentSheet extends HookConsumerWidget {
             suggestedCarbs: sheetState.suggestedCarbs,
             suggestedWithinMinutes: sheetState.suggestedWithinMinutes,
           ),
+          if (sheetState.relatedMeal != null) ...[
+            const SizedBox(height: 12),
+            LowTreatmentRelatedMealField(
+              meal: sheetState.relatedMeal!,
+              onDetach: sheetState.isSaving
+                  ? null
+                  : controller.detachRelatedMeal,
+            ),
+          ],
           const SizedBox(height: 12),
           LowTreatmentReasonSelector(
             value: sheetState.reason,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -5,8 +7,9 @@ import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/quick_low_treatment_item.dart';
+import '../../../../core/drift/mappers/meal_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
-import '../../../../foreground/providers/device_status_value_provider.dart';
+import '../../../dashboard/data/providers/device_status_ui_provider.dart';
 import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../data/drafts/low_treatment_context_draft.dart';
@@ -18,6 +21,8 @@ part 'low_treatment_context_controller.g.dart';
 
 @riverpod
 class LowTreatmentContextController extends _$LowTreatmentContextController {
+  static const _relatedMealAutoAttachWindow = Duration(hours: 3);
+
   late AddMealUseCase _addMealUseCase;
   late AddLowTreatmentContextEntryUseCase _addContextUseCase;
 
@@ -26,11 +31,13 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     _addMealUseCase = ref.watch(addMealUseCaseProvider);
     _addContextUseCase = ref.watch(addLowTreatmentContextEntryUseCaseProvider);
 
-    final deviceStatus = ref.read(deviceStatusValueProvider);
+    final deviceStatus = ref.read(deviceStatusUiProvider);
     final hasAapsSuggestion = (deviceStatus?.carbsReq ?? 0) > 0;
     final reason = hasAapsSuggestion
         ? LowTreatmentReason.carbsReq
         : LowTreatmentReason.lowGlucose;
+
+    unawaited(Future<void>.microtask(_attachRecentRelatedMeal));
 
     return LowTreatmentSheetState(
       contextDraft: composeDraft(
@@ -52,7 +59,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     required MealDraft meal,
     int? relatedMealId,
   }) {
-    final deviceStatus = ref.read(deviceStatusValueProvider);
+    final deviceStatus = ref.read(deviceStatusUiProvider);
     return composeDraft(
       meal: meal,
       relatedMealId: relatedMealId,
@@ -72,10 +79,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     final activeSuggestion = _activeSuggestion(deviceStatus);
 
     return LowTreatmentContextDraft(
-      meal: meal.copyWith(
-        purpose: MealPurpose.lowTreatment,
-        status: meal.status == 'draft' ? 'confirmed' : meal.status,
-      ),
+      meal: meal.copyWith(purpose: MealPurpose.lowTreatment),
       relatedMealId: relatedMealId,
       source: source,
       suggestedCarbs: activeSuggestion?.carbsReq,
@@ -90,6 +94,14 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     final contextDraft = state.contextDraft.copyWith(reason: reason);
 
     state = state.copyWith(contextDraft: contextDraft);
+  }
+
+  void detachRelatedMeal() {
+    state = state.copyWith(
+      contextDraft: state.contextDraft.copyWith(relatedMealId: null),
+      clearRelatedMeal: true,
+      relatedMealAutoAttachEnabled: false,
+    );
   }
 
   void addMealIngredient(MealIngredientsDraft mealIngredient) {
@@ -182,6 +194,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
 
     state = state.copyWith(isSaving: true);
     try {
+      await _attachRecentRelatedMeal();
       return await save(state.contextDraft);
     } finally {
       state = state.copyWith(isSaving: false);
@@ -199,6 +212,37 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     return meal.id;
   }
 
+  Future<void> _attachRecentRelatedMeal() async {
+    if (!ref.mounted) {
+      return;
+    }
+
+    if (!state.relatedMealAutoAttachEnabled ||
+        state.contextDraft.relatedMealId != null) {
+      return;
+    }
+
+    final db = ref.read(databaseProvider);
+    final meal = await db.mealDao.getLatestMealBefore(
+      clock.now(),
+      maxAge: _relatedMealAutoAttachWindow,
+    );
+    if (!ref.mounted || meal == null) {
+      return;
+    }
+
+    if (!state.relatedMealAutoAttachEnabled ||
+        state.contextDraft.relatedMealId != null) {
+      return;
+    }
+
+    final relatedMeal = meal.toDomain();
+    state = state.copyWith(
+      contextDraft: state.contextDraft.copyWith(relatedMealId: relatedMeal.id),
+      relatedMeal: relatedMeal,
+    );
+  }
+
   Future<LowTreatmentContext> _saveContext(
     LowTreatmentContextDraft draft, {
     required int mealId,
@@ -207,10 +251,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
   }
 
   MealDraft _lowTreatmentMealDraft(MealDraft meal) {
-    return meal.copyWith(
-      purpose: MealPurpose.lowTreatment,
-      status: meal.status == 'draft' ? 'confirmed' : meal.status,
-    );
+    return meal.copyWith(purpose: MealPurpose.lowTreatment);
   }
 
   DeviceStatus? _activeSuggestion(DeviceStatus? deviceStatus) {

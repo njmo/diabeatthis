@@ -124,11 +124,38 @@ void main() {
       subscription.close();
     },
   );
+
+  test('rejects quick items without energy macros', () async {
+    final controller = container.read(
+      quickLowTreatmentItemsControllerProvider.notifier,
+    );
+    await container.read(quickLowTreatmentItemsControllerProvider.future);
+
+    await expectLater(
+      controller.upsertSlot(
+        slot: 1,
+        mealIngredient: _ingredientDraft(
+          name: 'Pusty składnik',
+          carbsPer100g: 0,
+          fatPer100g: 0,
+          proteinPer100g: 0,
+          portionName: 'porcja',
+          gramsPerPortion: 10,
+          amount: 1,
+        ),
+      ),
+      throwsArgumentError,
+    );
+
+    expect(await db.quickLowTreatmentItemDao.getQuickLowTreatmentItems(), []);
+  });
 }
 
 MealIngredientsDraft _ingredientDraft({
   required String name,
   required double carbsPer100g,
+  double fatPer100g = 0,
+  double proteinPer100g = 0,
   required String portionName,
   required double gramsPerPortion,
   required double amount,
@@ -137,9 +164,9 @@ MealIngredientsDraft _ingredientDraft({
     ingredient: IngredientDraft.draft(
       name: name,
       carbsPer100g: carbsPer100g,
-      fatPer100g: 0,
+      fatPer100g: fatPer100g,
       fiberPer100g: 0,
-      proteinPer100g: 0,
+      proteinPer100g: proteinPer100g,
       nutritionConfidence: 1,
       isReference: false,
     ),
