@@ -49,7 +49,8 @@ class MealHeader extends StatelessWidget {
       if (details.hasLowTreatments)
         MealMetricTileData(
           icon: Icons.bloodtype_outlined,
-          label: 'Dosłodzono',
+          label:
+              'Dosłodzono ${formatDelayAfterMeal(details.firstLowTreatmentDelay)}',
           value: formatGrams(details.lowTreatmentNetCarbsG),
         ),
       MealMetricTileData(
@@ -207,7 +208,7 @@ class HeaderStatusChip extends StatelessWidget {
     return Chip(
       visualDensity: VisualDensity.compact,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      labelPadding: const EdgeInsets.only(right: 4),
+      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
       avatar: Icon(
         icon,
         size: 18,

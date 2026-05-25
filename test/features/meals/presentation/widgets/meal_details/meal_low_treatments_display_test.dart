@@ -29,6 +29,7 @@ void main() {
       find.descendant(of: find.byType(Chip), matching: find.text('Dosłodzono')),
       findsOneWidget,
     );
+    expect(find.text('Dosłodzono po 45 min'), findsOneWidget);
     expect(find.text('Dosłodzenia'), findsOneWidget);
     expect(find.text('Niski cukier • Dashboard'), findsOneWidget);
     expect(find.text('Glukoza: 10g'), findsOneWidget);

@@ -60,6 +60,15 @@ String formatDurationOffset(Duration? duration) {
   return '$sign${duration.inMinutes.abs()} min';
 }
 
+String formatDelayAfterMeal(Duration? duration) {
+  if (duration == null) return '-';
+  final minutes = duration.inMinutes.abs();
+  if (duration.isNegative) {
+    return 'przed $minutes min';
+  }
+  return 'po $minutes min';
+}
+
 String formatShare(double value, double total) {
   if (total <= 0) return '-';
   return '${(value / total * 100).round()}%';

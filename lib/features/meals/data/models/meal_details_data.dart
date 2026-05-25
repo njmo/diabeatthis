@@ -80,6 +80,17 @@ class MealDetailsData {
     });
   }
 
+  Duration? get firstLowTreatmentDelay {
+    if (lowTreatments.isEmpty) return null;
+
+    final firstTreatment = lowTreatments.reduce((earliest, treatment) {
+      return treatment.meal.analysisTime.isBefore(earliest.meal.analysisTime)
+          ? treatment
+          : earliest;
+    });
+    return firstTreatment.meal.analysisTime.difference(meal.analysisTime);
+  }
+
   List<MealStatusTimelineEntryData> get statusTimeline {
     final entries = statusHistory.map((history) {
       return MealStatusTimelineEntryData(
