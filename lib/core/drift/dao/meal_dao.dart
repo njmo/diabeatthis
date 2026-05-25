@@ -86,6 +86,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
           end.millisecondsSinceEpoch,
         ),
       )
+      ..where((tbl) => tbl.purpose.equals('meal'))
       ..orderBy([(tbl) => OrderingTerm.asc(tbl.plannedAt)]);
     if (excludeMealId != null) {
       query.where((tbl) => tbl.id.equals(excludeMealId).not());
@@ -203,6 +204,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
 
   Stream<List<MealData>> getAllMeals({int page = 0}) {
     final query = select(db.meal)
+      ..where((tbl) => tbl.purpose.equals('meal'))
       ..orderBy([
         (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
       ])
@@ -212,6 +214,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
 
   Stream<List<MealData>> watchRecentMeals({required int limit}) {
     final query = select(db.meal)
+      ..where((tbl) => tbl.purpose.equals('meal'))
       ..orderBy([
         (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
       ])
@@ -225,6 +228,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   }) {
     final normalizedQuery = queryString.trim().toLowerCase();
     final query = select(db.meal)
+      ..where((tbl) => tbl.purpose.equals('meal'))
       ..where((tbl) => tbl.name.like('%$normalizedQuery%'))
       ..orderBy([
         (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
@@ -252,6 +256,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
               db.mealIngredients.mealId.equalsExp(db.meal.id),
             ),
           ])
+          ..where(db.meal.purpose.equals('meal'))
           ..where(db.mealIngredients.ingredientId.isIn(distinctIngredientIds))
           ..groupBy(
             [db.meal.id],
@@ -314,6 +319,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
 
   Future<List<MealData>> searchMealsByName(String queryString) {
     final query = select(db.meal)
+      ..where((tbl) => tbl.purpose.equals('meal'))
       ..where((tbl) => tbl.name.like('%$queryString%'))
       ..orderBy([(m) => OrderingTerm(expression: m.updatedAt)])
       ..limit(10);

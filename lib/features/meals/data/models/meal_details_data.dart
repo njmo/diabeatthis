@@ -1,3 +1,4 @@
+import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 
 class MealDetailsData {
@@ -9,6 +10,7 @@ class MealDetailsData {
   final List<MealStatusHistoryEntryData> statusHistory;
   final MealCopySourceData? copySource;
   final List<MealCopyUsageData> copyUsages;
+  final List<MealLowTreatmentDetailsData> lowTreatments;
 
   const MealDetailsData({
     required this.meal,
@@ -19,7 +21,32 @@ class MealDetailsData {
     required this.statusHistory,
     this.copySource,
     this.copyUsages = const [],
+    this.lowTreatments = const [],
   });
+
+  MealDetailsData copyWith({
+    MealRecordData? meal,
+    MealAdvisorDecisionData? advisorDecision,
+    List<MealIngredientDetailsData>? ingredients,
+    MealSnapshotDetailsData? plannedSnapshot,
+    MealSnapshotDetailsData? consumedSnapshot,
+    List<MealStatusHistoryEntryData>? statusHistory,
+    MealCopySourceData? copySource,
+    List<MealCopyUsageData>? copyUsages,
+    List<MealLowTreatmentDetailsData>? lowTreatments,
+  }) {
+    return MealDetailsData(
+      meal: meal ?? this.meal,
+      advisorDecision: advisorDecision ?? this.advisorDecision,
+      ingredients: ingredients ?? this.ingredients,
+      plannedSnapshot: plannedSnapshot ?? this.plannedSnapshot,
+      consumedSnapshot: consumedSnapshot ?? this.consumedSnapshot,
+      statusHistory: statusHistory ?? this.statusHistory,
+      copySource: copySource ?? this.copySource,
+      copyUsages: copyUsages ?? this.copyUsages,
+      lowTreatments: lowTreatments ?? this.lowTreatments,
+    );
+  }
 
   bool get hasConsumedData => consumedSnapshot != null;
 
@@ -42,6 +69,14 @@ class MealDetailsData {
   double get addOnNetCarbsG {
     return ingredients.fold(0.0, (sum, ingredient) {
       return sum + ingredient.addOnNetCarbsContribution;
+    });
+  }
+
+  bool get hasLowTreatments => lowTreatments.isNotEmpty;
+
+  double get lowTreatmentNetCarbsG {
+    return lowTreatments.fold(0.0, (sum, treatment) {
+      return sum + treatment.totalNetCarbsG;
     });
   }
 
@@ -111,6 +146,30 @@ class MealDetailsData {
   }
 }
 
+class MealLowTreatmentDetailsData {
+  final MealRecordData meal;
+  final LowTreatmentContext context;
+  final List<MealIngredientDetailsData> ingredients;
+
+  const MealLowTreatmentDetailsData({
+    required this.meal,
+    required this.context,
+    required this.ingredients,
+  });
+
+  double get totalCarbsG {
+    return ingredients.fold(0.0, (sum, ingredient) {
+      return sum + ingredient.consumedCarbsContribution;
+    });
+  }
+
+  double get totalNetCarbsG {
+    return ingredients.fold(0.0, (sum, ingredient) {
+      return sum + ingredient.consumedNetCarbsContribution;
+    });
+  }
+}
+
 class MealCopySourceData {
   final int id;
   final String name;
@@ -137,6 +196,7 @@ class MealCopyUsageData {
 class MealRecordData {
   final int id;
   final String name;
+  final String purpose;
   final String status;
   final DateTime plannedAt;
   final DateTime? summarizedAt;
@@ -150,6 +210,7 @@ class MealRecordData {
   const MealRecordData({
     required this.id,
     required this.name,
+    this.purpose = 'meal',
     required this.status,
     required this.plannedAt,
     required this.summarizedAt,
@@ -180,6 +241,10 @@ class MealRecordData {
 
   bool get hasAddOnStatus {
     return status == 'eating-extra' || status == 'eaten-extra';
+  }
+
+  bool get isLowTreatment {
+    return purpose == 'lowTreatment';
   }
 
   domain.Meal toDomainTreatment() {

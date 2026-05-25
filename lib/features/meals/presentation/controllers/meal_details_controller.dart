@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/domain/use_cases/analyze_meal_use_case.dart';
+import '../../data/domain/use_cases/load_low_treatments_for_meal_use_case.dart';
 import '../../data/domain/use_cases/load_meal_details_use_case.dart';
 import '../models/meal_page_state.dart';
 
@@ -11,7 +12,15 @@ class MealDetailsControllerNotifier extends _$MealDetailsControllerNotifier {
   @override
   Future<MealPageState> build(int mealId) async {
     final detailsUseCase = ref.read(loadMealDetailsUseCaseProvider);
-    final details = await detailsUseCase.call(mealId);
+    final baseDetails = await detailsUseCase.call(mealId);
+    if (baseDetails.meal.isLowTreatment) {
+      throw const LowTreatmentMealPageException();
+    }
+
+    final lowTreatments = await ref.watch(
+      mealLowTreatmentsForMealUseCaseProvider(mealId).future,
+    );
+    final details = baseDetails.copyWith(lowTreatments: lowTreatments);
 
     final analysisUseCase = ref.read(analyzeMealUseCaseProvider);
     try {
@@ -32,5 +41,14 @@ class MealDetailsControllerNotifier extends _$MealDetailsControllerNotifier {
     final current = state.value;
     if (current == null) return;
     state = AsyncData(current.copyWith(clearSelectedTimestamp: true));
+  }
+}
+
+class LowTreatmentMealPageException implements Exception {
+  const LowTreatmentMealPageException();
+
+  @override
+  String toString() {
+    return 'Dosłodzenia są widoczne w powiązanym posiłku.';
   }
 }

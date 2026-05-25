@@ -120,6 +120,7 @@ String timelineEventLabel(MealTimelineEventData event) {
       event.label == 'Meal eaten'
           ? 'Posiłek z aplikacji'
           : 'Posiłek w aplikacji',
+    MealTimelineEventType.lowTreatment => 'Dosłodzenie',
     MealTimelineEventType.nightscoutMeal => 'Posiłek z Nightscout',
     MealTimelineEventType.deviceStatus => 'Status urządzenia',
     MealTimelineEventType.tempTarget => 'Temp target',

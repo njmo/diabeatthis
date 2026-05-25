@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/domain/model/low_treatment_context.dart';
+import '../formatters/low_treatment_context_formatters.dart';
 
 class LowTreatmentReasonSelector extends StatelessWidget {
   const LowTreatmentReasonSelector({
@@ -98,7 +99,7 @@ class LowTreatmentReasonChoiceChip extends StatelessWidget {
             ? colorScheme.onSecondaryContainer
             : colorScheme.onSurfaceVariant,
       ),
-      label: Text(_label(reason)),
+      label: Text(lowTreatmentReasonLabel(reason)),
       selected: selected,
       onSelected: (_) => onSelected(),
       showCheckmark: false,
@@ -131,20 +132,6 @@ class LowTreatmentReasonChoiceChip extends StatelessWidget {
       LowTreatmentReason.symptoms => Icons.arrow_downward,
       LowTreatmentReason.manual => Icons.edit_outlined,
       LowTreatmentReason.other => Icons.more_horiz,
-    };
-  }
-
-  String _label(LowTreatmentReason reason) {
-    return switch (reason) {
-      LowTreatmentReason.carbsReq => 'Sugestia AAPS',
-      LowTreatmentReason.lowGlucose => 'Niski cukier',
-      LowTreatmentReason.fallingTrend => 'Szybki spadek',
-      LowTreatmentReason.bgMismatch => 'Błąd sensora',
-      LowTreatmentReason.unplannedActivity => 'Aktywność',
-      LowTreatmentReason.plannedActivity => 'Aktywność',
-      LowTreatmentReason.symptoms => 'Niski cukier',
-      LowTreatmentReason.manual => 'Ręcznie',
-      LowTreatmentReason.other => 'Inny',
     };
   }
 }

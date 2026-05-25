@@ -10,6 +10,7 @@ import '../widgets/meal_details/meal_basic_info_section.dart';
 import '../widgets/meal_details/meal_charts_section.dart';
 import '../widgets/meal_details/meal_copy_relations_section.dart';
 import '../widgets/meal_details/meal_header.dart';
+import '../widgets/meal_details/meal_low_treatments_section.dart';
 import '../widgets/meal_details/meal_nutrition_analysis_section.dart';
 import '../widgets/meal_details/meal_snapshots_section.dart';
 import '../widgets/meal_details/meal_transition_analysis_section.dart';
@@ -56,8 +57,9 @@ class MealPageBody extends ConsumerWidget {
         MealHeader(state: state),
         const SizedBox(height: 12),
         MealBasicInfoSection(details: details),
-        MealCopyRelationsSection(details: details),
         MealNutritionAnalysisSection(details: details),
+        MealCopyRelationsSection(details: details),
+        MealLowTreatmentsSection(details: details),
         MealAdvisorResultSection(details: details),
         if (details.meal.isEaten)
           MealChartsSection(

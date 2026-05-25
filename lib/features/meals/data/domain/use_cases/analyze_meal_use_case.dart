@@ -172,6 +172,7 @@ class AnalyzeMealUseCase {
           mealId: meal.mealId,
         );
       }),
+      ...details.lowTreatments.map(_lowTreatmentEvent),
     ]..sort((a, b) => a.timestamp.compareTo(b.timestamp));
     return events;
   }
@@ -202,6 +203,33 @@ class AnalyzeMealUseCase {
     }
 
     return historyEvents;
+  }
+
+  MealTimelineEventData _lowTreatmentEvent(
+    MealLowTreatmentDetailsData treatment,
+  ) {
+    return MealTimelineEventData(
+      timestamp: treatment.meal.analysisTime,
+      type: MealTimelineEventType.lowTreatment,
+      label: treatment.meal.name,
+      value: _lowTreatmentValue(treatment),
+    );
+  }
+
+  String _lowTreatmentValue(MealLowTreatmentDetailsData treatment) {
+    final ingredients = treatment.ingredients
+        .map(_lowTreatmentIngredientValue)
+        .join(', ');
+    final total = '${_formatNumber(treatment.totalNetCarbsG)} g netto';
+
+    if (ingredients.isEmpty) {
+      return total;
+    }
+    return '$ingredients • $total';
+  }
+
+  String _lowTreatmentIngredientValue(MealIngredientDetailsData ingredient) {
+    return '${ingredient.ingredientName} ${_formatNumber(ingredient.consumedTotalGrams)} g';
   }
 
   MealTimelineEventData _treatmentEvent(Treatment treatment) {
@@ -278,5 +306,12 @@ class AnalyzeMealUseCase {
     return wbtKcal > 100
         ? const Duration(hours: 3)
         : const Duration(minutes: 90);
+  }
+
+  String _formatNumber(double value) {
+    if (value == value.roundToDouble()) {
+      return value.round().toString();
+    }
+    return value.toStringAsFixed(1);
   }
 }

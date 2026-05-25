@@ -221,6 +221,7 @@ enum MealTimelineEventType {
   correction,
   activity,
   localMeal,
+  lowTreatment,
   nightscoutMeal,
   deviceStatus,
   tempTarget,

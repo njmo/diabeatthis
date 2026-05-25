@@ -18,62 +18,66 @@ class MealHeader extends StatelessWidget {
     final details = state.details;
     final summary = details.preferredSummarySnapshot;
     final stats = state.analysis?.glucoseStats;
+    final metrics = [
+      MealMetricTileData(
+        icon: Icons.monitor_heart_outlined,
+        label: 'Szczyt glikemii',
+        value: formatMgdl(stats?.peakGlucose),
+      ),
+      MealMetricTileData(
+        icon: Icons.timer_outlined,
+        label: 'Czas do szczytu',
+        value: formatDurationOffset(stats?.timeToPeak),
+      ),
+      MealMetricTileData(
+        icon: Icons.timeline,
+        label: 'Średnia glikemia',
+        value: formatMgdl(stats?.averageGlucose?.round()),
+      ),
+      MealMetricTileData(
+        icon: Icons.vaccines_outlined,
+        label: 'Insulina łącznie',
+        value: formatUnits(
+          state.analysis?.totalInsulinUnits ?? details.totalInsulinUnits,
+        ),
+      ),
+      MealMetricTileData(
+        icon: Icons.grain,
+        label: 'Węglowodany',
+        value: formatGrams(summary?.totalCarbsG),
+      ),
+      if (details.hasLowTreatments)
+        MealMetricTileData(
+          icon: Icons.bloodtype_outlined,
+          label: 'Dosłodzono',
+          value: formatGrams(details.lowTreatmentNetCarbsG),
+        ),
+      MealMetricTileData(
+        icon: Icons.more_time,
+        label: 'Węglowodany przedłużone',
+        value: formatGrams(
+          details.advisorDecision?.extendedCarbsGrams.toDouble(),
+        ),
+      ),
+      if (details.hasAddOn)
+        MealMetricTileData(
+          icon: Icons.add_circle_outline,
+          label: 'Dokładka',
+          value: formatSignedGrams(details.addOnNetCarbsG),
+        ),
+      MealMetricTileData(
+        icon: Icons.check_circle_outline,
+        label: 'Czas w zakresie',
+        value: formatPercent(stats?.timeInRangePercent),
+      ),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         MealAnalysisProgressSummary(state: state),
         const SizedBox(height: 12),
-        MealMetricGrid(
-          wideColumns: 3,
-          metrics: [
-            MealMetricTileData(
-              icon: Icons.monitor_heart_outlined,
-              label: 'Szczyt glikemii',
-              value: formatMgdl(stats?.peakGlucose),
-            ),
-            MealMetricTileData(
-              icon: Icons.timer_outlined,
-              label: 'Czas do szczytu',
-              value: formatDurationOffset(stats?.timeToPeak),
-            ),
-            MealMetricTileData(
-              icon: Icons.timeline,
-              label: 'Średnia glikemia',
-              value: formatMgdl(stats?.averageGlucose?.round()),
-            ),
-            MealMetricTileData(
-              icon: Icons.vaccines_outlined,
-              label: 'Insulina łącznie',
-              value: formatUnits(
-                state.analysis?.totalInsulinUnits ?? details.totalInsulinUnits,
-              ),
-            ),
-            MealMetricTileData(
-              icon: Icons.grain,
-              label: 'Węglowodany',
-              value: formatGrams(summary?.totalCarbsG),
-            ),
-            MealMetricTileData(
-              icon: Icons.more_time,
-              label: 'Węglowodany przedłużone',
-              value: formatGrams(
-                details.advisorDecision?.extendedCarbsGrams.toDouble(),
-              ),
-            ),
-            if (details.hasAddOn)
-              MealMetricTileData(
-                icon: Icons.add_circle_outline,
-                label: 'Dokładka',
-                value: formatSignedGrams(details.addOnNetCarbsG),
-              ),
-            MealMetricTileData(
-              icon: Icons.check_circle_outline,
-              label: 'Czas w zakresie',
-              value: formatPercent(stats?.timeInRangePercent),
-            ),
-          ],
-        ),
+        MealMetricGrid(wideColumns: 3, metrics: metrics),
       ],
     );
   }
@@ -89,6 +93,9 @@ class MealAnalysisProgressSummary extends StatelessWidget {
     final details = state.details;
     final analysis = state.analysis;
     final chips = [if (details.isCopied) const HeaderStatusChip.copied()];
+    if (details.hasLowTreatments) {
+      chips.add(const HeaderStatusChip.lowTreatment());
+    }
     if (!details.meal.isEaten) {
       chips.add(
         HeaderStatusChip(
@@ -96,9 +103,7 @@ class MealAnalysisProgressSummary extends StatelessWidget {
           label: mealStatusLabel(details.meal.status),
         ),
       );
-      if (details.hasAddOn) {
-        chips.add(const HeaderStatusChip.addOn());
-      }
+      if (details.hasAddOn) chips.add(const HeaderStatusChip.addOn());
       return MealHeaderStatusRow(chips: chips);
     }
     if (analysis == null) {
@@ -108,9 +113,7 @@ class MealAnalysisProgressSummary extends StatelessWidget {
           label: 'Analiza oczekuje na dane',
         ),
       );
-      if (details.hasAddOn) {
-        chips.add(const HeaderStatusChip.addOn());
-      }
+      if (details.hasAddOn) chips.add(const HeaderStatusChip.addOn());
       return MealHeaderStatusRow(chips: chips);
     }
     if (!analysis.hasFullGlucoseWindow) {
@@ -121,9 +124,7 @@ class MealAnalysisProgressSummary extends StatelessWidget {
           detail: 'zbieranie do ${mealTime(analysis.expectedChartEnd)}',
         ),
       );
-      if (details.hasAddOn) {
-        chips.add(const HeaderStatusChip.addOn());
-      }
+      if (details.hasAddOn) chips.add(const HeaderStatusChip.addOn());
       return MealHeaderStatusRow(chips: chips);
     }
     chips.add(
@@ -142,9 +143,7 @@ class MealAnalysisProgressSummary extends StatelessWidget {
     if (_shouldShowWaitTimeIgnoredChip(details.advisorDecision)) {
       chips.add(const HeaderStatusChip.waitTimeIgnored());
     }
-    if (details.hasAddOn) {
-      chips.add(const HeaderStatusChip.addOn());
-    }
+    if (details.hasAddOn) chips.add(const HeaderStatusChip.addOn());
     return MealHeaderStatusRow(chips: chips);
   }
 }
@@ -161,7 +160,7 @@ class MealHeaderStatusRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(spacing: 8, runSpacing: 8, children: chips);
+    return Wrap(spacing: 4, runSpacing: 4, children: chips);
   }
 }
 
@@ -182,6 +181,11 @@ class HeaderStatusChip extends StatelessWidget {
       label = 'Dokładka',
       detail = 'uwzględniona w posiłku';
 
+  const HeaderStatusChip.lowTreatment({super.key})
+    : icon = Icons.bloodtype_outlined,
+      label = 'Dosłodzono',
+      detail = null;
+
   const HeaderStatusChip.copied({super.key})
     : icon = Icons.content_copy,
       label = 'Skopiowany',
@@ -201,6 +205,9 @@ class HeaderStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = detail == null ? label : '$label • $detail';
     return Chip(
+      visualDensity: VisualDensity.compact,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      labelPadding: const EdgeInsets.only(right: 4),
       avatar: Icon(
         icon,
         size: 18,
