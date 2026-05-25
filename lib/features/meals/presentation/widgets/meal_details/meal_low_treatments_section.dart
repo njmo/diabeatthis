@@ -21,16 +21,24 @@ class MealLowTreatmentsSection extends StatelessWidget {
       initiallyExpanded: true,
       children: [
         for (final treatment in details.lowTreatments)
-          MealLowTreatmentTile(treatment: treatment),
+          MealLowTreatmentTile(
+            treatment: treatment,
+            parentMealTime: details.meal.eatenOrPlannedAt,
+          ),
       ],
     );
   }
 }
 
 class MealLowTreatmentTile extends StatelessWidget {
-  const MealLowTreatmentTile({super.key, required this.treatment});
+  const MealLowTreatmentTile({
+    super.key,
+    required this.treatment,
+    required this.parentMealTime,
+  });
 
   final MealLowTreatmentDetailsData treatment;
+  final DateTime parentMealTime;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +49,7 @@ class MealLowTreatmentTile extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.bloodtype_outlined),
-      title: Text(mealTime(treatment.meal.plannedAt)),
+      title: Text(_timeLabel()),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 4),
         child: Column(
@@ -61,6 +69,12 @@ class MealLowTreatmentTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _timeLabel() {
+    final treatmentTime = treatment.meal.eatenOrPlannedAt;
+    final delay = treatmentTime.difference(parentMealTime);
+    return '${mealTime(treatmentTime)} • ${formatDelayAfterMeal(delay)}';
   }
 
   String _ingredientsLabel() {

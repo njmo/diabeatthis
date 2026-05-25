@@ -84,11 +84,15 @@ class MealDetailsData {
     if (lowTreatments.isEmpty) return null;
 
     final firstTreatment = lowTreatments.reduce((earliest, treatment) {
-      return treatment.meal.analysisTime.isBefore(earliest.meal.analysisTime)
+      return treatment.meal.eatenOrPlannedAt.isBefore(
+            earliest.meal.eatenOrPlannedAt,
+          )
           ? treatment
           : earliest;
     });
-    return firstTreatment.meal.analysisTime.difference(meal.analysisTime);
+    return firstTreatment.meal.eatenOrPlannedAt.difference(
+      meal.eatenOrPlannedAt,
+    );
   }
 
   List<MealStatusTimelineEntryData> get statusTimeline {
@@ -233,7 +237,9 @@ class MealRecordData {
     required this.isSynced,
   });
 
-  DateTime get analysisTime => summarizedAt ?? plannedAt;
+  DateTime get eatenOrPlannedAt => summarizedAt ?? plannedAt;
+
+  DateTime get analysisTime => eatenOrPlannedAt;
 
   DateTime get currentStatusTimestamp {
     if (summarizedAt != null &&
