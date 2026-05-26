@@ -137,6 +137,7 @@ class IngredientSearch extends HookConsumerWidget {
                     selectedIngredient.matchesSearchResult(ingredient);
                 return IngredientSearchTile(
                   name: ingredient.name,
+                  brand: ingredient.brand,
                   kcalPer100g: ingredient.kcalPer100g,
                   isReference: ingredient.isReference,
                   selected: selected,
@@ -158,6 +159,7 @@ class IngredientSearch extends HookConsumerWidget {
 
 class IngredientSearchTile extends StatelessWidget {
   final String name;
+  final String? brand;
   final double? kcalPer100g;
   final bool isReference;
   final bool selected;
@@ -165,6 +167,7 @@ class IngredientSearchTile extends StatelessWidget {
 
   const IngredientSearchTile({
     required this.name,
+    required this.brand,
     required this.kcalPer100g,
     required this.isReference,
     required this.selected,
@@ -175,6 +178,7 @@ class IngredientSearchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final brandLabel = _brandLabel(brand);
     final kcalLabel = kcalPer100g == null ? '-' : kcalPer100g!.round();
 
     return Material(
@@ -209,11 +213,23 @@ class IngredientSearchTile extends StatelessWidget {
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
-        subtitle: Text('$kcalLabel kcal / 100 g'),
+        subtitle: Text(
+          '$brandLabel • $kcalLabel kcal / 100 g',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         trailing: selected ? const Icon(Icons.check_circle) : null,
       ),
     );
   }
+}
+
+String _brandLabel(String? brand) {
+  final normalized = brand?.trim();
+  if (normalized == null || normalized.isEmpty) {
+    return 'Bez marki';
+  }
+  return normalized;
 }
 
 class IngredientSearchActions extends StatelessWidget {

@@ -34,6 +34,11 @@ class IngredientMultiPickerResultList extends StatelessWidget {
             itemBuilder: (context, index) {
               final ingredient = items[index];
               final selected = selectedIngredientIds.contains(ingredient.id);
+              final brand = ingredient.brand?.trim();
+              final brandLabel = brand == null || brand.isEmpty
+                  ? 'Bez marki'
+                  : brand;
+              final kcalLabel = ingredient.kcalPer100g?.round() ?? '-';
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(
@@ -41,7 +46,9 @@ class IngredientMultiPickerResultList extends StatelessWidget {
                 ),
                 title: Text(ingredient.name),
                 subtitle: Text(
-                  '${ingredient.kcalPer100g?.round() ?? '-'} kcal / 100 g',
+                  '$brandLabel • $kcalLabel kcal / 100 g',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 onTap: () => onToggleIngredient(ingredient),
               );

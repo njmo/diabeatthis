@@ -50,6 +50,23 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     return query.watch();
   }
 
+  Future<List<IngredientData>> searchIngredientsByQuery({
+    required String queryString,
+    required int limit,
+  }) {
+    final normalizedQuery = _normalizeSearchTerm(queryString);
+    final query = select(db.ingredient)
+      ..where(
+        (tbl) =>
+            tbl.name.like('%$normalizedQuery%') |
+            tbl.brand.like('%$normalizedQuery%'),
+      )
+      ..orderBy([(tbl) => OrderingTerm.asc(tbl.name)])
+      ..limit(limit);
+
+    return query.get();
+  }
+
   Future<List<IngredientData>> getLatestIngredients({int limit = 10}) {
     final query = select(db.ingredient)
       ..orderBy([

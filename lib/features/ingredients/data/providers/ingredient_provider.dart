@@ -50,7 +50,10 @@ Future<List<domain.Ingredient>> ingredientsByQuery(
   String query,
 ) async {
   final db = ref.watch(databaseProvider);
-  final ing = await db.ingredientDao.searchIngredientsByName(query, 6).get();
+  final ing = await db.ingredientDao.searchIngredientsByQuery(
+    queryString: query,
+    limit: 6,
+  );
   return ing.map((e) => e.toDomain()).toList();
 }
 
