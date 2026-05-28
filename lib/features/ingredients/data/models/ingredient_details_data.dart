@@ -48,4 +48,18 @@ class IngredientDetailsData {
     required this.usages,
     required this.history,
   });
+
+  IngredientDetailsData copyWith({
+    Ingredient? ingredient,
+    List<IngredientPortionData>? portions,
+    List<IngredientUsageData>? usages,
+    List<IngredientHistoryEntryData>? history,
+  }) {
+    return IngredientDetailsData(
+      ingredient: ingredient ?? this.ingredient,
+      portions: portions ?? this.portions,
+      usages: usages ?? this.usages,
+      history: history ?? this.history,
+    );
+  }
 }

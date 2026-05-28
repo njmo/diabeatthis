@@ -1,26 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
+import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/providers/ingredient_provider.dart';
 
+Future<double?> showIngredientPortionAmountSheet({
+  required BuildContext context,
+}) {
+  return showModalBottomSheet<double>(
+    context: context,
+    useRootNavigator: false,
+    isScrollControlled: true,
+    builder: (_) => const _IngredientPortionAmountSheet(),
+  );
+}
+
+class _IngredientPortionAmountSheet extends ConsumerStatefulWidget {
+  const _IngredientPortionAmountSheet();
+
+  @override
+  ConsumerState<_IngredientPortionAmountSheet> createState() =>
+      _IngredientPortionAmountSheetState();
+}
+
+class _IngredientPortionAmountSheetState
+    extends ConsumerState<_IngredientPortionAmountSheet> {
+  final formKey = GlobalKey<FormState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return KeyboardAwareBottomSheet(
+      header: BottomSheetStepHeader(
+        title: 'Waga porcji',
+        onBack: () => Navigator.of(context).pop(),
+      ),
+      body: IngredientPortionAmountForm(formKey: formKey),
+      actions: FilledButton.icon(
+        onPressed: _save,
+        icon: const Icon(Icons.check),
+        label: const Text('Zapisz porcję'),
+      ),
+    );
+  }
+
+  void _save() {
+    if (!(formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+    Navigator.of(context).pop(ref.read(ingredientPortionAmountDraftProvider));
+  }
+}
+
 class IngredientPortionAmountForm extends ConsumerWidget {
-  const IngredientPortionAmountForm({super.key});
+  const IngredientPortionAmountForm({super.key, this.formKey});
+
+  final GlobalKey<FormState>? formKey;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final amountNotifier = ref.watch(
-      ingredientPortionAmountDraftProvider.notifier,
-    );
-    final rawAmount = ref.watch(ingredientPortionAmountDraftProvider);
-    final formKey = ref.watch(mealIngredientFormKeyProvider);
-    final amount = rawAmount;
+    final amount = ref.watch(ingredientPortionAmountDraftProvider);
+    final effectiveFormKey =
+        formKey ?? ref.watch(mealIngredientFormKeyProvider);
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Form(
-        key: formKey,
+        key: effectiveFormKey,
         autovalidateMode: AutovalidateMode.always,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -41,7 +89,9 @@ class IngredientPortionAmountForm extends ConsumerWidget {
                       options: IngredientPortionAmountOptions.options,
                       valueLabel: (value) => '${value.formatted} g',
                       onChanged: (value) {
-                        amountNotifier.setValue(value);
+                        ref
+                            .read(ingredientPortionAmountDraftProvider.notifier)
+                            .setValue(value);
                         field.didChange(value);
                       },
                     ),
@@ -95,7 +145,7 @@ class IngredientPortionAmountHeader extends StatelessWidget {
                   Text('Waga jednej porcji', style: textTheme.titleMedium),
                   const SizedBox(height: 4),
                   Text(
-                    'Określ ile gramów ma porcja, którą dodajesz.',
+                    'Określ ile gramów ma porcja.',
                     style: textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),

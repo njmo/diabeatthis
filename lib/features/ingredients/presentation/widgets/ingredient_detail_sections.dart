@@ -33,8 +33,13 @@ class IngredientHistorySection extends StatelessWidget {
 
 class IngredientPortionsSection extends StatelessWidget {
   final List<IngredientPortionData> portions;
+  final ValueChanged<IngredientPortionData>? onEdit;
 
-  const IngredientPortionsSection({super.key, required this.portions});
+  const IngredientPortionsSection({
+    super.key,
+    required this.portions,
+    this.onEdit,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +63,9 @@ class IngredientPortionsSection extends StatelessWidget {
               title: portion.name,
               subtitle: portion.unitHint,
               trailing: '${_formatNumber(portion.gramsPerPortion)} g',
+              onTap: onEdit == null ? null : () => onEdit!(portion),
+              trailingIcon: onEdit == null ? null : Icons.edit_outlined,
+              trailingTooltip: 'Edytuj porcję',
             );
           }),
       ],
@@ -160,6 +168,8 @@ class _ListSurface extends StatelessWidget {
   final String subtitle;
   final String trailing;
   final VoidCallback? onTap;
+  final IconData? trailingIcon;
+  final String? trailingTooltip;
 
   const _ListSurface({
     required this.leading,
@@ -167,6 +177,8 @@ class _ListSurface extends StatelessWidget {
     required this.subtitle,
     required this.trailing,
     this.onTap,
+    this.trailingIcon,
+    this.trailingTooltip,
   });
 
   @override
@@ -183,6 +195,8 @@ class _ListSurface extends StatelessWidget {
         trailing: _ListSurfaceTrailing(
           label: trailing,
           hasAction: onTap != null,
+          icon: trailingIcon,
+          tooltip: trailingTooltip,
         ),
       ),
     );
@@ -192,8 +206,15 @@ class _ListSurface extends StatelessWidget {
 class _ListSurfaceTrailing extends StatelessWidget {
   final String label;
   final bool hasAction;
+  final IconData? icon;
+  final String? tooltip;
 
-  const _ListSurfaceTrailing({required this.label, required this.hasAction});
+  const _ListSurfaceTrailing({
+    required this.label,
+    required this.hasAction,
+    this.icon,
+    this.tooltip,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -202,16 +223,21 @@ class _ListSurfaceTrailing extends StatelessWidget {
       return text;
     }
 
+    final actionIcon = Icon(
+      icon ?? Icons.chevron_right,
+      size: 20,
+      color: Theme.of(context).colorScheme.outline,
+    );
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         text,
         const SizedBox(width: 4),
-        Icon(
-          Icons.chevron_right,
-          size: 20,
-          color: Theme.of(context).colorScheme.outline,
-        ),
+        if (tooltip == null)
+          actionIcon
+        else
+          Tooltip(message: tooltip!, child: actionIcon),
       ],
     );
   }

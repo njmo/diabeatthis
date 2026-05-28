@@ -108,4 +108,70 @@ void main() {
     expect(result, hasLength(1));
     expect(result.single.brand, 'Fantasia');
   });
+
+  test('portion amount update changes grams per portion', () async {
+    final ingredient = await db
+        .into(db.ingredient)
+        .insertReturning(
+          IngredientCompanion.insert(
+            name: 'Jogurt',
+            carbsPer100g: 5,
+            fatPer100g: 2,
+            fiberPer100g: 0,
+            proteinPer100g: 4,
+            nutritionConfidence: 0.8,
+          ),
+        );
+    final portion = await db
+        .into(db.portion)
+        .insertReturning(PortionCompanion.insert(name: 'kubek', unitHint: 'g'));
+    await db
+        .into(db.ingredientPortions)
+        .insert(
+          IngredientPortionsCompanion.insert(
+            ingredientId: ingredient.id,
+            portionId: portion.id,
+            gramsPerPortion: 150,
+            isSynced: const Value(true),
+          ),
+        );
+
+    await db.portionDao.updateIngredientPortionAmount(
+      ingredientId: ingredient.id,
+      portionId: portion.id,
+      gramsPerPortion: 180,
+    );
+
+    final grams = await db.portionDao.getGramsPerPortion(
+      ingredient.id,
+      portion.id,
+    );
+    final ingredientPortion =
+        await (db.select(db.ingredientPortions)..where(
+              (tbl) =>
+                  tbl.ingredientId.equals(ingredient.id) &
+                  tbl.portionId.equals(portion.id),
+            ))
+            .getSingle();
+
+    expect(grams, 180);
+    expect(ingredientPortion.isSynced, false);
+
+    await (db.update(db.ingredientPortions)..where(
+          (tbl) =>
+              tbl.ingredientId.equals(ingredient.id) &
+              tbl.portionId.equals(portion.id),
+        ))
+        .write(const IngredientPortionsCompanion(isSynced: Value(true)));
+
+    final syncedIngredientPortion =
+        await (db.select(db.ingredientPortions)..where(
+              (tbl) =>
+                  tbl.ingredientId.equals(ingredient.id) &
+                  tbl.portionId.equals(portion.id),
+            ))
+            .getSingle();
+
+    expect(syncedIngredientPortion.isSynced, true);
+  });
 }

@@ -65,4 +65,28 @@ class PortionDao extends DatabaseAccessor<DatabaseImpl> with _$PortionDaoMixin {
     final result = await query.getSingleOrNull();
     return result?.gramsPerPortion;
   }
+
+  Future<void> updateIngredientPortionAmount({
+    required int ingredientId,
+    required int portionId,
+    required double gramsPerPortion,
+  }) async {
+    final updatedRows =
+        await (update(db.ingredientPortions)..where(
+              (tbl) =>
+                  tbl.ingredientId.equals(ingredientId) &
+                  tbl.portionId.equals(portionId),
+            ))
+            .write(
+              IngredientPortionsCompanion(
+                gramsPerPortion: Value(gramsPerPortion),
+              ),
+            );
+
+    if (updatedRows == 0) {
+      throw StateError(
+        'Ingredient portion $ingredientId/$portionId was not found',
+      );
+    }
+  }
 }

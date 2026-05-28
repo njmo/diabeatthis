@@ -49,4 +49,21 @@ class UpdateIngredientDetailsUseCase {
       brand: existing.brand,
     );
   }
+
+  Future<void> updatePortionAmount({
+    required int ingredientId,
+    required int portionId,
+    required double gramsPerPortion,
+  }) async {
+    if (gramsPerPortion <= 0) {
+      throw ArgumentError('Portion amount must be greater than zero');
+    }
+
+    final db = ref.read(databaseProvider);
+    await db.portionDao.updateIngredientPortionAmount(
+      ingredientId: ingredientId,
+      portionId: portionId,
+      gramsPerPortion: gramsPerPortion,
+    );
+  }
 }

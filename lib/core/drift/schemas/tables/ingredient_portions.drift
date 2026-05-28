@@ -13,6 +13,18 @@ CREATE TABLE ingredient_portions (
   PRIMARY KEY (ingredient_id, portion_id)
 );
 
+CREATE TRIGGER ingredient_portions_any_change_marks_unsynced
+AFTER UPDATE OF grams_per_portion ON ingredient_portions
+FOR EACH ROW
+WHEN OLD.grams_per_portion IS NOT NEW.grams_per_portion
+  AND NEW.is_synced <> 0
+BEGIN
+  UPDATE ingredient_portions
+  SET is_synced = 0
+  WHERE ingredient_id = NEW.ingredient_id
+    AND portion_id = NEW.portion_id;
+END;
+
 insertIngredientPortion:
   INSERT OR IGNORE INTO ingredient_portions (
     ingredient_id,

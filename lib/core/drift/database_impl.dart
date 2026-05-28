@@ -38,7 +38,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -63,6 +63,9 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       if (from < 10) {
         await m.createTable(quickLowTreatmentItem);
       }
+      if (from < 11) {
+        await customStatement(createIngredientPortionsUnsyncedTrigger);
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -70,6 +73,10 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
         'DROP TRIGGER IF EXISTS ingredient_nutrition_changed',
       );
       await customStatement(createIngredientNutritionChangedTrigger);
+      await customStatement(
+        'DROP TRIGGER IF EXISTS ingredient_portions_any_change_marks_unsynced',
+      );
+      await customStatement(createIngredientPortionsUnsyncedTrigger);
     },
   );
 
@@ -115,5 +122,19 @@ BEGIN
     OLD.protein_per_100g,
     OLD.nutrition_confidence
   );
+END;
+''';
+
+const createIngredientPortionsUnsyncedTrigger = '''
+CREATE TRIGGER ingredient_portions_any_change_marks_unsynced
+AFTER UPDATE OF grams_per_portion ON ingredient_portions
+FOR EACH ROW
+WHEN OLD.grams_per_portion IS NOT NEW.grams_per_portion
+  AND NEW.is_synced <> 0
+BEGIN
+  UPDATE ingredient_portions
+  SET is_synced = 0
+  WHERE ingredient_id = NEW.ingredient_id
+    AND portion_id = NEW.portion_id;
 END;
 ''';

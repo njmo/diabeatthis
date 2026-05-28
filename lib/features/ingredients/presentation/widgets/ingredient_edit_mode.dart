@@ -1,23 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../meals/data/providers/add_ingredients_provider.dart';
 import 'ingredient_form.dart';
 
-class IngredientEditMode extends ConsumerWidget {
-  final bool isSaving;
-  final VoidCallback onCancel;
-  final Future<void> Function() onSave;
-
-  const IngredientEditMode({
-    super.key,
-    required this.isSaving,
-    required this.onCancel,
-    required this.onSave,
-  });
+class IngredientEditMode extends StatelessWidget {
+  const IngredientEditMode({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -41,41 +30,9 @@ class IngredientEditMode extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             const IngredientForm(showReferenceToggle: false),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: isSaving ? null : onCancel,
-                  icon: const Icon(Icons.close),
-                  label: const Text('Anuluj'),
-                ),
-                const SizedBox(width: 12),
-                FilledButton.icon(
-                  onPressed: isSaving ? null : () => _save(ref),
-                  icon: isSaving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save),
-                  label: const Text('Zapisz'),
-                ),
-              ],
-            ),
           ],
         ),
       ),
     );
-  }
-
-  Future<void> _save(WidgetRef ref) async {
-    final formKey = ref.read(mealIngredientFormKeyProvider);
-    if (!(formKey.currentState?.validate() ?? false)) {
-      return;
-    }
-
-    await onSave();
   }
 }
