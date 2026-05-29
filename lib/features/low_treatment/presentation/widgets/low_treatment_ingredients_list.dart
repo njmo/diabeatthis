@@ -13,7 +13,9 @@ class LowTreatmentIngredientsList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ingredients = ref.watch(
       lowTreatmentContextControllerProvider.select(
-        (state) => state.mealIngredients,
+        (state) =>
+            state.whenOrNull(data: (value) => value.mealIngredients) ??
+            const <MealIngredientsDraft>[],
       ),
     );
     final controller = ref.read(lowTreatmentContextControllerProvider.notifier);

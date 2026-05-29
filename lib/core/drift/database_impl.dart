@@ -38,7 +38,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -65,6 +65,12 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       }
       if (from < 11) {
         await customStatement(createIngredientPortionsUnsyncedTrigger);
+      }
+      if (from < 12) {
+        await m.addColumn(
+          lowTreatmentContext,
+          lowTreatmentContext.relatedActivityLogId,
+        );
       }
     },
     beforeOpen: (details) async {

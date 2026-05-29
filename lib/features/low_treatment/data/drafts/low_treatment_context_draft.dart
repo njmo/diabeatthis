@@ -11,6 +11,7 @@ abstract class LowTreatmentContextDraft with _$LowTreatmentContextDraft {
     int? mealId,
     required MealDraft meal,
     int? relatedMealId,
+    int? relatedActivityLogId,
     required LowTreatmentContextSource source,
     double? suggestedCarbs,
     int? suggestedWithinMinutes,

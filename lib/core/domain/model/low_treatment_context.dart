@@ -47,6 +47,7 @@ abstract class LowTreatmentContext with _$LowTreatmentContext {
   const factory LowTreatmentContext({
     required int mealId,
     int? relatedMealId,
+    int? relatedActivityLogId,
     required LowTreatmentContextSource source,
     double? suggestedCarbs,
     int? suggestedWithinMinutes,

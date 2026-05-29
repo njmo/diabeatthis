@@ -98,30 +98,14 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     DateTime before, {
     required Duration maxAge,
   }) {
-    final start = before.subtract(maxAge);
-    final query = select(db.meal)
-      ..where(
-        (tbl) => tbl.plannedAt.isBetweenValues(
-          start.millisecondsSinceEpoch,
-          before.millisecondsSinceEpoch,
-        ),
-      )
-      ..where((tbl) => tbl.purpose.equals('meal'))
-      ..where(
-        (tbl) => tbl.status.isIn([
-          'eaten',
-          'eaten-extra',
-          'eaten-bolused',
-          'summarized',
-        ]),
-      )
-      ..orderBy([
-        (tbl) =>
-            OrderingTerm(expression: tbl.plannedAt, mode: OrderingMode.desc),
-      ])
-      ..limit(1);
+    return _latestMealBeforeQuery(before, maxAge: maxAge).getSingleOrNull();
+  }
 
-    return query.getSingleOrNull();
+  Stream<MealData?> watchLatestMealBefore(
+    DateTime before, {
+    required Duration maxAge,
+  }) {
+    return _latestMealBeforeQuery(before, maxAge: maxAge).watchSingleOrNull();
   }
 
   Future<List<MealData>> getMealsForIngredient(int ingredientId) {
@@ -152,6 +136,34 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       ])
       ..limit(1);
     return query.getSingleOrNull();
+  }
+
+  SimpleSelectStatement<Meal, MealData> _latestMealBeforeQuery(
+    DateTime before, {
+    required Duration maxAge,
+  }) {
+    final start = before.subtract(maxAge);
+    return select(db.meal)
+      ..where(
+        (tbl) => tbl.plannedAt.isBetweenValues(
+          start.millisecondsSinceEpoch,
+          before.millisecondsSinceEpoch,
+        ),
+      )
+      ..where((tbl) => tbl.purpose.equals('meal'))
+      ..where(
+        (tbl) => tbl.status.isIn([
+          'eaten',
+          'eaten-extra',
+          'eaten-bolused',
+          'summarized',
+        ]),
+      )
+      ..orderBy([
+        (tbl) =>
+            OrderingTerm(expression: tbl.plannedAt, mode: OrderingMode.desc),
+      ])
+      ..limit(1);
   }
 
   Stream<MealData?> getNearestMealStream() async* {

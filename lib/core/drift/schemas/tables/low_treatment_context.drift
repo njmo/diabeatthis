@@ -1,10 +1,13 @@
 import 'meal.drift';
+import 'activity_log.drift';
 
 CREATE TABLE low_treatment_context (
   meal_id INTEGER NOT NULL PRIMARY KEY
     REFERENCES meal(id) ON DELETE CASCADE,
   related_meal_id INTEGER
     REFERENCES meal(id) ON DELETE SET NULL,
+  related_activity_log_id INTEGER
+    REFERENCES activity_log(id) ON DELETE SET NULL,
 
   source TEXT NOT NULL CHECK (source IN ('manual', 'aapsSuggestion', 'dashboardAction')),
   suggested_carbs REAL,
@@ -28,7 +31,11 @@ CREATE TABLE low_treatment_context (
   created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
   updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
 
-  is_synced BOOL NOT NULL DEFAULT 0
+  is_synced BOOL NOT NULL DEFAULT 0,
+  CHECK (
+    related_meal_id IS NULL
+    OR related_activity_log_id IS NULL
+  )
 );
 
 CREATE TRIGGER low_treatment_context_set_updated_at

@@ -14,6 +14,7 @@ import '../../../../core/domain/model/treatment_base.dart';
 import '../../data/models/activity_log_analysis_data.dart';
 import '../controllers/activity_log_details_controller.dart';
 import '../widgets/activity_glucose_chart.dart';
+import '../widgets/activity_low_treatments_section.dart';
 
 @RoutePage()
 class ActivityLogPage extends ConsumerWidget {
@@ -88,21 +89,7 @@ class ActivityLogPage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              if (state.analysis != null)
-                _ActivityAnalysisSection(
-                  analysis: state.analysis!,
-                  selectedTimestamp: state.selectedTimestamp,
-                  onTimestampSelected: (timestamp) {
-                    ref
-                        .read(
-                          activityLogDetailsControllerProvider(
-                            activityLogId,
-                          ).notifier,
-                        )
-                        .selectTimestamp(timestamp);
-                  },
-                )
-              else if (log.endedAt == null)
+              if (log.endedAt == null)
                 const DetailSectionCard(
                   title: 'Analiza glikemii',
                   children: [
@@ -113,19 +100,55 @@ class ActivityLogPage extends ConsumerWidget {
                     ),
                   ],
                 )
-              else if (state.analysisError != null)
-                DetailSectionCard(
-                  title: 'Analiza glikemii',
-                  children: [
-                    DetailInfoRow(
-                      icon: Icons.cloud_off,
-                      label: 'Nightscout',
-                      value: state.analysisError!,
-                      valueColor: scheme.error,
-                    ),
-                  ],
+              else
+                state.analysis.when(
+                  loading: () => const DetailSectionCard(
+                    title: 'Analiza glikemii',
+                    children: [
+                      DetailInfoRow(
+                        icon: Icons.insights,
+                        label: 'Status',
+                        value: 'Ładowanie analizy',
+                      ),
+                    ],
+                  ),
+                  error: (error, _) => DetailSectionCard(
+                    title: 'Analiza glikemii',
+                    children: [
+                      DetailInfoRow(
+                        icon: Icons.cloud_off,
+                        label: 'Nightscout',
+                        value: error.toString(),
+                        valueColor: scheme.error,
+                      ),
+                    ],
+                  ),
+                  data: (analysis) {
+                    if (analysis == null) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return _ActivityAnalysisSection(
+                      analysis: analysis,
+                      selectedTimestamp: state.selectedTimestamp,
+                      onTimestampSelected: (timestamp) {
+                        ref
+                            .read(
+                              activityLogDetailsControllerProvider(
+                                activityLogId,
+                              ).notifier,
+                            )
+                            .selectTimestamp(timestamp);
+                      },
+                    );
+                  },
                 ),
               const SizedBox(height: 12),
+              ActivityLowTreatmentsSection(
+                lowTreatments: state.lowTreatments,
+                activityStart: log.startedAt,
+              ),
+              if (state.lowTreatments.isNotEmpty) const SizedBox(height: 12),
               DetailSectionCard(
                 title: 'Czas',
                 children: [

@@ -11,6 +11,7 @@ import '../drafts/activity_draft.dart';
 import '../drafts/activity_log_draft.dart';
 import '../mappers/activity_draft_mapper.dart';
 import '../mappers/activity_log_draft_mapper.dart';
+import '../mappers/activity_log_summary_data_mapper.dart';
 import '../models/activity_log_summary_data.dart';
 
 part 'activity_provider.g.dart';
@@ -202,13 +203,7 @@ Stream<List<ActivityLogSummaryData>> activityLogListStream(
   final db = ref.watch(databaseProvider);
   return db.activityDao
       .watchActivityLogViews(activityId: activityId)
-      .map(
-        (rows) => rows.map((row) {
-          final log = row.readTable(db.activityLog);
-          final activity = row.readTable(db.activity);
-          return _activityLogView(log: log, activity: activity);
-        }).toList(),
-      );
+      .map((rows) => rows.map((row) => row.toSummaryData()).toList());
 }
 
 @riverpod
@@ -230,17 +225,14 @@ Future<void> stopActivity(Ref ref, ActivityLogSummaryData activityLog) async {
 @riverpod
 Stream<ActivityLogSummaryData?> getPendingActivity(Ref ref) {
   final db = ref.watch(databaseProvider);
-  return db.activityDao.watchActiveActivityLogView().map((rows) {
-    if (rows.isEmpty) {
+  return db.activityDao.watchActiveActivityLogView().map((row) {
+    if (row == null) {
       Log.i('getPendingActivityProvider', 'value: null');
       return null;
     }
 
-    final row = rows.first;
-    final log = row.readTable(db.activityLog);
-    final activity = row.readTable(db.activity);
-    Log.i('getPendingActivityProvider', 'value: $log');
-    return _activityLogView(log: log, activity: activity);
+    Log.i('getPendingActivityProvider', 'value: ${row.log}');
+    return row.toSummaryData();
   });
 }
 
@@ -282,22 +274,6 @@ class ActivityDialogController extends _$ActivityDialogController {
         break;
     }
   }
-}
-
-ActivityLogSummaryData _activityLogView({
-  required db.ActivityLogData log,
-  required db.ActivityData activity,
-}) {
-  return ActivityLogSummaryData(
-    id: log.id,
-    activityName: activity.name,
-    startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
-    endedAt: log.endedAt == null
-        ? null
-        : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
-    activityId: activity.id,
-    durationMinutes: activity.durationMinutes,
-  );
 }
 
 Future<domain.Activity?> _saveActivityDraft(

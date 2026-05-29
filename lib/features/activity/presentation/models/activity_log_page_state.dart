@@ -1,30 +1,33 @@
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+
+import '../../../meals/data/models/meal_details_data.dart';
 import '../../data/models/activity_log_analysis_data.dart';
 import '../../data/models/activity_log_details_data.dart';
 
 class ActivityLogPageState {
   final ActivityLogDetailsData data;
-  final ActivityLogAnalysisData? analysis;
-  final String? analysisError;
+  final AsyncValue<ActivityLogAnalysisData?> analysis;
+  final List<MealLowTreatmentDetailsData> lowTreatments;
   final DateTime? selectedTimestamp;
 
   const ActivityLogPageState({
     required this.data,
-    this.analysis,
-    this.analysisError,
+    this.analysis = const AsyncData(null),
+    this.lowTreatments = const [],
     this.selectedTimestamp,
   });
 
   ActivityLogPageState copyWith({
     ActivityLogDetailsData? data,
-    ActivityLogAnalysisData? analysis,
-    String? analysisError,
+    AsyncValue<ActivityLogAnalysisData?>? analysis,
+    List<MealLowTreatmentDetailsData>? lowTreatments,
     DateTime? selectedTimestamp,
     bool clearSelectedTimestamp = false,
   }) {
     return ActivityLogPageState(
       data: data ?? this.data,
       analysis: analysis ?? this.analysis,
-      analysisError: analysisError ?? this.analysisError,
+      lowTreatments: lowTreatments ?? this.lowTreatments,
       selectedTimestamp: clearSelectedTimestamp
           ? null
           : selectedTimestamp ?? this.selectedTimestamp,

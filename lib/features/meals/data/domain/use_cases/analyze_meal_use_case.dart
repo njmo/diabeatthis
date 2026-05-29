@@ -104,8 +104,8 @@ class AnalyzeMealUseCase {
     final db = ref.read(databaseProvider);
     final rows = await db.activityDao.getActivityLogsOverlapping(start, end);
     return rows.map((row) {
-      final log = row.readTable(db.activityLog);
-      final activity = row.readTable(db.activity);
+      final log = row.log;
+      final activity = row.activity;
       return MealLinkedActivityData(
         activityLogId: log.id,
         activityName: activity.name,

@@ -76,6 +76,38 @@ void main() {
     },
   );
 
+  test(
+    'allows low treatment context without related meal or activity',
+    () async {
+      final treatmentAt = DateTime.fromMillisecondsSinceEpoch(2000);
+      final lowTreatment = await db.mealDao.createLowTreatmentEntry(
+        name: 'Dosłodzenie',
+        eatenAt: treatmentAt,
+      );
+
+      await db.lowTreatmentContextDao.upsertContextForMeal(
+        LowTreatmentContextDraft(
+          meal: MealDraft(
+            name: 'Dosłodzenie',
+            mealIngredients: const [],
+            plannedAt: treatmentAt,
+            status: 'confirmed',
+          ),
+          source: LowTreatmentContextSource.dashboardAction,
+          reason: LowTreatmentReason.lowGlucose,
+        ).copyWith(mealId: lowTreatment.id).toCompanion(),
+      );
+
+      final context = await db.lowTreatmentContextDao.getContextForMeal(
+        lowTreatment.id,
+      );
+
+      expect(context?.mealId, lowTreatment.id);
+      expect(context?.relatedMealId, isNull);
+      expect(context?.relatedActivityLogId, isNull);
+    },
+  );
+
   test('excludes low treatments from nearest planned meal', () async {
     await db.mealDao.createLowTreatmentEntry(
       name: 'Dosłodzenie',

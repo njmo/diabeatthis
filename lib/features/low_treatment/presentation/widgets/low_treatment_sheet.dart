@@ -4,11 +4,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
+import '../../data/models/low_treatment_sheet_state.dart';
 import '../controllers/low_treatment_context_controller.dart';
 import 'low_treatment_carbs_summary.dart';
 import 'low_treatment_ingredients_list.dart';
 import 'low_treatment_reason_selector.dart';
-import 'low_treatment_related_meal_field.dart';
+import 'low_treatment_related_record_field.dart';
 import 'low_treatment_suggestion_summary.dart';
 import 'quick_low_treatment_selector.dart';
 
@@ -29,9 +30,38 @@ class LowTreatmentSheet extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = useState(LowTreatmentInputMode.quick);
-    final sheetState = ref.watch(lowTreatmentContextControllerProvider);
+    final sheetStateAsync = ref.watch(lowTreatmentContextControllerProvider);
     final controller = ref.read(lowTreatmentContextControllerProvider.notifier);
 
+    return sheetStateAsync.when(
+      data: (sheetState) => LowTreatmentSheetContent(
+        ref: ref,
+        mode: mode,
+        sheetState: sheetState,
+        controller: controller,
+      ),
+      loading: () => const LowTreatmentSheetLoading(),
+      error: (error, _) => LowTreatmentSheetError(error: error),
+    );
+  }
+}
+
+class LowTreatmentSheetContent extends StatelessWidget {
+  const LowTreatmentSheetContent({
+    super.key,
+    required this.ref,
+    required this.mode,
+    required this.sheetState,
+    required this.controller,
+  });
+
+  final WidgetRef ref;
+  final ValueNotifier<LowTreatmentInputMode> mode;
+  final LowTreatmentSheetState sheetState;
+  final LowTreatmentContextController controller;
+
+  @override
+  Widget build(BuildContext context) {
     return KeyboardAwareBottomSheet(
       header: Row(
         children: [
@@ -74,15 +104,7 @@ class LowTreatmentSheet extends HookConsumerWidget {
             suggestedCarbs: sheetState.suggestedCarbs,
             suggestedWithinMinutes: sheetState.suggestedWithinMinutes,
           ),
-          if (sheetState.relatedMeal != null) ...[
-            const SizedBox(height: 12),
-            LowTreatmentRelatedMealField(
-              meal: sheetState.relatedMeal!,
-              onDetach: sheetState.isSaving
-                  ? null
-                  : controller.detachRelatedMeal,
-            ),
-          ],
+          const LowTreatmentRelatedRecordField(),
           const SizedBox(height: 12),
           LowTreatmentReasonSelector(
             value: sheetState.reason,
@@ -158,6 +180,68 @@ class LowTreatmentSheet extends HookConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class LowTreatmentSheetLoading extends StatelessWidget {
+  const LowTreatmentSheetLoading({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return KeyboardAwareBottomSheet(
+      header: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Dosłodź się',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          IconButton(
+            tooltip: 'Zamknij',
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close),
+          ),
+        ],
+      ),
+      body: const Center(child: CircularProgressIndicator()),
+      actions: const SizedBox.shrink(),
+    );
+  }
+}
+
+class LowTreatmentSheetError extends StatelessWidget {
+  const LowTreatmentSheetError({super.key, required this.error});
+
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) {
+    return KeyboardAwareBottomSheet(
+      header: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Dosłodź się',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          IconButton(
+            tooltip: 'Zamknij',
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close),
+          ),
+        ],
+      ),
+      body: Text('Nie udało się przygotować dosłodzenia: $error'),
+      actions: SizedBox(
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Zamknij'),
+        ),
       ),
     );
   }

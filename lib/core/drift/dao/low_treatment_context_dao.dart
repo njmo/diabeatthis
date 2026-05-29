@@ -28,6 +28,16 @@ class LowTreatmentContextDao extends DatabaseAccessor<DatabaseImpl>
     return rows.map((row) => row.toDomain()).toList(growable: false);
   }
 
+  Future<List<domain.LowTreatmentContext>> getContextsForRelatedActivityLog(
+    int activityLogId,
+  ) async {
+    final query = select(db.lowTreatmentContext)
+      ..where((tbl) => tbl.relatedActivityLogId.equals(activityLogId))
+      ..orderBy([(tbl) => OrderingTerm.desc(tbl.createdAt)]);
+    final rows = await query.get();
+    return rows.map((row) => row.toDomain()).toList(growable: false);
+  }
+
   Future<domain.LowTreatmentContext> upsertContextForMeal(
     LowTreatmentContextCompanion context,
   ) async {

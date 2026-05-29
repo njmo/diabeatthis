@@ -11,6 +11,7 @@ extension LowTreatmentContextToDraft on domain.LowTreatmentContext {
       mealId: mealId,
       meal: meal,
       relatedMealId: relatedMealId,
+      relatedActivityLogId: relatedActivityLogId,
       source: source,
       suggestedCarbs: suggestedCarbs,
       suggestedWithinMinutes: suggestedWithinMinutes,
@@ -27,10 +28,16 @@ extension LowTreatmentContextDraftToCompanion on LowTreatmentContextDraft {
     if (persistedMealId == null) {
       throw StateError('Low treatment context draft requires mealId.');
     }
+    if (relatedMealId != null && relatedActivityLogId != null) {
+      throw StateError(
+        'Low treatment context can be related to meal or activity, not both.',
+      );
+    }
 
     return LowTreatmentContextCompanion.insert(
       mealId: d.Value(persistedMealId),
       relatedMealId: d.Value(relatedMealId),
+      relatedActivityLogId: d.Value(relatedActivityLogId),
       source: source.storageValue,
       suggestedCarbs: d.Value(suggestedCarbs),
       suggestedWithinMinutes: d.Value(suggestedWithinMinutes),

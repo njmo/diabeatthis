@@ -3,6 +3,8 @@ import '../database_impl.dart';
 
 part 'activity_dao.g.dart';
 
+typedef ActivityLogViewData = ({ActivityLogData log, ActivityData activity});
+
 @DriftAccessor(
   include: {
     '../schemas/tables/activity.drift',
@@ -31,7 +33,7 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     return query.watch();
   }
 
-  Stream<List<TypedResult>> watchActivityLogViews({
+  Stream<List<ActivityLogViewData>> watchActivityLogViews({
     int? activityId,
     int? limit,
   }) {
@@ -55,10 +57,10 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
       query.limit(limit);
     }
 
-    return query.watch();
+    return query.watch().map((rows) => rows.map(_activityLogViewData).toList());
   }
 
-  Future<List<TypedResult>> getActivityLogsOverlapping(
+  Future<List<ActivityLogViewData>> getActivityLogsOverlapping(
     DateTime start,
     DateTime end,
   ) {
@@ -78,7 +80,7 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
           )
           ..orderBy([OrderingTerm(expression: db.activityLog.startedAt)]);
 
-    return query.get();
+    return query.get().then((rows) => rows.map(_activityLogViewData).toList());
   }
 
   Future<ActivityLogData> getActivityLogById(int id) {
@@ -105,7 +107,7 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     )..where((tbl) => tbl.endedAt.isNull())).getSingleOrNull();
   }
 
-  Stream<List<TypedResult>> watchActiveActivityLogView() {
+  Future<ActivityLogViewData?> getActiveActivityLogView() async {
     final query =
         select(db.activityLog).join([
             innerJoin(
@@ -117,7 +119,25 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
           ..orderBy([OrderingTerm.asc(db.activityLog.startedAt)])
           ..limit(1);
 
-    return query.watch();
+    final row = await query.getSingleOrNull();
+    return row == null ? null : _activityLogViewData(row);
+  }
+
+  Stream<ActivityLogViewData?> watchActiveActivityLogView() {
+    final query =
+        select(db.activityLog).join([
+            innerJoin(
+              db.activity,
+              db.activity.id.equalsExp(db.activityLog.activityId),
+            ),
+          ])
+          ..where(db.activityLog.endedAt.isNull())
+          ..orderBy([OrderingTerm.asc(db.activityLog.startedAt)])
+          ..limit(1);
+
+    return query.watchSingleOrNull().map(
+      (row) => row == null ? null : _activityLogViewData(row),
+    );
   }
 
   Future<ActivityLogData?> getNearestActivityLog() {
@@ -135,6 +155,13 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
       ..orderBy([(log) => OrderingTerm.asc(log.startedAt)]);
 
     return query.watch();
+  }
+
+  ActivityLogViewData _activityLogViewData(TypedResult row) {
+    return (
+      log: row.readTable(db.activityLog),
+      activity: row.readTable(db.activity),
+    );
   }
 
   Future<ActivityData> getActivityById(int id) {

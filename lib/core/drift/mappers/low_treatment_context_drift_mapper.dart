@@ -6,6 +6,7 @@ extension LowTreatmentContextDataToDomain on LowTreatmentContextData {
     return domain.LowTreatmentContext(
       mealId: mealId,
       relatedMealId: relatedMealId,
+      relatedActivityLogId: relatedActivityLogId,
       source: domain.LowTreatmentContextSource.fromStorage(source),
       suggestedCarbs: suggestedCarbs,
       suggestedWithinMinutes: suggestedWithinMinutes,

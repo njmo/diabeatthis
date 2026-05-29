@@ -9,6 +9,7 @@ import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/device_status_ui_provider.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_portion_draft.dart';
+import 'package:diabeatthis/features/low_treatment/data/models/low_treatment_sheet_state.dart';
 import 'package:diabeatthis/features/low_treatment/presentation/controllers/low_treatment_context_controller.dart';
 import 'package:diabeatthis/features/meals/data/drafts/meal_draft.dart';
 import 'package:diabeatthis/features/portions/data/drafts/portion_draft.dart';
@@ -62,9 +63,7 @@ void main() {
       plannedAt: DateTime.fromMillisecondsSinceEpoch(2000),
       status: 'confirmed',
     );
-    final controller = container.read(
-      lowTreatmentContextControllerProvider.notifier,
-    );
+    final controller = await _readyController(container);
 
     final draft = controller.composeDashboardDraft(
       meal: mealDraft,
@@ -83,43 +82,27 @@ void main() {
     expect(context.reason, LowTreatmentReason.carbsReq);
   });
 
-  test('updates low treatment draft ingredients', () {
-    final controller = container.read(
-      lowTreatmentContextControllerProvider.notifier,
-    );
+  test('updates low treatment draft ingredients', () async {
+    final controller = await _readyController(container);
     final first = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
     final second = _ingredientDraft(name: 'Sok', carbsPer100g: 11);
 
     controller.addMealIngredient(first);
-    expect(
-      container.read(lowTreatmentContextControllerProvider).mealIngredients,
-      [first],
-    );
+    expect(_sheetState(container).mealIngredients, [first]);
 
     controller.updateMealIngredient(first, second);
-    expect(
-      container.read(lowTreatmentContextControllerProvider).mealIngredients,
-      [second],
-    );
+    expect(_sheetState(container).mealIngredients, [second]);
 
     controller.clearMealIngredients();
-    expect(
-      container.read(lowTreatmentContextControllerProvider).mealIngredients,
-      isEmpty,
-    );
+    expect(_sheetState(container).mealIngredients, isEmpty);
 
     controller.addMealIngredient(second);
     controller.removeMealIngredient(second);
-    expect(
-      container.read(lowTreatmentContextControllerProvider).mealIngredients,
-      isEmpty,
-    );
+    expect(_sheetState(container).mealIngredients, isEmpty);
   });
 
-  test('sets low treatment draft ingredient from quick item', () {
-    final controller = container.read(
-      lowTreatmentContextControllerProvider.notifier,
-    );
+  test('sets low treatment draft ingredient from quick item', () async {
+    final controller = await _readyController(container);
     const quickItem = domain.QuickLowTreatmentItem(
       id: 1,
       name: 'Dextro',
@@ -141,11 +124,7 @@ void main() {
 
     controller.setQuickLowTreatmentItem(quickItem, 2);
 
-    final ingredients = container.read(
-      lowTreatmentContextControllerProvider.select(
-        (state) => state.mealIngredients,
-      ),
-    );
+    final ingredients = _sheetState(container).mealIngredients;
 
     expect(ingredients, hasLength(1));
     expect(ingredients.single.ingredient.name, 'Dextro');
@@ -154,9 +133,7 @@ void main() {
   });
 
   test('saves current low treatment draft with ingredients', () async {
-    final controller = container.read(
-      lowTreatmentContextControllerProvider.notifier,
-    );
+    final controller = await _readyController(container);
     final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
 
     controller.addMealIngredient(ingredient);
@@ -210,15 +187,276 @@ void main() {
     final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
 
     final context = await withClock(Clock.fixed(now), () async {
-      final controller = container.read(
-        lowTreatmentContextControllerProvider.notifier,
-      );
+      final controller = await _readyController(container);
 
       controller.addMealIngredient(ingredient);
       return controller.saveCurrentDraft();
     });
 
     expect(context.relatedMealId, relatedMeal.id);
+  });
+
+  test('auto attaches active activity log', () async {
+    final now = DateTime(2026, 5, 24, 11, 30);
+    final activity = await db
+        .into(db.activity)
+        .insertReturning(
+          ActivityCompanion.insert(
+            name: 'Rower',
+            percentagePre: 30,
+            percentagePost: 20,
+          ),
+        );
+    final activityLog = await db
+        .into(db.activityLog)
+        .insertReturning(
+          ActivityLogCompanion.insert(
+            activityId: activity.id,
+            startedAt: now
+                .subtract(const Duration(minutes: 15))
+                .millisecondsSinceEpoch,
+          ),
+        );
+    final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
+
+    final context = await withClock(Clock.fixed(now), () async {
+      final controller = await _readyController(container);
+
+      controller.addMealIngredient(ingredient);
+      return controller.saveCurrentDraft();
+    });
+
+    expect(context.relatedActivityLogId, activityLog.id);
+    expect(context.reason, LowTreatmentReason.plannedActivity);
+  });
+
+  test(
+    'switches between cached related activity and meal candidates',
+    () async {
+      final now = DateTime(2026, 5, 24, 11, 30);
+      final relatedMeal = await db
+          .into(db.meal)
+          .insertReturning(
+            MealCompanion.insert(
+              name: 'Obiad',
+              plannedAt: now
+                  .subtract(const Duration(minutes: 45))
+                  .millisecondsSinceEpoch,
+              status: const drift.Value('summarized'),
+            ),
+          );
+      final activity = await db
+          .into(db.activity)
+          .insertReturning(
+            ActivityCompanion.insert(
+              name: 'Rower',
+              percentagePre: 30,
+              percentagePost: 20,
+            ),
+          );
+      final activityLog = await db
+          .into(db.activityLog)
+          .insertReturning(
+            ActivityLogCompanion.insert(
+              activityId: activity.id,
+              startedAt: now
+                  .subtract(const Duration(minutes: 15))
+                  .millisecondsSinceEpoch,
+            ),
+          );
+
+      await withClock(Clock.fixed(now), () async {
+        final controller = await _readyController(container);
+        var sheetState = _sheetState(container);
+
+        expect(sheetState.contextDraft.relatedActivityLogId, activityLog.id);
+        expect(sheetState.canSwitchToRelatedMeal, isTrue);
+
+        controller.switchRelatedContext();
+        sheetState = _sheetState(container);
+
+        expect(sheetState.contextDraft.relatedMealId, relatedMeal.id);
+        expect(sheetState.contextDraft.relatedActivityLogId, isNull);
+        expect(sheetState.canSwitchToRelatedActivity, isTrue);
+
+        controller.switchRelatedContext();
+        sheetState = _sheetState(container);
+
+        expect(sheetState.contextDraft.relatedMealId, isNull);
+        expect(sheetState.contextDraft.relatedActivityLogId, activityLog.id);
+      });
+    },
+  );
+
+  test('does not auto attach stale open activity log', () async {
+    final now = DateTime(2026, 5, 24, 11, 30);
+    final activity = await db
+        .into(db.activity)
+        .insertReturning(
+          ActivityCompanion.insert(
+            name: 'Rower',
+            percentagePre: 30,
+            percentagePost: 20,
+            durationMinutes: const drift.Value(30),
+          ),
+        );
+    await db
+        .into(db.activityLog)
+        .insert(
+          ActivityLogCompanion.insert(
+            activityId: activity.id,
+            startedAt: now
+                .subtract(const Duration(minutes: 45))
+                .millisecondsSinceEpoch,
+          ),
+        );
+    final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
+
+    final context = await withClock(Clock.fixed(now), () async {
+      final controller = await _readyController(container);
+
+      controller.addMealIngredient(ingredient);
+      return controller.saveCurrentDraft();
+    });
+
+    expect(context.relatedActivityLogId, isNull);
+  });
+
+  test('does not auto attach recently ended activity log', () async {
+    final now = DateTime(2026, 5, 24, 11, 30);
+    final activity = await db
+        .into(db.activity)
+        .insertReturning(
+          ActivityCompanion.insert(
+            name: 'Rower',
+            percentagePre: 30,
+            percentagePost: 20,
+            durationMinutes: const drift.Value(30),
+          ),
+        );
+    await db
+        .into(db.activityLog)
+        .insert(
+          ActivityLogCompanion.insert(
+            activityId: activity.id,
+            startedAt: now
+                .subtract(const Duration(minutes: 45))
+                .millisecondsSinceEpoch,
+            endedAt: drift.Value(
+              now.subtract(const Duration(minutes: 15)).millisecondsSinceEpoch,
+            ),
+          ),
+        );
+    final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
+
+    final context = await withClock(Clock.fixed(now), () async {
+      final controller = await _readyController(container);
+
+      controller.addMealIngredient(ingredient);
+      return controller.saveCurrentDraft();
+    });
+
+    expect(context.relatedActivityLogId, isNull);
+  });
+
+  test(
+    'disables meal switch when activity is attached without recent meal',
+    () async {
+      final now = DateTime(2026, 5, 24, 11, 30);
+      final activity = await db
+          .into(db.activity)
+          .insertReturning(
+            ActivityCompanion.insert(
+              name: 'Rower',
+              percentagePre: 30,
+              percentagePost: 20,
+            ),
+          );
+      await db
+          .into(db.activityLog)
+          .insert(
+            ActivityLogCompanion.insert(
+              activityId: activity.id,
+              startedAt: now
+                  .subtract(const Duration(minutes: 15))
+                  .millisecondsSinceEpoch,
+            ),
+          );
+
+      final sheetState = await withClock(Clock.fixed(now), () async {
+        final controller = await _readyController(container);
+
+        await container.pump();
+        controller.switchRelatedContext();
+        return _sheetState(container);
+      });
+
+      expect(sheetState.relatedActivityLog, isNotNull);
+      expect(sheetState.canSwitchToRelatedMeal, isFalse);
+    },
+  );
+
+  test(
+    'disables activity switch when meal is attached without recent activity',
+    () async {
+      final now = DateTime(2026, 5, 24, 11, 30);
+      await db
+          .into(db.meal)
+          .insert(
+            MealCompanion.insert(
+              name: 'Obiad',
+              plannedAt: now
+                  .subtract(const Duration(minutes: 45))
+                  .millisecondsSinceEpoch,
+              status: const drift.Value('summarized'),
+            ),
+          );
+
+      final sheetState = await withClock(Clock.fixed(now), () async {
+        final controller = await _readyController(container);
+
+        await container.pump();
+        controller.switchRelatedContext();
+        return _sheetState(container);
+      });
+
+      expect(sheetState.relatedMeal, isNotNull);
+      expect(sheetState.canSwitchToRelatedActivity, isFalse);
+    },
+  );
+
+  test('does not auto attach activity after detaching it', () async {
+    final now = DateTime(2026, 5, 24, 11, 30);
+    final activity = await db
+        .into(db.activity)
+        .insertReturning(
+          ActivityCompanion.insert(
+            name: 'Rower',
+            percentagePre: 30,
+            percentagePost: 20,
+          ),
+        );
+    await db
+        .into(db.activityLog)
+        .insert(
+          ActivityLogCompanion.insert(
+            activityId: activity.id,
+            startedAt: now
+                .subtract(const Duration(minutes: 15))
+                .millisecondsSinceEpoch,
+          ),
+        );
+    final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
+
+    final context = await withClock(Clock.fixed(now), () async {
+      final controller = await _readyController(container);
+
+      controller.detachRelatedContext();
+      controller.addMealIngredient(ingredient);
+      return controller.saveCurrentDraft();
+    });
+
+    expect(context.relatedActivityLogId, isNull);
   });
 
   test('does not auto attach latest meal after detaching it', () async {
@@ -236,11 +474,9 @@ void main() {
     final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
 
     final context = await withClock(Clock.fixed(now), () async {
-      final controller = container.read(
-        lowTreatmentContextControllerProvider.notifier,
-      );
+      final controller = await _readyController(container);
 
-      controller.detachRelatedMeal();
+      controller.detachRelatedContext();
       controller.addMealIngredient(ingredient);
       return controller.saveCurrentDraft();
     });
@@ -253,9 +489,7 @@ void main() {
       lowTreatmentContextControllerProvider,
       (_, _) {},
     );
-    final controller = container.read(
-      lowTreatmentContextControllerProvider.notifier,
-    );
+    final controller = await _readyController(container);
     final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
 
     await container.pump();
@@ -271,9 +505,7 @@ void main() {
   });
 
   test('blocks saving current low treatment draft while saving', () async {
-    final controller = container.read(
-      lowTreatmentContextControllerProvider.notifier,
-    );
+    final controller = await _readyController(container);
     final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
 
     controller.addMealIngredient(ingredient);
@@ -286,6 +518,18 @@ void main() {
     expect(context.mealId, isPositive);
     expect(meals.where((meal) => meal.purpose == 'lowTreatment'), hasLength(1));
   });
+}
+
+Future<LowTreatmentContextController> _readyController(
+  ProviderContainer container,
+) async {
+  container.listen(lowTreatmentContextControllerProvider, (_, _) {});
+  await container.read(lowTreatmentContextControllerProvider.future);
+  return container.read(lowTreatmentContextControllerProvider.notifier);
+}
+
+LowTreatmentSheetState _sheetState(ProviderContainer container) {
+  return container.read(lowTreatmentContextControllerProvider).value!;
 }
 
 MealIngredientsDraft _ingredientDraft({
