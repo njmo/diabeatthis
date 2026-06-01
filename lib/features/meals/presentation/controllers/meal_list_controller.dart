@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/domain/model/ingredient.dart';
+import '../../../ingredients/data/models/ingredient_filter_item.dart';
 import '../../data/models/meal_list_filter.dart';
 import '../../data/providers/meal_database_provider.dart';
 import '../models/meal_list_state.dart';
@@ -37,36 +37,17 @@ class MealListController extends _$MealListController {
   }
 
   void _setQueryNow(String normalizedQuery) {
-    final filter = normalizedQuery.isEmpty
-        ? const MealListFilter.recent()
-        : MealListFilter.byQuery(query: normalizedQuery);
-    _setFilter(filter: filter, selectedIngredients: const []);
+    final filter = state.filter.copyWithQuery(normalizedQuery);
+    _setFilter(filter);
   }
 
-  void setIngredients(List<Ingredient> ingredients) {
-    _queryDebounceTimer?.cancel();
-    final limitedIngredients = ingredients
+  void setIngredientFilterItems(List<IngredientFilterItem> ingredients) {
+    final ingredientIds = ingredients
         .take(mealIngredientFilterLimit)
-        .toList(growable: false);
-    final ingredientIds = limitedIngredients
         .map((ingredient) => ingredient.id)
         .toList(growable: false);
-    final filter = ingredientIds.isEmpty
-        ? const MealListFilter.recent()
-        : MealListFilter.byIngredients(ingredientIds: ingredientIds);
-    _setFilter(filter: filter, selectedIngredients: limitedIngredients);
-  }
-
-  void removeIngredient(int ingredientId) {
-    final ingredients = [
-      for (final ingredient in state.selectedIngredients)
-        if (ingredient.id != ingredientId) ingredient,
-    ];
-    setIngredients(ingredients);
-  }
-
-  void clearIngredients() {
-    setIngredients(const []);
+    final filter = state.filter.copyWithIngredientIds(ingredientIds);
+    _setFilter(filter);
   }
 
   void loadNextPage() {
@@ -77,34 +58,11 @@ class MealListController extends _$MealListController {
     await ref.read(removeMealByIdProvider(mealId).future);
   }
 
-  void _setFilter({
-    required MealListFilter filter,
-    required List<Ingredient> selectedIngredients,
-  }) {
-    if (state.filter == filter &&
-        _sameIngredientSelection(
-          state.selectedIngredients,
-          selectedIngredients,
-        )) {
+  void _setFilter(MealListFilter filter) {
+    if (state.filter == filter) {
       return;
     }
 
-    state = state.copyWith(
-      filter: filter,
-      selectedIngredients: selectedIngredients,
-      visibleLimit: mealListPageSize,
-    );
+    state = state.copyWith(filter: filter, visibleLimit: mealListPageSize);
   }
-}
-
-bool _sameIngredientSelection(List<Ingredient> left, List<Ingredient> right) {
-  if (left.length != right.length) {
-    return false;
-  }
-  for (var index = 0; index < left.length; index += 1) {
-    if (left[index].id != right[index].id) {
-      return false;
-    }
-  }
-  return true;
 }

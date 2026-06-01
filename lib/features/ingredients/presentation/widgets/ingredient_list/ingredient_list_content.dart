@@ -15,7 +15,6 @@ class IngredientListContent extends StatelessWidget {
   final bool hasError;
   final VoidCallback? onLoadMore;
   final ValueChanged<String> onQueryChanged;
-  final VoidCallback onClearQuery;
   final ValueChanged<Ingredient> onIngredientTap;
 
   const IngredientListContent({
@@ -28,7 +27,6 @@ class IngredientListContent extends StatelessWidget {
     this.hasError = false,
     this.onLoadMore,
     required this.onQueryChanged,
-    required this.onClearQuery,
     required this.onIngredientTap,
   });
 
@@ -59,7 +57,6 @@ class IngredientListContent extends StatelessWidget {
                     controller: queryController,
                     hintText: 'Szukaj po nazwie lub marce',
                     onChanged: onQueryChanged,
-                    onClear: onClearQuery,
                   ),
                 ],
               ),

@@ -20,9 +20,9 @@ class AddMealSourceSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return FormSection(
       icon: Icons.content_copy,
-      title: 'Szybki start',
+      title: 'Znajdź podobny',
       subtitle:
-          'Opcjonalnie skopiuj składniki z szablonu albo wcześniejszego posiłku.',
+          'Opcjonalnie skopiuj składniki z podobnego posiłku albo szablonu.',
       children: [
         CopiedMealFormField(
           picker: picker,

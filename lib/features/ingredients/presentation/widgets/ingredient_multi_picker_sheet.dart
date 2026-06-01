@@ -2,82 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../../core/domain/model/ingredient.dart';
+import '../../data/models/ingredient_filter_item.dart';
 import '../../data/models/ingredient_filter_limits.dart';
+import '../../data/providers/ingredient_filter_controller.dart';
 import '../../data/providers/ingredient_provider.dart';
 import 'ingredient_multi_picker_footer.dart';
 import 'ingredient_multi_picker_result_list.dart';
 import 'ingredient_multi_picker_search_field.dart';
 import 'selected_ingredient_chips.dart';
 
-Future<List<Ingredient>?> showIngredientMultiPickerSheet({
+Future<List<IngredientFilterItem>?> showIngredientMultiPickerSheet({
   required BuildContext context,
-  required List<Ingredient> initialSelection,
 }) {
-  return showModalBottomSheet<List<Ingredient>>(
+  return showModalBottomSheet<List<IngredientFilterItem>>(
     context: context,
     isScrollControlled: true,
     clipBehavior: Clip.antiAlias,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (context) =>
-        IngredientMultiPickerSheet(initialSelection: initialSelection),
+    builder: (context) => const IngredientMultiPickerSheet(),
   );
 }
 
 class IngredientMultiPickerSheet extends HookConsumerWidget {
-  final List<Ingredient> initialSelection;
-
-  const IngredientMultiPickerSheet({super.key, required this.initialSelection});
+  const IngredientMultiPickerSheet({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final queryController = useTextEditingController();
     final query = useState('');
-    final pickedIngredients = useState<List<Ingredient>>(initialSelection);
+    final pickedIngredients = ref.watch(ingredientFilterDraftProvider);
+    final controller = ref.read(ingredientFilterDraftProvider.notifier);
     final normalizedQuery = query.value.trim();
     final ingredients = normalizedQuery.isEmpty
         ? ref.watch(latestIngredientsProvider)
         : ref.watch(ingredientsByQueryProvider(normalizedQuery));
-    final pickedIngredientIds = pickedIngredients.value
+    final pickedIngredientIds = pickedIngredients
         .map((ingredient) => ingredient.id)
         .toSet();
-
-    void clearQuery() {
-      queryController.clear();
-      query.value = '';
-    }
-
-    void toggleIngredient(Ingredient ingredient) {
-      final ingredientId = ingredient.id;
-      final isSelected = pickedIngredientIds.contains(ingredientId);
-      if (isSelected) {
-        pickedIngredients.value = [
-          for (final item in pickedIngredients.value)
-            if (item.id != ingredientId) item,
-        ];
-        return;
-      }
-
-      if (pickedIngredients.value.length >= ingredientFilterSelectionLimit) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Możesz wybrać maksymalnie 4 składniki'),
-          ),
-        );
-        return;
-      }
-      pickedIngredients.value = [...pickedIngredients.value, ingredient];
-      clearQuery();
-    }
-
-    void removeIngredient(int ingredientId) {
-      pickedIngredients.value = [
-        for (final ingredient in pickedIngredients.value)
-          if (ingredient.id != ingredientId) ingredient,
-      ];
-    }
 
     final mediaQuery = MediaQuery.of(context);
     final sheetHeight =
@@ -98,17 +61,25 @@ class IngredientMultiPickerSheet extends HookConsumerWidget {
                 controller: queryController,
                 query: query.value,
                 onChanged: (value) => query.value = value,
-                onClear: clearQuery,
+                onClear: () {
+                  queryController.clear();
+                  query.value = '';
+                },
               ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (pickedIngredients.value.isNotEmpty) ...[
-                      _SelectedIngredientsPanel(
-                        ingredients: pickedIngredients.value,
-                        onRemove: removeIngredient,
-                        onClearAll: () => pickedIngredients.value = const [],
+                    if (pickedIngredients.isNotEmpty) ...[
+                      SelectedIngredientsPanel(
+                        ingredients: pickedIngredients,
+                        onRemove: controller.removeIngredient,
+                        onClearAll:
+                            pickedIngredients.any(
+                              (ingredient) => ingredient.removable,
+                            )
+                            ? controller.clearAdditionalIngredients
+                            : null,
                       ),
                       const Divider(height: 1),
                     ],
@@ -116,13 +87,41 @@ class IngredientMultiPickerSheet extends HookConsumerWidget {
                       child: IngredientMultiPickerResultList(
                         ingredients: ingredients,
                         selectedIngredientIds: pickedIngredientIds,
-                        onToggleIngredient: toggleIngredient,
+                        onToggleIngredient: (ingredient) {
+                          final pickedIngredient = pickedIngredients
+                              .where((item) => item.id == ingredient.id)
+                              .firstOrNull;
+                          if (pickedIngredient != null) {
+                            if (pickedIngredient.removable) {
+                              controller.removeIngredient(ingredient.id);
+                            }
+                            return;
+                          }
+
+                          if (pickedIngredients.length >=
+                              ingredientFilterSelectionLimit) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Możesz wybrać maksymalnie 6 składników',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          controller.addIngredient(
+                            ingredient.toFilterItem(removable: true),
+                          );
+                          queryController.clear();
+                          query.value = '';
+                        },
                       ),
                     ),
                     const Divider(height: 1),
                     IngredientMultiPickerFooter(
                       onConfirm: () =>
-                          Navigator.of(context).pop(pickedIngredients.value),
+                          Navigator.of(context).pop(pickedIngredients),
                     ),
                   ],
                 ),
@@ -135,12 +134,13 @@ class IngredientMultiPickerSheet extends HookConsumerWidget {
   }
 }
 
-class _SelectedIngredientsPanel extends StatelessWidget {
-  final List<Ingredient> ingredients;
+class SelectedIngredientsPanel extends StatelessWidget {
+  final List<IngredientFilterItem> ingredients;
   final ValueChanged<int> onRemove;
-  final VoidCallback onClearAll;
+  final VoidCallback? onClearAll;
 
-  const _SelectedIngredientsPanel({
+  const SelectedIngredientsPanel({
+    super.key,
     required this.ingredients,
     required this.onRemove,
     required this.onClearAll,
@@ -156,7 +156,6 @@ class _SelectedIngredientsPanel extends StatelessWidget {
           ingredients: ingredients,
           onRemove: onRemove,
           onClearAll: onClearAll,
-          variant: SelectedIngredientChipsVariant.sheet,
         ),
       ),
     );

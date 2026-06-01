@@ -1,51 +1,57 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/widgets/compact_clear_button.dart';
-import '../../../../core/domain/model/ingredient.dart';
-
-enum SelectedIngredientChipsVariant {
-  mealList(clearButtonSize: 26, clearButtonIconSize: 14),
-  sheet(clearButtonSize: 24, clearButtonIconSize: 14);
-
-  final double clearButtonSize;
-  final double clearButtonIconSize;
-
-  const SelectedIngredientChipsVariant({
-    required this.clearButtonSize,
-    required this.clearButtonIconSize,
-  });
-}
+import '../../data/models/ingredient_filter_item.dart';
 
 class SelectedIngredientChips extends StatelessWidget {
-  final List<Ingredient> ingredients;
-  final ValueChanged<int> onRemove;
+  final List<IngredientFilterItem> ingredients;
+  final ValueChanged<int>? onRemove;
   final VoidCallback? onClearAll;
-  final SelectedIngredientChipsVariant variant;
 
   const SelectedIngredientChips({
     super.key,
     required this.ingredients,
     required this.onRemove,
     this.onClearAll,
-    required this.variant,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 4,
-      runSpacing: 2,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        if (onClearAll != null && ingredients.isNotEmpty)
-          CompactClearButton(
-            tooltip: 'Usuń wszystkie składniki',
-            onPressed: onClearAll!,
-            size: variant.clearButtonSize,
-            iconSize: variant.clearButtonIconSize,
-          ),
-        for (final ingredient in ingredients)
-          ActionChip(
+    final hasClearButton = onClearAll != null && ingredients.isNotEmpty;
+    final itemCount = ingredients.length + (hasClearButton ? 1 : 0);
+
+    return SizedBox(
+      height: 32,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: itemCount,
+        separatorBuilder: (_, _) => const SizedBox(width: 4),
+        itemBuilder: (context, index) {
+          if (hasClearButton && index == 0) {
+            return Center(
+              child: CompactClearButton(
+                tooltip: 'Usuń wszystkie składniki',
+                onPressed: onClearAll!,
+                size: 24,
+                iconSize: 14,
+              ),
+            );
+          }
+
+          final ingredientIndex = hasClearButton ? index - 1 : index;
+          final ingredient = ingredients[ingredientIndex];
+          final onRemove = this.onRemove;
+          if (onRemove == null || !ingredient.removable) {
+            return Chip(
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+              label: Text(ingredient.name),
+            );
+          }
+
+          return ActionChip(
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -54,8 +60,9 @@ class SelectedIngredientChips extends StatelessWidget {
             onPressed: () {
               onRemove(ingredient.id);
             },
-          ),
-      ],
+          );
+        },
+      ),
     );
   }
 }

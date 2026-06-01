@@ -16,7 +16,7 @@ class CopiedMealFormField extends FormField<CopiedMealType?> {
 
            String label;
            if (value == null) {
-             label = 'Wybierz posiłek lub szablon';
+             label = 'Wybierz podobny posiłek lub szablon';
            } else if (value is CopiedMealFromTemplate) {
              label = 'Szablon - ${value.name}';
            } else if (value is CopiedMealFromMeal) {
@@ -38,7 +38,7 @@ class CopiedMealFormField extends FormField<CopiedMealType?> {
                  },
                  child: InputDecorator(
                    decoration: InputDecoration(
-                     labelText: 'Na podstawie',
+                     labelText: 'Znajdź podobny',
                      errorText: state.errorText,
                      border: const OutlineInputBorder(),
                    ),

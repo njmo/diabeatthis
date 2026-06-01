@@ -31,10 +31,6 @@ class IngredientList extends HookConsumerWidget {
                 isLoading: true,
                 hasMore: false,
                 onQueryChanged: (value) => query.value = value,
-                onClearQuery: () {
-                  queryController.clear();
-                  query.value = '';
-                },
                 onIngredientTap: (ingredient) {
                   _openIngredientDetails(context, ingredient);
                 },
@@ -46,10 +42,6 @@ class IngredientList extends HookConsumerWidget {
                 hasError: true,
                 onLoadMore: () => ref.invalidate(ingredientListStreamProvider),
                 onQueryChanged: (value) => query.value = value,
-                onClearQuery: () {
-                  queryController.clear();
-                  query.value = '';
-                },
                 onIngredientTap: (ingredient) {
                   _openIngredientDetails(context, ingredient);
                 },
@@ -73,10 +65,6 @@ class IngredientList extends HookConsumerWidget {
                   hasMore: hasMore,
                   onLoadMore: loadNextPage,
                   onQueryChanged: (value) => query.value = value,
-                  onClearQuery: () {
-                    queryController.clear();
-                    query.value = '';
-                  },
                   onIngredientTap: (ingredient) {
                     _openIngredientDetails(context, ingredient);
                   },
@@ -90,10 +78,6 @@ class IngredientList extends HookConsumerWidget {
                 isLoading: true,
                 hasMore: false,
                 onQueryChanged: (value) => query.value = value,
-                onClearQuery: () {
-                  queryController.clear();
-                  query.value = '';
-                },
                 onIngredientTap: (ingredient) {
                   _openIngredientDetails(context, ingredient);
                 },
@@ -106,10 +90,6 @@ class IngredientList extends HookConsumerWidget {
                   queryController: queryController,
                   hasMore: false,
                   onQueryChanged: (value) => query.value = value,
-                  onClearQuery: () {
-                    queryController.clear();
-                    query.value = '';
-                  },
                   onIngredientTap: (ingredient) {
                     _openIngredientDetails(context, ingredient);
                   },

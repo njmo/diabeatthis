@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../ingredients/presentation/widgets/ingredient_list_filter.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/copied_meal_provider.dart';
 import '../screens/meal_page.dart';
@@ -31,16 +32,12 @@ class CopiedMealPicker extends HookConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextField(
-            onChanged: (value) {
+          IngredientListFilter(
+            hintText: 'Szukaj podobnego posiłku lub szablonu',
+            onQueryChanged: (value) {
               query.value = value;
             },
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Nazwa posiłku lub szablonu',
-              icon: Icon(Icons.search),
-              border: OutlineInputBorder(),
-            ),
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 16),
           ConstrainedBox(

@@ -24,6 +24,14 @@ Stream<List<domain.Meal>> mealListWindow(
           .toList(growable: false),
       limit: limit,
     ),
+    byQueryAndIngredients: (filter) =>
+        db.mealDao.watchMealsByNameAndIngredientIds(
+          queryString: filter.query,
+          ingredientIds: filter.ingredientIds
+              .take(mealIngredientFilterLimit)
+              .toList(growable: false),
+          limit: limit,
+        ),
   );
   return meals.map((items) => items.toDomainList());
 }

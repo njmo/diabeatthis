@@ -254,10 +254,6 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     required int limit,
   }) {
     final distinctIngredientIds = ingredientIds.toSet().toList(growable: false);
-    if (distinctIngredientIds.isEmpty) {
-      return watchRecentMeals(limit: limit);
-    }
-
     final distinctIngredientCount = db.mealIngredients.ingredientId.count(
       distinct: true,
     );
@@ -270,13 +266,50 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
           ])
           ..where(db.meal.purpose.equals('meal'))
           ..where(db.mealIngredients.ingredientId.isIn(distinctIngredientIds))
-          ..groupBy(
-            [db.meal.id],
-            having: distinctIngredientCount.equals(
-              distinctIngredientIds.length,
-            ),
-          )
+          ..groupBy([db.meal.id])
           ..orderBy([
+            OrderingTerm(
+              expression: distinctIngredientCount,
+              mode: OrderingMode.desc,
+            ),
+            OrderingTerm(
+              expression: db.meal.plannedAt,
+              mode: OrderingMode.desc,
+            ),
+          ])
+          ..limit(limit);
+
+    return query.watch().map(
+      (rows) => rows.map((row) => row.readTable(db.meal)).toList(),
+    );
+  }
+
+  Stream<List<MealData>> watchMealsByNameAndIngredientIds({
+    required String queryString,
+    required List<int> ingredientIds,
+    required int limit,
+  }) {
+    final normalizedQuery = queryString.trim();
+    final distinctIngredientIds = ingredientIds.toSet().toList(growable: false);
+    final distinctIngredientCount = db.mealIngredients.ingredientId.count(
+      distinct: true,
+    );
+    final query =
+        select(db.meal).join([
+            innerJoin(
+              db.mealIngredients,
+              db.mealIngredients.mealId.equalsExp(db.meal.id),
+            ),
+          ])
+          ..where(db.meal.purpose.equals('meal'))
+          ..where(db.meal.name.like('%$normalizedQuery%'))
+          ..where(db.mealIngredients.ingredientId.isIn(distinctIngredientIds))
+          ..groupBy([db.meal.id])
+          ..orderBy([
+            OrderingTerm(
+              expression: distinctIngredientCount,
+              mode: OrderingMode.desc,
+            ),
             OrderingTerm(
               expression: db.meal.plannedAt,
               mode: OrderingMode.desc,
@@ -329,13 +362,94 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.getSingleOrNull();
   }
 
-  Future<List<MealData>> searchMealsByName(String queryString) {
+  Future<List<MealData>> searchRecentMeals() {
     final query = select(db.meal)
       ..where((tbl) => tbl.purpose.equals('meal'))
-      ..where((tbl) => tbl.name.like('%$queryString%'))
-      ..orderBy([(m) => OrderingTerm(expression: m.updatedAt)])
+      ..orderBy([
+        (m) => OrderingTerm(expression: m.updatedAt, mode: OrderingMode.desc),
+      ])
       ..limit(10);
 
     return query.get();
+  }
+
+  Future<List<MealData>> searchMealsByName(String queryString) {
+    final normalizedQuery = queryString.trim();
+    final query = select(db.meal)
+      ..where((tbl) => tbl.purpose.equals('meal'))
+      ..where((tbl) => tbl.name.like('%$normalizedQuery%'))
+      ..orderBy([
+        (m) => OrderingTerm(expression: m.updatedAt, mode: OrderingMode.desc),
+      ])
+      ..limit(10);
+
+    return query.get();
+  }
+
+  Future<List<MealData>> searchMealsByIngredientIds({
+    required List<int> ingredientIds,
+  }) {
+    final distinctIngredientIds = ingredientIds.toSet().toList(growable: false);
+    final distinctIngredientCount = db.mealIngredients.ingredientId.count(
+      distinct: true,
+    );
+    final query =
+        select(db.meal).join([
+            innerJoin(
+              db.mealIngredients,
+              db.mealIngredients.mealId.equalsExp(db.meal.id),
+            ),
+          ])
+          ..where(db.meal.purpose.equals('meal'))
+          ..where(db.mealIngredients.ingredientId.isIn(distinctIngredientIds))
+          ..groupBy([db.meal.id])
+          ..orderBy([
+            OrderingTerm(
+              expression: distinctIngredientCount,
+              mode: OrderingMode.desc,
+            ),
+            OrderingTerm(
+              expression: db.meal.updatedAt,
+              mode: OrderingMode.desc,
+            ),
+          ])
+          ..limit(10);
+
+    return query.map((row) => row.readTable(db.meal)).get();
+  }
+
+  Future<List<MealData>> searchMealsByNameAndIngredientIds({
+    required String queryString,
+    required List<int> ingredientIds,
+  }) {
+    final normalizedQuery = queryString.trim();
+    final distinctIngredientIds = ingredientIds.toSet().toList(growable: false);
+    final distinctIngredientCount = db.mealIngredients.ingredientId.count(
+      distinct: true,
+    );
+    final query =
+        select(db.meal).join([
+            innerJoin(
+              db.mealIngredients,
+              db.mealIngredients.mealId.equalsExp(db.meal.id),
+            ),
+          ])
+          ..where(db.meal.purpose.equals('meal'))
+          ..where(db.meal.name.like('%$normalizedQuery%'))
+          ..where(db.mealIngredients.ingredientId.isIn(distinctIngredientIds))
+          ..groupBy([db.meal.id])
+          ..orderBy([
+            OrderingTerm(
+              expression: distinctIngredientCount,
+              mode: OrderingMode.desc,
+            ),
+            OrderingTerm(
+              expression: db.meal.updatedAt,
+              mode: OrderingMode.desc,
+            ),
+          ])
+          ..limit(10);
+
+    return query.map((row) => row.readTable(db.meal)).get();
   }
 }

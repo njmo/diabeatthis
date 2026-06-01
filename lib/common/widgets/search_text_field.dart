@@ -4,14 +4,12 @@ class SearchTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final ValueChanged<String> onChanged;
-  final VoidCallback onClear;
 
   const SearchTextField({
     super.key,
     required this.controller,
     required this.hintText,
     required this.onChanged,
-    required this.onClear,
   });
 
   @override
@@ -31,7 +29,10 @@ class SearchTextField extends StatelessWidget {
                 : IconButton(
                     tooltip: 'Wyczyść',
                     icon: const Icon(Icons.close),
-                    onPressed: onClear,
+                    onPressed: () {
+                      controller.clear();
+                      onChanged('');
+                    },
                   ),
             border: const OutlineInputBorder(),
           ),
