@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
@@ -8,6 +9,7 @@ import '../../../../core/drift/providers/database_provider.dart';
 import '../../../meal_advisor/data/models/ingredient_photo_search_result.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../drafts/ingredient_draft.dart';
+import '../drafts/ingredient_draft_validation.dart';
 import '../mappers/ingredient_draft_mapper.dart';
 
 part 'ingredient_provider.g.dart';
@@ -115,6 +117,7 @@ Future<domain.Ingredient> insertIngredient(
       }
       final fiberPer100g = draft.isReference ? 0.0 : draft.fiberPer100g;
       final ingredient = draft.copyWith(name: name, fiberPer100g: fiberPer100g);
+      ingredient.validateMacroRanges();
 
       final db = ref.watch(databaseProvider);
       final value = await db
@@ -179,6 +182,13 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
       state = state.copyWith(fiberPer100g: _parseDraftNumber(value));
   void setProteinPer100g(String value) =>
       state = state.copyWith(proteinPer100g: _parseDraftNumber(value));
+  void setCarbsLabelMode(CarbsLabelMode value) {
+    state = state.map(
+      draft: (draft) => draft.copyWith(carbsLabelMode: value),
+      existing: (existing) => existing,
+    );
+  }
+
   void setName(String value) => state = state.copyWith(name: value);
   void setNutritionConfidence(ConfidenceLevel value) =>
       state = state.copyWith(nutritionConfidence: value.toDouble01());

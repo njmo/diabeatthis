@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../models/ingredient_details_data.dart';
 import '../../models/ingredient_history_entry_data.dart';
@@ -54,6 +55,9 @@ class LoadIngredientDetailsUseCase {
       }),
     );
 
+    final carbsLabelMode = CarbsLabelModeX.fromStorage(
+      ingredient.carbsLabelMode,
+    );
     final ingredientData = Ingredient(
       id: ingredient.id,
       name: ingredient.name,
@@ -63,6 +67,7 @@ class LoadIngredientDetailsUseCase {
       proteinPer100g: ingredient.proteinPer100g,
       nutritionConfidence: ingredient.nutritionConfidence,
       isReference: ingredient.isReference == 1,
+      carbsLabelMode: carbsLabelMode,
       netKcalPer100g: ingredient.netKcalPer100g,
       kcalPer100g: ingredient.kcalPer100g,
       wbtKcalPer100g: ingredient.wbtKcalPer100g,

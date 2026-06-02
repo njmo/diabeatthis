@@ -19,8 +19,8 @@ class MealAddOnMultiplierResult {
   final double addedNetCarbs;
   final double totalNetCarbs;
 
-  int get roundedAddedNetCarbs => addedNetCarbs.round();
-  int get roundedTotalNetCarbs => totalNetCarbs.round();
+  int get roundedAddedNetCarbs => addedNetCarbs.ceil();
+  int get roundedTotalNetCarbs => totalNetCarbs.ceil();
 }
 
 class ApplyMealAddOnMultiplierUseCase with Logging {
@@ -79,6 +79,6 @@ class ApplyMealAddOnMultiplierUseCase with Logging {
     if (summary == null) {
       return 0;
     }
-    return summary.carbsGrams - summary.fiberGrams;
+    return summary.netCarbsGrams;
   }
 }

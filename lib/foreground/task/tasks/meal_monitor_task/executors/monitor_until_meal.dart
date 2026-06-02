@@ -385,7 +385,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     logI("Meal advice: ${advice.decision.toString()}");
                     nextExecutor = DetectFinishedEatingExecutor(
                       shouldBolus: true,
-                      grams: mealStatus.netCarbsGrams.round(),
+                      grams: mealStatus.netCarbsGrams.ceil(),
                     );
                     break;
                   case MealDecision.bolusAndEatNow:
@@ -444,7 +444,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 mealId: mealMonitorContext.activeMeal!.id,
                 minutes: advice.wait?.recommendedMinutes ?? 0,
                 decision: advice.decision!,
-                carbs: mealStatus.netCarbsGrams.round(),
+                carbs: mealStatus.netCarbsGrams.ceil(),
                 extendedCarbs: advice.extendedCarbs.grams,
                 extendedCarbsDeliveryMode:
                     advice.extendedCarbs.scheduleSettings.deliveryMode,

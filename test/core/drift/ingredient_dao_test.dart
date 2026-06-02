@@ -174,4 +174,63 @@ void main() {
 
     expect(syncedIngredientPortion.isSynced, true);
   });
+
+  test('meal totals calculate net carbs per ingredient label mode', () async {
+    final meal = await db
+        .into(db.meal)
+        .insertReturning(MealCompanion.insert(name: 'Mix', plannedAt: 1));
+    final euIngredient = await db
+        .into(db.ingredient)
+        .insertReturning(
+          IngredientCompanion.insert(
+            name: 'UE produkt',
+            carbsPer100g: 10,
+            fatPer100g: 0,
+            fiberPer100g: 8,
+            proteinPer100g: 0,
+            nutritionConfidence: 0.8,
+            carbsLabelMode: const Value('eu'),
+          ),
+        );
+    final nonEuIngredient = await db
+        .into(db.ingredient)
+        .insertReturning(
+          IngredientCompanion.insert(
+            name: 'Non-UE produkt',
+            carbsPer100g: 10,
+            fatPer100g: 0,
+            fiberPer100g: 8,
+            proteinPer100g: 0,
+            nutritionConfidence: 0.8,
+            carbsLabelMode: const Value('non_eu'),
+          ),
+        );
+
+    await db
+        .into(db.mealIngredients)
+        .insert(
+          MealIngredientsCompanion.insert(
+            mealId: meal.id,
+            ingredientId: euIngredient.id,
+            amount: const Value(100),
+            quantityConfidence: 1,
+          ),
+        );
+    await db
+        .into(db.mealIngredients)
+        .insert(
+          MealIngredientsCompanion.insert(
+            mealId: meal.id,
+            ingredientId: nonEuIngredient.id,
+            amount: const Value(100),
+            quantityConfidence: 1,
+          ),
+        );
+
+    final summary = await db.ingredientDao.totalsForMeal(meal.id);
+
+    expect(summary?.carbsGrams, 20);
+    expect(summary?.fiberGrams, 16);
+    expect(summary?.netCarbsGrams, 12);
+  });
 }

@@ -1,3 +1,4 @@
+import 'package:diabeatthis/core/domain/model/carbs_label_mode.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_details_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -30,7 +31,7 @@ void main() {
       );
 
       expect(details.hasAddOn, true);
-      expect(details.addOnNetCarbsG, 17);
+      expect(details.addOnNetCarbsG, 20);
     });
 
     test('detects add-on status even when carbs delta is not available', () {
@@ -81,6 +82,7 @@ MealIngredientDetailsData _ingredient({
     fatPer100g: 0,
     fiberPer100g: fiberPer100g,
     proteinPer100g: 0,
+    carbsLabelMode: CarbsLabelMode.eu,
     nutritionConfidence: 1,
     effectiveAt: now,
   );

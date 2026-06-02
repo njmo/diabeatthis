@@ -1,3 +1,4 @@
+import '../../../../core/domain/model/carbs_label_mode.dart';
 import 'ingredient_history_entry_data.dart';
 import 'ingredient_portion_data.dart';
 import 'ingredient_usage_data.dart';
@@ -11,6 +12,7 @@ class Ingredient {
   double proteinPer100g;
   double nutritionConfidence;
   bool isReference;
+  CarbsLabelMode carbsLabelMode;
   double? netKcalPer100g;
   double? kcalPer100g;
   double? wbtKcalPer100g;
@@ -27,6 +29,7 @@ class Ingredient {
     required this.proteinPer100g,
     required this.nutritionConfidence,
     required this.isReference,
+    required this.carbsLabelMode,
     this.netKcalPer100g,
     this.kcalPer100g,
     this.wbtKcalPer100g,

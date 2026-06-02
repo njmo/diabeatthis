@@ -41,9 +41,12 @@ extension IngredientFilterItemMapper on Ingredient {
 
 extension IngredientDraftFilterItemMapper on IngredientDraft {
   IngredientFilterItem? toFilterItem({bool removable = false}) {
-    return maybeWhen(
-      existing: (id, name, _, _, _, _, _, _, _, _, _, _, _, _) =>
-          IngredientFilterItem(id: id, name: name, removable: removable),
+    return maybeMap(
+      existing: (ingredient) => IngredientFilterItem(
+        id: ingredient.id,
+        name: ingredient.name,
+        removable: removable,
+      ),
       orElse: () => null,
     );
   }

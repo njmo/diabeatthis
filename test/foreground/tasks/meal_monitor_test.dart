@@ -1059,7 +1059,7 @@ void main() {
             expect(reminder, isA<MealSuggestionNotificationEvent>());
             final reminderTyped = reminder as MealSuggestionNotificationEvent;
             expect(reminderTyped.isAddOn, true);
-            expect(reminderTyped.carbs, 9);
+            expect(reminderTyped.carbs, 10);
             expect(reminderTyped.title, 'Dokładka: wpisz w AAPS');
 
             _advanceMinutes(harness, async, 5);
@@ -1071,7 +1071,7 @@ void main() {
             final secondReminderTyped =
                 secondReminder as MealSuggestionNotificationEvent;
             expect(secondReminderTyped.isAddOn, true);
-            expect(secondReminderTyped.carbs, 9);
+            expect(secondReminderTyped.carbs, 10);
 
             harness.dispatchEventToTask(
               task,

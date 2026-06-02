@@ -8,6 +8,7 @@ import '../../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../../portions/data/providers/portion_provider.dart';
 import '../../drafts/meal_draft.dart';
 import '../../providers/meal_database_provider.dart';
+import '../../providers/meal_ingredients_list_provider.dart';
 
 part 'add_meal_use_case.g.dart';
 
@@ -22,7 +23,7 @@ class AddMealUseCase with Logging {
   const AddMealUseCase({required this.ref});
 
   Future<Meal> call(MealDraft draft) async {
-    _validateMealDraft(draft);
+    await _validateMealDraft(draft);
 
     final db = ref.read(databaseProvider);
 
@@ -68,17 +69,36 @@ class AddMealUseCase with Logging {
     });
   }
 
-  void _validateMealDraft(MealDraft draft) {
+  Future<void> _validateMealDraft(MealDraft draft) async {
     if (draft.mealIngredients.isEmpty) {
       throw ArgumentError('Posiłek musi zawierać co najmniej jeden składnik.');
     }
 
     for (final mealIngredient in draft.mealIngredients) {
+      mealIngredient.ingredient.validateMacroRanges();
       if (!mealIngredient.ingredient.hasEnergyMacros) {
         throw ArgumentError(
           'Składnik musi mieć uzupełnione węglowodany, tłuszcz albo białko.',
         );
       }
     }
+
+    if (!await _hasActionableCarbs(draft)) {
+      throw ArgumentError(
+        'Posiłek musi mieć węglowodany netto albo e-carbs z WBT.',
+      );
+    }
+  }
+
+  Future<bool> _hasActionableCarbs(MealDraft draft) async {
+    final macros = await calculateMealIngredientsMacronutrients(
+      ref,
+      draft.mealIngredients,
+    );
+    if (macros.netCarbsTotal > 0) {
+      return true;
+    }
+
+    return macros.extendedCarbsTotal > 0;
   }
 }

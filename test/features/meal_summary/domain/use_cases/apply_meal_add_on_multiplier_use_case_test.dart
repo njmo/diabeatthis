@@ -35,8 +35,8 @@ void main() {
     expect(meal?.status, 'eating-extra');
     expect(ingredients.single.consumedAmount, 150);
     expect(ingredients.single.consumedConfidence, 0.8);
-    expect(result.addedNetCarbs, closeTo(7.5, 0.01));
-    expect(result.totalNetCarbs, closeTo(22.5, 0.01));
+    expect(result.addedNetCarbs, closeTo(10, 0.01));
+    expect(result.totalNetCarbs, closeTo(30, 0.01));
   });
 }
 

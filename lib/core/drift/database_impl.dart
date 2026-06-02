@@ -38,7 +38,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -70,6 +70,12 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
         await m.addColumn(
           lowTreatmentContext,
           lowTreatmentContext.relatedActivityLogId,
+        );
+      }
+      if (from < 13) {
+        await m.alterTable(
+          // ignore: experimental_member_use
+          TableMigration(ingredient, newColumns: [ingredient.carbsLabelMode]),
         );
       }
     },

@@ -94,8 +94,8 @@ class MealDialogController extends _$MealDialogController with Logging {
   }
 
   String? mealAdviceString() {
-    final carbsText = _formatCarbsForCalculator(state.carbsGrams);
-    final extendedCarbs = state.extendedCarbsGrams.round();
+    final carbsText = state.carbsGrams.ceil().toString();
+    final extendedCarbs = state.extendedCarbsGrams.ceil();
     final extendedCarbsText = extendedCarbs > 0
         ? '\n${formatExtendedCarbsInstruction(extendedCarbs, settings: state.advice.extendedCarbs.scheduleSettings)}'
         : '';
@@ -145,8 +145,4 @@ class MealDialogController extends _$MealDialogController with Logging {
       logE('Error scheduling notification: $e');
     }
   }
-}
-
-String _formatCarbsForCalculator(double grams) {
-  return grams.round().toString();
 }

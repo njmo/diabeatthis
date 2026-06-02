@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' as d;
 
+import '../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/drift/entity/ingredient.dart';
 import '../drafts/ingredient_draft.dart';
@@ -15,6 +16,7 @@ extension DomainIngredientDraftMapper on domain.Ingredient {
       proteinPer100g: proteinPer100g,
       nutritionConfidence: nutritionConfidence,
       isReference: isReference,
+      carbsLabelMode: carbsLabelMode,
       netKcalPer100g: netKcalPer100g,
       kcalPer100g: kcalPer100g,
       wbtKcalPer100g: wbtKcalPer100g,
@@ -38,6 +40,7 @@ extension IngredientDraftDomainMapper on IngredientDraft {
         proteinPer100g: ingredient.proteinPer100g,
         nutritionConfidence: ingredient.nutritionConfidence,
         isReference: ingredient.isReference,
+        carbsLabelMode: ingredient.carbsLabelMode,
         netKcalPer100g: ingredient.netKcalPer100g,
         kcalPer100g: ingredient.kcalPer100g,
         wbtKcalPer100g: ingredient.wbtKcalPer100g,
@@ -58,6 +61,7 @@ extension IngredientDraftToCompanion on IngredientDraft {
         fatPer100g: d.Value(ingredient.fatPer100g),
         fiberPer100g: d.Value(ingredient.fiberPer100g),
         proteinPer100g: d.Value(ingredient.proteinPer100g),
+        carbsLabelMode: d.Value(ingredient.carbsLabelMode.storageValue),
         brand: d.Value(ingredient.brand),
         nutritionConfidence: d.Value(ingredient.nutritionConfidence),
         isReference: d.Value(ingredient.isReference ? 1 : 0),

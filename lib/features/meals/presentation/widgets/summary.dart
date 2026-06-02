@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/domain/model/net_carbs_calculator.dart';
+import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../data/drafts/meal_draft.dart';
 import '../../data/providers/meal_draft_provider.dart';
@@ -87,11 +89,11 @@ class AddIngredientSummaryContent extends StatelessWidget {
         : totalGrams == null
         ? 'Brak wagi porcji'
         : '${totalGrams.formattedAmount} g';
-    final carbsLabel = isLoadingPortionAmount
+    final netCarbsLabel = isLoadingPortionAmount
         ? 'Ładuję...'
         : totalGrams == null
         ? '-'
-        : '+${(draft.ingredient.carbsPer100g * totalGrams / 100).formattedAmount} g';
+        : '+${_netCarbs(totalGrams, draft).ceil()} g';
     final wbtKcalPer100g =
         draft.ingredient.wbtKcalPer100g ??
         (draft.ingredient.proteinPer100g * 4 + draft.ingredient.fatPer100g * 9);
@@ -99,7 +101,7 @@ class AddIngredientSummaryContent extends StatelessWidget {
         ? 'Ładuję...'
         : totalGrams == null
         ? '-'
-        : '+${(wbtKcalPer100g * totalGrams / 100 / 10).formattedAmount} g';
+        : '+${const WbtExtendedCarbsCalculator().calculateFromKcal(wbtKcalPer100g * totalGrams / 100).grams} g';
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -127,7 +129,7 @@ class AddIngredientSummaryContent extends StatelessWidget {
                   ? '-'
                   : '${gramsPerPortion!.formattedAmount} ${draft.portionWeightUnitLabel}',
               totalGramsLabel: totalGramsLabel,
-              carbsLabel: carbsLabel,
+              carbsLabel: netCarbsLabel,
               extendedCarbsLabel: extendedCarbsLabel,
             ),
           ],
@@ -148,6 +150,14 @@ class AddIngredientSummaryContent extends StatelessWidget {
       return null;
     }
     return amount * gramsPerPortion;
+  }
+
+  double _netCarbs(double totalGrams, MealIngredientsDraft draft) {
+    return calculateNetCarbs(
+      carbs: draft.ingredient.carbsPer100g * totalGrams / 100,
+      fiber: draft.ingredient.fiberPer100g * totalGrams / 100,
+      labelMode: draft.ingredient.carbsLabelMode,
+    );
   }
 }
 
@@ -245,7 +255,7 @@ class SummaryMetricGrid extends StatelessWidget {
             Expanded(
               child: SummaryMetricTile(
                 icon: Icons.grain,
-                label: 'Carbs',
+                label: 'Węgle',
                 value: carbsLabel,
               ),
             ),

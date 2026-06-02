@@ -50,7 +50,7 @@ class WbtExtendedCarbsCalculator {
   WbtExtendedCarbsSuggestion calculateFromKcal(double kcal) {
     final normalizedKcal = kcal < 0 ? 0.0 : kcal;
     final wbt = normalizedKcal / kcalPerWbt;
-    final grams = wbt > minSuggestedWbt ? (wbt * carbsGramsPerWbt).round() : 0;
+    final grams = wbt > minSuggestedWbt ? (wbt * carbsGramsPerWbt).ceil() : 0;
 
     return WbtExtendedCarbsSuggestion(
       kcal: normalizedKcal,

@@ -5,7 +5,20 @@ CREATE TABLE ingredient (
   fat_per_100g REAL NOT NULL CHECK (fat_per_100g >= 0),
   fiber_per_100g REAL NOT NULL CHECK (fiber_per_100g >= 0),
   protein_per_100g REAL NOT NULL CHECK (protein_per_100g >= 0),
-  net_kcal_per_100g REAL GENERATED ALWAYS AS ((protein_per_100g*4 + (carbs_per_100g-fiber_per_100g)*4 + fat_per_100g*9)) STORED,
+  carbs_label_mode TEXT NOT NULL DEFAULT 'non_eu' CHECK (carbs_label_mode IN ('eu', 'non_eu')),
+  net_kcal_per_100g REAL GENERATED ALWAYS AS (
+    (
+      protein_per_100g*4 +
+      (
+        CASE
+          WHEN carbs_label_mode = 'non_eu' AND carbs_per_100g - fiber_per_100g > 0 THEN carbs_per_100g - fiber_per_100g
+          WHEN carbs_label_mode = 'non_eu' THEN 0
+          ELSE carbs_per_100g
+        END
+      )*4 +
+      fat_per_100g*9
+    )
+  ) STORED,
   kcal_per_100g REAL GENERATED ALWAYS AS ((protein_per_100g*4 + carbs_per_100g*4 + fat_per_100g*9)) STORED,
   wbt_kcal_per_100g REAL GENERATED ALWAYS AS ((protein_per_100g*4 + fat_per_100g*9)) STORED,
   ig INTEGER CHECK (ig BETWEEN 0 AND 110),

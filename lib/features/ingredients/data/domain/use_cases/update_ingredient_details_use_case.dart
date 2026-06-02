@@ -1,7 +1,9 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../drafts/ingredient_draft.dart';
+import '../../drafts/ingredient_draft_validation.dart';
 
 part 'update_ingredient_details_use_case.g.dart';
 
@@ -26,17 +28,20 @@ class UpdateIngredientDetailsUseCase {
     if (name.length < 2) {
       throw ArgumentError('Ingredient name must be at least 2 characters');
     }
-    if (existing.carbsPer100g < 0 ||
-        existing.fatPer100g < 0 ||
-        fiberPer100g < 0 ||
-        existing.proteinPer100g < 0) {
-      throw ArgumentError('Ingredient macros cannot be negative');
-    }
+
+    final db = ref.read(databaseProvider);
+    final saved = await db.ingredientDao.getIngredientById(existing.id);
+    final savedLabelMode = CarbsLabelModeX.fromStorage(saved.carbsLabelMode);
+    final updated = existing.copyWith(
+      fiberPer100g: fiberPer100g,
+      carbsLabelMode: savedLabelMode,
+    );
+
+    updated.validateMacroRanges();
     if (existing.nutritionConfidence < 0 || existing.nutritionConfidence > 1) {
       throw ArgumentError('Nutrition confidence must be between 0 and 1');
     }
 
-    final db = ref.read(databaseProvider);
     await db.ingredientDao.updateIngredientDetails(
       ingredientId: existing.id,
       name: name,

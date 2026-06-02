@@ -1,5 +1,7 @@
+import '../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
+import '../../../../core/domain/model/net_carbs_calculator.dart';
 
 class MealDetailsData {
   final MealRecordData meal;
@@ -448,6 +450,7 @@ class IngredientNutritionData {
   final double fatPer100g;
   final double fiberPer100g;
   final double proteinPer100g;
+  final CarbsLabelMode carbsLabelMode;
   final double nutritionConfidence;
   final DateTime? effectiveAt;
 
@@ -456,6 +459,7 @@ class IngredientNutritionData {
     required this.fatPer100g,
     required this.fiberPer100g,
     required this.proteinPer100g,
+    required this.carbsLabelMode,
     required this.nutritionConfidence,
     required this.effectiveAt,
   });
@@ -469,8 +473,11 @@ class IngredientNutritionData {
   }
 
   double get safeNetCarbsPer100g {
-    final netCarbs = carbsPer100g - fiberPer100g;
-    return netCarbs < 0 ? 0 : netCarbs;
+    return calculateNetCarbs(
+      carbs: carbsPer100g,
+      fiber: fiberPer100g,
+      labelMode: carbsLabelMode,
+    );
   }
 
   bool differsFrom(IngredientNutritionData other) {
@@ -478,6 +485,7 @@ class IngredientNutritionData {
         fatPer100g != other.fatPer100g ||
         fiberPer100g != other.fiberPer100g ||
         proteinPer100g != other.proteinPer100g ||
+        carbsLabelMode != other.carbsLabelMode ||
         nutritionConfidence != other.nutritionConfidence;
   }
 }

@@ -17,6 +17,11 @@ class MealMacroSummary {
     required this.proteinGrams,
     required this.fiberGrams,
     required this.totalGrams,
-  }) : netCarbsGrams = carbsGrams - fiberGrams,
-       totalKcal = _calculateKcal(carbsGrams - fiberGrams, fatGrams, proteinGrams);
+    double? netCarbsGrams,
+  }) : netCarbsGrams = netCarbsGrams ?? (carbsGrams < 0 ? 0 : carbsGrams),
+       totalKcal = _calculateKcal(
+         netCarbsGrams ?? (carbsGrams < 0 ? 0 : carbsGrams),
+         fatGrams,
+         proteinGrams,
+       );
 }

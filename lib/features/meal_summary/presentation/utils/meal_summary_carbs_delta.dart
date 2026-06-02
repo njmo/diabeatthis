@@ -1,3 +1,4 @@
+import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
@@ -26,9 +27,9 @@ class MealSummaryCarbsDelta {
 
   double get total => itemAmountDelta + extraItemsCarbs;
 
-  int get roundedTotal => total.round();
-  int get roundedItemAmountDelta => itemAmountDelta.round();
-  int get roundedExtraItemsCarbs => extraItemsCarbs.round();
+  int get roundedTotal => total.ceil();
+  int get roundedItemAmountDelta => itemAmountDelta.ceil();
+  int get roundedExtraItemsCarbs => extraItemsCarbs.ceil();
 
   bool get isNeutral => total.abs() < 0.5;
   bool get isPositive => total >= 0.5;
@@ -83,14 +84,13 @@ MealSummaryAapsCarbs calculateMealSummaryAapsCarbs(MealSummaryDraft draft) {
 }
 
 double calculateExtraItemNetCarbs(MealIngredientsDraft item) {
-  final netCarbsPer100g =
-      item.ingredient.carbsPer100g - item.ingredient.fiberPer100g;
-  final safeNetCarbsPer100g = netCarbsPer100g < 0
-      ? 0.0
-      : netCarbsPer100g.toDouble();
   final grams = calculateMealIngredientDraftGrams(item);
 
-  return grams * safeNetCarbsPer100g / 100;
+  return calculateNetCarbs(
+    carbs: grams * item.ingredient.carbsPer100g / 100,
+    fiber: grams * item.ingredient.fiberPer100g / 100,
+    labelMode: item.ingredient.carbsLabelMode,
+  );
 }
 
 double calculateMealIngredientDraftGrams(MealIngredientsDraft item) {

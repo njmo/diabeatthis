@@ -19,10 +19,11 @@ class MealNutritionAnalysisSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final snapshot = details.preferredSummarySnapshot;
     final macros = Macronutrients(
-      carbsTotal: snapshot?.totalCarbsG.round() ?? 0,
-      fatTotal: snapshot?.totalFatG.round() ?? 0,
-      fiberTotal: snapshot?.totalFiberG.round() ?? 0,
-      proteinTotal: snapshot?.totalProteinG.round() ?? 0,
+      carbsTotal: (snapshot?.totalCarbsG ?? 0).ceil(),
+      fatTotal: (snapshot?.totalFatG ?? 0).ceil(),
+      fiberTotal: (snapshot?.totalFiberG ?? 0).ceil(),
+      proteinTotal: (snapshot?.totalProteinG ?? 0).ceil(),
+      netCarbsTotal: (snapshot?.totalNetCarbsG ?? 0).ceil(),
     );
 
     return MealSectionTile(

@@ -99,7 +99,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
             logI("Problem gathering meal advice, checking next meal");
             return NewMealCheckExecutor();
           }
-          grams = mealSummary.netCarbsGrams.round();
+          grams = mealSummary.netCarbsGrams.ceil();
           logI("Meal summary available with $grams grams of carbs");
         }
       } else {
@@ -349,14 +349,13 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     if (addOnNetCarbs <= 0) {
       return 0;
     }
-    return addOnNetCarbs.round();
+    return addOnNetCarbs.ceil();
   }
 
   double _netCarbs(MealMacroSummary? summary) {
     if (summary == null) {
       return 0;
     }
-    final netCarbs = summary.carbsGrams - summary.fiberGrams;
-    return netCarbs < 0 ? 0 : netCarbs;
+    return summary.netCarbsGrams;
   }
 }

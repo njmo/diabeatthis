@@ -67,7 +67,7 @@ class MealSummaryItemRow extends ConsumerWidget {
                         carbDelta > 0 ? Icons.add : Icons.remove,
                         size: 18,
                       ),
-                      label: Text('${_formatSigned(carbDelta.round())}g węgli'),
+                      label: Text('${_formatSigned(carbDelta.ceil())}g węgli'),
                     ),
                 ],
               ),

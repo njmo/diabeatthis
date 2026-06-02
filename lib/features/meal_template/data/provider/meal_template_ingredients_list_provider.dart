@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
@@ -91,6 +92,7 @@ Future<Macronutrients> calculatedTemplateMacronutrients(Ref ref) async {
   var fatTotal = 0;
   var fiberTotal = 0;
   var proteinTotal = 0;
+  var netCarbsTotal = 0;
 
   for (final mi in ingredients) {
     final isReference = mi.ingredient.isReference;
@@ -120,10 +122,15 @@ Future<Macronutrients> calculatedTemplateMacronutrients(Ref ref) async {
       portionAmount = fetched ?? 0;
     }
     final grams = mi.defaultAmount * portionAmount;
-    carbsTotal += (mi.ingredient.carbsPer100g * grams / 100).round();
-    fatTotal += (mi.ingredient.fatPer100g * grams / 100).round();
-    fiberTotal += (mi.ingredient.fiberPer100g * grams / 100).round();
-    proteinTotal += (mi.ingredient.proteinPer100g * grams / 100).round();
+    carbsTotal += (mi.ingredient.carbsPer100g * grams / 100).ceil();
+    fatTotal += (mi.ingredient.fatPer100g * grams / 100).ceil();
+    fiberTotal += (mi.ingredient.fiberPer100g * grams / 100).ceil();
+    proteinTotal += (mi.ingredient.proteinPer100g * grams / 100).ceil();
+    netCarbsTotal += calculateNetCarbs(
+      carbs: mi.ingredient.carbsPer100g * grams / 100,
+      fiber: mi.ingredient.fiberPer100g * grams / 100,
+      labelMode: mi.ingredient.carbsLabelMode,
+    ).ceil();
   }
 
   return Macronutrients(
@@ -131,5 +138,6 @@ Future<Macronutrients> calculatedTemplateMacronutrients(Ref ref) async {
     fatTotal: fatTotal,
     fiberTotal: fiberTotal,
     proteinTotal: proteinTotal,
+    netCarbsTotal: netCarbsTotal,
   );
 }

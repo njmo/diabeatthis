@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../core/domain/model/carbs_label_mode.dart';
+
 part 'ingredient_draft.freezed.dart';
 
 @freezed
@@ -12,6 +14,7 @@ abstract class IngredientDraft with _$IngredientDraft {
     required double proteinPer100g,
     required double nutritionConfidence,
     required bool isReference,
+    @Default(CarbsLabelMode.nonEu) CarbsLabelMode carbsLabelMode,
     double? netKcalPer100g,
     double? kcalPer100g,
     double? wbtKcalPer100g,
@@ -29,6 +32,7 @@ abstract class IngredientDraft with _$IngredientDraft {
     required double proteinPer100g,
     required double nutritionConfidence,
     required bool isReference,
+    @Default(CarbsLabelMode.nonEu) CarbsLabelMode carbsLabelMode,
     double? netKcalPer100g,
     double? kcalPer100g,
     double? wbtKcalPer100g,

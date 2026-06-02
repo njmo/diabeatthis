@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/model/meal_snapshot.dart';
+import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../../core/drift/mappers/meal_snapshot_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
@@ -52,12 +53,11 @@ class MealSnapshotController with Logging {
       }
       final proteinG = grams * mealIngredient.ingredient.proteinPer100g / 100.0;
       final fatG = grams * mealIngredient.ingredient.fatPer100g / 100.0;
-      final netCarbsPer100g =
-          mealIngredient.ingredient.carbsPer100g -
-          mealIngredient.ingredient.fiberPer100g;
-
-      final netCarbsG =
-          grams * (netCarbsPer100g < 0 ? 0 : netCarbsPer100g) / 100.0;
+      final netCarbsG = calculateNetCarbs(
+        carbs: grams * mealIngredient.ingredient.carbsPer100g / 100.0,
+        fiber: grams * mealIngredient.ingredient.fiberPer100g / 100.0,
+        labelMode: mealIngredient.ingredient.carbsLabelMode,
+      );
 
       final wbtKcal = proteinG * 4 + fatG * 9;
 
@@ -168,12 +168,11 @@ class MealSnapshotController with Logging {
 
       final proteinG = grams * mealIngredient.ingredient.proteinPer100g / 100.0;
       final fatG = grams * mealIngredient.ingredient.fatPer100g / 100.0;
-      final netCarbsPer100g =
-          mealIngredient.ingredient.carbsPer100g -
-          mealIngredient.ingredient.fiberPer100g;
-
-      final netCarbsG =
-          grams * (netCarbsPer100g < 0 ? 0 : netCarbsPer100g) / 100.0;
+      final netCarbsG = calculateNetCarbs(
+        carbs: grams * mealIngredient.ingredient.carbsPer100g / 100.0,
+        fiber: grams * mealIngredient.ingredient.fiberPer100g / 100.0,
+        labelMode: mealIngredient.ingredient.carbsLabelMode,
+      );
 
       final wbtKcal = proteinG * 4 + fatG * 9;
 

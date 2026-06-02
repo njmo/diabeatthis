@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/widgets/fab_action_option.dart';
+import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../activity/data/drafts/activity_log_draft.dart';
 import '../../../activity/data/providers/activity_provider.dart';
@@ -85,9 +86,21 @@ class DashboardFAB extends HookConsumerWidget with Logging {
                 final draft = ref.read(mealDraftProvider.notifier);
                 draft.addMealIngredient(mealIngredient);
                 draft.setName("QM: ${mealIngredient.ingredient.name}");
-                final addedMeal = await ref
-                    .read(addMealUseCaseProvider)
-                    .call(ref.read(mealDraftProvider));
+                final quickMealDraft = ref.read(mealDraftProvider);
+                late final Meal addedMeal;
+                try {
+                  addedMeal = await ref
+                      .read(addMealUseCaseProvider)
+                      .call(quickMealDraft);
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(_addMealErrorMessage(e))),
+                    );
+                  }
+                  ref.read(mealDraftProvider.notifier).reset();
+                  return;
+                }
 
                 if (!context.mounted) {
                   return;
@@ -173,4 +186,12 @@ class DashboardFAB extends HookConsumerWidget with Logging {
       },
     );
   }
+}
+
+String _addMealErrorMessage(Object error) {
+  if (error is ArgumentError && error.message is String) {
+    return error.message as String;
+  }
+
+  return 'Nie udało się dodać posiłku.';
 }

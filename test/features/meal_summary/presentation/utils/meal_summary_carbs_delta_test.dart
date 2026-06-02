@@ -1,3 +1,4 @@
+import 'package:diabeatthis/core/domain/model/carbs_label_mode.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import 'package:diabeatthis/features/meal_summary/presentation/models/meal_summary_draft.dart';
@@ -59,8 +60,8 @@ void main() {
     );
 
     expect(delta.itemAmountDelta, 3);
-    expect(delta.extraItemsCarbs, 15);
-    expect(delta.roundedTotal, 18);
+    expect(delta.extraItemsCarbs, 20);
+    expect(delta.roundedTotal, 23);
     expect(delta.isPositive, isTrue);
   });
 
@@ -142,8 +143,8 @@ void main() {
       );
 
       expect(delta.itemAmountDelta, -1);
-      expect(delta.extraItemsCarbs, 28);
-      expect(delta.roundedTotal, 27);
+      expect(delta.extraItemsCarbs, 30);
+      expect(delta.roundedTotal, 29);
       expect(delta.isPositive, isTrue);
       expect(delta.usesReportedBaseline, isTrue);
     },
@@ -203,7 +204,7 @@ void main() {
       ),
     );
 
-    expect(aapsCarbs.carbs, 30);
+    expect(aapsCarbs.carbs, 35);
     expect(aapsCarbs.extendedCarbs, 22);
   });
 }
@@ -245,6 +246,7 @@ MealIngredientsDraft _extraItem({
       proteinPer100g: proteinPer100g,
       nutritionConfidence: 1,
       isReference: false,
+      carbsLabelMode: CarbsLabelMode.eu,
     ),
     ingredientPortion: IngredientPortionDraft(
       portion: PortionSelection.empty(),

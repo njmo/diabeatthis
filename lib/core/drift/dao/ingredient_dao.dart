@@ -208,11 +208,21 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     final totalGrams = grams.sum();
     final carbsG = (grams * ing.carbsPer100g / const Constant(100.0)).sum();
     final fiberG = (grams * ing.fiberPer100g / const Constant(100.0)).sum();
+    final netCarbsG = (grams * _netCarbsPer100g(ing) / const Constant(100.0))
+        .sum();
     final proteinG = (grams * ing.proteinPer100g / const Constant(100.0)).sum();
     final fatG = (grams * ing.fatPer100g / const Constant(100.0)).sum();
 
     final q = base
-      ..addColumns([mi.mealId, carbsG, fiberG, proteinG, fatG, totalGrams])
+      ..addColumns([
+        mi.mealId,
+        carbsG,
+        fiberG,
+        netCarbsG,
+        proteinG,
+        fatG,
+        totalGrams,
+      ])
       ..groupBy([mi.mealId]);
 
     final row = await q.getSingleOrNull();
@@ -224,6 +234,7 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
       proteinGrams: row.read(proteinG) ?? 0.0,
       fiberGrams: row.read(fiberG) ?? 0.0,
       totalGrams: row.read(totalGrams) ?? 0.0,
+      netCarbsGrams: row.read(netCarbsG) ?? 0.0,
     );
   }
 
@@ -255,11 +266,21 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     final totalGrams = grams.sum();
     final carbsG = (grams * ing.carbsPer100g / const Constant(100.0)).sum();
     final fiberG = (grams * ing.fiberPer100g / const Constant(100.0)).sum();
+    final netCarbsG = (grams * _netCarbsPer100g(ing) / const Constant(100.0))
+        .sum();
     final proteinG = (grams * ing.proteinPer100g / const Constant(100.0)).sum();
     final fatG = (grams * ing.fatPer100g / const Constant(100.0)).sum();
 
     final q = base
-      ..addColumns([mi.mealId, carbsG, fiberG, proteinG, fatG, totalGrams])
+      ..addColumns([
+        mi.mealId,
+        carbsG,
+        fiberG,
+        netCarbsG,
+        proteinG,
+        fatG,
+        totalGrams,
+      ])
       ..groupBy([mi.mealId]);
 
     final row = await q.getSingleOrNull();
@@ -271,8 +292,24 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
       proteinGrams: row.read(proteinG) ?? 0.0,
       fiberGrams: row.read(fiberG) ?? 0.0,
       totalGrams: row.read(totalGrams) ?? 0.0,
+      netCarbsGrams: row.read(netCarbsG) ?? 0.0,
     );
   }
+}
+
+Expression<double> _netCarbsPer100g(Ingredient ing) {
+  final nonEuNetCarbs = ing.carbsPer100g - ing.fiberPer100g;
+  return CaseWhenExpression<double>(
+    cases: [
+      CaseWhen(
+        ing.carbsLabelMode.equals('non_eu') &
+            nonEuNetCarbs.isBiggerThanValue(0),
+        then: nonEuNetCarbs,
+      ),
+      CaseWhen(ing.carbsLabelMode.equals('non_eu'), then: const Constant(0.0)),
+    ],
+    orElse: ing.carbsPer100g,
+  );
 }
 
 String _normalizeSearchTerm(String value) => value.trim().toLowerCase();

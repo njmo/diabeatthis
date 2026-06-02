@@ -1,3 +1,4 @@
+import 'package:diabeatthis/core/domain/model/carbs_label_mode.dart';
 import 'package:diabeatthis/core/domain/model/low_treatment_context.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_details_data.dart';
 import 'package:diabeatthis/features/meals/presentation/models/meal_page_state.dart';
@@ -119,6 +120,7 @@ MealIngredientDetailsData mealIngredient({
     fatPer100g: 0,
     fiberPer100g: 0,
     proteinPer100g: 0,
+    carbsLabelMode: CarbsLabelMode.eu,
     nutritionConfidence: 1,
     effectiveAt: null,
   );

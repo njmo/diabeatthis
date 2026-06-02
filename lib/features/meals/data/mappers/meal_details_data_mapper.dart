@@ -1,3 +1,4 @@
+import '../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../models/meal_details_data.dart';
 
@@ -210,6 +211,9 @@ class MealDetailsDataMapper {
           fatPer100g: selected.fatPer100g,
           fiberPer100g: selected.fiberPer100g,
           proteinPer100g: selected.proteinPer100g,
+          carbsLabelMode: CarbsLabelModeX.fromStorage(
+            ingredient.carbsLabelMode,
+          ),
           nutritionConfidence: selected.nutritionConfidence,
           effectiveAt: date(selected.createdAt),
         ),
@@ -235,6 +239,7 @@ class MealDetailsDataMapper {
       fatPer100g: ingredient.fatPer100g,
       fiberPer100g: ingredient.fiberPer100g,
       proteinPer100g: ingredient.proteinPer100g,
+      carbsLabelMode: CarbsLabelModeX.fromStorage(ingredient.carbsLabelMode),
       nutritionConfidence: ingredient.nutritionConfidence,
       effectiveAt: date(ingredient.updatedAt),
     );

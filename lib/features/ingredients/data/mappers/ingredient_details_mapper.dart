@@ -12,6 +12,7 @@ extension IngredientDetailsDraftMapper on details.Ingredient {
       proteinPer100g: proteinPer100g,
       nutritionConfidence: nutritionConfidence,
       isReference: isReference,
+      carbsLabelMode: carbsLabelMode,
       netKcalPer100g: netKcalPer100g,
       kcalPer100g: kcalPer100g,
       wbtKcalPer100g: wbtKcalPer100g,

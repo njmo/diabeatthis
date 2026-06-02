@@ -87,7 +87,7 @@ Future<AapsBolusSuggestionNotificationEvent?> _aapsSuggestionNotificationEvent(
 ) async {
   final advice = await ref.read(getMealAdviceProvider(meal).future);
   final extendedCarbs = advice?.extendedCarbs;
-  final extendedCarbsGrams = extendedCarbs?.grams.round() ?? 0;
+  final extendedCarbsGrams = extendedCarbs?.grams ?? 0;
 
   if (!shouldCreateAapsSuggestionForMealStatus(
     status,
@@ -125,14 +125,14 @@ Future<int> _carbsForAaps(WidgetRef ref, Meal meal, String status) async {
     final consumedSummary = await db.ingredientDao.totalsForMealConsumed(
       meal.id,
     );
-    final consumedCarbs = consumedSummary?.netCarbsGrams.round() ?? 0;
+    final consumedCarbs = (consumedSummary?.netCarbsGrams ?? 0).ceil();
     if (consumedCarbs > 0) {
       return consumedCarbs;
     }
   }
 
   final summary = await db.ingredientDao.totalsForMeal(meal.id);
-  return summary?.netCarbsGrams.round() ?? 0;
+  return (summary?.netCarbsGrams ?? 0).ceil();
 }
 
 Future<void> handleMealAddOnChoice({
