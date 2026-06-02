@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/widgets/forms.dart';
 import '../../../ingredients/presentation/widgets/ingredient_form.dart';
 import '../../../ingredients/presentation/widgets/ingredient_portion_amount_form.dart';
 import '../../../ingredients/presentation/widgets/ingredient_search.dart';
@@ -22,6 +23,13 @@ class AddMealTemplateIngredient extends ConsumerWidget {
     final addingStateNotifier = ref.read(
       addMealTemplateIngredientStageProvider.notifier,
     );
+    if (addingStage == AddMealTemplateIngredientStage.dismiss) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
 
     return Padding(
       padding: EdgeInsets.only(
@@ -35,6 +43,7 @@ class AddMealTemplateIngredient extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           switch (addingStage) {
+            AddMealTemplateIngredientStage.dismiss => const SizedBox.shrink(),
             AddMealTemplateIngredientStage.ingredientSearch =>
               _textWithSearchTransition(
                 'Ingredient search',
@@ -76,6 +85,7 @@ class AddMealTemplateIngredient extends ConsumerWidget {
             switchInCurve: Curves.easeOut,
             switchOutCurve: Curves.easeIn,
             child: switch (addingStage) {
+              AddMealTemplateIngredientStage.dismiss => const SizedBox.shrink(),
               AddMealTemplateIngredientStage.ingredientSearch =>
                 IngredientSearch(),
               AddMealTemplateIngredientStage.ingredientForm =>
@@ -87,7 +97,16 @@ class AddMealTemplateIngredient extends ConsumerWidget {
               AddMealTemplateIngredientStage.amountForm => AmountTemplateForm(),
               AddMealTemplateIngredientStage.summary => AddIngredientSummary(),
               AddMealTemplateIngredientStage.portionSpecifyAmount =>
-                IngredientPortionAmountForm(),
+                IngredientPortionAmountForm(
+                  amount: ref.watch(
+                    mealTemplateIngredientsDraftProvider.select(
+                      (draft) => draft.ingredientPortion.amount,
+                    ),
+                  ),
+                  onAmountChanged: ref
+                      .read(mealTemplateIngredientsDraftProvider.notifier)
+                      .setIngredientPortionAmount,
+                ),
               AddMealTemplateIngredientStage.portionAddNewForm => PortionForm(),
             },
           ),
@@ -102,9 +121,8 @@ class AddMealTemplateIngredient extends ConsumerWidget {
                       ).pop(ref.read(mealTemplateIngredientsDraftProvider));
                     } else {
                       final formKey = ref.read(mealIngredientFormKeyProvider);
-                      if (formKey.currentState!.validate()) {
+                      if (validateForm(formKey)) {
                         addingStateNotifier.nextStage();
-                        formKey.currentState!.reset();
                       }
                     }
                   },

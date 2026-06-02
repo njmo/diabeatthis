@@ -1,6 +1,10 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 
+bool validateForm(GlobalKey<FormState> formKey) {
+  return formKey.currentState?.validate() ?? false;
+}
+
 class StringFormField extends StatelessWidget {
   const StringFormField({
     super.key,
@@ -40,8 +44,8 @@ class StringFormField extends StatelessWidget {
   }
 }
 
-typedef TextFieldBuilder = Widget Function(
-    BuildContext context, TextEditingController controller);
+typedef TextFieldBuilder =
+    Widget Function(BuildContext context, TextEditingController controller);
 
 class _TextField extends StatefulWidget {
   const _TextField({
@@ -88,9 +92,7 @@ class _TextFieldState extends State<_TextField> {
           }
           return null;
         },
-        decoration: InputDecoration(
-          labelText: widget.label,
-        ),
+        decoration: InputDecoration(labelText: widget.label),
         onChanged: widget.onChanged,
       );
     }

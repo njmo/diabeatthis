@@ -37,7 +37,13 @@ class _IngredientPortionAmountSheetState
         title: 'Waga porcji',
         onBack: () => Navigator.of(context).pop(),
       ),
-      body: IngredientPortionAmountForm(formKey: formKey),
+      body: IngredientPortionAmountForm(
+        formKey: formKey,
+        amount: ref.watch(ingredientPortionAmountDraftProvider),
+        onAmountChanged: ref
+            .read(ingredientPortionAmountDraftProvider.notifier)
+            .setValue,
+      ),
       actions: FilledButton.icon(
         onPressed: _save,
         icon: const Icon(Icons.check),
@@ -55,13 +61,19 @@ class _IngredientPortionAmountSheetState
 }
 
 class IngredientPortionAmountForm extends ConsumerWidget {
-  const IngredientPortionAmountForm({super.key, this.formKey});
+  const IngredientPortionAmountForm({
+    super.key,
+    required this.amount,
+    required this.onAmountChanged,
+    this.formKey,
+  });
 
+  final double amount;
+  final ValueChanged<double> onAmountChanged;
   final GlobalKey<FormState>? formKey;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final amount = ref.watch(ingredientPortionAmountDraftProvider);
     final effectiveFormKey =
         formKey ?? ref.watch(mealIngredientFormKeyProvider);
 
@@ -89,9 +101,7 @@ class IngredientPortionAmountForm extends ConsumerWidget {
                       options: IngredientPortionAmountOptions.options,
                       valueLabel: (value) => '${value.formatted} g',
                       onChanged: (value) {
-                        ref
-                            .read(ingredientPortionAmountDraftProvider.notifier)
-                            .setValue(value);
+                        onAmountChanged(value);
                         field.didChange(value);
                       },
                     ),

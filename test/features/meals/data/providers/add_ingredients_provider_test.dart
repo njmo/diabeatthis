@@ -8,6 +8,7 @@ import 'package:diabeatthis/features/meal_advisor/data/providers/ingredient_phot
 import 'package:diabeatthis/features/meal_advisor/data/providers/ingredient_photo_scan_client_provider.dart';
 import 'package:diabeatthis/features/meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 import 'package:diabeatthis/features/meals/data/providers/add_ingredients_provider.dart';
+import 'package:diabeatthis/features/meals/data/providers/meal_draft_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -95,6 +96,100 @@ void main() {
       expect(
         container.read(addMealIngredientStageProvider),
         AddMealIngredientStage.ingredientSearch,
+      );
+    });
+
+    test('uses dismiss stage as the root back target', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final notifier = container.read(addMealIngredientStageProvider.notifier);
+
+      notifier.back();
+
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.dismiss,
+      );
+    });
+
+    test('keeps full back path after moving past ingredient form', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final notifier = container.read(addMealIngredientStageProvider.notifier);
+
+      notifier.startManualIngredient();
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.ingredientForm,
+      );
+
+      await notifier.nextStage();
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.portionAddNewSearch,
+      );
+
+      await notifier.nextStage();
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.portionSpecifyAmount,
+      );
+
+      notifier.back();
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.portionAddNewSearch,
+      );
+
+      notifier.back();
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.ingredientForm,
+      );
+
+      notifier.back();
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.ingredientSearch,
+      );
+
+      notifier.back();
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.dismiss,
+      );
+    });
+
+    test('keeps portion weight in meal ingredient draft', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final notifier = container.read(addMealIngredientStageProvider.notifier);
+
+      notifier.startManualIngredient();
+      await notifier.nextStage();
+      await notifier.nextStage();
+      container
+          .read(mealIngredientsDraftProvider.notifier)
+          .setIngredientPortionAmount(75);
+
+      await notifier.nextStage();
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.amountForm,
+      );
+
+      notifier.back();
+
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.portionSpecifyAmount,
+      );
+      expect(
+        container.read(mealIngredientsDraftProvider).ingredientPortion.amount,
+        75,
       );
     });
   });

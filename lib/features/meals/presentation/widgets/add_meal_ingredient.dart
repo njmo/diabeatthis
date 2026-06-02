@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
+import '../../../../common/widgets/forms.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../ingredients/presentation/widgets/ingredient_form.dart';
@@ -67,12 +68,20 @@ class AddMealIngredient extends ConsumerWidget {
     final addingStateNotifier = ref.read(
       addMealIngredientStageProvider.notifier,
     );
+    if (addingStage == AddMealIngredientStage.dismiss) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
 
     return KeyboardAwareBottomSheet(
       header: switch (addingStage) {
+        AddMealIngredientStage.dismiss => const SizedBox.shrink(),
         AddMealIngredientStage.ingredientSearch => BottomSheetStepHeader(
           title: 'Wyszukaj składnik',
-          onBack: () => Navigator.of(context).pop(),
+          onBack: addingStateNotifier.back,
         ),
         AddMealIngredientStage.ingredientPhotoScan => BottomSheetStepHeader(
           title: 'Dodaj ze zdjęć',
@@ -140,6 +149,7 @@ class AddMealIngredient extends ConsumerWidget {
         switchInCurve: Curves.easeOut,
         switchOutCurve: Curves.easeIn,
         child: switch (addingStage) {
+          AddMealIngredientStage.dismiss => const SizedBox.shrink(),
           AddMealIngredientStage.ingredientSearch => IngredientSearch(),
           AddMealIngredientStage.ingredientPhotoScan => IngredientPhotoScan(),
           AddMealIngredientStage.ingredientForm => const SingleChildScrollView(
@@ -150,7 +160,16 @@ class AddMealIngredient extends ConsumerWidget {
           AddMealIngredientStage.amountForm => AmountForm(),
           AddMealIngredientStage.summary => AddIngredientSummary(),
           AddMealIngredientStage.portionSpecifyAmount =>
-            IngredientPortionAmountForm(),
+            IngredientPortionAmountForm(
+              amount: ref.watch(
+                mealIngredientsDraftProvider.select(
+                  (draft) => draft.ingredientPortion.amount,
+                ),
+              ),
+              onAmountChanged: ref
+                  .read(mealIngredientsDraftProvider.notifier)
+                  .setIngredientPortionAmount,
+            ),
           AddMealIngredientStage.portionAddNewForm => PortionForm(),
         },
       ),
@@ -192,9 +211,8 @@ class AddMealIngredient extends ConsumerWidget {
                         }
                       } else {
                         final formKey = ref.read(mealIngredientFormKeyProvider);
-                        if (formKey.currentState!.validate()) {
+                        if (validateForm(formKey)) {
                           await addingStateNotifier.nextStage();
-                          formKey.currentState!.reset();
                         }
                       }
                     },

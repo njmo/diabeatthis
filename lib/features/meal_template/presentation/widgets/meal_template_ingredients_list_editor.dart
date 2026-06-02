@@ -31,18 +31,25 @@ class MealTemplateIngredientsListEditor extends ConsumerWidget {
               Expanded(
                 child: Row(
                   children: [
-                    Text('Ingredients list:', style: TextStyle(fontSize: 20),),
+                    Text('Ingredients list:', style: TextStyle(fontSize: 20)),
                     const Spacer(),
                     InkWell(
                       onTap: () async {
-                        final mealTemplateIngredient = await showModalBottomSheet<MealTemplateIngredientsDraft>(
-                          context: context,
-                          useRootNavigator: false,
-                          isScrollControlled: true,
-                          builder: (_) => AddMealTemplateIngredient(),
-                        );
+                        final mealTemplateIngredient =
+                            await showModalBottomSheet<
+                              MealTemplateIngredientsDraft
+                            >(
+                              context: context,
+                              useRootNavigator: false,
+                              isScrollControlled: true,
+                              builder: (_) => AddMealTemplateIngredient(),
+                            );
                         if (mealTemplateIngredient != null) {
-                          ref.read(mealTemplateDraftProvider.notifier).addMealTemplateIngredient(mealTemplateIngredient);
+                          ref
+                              .read(mealTemplateDraftProvider.notifier)
+                              .addMealTemplateIngredient(
+                                mealTemplateIngredient,
+                              );
                         }
                       },
                       child: const Icon(Icons.add_box, size: 20),
