@@ -33,8 +33,10 @@ Future<MealIngredientsDraft?> showAddMealIngredientSheet({
   ref.invalidate(mealIngredientConfidenceDraftProvider);
 
   if (initialDraft != null) {
-    final mealIngredientDraft = ref.read(mealIngredientsDraftProvider.notifier);
-    final stageNotifier = ref.read(addMealIngredientStageProvider.notifier);
+    final mealIngredientDraft = ref.watch(
+      mealIngredientsDraftProvider.notifier,
+    );
+    final stageNotifier = ref.watch(addMealIngredientStageProvider.notifier);
     mealIngredientDraft.overrideMealIngredient(initialDraft);
     stageNotifier.modifyIngredientStage(initialDraft.ingredient.isReference);
   }

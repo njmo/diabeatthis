@@ -41,3 +41,9 @@ abstract class IngredientDraft with _$IngredientDraft {
     String? brand,
   }) = _IngredientDraftExisting;
 }
+
+extension IngredientDraftIdentity on IngredientDraft {
+  int? getIngredientIdOrNull() {
+    return map(draft: (_) => null, existing: (ingredient) => ingredient.id);
+  }
+}

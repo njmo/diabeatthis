@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
@@ -38,6 +39,30 @@ class AddMealTemplateIngredientStageNotifier
     _history.clear();
     _history.add(AddMealTemplateIngredientStage.dismiss);
     return AddMealTemplateIngredientStage.ingredientSearch;
+  }
+
+  void modifyIngredientStage(bool isReference) {
+    _history.clear();
+    _history.add(AddMealTemplateIngredientStage.dismiss);
+    if (isReference) {
+      state = AddMealTemplateIngredientStage.amountForm;
+      return;
+    }
+
+    final ingredientDraft = ref
+        .read(mealTemplateIngredientsDraftProvider)
+        .ingredient;
+    final ingredientId = ingredientDraft.getIngredientIdOrNull();
+    final filter = ingredientId == null
+        ? PortionFilter.byQuery()
+        : PortionFilter.byQueryForIngredient(ingredientId: ingredientId);
+    ref.watch(portionFilterProvider.notifier).setFilter(filter);
+    if (ingredientId == null) {
+      state = AddMealTemplateIngredientStage.portionAddNewSearch;
+      return;
+    }
+
+    state = AddMealTemplateIngredientStage.definedPortionsSearch;
   }
 
   void setOverride() {

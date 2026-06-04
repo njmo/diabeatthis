@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
@@ -43,11 +44,28 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   }
 
   void modifyIngredientStage(bool isReference) {
+    _history.clear();
+    _history.add(AddMealIngredientStage.dismiss);
     if (isReference) {
-      _openAmountForm();
+      final draft = ref.read(mealIngredientsDraftProvider);
+      final amount = draft.amount > 0 ? draft.amount : 1.0;
+      ref.read(mealIngredientAmountDraftProvider.notifier).setValue(amount);
+      state = AddMealIngredientStage.amountForm;
       return;
     }
-    _moveTo(AddMealIngredientStage.portionAddNewSearch);
+
+    final ingredientDraft = ref.read(mealIngredientsDraftProvider).ingredient;
+    final ingredientId = ingredientDraft.getIngredientIdOrNull();
+    final filter = ingredientId == null
+        ? PortionFilter.byQuery()
+        : PortionFilter.byQueryForIngredient(ingredientId: ingredientId);
+    ref.watch(portionFilterProvider.notifier).setFilter(filter);
+    if (ingredientId == null) {
+      state = AddMealIngredientStage.portionAddNewSearch;
+      return;
+    }
+
+    state = AddMealIngredientStage.definedPortionsSearch;
   }
 
   void setOverride() {
