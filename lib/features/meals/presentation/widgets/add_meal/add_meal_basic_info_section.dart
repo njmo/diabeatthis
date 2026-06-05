@@ -1,10 +1,12 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../../common/widgets/date_time_picker.dart';
 import '../../../../../common/widgets/form_section.dart';
+import '../../../data/providers/meal_draft_provider.dart';
 
-class AddMealBasicInfoSection extends StatelessWidget {
+class AddMealBasicInfoSection extends ConsumerWidget {
   const AddMealBasicInfoSection({
     super.key,
     required this.onNameSaved,
@@ -15,13 +17,17 @@ class AddMealBasicInfoSection extends StatelessWidget {
   final ValueChanged<DateTime> onPlannedAtSaved;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mealName = ref.watch(mealDraftProvider.select((draft) => draft.name));
+
     return FormSection(
       icon: Icons.restaurant_menu,
       title: 'Podstawowe informacje',
       subtitle: 'Nazwij posiłek i wybierz, kiedy jest planowany.',
       children: [
         TextFormField(
+          key: ValueKey(mealName),
+          initialValue: mealName,
           maxLength: 120,
           textInputAction: TextInputAction.next,
           validator: (value) {

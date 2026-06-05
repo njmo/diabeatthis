@@ -80,10 +80,11 @@ class AddMealPage extends HookConsumerWidget {
     CopiedMealType? value,
   ) async {
     if (value is CopiedMealFromTemplate) {
+      final draft = ref.read(mealDraftProvider.notifier);
+      draft.setName(value.name);
       final ingredients = await ref.read(
         getMealIngredientsDraftForMealTemplateProvider(value.id).future,
       );
-      final draft = ref.read(mealDraftProvider.notifier);
       draft.clearMealIngredients();
       draft.addMealIngredients(ingredients);
     } else if (value is CopiedMealFromMeal) {
