@@ -10,6 +10,7 @@ import '../models/ingredient_page_state.dart';
 import '../widgets/ingredient_detail_sections.dart';
 import '../widgets/ingredient_details_view.dart';
 import '../widgets/ingredient_edit_mode.dart';
+import '../widgets/ingredient_identity_text.dart';
 import '../widgets/ingredient_portion_amount_form.dart';
 
 @RoutePage()
@@ -27,7 +28,13 @@ class IngredientPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: state.maybeWhen(
-          data: (s) => Text(s.data.ingredient.name),
+          data: (s) => IngredientIdentityText(
+            name: s.data.ingredient.name,
+            brand: s.data.ingredient.brand,
+            nameStyle: Theme.of(context).textTheme.titleLarge,
+            brandStyle: Theme.of(context).textTheme.bodySmall,
+            spacing: 0,
+          ),
           orElse: () => Text('Składnik $ingredientId'),
         ),
         actions: state.maybeWhen(

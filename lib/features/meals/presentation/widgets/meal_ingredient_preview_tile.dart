@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../ingredients/presentation/widgets/ingredient_identity_text.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../data/drafts/meal_draft.dart';
@@ -36,7 +37,11 @@ class MealIngredientPreviewTile extends ConsumerWidget {
             foregroundColor: colorScheme.onSecondaryContainer,
             child: const Icon(Icons.restaurant, size: 20),
           ),
-          title: Text(draft.ingredient.name),
+          title: IngredientIdentityText(
+            name: draft.ingredient.name,
+            brand: draft.ingredient.brand,
+            spacing: 1,
+          ),
           subtitle: Text(portionInfo),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,

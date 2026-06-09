@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/models/ingredient_details_data.dart';
+import 'ingredient_identity_text.dart';
 
 class IngredientDetailsView extends StatelessWidget {
   final IngredientDetailsData data;
@@ -46,14 +47,12 @@ class _IngredientHeader extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        ingredient.name,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        ingredient.brand ?? 'Bez marki',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                      IngredientIdentityText(
+                        name: ingredient.name,
+                        brand: ingredient.brand,
+                        nameStyle: Theme.of(context).textTheme.headlineSmall,
+                        brandStyle: Theme.of(context).textTheme.bodyMedium,
+                        spacing: 4,
                       ),
                     ],
                   ),

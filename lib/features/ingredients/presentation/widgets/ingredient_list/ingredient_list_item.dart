@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../core/domain/model/ingredient.dart';
+import '../ingredient_identity_text.dart';
 
 class IngredientListItem extends StatelessWidget {
   final Ingredient ingredient;
@@ -42,8 +43,6 @@ class _IngredientListItemHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -51,9 +50,10 @@ class _IngredientListItemHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(ingredient.name, style: textTheme.titleMedium),
-              const SizedBox(height: 2),
-              Text(ingredient.brand ?? 'Bez marki', style: textTheme.bodySmall),
+              IngredientIdentityText(
+                name: ingredient.name,
+                brand: ingredient.brand,
+              ),
             ],
           ),
         ),
