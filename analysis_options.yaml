@@ -10,6 +10,9 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  exclude:
+    - build/**
+    - ios/Flutter/ephemeral/**
   plugins:
     - riverpod_lint
 linter:
