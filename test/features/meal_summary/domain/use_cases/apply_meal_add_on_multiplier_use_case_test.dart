@@ -49,8 +49,9 @@ Future<void> _seedMeal(DatabaseImpl db) async {
       fat_per_100g,
       fiber_per_100g,
       protein_per_100g,
+      carbs_label_mode,
       nutrition_confidence
-    ) VALUES (1, 'Ryż', 20, 0, 5, 2, 1)
+    ) VALUES (1, 'Ryż', 20, 0, 5, 2, 'eu', 1)
   ''');
 
   await db.customInsert('''

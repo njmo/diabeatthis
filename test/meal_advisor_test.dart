@@ -11,6 +11,7 @@
 //   trendPerMin = (trendPer5Min / 5).round()
 
 import 'package:diabeatthis/features/dashboard/data/utils/meal_advisor.dart';
+import 'package:diabeatthis/features/meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class MealTestCase {
@@ -271,10 +272,9 @@ void main() {
           reason:
               'Decision mismatch for "${tc.name}" (bg=${tc.bg}, iob=${tc.iob}, cob=${tc.cob}, trend=${tc.trendPerMin})',
         );
-        final wbtKcal = tc.proteinG * 4 + tc.fatG * 9;
-        final expectedExtendedCarbs = wbtKcal > 100
-            ? (wbtKcal / 10).round()
-            : 0;
+        final expectedExtendedCarbs = const WbtExtendedCarbsCalculator()
+            .calculateFromMacros(fatGrams: tc.fatG, proteinGrams: tc.proteinG)
+            .grams;
         expect(advice.extendedCarbs.grams, expectedExtendedCarbs);
 
         if (tc.expectedDecision != MealDecision.bolusWaitThenEat) {
