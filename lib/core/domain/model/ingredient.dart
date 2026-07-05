@@ -16,7 +16,7 @@ abstract class Ingredient with _$Ingredient {
     required double proteinPer100g,
     required double nutritionConfidence,
     required bool isReference,
-    @Default(CarbsLabelMode.nonEu) CarbsLabelMode carbsLabelMode,
+    @Default(CarbsLabelMode.eu) CarbsLabelMode carbsLabelMode,
     double? netKcalPer100g,
     double? kcalPer100g,
     double? wbtKcalPer100g,
