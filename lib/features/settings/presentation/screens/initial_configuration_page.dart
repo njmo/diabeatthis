@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
 import '../controllers/initial_configuration_controller.dart';
 import '../widgets/data_source_config_controls.dart';
+import '../widgets/nightscout_connection_fields.dart';
 import '../widgets/settings_section_card.dart';
 
 @RoutePage()
@@ -83,34 +84,14 @@ class InitialConfigurationPage extends HookConsumerWidget {
                       subtitle:
                           'Podaj adres swojego Nightscout. Bez niego nie możemy pobrać danych.',
                       children: [
-                        TextFormField(
-                          initialValue: state.nightscoutUrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Nightscout URL',
-                            hintText: 'https://twoj-nightscout.com',
-                          ),
-                          keyboardType: TextInputType.url,
-                          autocorrect: false,
-                          validator: (value) {
-                            final text = value?.trim() ?? '';
-
-                            if (text.isEmpty) {
-                              return 'Podaj adres Nightscout';
-                            }
-
-                            final uri = Uri.tryParse(text);
-                            if (uri == null ||
-                                !uri.hasScheme ||
-                                (uri.scheme != 'http' &&
-                                    uri.scheme != 'https') ||
-                                uri.host.isEmpty) {
-                              return 'Podaj poprawny adres URL';
-                            }
-
-                            return null;
-                          },
-                          onSaved: (value) {
+                        NightscoutConnectionFields(
+                          initialUrl: state.nightscoutUrl,
+                          initialToken: state.nightscoutToken,
+                          onUrlSaved: (value) {
                             controller.setNightscoutUrl(value?.trim() ?? '');
+                          },
+                          onTokenSaved: (value) {
+                            controller.setNightscoutToken(value?.trim() ?? '');
                           },
                         ),
                       ],

@@ -13,6 +13,7 @@ import '../../../core/data_sources/config/data_source_config_sync_payload.dart';
 import '../../../core/data_sources/config/data_source_option_availability.dart';
 import '../../../core/data_sources/config/helpers/data_source_config_storer.dart';
 import '../../../core/data_sources/nightscout/nightscout_cloud_connection_tester.dart';
+import '../../../core/data_sources/nightscout/nightscout_storage_keys.dart';
 import '../../../core/data_sources/receiver/providers/data_receiver_activation_controller_provider.dart';
 import '../data/settings_storage_keys.dart';
 
@@ -31,6 +32,7 @@ class ApplyInitialConfigurationUseCase {
   Future<void> call({
     required DataSourceConfig config,
     required String nightscoutUrl,
+    required String nightscoutToken,
     required String childName,
   }) async {
     final availability = await _ref.read(
@@ -41,6 +43,7 @@ class ApplyInitialConfigurationUseCase {
     if (config.usesCloud) {
       await NightscoutCloudConnectionTester.fromUrl(
         nightscoutUrl,
+        nightscoutToken: nightscoutToken,
       ).testConnection();
     }
 
@@ -51,6 +54,8 @@ class ApplyInitialConfigurationUseCase {
     await Future.wait([
       if (config.usesCloud)
         prefs.setString(nightscoutUrlKey, nightscoutUrl.trim()),
+      if (config.usesCloud)
+        prefs.setString(nightscoutTokenKey, nightscoutToken.trim()),
       prefs.setString(childNameKey, childName.trim()),
       prefs.setBool(initialConfigurationDoneKey, true),
     ]);

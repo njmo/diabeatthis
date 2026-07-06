@@ -15,15 +15,17 @@ import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/nightscout/nightscout_cloud_connection_tester.dart';
+import '../../../../core/data_sources/nightscout/nightscout_storage_keys.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
+import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../../../../core/data_sources/nightscout/repository/nightscout_repository_impl.dart';
 import '../../../../core/logger/logger.dart';
 import '../widgets/data_source_settings_section.dart';
 import '../widgets/database_settings_section.dart';
 import '../widgets/meal_advisor_settings_section.dart';
+import '../widgets/nightscout_connection_fields.dart';
 import '../widgets/settings_section_card.dart';
 
-const _nightscoutUrlKey = 'nightscout_url';
 const _childNameKey = 'main-user-name';
 
 @RoutePage()
@@ -36,6 +38,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
 
     final formKey = useMemoized(GlobalKey<FormState>.new);
     final urlController = useTextEditingController();
+    final tokenController = useTextEditingController();
     final childNameController = useTextEditingController();
 
     final initialized = useState(false);
@@ -57,7 +60,8 @@ class SettingsPage extends HookConsumerWidget with Logging {
             );
 
         if (!initialized.value) {
-          urlController.text = prefs.getString(_nightscoutUrlKey) ?? '';
+          urlController.text = prefs.getString(nightscoutUrlKey) ?? '';
+          tokenController.text = prefs.getString(nightscoutTokenKey) ?? '';
           childNameController.text = prefs.getString(_childNameKey) ?? '';
           initialized.value = true;
         }
@@ -71,20 +75,27 @@ class SettingsPage extends HookConsumerWidget with Logging {
 
           final newUrl = urlController.text.trim();
           logI('newUrl: $newUrl');
+          final newToken = tokenController.text.trim();
           final newChildName = childNameController.text.trim();
 
-          final oldUrl = prefs.getString(_nightscoutUrlKey)?.trim() ?? '';
+          final oldUrl = prefs.getString(nightscoutUrlKey)?.trim() ?? '';
           logI('oldUrl: $oldUrl');
+          final oldToken = prefs.getString(nightscoutTokenKey)?.trim() ?? '';
           final oldChildName = prefs.getString(_childNameKey)?.trim() ?? '';
 
           final urlChanged = newUrl != oldUrl;
+          final tokenChanged = newToken != oldToken;
           final childNameChanged = newChildName != oldChildName;
+          final nightscoutConnectionChanged = urlChanged || tokenChanged;
 
           isSaving.value = true;
 
           try {
-            if (urlChanged) {
-              final repo = NightscoutRepositoryImpl(nightscoutUrl: newUrl);
+            if (nightscoutConnectionChanged) {
+              final repo = NightscoutRepositoryImpl(
+                nightscoutUrl: newUrl,
+                nightscoutToken: newToken,
+              );
               final selectedConfig = selectedDataSourceConfig.value;
               final DataSourceConfig config;
               if (selectedConfig != null) {
@@ -96,19 +107,25 @@ class SettingsPage extends HookConsumerWidget with Logging {
             }
 
             if (urlChanged) {
-              await prefs.setString(_nightscoutUrlKey, newUrl);
+              await prefs.setString(nightscoutUrlKey, newUrl);
+            }
+
+            if (tokenChanged) {
+              await prefs.setString(nightscoutTokenKey, newToken);
             }
 
             if (childNameChanged) {
               await prefs.setString(_childNameKey, newChildName);
             }
 
-            if (urlChanged || childNameChanged) {
+            if (nightscoutConnectionChanged || childNameChanged) {
               ref.invalidate(sharedPrefsProvider);
               ref.invalidate(nightscoutRepositoryProvider);
+              ref.invalidate(nightscoutUrlProvider);
+              ref.invalidate(nightscoutTokenProvider);
             }
 
-            if (urlChanged) {
+            if (nightscoutConnectionChanged) {
               final foregroundBridge = ref.read(appForegroundBridgeProvider);
               final taskState = ref.read(foregroundTaskStateProvider.notifier);
 
@@ -174,32 +191,9 @@ class SettingsPage extends HookConsumerWidget with Logging {
                         subtitle:
                             'Podaj adres swojego Nightscout. Bez niego nie możemy pobrać danych.',
                         children: [
-                          TextFormField(
-                            controller: urlController,
-                            decoration: const InputDecoration(
-                              labelText: 'Nightscout URL',
-                              hintText: 'https://twoj-nightscout.com',
-                            ),
-                            keyboardType: TextInputType.url,
-                            autocorrect: false,
-                            validator: (value) {
-                              final text = value?.trim() ?? '';
-
-                              if (text.isEmpty) {
-                                return 'Podaj adres Nightscout';
-                              }
-
-                              final uri = Uri.tryParse(text);
-                              if (uri == null ||
-                                  !uri.hasScheme ||
-                                  (uri.scheme != 'http' &&
-                                      uri.scheme != 'https') ||
-                                  uri.host.isEmpty) {
-                                return 'Podaj poprawny adres URL';
-                              }
-
-                              return null;
-                            },
+                          NightscoutConnectionFields(
+                            urlController: urlController,
+                            tokenController: tokenController,
                             onChanged: (_) {
                               if (submitError.value != null) {
                                 submitError.value = null;

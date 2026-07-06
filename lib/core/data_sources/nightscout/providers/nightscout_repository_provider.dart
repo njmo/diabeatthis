@@ -17,7 +17,8 @@ part 'nightscout_repository_provider.g.dart';
 @riverpod
 Future<NightscoutRepository> nightscoutRepository(Ref ref) async {
   final url = await ref.watch(nightscoutUrlProvider.future);
-  return NightscoutRepositoryImpl(nightscoutUrl: url);
+  final token = await ref.watch(nightscoutTokenProvider.future);
+  return NightscoutRepositoryImpl(nightscoutUrl: url, nightscoutToken: token);
 }
 
 @riverpod

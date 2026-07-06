@@ -24,11 +24,13 @@ class InitialConfigurationController extends _$InitialConfigurationController
     );
     final config = await ref.read(dataSourceConfigProvider.future);
     final nightscoutUrl = await ref.read(nightscoutUrlProvider.future);
+    final nightscoutToken = await ref.read(nightscoutTokenProvider.future);
     final userName = await ref.read(nameProvider.future);
 
     return InitialConfigurationState(
       config: config,
       nightscoutUrl: nightscoutUrl,
+      nightscoutToken: nightscoutToken,
       userName: userName,
     );
   }
@@ -57,7 +59,13 @@ class InitialConfigurationController extends _$InitialConfigurationController
     });
   }
 
-  Future<bool> submit({String? nightscoutUrl}) async {
+  void setNightscoutToken(String value) {
+    _update((previous) {
+      return previous.copyWith(nightscoutToken: value, clearSubmitError: true);
+    });
+  }
+
+  Future<bool> submit({String? nightscoutUrl, String? nightscoutToken}) async {
     final current = _currentState;
     if (current == null || current.isSaving) return false;
 
@@ -67,6 +75,7 @@ class InitialConfigurationController extends _$InitialConfigurationController
       await _applyInitialConfigurationUseCase(
         config: current.config,
         nightscoutUrl: (nightscoutUrl ?? current.nightscoutUrl).trim(),
+        nightscoutToken: (nightscoutToken ?? current.nightscoutToken).trim(),
         childName: current.userName.trim(),
       );
       return true;

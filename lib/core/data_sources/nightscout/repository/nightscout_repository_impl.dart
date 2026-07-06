@@ -20,22 +20,30 @@ import 'nightscout_repository.dart';
 
 class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
   final String nightscoutUrl;
+  final String nightscoutToken;
   final NightscoutService service;
   final TreatmentFactory treatmentFactory = TreatmentFactory();
 
   NightscoutRepositoryImpl({
     required this.nightscoutUrl,
+    this.nightscoutToken = '',
     NightscoutService? service,
   }) : service = service ?? NightscoutService(nightscoutUrl: nightscoutUrl);
 
   Uri _buildUri(String path, Map<String, String> qp) {
     final uri = Uri.parse(nightscoutUrl);
+    final token = nightscoutToken.trim();
+    final queryParameters = {
+      ...uri.queryParameters,
+      ...qp,
+      if (token.isNotEmpty) 'token': token,
+    };
     return Uri(
       scheme: uri.scheme.isEmpty ? 'https' : uri.scheme,
       host: uri.host.isEmpty ? uri.path : uri.host,
       port: uri.hasPort ? uri.port : null,
       path: '${uri.host.isEmpty ? '' : uri.path}$path',
-      queryParameters: qp,
+      queryParameters: queryParameters,
     );
   }
 

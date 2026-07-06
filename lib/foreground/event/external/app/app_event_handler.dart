@@ -52,6 +52,7 @@ class AppEventHandler with Logging {
             );
             await sharedPrefs.reload();
             runtimeContext.container.invalidate(nightscoutUrlProvider);
+            runtimeContext.container.invalidate(nightscoutTokenProvider);
             runtimeContext.container.invalidate(dataSourceConfigProvider);
             runtimeContext.container.invalidate(
               glucoseSourceRepositoryProvider,
