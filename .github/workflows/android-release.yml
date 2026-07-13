@@ -4,6 +4,31 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Android versionName, for example 1.0.2"
+        required: true
+        default: "1.0.0"
+        type: string
+      track:
+        description: "Google Play track"
+        required: true
+        default: "internal"
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+      release_status:
+        description: "Google Play release status"
+        required: true
+        default: "completed"
+        type: choice
+        options:
+          - draft
+          - completed
 
 jobs:
   build-android:
@@ -11,6 +36,11 @@ jobs:
 
     permissions:
       contents: write
+
+    env:
+      GOOGLE_PLAY_TRACK: ${{ github.event.inputs.track || 'internal' }}
+      GOOGLE_PLAY_RELEASE_STATUS: ${{ github.event.inputs.release_status || 'completed' }}
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
 
     steps:
       - name: Checkout
@@ -49,8 +79,20 @@ jobs:
 
       - name: Read release version
         run: |
-          echo "RELEASE_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "RELEASE_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_VERSION=${{ github.event.inputs.release_version }}" >> "$GITHUB_ENV"
+          fi
           echo "RELEASE_BUILD_NUMBER=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+
+      - name: Build signed app bundle
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: flutter build appbundle --release --build-name "$RELEASE_VERSION" --build-number "$RELEASE_BUILD_NUMBER"
 
       - name: Build signed APK
         env:
@@ -60,19 +102,37 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: flutter build apk --release --build-name "$RELEASE_VERSION" --build-number "$RELEASE_BUILD_NUMBER"
 
-      - name: Upload APK artifacts
+      - name: Upload app bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: diabeatthis-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: diabeatthis-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
+      - name: Upload to Google Play
+        if: env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != ''
+        uses: r0adkll/upload-google-play@v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: pl.diabeatthis.app
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          tracks: ${{ env.GOOGLE_PLAY_TRACK }}
+          status: ${{ env.GOOGLE_PLAY_RELEASE_STATUS }}
+
       - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           body: |
-            Android APK signed by the GitHub release keystore.
+            Android app bundle and APK signed by the GitHub release keystore.
 
-            Firebase AI features may be unavailable until the developer account is verified.
+            Google Play track: ${{ env.GOOGLE_PLAY_TRACK }}.
           files: |
+            build/app/outputs/bundle/release/app-release.aab
             build/app/outputs/flutter-apk/app-release.apk

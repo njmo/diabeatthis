@@ -1,0 +1,47 @@
+# Google Play release from GitHub Actions
+
+The Android release workflow builds a signed app bundle and APK, uploads both as GitHub Actions artifacts, creates a GitHub Release for version tags, and can upload the app bundle to Google Play.
+
+## Trigger
+
+Push a semantic version tag:
+
+```bash
+git tag v1.0.2
+git push github v1.0.2
+```
+
+The workflow also supports manual runs from GitHub Actions with a selected Google Play track.
+
+## Required GitHub secrets
+
+- `ANDROID_KEYSTORE_BASE64`: base64-encoded release upload keystore.
+- `ANDROID_KEYSTORE_PASSWORD`: keystore password.
+- `ANDROID_KEY_ALIAS`: upload key alias.
+- `ANDROID_KEY_PASSWORD`: upload key password.
+- `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`: Google Play service account JSON.
+
+## Google Play setup
+
+1. Create the app in Play Console with package name `pl.diabeatthis.app`.
+2. Enable Play App Signing for the app.
+3. Upload the first app bundle manually in Play Console if the Google Play API does not recognize the package yet.
+4. Enable the Google Play Android Developer API.
+5. Create a Google Cloud service account for Play publishing.
+6. In Play Console, grant the service account access to the app with release permissions.
+7. Add the service account JSON as `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` in GitHub repository secrets.
+8. Use the `internal` track first, then move to closed testing when the app is ready.
+
+If `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` is missing, the workflow still builds the app bundle and APK, then creates a GitHub Release, but it skips the Google Play upload.
+
+## Firebase App Check setup
+
+Release builds use `AndroidPlayIntegrityProvider`, so testers installed from Google Play do not need Firebase App Check debug tokens.
+
+1. In Play Console, open app integrity settings after the first app bundle upload.
+2. Copy the SHA-256 fingerprint from the Play App Signing app signing certificate.
+3. Add that SHA-256 fingerprint to the Android app in Firebase.
+4. In Firebase App Check, register the Android app with the Play Integrity provider.
+5. Keep App Check enforcement disabled until internal testers confirm Firebase AI works from the Play-installed build.
+
+Debug and profile builds still use a locally generated Firebase App Check debug token for development.
