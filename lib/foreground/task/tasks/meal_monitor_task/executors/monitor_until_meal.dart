@@ -434,6 +434,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               logI("No advice available, checking next meal");
               return NewMealCheckExecutor();
             }
+            final mealAdvice = advice;
 
             // notify user about suggestion (if any)
             final notificationProvider = runtimeContext.container.read(
@@ -442,16 +443,16 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             notificationProvider.show(
               MealSuggestionNotificationEvent(
                 mealId: mealMonitorContext.activeMeal!.id,
-                minutes: advice.wait?.recommendedMinutes ?? 0,
-                decision: advice.decision!,
+                minutes: mealAdvice.wait?.recommendedMinutes ?? 0,
+                decision: mealAdvice.decision!,
                 carbs: mealStatus.netCarbsGrams.ceil(),
-                extendedCarbs: advice.extendedCarbs.grams,
+                extendedCarbs: mealAdvice.extendedCarbs.grams,
                 extendedCarbsDeliveryMode:
-                    advice.extendedCarbs.scheduleSettings.deliveryMode,
+                    mealAdvice.extendedCarbs.scheduleSettings.deliveryMode,
                 extendedCarbsDelayMinutes:
-                    advice.extendedCarbs.scheduleSettings.delayMinutes,
+                    mealAdvice.extendedCarbs.scheduleSettings.delayMinutes,
                 extendedCarbsDurationMinutes:
-                    advice.extendedCarbs.scheduleSettings.durationMinutes,
+                    mealAdvice.extendedCarbs.scheduleSettings.durationMinutes,
               ),
             );
 
@@ -463,9 +464,9 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             logI("Received response from user");
             await response.when(
               agree: (e) async {
-                final decisionStatus = advice!.decision!.status;
+                final decisionStatus = mealAdvice.decision!.status;
                 logI("User agreed meal, decision: $decisionStatus");
-                if (advice.decision == MealDecision.eatNowBolusLater) {
+                if (mealAdvice.decision == MealDecision.eatNowBolusLater) {
                   await runtimeContext.container.read(
                     updateMealProvider(
                       mealMonitorContext.activeMeal!,
@@ -475,7 +476,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                   runtimeContext.container.read(
                     insertAdviceProvider(
                       mealMonitorContext.activeMeal!,
-                      advice,
+                      mealAdvice,
                     ),
                   );
                 }
