@@ -3,6 +3,9 @@ import 'package:diabeatthis/core/media/camera_photo_capture_service.dart';
 import 'package:diabeatthis/core/media/providers/camera_permission_service_provider.dart';
 import 'package:diabeatthis/core/media/providers/camera_photo_capture_service_provider.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
+import 'package:diabeatthis/features/ingredients/data/mappers/ingredient_draft_mapper.dart';
+import 'package:diabeatthis/features/ingredients/data/mappers/ingredient_scan_result_mapper.dart';
+import 'package:diabeatthis/features/ingredients/data/models/ingredient_scan_result.dart';
 import 'package:diabeatthis/features/meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
 import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_photo_scan_input.dart';
 import 'package:diabeatthis/features/meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
@@ -222,6 +225,73 @@ void main() {
         container.read(addMealIngredientStageProvider),
         AddMealIngredientStage.dismiss,
       );
+    });
+
+    test('opens existing portions for existing barcode ingredient', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final notifier = container.read(addMealIngredientStageProvider.notifier);
+
+      notifier.continueWithExistingBarcodeIngredient(
+        _existingIngredient(id: 12).toDomain(),
+      );
+
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.definedPortionsSearch,
+      );
+      expect(
+        container.read(portionFilterProvider),
+        const PortionFilter.byQueryForIngredient(ingredientId: 12),
+      );
+      expect(
+        container
+            .read(mealIngredientsDraftProvider)
+            .ingredient
+            .getIngredientIdOrNull(),
+        12,
+      );
+    });
+
+    test('keeps barcode result with product name as usable draft data', () {
+      const result = IngredientScanResult(
+        status: IngredientScanStatus.needsReview,
+        name: 'keczup łagodny kotlin 0 dodatku cukru',
+        brand: null,
+        barcode: '5900385503415',
+        nutritionPer100g: NutritionPer100g(
+          carbs: null,
+          fat: null,
+          protein: null,
+          fiber: null,
+        ),
+        portions: [],
+        retakeRequest: null,
+      );
+
+      expect(result.hasUsableBarcodeDraftData, isTrue);
+      expect(result.toIngredientDraft().name, result.name);
+      expect(result.toIngredientDraft().barcode, result.barcode);
+    });
+
+    test('does not keep barcode result without product name', () {
+      const result = IngredientScanResult(
+        status: IngredientScanStatus.needsReview,
+        name: null,
+        brand: 'Test brand',
+        barcode: '5900385503415',
+        nutritionPer100g: NutritionPer100g(
+          carbs: 12,
+          fat: null,
+          protein: null,
+          fiber: null,
+        ),
+        portions: [],
+        retakeRequest: null,
+      );
+
+      expect(result.hasUsableBarcodeDraftData, isFalse);
     });
   });
 }

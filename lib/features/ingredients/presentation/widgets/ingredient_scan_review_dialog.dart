@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
+import '../../data/models/ingredient_scan_result.dart';
 
 Future<bool?> showIngredientScanReviewDialog({
   required BuildContext context,

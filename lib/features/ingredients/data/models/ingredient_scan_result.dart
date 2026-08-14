@@ -6,6 +6,7 @@ class IngredientScanResult {
   final IngredientScanStatus status;
   final String? name;
   final String? brand;
+  final String? barcode;
   final NutritionPer100g? nutritionPer100g;
   final List<RecognizedPortion> portions;
   final IngredientScanRetakeRequest? retakeRequest;
@@ -14,6 +15,7 @@ class IngredientScanResult {
     required this.status,
     required this.name,
     required this.brand,
+    required this.barcode,
     required this.nutritionPer100g,
     required this.portions,
     required this.retakeRequest,

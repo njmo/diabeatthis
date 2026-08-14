@@ -5,9 +5,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/llm/local_llm_client.dart';
 import '../../../../core/media/providers/camera_permission_service_provider.dart';
 import '../../../meal_advisor/data/models/ingredient_photo_scan_input.dart';
-import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
 import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
+import '../../data/models/ingredient_scan_result.dart';
 
 class IngredientPhotoScan extends HookConsumerWidget {
   const IngredientPhotoScan({super.key});

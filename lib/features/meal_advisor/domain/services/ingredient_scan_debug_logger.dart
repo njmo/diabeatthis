@@ -1,5 +1,5 @@
 import '../../../../core/logger/logger.dart';
-import '../../data/models/ingredient_scan_result.dart';
+import '../../../ingredients/data/models/ingredient_scan_result.dart';
 
 class IngredientScanDebugLogger with Logging {
   const IngredientScanDebugLogger();

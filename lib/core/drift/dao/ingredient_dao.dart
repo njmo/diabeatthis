@@ -138,6 +138,7 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     required double nutritionConfidence,
     required bool isReference,
     required String? brand,
+    required String? barcode,
   }) async {
     final updatedRows =
         await (update(
@@ -152,12 +153,27 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
             nutritionConfidence: Value(nutritionConfidence),
             isReference: Value(isReference ? 1 : 0),
             brand: Value(brand),
+            barcode: Value(barcode),
           ),
         );
 
     if (updatedRows == 0) {
       throw StateError('Ingredient $ingredientId was not found');
     }
+  }
+
+  Future<void> updateIngredientBarcodeIfMissing({
+    required int ingredientId,
+    required String barcode,
+  }) {
+    final query = update(ingredient)
+      ..where(
+        (tbl) =>
+            tbl.id.equals(ingredientId) &
+            (tbl.barcode.isNull() | tbl.barcode.equals('')),
+      );
+
+    return query.write(IngredientCompanion(barcode: Value(barcode)));
   }
 
   Future<MealMacroSummary?> totalsForMealConsumed(int mealId) async {

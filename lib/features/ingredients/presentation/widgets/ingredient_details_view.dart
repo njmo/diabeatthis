@@ -83,6 +83,11 @@ class _IngredientHeader extends StatelessWidget {
                   icon: Icons.local_fire_department_outlined,
                   label: '${_formatNumber(ingredient.kcalPer100g)} kcal',
                 ),
+                if (ingredient.barcode?.trim().isNotEmpty ?? false)
+                  _StatusPill(
+                    icon: Icons.qr_code_2_outlined,
+                    label: 'Kod: ${ingredient.barcode!.trim()}',
+                  ),
               ],
             ),
           ],

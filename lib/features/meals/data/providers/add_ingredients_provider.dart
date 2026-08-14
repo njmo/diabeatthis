@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
+import '../../../ingredients/presentation/controllers/ingredient_barcode_lookup_controller.dart';
+import '../../../ingredients/presentation/controllers/ingredient_barcode_scan_feedback_controller.dart';
+import '../../../ingredients/presentation/models/ingredient_barcode_scan_outcome.dart';
 import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_search_controller.dart';
@@ -29,6 +33,16 @@ enum AddMealIngredientStage {
 
 @riverpod
 GlobalKey<FormState> mealIngredientFormKey(Ref ref) {
+  return GlobalKey<FormState>();
+}
+
+@riverpod
+GlobalKey<FormState> ingredientSearchFormKey(Ref ref) {
+  return GlobalKey<FormState>();
+}
+
+@riverpod
+GlobalKey<FormState> ingredientFormKey(Ref ref) {
   return GlobalKey<FormState>();
 }
 
@@ -79,27 +93,69 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   void setStage(AddMealIngredientStage stage) => _moveTo(stage);
 
   void startManualIngredient() {
+    ref.invalidate(ingredientBarcodeScanFeedbackProvider);
     ref.invalidate(ingredientDraftProvider);
-    ref.invalidate(mealIngredientFormKeyProvider);
+    ref.invalidate(ingredientFormKeyProvider);
     _moveTo(AddMealIngredientStage.ingredientForm);
   }
 
   void startIngredientPhotoScan() {
+    ref.invalidate(ingredientBarcodeScanFeedbackProvider);
     ref.invalidate(ingredientDraftProvider);
     ref.invalidate(ingredientPhotoScanCaptureControllerProvider);
+    ref.invalidate(ingredientBarcodeLookupControllerProvider);
     ref.invalidate(ingredientPhotoScanControllerProvider);
     ref.invalidate(ingredientPhotoSearchControllerProvider);
     _moveTo(AddMealIngredientStage.ingredientPhotoScan);
   }
 
   Future<void> startIngredientPhotoSearch() async {
+    ref.invalidate(ingredientBarcodeScanFeedbackProvider);
     ref.invalidate(ingredientDraftProvider);
     ref.invalidate(ingredientPhotoScanCaptureControllerProvider);
+    ref.invalidate(ingredientBarcodeLookupControllerProvider);
     ref.invalidate(ingredientPhotoScanControllerProvider);
     ref.invalidate(ingredientPhotoSearchControllerProvider);
     await ref
         .read(ingredientPhotoSearchControllerProvider.notifier)
         .captureAndSearch();
+  }
+
+  Future<IngredientBarcodeScanOutcome> scanIngredientBarcode(
+    String barcode,
+  ) async {
+    ref.invalidate(ingredientBarcodeScanFeedbackProvider);
+    ref.invalidate(ingredientDraftProvider);
+    ref.invalidate(ingredientPhotoScanCaptureControllerProvider);
+    ref.invalidate(ingredientPhotoScanControllerProvider);
+    ref.invalidate(ingredientPhotoSearchControllerProvider);
+    final outcome = await ref
+        .read(ingredientBarcodeLookupControllerProvider.notifier)
+        .scan(barcode);
+    if (outcome.type == IngredientBarcodeScanOutcomeType.failed &&
+        outcome.error == null) {
+      ref
+          .read(ingredientBarcodeScanFeedbackProvider.notifier)
+          .show(ingredientBarcodeScanNoUsableDataMessage);
+    }
+    return outcome;
+  }
+
+  void continueWithExistingBarcodeIngredient(domain.Ingredient ingredient) {
+    final ingredientDraft = ref.read(ingredientDraftProvider.notifier);
+    ingredientDraft.overrideDraft(ingredient.toDraft());
+    ref.invalidate(ingredientFormKeyProvider);
+    _continueWithSelectedIngredientDraft(ingredient.toDraft());
+  }
+
+  void continueWithBarcodeIngredientDraft(IngredientDraft scannedIngredient) {
+    final ingredientDraft = ref.read(ingredientDraftProvider.notifier);
+    ingredientDraft.overrideDraft(scannedIngredient);
+    ref.invalidate(ingredientFormKeyProvider);
+    _moveTo(
+      AddMealIngredientStage.ingredientForm,
+      backTo: AddMealIngredientStage.ingredientSearch,
+    );
   }
 
   void continuePhotoSearchAsFullScan() {
@@ -116,23 +172,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         throw UnimplementedError();
       case AddMealIngredientStage.ingredientSearch:
         final ingredientDraft = ref.read(ingredientDraftProvider);
-        final mealIngredientsDraft = ref.watch(
-          mealIngredientsDraftProvider.notifier,
-        );
-        mealIngredientsDraft.setIngredient(ingredientDraft);
-        if (ingredientDraft.isReference) {
-          mealIngredientsDraft.setIngredientPortion(PortionSelection.empty());
-          _openAmountForm();
-        } else {
-          final portionsFilter = ref.read(portionFilterProvider.notifier);
-          portionsFilter.setFilter(
-            PortionFilter.byQueryForIngredient(
-              ingredientId: ingredientDraft.toDomain().id,
-            ),
-          );
-
-          _moveTo(AddMealIngredientStage.definedPortionsSearch);
-        }
+        _continueWithSelectedIngredientDraft(ingredientDraft);
         break;
       case AddMealIngredientStage.ingredientPhotoScan:
         final scannedIngredient = await ref
@@ -143,7 +183,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         }
         final ingredientDraft = ref.read(ingredientDraftProvider.notifier);
         ingredientDraft.overrideDraft(scannedIngredient);
-        ref.invalidate(mealIngredientFormKeyProvider);
+        ref.invalidate(ingredientFormKeyProvider);
         _moveTo(
           AddMealIngredientStage.ingredientForm,
           backTo: AddMealIngredientStage.ingredientSearch,
@@ -254,7 +294,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
 
     final ingredientDraft = ref.read(ingredientDraftProvider.notifier);
     ingredientDraft.overrideDraft(scannedIngredient);
-    ref.invalidate(mealIngredientFormKeyProvider);
+    ref.invalidate(ingredientFormKeyProvider);
     _moveTo(
       AddMealIngredientStage.ingredientForm,
       backTo: AddMealIngredientStage.ingredientSearch,
@@ -277,6 +317,26 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   void _moveTo(AddMealIngredientStage next, {AddMealIngredientStage? backTo}) {
     _pushHistory(backTo ?? state);
     state = next;
+  }
+
+  void _continueWithSelectedIngredientDraft(IngredientDraft ingredientDraft) {
+    final mealIngredientsDraft = ref.watch(
+      mealIngredientsDraftProvider.notifier,
+    );
+    mealIngredientsDraft.setIngredient(ingredientDraft);
+    if (ingredientDraft.isReference) {
+      mealIngredientsDraft.setIngredientPortion(PortionSelection.empty());
+      _openAmountForm();
+      return;
+    }
+
+    final portionsFilter = ref.read(portionFilterProvider.notifier);
+    portionsFilter.setFilter(
+      PortionFilter.byQueryForIngredient(
+        ingredientId: ingredientDraft.toDomain().id,
+      ),
+    );
+    _moveTo(AddMealIngredientStage.definedPortionsSearch);
   }
 
   void _moveBackTo(AddMealIngredientStage stage) {

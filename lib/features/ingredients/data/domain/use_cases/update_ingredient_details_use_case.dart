@@ -35,9 +35,11 @@ class UpdateIngredientDetailsUseCase {
     final updated = existing.copyWith(
       fiberPer100g: fiberPer100g,
       carbsLabelMode: savedLabelMode,
+      barcode: existing.normalizedBarcode,
     );
 
     updated.validateMacroRanges();
+    updated.validateBarcode();
     if (existing.nutritionConfidence < 0 || existing.nutritionConfidence > 1) {
       throw ArgumentError('Nutrition confidence must be between 0 and 1');
     }
@@ -52,6 +54,7 @@ class UpdateIngredientDetailsUseCase {
       nutritionConfidence: existing.nutritionConfidence,
       isReference: existing.isReference,
       brand: existing.brand,
+      barcode: existing.normalizedBarcode,
     );
   }
 

@@ -13,6 +13,7 @@ class IngredientScanResultValidator {
       status: IngredientScanStatus.needsReview,
       name: result.name,
       brand: result.brand,
+      barcode: result.barcode,
       nutritionPer100g: result.nutritionPer100g,
       portions: result.portions,
       retakeRequest: result.retakeRequest,

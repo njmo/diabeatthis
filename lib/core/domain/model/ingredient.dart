@@ -23,6 +23,7 @@ abstract class Ingredient with _$Ingredient {
     int? ig,
     String? preparation,
     String? brand,
+    String? barcode,
   }) = _Ingredient;
 
   factory Ingredient.fromJson(Map<String, dynamic> json) =>

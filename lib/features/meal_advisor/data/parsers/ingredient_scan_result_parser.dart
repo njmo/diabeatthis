@@ -1,8 +1,11 @@
 import 'dart:convert';
 
-import '../models/ingredient_scan_result.dart';
+import '../../../ingredients/data/models/ingredient_scan_result.dart';
+import '../../../ingredients/domain/utils/ingredient_barcode_validator.dart';
 
 class IngredientScanResultParser {
+  static const _barcodeValidator = IngredientBarcodeValidator();
+
   const IngredientScanResultParser();
 
   IngredientScanResult parse(String rawResponse) {
@@ -23,6 +26,7 @@ class IngredientScanResultParser {
         status: status,
         name: null,
         brand: null,
+        barcode: null,
         nutritionPer100g: null,
         portions: const [],
         retakeRequest: _parseRetakeRequest(json),
@@ -33,6 +37,7 @@ class IngredientScanResultParser {
       status: status,
       name: _readString(json, 'name'),
       brand: _readString(json, 'brand'),
+      barcode: _readBarcode(json),
       nutritionPer100g: _parseNutritionPer100g(json),
       portions: _parsePortions(json),
       retakeRequest: null,
@@ -121,6 +126,14 @@ class IngredientScanResultParser {
       return value.trim();
     }
     return null;
+  }
+
+  String? _readBarcode(Map<String, dynamic> json) {
+    final barcode = _readString(json, 'barcode');
+    if (barcode == null) {
+      return null;
+    }
+    return _barcodeValidator.normalizeValidBarcode(barcode);
   }
 
   double? _readNonNegativeNumber(Map<String, dynamic> json, String key) {

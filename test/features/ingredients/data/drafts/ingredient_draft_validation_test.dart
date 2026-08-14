@@ -52,6 +52,22 @@ void main() {
       expect(ingredient.hasValidMacroRanges, false);
       expect(ingredient.validateMacroRanges, throwsArgumentError);
     });
+
+    test('allows empty or valid barcode and rejects invalid barcode', () {
+      final emptyBarcode = _ingredient(
+        carbsPer100g: 1,
+        fiberPer100g: 1,
+        carbsLabelMode: CarbsLabelMode.eu,
+      );
+      final validBarcode = emptyBarcode.copyWith(barcode: '5900385503415');
+      final invalidBarcode = emptyBarcode.copyWith(barcode: '5900385503416');
+
+      expect(emptyBarcode.hasValidBarcode, true);
+      expect(validBarcode.hasValidBarcode, true);
+      expect(validBarcode.validateBarcode, returnsNormally);
+      expect(invalidBarcode.hasValidBarcode, false);
+      expect(invalidBarcode.validateBarcode, throwsArgumentError);
+    });
   });
 }
 

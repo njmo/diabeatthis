@@ -120,7 +120,7 @@ class IngredientPage extends ConsumerWidget {
   }
 
   Future<void> _saveIngredient(BuildContext context, WidgetRef ref) async {
-    final formKey = ref.read(mealIngredientFormKeyProvider);
+    final formKey = ref.read(ingredientFormKeyProvider);
     if (!(formKey.currentState?.validate() ?? false)) {
       return;
     }

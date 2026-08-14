@@ -30,7 +30,7 @@ class IngredientDetailsControllerNotifier
     ref
         .read(ingredientDraftProvider.notifier)
         .overrideDraft(current.data.ingredient.toDraft());
-    ref.invalidate(mealIngredientFormKeyProvider);
+    ref.invalidate(ingredientFormKeyProvider);
     state = AsyncData(current.copyWith(isEditing: true));
   }
 

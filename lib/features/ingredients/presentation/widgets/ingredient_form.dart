@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/providers/ingredient_provider.dart';
+import 'ingredient_barcode_form_field.dart';
 import 'ingredient_macro_form.dart';
 import 'ingredient_reference_macro_form.dart';
 import 'reference_ingredient_checkbox.dart';
@@ -17,7 +18,7 @@ class IngredientForm extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final formKey = ref.watch(mealIngredientFormKeyProvider);
+    final formKey = ref.watch(ingredientFormKeyProvider);
     final draft = ref.read(ingredientDraftProvider.notifier);
     final state = ref.watch(ingredientDraftProvider);
 
@@ -52,6 +53,7 @@ class IngredientForm extends ConsumerWidget {
               border: OutlineInputBorder(),
             ),
           ),
+          const IngredientBarcodeFormField(),
           const SizedBox(height: 16),
           ConfidenceSlider(
             value: ConfidenceLevelX.fromDouble01(state.nutritionConfidence),

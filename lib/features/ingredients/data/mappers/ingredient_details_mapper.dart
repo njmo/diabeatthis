@@ -19,6 +19,7 @@ extension IngredientDetailsDraftMapper on details.Ingredient {
       ig: ig,
       preparation: preparation,
       brand: brand,
+      barcode: barcode,
     );
   }
 }

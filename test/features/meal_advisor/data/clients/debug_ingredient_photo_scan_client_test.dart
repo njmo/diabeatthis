@@ -1,8 +1,8 @@
+import 'package:diabeatthis/features/ingredients/data/models/ingredient_scan_result.dart';
+import 'package:diabeatthis/features/ingredients/domain/services/ingredient_scan_result_validator.dart';
 import 'package:diabeatthis/features/meal_advisor/data/clients/debug_ingredient_photo_scan_client.dart';
 import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_photo_scan_input.dart';
-import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_scan_result.dart';
 import 'package:diabeatthis/features/meal_advisor/data/parsers/ingredient_scan_result_parser.dart';
-import 'package:diabeatthis/features/meal_advisor/domain/services/ingredient_scan_result_validator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

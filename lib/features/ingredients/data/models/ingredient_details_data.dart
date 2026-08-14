@@ -19,6 +19,7 @@ class Ingredient {
   int? ig;
   String? preparation;
   String? brand;
+  String? barcode;
 
   Ingredient({
     required this.id,
@@ -36,6 +37,7 @@ class Ingredient {
     this.ig,
     this.preparation,
     this.brand,
+    this.barcode,
   });
 }
 

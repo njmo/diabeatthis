@@ -1,12 +1,12 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../ingredients/data/models/ingredient_scan_result.dart';
+import '../../../ingredients/domain/services/ingredient_scan_result_validator.dart';
 import '../../data/clients/ingredient_photo_scan_client.dart';
 import '../../data/models/ingredient_photo_scan_input.dart';
-import '../../data/models/ingredient_scan_result.dart';
 import '../../data/parsers/ingredient_scan_result_parser.dart';
 import '../../data/providers/ingredient_photo_scan_client_provider.dart';
 import '../services/ingredient_scan_debug_logger.dart';
-import '../services/ingredient_scan_result_validator.dart';
 
 part 'scan_ingredient_from_photos_use_case.g.dart';
 

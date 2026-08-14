@@ -38,7 +38,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -76,6 +76,12 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
         await m.alterTable(
           // ignore: experimental_member_use
           TableMigration(ingredient, newColumns: [ingredient.carbsLabelMode]),
+        );
+      }
+      if (from < 14) {
+        await m.addColumn(ingredient, ingredient.barcode);
+        await customStatement(
+          'CREATE UNIQUE INDEX IF NOT EXISTS ingredient_barcode_unique ON ingredient(barcode) WHERE barcode IS NOT NULL',
         );
       }
     },

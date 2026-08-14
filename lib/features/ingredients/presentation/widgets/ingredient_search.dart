@@ -13,6 +13,11 @@ import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/drafts/ingredient_draft.dart';
 import '../../data/mappers/ingredient_draft_mapper.dart';
 import '../../data/providers/ingredient_provider.dart';
+import '../controllers/ingredient_barcode_lookup_controller.dart';
+import '../controllers/ingredient_barcode_scan_feedback_controller.dart';
+import '../models/ingredient_barcode_scan_outcome.dart';
+import '../services/ingredient_barcode_scanner.dart';
+import 'ingredient_barcode_scan_outcome_dialog.dart';
 import 'ingredient_photo_scan.dart';
 
 const int _ingredientSearchMaxLength = 120;
@@ -26,6 +31,10 @@ class IngredientSearch extends HookConsumerWidget {
     final valuePicked = useState(-1);
     final normalizedQuery = query.value.trim();
     final photoSearchState = ref.watch(ingredientPhotoSearchControllerProvider);
+    final barcodeScanState = ref.watch(
+      ingredientBarcodeLookupControllerProvider,
+    );
+    final barcodeScanMessage = ref.watch(ingredientBarcodeScanFeedbackProvider);
     final photoSearch = photoSearchState.value;
     final photoSearchResult = photoSearch?.result;
     final photoSearchCandidatesKey = photoSearchResult?.candidatesKey ?? '';
@@ -44,10 +53,11 @@ class IngredientSearch extends HookConsumerWidget {
         (ingredients.asData?.value.isEmpty ?? false);
     final selectedIngredient = ref.watch(ingredientDraftProvider);
     final draft = ref.watch(ingredientDraftProvider.notifier);
-    final formKey = ref.watch(mealIngredientFormKeyProvider);
+    final formKey = ref.watch(ingredientSearchFormKeyProvider);
     final addIngredientController = ref.read(
       addMealIngredientStageProvider.notifier,
     );
+    final barcodeScanner = ref.read(ingredientBarcodeScannerProvider);
 
     return SafeArea(
       child: Column(
@@ -55,9 +65,73 @@ class IngredientSearch extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           IngredientSearchActions(
+            isBarcodeScanLoading: barcodeScanState.isLoading,
             isPhotoSearchLoading: photoSearchState.isLoading,
             onAddManual: addIngredientController.startManualIngredient,
             onScanLabel: addIngredientController.startIngredientPhotoScan,
+            onScanBarcode: () async {
+              final barcode = await barcodeScanner.scan(context);
+              if (barcode == null) {
+                return;
+              }
+
+              final outcome = await addIngredientController
+                  .scanIngredientBarcode(barcode);
+              if (!context.mounted) {
+                return;
+              }
+
+              final shouldContinue =
+                  await showIngredientBarcodeScanOutcomeDialog(
+                    context: context,
+                    outcome: outcome,
+                    errorMessage: outcome.error == null
+                        ? null
+                        : ingredientBarcodeScanErrorMessage(outcome.error!),
+                  );
+              if (shouldContinue != true) {
+                if (outcome.type == IngredientBarcodeScanOutcomeType.failed) {
+                  ref
+                      .read(ingredientBarcodeScanFeedbackProvider.notifier)
+                      .show(
+                        ingredientBarcodeScanNoUsableDataMessageForError(
+                          outcome.error,
+                        ),
+                      );
+                }
+                return;
+              }
+
+              switch (outcome.type) {
+                case IngredientBarcodeScanOutcomeType.existingIngredient:
+                  ref.invalidate(ingredientBarcodeScanFeedbackProvider);
+                  addIngredientController.continueWithExistingBarcodeIngredient(
+                    outcome.existingIngredient!,
+                  );
+                  break;
+                case IngredientBarcodeScanOutcomeType.newDraft:
+                  ref.invalidate(ingredientBarcodeScanFeedbackProvider);
+                  addIngredientController.continueWithBarcodeIngredientDraft(
+                    outcome.draft!,
+                  );
+                  break;
+                case IngredientBarcodeScanOutcomeType.needsReview:
+                  ref.invalidate(ingredientBarcodeScanFeedbackProvider);
+                  addIngredientController.continueWithBarcodeIngredientDraft(
+                    outcome.draft!,
+                  );
+                  break;
+                case IngredientBarcodeScanOutcomeType.failed:
+                  ref
+                      .read(ingredientBarcodeScanFeedbackProvider.notifier)
+                      .show(
+                        ingredientBarcodeScanNoUsableDataMessageForError(
+                          outcome.error,
+                        ),
+                      );
+                  break;
+              }
+            },
             onSearchPhoto: addIngredientController.startIngredientPhotoSearch,
           ),
           const SizedBox(height: 8),
@@ -112,6 +186,18 @@ class IngredientSearch extends HookConsumerWidget {
             IngredientPhotoSearchErrorMessage(
               message: _photoSearchErrorMessage(photoSearchState.error!),
             ),
+            const SizedBox(height: 8),
+          ],
+          if (barcodeScanState.hasError && barcodeScanMessage == null) ...[
+            IngredientBarcodeScanErrorMessage(
+              message: ingredientBarcodeScanErrorMessage(
+                barcodeScanState.error!,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (barcodeScanMessage != null) ...[
+            IngredientBarcodeScanInfoMessage(message: barcodeScanMessage),
             const SizedBox(height: 8),
           ],
           if (normalizedQuery.isEmpty && photoSearchResult != null) ...[
@@ -233,15 +319,19 @@ String _brandLabel(String? brand) {
 }
 
 class IngredientSearchActions extends StatelessWidget {
+  final bool isBarcodeScanLoading;
   final bool isPhotoSearchLoading;
   final VoidCallback onAddManual;
   final VoidCallback onScanLabel;
+  final VoidCallback? onScanBarcode;
   final VoidCallback onSearchPhoto;
 
   const IngredientSearchActions({
+    required this.isBarcodeScanLoading,
     required this.isPhotoSearchLoading,
     required this.onAddManual,
     required this.onScanLabel,
+    required this.onScanBarcode,
     required this.onSearchPhoto,
     super.key,
   });
@@ -251,7 +341,7 @@ class IngredientSearchActions extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _IngredientSearchActionButton(
+          child: IngredientSearchActionButton(
             icon: const Icon(Icons.add_box_outlined),
             label: 'Ręcznie',
             tooltip: 'Dodaj ręcznie',
@@ -260,7 +350,7 @@ class IngredientSearchActions extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: _IngredientSearchActionButton(
+          child: IngredientSearchActionButton(
             icon: const Icon(Icons.add_a_photo_outlined),
             label: 'Etykieta',
             tooltip: 'Odczytaj etykietę',
@@ -269,7 +359,16 @@ class IngredientSearchActions extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: _IngredientSearchActionButton(
+          child: IngredientSearchActionButton(
+            icon: const Icon(Icons.qr_code_scanner_outlined),
+            label: isBarcodeScanLoading ? 'Pobieram' : 'Kod',
+            tooltip: 'Skanuj kod kreskowy',
+            onPressed: isBarcodeScanLoading ? null : onScanBarcode,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: IngredientSearchActionButton(
             icon: const CameraSearchIcon(size: 18),
             label: isPhotoSearchLoading ? 'Szukam' : 'Ze zdjęcia',
             tooltip: 'Znajdź ze zdjęcia',
@@ -281,17 +380,18 @@ class IngredientSearchActions extends StatelessWidget {
   }
 }
 
-class _IngredientSearchActionButton extends StatelessWidget {
+class IngredientSearchActionButton extends StatelessWidget {
   final Widget icon;
   final String label;
   final String tooltip;
   final VoidCallback? onPressed;
 
-  const _IngredientSearchActionButton({
+  const IngredientSearchActionButton({
     required this.icon,
     required this.label,
     required this.tooltip,
     required this.onPressed,
+    super.key,
   });
 
   @override

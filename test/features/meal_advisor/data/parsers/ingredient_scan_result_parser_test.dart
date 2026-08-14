@@ -1,4 +1,4 @@
-import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_scan_result.dart';
+import 'package:diabeatthis/features/ingredients/data/models/ingredient_scan_result.dart';
 import 'package:diabeatthis/features/meal_advisor/data/parsers/ingredient_scan_result_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,6 +13,7 @@ void main() {
   "status": "recognized",
   "name": "Pieguski",
   "brand": "Milka",
+  "barcode": "5900385503415",
   "nutritionPer100g": {
     "carbs": 62.3,
     "fat": 20.1,
@@ -33,6 +34,7 @@ void main() {
 
       expect(result.name, 'Pieguski');
       expect(result.brand, 'Milka');
+      expect(result.barcode, '5900385503415');
       expect(result.status, IngredientScanStatus.recognized);
       expect(result.needsRetake, isFalse);
       expect(result.hasCompleteNutritionPer100g, isTrue);
@@ -96,6 +98,24 @@ void main() {
       expect(result.nutritionPer100g?.protein, 4);
       expect(result.nutritionPer100g?.fiber, 0);
       expect(result.portions, isEmpty);
+    });
+
+    test('ignores invalid barcode value', () {
+      final result = parser.parse('''
+{
+  "name": "Jogurt",
+  "brand": "Test",
+  "barcode": "5900385503416",
+  "nutritionPer100g": {
+    "carbs": 12,
+    "fat": 3,
+    "protein": 4,
+    "fiber": 0
+  }
+}
+''');
+
+      expect(result.barcode, isNull);
     });
 
     test('ignores flat legacy macro values outside the schema', () {

@@ -21,6 +21,7 @@ Recognized schema:
   "status": "recognized",
   "name": "Product name",
   "brand": "Brand name or null",
+  "barcode": "Visible EAN/UPC/GTIN barcode digits or null",
   "nutritionPer100g": {
     "carbs": 62.3,
     "fat": 20.1,
@@ -52,6 +53,8 @@ Rules:
 - Do not infer missing macronutrients from kcal.
 - Do not translate product or brand names.
 - Return product and brand names in lowercase.
+- If a barcode is clearly visible, copy only its digits into barcode.
+- Use null for barcode when the digits are incomplete, blurry, or uncertain.
 - For nutritionPer100g, use values per 100 g only.
 - Put package serving sizes in portions only when explicitly visible.
 ''';

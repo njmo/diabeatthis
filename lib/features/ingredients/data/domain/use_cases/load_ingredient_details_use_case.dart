@@ -74,6 +74,7 @@ class LoadIngredientDetailsUseCase {
       ig: ingredient.ig,
       preparation: '',
       brand: ingredient.brand,
+      barcode: ingredient.barcode,
     );
 
     return IngredientDetailsData(

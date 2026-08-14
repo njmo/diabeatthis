@@ -1,5 +1,5 @@
-import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_scan_result.dart';
-import 'package:diabeatthis/features/meal_advisor/domain/services/ingredient_scan_result_validator.dart';
+import 'package:diabeatthis/features/ingredients/data/models/ingredient_scan_result.dart';
+import 'package:diabeatthis/features/ingredients/domain/services/ingredient_scan_result_validator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -11,6 +11,7 @@ void main() {
         status: IngredientScanStatus.recognized,
         name: 'Pieguski',
         brand: 'Milka',
+        barcode: null,
         nutritionPer100g: NutritionPer100g(
           carbs: 62.3,
           fat: 20.1,
@@ -29,6 +30,7 @@ void main() {
         status: IngredientScanStatus.recognized,
         name: 'Pieguski',
         brand: null,
+        barcode: null,
         nutritionPer100g: NutritionPer100g(
           carbs: 62.3,
           fat: null,
@@ -56,6 +58,7 @@ void main() {
         status: IngredientScanStatus.needsRetake,
         name: null,
         brand: null,
+        barcode: null,
         nutritionPer100g: null,
         portions: [],
         retakeRequest: IngredientScanRetakeRequest(

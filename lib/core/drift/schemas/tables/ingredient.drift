@@ -24,6 +24,7 @@ CREATE TABLE ingredient (
   ig INTEGER CHECK (ig BETWEEN 0 AND 110),
   nutrition_confidence REAL NOT NULL CHECK (nutrition_confidence >= 0 AND nutrition_confidence <= 1),
   brand TEXT,
+  barcode TEXT,
   is_reference INTEGER NOT NULL DEFAULT 0,
 
   created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
@@ -33,6 +34,10 @@ CREATE TABLE ingredient (
   UNIQUE (name, brand),
   CHECK (is_reference IN (0, 1))
 );
+
+CREATE UNIQUE INDEX ingredient_barcode_unique
+ON ingredient(barcode)
+WHERE barcode IS NOT NULL;
 
 CREATE TABLE ingredient_status_history (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -103,3 +108,8 @@ searchIngredientsByName:
   WHERE name LIKE '%' || :q || '%'
   ORDER BY name ASC
   LIMIT :limit;
+
+getIngredientByBarcode:
+  SELECT * FROM ingredient
+  WHERE barcode = :barcode
+  LIMIT 1;

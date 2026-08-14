@@ -4,13 +4,13 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/forms.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../ingredients/data/models/ingredient_scan_result.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../ingredients/presentation/widgets/ingredient_form.dart';
 import '../../../ingredients/presentation/widgets/ingredient_photo_scan.dart';
 import '../../../ingredients/presentation/widgets/ingredient_portion_amount_form.dart';
 import '../../../ingredients/presentation/widgets/ingredient_scan_review_dialog.dart';
 import '../../../ingredients/presentation/widgets/ingredient_search.dart';
-import '../../../meal_advisor/data/models/ingredient_scan_result.dart';
 import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -212,7 +212,7 @@ class AddMealIngredient extends ConsumerWidget {
                           }
                         }
                       } else {
-                        final formKey = ref.read(mealIngredientFormKeyProvider);
+                        final formKey = _formKeyForStage(ref, addingStage);
                         if (validateForm(formKey)) {
                           await addingStateNotifier.nextStage();
                         }
@@ -284,4 +284,19 @@ class AddMealIngredient extends ConsumerWidget {
       ),
     );
   }
+}
+
+GlobalKey<FormState> _formKeyForStage(
+  WidgetRef ref,
+  AddMealIngredientStage stage,
+) {
+  return switch (stage) {
+    AddMealIngredientStage.ingredientSearch => ref.read(
+      ingredientSearchFormKeyProvider,
+    ),
+    AddMealIngredientStage.ingredientForm => ref.read(
+      ingredientFormKeyProvider,
+    ),
+    _ => ref.read(mealIngredientFormKeyProvider),
+  };
 }

@@ -4,7 +4,6 @@ import '../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
-
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../meal_advisor/data/models/ingredient_photo_search_result.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
@@ -116,8 +115,13 @@ Future<domain.Ingredient> insertIngredient(
         throw ArgumentError('Ingredient name cannot be empty');
       }
       final fiberPer100g = draft.isReference ? 0.0 : draft.fiberPer100g;
-      final ingredient = draft.copyWith(name: name, fiberPer100g: fiberPer100g);
+      final ingredient = draft.copyWith(
+        name: name,
+        fiberPer100g: fiberPer100g,
+        barcode: draft.normalizedBarcode,
+      );
       ingredient.validateMacroRanges();
+      ingredient.validateBarcode();
 
       final db = ref.watch(databaseProvider);
       final value = await db
@@ -199,6 +203,11 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
   String? getBrand() =>
       state.map(draft: (d) => d.brand, existing: (e) => e.brand);
   void setBrand(String value) => state = state.copyWith(brand: value);
+
+  void setBarcode(String value) {
+    final normalized = value.trim();
+    state = state.copyWith(barcode: normalized.isEmpty ? null : normalized);
+  }
 
   void setIsReference(bool value) => state = state.copyWith(isReference: value);
 }

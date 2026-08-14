@@ -38,6 +38,7 @@ void main() {
       nutritionConfidence: 0.75,
       isReference: false,
       brand: null,
+      barcode: null,
     );
 
     final historyAfterMacroChange = await db.ingredientDao
@@ -60,6 +61,7 @@ void main() {
       nutritionConfidence: 0.75,
       isReference: false,
       brand: null,
+      barcode: null,
     );
 
     final historyAfterNameChange = await db.ingredientDao
@@ -107,6 +109,28 @@ void main() {
 
     expect(result, hasLength(1));
     expect(result.single.brand, 'Fantasia');
+  });
+
+  test('finds ingredient by barcode', () async {
+    await db
+        .into(db.ingredient)
+        .insert(
+          IngredientCompanion.insert(
+            name: 'Keczup',
+            carbsPer100g: 12,
+            fatPer100g: 0,
+            fiberPer100g: 1,
+            proteinPer100g: 1,
+            nutritionConfidence: 0.8,
+            barcode: const Value('5900385503415'),
+          ),
+        );
+
+    final result = await db.ingredientDao
+        .getIngredientByBarcode('5900385503415')
+        .getSingleOrNull();
+
+    expect(result?.name, 'Keczup');
   });
 
   test('portion amount update changes grams per portion', () async {
