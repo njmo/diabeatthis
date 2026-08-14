@@ -110,14 +110,30 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
   void setMealTemplateId(int? mealTemplateId) =>
       state = state.copyWith(mealTemplateId: mealTemplateId);
   void setStatus(String status) => state = state.copyWith(status: status);
-  void removeMealIngredient(MealIngredientsDraft mealIngredient) =>
-      state = state.copyWith(
-        mealIngredients: state.mealIngredients
-            .where((element) => element != mealIngredient)
-            .toList(),
-      );
-  void addMealIngredient(MealIngredientsDraft mealIngredient) => state = state
-      .copyWith(mealIngredients: [...state.mealIngredients, mealIngredient]);
+  void removeMealIngredient(MealIngredientsDraft mealIngredient) {
+    final ingredients = [...state.mealIngredients];
+    final index = ingredients.indexOf(mealIngredient);
+    if (index < 0) {
+      return;
+    }
+
+    ingredients.removeAt(index);
+    state = state.copyWith(mealIngredients: ingredients);
+  }
+
+  bool addMealIngredient(MealIngredientsDraft mealIngredient) {
+    if (state.mealIngredients.any(
+      (ingredient) => ingredient.isSameIngredientAs(mealIngredient),
+    )) {
+      return false;
+    }
+
+    state = state.copyWith(
+      mealIngredients: [...state.mealIngredients, mealIngredient],
+    );
+    return true;
+  }
+
   void addMealIngredients(List<MealIngredientsDraft> mealIngredients) =>
       state = state.copyWith(
         mealIngredients: [...state.mealIngredients, ...mealIngredients],
@@ -125,4 +141,29 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
   void clearMealIngredients() => state = state.copyWith(mealIngredients: []);
   void setMealIngredients(List<MealIngredientsDraft> mealIngredients) =>
       state = state.copyWith(mealIngredients: mealIngredients);
+}
+
+extension MealIngredientsDraftIdentity on MealIngredientsDraft {
+  bool isSameIngredientAs(MealIngredientsDraft other) {
+    final ingredientId = ingredient.getIngredientIdOrNull();
+    final otherIngredientId = other.ingredient.getIngredientIdOrNull();
+    if (ingredientId != null && otherIngredientId != null) {
+      return ingredientId == otherIngredientId;
+    }
+
+    if (ingredient == other.ingredient) {
+      return true;
+    }
+
+    final barcode = ingredient.barcode?.trim();
+    final otherBarcode = other.ingredient.barcode?.trim();
+    if (barcode != null &&
+        barcode.isNotEmpty &&
+        otherBarcode != null &&
+        otherBarcode.isNotEmpty) {
+      return barcode == otherBarcode;
+    }
+
+    return false;
+  }
 }

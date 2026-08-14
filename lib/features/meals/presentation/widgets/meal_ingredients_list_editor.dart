@@ -59,7 +59,14 @@ class MealIngredientsListEditor extends ConsumerWidget {
       ref: ref,
     );
     if (mealIngredient != null) {
-      ref.read(mealDraftProvider.notifier).addMealIngredient(mealIngredient);
+      final added = ref
+          .read(mealDraftProvider.notifier)
+          .addMealIngredient(mealIngredient);
+      if (!added && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Składnik jest już na liście.')),
+        );
+      }
     }
   }
 }

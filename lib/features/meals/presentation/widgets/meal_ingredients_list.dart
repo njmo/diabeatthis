@@ -43,6 +43,18 @@ class MealIngredientsList extends ConsumerWidget {
     );
     if (mealIngredient != null) {
       final mealDraft = ref.read(mealDraftProvider.notifier);
+      final wouldDuplicate = ref
+          .read(mealDraftProvider)
+          .mealIngredients
+          .where((ingredient) => ingredient != draft)
+          .any((ingredient) => ingredient.isSameIngredientAs(mealIngredient));
+      if (wouldDuplicate && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Składnik jest już na liście.')),
+        );
+        return;
+      }
+
       mealDraft.removeMealIngredient(draft);
       mealDraft.addMealIngredient(mealIngredient);
     }
