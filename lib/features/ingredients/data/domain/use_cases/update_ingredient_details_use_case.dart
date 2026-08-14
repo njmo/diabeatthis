@@ -32,10 +32,11 @@ class UpdateIngredientDetailsUseCase {
     final db = ref.read(databaseProvider);
     final saved = await db.ingredientDao.getIngredientById(existing.id);
     final savedLabelMode = CarbsLabelModeX.fromStorage(saved.carbsLabelMode);
+    final barcode = existing.isReference ? null : existing.normalizedBarcode;
     final updated = existing.copyWith(
       fiberPer100g: fiberPer100g,
       carbsLabelMode: savedLabelMode,
-      barcode: existing.normalizedBarcode,
+      barcode: barcode,
     );
 
     updated.validateMacroRanges();
@@ -54,7 +55,7 @@ class UpdateIngredientDetailsUseCase {
       nutritionConfidence: existing.nutritionConfidence,
       isReference: existing.isReference,
       brand: existing.brand,
-      barcode: existing.normalizedBarcode,
+      barcode: barcode,
     );
   }
 

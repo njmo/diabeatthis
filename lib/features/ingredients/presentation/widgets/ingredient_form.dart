@@ -53,8 +53,10 @@ class IngredientForm extends ConsumerWidget {
               border: OutlineInputBorder(),
             ),
           ),
-          const IngredientBarcodeFormField(),
-          const SizedBox(height: 16),
+          if (!state.isReference) ...[
+            const IngredientBarcodeFormField(),
+            const SizedBox(height: 16),
+          ],
           ConfidenceSlider(
             value: ConfidenceLevelX.fromDouble01(state.nutritionConfidence),
             onChanged: draft.setNutritionConfidence,

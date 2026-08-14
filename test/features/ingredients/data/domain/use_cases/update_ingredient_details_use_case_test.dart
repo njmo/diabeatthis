@@ -58,4 +58,40 @@ void main() {
 
     expect(updated.carbsLabelMode, 'non_eu');
   });
+
+  test('clears barcode when updating reference ingredient', () async {
+    final ingredient = await db
+        .into(db.ingredient)
+        .insertReturning(
+          IngredientCompanion.insert(
+            name: 'Referencyjny obiad',
+            carbsPer100g: 28,
+            fatPer100g: 8,
+            fiberPer100g: 0,
+            proteinPer100g: 14,
+            nutritionConfidence: 0.8,
+            isReference: const Value(1),
+            barcode: const Value('5900385503415'),
+          ),
+        );
+
+    final useCase = container.read(updateIngredientDetailsUseCaseProvider);
+    await useCase.call(
+      IngredientDraft.existing(
+        id: ingredient.id,
+        name: ingredient.name,
+        carbsPer100g: ingredient.carbsPer100g,
+        fatPer100g: ingredient.fatPer100g,
+        fiberPer100g: ingredient.fiberPer100g,
+        proteinPer100g: ingredient.proteinPer100g,
+        nutritionConfidence: ingredient.nutritionConfidence,
+        isReference: true,
+        barcode: ingredient.barcode,
+      ),
+    );
+
+    final updated = await db.ingredientDao.getIngredientById(ingredient.id);
+
+    expect(updated.barcode, null);
+  });
 }

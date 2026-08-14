@@ -209,7 +209,12 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
     state = state.copyWith(barcode: normalized.isEmpty ? null : normalized);
   }
 
-  void setIsReference(bool value) => state = state.copyWith(isReference: value);
+  void setIsReference(bool value) {
+    state = state.copyWith(
+      isReference: value,
+      barcode: value ? null : state.barcode,
+    );
+  }
 }
 
 double _parseDraftNumber(String value) {
