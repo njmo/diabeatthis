@@ -54,7 +54,9 @@ class IngredientMacroForm extends ConsumerWidget {
                 label: 'Węglowodany',
                 initialValue: _formatInput(value.carbsPer100g),
                 onChanged: draft.setCarbsPer100g,
-                validator: (_) => _macroValidationMessage(value),
+                validator: (input) =>
+                    _validateMacroInput(input) ??
+                    _macroValidationMessage(value),
               ),
             ),
             const SizedBox(width: 10),
@@ -63,6 +65,7 @@ class IngredientMacroForm extends ConsumerWidget {
                 label: 'Tłuszcz',
                 initialValue: _formatInput(value.fatPer100g),
                 onChanged: draft.setFatPer100g,
+                validator: _validateMacroInput,
               ),
             ),
           ],
@@ -74,6 +77,7 @@ class IngredientMacroForm extends ConsumerWidget {
                 label: 'Białko',
                 initialValue: _formatInput(value.proteinPer100g),
                 onChanged: draft.setProteinPer100g,
+                validator: _validateMacroInput,
               ),
             ),
             const SizedBox(width: 10),
@@ -82,6 +86,9 @@ class IngredientMacroForm extends ConsumerWidget {
                 label: 'Błonnik',
                 initialValue: _formatInput(value.fiberPer100g),
                 onChanged: draft.setFiberPer100g,
+                validator: (input) =>
+                    _validateMacroInput(input) ??
+                    _netCarbsValidationMessage(value),
               ),
             ),
           ],
@@ -95,8 +102,27 @@ String? _macroValidationMessage(IngredientDraft value) {
   if (!value.hasEnergyMacros) {
     return 'Uzupełnij węglowodany, tłuszcz albo białko';
   }
+  return _netCarbsValidationMessage(value);
+}
+
+String? _netCarbsValidationMessage(IngredientDraft value) {
   if (!value.hasPositiveNonEuNetCarbs) {
     return 'Węglow. > błonnik';
+  }
+  return null;
+}
+
+String? _validateMacroInput(String? value) {
+  final normalized = value?.trim().replaceAll(',', '.');
+  if (normalized == null || normalized.isEmpty) {
+    return '';
+  }
+  final parsed = double.tryParse(normalized);
+  if (parsed == null || parsed < 0) {
+    return 'Podaj liczbę';
+  }
+  if (parsed > IngredientDraftValidation.maxMacroPer100g) {
+    return 'Maks. 100 g/100 g';
   }
   return null;
 }

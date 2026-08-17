@@ -4,6 +4,7 @@ import 'ingredient_draft.dart';
 
 extension IngredientDraftValidation on IngredientDraft {
   static const _barcodeValidator = IngredientBarcodeValidator();
+  static const maxMacroPer100g = 100.0;
 
   bool get hasEnergyMacros =>
       carbsPer100g > 0 || fatPer100g > 0 || proteinPer100g > 0;
@@ -19,9 +20,13 @@ extension IngredientDraftValidation on IngredientDraft {
   bool get hasValidMacroRanges {
     final fiber = isReference ? 0.0 : fiberPer100g;
     return carbsPer100g >= 0 &&
+        carbsPer100g <= maxMacroPer100g &&
         fatPer100g >= 0 &&
+        fatPer100g <= maxMacroPer100g &&
         fiber >= 0 &&
+        fiber <= maxMacroPer100g &&
         proteinPer100g >= 0 &&
+        proteinPer100g <= maxMacroPer100g &&
         hasPositiveNonEuNetCarbs;
   }
 
@@ -47,6 +52,12 @@ extension IngredientDraftValidation on IngredientDraft {
         fiberPer100g < 0 ||
         proteinPer100g < 0) {
       throw ArgumentError('Ingredient macros cannot be negative');
+    }
+    if (carbsPer100g > maxMacroPer100g ||
+        fatPer100g > maxMacroPer100g ||
+        fiberPer100g > maxMacroPer100g ||
+        proteinPer100g > maxMacroPer100g) {
+      throw ArgumentError('Ingredient macros cannot exceed 100g per 100g');
     }
     if (!hasPositiveNonEuNetCarbs) {
       throw ArgumentError(

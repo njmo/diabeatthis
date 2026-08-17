@@ -53,6 +53,38 @@ void main() {
       expect(ingredient.validateMacroRanges, throwsArgumentError);
     });
 
+    test('rejects macros above 100g per 100g', () {
+      final invalidMacros = [
+        _ingredient(
+          carbsPer100g: 101,
+          fiberPer100g: 1,
+          carbsLabelMode: CarbsLabelMode.eu,
+        ),
+        _ingredient(
+          carbsPer100g: 10,
+          fatPer100g: 101,
+          fiberPer100g: 1,
+          carbsLabelMode: CarbsLabelMode.eu,
+        ),
+        _ingredient(
+          carbsPer100g: 10,
+          fiberPer100g: 101,
+          carbsLabelMode: CarbsLabelMode.eu,
+        ),
+        _ingredient(
+          carbsPer100g: 10,
+          proteinPer100g: 101,
+          fiberPer100g: 1,
+          carbsLabelMode: CarbsLabelMode.eu,
+        ),
+      ];
+
+      for (final ingredient in invalidMacros) {
+        expect(ingredient.hasValidMacroRanges, false);
+        expect(ingredient.validateMacroRanges, throwsArgumentError);
+      }
+    });
+
     test('allows empty or valid barcode and rejects invalid barcode', () {
       final emptyBarcode = _ingredient(
         carbsPer100g: 1,
@@ -75,13 +107,15 @@ IngredientDraft _ingredient({
   required double carbsPer100g,
   required double fiberPer100g,
   required CarbsLabelMode carbsLabelMode,
+  double fatPer100g = 1,
+  double proteinPer100g = 1,
 }) {
   return IngredientDraft.draft(
     name: 'Test',
     carbsPer100g: carbsPer100g,
-    fatPer100g: 1,
+    fatPer100g: fatPer100g,
     fiberPer100g: fiberPer100g,
-    proteinPer100g: 1,
+    proteinPer100g: proteinPer100g,
     nutritionConfidence: 0.8,
     isReference: false,
     carbsLabelMode: carbsLabelMode,
