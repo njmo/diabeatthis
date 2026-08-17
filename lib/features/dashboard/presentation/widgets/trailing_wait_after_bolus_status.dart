@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../meals/data/providers/meal_status_history_provider.dart';
 import '../../data/providers/meal_advisor_result_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 
@@ -14,25 +15,36 @@ class TrailingWaitAfterBolusStatus extends HookConsumerWidget with Logging {
   Widget build(BuildContext context, WidgetRef ref) {
     final timeNow = ref.watch(timeNowProvider);
     final mealAdvice = ref.watch(getMealAdviceProvider(meal));
+    final waitStartedAt = ref.watch(
+      mealStatusStartedAtProvider(
+        MealStatusStartedAtRequest(mealId: meal.id, status: 'bolused-waiting'),
+      ),
+    );
 
-    if (mealAdvice.isLoading || timeNow.isLoading) {
+    if (mealAdvice.isLoading || timeNow.isLoading || waitStartedAt.isLoading) {
       return const SizedBox.shrink();
     }
 
     final advice = mealAdvice.asData?.value;
     final timeNowDate = timeNow.asData?.value;
+    final waitStartedAtDate = waitStartedAt.asData?.value;
     final recommendedMinutes = advice?.wait?.recommendedMinutes;
 
-    if (advice == null || timeNowDate == null || recommendedMinutes == null) {
+    if (advice == null ||
+        timeNowDate == null ||
+        waitStartedAtDate == null ||
+        recommendedMinutes == null) {
       return const SizedBox.shrink();
     }
 
-    final timeDifference = advice.createdAt.difference(timeNowDate);
+    final elapsedWaitMinutes = timeNowDate
+        .difference(waitStartedAtDate)
+        .inMinutes;
 
-    logI('timeDifference: $timeDifference');
+    logI('elapsedWaitMinutes: $elapsedWaitMinutes');
     logI('recommendedMinutes: $recommendedMinutes');
 
-    final minutesLeft = recommendedMinutes + timeDifference.inMinutes;
+    final minutesLeft = recommendedMinutes - elapsedWaitMinutes;
     return SizedBox(
       width: 52,
       child: Align(

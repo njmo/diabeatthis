@@ -27,6 +27,14 @@ extension MealDecisionX on MealDecision {
     // TODO: Handle this case.
     MealDecision.bolus => throw UnimplementedError(),
   };
+
+  String get acceptedStatus => switch (this) {
+    MealDecision.eatNowBolusLater => 'eating-then-bolus',
+    MealDecision.bolusAndEatNow => 'waiting-for-bolus',
+    MealDecision.bolusWaitThenEat => 'waiting-for-bolus',
+    // TODO: Handle this case.
+    MealDecision.bolus => throw UnimplementedError(),
+  };
 }
 
 class MealAdvice {

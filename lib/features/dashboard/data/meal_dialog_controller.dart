@@ -1,12 +1,12 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/logger/logger.dart';
-import '../../../core/notifications/domain/events/eat_now_event_notification.dart';
 import '../../../core/notifications/domain/events/meal_advice_pending_notification.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
 import '../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import '../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
+import '../../meals/data/providers/meal_activation_guard_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
 import 'meal_dialog_state.dart';
 import 'providers/device_status_ui_provider.dart';
@@ -66,6 +66,17 @@ class MealDialogController extends _$MealDialogController with Logging {
   }
 
   Future<void> chooseEat() async {
+    final blockingMeal = await ref.read(
+      mealBlockingActivationProvider(mealId).future,
+    );
+    if (blockingMeal != null) {
+      state = state.copyWith(
+        activationBlockedByMealName: blockingMeal.name,
+        step: MealDialogStep.choose,
+      );
+      return;
+    }
+
     final mealStatus = await ref.read(
       mealMacronutrientsSummaryProvider(mealId).future,
     );
@@ -96,6 +107,7 @@ class MealDialogController extends _$MealDialogController with Logging {
       carbsGrams: carbs,
       extendedCarbsGrams: advice.extendedCarbs.grams.toDouble(),
       advice: advice,
+      clearActivationBlock: true,
     );
   }
 
@@ -121,7 +133,11 @@ class MealDialogController extends _$MealDialogController with Logging {
   }
 
   void chooseSkip() {
-    state = state.copyWith(skipMeal: true, step: MealDialogStep.confirm);
+    state = state.copyWith(
+      skipMeal: true,
+      step: MealDialogStep.confirm,
+      clearActivationBlock: true,
+    );
   }
 
   void back() {
@@ -129,26 +145,6 @@ class MealDialogController extends _$MealDialogController with Logging {
       state = state.copyWith(
         step: state.skipMeal ? MealDialogStep.choose : MealDialogStep.choose,
       );
-    }
-  }
-
-  Future<void> scheduleEatNotification({required int minutes}) async {
-    final notificationsPluginController = ref.read(
-      notificationsControllerUiProvider,
-    );
-    final when = Duration(minutes: minutes);
-
-    logI("SCHEDULING NOTIFICATION IN ${when.toString()}");
-
-    try {
-      final event = EatNowNotificationEvent(mealId: mealId, minutes: minutes);
-
-      await notificationsPluginController.schedule(event, when);
-
-      final pending = await notificationsPluginController.pending;
-      logI('Pending IDs: $pending');
-    } catch (e) {
-      logE('Error scheduling notification: $e');
     }
   }
 

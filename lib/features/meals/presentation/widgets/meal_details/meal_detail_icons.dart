@@ -35,6 +35,7 @@ Color mealTimelineEventColor(MealTimelineEventType type) {
 IconData mealStatusIcon(String status) {
   return switch (status) {
     'planned' => Icons.schedule,
+    'waiting-for-bolus' => Icons.medication,
     'bolused-waiting' => Icons.hourglass_top,
     'bolused-eating' => Icons.restaurant,
     'eating-extra' => Icons.add_circle,

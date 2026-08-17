@@ -5,6 +5,7 @@ import '../executors/finalize_meal_executor.dart';
 import '../executors/idle_executor.dart';
 import '../executors/meal_monitor_state_executor.dart';
 import '../executors/monitor_until_meal.dart';
+import '../executors/wait_for_bolus_executor.dart';
 
 MealMonitorStateExecutor? mealStatusChangedEventToExecutor(
   MealStatusChangedEvent event,
@@ -12,7 +13,7 @@ MealMonitorStateExecutor? mealStatusChangedEventToExecutor(
 ) {
   return event.map(
     eating: (MealStartedEatingEvent value) =>
-        DetectFinishedEatingExecutor(shouldBolus: false, bolusWaited: true),
+        DetectFinishedEatingExecutor(shouldBolus: false),
     eatingExtra: (MealEatingExtraEvent value) =>
         DetectFinishedEatingExecutor(shouldBolus: false, isAddOn: true),
     eaten: (MealFinishedEatingEvent value) => FinalizeMealExecutor(),
@@ -26,6 +27,7 @@ MealMonitorStateExecutor? mealStatusChangedEventToExecutor(
     },
     eatingThenBolus: (MealEatingThenBolus value) =>
         DetectFinishedEatingExecutor(shouldBolus: true),
+    waitingForBolus: (MealWaitingForBolusEvent value) => WaitForBolusExecutor(),
     bolusedWaiting: (MealBolusedWaitingEvent value) =>
         BolusThenWaitExecutor(recommendedMinutes: null),
     bolusedEating: (MealBolusedEatingEvent value) =>
@@ -34,6 +36,6 @@ MealMonitorStateExecutor? mealStatusChangedEventToExecutor(
         FinalizeMealExecutor(),
     planned: (MealPlannedEvent value) => MonitorUntilMeal(),
     waitedEating: (MealWaitedEatingEvent value) =>
-        DetectFinishedEatingExecutor(shouldBolus: false, bolusWaited: true),
+        DetectFinishedEatingExecutor(shouldBolus: false),
   );
 }

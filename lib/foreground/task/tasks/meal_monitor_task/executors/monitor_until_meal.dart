@@ -23,11 +23,11 @@ import '../../../../providers/device_status_value_provider.dart';
 import '../../../../runtime/wait_handle.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
-import 'bolus_then_wait_executor.dart';
 import 'detect_finished_eating_executor.dart';
 import 'idle_executor.dart';
 import 'meal_monitor_state_executor.dart';
 import 'new_meal_check_executor.dart';
+import 'wait_for_bolus_executor.dart';
 
 enum PathDecision {
   waitUntilMealMonitorWindow,
@@ -45,6 +45,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
   List<Type> get interruptableEvents => [
     MealStartedEatingEvent,
     MealEatingExtraEvent,
+    MealWaitingForBolusEvent,
     MealBolusedEatingEvent,
     MealEatingThenBolus,
     MealBolusedWaitingEvent,
@@ -392,9 +393,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     logI("Meal advice: ${advice.decision.toString()}");
                     // need to store meal information for notification
                     // wait more time to return right before meal
-                    nextExecutor = DetectFinishedEatingExecutor(
-                      shouldBolus: false,
-                    );
+                    nextExecutor = WaitForBolusExecutor(initialAdvice: advice);
                     break;
                   case MealDecision.bolusWaitThenEat:
                     logI("Meal advice: ${advice.decision.toString()}");
@@ -404,8 +403,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     logI("min waiting for ${advice.wait!.minMinutes} minutes");
                     logI("max waiting for ${advice.wait!.maxMinutes} minutes");
                     if (advice.wait!.recommendedMinutes >= minutesLeft) {
-                      nextExecutor = BolusThenWaitExecutor(
-                        recommendedMinutes: advice.wait!.recommendedMinutes,
+                      nextExecutor = WaitForBolusExecutor(
+                        initialAdvice: advice,
                       );
                       shouldAbort = true;
                     }
@@ -464,22 +463,22 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             logI("Received response from user");
             await response.when(
               agree: (e) async {
-                final decisionStatus = mealAdvice.decision!.status;
+                final decisionStatus = mealAdvice.decision!.acceptedStatus;
                 logI("User agreed meal, decision: $decisionStatus");
-                if (mealAdvice.decision == MealDecision.eatNowBolusLater) {
-                  await runtimeContext.container.read(
-                    updateMealProvider(
-                      mealMonitorContext.activeMeal!,
-                      decisionStatus,
-                    ).future,
-                  );
-                  runtimeContext.container.read(
-                    insertAdviceProvider(
-                      mealMonitorContext.activeMeal!,
-                      mealAdvice,
-                    ),
-                  );
-                }
+                await runtimeContext.container.read(
+                  updateMealProvider(
+                    mealMonitorContext.activeMeal!,
+                    decisionStatus,
+                  ).future,
+                );
+                mealMonitorContext.activeMeal = mealMonitorContext.activeMeal!
+                    .copyWith(status: decisionStatus, updatedAt: clock.now());
+                await runtimeContext.container.read(
+                  insertAdviceProvider(
+                    mealMonitorContext.activeMeal!,
+                    mealAdvice,
+                  ).future,
+                );
               },
               skip: (_) async {
                 logI("User dismissed meal, clicked on notification");

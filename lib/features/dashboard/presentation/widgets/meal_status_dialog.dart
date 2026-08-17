@@ -27,51 +27,63 @@ class MealStatusDialog extends ConsumerWidget with Logging {
         case MealDialogStep.choose:
           return Padding(
             padding: EdgeInsetsGeometry.directional(top: 10),
-            child: Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsetsGeometry.all(10),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
-                      color: Colors.white70,
-                    ),
-                    child: InkWell(
-                      onTap: c.chooseEat,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.restaurant_outlined, size: 60),
-                          Text('Zjem'),
-                        ],
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsetsGeometry.all(10),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.all(Radius.circular(15)),
+                          color: Colors.white70,
+                        ),
+                        child: InkWell(
+                          onTap: c.chooseEat,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.restaurant_outlined, size: 60),
+                              Text('Zjem'),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                SizedBox(width: 20),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsetsGeometry.all(10),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
-                      color: Colors.white70,
-                    ),
-                    child: InkWell(
-                      onTap: c.chooseSkip,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.no_meals, size: 60),
-                          Text('Pomijam'),
-                        ],
+                    SizedBox(width: 20),
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsetsGeometry.all(10),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.all(Radius.circular(15)),
+                          color: Colors.white70,
+                        ),
+                        child: InkWell(
+                          onTap: c.chooseSkip,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.no_meals, size: 60),
+                              Text('Pomijam'),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
+                if (s.activationBlockedByMealName != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Najpierw zakończ aktywny posiłek: ${s.activationBlockedByMealName}.',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ],
               ],
             ),
           );
@@ -103,7 +115,13 @@ class MealStatusDialog extends ConsumerWidget with Logging {
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [Text('Potwierdź że podałeś insuline po zjedzeniu')],
+            children: [Text('Podaj bolusa po zjedzeniu.')],
+          );
+        case MealDialogStep.waitingForBolus:
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [Text('Czekamy na bolus z kalkulatora.')],
           );
       }
     }
@@ -143,23 +161,19 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                     } catch (e) {
                       logE("Error creating snapshot for meal: $e");
                     }
-
-                    if (s.advice.wait != null) {
-                      await c.scheduleEatNotification(
-                        minutes: s.advice.wait!.recommendedMinutes,
-                      );
-                    }
                   }
                   if (context.mounted) {
                     Navigator.of(context).pop(
                       MealStatusUpdateResult(
-                        s.skipMeal ? 'skipped' : s.advice.decision!.status,
+                        s.skipMeal
+                            ? 'skipped'
+                            : s.advice.decision!.acceptedStatus,
                       ),
                     );
                   }
                 }
               },
-              child: Text(_buttonText(s.advice.decision?.status)),
+              child: Text(_buttonText(s.advice.decision)),
             ),
           ];
         case MealDialogStep.confirmEaten:
@@ -223,10 +237,29 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                 if (context.mounted) {
                   Navigator.of(
                     context,
-                  ).pop(const MealStatusUpdateResult('eaten-bolused'));
+                  ).pop(const MealStatusUpdateResult('waiting-for-bolus'));
                 }
               },
-              child: const Text("Podałem insuline"),
+              child: const Text("Podaję bolusa"),
+            ),
+          ];
+        case MealDialogStep.waitingForBolus:
+          return [
+            TextButton(
+              onPressed: () async {
+                await c.cancelAllMealNotifications();
+                if (context.mounted) {
+                  Navigator.of(
+                    context,
+                  ).pop(const MealStatusUpdateResult('skipped'));
+                }
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text("Anuluj posiłek"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
             ),
           ];
       }
@@ -239,22 +272,26 @@ class MealStatusDialog extends ConsumerWidget with Logging {
     );
   }
 
-  String _buttonText(String? status) {
-    switch (status) {
-      case 'eating-then-bolus':
+  String _buttonText(MealDecision? decision) {
+    switch (decision) {
+      case MealDecision.eatNowBolusLater:
         return "Zaczynam jeść";
-      case 'bolused-eating':
+      case MealDecision.bolusAndEatNow:
         return "Podaje bolusa";
-      case 'bolused-waiting':
+      case MealDecision.bolusWaitThenEat:
         return "Podaje bolusa i czekam";
+      case MealDecision.bolus:
+      case null:
+        return 'Potwierdzam';
     }
-    return 'Potwierdzam';
   }
 
   MealDialogStep getStep() {
     switch (meal.status) {
       case 'bolused-waiting':
         return MealDialogStep.confirmEating;
+      case 'waiting-for-bolus':
+        return MealDialogStep.waitingForBolus;
       case 'eating-then-bolus':
         return MealDialogStep.confirmBolusedAfterEating;
       case 'waited-eating':

@@ -17,6 +17,7 @@ void main() {
   group('shouldOpenAapsAfterMealStatusUpdate', () {
     test('opens AAPS for statuses that require AAPS entry', () {
       expect(shouldOpenAapsAfterMealStatusUpdate('eating-then-bolus'), isTrue);
+      expect(shouldOpenAapsAfterMealStatusUpdate('waiting-for-bolus'), isTrue);
       expect(shouldOpenAapsAfterMealStatusUpdate('bolused-eating'), isTrue);
       expect(shouldOpenAapsAfterMealStatusUpdate('bolused-waiting'), isTrue);
       expect(shouldOpenAapsAfterMealStatusUpdate('eaten-bolused'), isTrue);

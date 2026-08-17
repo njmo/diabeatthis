@@ -12,6 +12,7 @@ abstract class MealMonitorStateExecutor with Logging {
     MealStartedEatingEvent,
     MealEatingExtraEvent,
     MealEatingThenBolus,
+    MealWaitingForBolusEvent,
     MealBolusedEatingEvent,
     MealBolusedWaitingEvent,
     MealSkippedEvent,

@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
+import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/event/model/foreground_event.dart';
+import 'package:diabeatthis/foreground/providers/latest_bolus_wizard_provider.dart';
 import 'package:diabeatthis/foreground/runtime/deadline_waiter.dart';
 import 'package:diabeatthis/foreground/runtime/runtime_input.dart';
 import 'package:diabeatthis/foreground/runtime/runtime_waiter.dart';
@@ -102,6 +105,7 @@ class FakeRuntimeHarness {
   }
 
   void dispatchEvent(ForegroundEvent event) {
+    _cacheEvent(event);
     _deliverInput(RuntimeEventInput(event));
   }
 
@@ -117,6 +121,7 @@ class FakeRuntimeHarness {
     InterruptableWorkflowTask task,
     ForegroundEvent event,
   ) {
+    _cacheEvent(event);
     final shouldInterrupt = task.shouldInterrupt(event);
 
     if (shouldInterrupt) {
@@ -124,6 +129,12 @@ class FakeRuntimeHarness {
     }
 
     _deliverInput(RuntimeEventInput(event));
+  }
+
+  void _cacheEvent(ForegroundEvent event) {
+    if (event is TreatmentAvailableEvent<BolusWizard>) {
+      container.read(latestBolusWizardProvider.notifier).update(event.data);
+    }
   }
 
   void interruptWith(ForegroundEvent event) {

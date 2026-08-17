@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
+import '../../domain/model/meal_status_flow.dart';
 import '../database_impl.dart';
 
 part 'meal_dao.g.dart';
@@ -42,7 +43,11 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     ).millisecondsSinceEpoch;
     final query = select(db.meal)
       ..where(
-        (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
+        (tbl) =>
+            tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch) |
+            tbl.status.isIn(
+              mealStatusesBlockingAnotherMealActivation.toList(growable: false),
+            ),
       )
       ..where((tbl) => tbl.purpose.equals('meal'))
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)]);
@@ -203,9 +208,16 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       now.month,
       now.day,
     ).millisecondsSinceEpoch;
+    // Dashboard must keep unfinished active meals visible even when they were
+    // planned before today, otherwise they could block new meals with no way
+    // to finish or cancel them from the main screen.
     final query = select(db.meal)
       ..where(
-        (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
+        (tbl) =>
+            tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch) |
+            tbl.status.isIn(
+              mealStatusesBlockingAnotherMealActivation.toList(growable: false),
+            ),
       )
       ..where((tbl) => tbl.purpose.equals('meal'))
       ..where((tbl) => tbl.status.equals('skipped').not())

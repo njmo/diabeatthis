@@ -43,6 +43,7 @@ Stream<List<domain.Meal>> mealsForTodayStream(Ref ref) {
 @riverpod
 Stream<List<domain.Meal>> plannedMealsForTodayStream(Ref ref) {
   final db = ref.watch(databaseProvider);
+  // Also includes unfinished active meals from previous days.
   return db.mealDao.getAllPlannedMealForToday().map((e) => e.toDomainList());
 }
 

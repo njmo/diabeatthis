@@ -12,6 +12,7 @@ import '../../../activity/data/providers/activity_provider.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_sheet.dart';
 import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
+import '../../../meals/data/providers/meal_activation_guard_provider.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../utils/meal_status_dialog_result_handler.dart';
@@ -25,6 +26,8 @@ class DashboardFAB extends HookConsumerWidget with Logging {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final open = useState(false);
+    final mealBlockingActivation = ref.watch(anyMealBlockingActivationProvider);
+    final quickMealEnabled = mealBlockingActivation.asData?.value == null;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -72,8 +75,18 @@ class DashboardFAB extends HookConsumerWidget with Logging {
           FabActionOption(
             icon: Icons.bakery_dining_rounded,
             label: 'Zjedz coś na szybko',
+            enabled: quickMealEnabled,
             onTap: () async {
               open.value = false;
+              final blockingMeal = await ref.refresh(
+                currentMealBlockingActivationProvider.future,
+              );
+              if (blockingMeal != null) {
+                return;
+              }
+              if (!context.mounted) {
+                return;
+              }
               ref.read(mealDraftProvider.notifier).reset();
               final mealIngredient =
                   await showModalBottomSheet<MealIngredientsDraft>(

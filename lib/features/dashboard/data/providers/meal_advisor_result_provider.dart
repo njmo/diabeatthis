@@ -9,9 +9,9 @@ import '../utils/meal_advisor.dart';
 part 'meal_advisor_result_provider.g.dart';
 
 @riverpod
-void insertAdvice(Ref ref, domain.Meal meal, MealAdvice advice) {
+Future<void> insertAdvice(Ref ref, domain.Meal meal, MealAdvice advice) async {
   final db = ref.watch(databaseProvider);
-  MealAdvisorResultUseCase(
+  await MealAdvisorResultUseCase(
     DriftMealAdvisorResultStore(dao: db.mealAdvisorResultDao),
   ).saveMealAdvice(meal.id, advice);
 }

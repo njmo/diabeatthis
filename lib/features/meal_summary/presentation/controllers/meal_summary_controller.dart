@@ -75,6 +75,7 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
       state = AsyncData(current);
     } catch (e, st) {
       state = AsyncError(e, st);
+      rethrow;
     }
   }
 

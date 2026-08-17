@@ -12,6 +12,7 @@ import '../../../core/domain/model/temporary_target.dart';
 import '../../../core/domain/model/treat.dart';
 import '../../../core/domain/model/treatment_base.dart';
 import '../../../core/logger/logger.dart';
+import '../../providers/latest_bolus_wizard_provider.dart';
 import '../../providers/task_event_router_provider.dart';
 import '../../synchronization/synchronization_cache_controller.dart';
 import '../model/foreground_event.dart';
@@ -32,6 +33,7 @@ class TreatmentEventDispatcher with Logging {
 
     switch (treatment) {
       case BolusWizard():
+        container.read(latestBolusWizardProvider.notifier).update(treatment);
         emitEvent(TreatmentAvailableEvent<BolusWizard>(treatment));
         break;
       case CorrectionBolus():

@@ -1,11 +1,9 @@
+import 'package:clock/clock.dart';
+
 import '../../../../../common/events/data/notification/finished_eating_response_event.dart';
-import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
-import '../../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../../core/logger/logger.dart';
-import '../../../../../core/notifications/base/notifications_controller.dart';
 import '../../../../../core/notifications/domain/events/finished_eating_event_notification.dart';
-import '../../../../../core/notifications/domain/events/meal_suggestion_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
 import '../../../../../features/meals/data/providers/meal_database_provider.dart';
@@ -14,30 +12,31 @@ import '../../../../event/internal/meal_status_changed_event.dart';
 import '../../../../event/internal/treatment_available_event.dart';
 import '../../../../event/model/foreground_event.dart';
 import '../../../base/runtime_context.dart';
+import '../helpers/bolus_reminder_helper.dart';
 import '../meal_monitor_context.dart';
 import 'finalize_meal_executor.dart';
 import 'meal_monitor_state_executor.dart';
 import 'new_meal_check_executor.dart';
+import 'wait_for_bolus_executor.dart';
 
 class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     with Logging {
-  static const _bolusReminderInterval = Duration(minutes: 5);
+  final BolusReminderHelper _bolusReminderHelper = BolusReminderHelper();
 
   final bool shouldBolus;
-  final bool? bolusWaited;
   final bool isAddOn;
   int? grams;
 
   DetectFinishedEatingExecutor({
     required this.shouldBolus,
     this.grams,
-    this.bolusWaited,
     this.isAddOn = false,
   });
 
   @override
   List<Type> get interruptableEvents => [
     MealEatingThenBolus,
+    MealWaitingForBolusEvent,
     MealEatingExtraEvent,
     MealFinishedEatingEvent,
     MealFinishedEatingExtraEvent,
@@ -69,63 +68,35 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
-    logI(
-      "DetectFinishedEatingExecutor bolusWaited $bolusWaited shouldBolus $shouldBolus",
-    );
+    logI("DetectFinishedEatingExecutor shouldBolus $shouldBolus");
 
-    if (bolusWaited == null) {
-      if (isAddOn) {
-        final bolusRecorded = await _waitForAddOnBolus(
-          runtimeContext,
-          mealMonitorContext,
+    if (isAddOn) {
+      final bolusRecorded = await _waitForAddOnBolus(
+        runtimeContext,
+        mealMonitorContext,
+      );
+      if (!bolusRecorded) {
+        return NewMealCheckExecutor();
+      }
+    } else if (shouldBolus) {
+      logI("Checking if needed data is present");
+      // if below passes it means that user manually went
+      // through starting the meal earlier than planned.
+      if (grams == null) {
+        logI(
+          "User manually went through starting the meal earlier than planned",
         );
-        if (!bolusRecorded) {
-          return NewMealCheckExecutor();
-        }
-      } else if (shouldBolus) {
-        logI("Checking if needed data is present");
-        // if below passes it means that user manually went
-        // through starting the meal earlier than planned.
-        if (grams == null) {
-          logI(
-            "User manually went through starting the meal earlier than planned",
-          );
-          final mealSummary = await runtimeContext.container.read(
-            mealMacronutrientsConsumedSummaryProvider(
-              mealMonitorContext.activeMeal!.id,
-            ).future,
-          );
-          if (mealSummary == null) {
-            logI("Problem gathering meal advice, checking next meal");
-            return NewMealCheckExecutor();
-          }
-          grams = mealSummary.netCarbsGrams.ceil();
-          logI("Meal summary available with $grams grams of carbs");
-        }
-      } else {
-        logI("Should not bolus");
-        logI("Waiting for calculator use before moving to next step");
-        final notificationProvider = runtimeContext.container.read(
-          notificationsControllerForegroundProvider,
-        );
-        final calculatorResponse = await runtimeContext
-            .waitForEventWithTimeoutOrNull<
-              TreatmentAvailableEvent<BolusWizard>
-            >(Duration(minutes: 20));
-
-        if (calculatorResponse == null) {
-          logI("Problem gathering calculator response, checking next meal");
-          return NewMealCheckExecutor();
-        }
-
-        logI("Calculator response available, cancelling meal notifications");
-        await notificationProvider.cancelAll();
-        await runtimeContext.container.read(
-          updateMealProvider(
-            mealMonitorContext.activeMeal!,
-            'bolused-eating',
+        final mealSummary = await runtimeContext.container.read(
+          mealMacronutrientsConsumedSummaryProvider(
+            mealMonitorContext.activeMeal!.id,
           ).future,
         );
+        if (mealSummary == null) {
+          logI("Problem gathering meal advice, checking next meal");
+          return NewMealCheckExecutor();
+        }
+        grams = mealSummary.netCarbsGrams.ceil();
+        logI("Meal summary available with $grams grams of carbs");
       }
     }
 
@@ -168,20 +139,24 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       );
     }
 
-    var mealStatus = isAddOn ? 'eaten-extra' : 'eaten';
+    final mealStatus = isAddOn ? 'eaten-extra' : 'eaten';
 
     if (shouldBolus) {
-      final bolusRecorded = await _remindUntilBolusRecorded(
-        runtimeContext,
-        notificationProvider,
-        mealMonitorContext.activeMeal!.id,
-        carbs: grams!,
+      await runtimeContext.container.read(
+        updateMealProvider(
+          mealMonitorContext.activeMeal!,
+          'waiting-for-bolus',
+        ).future,
       );
-      if (!bolusRecorded) {
-        return NewMealCheckExecutor();
-      }
-
-      mealStatus = 'eaten-bolused';
+      logI("Meal waiting for bolus after eating");
+      return WaitForBolusExecutor(
+        remindImmediately: true,
+        initialAdvice: MealAdvice.full(
+          MealDecision.eatNowBolusLater,
+          null,
+          clock.now(),
+        ),
+      );
     } else {
       logI("Finished eating, bolus already given");
     }
@@ -192,113 +167,6 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     logI("Meal marked as $mealStatus");
 
     return FinalizeMealExecutor();
-  }
-
-  Future<bool> _remindUntilBolusRecorded(
-    RuntimeContext runtimeContext,
-    NotificationsController notificationProvider,
-    int mealId, {
-    required int carbs,
-    bool isAddOn = false,
-  }) async {
-    var shouldCancelPreviousReminder = false;
-
-    while (true) {
-      if (shouldCancelPreviousReminder) {
-        logI("Cancelling previous bolus reminder before showing next one");
-        await notificationProvider.cancelAll();
-      }
-
-      logI("User should bolus after eating, showing notification");
-      await notificationProvider.show(
-        MealSuggestionNotificationEvent(
-          mealId: mealId,
-          decision: MealDecision.bolus,
-          carbs: carbs,
-          minutes: 0,
-          isAddOn: isAddOn,
-        ),
-      );
-      shouldCancelPreviousReminder = true;
-
-      logI("Notification shown, waiting for user response or calculator");
-      final result = await _waitForBolusReminderResult(runtimeContext, mealId);
-
-      if (result == null) {
-        logI("Bolus reminder timed out, showing it again");
-        continue;
-      }
-
-      if (result is TreatmentAvailableEvent<BolusWizard>) {
-        logI(
-          "Calculator response available, cancelling notifications and marking meal as bolused eaten",
-        );
-        await notificationProvider.cancelAll();
-        return true;
-      }
-
-      final response = result as MealSuggestionResponseEvent;
-      logI("Got response from user");
-
-      var delay = _bolusReminderInterval;
-      var shouldContinue = true;
-
-      response.when(
-        agree: (int mealId) {
-          logI("User agreed to bolus");
-        },
-        skip: (int mealId) {
-          logI("User skipped meal suggestion");
-          shouldContinue = false;
-        },
-        snooze: (int mealId, String input) {
-          logI("User snoozed meal suggestion");
-          delay = Duration(
-            minutes: int.tryParse(input) ?? _bolusReminderInterval.inMinutes,
-          );
-        },
-        empty: (int mealId) {
-          logI("User clicked on notification probably by mistake");
-        },
-      );
-
-      if (!shouldContinue) {
-        return false;
-      }
-
-      final bolusResponse = await runtimeContext
-          .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<BolusWizard>>(
-            delay,
-          );
-      if (bolusResponse != null) {
-        logI(
-          "Calculator response available, cancelling notifications and marking meal as bolused eaten",
-        );
-        await notificationProvider.cancelAll();
-        return true;
-      }
-
-      logI("Calculator response missing after reminder delay, reminding again");
-    }
-  }
-
-  Future<ForegroundEvent?> _waitForBolusReminderResult(
-    RuntimeContext runtimeContext,
-    int mealId,
-  ) async {
-    final responseHandle = runtimeContext
-        .eventWait<MealSuggestionResponseEvent>(
-          predicate: (event) => event.mealId == mealId,
-        );
-    final bolusHandle = runtimeContext
-        .eventWait<TreatmentAvailableEvent<BolusWizard>>();
-    final timeoutHandle = runtimeContext.durationWait(_bolusReminderInterval);
-
-    return runtimeContext.any<ForegroundEvent?>([
-      responseHandle.map<ForegroundEvent?>((event) => event),
-      bolusHandle.map<ForegroundEvent?>((event) => event),
-      timeoutHandle.map<ForegroundEvent?>((_) => null),
-    ]);
   }
 
   Future<bool> _waitForAddOnBolus(
@@ -319,43 +187,18 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       return true;
     }
 
-    final grams = await _resolveAddOnNetCarbs(
+    final grams = await _bolusReminderHelper.resolveAddOnNetCarbs(
       runtimeContext,
       mealMonitorContext.activeMeal!.id,
     );
     logI("Add-on calculator response missing, showing reminder");
 
-    return _remindUntilBolusRecorded(
+    return _bolusReminderHelper.remindUntilBolusRecorded(
       runtimeContext,
       runtimeContext.container.read(notificationsControllerForegroundProvider),
       mealMonitorContext.activeMeal!.id,
       carbs: grams,
       isAddOn: true,
     );
-  }
-
-  Future<int> _resolveAddOnNetCarbs(
-    RuntimeContext runtimeContext,
-    int mealId,
-  ) async {
-    final plannedSummary = await runtimeContext.container.read(
-      mealMacronutrientsSummaryProvider(mealId).future,
-    );
-    final consumedSummary = await runtimeContext.container.read(
-      mealMacronutrientsConsumedSummaryProvider(mealId).future,
-    );
-    final addOnNetCarbs =
-        _netCarbs(consumedSummary) - _netCarbs(plannedSummary);
-    if (addOnNetCarbs <= 0) {
-      return 0;
-    }
-    return addOnNetCarbs.ceil();
-  }
-
-  double _netCarbs(MealMacroSummary? summary) {
-    if (summary == null) {
-      return 0;
-    }
-    return summary.netCarbsGrams;
   }
 }

@@ -16,6 +16,25 @@ FinalizeMealSummaryUseCase finalizeMealSummaryUseCase(Ref ref) {
 
 enum MealSummarySaveMode { finishMeal, continueEating }
 
+class MealSummaryCannotFinishException implements Exception {
+  const MealSummaryCannotFinishException(this.userMessage);
+
+  final String userMessage;
+}
+
+bool mealSummaryRequiresBolusBeforeFinish(String? status) {
+  return status == 'eating-then-bolus' ||
+      status == 'waiting-for-bolus' ||
+      status == 'bolused-eating' ||
+      status == 'bolused-waiting';
+}
+
+bool mealSummaryCanFinish(String? status) {
+  return status == 'eaten' ||
+      status == 'eaten-extra' ||
+      status == 'eaten-bolused';
+}
+
 class FinalizeMealSummaryUseCase with Logging {
   final Ref ref;
   FinalizeMealSummaryUseCase({required this.ref});
@@ -27,6 +46,15 @@ class FinalizeMealSummaryUseCase with Logging {
     final db = ref.read(databaseProvider);
     final snapshotController = ref.read(mealSnapshotControllerProvider);
     final notificationsController = ref.read(notificationsControllerUiProvider);
+
+    if (mode == MealSummarySaveMode.finishMeal &&
+        !mealSummaryCanFinish(draft.mealStatus)) {
+      throw MealSummaryCannotFinishException(
+        mealSummaryRequiresBolusBeforeFinish(draft.mealStatus)
+            ? 'Najpierw podaj bolusa w kalkulatorze. Dopiero potem zakończ posiłek.'
+            : 'Najpierw oznacz posiłek jako zjedzony. Dopiero potem zapisz podsumowanie.',
+      );
+    }
 
     await notificationsController.cancelAll();
 

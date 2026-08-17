@@ -4,8 +4,8 @@ import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../core/domain/model/meal.dart' as domain;
-import '../../../../../core/drift/database_impl.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
+import '../../providers/meal_status_history_provider.dart';
 
 part 'complete_bolus_wait_use_case.g.dart';
 
@@ -21,7 +21,7 @@ class CompleteBolusWaitUseCase {
 
   Future<void> call(domain.Meal meal) async {
     final db = ref.read(databaseProvider);
-    final finalWaitMinutes = await _finalWaitMinutes(db, meal);
+    final finalWaitMinutes = await _finalWaitMinutes(meal);
 
     await db.transaction(() async {
       if (finalWaitMinutes != null) {
@@ -41,26 +41,21 @@ class CompleteBolusWaitUseCase {
     });
   }
 
-  Future<int?> _finalWaitMinutes(DatabaseImpl db, domain.Meal meal) async {
-    final startedAt = await _bolusWaitStartedAt(db, meal.id) ?? meal.updatedAt;
+  Future<int?> _finalWaitMinutes(domain.Meal meal) async {
+    final startedAt =
+        await ref.read(
+          mealStatusStartedAtProvider(
+            MealStatusStartedAtRequest(
+              mealId: meal.id,
+              status: 'bolused-waiting',
+            ),
+          ).future,
+        ) ??
+        meal.updatedAt;
     if (startedAt == null) {
       return null;
     }
 
     return max(0, clock.now().difference(startedAt).inMinutes);
-  }
-
-  Future<DateTime?> _bolusWaitStartedAt(DatabaseImpl db, int mealId) async {
-    final history =
-        await (db.select(db.mealStatusHistory)
-              ..where((tbl) => tbl.mealId.equals(mealId))
-              ..where((tbl) => tbl.status.equals('bolused-waiting')))
-            .getSingleOrNull();
-
-    if (history == null) {
-      return null;
-    }
-
-    return DateTime.fromMillisecondsSinceEpoch(history.createdAt);
   }
 }

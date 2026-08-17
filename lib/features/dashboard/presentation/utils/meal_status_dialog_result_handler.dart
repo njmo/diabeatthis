@@ -207,6 +207,7 @@ bool shouldOpenSummaryAfterMealStatusUpdate(String status) {
 
 bool shouldOpenAapsAfterMealStatusUpdate(String status) {
   return status == 'eating-then-bolus' ||
+      status == 'waiting-for-bolus' ||
       status == 'bolused-eating' ||
       status == 'bolused-waiting' ||
       status == 'eaten-bolused';

@@ -8,6 +8,8 @@ import 'package:diabeatthis/features/dashboard/data/providers/meal_advisor_resul
 import 'package:diabeatthis/features/dashboard/data/providers/meal_snapshot_controller_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/utils/meal_snapshot_controller.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/meal_status_dialog.dart';
+import 'package:diabeatthis/features/dashboard/presentation/widgets/meal_status_dialog_result.dart';
+import 'package:diabeatthis/features/meals/data/providers/meal_activation_guard_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -34,6 +36,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          mealBlockingActivationProvider(1).overrideWith((ref) async => null),
           notificationsControllerUiProvider.overrideWithValue(notifications),
           mealMacronutrientsSummaryProvider(1).overrideWithValue(
             AsyncData(
@@ -75,6 +78,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          mealBlockingActivationProvider(1).overrideWith((ref) async => null),
           notificationsControllerUiProvider.overrideWithValue(notifications),
           mealMacronutrientsSummaryProvider(1).overrideWithValue(
             AsyncData(
@@ -100,10 +104,17 @@ void main() {
 
     await tester.tap(find.text('Zjem'));
     await tester.pumpAndSettle();
+    expect(notifications.scheduledEvents, hasLength(1));
+
     await tester.tap(find.text('Podaje bolusa'));
     await tester.pumpAndSettle();
 
     expect(notifications.cancelAllCalled, isTrue);
+    expect(notifications.scheduledEvents, hasLength(1));
+    expect(
+      notifications.scheduledEvents.single.event,
+      isA<MealAdvicePendingNotificationEvent>(),
+    );
   });
 
   testWidgets('cancelling advice cancels meal notifications', (tester) async {
@@ -118,6 +129,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          mealBlockingActivationProvider(1).overrideWith((ref) async => null),
           notificationsControllerUiProvider.overrideWithValue(notifications),
           mealMacronutrientsSummaryProvider(1).overrideWithValue(
             AsyncData(
@@ -171,6 +183,51 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(notifications.cancelAllCalled, isFalse);
+  });
+
+  testWidgets('waiting for bolus can cancel meal', (tester) async {
+    final notifications = FakeNotificationsController();
+    final meal = Meal(
+      id: 1,
+      status: 'waiting-for-bolus',
+      name: 'Obiad',
+      plannedAt: DateTime(2026, 3, 23, 12, 20),
+    );
+    Object? dialogResult;
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          notificationsControllerUiProvider.overrideWithValue(notifications),
+        ],
+        child: MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () async {
+                dialogResult = await showDialog<Object?>(
+                  context: context,
+                  builder: (context) => MealStatusDialog(meal: meal),
+                );
+              },
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Czekamy na bolus z kalkulatora.'), findsOneWidget);
+    expect(find.text('Anuluj posiłek'), findsOneWidget);
+
+    await tester.tap(find.text('Anuluj posiłek'));
+    await tester.pumpAndSettle();
+
+    expect(notifications.cancelAllCalled, isTrue);
+    expect(dialogResult, isA<MealStatusUpdateResult>());
+    expect((dialogResult as MealStatusUpdateResult).status, 'skipped');
   });
 }
 

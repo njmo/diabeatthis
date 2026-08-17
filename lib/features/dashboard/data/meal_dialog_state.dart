@@ -6,6 +6,7 @@ enum MealDialogStep {
   confirmEaten,
   confirmEating,
   confirmBolusedAfterEating,
+  waitingForBolus,
 }
 
 class MealDialogState {
@@ -14,6 +15,7 @@ class MealDialogState {
   final double carbsGrams;
   final double extendedCarbsGrams;
   final MealAdvice advice;
+  final String? activationBlockedByMealName;
 
   const MealDialogState({
     required this.step,
@@ -21,6 +23,7 @@ class MealDialogState {
     required this.advice,
     required this.carbsGrams,
     required this.extendedCarbsGrams,
+    required this.activationBlockedByMealName,
   });
 
   MealDialogState copyWith({
@@ -29,6 +32,8 @@ class MealDialogState {
     MealAdvice? advice,
     double? carbsGrams,
     double? extendedCarbsGrams,
+    String? activationBlockedByMealName,
+    bool clearActivationBlock = false,
   }) {
     return MealDialogState(
       step: step ?? this.step,
@@ -36,6 +41,9 @@ class MealDialogState {
       advice: advice ?? this.advice,
       carbsGrams: carbsGrams ?? this.carbsGrams,
       extendedCarbsGrams: extendedCarbsGrams ?? this.extendedCarbsGrams,
+      activationBlockedByMealName: clearActivationBlock
+          ? null
+          : activationBlockedByMealName ?? this.activationBlockedByMealName,
     );
   }
 
@@ -45,5 +53,6 @@ class MealDialogState {
     carbsGrams: 0,
     extendedCarbsGrams: 0,
     advice: MealAdvice.empty(),
+    activationBlockedByMealName: null,
   );
 }

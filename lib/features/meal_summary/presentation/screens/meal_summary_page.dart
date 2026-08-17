@@ -134,7 +134,27 @@ class MealSummaryPage extends ConsumerWidget {
     required MealSummarySaveMode mode,
   }) async {
     final delta = calculateMealSummaryCarbsDelta(draft);
-    await notifier.saveSummary(mode: mode);
+    try {
+      await notifier.saveSummary(mode: mode);
+    } on MealSummaryCannotFinishException catch (e) {
+      if (!context.mounted) {
+        return;
+      }
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Bolus nie został potwierdzony'),
+          content: Text(e.userMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
     if (!context.mounted) {
       return;

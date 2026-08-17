@@ -64,6 +64,7 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
     RuntimeContext context,
     int mealId,
   ) async {
+    context.container.invalidate(getMealByIdProvider(mealId));
     final meal = await context.container.read(
       getMealByIdProvider(mealId).future,
     );
@@ -123,11 +124,11 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
           nextMealExecutorContext = _activeMealExecutorContext.copyWith(
             activeMeal: null,
           );
-        }
-        if (eventForActiveMeal &&
-            (interruptedEvent is MealEatingExtraEvent ||
-                interruptedEvent is MealEatingThenBolus)) {
-          nextMealExecutorContext = _activeMealExecutorContext.copyWith();
+        } else if (eventForActiveMeal) {
+          nextMealExecutorContext = await buildMealMonitorContext(
+            context,
+            interruptedEvent.mealId,
+          );
         }
 
         // pick next state based on interrupted event type

@@ -33,6 +33,9 @@ sealed class MealStatusChangedEvent
   const factory MealStatusChangedEvent.waitedEating({required int mealId}) =
       MealWaitedEatingEvent;
 
+  const factory MealStatusChangedEvent.waitingForBolus({required int mealId}) =
+      MealWaitingForBolusEvent;
+
   const factory MealStatusChangedEvent.bolusedWaiting({required int mealId}) =
       MealBolusedWaitingEvent;
 

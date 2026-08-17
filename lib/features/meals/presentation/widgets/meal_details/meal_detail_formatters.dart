@@ -95,6 +95,7 @@ String formatNutritionValue(double value, String unit) {
 String mealStatusLabel(String status) {
   return switch (status) {
     'planned' => 'Zaplanowany',
+    'waiting-for-bolus' => 'Oczekiwanie na bolus',
     'bolused-waiting' => 'Bolus podany, oczekiwanie',
     'bolused-eating' => 'Bolus podany, jedzenie',
     'waited-eating' => 'Po oczekiwaniu, jedzenie',
