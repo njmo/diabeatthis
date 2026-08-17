@@ -5,6 +5,7 @@ import 'event/aaps_bolus_suggestion_notification_definition.dart';
 import 'event/activity_finished_notification_definition.dart';
 import 'event/eat_now_notification_definition.dart';
 import 'event/finished_eating_notification_definition.dart';
+import 'event/meal_advice_pending_notification_definition.dart';
 import 'event/meal_suggestion_notification_definition.dart';
 import 'event/meal_summary_reminder_notification_definition.dart';
 import 'event/temp_target_notification_definition.dart';
@@ -15,6 +16,7 @@ class NotificationDefinitionCatalogImpl
     mealReadyNotificationDefinition,
     tempTargetNotificationDefinition,
     mealSuggestionNotificationDefinition,
+    mealAdvicePendingNotificationDefinition,
     finishedEatingNotificationDefinition,
     activityFinishedNotificationDefinition,
     mealSummaryReminderNotificationDefinition,

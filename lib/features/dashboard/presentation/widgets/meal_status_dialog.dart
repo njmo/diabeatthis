@@ -115,14 +115,23 @@ class MealStatusDialog extends ConsumerWidget with Logging {
         case MealDialogStep.confirm:
           return [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () async {
+                if (!s.skipMeal) {
+                  await c.cancelAllMealNotifications();
+                }
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
               child: const Text("Anuluj"),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (context.mounted) {
                   if (!s.skipMeal) {
-                    ref.read(insertAdviceProvider(meal, s.advice));
+                    await c.cancelAllMealNotifications();
+
+                    await ref.read(insertAdviceProvider(meal, s.advice).future);
 
                     try {
                       final mealSummaryController = ref.read(
@@ -136,7 +145,7 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                     }
 
                     if (s.advice.wait != null) {
-                      c.scheduleEatNotification(
+                      await c.scheduleEatNotification(
                         minutes: s.advice.wait!.recommendedMinutes,
                       );
                     }

@@ -18,7 +18,11 @@ void onDidReceiveNotificationResponse(NotificationResponse response) {
     final input = response.input;
 
     final dataJson = jsonDecode(data) as Map<String, dynamic>;
-    final responseEventType = dataJson['response_event_type'] as String;
+    final responseEventType = dataJson['response_event_type'] as String?;
+    if (responseEventType == null || responseEventType.isEmpty) {
+      debugPrint('Notification has no foreground response event');
+      return;
+    }
     final actionData = dataJson['action_data'] as Map<String, dynamic>;
     if (input != null) {
       actionData['input'] = input;
@@ -28,14 +32,10 @@ void onDidReceiveNotificationResponse(NotificationResponse response) {
       'external_event': 'notification_event',
       'data': {
         'notification_response_event': responseEventType,
-        'data': {
-          'action': action,
-          ...actionData
-        },
+        'data': {'action': action, ...actionData},
       },
     };
-  }
-  catch (e) {
+  } catch (e) {
     debugPrint('Error parsing notification response: $e');
     return;
   }

@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/eat_now_event_notification.dart';
+import '../../../core/notifications/domain/events/meal_advice_pending_notification.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
 import '../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
@@ -15,6 +16,8 @@ part 'meal_dialog_controller.g.dart';
 
 @riverpod
 class MealDialogController extends _$MealDialogController with Logging {
+  static const pendingAdviceReminderDelay = Duration(minutes: 2);
+
   late final int mealId;
 
   @override
@@ -83,6 +86,9 @@ class MealDialogController extends _$MealDialogController with Logging {
           extendedCarbsScheduleSettings,
         ) ??
         MealAdvice.empty();
+    if (advice.decision != null) {
+      await schedulePendingAdviceReminder();
+    }
 
     state = state.copyWith(
       skipMeal: false,
@@ -143,6 +149,34 @@ class MealDialogController extends _$MealDialogController with Logging {
       logI('Pending IDs: $pending');
     } catch (e) {
       logE('Error scheduling notification: $e');
+    }
+  }
+
+  Future<void> schedulePendingAdviceReminder() async {
+    final notificationsPluginController = ref.read(
+      notificationsControllerUiProvider,
+    );
+    final event = MealAdvicePendingNotificationEvent(mealId: mealId);
+
+    try {
+      await notificationsPluginController.schedule(
+        event,
+        pendingAdviceReminderDelay,
+      );
+    } catch (e) {
+      logE('Error scheduling pending meal advice reminder: $e');
+    }
+  }
+
+  Future<void> cancelAllMealNotifications() async {
+    final notificationsPluginController = ref.read(
+      notificationsControllerUiProvider,
+    );
+
+    try {
+      await notificationsPluginController.cancelAll();
+    } catch (e) {
+      logE('Error cancelling meal notifications: $e');
     }
   }
 }

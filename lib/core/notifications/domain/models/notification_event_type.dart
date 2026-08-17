@@ -4,6 +4,7 @@ enum NotificationEventType {
   finishedEating,
   activityFinished,
   mealSuggestion,
+  mealAdvicePending,
   mealSummaryReminder,
   aapsBolusSuggestion,
 }
