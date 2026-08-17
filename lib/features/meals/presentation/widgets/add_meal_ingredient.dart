@@ -83,7 +83,7 @@ class AddMealIngredient extends ConsumerWidget {
         AddMealIngredientStage.dismiss => const SizedBox.shrink(),
         AddMealIngredientStage.ingredientSearch => BottomSheetStepHeader(
           title: 'Wyszukaj składnik',
-          onBack: addingStateNotifier.back,
+          onBack: () => Navigator.of(context).pop(),
         ),
         AddMealIngredientStage.ingredientPhotoScan => BottomSheetStepHeader(
           title: 'Dodaj ze zdjęć',
