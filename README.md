@@ -203,6 +203,37 @@ DiaBeatThis is integration-first:
 
 The architecture is designed so the app can combine CGM readings, meal context, activity context, treatments, and local history into one practical workflow.
 
+### Installation And AAPS Local Data Source Setup
+
+DiaBeatThis can be installed from the project releases:
+
+- [DiaBeatThis releases](https://github.com/njmo/diabeatthis/releases)
+
+The app works correctly with Nightscout as the data source. The AAPS local data source is optional and is only needed when glucose, treatments, and pump status should be received directly from AAPS instead of Nightscout.
+
+At the moment, using AAPS as the direct data source requires rebuilding AAPS. The xDrip communication code in the current AAPS release is partially commented out, so the local broadcast path does not work without an AAPS-side change.
+
+The AAPS change is available here:
+
+- [AndroidAPS external broadcast review branch](https://github.com/njmo/AndroidAPS/tree/codex/external-broadcast-review)
+
+That branch is based on the latest AAPS release at the time the change was prepared and adds the missing option for broadcasting data to external apps.
+
+After installing the rebuilt AAPS version:
+
+1. Open AAPS.
+2. Go to `Configuration` > `Synchronization`.
+3. Enable `External apps`.
+4. Open the `External apps` settings.
+5. Enable broadcasting.
+6. Set the receiver to `pl.diabeatthis.app`.
+7. Enable the required data types: `Glucose`, `Device status`, and `Treatments`.
+8. In DiaBeatThis settings, set the data source to `AAPS`.
+
+<img width="360" alt="AAPS synchronization configuration in English" src="docs/assets/aaps-synchronization-configuration.png" />
+
+<img width="360" alt="AAPS external apps settings in English" src="docs/assets/aaps-external-apps-settings.png" />
+
 ---
 
 ## Example Day
