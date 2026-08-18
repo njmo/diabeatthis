@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/carbs_label_mode.dart';
 import '../../data/drafts/ingredient_draft.dart';
 import '../../data/drafts/ingredient_draft_validation.dart';
@@ -25,7 +26,7 @@ class IngredientMacroForm extends ConsumerWidget {
           children: [
             Expanded(
               child: Text(
-                'Makro na 100 g',
+                context.lang.ingredientMacroPer100gTitle,
                 style: Theme.of(context).textTheme.labelLarge,
               ),
             ),
@@ -51,7 +52,7 @@ class IngredientMacroForm extends ConsumerWidget {
           children: [
             Expanded(
               child: NutritionValueTextFormField(
-                label: 'Węglowodany',
+                label: context.lang.mealCarbsLabel,
                 initialValue: _formatInput(value.carbsPer100g),
                 onChanged: draft.setCarbsPer100g,
                 validator: (input) =>
@@ -62,7 +63,7 @@ class IngredientMacroForm extends ConsumerWidget {
             const SizedBox(width: 10),
             Expanded(
               child: NutritionValueTextFormField(
-                label: 'Tłuszcz',
+                label: context.lang.mealFatLabel,
                 initialValue: _formatInput(value.fatPer100g),
                 onChanged: draft.setFatPer100g,
                 validator: _validateMacroInput,
@@ -74,7 +75,7 @@ class IngredientMacroForm extends ConsumerWidget {
           children: [
             Expanded(
               child: NutritionValueTextFormField(
-                label: 'Białko',
+                label: context.lang.mealProteinLabel,
                 initialValue: _formatInput(value.proteinPer100g),
                 onChanged: draft.setProteinPer100g,
                 validator: _validateMacroInput,
@@ -83,7 +84,7 @@ class IngredientMacroForm extends ConsumerWidget {
             const SizedBox(width: 10),
             Expanded(
               child: NutritionValueTextFormField(
-                label: 'Błonnik',
+                label: context.lang.mealFiberLabel,
                 initialValue: _formatInput(value.fiberPer100g),
                 onChanged: draft.setFiberPer100g,
                 validator: (input) =>
@@ -100,14 +101,14 @@ class IngredientMacroForm extends ConsumerWidget {
 
 String? _macroValidationMessage(IngredientDraft value) {
   if (!value.hasEnergyMacros) {
-    return 'Uzupełnij węglowodany, tłuszcz albo białko';
+    return lang.ingredientMacroRequired;
   }
   return _netCarbsValidationMessage(value);
 }
 
 String? _netCarbsValidationMessage(IngredientDraft value) {
   if (!value.hasPositiveNonEuNetCarbs) {
-    return 'Węglow. > błonnik';
+    return lang.ingredientNetCarbsInvalid;
   }
   return null;
 }
@@ -119,7 +120,7 @@ String? _validateMacroInput(String? value) {
   }
   final parsed = double.tryParse(normalized);
   if (parsed == null || parsed < 0) {
-    return 'Podaj liczbę';
+    return lang.ingredientNumberRequired;
   }
   if (parsed > IngredientDraftValidation.maxMacroPer100g) {
     return 'Maks. 100 g/100 g';

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class NightscoutConnectionFields extends StatelessWidget {
   const NightscoutConnectionFields({
     super.key,
@@ -27,13 +29,13 @@ class NightscoutConnectionFields extends StatelessWidget {
         TextFormField(
           initialValue: urlController == null ? initialUrl : null,
           controller: urlController,
-          decoration: const InputDecoration(
-            labelText: 'Nightscout URL',
-            hintText: 'https://twoj-nightscout.com',
+          decoration: InputDecoration(
+            labelText: context.lang.settingsNightscoutUrlLabel,
+            hintText: context.lang.settingsNightscoutUrlHint,
           ),
           keyboardType: TextInputType.url,
           autocorrect: false,
-          validator: _validateUrl,
+          validator: (value) => _validateUrl(context, value),
           onSaved: onUrlSaved,
           onChanged: onChanged,
         ),
@@ -41,9 +43,9 @@ class NightscoutConnectionFields extends StatelessWidget {
         TextFormField(
           initialValue: tokenController == null ? initialToken : null,
           controller: tokenController,
-          decoration: const InputDecoration(
-            labelText: 'Token Nightscout',
-            hintText: 'Opcjonalny token dla prywatnej strony',
+          decoration: InputDecoration(
+            labelText: context.lang.settingsNightscoutTokenLabel,
+            hintText: context.lang.settingsNightscoutTokenHint,
           ),
           autocorrect: false,
           enableSuggestions: false,
@@ -55,11 +57,11 @@ class NightscoutConnectionFields extends StatelessWidget {
     );
   }
 
-  String? _validateUrl(String? value) {
+  String? _validateUrl(BuildContext context, String? value) {
     final text = value?.trim() ?? '';
 
     if (text.isEmpty) {
-      return 'Podaj adres Nightscout';
+      return context.lang.settingsNightscoutUrlRequired;
     }
 
     final uri = Uri.tryParse(text);
@@ -67,7 +69,7 @@ class NightscoutConnectionFields extends StatelessWidget {
         !uri.hasScheme ||
         (uri.scheme != 'http' && uri.scheme != 'https') ||
         uri.host.isEmpty) {
-      return 'Podaj poprawny adres URL';
+      return context.lang.settingsNightscoutUrlInvalid;
     }
 
     return null;

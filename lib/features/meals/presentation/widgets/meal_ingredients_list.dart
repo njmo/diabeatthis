@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../data/drafts/meal_draft.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
@@ -50,7 +51,7 @@ class MealIngredientsList extends ConsumerWidget {
           .any((ingredient) => ingredient.isSameIngredientAs(mealIngredient));
       if (wouldDuplicate && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Składnik jest już na liście.')),
+          SnackBar(content: Text(context.lang.mealIngredientAlreadyOnList)),
         );
         return;
       }

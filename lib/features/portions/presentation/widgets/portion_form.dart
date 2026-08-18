@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/forms.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/providers/portion_provider.dart';
@@ -10,6 +11,7 @@ class PortionForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = context.lang;
     final draft = ref.watch(portionDraftProvider.notifier);
     final formKey = ref.watch(mealIngredientFormKeyProvider);
 
@@ -25,7 +27,7 @@ class PortionForm extends HookConsumerWidget {
             const PortionFormHeader(),
             const SizedBox(height: 16),
             StringFormField(
-              label: 'Nazwa',
+              label: lang.portionNameLabel,
               value: draft.getName(),
               onChanged: draft.setName,
               builder: (context, controller) {
@@ -40,19 +42,19 @@ class PortionForm extends HookConsumerWidget {
                     }
                     return null;
                   },
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.local_dining_outlined),
-                    labelText: 'Nazwa porcji',
-                    helperText: 'Np. sztuka, kromka, kubek',
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.local_dining_outlined),
+                    labelText: lang.portionNameLabel,
+                    helperText: lang.portionNameHelper,
                     counterText: '',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 );
               },
             ),
             const SizedBox(height: 12),
             StringFormField(
-              label: 'Jednostka',
+              label: lang.portionUnitLabel,
               value: draft.getUnitHint(),
               onChanged: draft.setUnitHint,
               builder: (context, controller) {
@@ -65,12 +67,12 @@ class PortionForm extends HookConsumerWidget {
                     }
                     return null;
                   },
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.scale_outlined),
-                    labelText: 'Jednostka wagi',
-                    helperText: 'Zwykle g',
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.scale_outlined),
+                    labelText: lang.portionWeightUnitLabel,
+                    helperText: lang.portionWeightUnitHelper,
                     counterText: '',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 );
               },
@@ -87,6 +89,7 @@ class PortionFormHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -110,10 +113,10 @@ class PortionFormHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Nowa porcja', style: textTheme.titleMedium),
+                  Text(lang.portionNewTitle, style: textTheme.titleMedium),
                   const SizedBox(height: 4),
                   Text(
-                    'Nazwij porcję, a w następnym kroku ustawisz ile ma gramów.',
+                    lang.portionNewSubtitle,
                     style: textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),

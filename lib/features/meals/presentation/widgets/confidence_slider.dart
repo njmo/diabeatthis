@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 enum ConfidenceLevel { low, medium, high, certain }
 
 extension ConfidenceLevelX on ConfidenceLevel {
   String get label => switch (this) {
-    ConfidenceLevel.low => 'Niska',
-    ConfidenceLevel.medium => 'Średnia',
-    ConfidenceLevel.high => 'Wysoka',
-    ConfidenceLevel.certain => 'Pewna',
+    ConfidenceLevel.low => lang.confidenceLow,
+    ConfidenceLevel.medium => lang.confidenceMedium,
+    ConfidenceLevel.high => lang.confidenceHigh,
+    ConfidenceLevel.certain => lang.confidenceCertain,
   };
 
   /// Jeśli chcesz to zapisywać w bazie jako REAL 0..1.
@@ -38,9 +40,9 @@ class ConfidenceSlider extends StatelessWidget {
     super.key,
     required this.value,
     required this.onChanged,
-    this.title = 'Pewność',
+    String? title,
     this.showValueLabel = true,
-  });
+  }) : title = title ?? '';
 
   final ConfidenceLevel value;
   final ValueChanged<ConfidenceLevel> onChanged;
@@ -57,7 +59,10 @@ class ConfidenceSlider extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              title.isEmpty ? context.lang.confidenceTitle : title,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const Spacer(),
             if (showValueLabel)
               Text(value.label, style: Theme.of(context).textTheme.labelLarge),
@@ -76,8 +81,12 @@ class ConfidenceSlider extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: ConfidenceLevel.values
-              .map((c) => Text(c.label,
-              style: Theme.of(context).textTheme.labelSmall))
+              .map(
+                (c) => Text(
+                  c.label,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+              )
               .toList(),
         ),
       ],

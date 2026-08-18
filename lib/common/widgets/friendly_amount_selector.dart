@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/language.dart';
+
 class FriendlyAmountOption {
   const FriendlyAmountOption({
     required this.label,
@@ -52,14 +54,14 @@ class FriendlyAmountSelector extends StatelessWidget {
               children: [
                 IconButton.filledTonal(
                   padding: const EdgeInsets.all(15),
-                  tooltip: 'Mniej',
+                  tooltip: context.lang.commonLessTooltip,
                   onPressed: normalizedValue <= min
                       ? null
                       : () => onChanged(_normalize(normalizedValue - step)),
                   icon: Text(_stepLabel(-step), style: TextStyle(fontSize: 20)),
                 ),
                 IconButton.filledTonal(
-                  tooltip: 'Mniej',
+                  tooltip: context.lang.commonLessTooltip,
                   onPressed: normalizedValue <= min
                       ? null
                       : () => onChanged(_normalize(normalizedValue - 1)),
@@ -73,7 +75,7 @@ class FriendlyAmountSelector extends StatelessWidget {
                   ),
                 ),
                 IconButton.filledTonal(
-                  tooltip: 'Więcej',
+                  tooltip: context.lang.commonMoreTooltip,
                   onPressed: max != null && normalizedValue >= max!
                       ? null
                       : () => onChanged(_normalize(normalizedValue + 1)),
@@ -81,7 +83,7 @@ class FriendlyAmountSelector extends StatelessWidget {
                 ),
                 IconButton.filledTonal(
                   padding: const EdgeInsets.all(15),
-                  tooltip: 'Więcej',
+                  tooltip: context.lang.commonMoreTooltip,
                   onPressed: max != null && normalizedValue >= max!
                       ? null
                       : () => onChanged(_normalize(normalizedValue + step)),

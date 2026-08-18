@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
 import '../controllers/meal_summary_controller.dart';
 import '../models/meal_summary_item_draft.dart';
@@ -20,6 +21,7 @@ class MealSummaryItemRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = context.lang;
     final item = ref.watch(
       mealSummaryItemDraftProvider(mealId, mealIngredientId),
     );
@@ -53,7 +55,12 @@ class MealSummaryItemRow extends ConsumerWidget {
                         Text(item.name, style: textTheme.titleMedium),
                         const SizedBox(height: 4),
                         Text(
-                          'Plan: ${formatMealSummaryAmount(item.plannedAmount, item.amountLabel)}',
+                          lang.mealSummaryPlanAmount(
+                            formatMealSummaryAmount(
+                              item.plannedAmount,
+                              item.amountLabel,
+                            ),
+                          ),
                           style: textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
@@ -67,18 +74,22 @@ class MealSummaryItemRow extends ConsumerWidget {
                         carbDelta > 0 ? Icons.add : Icons.remove,
                         size: 18,
                       ),
-                      label: Text('${_formatSigned(carbDelta.ceil())}g węgli'),
+                      label: Text(
+                        lang.mealSummaryCarbsChip(
+                          _formatSigned(carbDelta.ceil()),
+                        ),
+                      ),
                     ),
                 ],
               ),
               const SizedBox(height: 12),
-              Text('Ile zjadłeś?', style: textTheme.labelLarge),
+              Text(lang.mealSummaryHowMuchEaten, style: textTheme.labelLarge),
               const SizedBox(height: 8),
               FriendlyAmountSelector(
                 value: item.consumedAmount,
                 max: _maxAmount(item),
                 step: _amountStep(item),
-                options: _amountOptions(item),
+                options: _amountOptions(lang, item),
                 valueLabel: (value) =>
                     formatMealSummaryAmount(value, item.amountLabel),
                 onChanged: (value) {
@@ -86,7 +97,10 @@ class MealSummaryItemRow extends ConsumerWidget {
                 },
               ),
               const SizedBox(height: 12),
-              Text('Jak dobrze to pamiętasz?', style: textTheme.labelLarge),
+              Text(
+                lang.mealSummaryConfidenceQuestion,
+                style: textTheme.labelLarge,
+              ),
               const SizedBox(height: 8),
               MealSummaryConfidenceSelector(
                 value: item.consumedConfidence,
@@ -101,27 +115,34 @@ class MealSummaryItemRow extends ConsumerWidget {
     );
   }
 
-  List<FriendlyAmountOption> _amountOptions(MealSummaryItemDraft item) {
+  List<FriendlyAmountOption> _amountOptions(
+    AppLocalizations lang,
+    MealSummaryItemDraft item,
+  ) {
     if (item.amountLabel == 'g') {
       return [
-        const FriendlyAmountOption(label: 'Nic', value: 0, icon: Icons.close),
         FriendlyAmountOption(
-          label: 'Połowa',
+          label: lang.commonNone,
+          value: 0,
+          icon: Icons.close,
+        ),
+        FriendlyAmountOption(
+          label: lang.commonHalf,
           value: item.plannedAmount * 0.5,
           icon: Icons.pie_chart_outline,
         ),
         FriendlyAmountOption(
-          label: 'Plan',
+          label: lang.mealSummaryPlanLabel,
           value: item.plannedAmount,
           icon: Icons.check_circle_outline,
         ),
         FriendlyAmountOption(
-          label: 'Więcej',
+          label: lang.commonMoreTooltip,
           value: item.plannedAmount * 1.5,
           icon: Icons.add_circle_outline,
         ),
         FriendlyAmountOption(
-          label: '2x plan',
+          label: lang.mealSummaryDoublePlan,
           value: item.plannedAmount * 2,
           icon: Icons.add_chart,
         ),
@@ -129,14 +150,14 @@ class MealSummaryItemRow extends ConsumerWidget {
     }
 
     return [
-      const FriendlyAmountOption(label: 'Nic', value: 0, icon: Icons.close),
-      const FriendlyAmountOption(
-        label: 'Pół',
+      FriendlyAmountOption(label: lang.commonNone, value: 0, icon: Icons.close),
+      FriendlyAmountOption(
+        label: lang.commonHalfShort,
         value: 0.5,
         icon: Icons.pie_chart_outline,
       ),
-      const FriendlyAmountOption(
-        label: '1 porcja',
+      FriendlyAmountOption(
+        label: lang.commonOnePortion,
         value: 1,
         icon: Icons.check_circle_outline,
       ),
@@ -148,7 +169,7 @@ class MealSummaryItemRow extends ConsumerWidget {
       const FriendlyAmountOption(label: '2', value: 2, icon: Icons.add_chart),
       if (item.plannedAmount > 2)
         FriendlyAmountOption(
-          label: 'Plan',
+          label: lang.mealSummaryPlanLabel,
           value: item.plannedAmount,
           icon: Icons.flag_outlined,
         ),

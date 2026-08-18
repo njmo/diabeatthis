@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/form_section.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/providers/activity_provider.dart';
@@ -34,7 +35,7 @@ class ActivityForm extends HookConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 FormSection(
-                  title: 'Aktywność',
+                  title: context.lang.activityTitle,
                   icon: Icons.directions_run,
                   children: [
                     TextFormField(
@@ -45,17 +46,17 @@ class ActivityForm extends HookConsumerWidget {
                       validator: (value) {
                         final text = value?.trim() ?? '';
                         if (text.length < 2) {
-                          return 'Podaj nazwę aktywności';
+                          return context.lang.activityNameRequired;
                         }
                         return null;
                       },
                       onSaved: (value) {
                         activityDraft.setName(value?.trim() ?? '');
                       },
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.badge_outlined),
-                        labelText: 'Nazwa aktywności',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.badge_outlined),
+                        labelText: context.lang.activityNameLabel,
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                     CheckboxListTile(
@@ -64,10 +65,8 @@ class ActivityForm extends HookConsumerWidget {
                       onChanged: (value) {
                         activityDraft.setHasPlannedDuration(value ?? false);
                       },
-                      title: const Text('Ma planowany czas trwania'),
-                      subtitle: const Text(
-                        'Odznacz, jeśli aktywność kończysz ręcznie',
-                      ),
+                      title: Text(context.lang.activityHasPlannedDurationTitle),
+                      subtitle: Text(context.lang.activityManualEndHint),
                     ),
                     if (hasPlannedDuration) ...[
                       const SizedBox(height: 8),
@@ -82,18 +81,18 @@ class ActivityForm extends HookConsumerWidget {
                         validator: (value) {
                           final duration = int.tryParse(value?.trim() ?? '');
                           if (duration == null || duration <= 0) {
-                            return 'Podaj czas w minutach';
+                            return context.lang.activityDurationRequired;
                           }
                           return null;
                         },
                         onSaved: (value) {
                           activityDraft.setDurationMinutes(value?.trim() ?? '');
                         },
-                        decoration: const InputDecoration(
-                          prefixIcon: Icon(Icons.timer_outlined),
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.timer_outlined),
                           suffixText: 'min',
-                          labelText: 'Czas trwania',
-                          border: OutlineInputBorder(),
+                          labelText: context.lang.activityDurationLabel,
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                     ],
@@ -101,10 +100,9 @@ class ActivityForm extends HookConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 FormSection(
-                  title: 'Wrażliwość na insulinę',
+                  title: context.lang.activityInsulinSensitivityTitle,
                   icon: Icons.percent,
-                  subtitle:
-                      'O ile obniżyć dawkę insuliny w kontekście aktywności.',
+                  subtitle: context.lang.activityInsulinSensitivitySubtitle,
                   children: [
                     Row(
                       children: [
@@ -119,17 +117,19 @@ class ActivityForm extends HookConsumerWidget {
                             keyboardType: TextInputType.number,
                             textInputAction: TextInputAction.next,
                             maxLength: 3,
-                            validator: _percentageValidator,
+                            validator: (value) =>
+                                _percentageValidator(context, value),
                             onSaved: (value) {
                               activityDraft.setPercentagePre(
                                 value?.trim() ?? '',
                               );
                             },
-                            decoration: const InputDecoration(
-                              prefixIcon: Icon(Icons.schedule),
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.schedule),
                               suffixText: '%',
-                              labelText: '1h przed',
-                              border: OutlineInputBorder(),
+                              labelText:
+                                  context.lang.activityOneHourBeforeShortLabel,
+                              border: const OutlineInputBorder(),
                             ),
                           ),
                         ),
@@ -144,17 +144,18 @@ class ActivityForm extends HookConsumerWidget {
                             ),
                             keyboardType: TextInputType.number,
                             maxLength: 3,
-                            validator: _percentageValidator,
+                            validator: (value) =>
+                                _percentageValidator(context, value),
                             onSaved: (value) {
                               activityDraft.setPercentagePost(
                                 value?.trim() ?? '',
                               );
                             },
-                            decoration: const InputDecoration(
-                              prefixIcon: Icon(Icons.sports_score),
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.sports_score),
                               suffixText: '%',
-                              labelText: 'Po treningu',
-                              border: OutlineInputBorder(),
+                              labelText: context.lang.activityAfterWorkoutLabel,
+                              border: const OutlineInputBorder(),
                             ),
                           ),
                         ),
@@ -170,10 +171,10 @@ class ActivityForm extends HookConsumerWidget {
     );
   }
 
-  String? _percentageValidator(String? value) {
+  String? _percentageValidator(BuildContext context, String? value) {
     final percentage = int.tryParse(value?.trim() ?? '');
     if (percentage == null || percentage <= 0 || percentage >= 100) {
-      return 'Podaj obniżenie od 1 do 99%';
+      return context.lang.activityPercentageRequired;
     }
     return null;
   }

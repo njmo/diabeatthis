@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../models/notification_event.dart';
 import '../models/notification_event_type.dart';
 import '../models/notification_key.dart';
@@ -22,10 +23,10 @@ class ActivityFinishedNotificationEvent implements NotificationEvent {
       NotificationKey(type: type, entityId: activityLogId);
 
   @override
-  String get title => 'Trening zakończony?';
+  String get title => lang.notificationActivityFinishedTitle;
 
   @override
-  String get body => 'Daj znać, czy aktywność "$activityName" jest zakończona.';
+  String get body => lang.notificationActivityFinishedBody(activityName);
 
   @override
   Map<String, Object?> toPayload() => {

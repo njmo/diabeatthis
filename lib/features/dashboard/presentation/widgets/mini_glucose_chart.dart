@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../data/providers/blood_sugar_readings_list_provider.dart';
 
@@ -33,7 +34,7 @@ class MiniGlucoseChart extends ConsumerWidget {
         );
       },
       loading: () => const CircularProgressIndicator(),
-      error: (error, _) => Text('Błąd: $error'),
+      error: (error, _) => Text(context.lang.activityError(error)),
     );
   }
 }

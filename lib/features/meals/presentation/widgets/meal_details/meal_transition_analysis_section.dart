@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../data/models/meal_details_data.dart';
 import 'meal_detail_components.dart';
 import 'meal_detail_formatters.dart';
@@ -15,10 +16,10 @@ class MealTransitionAnalysisSection extends StatelessWidget {
     final transitions = details.statusTransitions;
 
     return MealSectionTile(
-      title: 'Analiza zmian statusu',
+      title: context.lang.mealTransitionTitle,
       children: [
         if (transitions.isEmpty)
-          const MealInfoRow(label: 'Historia statusów', value: '-')
+          MealInfoRow(label: context.lang.mealStatusHistoryLabel, value: '-')
         else
           for (final transition in transitions)
             ListTile(
@@ -30,20 +31,25 @@ class MealTransitionAnalysisSection extends StatelessWidget {
                     ? Theme.of(context).colorScheme.primary
                     : null,
               ),
-              title: Text(_transitionLabel(transition)),
+              title: Text(_transitionLabel(context, transition)),
               subtitle: Text(mealDateTime(transition.timestamp)),
               trailing: transition.isCurrent
-                  ? const MealSmallBadge(label: 'aktualny')
+                  ? MealSmallBadge(label: context.lang.mealCurrentBadge)
                   : null,
             ),
       ],
     );
   }
 
-  String _transitionLabel(MealStatusTransitionData transition) {
+  String _transitionLabel(
+    BuildContext context,
+    MealStatusTransitionData transition,
+  ) {
     final from = transition.fromStatus;
     if (from == null) {
-      return 'Status początkowy: ${mealStatusLabel(transition.toStatus)}';
+      return context.lang.mealInitialStatus(
+        mealStatusLabel(transition.toStatus),
+      );
     }
     if (from == transition.toStatus) {
       return mealStatusLabel(transition.toStatus);

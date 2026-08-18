@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../data/models/ingredient_filter_item.dart';
 import '../../data/models/ingredient_filter_limits.dart';
 import '../../data/providers/ingredient_filter_controller.dart';
@@ -101,9 +102,9 @@ class IngredientMultiPickerSheet extends HookConsumerWidget {
                           if (pickedIngredients.length >=
                               ingredientFilterSelectionLimit) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
+                              SnackBar(
                                 content: Text(
-                                  'Możesz wybrać maksymalnie 6 składników',
+                                  context.lang.ingredientSelectionLimit,
                                 ),
                               ),
                             );

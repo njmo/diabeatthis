@@ -1,8 +1,10 @@
+import '../../../../common/l10n/application_language.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 
 class InitialConfigurationState {
   const InitialConfigurationState({
     required this.config,
+    required this.language,
     required this.nightscoutUrl,
     required this.nightscoutToken,
     required this.userName,
@@ -11,6 +13,7 @@ class InitialConfigurationState {
   });
 
   final DataSourceConfig config;
+  final ApplicationLanguage language;
   final String nightscoutUrl;
   final String nightscoutToken;
   final String userName;
@@ -19,6 +22,7 @@ class InitialConfigurationState {
 
   InitialConfigurationState copyWith({
     DataSourceConfig? config,
+    ApplicationLanguage? language,
     String? nightscoutUrl,
     String? nightscoutToken,
     String? userName,
@@ -28,6 +32,7 @@ class InitialConfigurationState {
   }) {
     return InitialConfigurationState(
       config: config ?? this.config,
+      language: language ?? this.language,
       nightscoutUrl: nightscoutUrl ?? this.nightscoutUrl,
       nightscoutToken: nightscoutToken ?? this.nightscoutToken,
       userName: userName ?? this.userName,

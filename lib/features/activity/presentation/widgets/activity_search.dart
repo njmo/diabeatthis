@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/forms.dart';
 import '../../../../core/domain/model/activity.dart';
 import '../../data/mappers/activity_draft_mapper.dart';
@@ -31,7 +32,7 @@ class ActivitySearch extends HookConsumerWidget {
         children: [
           if (showSearchField) ...[
             StringFormField(
-              label: 'Nazwa',
+              label: context.lang.mealTemplateNameLabel,
               value: '',
               onChanged: (value) => query.value = value,
               builder: (context, controller) {
@@ -39,11 +40,11 @@ class ActivitySearch extends HookConsumerWidget {
                   autofocus: autofocus,
                   controller: controller,
                   maxLength: 30,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.search),
-                    labelText: 'Nazwa',
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
+                    labelText: context.lang.mealTemplateNameLabel,
                     counterText: '',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 );
               },
@@ -53,9 +54,9 @@ class ActivitySearch extends HookConsumerWidget {
           activities.when(
             data: (data) {
               if (data.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.only(top: 8),
-                  child: Text('Brak wyników'),
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(context.lang.searchNoResults),
                 );
               }
               return Expanded(
@@ -116,7 +117,7 @@ class ActivitySearch extends HookConsumerWidget {
                           ),
                         ),
                         subtitle: Text(
-                          _activitySubtitle(activity),
+                          _activitySubtitle(context, activity),
                           style: theme.textTheme.bodySmall,
                         ),
                         trailing: selected
@@ -150,13 +151,13 @@ class ActivitySearch extends HookConsumerWidget {
     return activity.name;
   }
 
-  static String _activitySubtitle(Activity activity) {
-    return _formatDuration(activity.durationMinutes);
+  static String _activitySubtitle(BuildContext context, Activity activity) {
+    return _formatDuration(context, activity.durationMinutes);
   }
 
-  static String _formatDuration(int? minutes) {
+  static String _formatDuration(BuildContext context, int? minutes) {
     if (minutes == null) {
-      return 'zakończenie ręczne';
+      return context.lang.activityManualEndLowercase;
     }
 
     final hours = minutes ~/ 60;

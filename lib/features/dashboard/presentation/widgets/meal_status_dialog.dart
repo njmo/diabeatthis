@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../meal_summary/domain/utils/meal_add_on_status.dart';
@@ -47,7 +48,7 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.restaurant_outlined, size: 60),
-                              Text('Zjem'),
+                              Text(context.lang.mealStatusEatChoice),
                             ],
                           ),
                         ),
@@ -69,7 +70,7 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.no_meals, size: 60),
-                              Text('Pomijam'),
+                              Text(context.lang.mealStatusSkipChoice),
                             ],
                           ),
                         ),
@@ -80,7 +81,9 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                 if (s.activationBlockedByMealName != null) ...[
                   const SizedBox(height: 12),
                   Text(
-                    'Najpierw zakończ aktywny posiłek: ${s.activationBlockedByMealName}.',
+                    context.lang.mealStatusActivationBlocked(
+                      s.activationBlockedByMealName!,
+                    ),
                     style: const TextStyle(color: Colors.red),
                   ),
                 ],
@@ -92,36 +95,40 @@ class MealStatusDialog extends ConsumerWidget with Logging {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (s.skipMeal) const Text("Potwierdź pominięcie posiłku"),
+              if (s.skipMeal) Text(context.lang.mealStatusConfirmSkipTitle),
               if (s.skipMeal)
-                const Text("Zapiszemy, że posiłek został pominięty.")
+                Text(context.lang.mealStatusConfirmSkipMessage)
               else if (s.advice.decision != null)
-                Text("Propozycja do wykonania: \n\n${c.mealAdviceString()}\n"),
+                Text(
+                  context.lang.mealStatusAdviceToApply(
+                    c.mealAdviceString() ?? '',
+                  ),
+                ),
             ],
           );
         case MealDialogStep.confirmEaten:
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [Text('Potwierdź że posiłek został zjedzony')],
+            children: [Text(context.lang.mealStatusConfirmEaten)],
           );
         case MealDialogStep.confirmEating:
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [Text('Potwierdź że zacząłeś jeść')],
+            children: [Text(context.lang.mealStatusConfirmEating)],
           );
         case MealDialogStep.confirmBolusedAfterEating:
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [Text('Podaj bolusa po zjedzeniu.')],
+            children: [Text(context.lang.mealStatusBolusAfterEating)],
           );
         case MealDialogStep.waitingForBolus:
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [Text('Czekamy na bolus z kalkulatora.')],
+            children: [Text(context.lang.mealStatusWaitingForBolus)],
           );
       }
     }
@@ -141,7 +148,7 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                   Navigator.of(context).pop();
                 }
               },
-              child: const Text("Anuluj"),
+              child: Text(context.lang.settingsCancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -180,13 +187,13 @@ class MealStatusDialog extends ConsumerWidget with Logging {
           return [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Anuluj"),
+              child: Text(context.lang.settingsCancel),
             ),
             if (mealStatusCanRequestAddOn(meal.status))
               OutlinedButton.icon(
                 onPressed: () => _chooseAddOn(context),
                 icon: const Icon(Icons.add),
-                label: const Text('Dokładka'),
+                label: Text(context.lang.mealSummaryExtraTitle),
               ),
             ElevatedButton(
               onPressed: () async {
@@ -198,7 +205,7 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                   );
                 }
               },
-              child: const Text("Zjadłem"),
+              child: Text(context.lang.mealStatusAte),
             ),
           ];
 
@@ -206,7 +213,7 @@ class MealStatusDialog extends ConsumerWidget with Logging {
           return [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Anuluj"),
+              child: Text(context.lang.settingsCancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -217,20 +224,20 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                   Navigator.of(context).pop(MealStatusUpdateResult(status));
                 }
               },
-              child: const Text("Jem"),
+              child: Text(context.lang.mealStatusEatingAction),
             ),
           ];
         case MealDialogStep.confirmBolusedAfterEating:
           return [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Anuluj"),
+              child: Text(context.lang.settingsCancel),
             ),
             if (mealStatusCanRequestAddOn(meal.status))
               OutlinedButton.icon(
                 onPressed: () => _chooseAddOn(context),
                 icon: const Icon(Icons.add),
-                label: const Text('Dokładka'),
+                label: Text(context.lang.mealSummaryExtraTitle),
               ),
             ElevatedButton(
               onPressed: () async {
@@ -240,7 +247,7 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                   ).pop(const MealStatusUpdateResult('waiting-for-bolus'));
                 }
               },
-              child: const Text("Podaję bolusa"),
+              child: Text(context.lang.mealStatusDeliverBolus),
             ),
           ];
         case MealDialogStep.waitingForBolus:
@@ -255,11 +262,11 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                 }
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text("Anuluj posiłek"),
+              child: Text(context.lang.mealStatusCancelMeal),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text("OK"),
+              child: Text(context.lang.notificationActionOk),
             ),
           ];
       }
@@ -275,14 +282,14 @@ class MealStatusDialog extends ConsumerWidget with Logging {
   String _buttonText(MealDecision? decision) {
     switch (decision) {
       case MealDecision.eatNowBolusLater:
-        return "Zaczynam jeść";
+        return lang.mealStatusStartEating;
       case MealDecision.bolusAndEatNow:
-        return "Podaje bolusa";
+        return lang.mealStatusDeliverBolus;
       case MealDecision.bolusWaitThenEat:
-        return "Podaje bolusa i czekam";
+        return lang.mealStatusDeliverBolusAndWait;
       case MealDecision.bolus:
       case null:
-        return 'Potwierdzam';
+        return lang.mealStatusConfirm;
     }
   }
 

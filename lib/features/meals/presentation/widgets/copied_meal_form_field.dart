@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../data/model/copied_meal_type.dart';
 
 class CopiedMealFormField extends FormField<CopiedMealType?> {
@@ -16,11 +17,11 @@ class CopiedMealFormField extends FormField<CopiedMealType?> {
 
            String label;
            if (value == null) {
-             label = 'Wybierz podobny posiłek lub szablon';
+             label = state.context.lang.copiedMealEmptyLabel;
            } else if (value is CopiedMealFromTemplate) {
-             label = 'Szablon - ${value.name}';
+             label = state.context.lang.copiedMealTemplateLabel(value.name);
            } else if (value is CopiedMealFromMeal) {
-             label = 'Posiłek - ${value.name}';
+             label = state.context.lang.copiedMealMealLabel(value.name);
            } else {
              label = value.name;
            }
@@ -38,7 +39,7 @@ class CopiedMealFormField extends FormField<CopiedMealType?> {
                  },
                  child: InputDecorator(
                    decoration: InputDecoration(
-                     labelText: 'Znajdź podobny',
+                     labelText: state.context.lang.copiedMealFieldLabel,
                      errorText: state.errorText,
                      border: const OutlineInputBorder(),
                    ),

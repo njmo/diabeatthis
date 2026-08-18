@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/quick_low_treatment_item.dart';
 import '../../data/providers/quick_low_treatment_item_provider.dart';
 import '../formatters/quick_low_treatment_item_formatter.dart';
@@ -82,6 +83,7 @@ class QuickLowTreatmentDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final colorScheme = Theme.of(context).colorScheme;
     final item = selectedItem;
 
@@ -107,7 +109,7 @@ class QuickLowTreatmentDropdown extends StatelessWidget {
             height: 38,
             child: item == null
                 ? Text(
-                    isLoading ? 'Ładuję...' : 'Dodaj szybkie dosłodzenie',
+                    isLoading ? lang.commonLoading : lang.quickLowTreatmentAdd,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),

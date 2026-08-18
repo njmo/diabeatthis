@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meal_template/data/provider/meal_template_ingredients_list_provider.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/meal_draft_provider.dart';
@@ -25,7 +26,7 @@ class AddMealPage extends HookConsumerWidget {
     final isSaving = addMealState.isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Dodaj posiłek')),
+      appBar: AppBar(title: Text(context.lang.addMealTitle)),
       body: SafeArea(
         child: Form(
           key: formKey,
@@ -60,7 +61,9 @@ class AddMealPage extends HookConsumerWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.check),
-          label: Text(isSaving ? 'Zapisywanie...' : 'Zapisz posiłek'),
+          label: Text(
+            isSaving ? context.lang.addMealSaving : context.lang.addMealSave,
+          ),
         ),
       ),
     );
@@ -129,7 +132,7 @@ class AddMealPage extends HookConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Nie udało się dodać posiłku: $e')),
+          SnackBar(content: Text(context.lang.addMealSaveError(e))),
         );
       }
     }

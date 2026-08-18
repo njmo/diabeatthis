@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class ActivityEditValues {
   final String name;
   final int? durationMinutes;
@@ -48,13 +50,13 @@ class ActivityEditForm extends HookWidget {
                 validator: (value) {
                   final text = value?.trim() ?? '';
                   if (text.length < 2) {
-                    return 'Podaj nazwę aktywności';
+                    return context.lang.activityNameRequired;
                   }
                   return null;
                 },
-                decoration: const InputDecoration(
-                  labelText: 'Nazwa aktywności',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: context.lang.activityNameLabel,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               CheckboxListTile(
@@ -65,8 +67,8 @@ class ActivityEditForm extends HookWidget {
                     : (value) {
                         hasPlannedDuration.value = value ?? false;
                       },
-                title: const Text('Aktywność ma start i koniec'),
-                subtitle: const Text('Odznacz, jeśli kończysz ją ręcznie'),
+                title: Text(context.lang.activityHasStartAndEndTitle),
+                subtitle: Text(context.lang.activityManualEndEditHint),
               ),
               if (hasPlannedDuration.value) ...[
                 const SizedBox(height: 8),
@@ -78,13 +80,13 @@ class ActivityEditForm extends HookWidget {
                   validator: (value) {
                     final duration = int.tryParse(value?.trim() ?? '');
                     if (duration == null || duration <= 0) {
-                      return 'Podaj czas w minutach';
+                      return context.lang.activityDurationRequired;
                     }
                     return null;
                   },
-                  decoration: const InputDecoration(
-                    labelText: 'Czas trwania w minutach',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.lang.activityDurationMinutesLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
               ],
@@ -94,7 +96,7 @@ class ActivityEditForm extends HookWidget {
                 children: [
                   TextButton(
                     onPressed: isSaving ? null : onCancel,
-                    child: const Text('Anuluj'),
+                    child: Text(context.lang.settingsCancel),
                   ),
                   const SizedBox(width: 8),
                   FilledButton.icon(
@@ -119,7 +121,7 @@ class ActivityEditForm extends HookWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.save),
-                    label: const Text('Zapisz'),
+                    label: Text(context.lang.settingsSave),
                   ),
                 ],
               ),

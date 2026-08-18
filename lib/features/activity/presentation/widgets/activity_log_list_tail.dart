@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class ActivityLogListTail extends StatelessWidget {
   final bool isLoading;
   final bool hasMore;
@@ -28,7 +30,7 @@ class ActivityLogListTail extends StatelessWidget {
         child: TextButton.icon(
           onPressed: onRetry,
           icon: const Icon(Icons.refresh),
-          label: const Text('Spróbuj ponownie'),
+          label: Text(context.lang.commonRetry),
         ),
       );
     }

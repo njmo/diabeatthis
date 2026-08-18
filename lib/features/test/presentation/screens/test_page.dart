@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 
 @RoutePage()
@@ -15,7 +16,7 @@ class TestPage extends ConsumerWidget {
     final bolusWizards = ref.watch(bolusWizardsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Test Page')),
+      appBar: AppBar(title: Text(context.lang.testPageTitle)),
       body: Center(
         child: SingleChildScrollView(
           child: Column(
@@ -23,25 +24,25 @@ class TestPage extends ConsumerWidget {
               sensorAge.when(
                 data: (duration) {
                   if (duration == null) {
-                    return const Text('Brak danych o wieku sensora');
+                    return Text(context.lang.testSensorAgeMissing);
                   }
                   final days = duration.inDays;
-                  return Text('Sensor działa od $days dni');
+                  return Text(context.lang.testSensorAge(days));
                 },
                 loading: () => const CircularProgressIndicator(),
-                error: (error, _) => Text('Błąd: $error'),
+                error: (error, _) => Text(context.lang.activityError(error)),
               ),
               canulaAge.when(
                 data: (duration) {
                   if (duration == null) {
-                    return const Text('Brak danych o wieku poda');
+                    return Text(context.lang.testPodAgeMissing);
                   }
                   final days = duration.inDays;
                   final hours = duration.inHours % 24;
-                  return Text('Pompa działa od $days dni i $hours godzin');
+                  return Text(context.lang.testPodAge(days, hours));
                 },
                 loading: () => const CircularProgressIndicator(),
-                error: (error, _) => Text('Błąd: $error'),
+                error: (error, _) => Text(context.lang.activityError(error)),
               ),
               bolusWizards.when(
                 data: (bolusWizardList) {
@@ -56,7 +57,9 @@ class TestPage extends ConsumerWidget {
                           ),
                           title: Text(bolusWizard.getParts()),
                           subtitle: Text(
-                            'Data: ${bolusWizard.createdAt.toLocal().toIso8601String()}',
+                            context.lang.testDateLabel(
+                              bolusWizard.createdAt.toLocal().toIso8601String(),
+                            ),
                           ),
                         ),
                       );
@@ -66,7 +69,7 @@ class TestPage extends ConsumerWidget {
                   );
                 },
                 loading: () => const CircularProgressIndicator(),
-                error: (error, _) => Text('Błąd: $error'),
+                error: (error, _) => Text(context.lang.activityError(error)),
               ),
             ],
           ),

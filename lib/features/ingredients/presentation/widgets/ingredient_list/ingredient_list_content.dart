@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../common/widgets/search_text_field.dart';
 import '../../../../../core/domain/model/ingredient.dart';
 import 'ingredient_empty_state.dart';
@@ -55,7 +56,7 @@ class IngredientListContent extends StatelessWidget {
                 children: [
                   SearchTextField(
                     controller: queryController,
-                    hintText: 'Szukaj po nazwie lub marce',
+                    hintText: context.lang.ingredientSearchByNameOrBrand,
                     onChanged: onQueryChanged,
                   ),
                 ],
@@ -74,7 +75,7 @@ class IngredientListContent extends StatelessWidget {
                 child: TextButton.icon(
                   onPressed: onLoadMore,
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Spróbuj ponownie'),
+                  label: Text(context.lang.commonRetry),
                 ),
               ),
             )
@@ -140,7 +141,7 @@ class _IngredientListTail extends StatelessWidget {
         child: TextButton.icon(
           onPressed: onRetry,
           icon: const Icon(Icons.refresh),
-          label: const Text('Spróbuj ponownie'),
+          label: Text(context.lang.commonRetry),
         ),
       );
     }

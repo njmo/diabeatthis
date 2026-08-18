@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart';
@@ -39,7 +40,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     final initialState = LowTreatmentSheetState(
       contextDraft: composeDraft(
         meal: MealDraft(
-          name: 'Dosłodzenie',
+          name: lang.lowTreatmentMealName,
           mealIngredients: const [],
           plannedAt: clock.now(),
           purpose: MealPurpose.lowTreatment,

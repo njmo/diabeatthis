@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/timeline_analysis_charts.dart';
 import '../../../../core/domain/model/correction_bolus.dart';
 import '../../../../core/domain/model/extended_carb.dart';
@@ -31,31 +32,39 @@ class ActivityAnalysisCharts extends StatelessWidget {
       selectedTimestamp: selectedTimestamp,
       glucoseReadings: analysis.glucoseReadings,
       deviceStatuses: analysis.deviceStatuses,
-      events: _activityEvents(analysis),
-      ranges: _activityRanges(analysis),
+      events: _activityEvents(context, analysis),
+      ranges: _activityRanges(context, analysis),
       onTimestampSelected: onTimestampSelected,
     );
   }
 }
 
-List<TimelineChartRange> _activityRanges(ActivityLogAnalysisData analysis) {
+List<TimelineChartRange> _activityRanges(
+  BuildContext context,
+  ActivityLogAnalysisData analysis,
+) {
   return [
     TimelineChartRange(
       start: analysis.activityStart,
       end: analysis.activityEnd,
       color: Colors.teal,
       alpha: 0.10,
-      label: 'Aktywność',
+      label: context.lang.activityLegendActivity,
       startIcon: Icons.play_arrow,
       endIcon: Icons.stop,
-      startLabel: 'Start aktywności',
-      endLabel: 'Koniec aktywności',
+      startLabel: context.lang.activityRangeStartLabel,
+      endLabel: context.lang.activityRangeEndLabel,
     ),
-    ...analysis.activityTargets.map(_temporaryTargetRange),
+    ...analysis.activityTargets.map((target) {
+      return _temporaryTargetRange(context, target);
+    }),
   ];
 }
 
-TimelineChartRange _temporaryTargetRange(TemporaryTarget target) {
+TimelineChartRange _temporaryTargetRange(
+  BuildContext context,
+  TemporaryTarget target,
+) {
   return TimelineChartRange(
     start: target.createdAt,
     end: target.createdAt.add(Duration(minutes: target.duration)),
@@ -64,29 +73,34 @@ TimelineChartRange _temporaryTargetRange(TemporaryTarget target) {
     label: '${target.targetBottom}-${target.targetTop} mg/dL',
     startIcon: Icons.timer,
     endIcon: Icons.timer_off,
-    startLabel: 'Start temp targetu',
-    endLabel: 'Koniec temp targetu',
+    startLabel: context.lang.tempTargetRangeStartLabel,
+    endLabel: context.lang.tempTargetRangeEndLabel,
   );
 }
 
-List<TimelineChartEvent> _activityEvents(ActivityLogAnalysisData analysis) {
+List<TimelineChartEvent> _activityEvents(
+  BuildContext context,
+  ActivityLogAnalysisData analysis,
+) {
   return analysis.chartTreatments.map((treatment) {
     return TimelineChartEvent(
       timestamp: treatment.createdAt ?? analysis.chartStart,
       icon: treatment.getIcon(),
       color: treatment.getColor(),
-      label: _treatmentName(treatment),
+      label: _treatmentName(context, treatment),
       value: treatment.getParts(),
     );
   }).toList();
 }
 
-String _treatmentName(Treatment treatment) {
-  if (treatment is Meal) return 'Posiłek';
+String _treatmentName(BuildContext context, Treatment treatment) {
+  if (treatment is Meal) return context.lang.activityTreatmentMeal;
   if (treatment is TemporaryTarget) return 'Temp target';
   if (treatment is Treat) return 'Treat';
   if (treatment is ManualBolus) return 'Bolus';
-  if (treatment is CorrectionBolus) return 'Korekta';
+  if (treatment is CorrectionBolus) {
+    return context.lang.activityTreatmentCorrection;
+  }
   if (treatment is ExtendedCarb) return 'Extended carbs';
-  return 'Zdarzenie';
+  return context.lang.activityTreatmentEvent;
 }

@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/quick_low_treatment_item.dart';
 
 String formatQuickLowTreatmentItemDetails(QuickLowTreatmentItem item) {
@@ -6,12 +7,20 @@ String formatQuickLowTreatmentItemDetails(QuickLowTreatmentItem item) {
 
   if (item.portion == null) {
     if (item.ingredient.isReference) {
-      return '$amount x ${_referencePortionLabel(item.amount)} • $carbs g węglowodanów';
+      return lang.quickLowTreatmentReferenceDetails(
+        amount,
+        carbs,
+        _referencePortionLabel(item.amount),
+      );
     }
-    return '$amount g • $carbs g węglowodanów';
+    return lang.quickLowTreatmentGramDetails(amount, carbs);
   }
 
-  return '$amount x ${item.portion!.name} • $carbs g węglowodanów';
+  return lang.quickLowTreatmentPortionDetails(
+    amount,
+    carbs,
+    item.portion!.name,
+  );
 }
 
 double _calculateQuickLowTreatmentCarbs(QuickLowTreatmentItem item) {

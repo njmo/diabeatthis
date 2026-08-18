@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../app/router/app_router.dart';
+import '../../../../../common/l10n/language.dart';
 import '../../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
 import '../../../data/models/meal_details_data.dart';
 import '../../../data/providers/meal_ingredients_list_provider.dart';
@@ -27,7 +28,7 @@ class MealNutritionAnalysisSection extends StatelessWidget {
     );
 
     return MealSectionTile(
-      title: 'Analiza żywieniowa',
+      title: context.lang.mealNutritionTitle,
       initiallyExpanded: true,
       children: [
         MealNutritionMacroSummary(
@@ -69,28 +70,28 @@ class MealNutritionMacroSummary extends StatelessWidget {
           metrics: [
             MealMetricTileData(
               icon: Icons.grain,
-              label: 'Węglowodany',
+              label: context.lang.mealCarbsLabel,
               value: formatGrams(snapshot?.totalCarbsG),
             ),
             MealMetricTileData(
               icon: Icons.opacity,
-              label: 'Tłuszcz',
+              label: context.lang.mealFatLabel,
               value: formatGrams(snapshot?.totalFatG),
             ),
             MealMetricTileData(
               icon: Icons.fitness_center,
-              label: 'Białko',
+              label: context.lang.mealProteinLabel,
               value: formatGrams(snapshot?.totalProteinG),
             ),
             MealMetricTileData(
               icon: Icons.eco_outlined,
-              label: 'Błonnik',
+              label: context.lang.mealFiberLabel,
               value: formatGrams(snapshot?.totalFiberG),
             ),
             if (hasAddOn)
               MealMetricTileData(
                 icon: Icons.add_circle_outline,
-                label: 'Węgle z dokładki',
+                label: context.lang.mealAddOnCarbsLabel,
                 value: formatSignedGrams(addOnNetCarbsG),
               ),
           ],
@@ -99,19 +100,19 @@ class MealNutritionMacroSummary extends StatelessWidget {
         MealCompactMetricBar(
           metrics: [
             MealCompactMetricData(
-              label: 'Kalorie',
+              label: context.lang.mealCaloriesLabel,
               value: formatSnapshotValue(snapshot?.totalCaloriesKcal, 'kcal'),
             ),
             MealCompactMetricData(
-              label: 'Netto',
+              label: context.lang.mealNetLabel,
               value: formatGrams(snapshot?.totalNetCarbsG),
             ),
             MealCompactMetricData(
-              label: 'WBT',
+              label: context.lang.mealWbtLabel,
               value: formatSnapshotValue(snapshot?.wbtKcal, 'kcal'),
             ),
             MealCompactMetricData(
-              label: 'Masa',
+              label: context.lang.mealMassLabel,
               value: formatGrams(snapshot?.totalGrams),
             ),
           ],
@@ -146,69 +147,79 @@ class MealIngredientTile extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(ingredient.ingredientName),
-          if (ingredient.isExtra) const MealSmallBadge(label: 'dodatkowy'),
+          if (ingredient.isExtra)
+            MealSmallBadge(label: context.lang.mealExtraBadge),
           if (ingredient.usesHistoricalNutrition)
-            const MealSmallBadge(label: 'historyczne wartości'),
+            MealSmallBadge(label: context.lang.mealHistoricalValuesBadge),
         ],
       ),
       subtitle: Text(
         [
-          ingredient.isExtra ? 'dodane po posiłku' : 'planowany',
-          'porcja ${ingredient.portionLabel}',
-          'plan ${formatNumber(ingredient.plannedAmount)}',
-          'zjedzono ${formatNumber(ingredient.effectiveConsumedAmount)}',
+          ingredient.isExtra
+              ? context.lang.mealAddedAfterMeal
+              : context.lang.mealPlannedEntry,
+          context.lang.mealPortionInline(ingredient.portionLabel),
+          context.lang.mealPlanInline(formatNumber(ingredient.plannedAmount)),
+          context.lang.mealConsumedInline(
+            formatNumber(ingredient.effectiveConsumedAmount),
+          ),
           formatGrams(ingredient.consumedTotalGrams),
         ].join(' • '),
       ),
       trailing: canOpenIngredient
           ? IconButton(
-              tooltip: 'Otwórz składnik',
+              tooltip: context.lang.mealOpenIngredientTooltip,
               icon: const Icon(Icons.open_in_new),
               onPressed: () => context.router.push(
                 IngredientRoute(ingredientId: ingredient.ingredientId),
               ),
             )
           : Tooltip(
-              message:
-                  'Ten posiłek używa historycznych wartości; link do aktualnego składnika jest nieaktywny.',
+              message: context.lang.mealHistoricalIngredientTooltip,
               child: Icon(Icons.link_off, color: scheme.error),
             ),
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       children: [
         MealInfoRow(
-          label: 'Typ wpisu',
+          label: context.lang.mealEntryTypeLabel,
           value: mealEntryTypeLabel(ingredient.entryType),
         ),
-        MealInfoRow(label: 'Porcja', value: ingredient.portionLabel),
         MealInfoRow(
-          label: 'Ilość planowana',
+          label: context.lang.mealPortionLabel,
+          value: ingredient.portionLabel,
+        ),
+        MealInfoRow(
+          label: context.lang.mealPlannedAmountLabel,
           value: formatNumber(ingredient.plannedAmount),
         ),
         MealInfoRow(
-          label: 'Ilość zjedzona',
+          label: context.lang.mealConsumedAmountLabel,
           value: formatNumber(ingredient.effectiveConsumedAmount),
         ),
         MealInfoRow(
-          label: 'Pewność ilości',
+          label: context.lang.mealQuantityConfidenceLabel,
           value: formatConfidence(ingredient.quantityConfidence),
         ),
         MealInfoRow(
-          label: 'Pewność zjedzenia',
+          label: context.lang.mealConsumedConfidenceLabel,
           value: formatConfidence(ingredient.consumedConfidence),
         ),
         MealInfoRow(
-          label: 'Planowana masa',
+          label: context.lang.mealPlannedMassLabel,
           value: formatGrams(ingredient.plannedTotalGrams),
         ),
         MealInfoRow(
-          label: 'Zjedzona masa',
+          label: context.lang.mealConsumedMassLabel,
           value: formatGrams(ingredient.consumedTotalGrams),
         ),
         MealInfoRow(
-          label: 'Przygotowanie',
+          label: context.lang.mealPrepMethodLabel,
           value: fallbackText(ingredient.prepMethod),
         ),
-        MealInfoRow(label: 'Notatki', value: fallbackText(ingredient.notes)),
+        MealInfoRow(
+          label: context.lang.mealNotesLabel,
+          value: fallbackText(ingredient.notes),
+        ),
         const SizedBox(height: 8),
         NutritionComparisonTable(ingredient: ingredient),
       ],
@@ -229,43 +240,43 @@ class NutritionComparisonTable extends StatelessWidget {
         headingRowHeight: 36,
         dataRowMinHeight: 36,
         dataRowMaxHeight: 44,
-        columns: const [
-          DataColumn(label: Text('Wartość')),
-          DataColumn(label: Text('Plan')),
-          DataColumn(label: Text('Zjedzone')),
-          DataColumn(label: Text('Aktualne')),
+        columns: [
+          DataColumn(label: Text(context.lang.mealValueColumn)),
+          DataColumn(label: Text(context.lang.mealSnapshotsPlanColumn)),
+          DataColumn(label: Text(context.lang.mealSnapshotsConsumedColumn)),
+          DataColumn(label: Text(context.lang.mealCurrentColumn)),
         ],
         rows: [
           _nutritionRow(
-            'Węglowodany/100g',
+            context.lang.mealCarbsPer100gLabel,
             ingredient.plannedNutrition.carbsPer100g,
             ingredient.consumedNutrition.carbsPer100g,
             ingredient.currentNutrition.carbsPer100g,
             'g',
           ),
           _nutritionRow(
-            'Tłuszcz/100g',
+            context.lang.mealFatPer100gLabel,
             ingredient.plannedNutrition.fatPer100g,
             ingredient.consumedNutrition.fatPer100g,
             ingredient.currentNutrition.fatPer100g,
             'g',
           ),
           _nutritionRow(
-            'Błonnik/100g',
+            context.lang.mealFiberPer100gLabel,
             ingredient.plannedNutrition.fiberPer100g,
             ingredient.consumedNutrition.fiberPer100g,
             ingredient.currentNutrition.fiberPer100g,
             'g',
           ),
           _nutritionRow(
-            'Białko/100g',
+            context.lang.mealProteinPer100gLabel,
             ingredient.plannedNutrition.proteinPer100g,
             ingredient.consumedNutrition.proteinPer100g,
             ingredient.currentNutrition.proteinPer100g,
             'g',
           ),
           _nutritionRow(
-            'Pewność',
+            context.lang.mealConfidenceLabel,
             ingredient.plannedNutrition.nutritionConfidence,
             ingredient.consumedNutrition.nutritionConfidence,
             ingredient.currentNutrition.nutritionConfidence,
@@ -319,8 +330,15 @@ class MealContributionBreakdown extends StatelessWidget {
         for (final ingredient in details.ingredients)
           MealInfoRow(
             label: ingredient.ingredientName,
-            value:
-                'węgl. ${formatShare(ingredient.consumedCarbsContribution, totalCarbs)} • tł. ${formatShare(ingredient.consumedFatContribution, totalFat)} • kcal ${formatShare(ingredient.consumedCaloriesContribution, totalCalories)} • WBT ${formatNumber(ingredient.consumedWbtKcalContribution)} kcal',
+            value: context.lang.mealNutritionContribution(
+              formatShare(ingredient.consumedCarbsContribution, totalCarbs),
+              formatShare(ingredient.consumedFatContribution, totalFat),
+              formatShare(
+                ingredient.consumedCaloriesContribution,
+                totalCalories,
+              ),
+              formatNumber(ingredient.consumedWbtKcalContribution),
+            ),
           ),
       ],
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/delete_confirmation_dialog.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../ingredients/data/providers/ingredient_filter_controller.dart';
@@ -37,7 +38,7 @@ class MealList extends ConsumerWidget {
       child: Column(
         children: [
           IngredientListFilter(
-            hintText: 'Szukaj posiłku po nazwie',
+            hintText: context.lang.mealSearchHint,
             onQueryChanged: controller.setQuery,
           ),
           Expanded(
@@ -80,10 +81,9 @@ class MealList extends ConsumerWidget {
   }) async {
     final confirmed = await showDeleteConfirmationDialog(
       context,
-      title: 'Usunąć posiłek?',
-      message:
-          'Posiłek "${meal.name}" zostanie usunięty razem ze składnikami, podsumowaniem i wynikami analizy.',
-      confirmLabel: 'Usuń posiłek',
+      title: context.lang.mealDeleteTitle,
+      message: context.lang.mealDeleteMessage(meal.name),
+      confirmLabel: context.lang.mealDeleteConfirm,
     );
     if (!confirmed || !context.mounted) {
       return false;
@@ -96,13 +96,13 @@ class MealList extends ConsumerWidget {
         return true;
       }
       messenger.showSnackBar(
-        const SnackBar(content: Text('Posiłek został usunięty')),
+        SnackBar(content: Text(context.lang.mealDeleteSuccess)),
       );
       return true;
     } catch (error) {
       if (context.mounted) {
         messenger.showSnackBar(
-          SnackBar(content: Text('Nie udało się usunąć posiłku: $error')),
+          SnackBar(content: Text(context.lang.mealDeleteFailed(error))),
         );
       }
       return false;

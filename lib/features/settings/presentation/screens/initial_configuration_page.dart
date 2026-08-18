@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/application_language.dart';
+import '../../../../common/l10n/language.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
 import '../controllers/initial_configuration_controller.dart';
+import '../widgets/application_language_selector.dart';
 import '../widgets/data_source_config_controls.dart';
 import '../widgets/nightscout_connection_fields.dart';
 import '../widgets/settings_section_card.dart';
@@ -25,11 +28,12 @@ class InitialConfigurationPage extends HookConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Pierwsza konfiguracja'),
+        title: Text(context.lang.initialConfigurationTitle),
       ),
       body: stateAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Błąd: $error')),
+        error: (error, _) =>
+            Center(child: Text(context.lang.settingsGenericError(error))),
         data: (state) => SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -40,15 +44,17 @@ class InitialConfigurationPage extends HookConsumerWidget {
                 children: [
                   SettingsSectionCard(
                     icon: Icons.hub_outlined,
-                    title: 'Źródła danych',
-                    subtitle:
-                        'Wybierz źródło cukru, zdarzeń, statusu pompy i historii.',
+                    title: context.lang.settingsDataSourcesTitle,
+                    subtitle: context.lang.settingsDataSourcesSubtitle,
                     children: [
                       availabilityAsync.when(
                         loading: () =>
                             const Center(child: CircularProgressIndicator()),
-                        error: (error, _) =>
-                            Text('Błąd dostępności źródeł: $error'),
+                        error: (error, _) => Text(
+                          context.lang.settingsDataSourcesAvailabilityError(
+                            error,
+                          ),
+                        ),
                         data: (availability) => DataSourceConfigControls(
                           config: state.config,
                           availability: availability,
@@ -59,15 +65,45 @@ class InitialConfigurationPage extends HookConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   SettingsSectionCard(
+                    icon: Icons.language_outlined,
+                    title: context.lang.settingsLanguageTitle,
+                    subtitle: context.lang.settingsLanguageSubtitle,
+                    children: [
+                      ApplicationLanguageSelector(
+                        value: state.language,
+                        onChanged: (value) async {
+                          final errorMessage =
+                              context.lang.settingsLanguageSaveError;
+                          try {
+                            await ref
+                                .read(
+                                  applicationLanguageControllerProvider
+                                      .notifier,
+                                )
+                                .setLanguage(value);
+                            controller.setLanguage(value);
+                          } catch (_) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(errorMessage)),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SettingsSectionCard(
                     icon: Icons.person_outline,
-                    title: 'Preferencje użytkownika',
-                    subtitle: 'Imię wyświetlane w aplikacji.',
+                    title: context.lang.settingsUserPreferencesTitle,
+                    subtitle: context.lang.settingsUserPreferencesSubtitle,
                     children: [
                       TextFormField(
                         initialValue: state.userName,
-                        decoration: const InputDecoration(
-                          labelText: 'Imię użytkownika',
-                          hintText: 'Oliwier',
+                        decoration: InputDecoration(
+                          labelText: context.lang.settingsUserNameLabel,
+                          hintText: context.lang.settingsNameHint,
                         ),
                         textCapitalization: TextCapitalization.words,
                         onSaved: (value) {
@@ -81,8 +117,7 @@ class InitialConfigurationPage extends HookConsumerWidget {
                     SettingsSectionCard(
                       icon: Icons.cloud_outlined,
                       title: 'Nightscout',
-                      subtitle:
-                          'Podaj adres swojego Nightscout. Bez niego nie możemy pobrać danych.',
+                      subtitle: context.lang.settingsNightscoutSubtitle,
                       children: [
                         NightscoutConnectionFields(
                           initialUrl: state.nightscoutUrl,
@@ -131,7 +166,7 @@ class InitialConfigurationPage extends HookConsumerWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.save_outlined),
-                    label: const Text('Zakończ konfigurację'),
+                    label: Text(context.lang.settingsFinishConfiguration),
                   ),
                   const SizedBox(height: 16),
                 ],

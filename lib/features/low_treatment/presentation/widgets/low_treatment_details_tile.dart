@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meals/data/models/meal_details_data.dart';
 import '../../../meals/presentation/widgets/meal_details/meal_detail_formatters.dart';
 import '../formatters/low_treatment_context_formatters.dart';
@@ -18,6 +19,7 @@ class LowTreatmentDetailsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final lowTreatmentContext = treatment.context;
     final suggestedCarbs = lowTreatmentContext.suggestedCarbs;
     final suggestedWithinMinutes = lowTreatmentContext.suggestedWithinMinutes;
@@ -33,14 +35,14 @@ class LowTreatmentDetailsTile extends StatelessWidget {
           children: [
             Text(
               [
-                lowTreatmentReasonLabel(lowTreatmentContext.reason),
-                lowTreatmentSourceLabel(lowTreatmentContext.source),
+                lowTreatmentReasonLabel(lowTreatmentContext.reason, lang),
+                lowTreatmentSourceLabel(lowTreatmentContext.source, lang),
               ].join(' • '),
             ),
             const SizedBox(height: 4),
             Text(_ingredientsLabel()),
             const SizedBox(height: 4),
-            Text(_amountLabel(suggestedCarbs, suggestedWithinMinutes)),
+            Text(_amountLabel(lang, suggestedCarbs, suggestedWithinMinutes)),
           ],
         ),
       ),
@@ -58,12 +60,17 @@ class LowTreatmentDetailsTile extends StatelessWidget {
         .join(', ');
   }
 
-  String _amountLabel(double? suggestedCarbs, int? suggestedWithinMinutes) {
+  String _amountLabel(
+    AppLocalizations lang,
+    double? suggestedCarbs,
+    int? suggestedWithinMinutes,
+  ) {
     return [
-      'Razem ${formatGrams(treatment.totalNetCarbsG)} netto',
-      if (suggestedCarbs != null) 'sugestia ${formatGrams(suggestedCarbs)}',
+      lang.lowTreatmentTotalNet(formatGrams(treatment.totalNetCarbsG)),
+      if (suggestedCarbs != null)
+        lang.lowTreatmentSuggestionInline(formatGrams(suggestedCarbs)),
       if (suggestedWithinMinutes != null && suggestedWithinMinutes > 0)
-        'w $suggestedWithinMinutes min',
+        lang.lowTreatmentWithinInline(suggestedWithinMinutes),
     ].join(' • ');
   }
 }

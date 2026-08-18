@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../activity/data/drafts/activity_log_draft.dart';
@@ -79,31 +80,40 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
     ActivityLogSummaryData activity,
     DateTime now, {
     TemporaryTarget? linkedTarget,
+    required AppLocalizations lang,
   }) {
     final isPlanned = _isActivityPlanned(activity, now);
     final durationMinutes = _activityDurationMinutes(activity);
     final parts = <String>[
       _activityName(activity),
       if (isPlanned)
-        'start za ${_remainingMinutes(activity.startedAt, now)} min'
+        lang.dashboardActivityStartsIn(
+          _remainingMinutes(activity.startedAt, now),
+        )
       else
-        'trwa ${_activityElapsedMinutes(activity.startedAt, now)} min',
+        lang.dashboardActivityElapsed(
+          _activityElapsedMinutes(activity.startedAt, now),
+        ),
     ];
 
     if (durationMinutes != null) {
       final endAt = activity.startedAt.add(Duration(minutes: durationMinutes));
       if (isPlanned) {
-        parts.add('czas trwania $durationMinutes min');
+        parts.add(lang.dashboardActivityDuration(durationMinutes));
       } else {
         final minutesLeft = _remainingMinutes(endAt, now);
         parts.add(
-          minutesLeft == 0 ? 'czas minął' : 'koniec za $minutesLeft min',
+          minutesLeft == 0
+              ? lang.dashboardActivityTimePassed
+              : lang.dashboardActivityEndsIn(minutesLeft),
         );
       }
     }
 
     if (linkedTarget != null) {
-      parts.add('target ${_targetSubtitle(linkedTarget, now)}');
+      parts.add(
+        lang.dashboardTargetSubtitle(_targetSubtitle(linkedTarget, now)),
+      );
     }
 
     return parts.join(' • ');
@@ -144,15 +154,16 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
           child: _StatusInfoCard(
             icon: Icons.directions_run_rounded,
             title: _isActivityPlanned(pendingActivity, now)
-                ? 'Zaplanowana aktywność'
-                : 'Aktywność w toku',
+                ? context.lang.dashboardPlannedActivityTitle
+                : context.lang.dashboardActivityInProgressCardTitle,
             subtitle: _activitySubtitle(
               pendingActivity,
               now,
               linkedTarget: linkedTarget,
+              lang: context.lang,
             ),
             trailing: IconButton(
-              tooltip: 'Zakończ aktywność',
+              tooltip: context.lang.dashboardFinishActivityTooltip,
               icon: const Icon(Icons.stop_circle_outlined),
               onPressed: () async {
                 await ref.read(stopActivityProvider(pendingActivity).future);
@@ -176,7 +187,7 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _StatusInfoCard(
               icon: Icons.track_changes_rounded,
-              title: 'Temp target aktywności',
+              title: context.lang.dashboardActivityTempTargetTitle,
               subtitle: _targetSubtitle(target, now),
               trailing: pendingActivity == null
                   ? FilledButton.icon(
@@ -197,7 +208,7 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
                           );
                           ref.invalidate(getPendingActivityProvider);
                         } catch (e, st) {
-                          logE('Błąd dodawania aktywności $e, $st');
+                          logE('Activity add failed $e, $st');
                           if (context.mounted) {
                             await showActivityAddFailedDialog(context);
                           }
@@ -205,7 +216,7 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
                         }
                       },
                       icon: const Icon(Icons.app_registration),
-                      label: const Text('Podepnij aktywność'),
+                      label: Text(context.lang.dashboardAttachActivity),
                     )
                   : null,
             ),
@@ -219,7 +230,7 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _StatusInfoCard(
               icon: Icons.restaurant_rounded,
-              title: 'Temp target posiłku',
+              title: context.lang.dashboardMealTempTargetTitle,
               subtitle: _targetSubtitle(target, now),
             ),
           ),
@@ -246,11 +257,8 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Aktywność w toku'),
-          content: const Text(
-            'Jedna aktywność jest już w trakcie.\n\n'
-            'Nie można rozpocząć nowej, dopóki obecna nie zostanie zakończona.',
-          ),
+          title: Text(context.lang.dashboardActivityInProgressTitle),
+          content: Text(context.lang.dashboardActivityInProgressMessage),
         );
       },
     );
@@ -261,11 +269,8 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Problem z dodaniem aktywności'),
-          content: const Text(
-            'Taka aktywność już istnieje lub parametry nie są podane prawidłowo.\n'
-            'Pamiętaj: pre i post muszą być <100 i >0.',
-          ),
+          title: Text(context.lang.dashboardActivityAddFailedTitle),
+          content: Text(context.lang.dashboardActivityAddFailedMessage),
         );
       },
     );

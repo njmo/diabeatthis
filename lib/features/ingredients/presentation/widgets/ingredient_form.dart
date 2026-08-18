@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/providers/ingredient_provider.dart';
@@ -38,9 +39,9 @@ class IngredientForm extends ConsumerWidget {
             maxLength: _ingredientNameMaxLength,
             onChanged: draft.setName,
             validator: _validateName,
-            decoration: const InputDecoration(
-              labelText: 'Nazwa',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.lang.mealTemplateNameLabel,
+              border: const OutlineInputBorder(),
             ),
           ),
           TextFormField(
@@ -48,9 +49,9 @@ class IngredientForm extends ConsumerWidget {
             maxLength: 30,
             onChanged: draft.setBrand,
             validator: _validateOptionalBrand,
-            decoration: const InputDecoration(
-              labelText: 'Producent',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: context.lang.ingredientBrandLabel,
+              border: const OutlineInputBorder(),
             ),
           ),
           if (!state.isReference) ...[
@@ -75,10 +76,10 @@ class IngredientForm extends ConsumerWidget {
 String? _validateName(String? value) {
   final name = value?.trim() ?? '';
   if (name.isEmpty) {
-    return 'Podaj nazwę składnika';
+    return lang.ingredientNameRequired;
   }
   if (name.length < 2) {
-    return 'Nazwa jest za krótka';
+    return lang.ingredientNameTooShort;
   }
   return null;
 }

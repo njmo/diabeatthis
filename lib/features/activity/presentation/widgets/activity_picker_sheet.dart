@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/drafts/activity_draft.dart';
@@ -38,13 +39,13 @@ class ActivityPickerSheet extends HookConsumerWidget {
         children: [
           Expanded(
             child: Text(switch (state) {
-              ActivityPickerStep.initial => 'Dodaj aktywność',
-              ActivityPickerStep.add => 'Utwórz aktywność',
-              ActivityPickerStep.search => 'Wybierz aktywność',
+              ActivityPickerStep.initial => context.lang.dashboardAddActivity,
+              ActivityPickerStep.add => context.lang.activityCreateTitle,
+              ActivityPickerStep.search => context.lang.activityPickTitle,
             }, style: Theme.of(context).textTheme.titleLarge),
           ),
           IconButton(
-            tooltip: 'Zamknij',
+            tooltip: context.lang.commonCloseTooltip,
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close),
           ),
@@ -56,16 +57,16 @@ class ActivityPickerSheet extends HookConsumerWidget {
           SegmentedButton<ActivityPickerStep>(
             emptySelectionAllowed: true,
             showSelectedIcon: false,
-            segments: const [
+            segments: [
               ButtonSegment(
                 value: ActivityPickerStep.search,
-                icon: Icon(Icons.search),
-                label: Text('Wyszukaj'),
+                icon: const Icon(Icons.search),
+                label: Text(context.lang.commonSearch),
               ),
               ButtonSegment(
                 value: ActivityPickerStep.add,
-                icon: Icon(Icons.add),
-                label: Text('Utwórz'),
+                icon: const Icon(Icons.add),
+                label: Text(context.lang.commonCreate),
               ),
             ],
             selected: isInitial ? const {} : {state},
@@ -98,7 +99,7 @@ class ActivityPickerSheet extends HookConsumerWidget {
           Expanded(
             child: OutlinedButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Anuluj'),
+              child: Text(context.lang.settingsCancel),
             ),
           ),
           const SizedBox(width: 12),
@@ -121,7 +122,9 @@ class ActivityPickerSheet extends HookConsumerWidget {
                     }
                   : null,
               icon: Icon(isAdding ? Icons.add : Icons.check),
-              label: Text(isAdding ? 'Utwórz' : 'Wybierz'),
+              label: Text(
+                isAdding ? context.lang.commonCreate : context.lang.commonPick,
+              ),
             ),
           ),
         ],

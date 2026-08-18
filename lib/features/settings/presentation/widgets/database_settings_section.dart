@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../data/database_backup_scope.dart';
 import '../../data/providers/database_backup_service_provider.dart';
 import 'settings_section_card.dart';
@@ -29,8 +30,8 @@ class _DatabaseSettingsSectionState
   Widget build(BuildContext context) {
     return SettingsSectionCard(
       icon: Icons.storage_outlined,
-      title: 'Baza danych',
-      subtitle: 'Eksport, import i porządkowanie lokalnych danych aplikacji.',
+      title: context.lang.settingsDatabaseTitle,
+      subtitle: context.lang.settingsDatabaseSubtitle,
       children: [
         _ScopeSelector(
           value: _selectedScope,
@@ -39,14 +40,14 @@ class _DatabaseSettingsSectionState
         const SizedBox(height: 12),
         _DatabaseActionButton(
           icon: Icons.file_upload_outlined,
-          label: 'Eksportuj do pliku',
+          label: context.lang.settingsDatabaseExportButton,
           isLoading: _isExporting,
           onPressed: _isExporting ? null : _exportDatabase,
         ),
         const SizedBox(height: 8),
         _DatabaseActionButton(
           icon: Icons.file_download_outlined,
-          label: 'Importuj z pliku',
+          label: context.lang.settingsDatabaseImportButton,
           isLoading: _isImporting,
           onPressed: _isImporting ? null : _pickAndImportDatabase,
         ),
@@ -55,7 +56,7 @@ class _DatabaseSettingsSectionState
         const SizedBox(height: 8),
         _DatabaseActionButton(
           icon: Icons.cleaning_services_outlined,
-          label: 'Wyczyść historię i posiłki',
+          label: context.lang.settingsDatabaseClearButton,
           isDestructive: true,
           isLoading: _isClearing,
           onPressed: _isClearing ? null : _confirmClearHistory,
@@ -65,6 +66,11 @@ class _DatabaseSettingsSectionState
   }
 
   Future<void> _exportDatabase() async {
+    final exportSavedMessage = context.lang.settingsDatabaseExportSaved;
+    final exportShareText = context.lang.settingsDatabaseExportShareText;
+    final exportReadyMessage = context.lang.settingsDatabaseExportReady;
+    final exportFailedMessage = context.lang.settingsDatabaseExportFailed;
+
     setState(() => _isExporting = true);
     try {
       final service = ref.read(databaseBackupServiceProvider);
@@ -77,27 +83,32 @@ class _DatabaseSettingsSectionState
       if (savedPath == null) return;
 
       if (!mounted) return;
-      _showSnackBar('Eksport bazy danych został zapisany.');
+      _showSnackBar(exportSavedMessage);
     } on MissingPluginException {
       final service = ref.read(databaseBackupServiceProvider);
       final file = await service.exportToFile(_selectedScope);
       await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          text: 'Eksport bazy DiabeatThis',
-        ),
+        ShareParams(files: [XFile(file.path)], text: exportShareText),
       );
       if (!mounted) return;
-      _showSnackBar('Eksport bazy danych jest gotowy do udostępnienia.');
+      _showSnackBar(exportReadyMessage);
     } catch (_) {
       if (!mounted) return;
-      _showSnackBar('Nie udało się wyeksportować bazy danych.');
+      _showSnackBar(exportFailedMessage);
     } finally {
       if (mounted) setState(() => _isExporting = false);
     }
   }
 
   Future<void> _pickAndImportDatabase() async {
+    final importerUnavailableMessage =
+        context.lang.settingsDatabaseImporterUnavailable;
+    final pickJsonMessage = context.lang.settingsDatabasePickJson;
+    final fileReadFailedMessage = context.lang.settingsDatabaseFileReadFailed;
+    final invalidExportMessage = context.lang.settingsDatabaseInvalidExport;
+    final importFailedMessage = context.lang.settingsDatabaseImportFailed;
+    final importSuccessMessage = context.lang.settingsDatabaseImportSuccess;
+
     PlatformFile? file;
     try {
       final result = await FilePicker.pickFiles(
@@ -108,9 +119,7 @@ class _DatabaseSettingsSectionState
       file = result?.files.single;
     } on MissingPluginException {
       if (!mounted) return;
-      _showSnackBar(
-        'Importer plików nie jest jeszcze dostępny. Uruchom aplikację ponownie po pełnym rebuildzie.',
-      );
+      _showSnackBar(importerUnavailableMessage);
       return;
     }
 
@@ -119,7 +128,7 @@ class _DatabaseSettingsSectionState
     final fileName = file.name.toLowerCase();
     final pathName = path?.toLowerCase();
     if (!fileName.endsWith('.json') && pathName?.endsWith('.json') != true) {
-      _showSnackBar('Wybierz plik eksportu w formacie JSON.');
+      _showSnackBar(pickJsonMessage);
       return;
     }
 
@@ -131,7 +140,7 @@ class _DatabaseSettingsSectionState
     try {
       final service = ref.read(databaseBackupServiceProvider);
       if (file.bytes == null && path == null) {
-        _showSnackBar('Nie udało się odczytać wybranego pliku.');
+        _showSnackBar(fileReadFailedMessage);
         return;
       }
 
@@ -139,15 +148,13 @@ class _DatabaseSettingsSectionState
           ? await service.importFromBytes(file.bytes!)
           : await service.importFromFile(File(path!));
       if (!mounted) return;
-      _showSnackBar(
-        'Zaimportowano ${result.rowCount} rekordów z pliku bazy danych.',
-      );
+      _showSnackBar(importSuccessMessage(result.rowCount));
     } on FormatException {
       if (!mounted) return;
-      _showSnackBar('Ten plik nie wygląda jak poprawny eksport bazy danych.');
+      _showSnackBar(invalidExportMessage);
     } catch (_) {
       if (!mounted) return;
-      _showSnackBar('Nie udało się zaimportować bazy danych.');
+      _showSnackBar(importFailedMessage);
     } finally {
       if (mounted) setState(() => _isImporting = false);
     }
@@ -157,19 +164,16 @@ class _DatabaseSettingsSectionState
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Zaimportować bazę?'),
-        content: const Text(
-          'Import zastąpi aktualne dane lokalne zakresem zapisanym w pliku. '
-          'Przed kontynuacją upewnij się, że masz aktualny eksport.',
-        ),
+        title: Text(context.lang.settingsDatabaseConfirmImportTitle),
+        content: Text(context.lang.settingsDatabaseConfirmImportMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Anuluj'),
+            child: Text(context.lang.settingsCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Importuj'),
+            child: Text(context.lang.settingsImport),
           ),
         ],
       ),
@@ -177,23 +181,22 @@ class _DatabaseSettingsSectionState
   }
 
   Future<void> _confirmClearHistory() async {
+    final clearSuccessMessage = context.lang.settingsDatabaseClearSuccess;
+    final clearFailedMessage = context.lang.settingsDatabaseClearFailed;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Wyczyścić historię?'),
-        content: const Text(
-          'Usunięte zostaną posiłki, historia aktywności, analizy i zapisane '
-          'snapshoty. Składniki, porcje, aktywności i szablony posiłków '
-          'zostaną zachowane.',
-        ),
+        title: Text(context.lang.settingsDatabaseConfirmClearTitle),
+        content: Text(context.lang.settingsDatabaseConfirmClearMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Anuluj'),
+            child: Text(context.lang.settingsCancel),
           ),
           FilledButton.tonal(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Wyczyść'),
+            child: Text(context.lang.settingsClear),
           ),
         ],
       ),
@@ -207,10 +210,10 @@ class _DatabaseSettingsSectionState
           .read(databaseBackupServiceProvider)
           .clearHistoryKeepingCoreData();
       if (!mounted) return;
-      _showSnackBar('Historia i posiłki zostały wyczyszczone.');
+      _showSnackBar(clearSuccessMessage);
     } catch (_) {
       if (!mounted) return;
-      _showSnackBar('Nie udało się wyczyścić danych.');
+      _showSnackBar(clearFailedMessage);
     } finally {
       if (mounted) setState(() => _isClearing = false);
     }
@@ -237,17 +240,15 @@ class _ScopeSelector extends StatelessWidget {
           value: value == DatabaseBackupScope.core,
           onChanged: (_) => onChanged(DatabaseBackupScope.core),
           contentPadding: EdgeInsets.zero,
-          title: const Text('Eksportuj tylko dane bazowe'),
-          subtitle: const Text(
-            'Składniki, porcje, aktywności i szablony posiłków.',
-          ),
+          title: Text(context.lang.settingsDatabaseCoreScopeTitle),
+          subtitle: Text(context.lang.settingsDatabaseCoreScopeSubtitle),
         ),
         CheckboxListTile(
           value: value == DatabaseBackupScope.full,
           onChanged: (_) => onChanged(DatabaseBackupScope.full),
           contentPadding: EdgeInsets.zero,
-          title: const Text('Eksportuj całą bazę'),
-          subtitle: const Text('Pełna historia, posiłki, analizy i snapshoty.'),
+          title: Text(context.lang.settingsDatabaseFullScopeTitle),
+          subtitle: Text(context.lang.settingsDatabaseFullScopeSubtitle),
         ),
       ],
     );

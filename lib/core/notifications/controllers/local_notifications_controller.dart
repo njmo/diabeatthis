@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+
+import '../../../common/l10n/application_language.dart';
 import '../base/notifications_controller.dart';
 import '../bootstrap/local_notifications_bootstrap.dart' as bootstrap;
 
@@ -20,6 +22,7 @@ class LocalNotificationsController implements NotificationsController {
 
   @override
   Future<void> init() async {
+    await initializeLanguageStringsFromPreferences();
     await bootstrap.init(_plugin);
     await bootstrap.requestPermissions(_plugin);
 

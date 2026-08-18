@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../models/notification_event.dart';
 import '../models/notification_event_type.dart';
 import '../models/notification_key.dart';
@@ -17,10 +18,10 @@ class MealAdvicePendingNotificationEvent implements NotificationEvent {
   NotificationKey get key => NotificationKey(type: type, entityId: mealId);
 
   @override
-  String get title => 'Dokończ decyzję o posiłku';
+  String get title => lang.notificationMealAdvicePendingTitle;
 
   @override
-  String get body => 'Potwierdź propozycję albo anuluj, jeśli nie jesz.';
+  String get body => lang.notificationMealAdvicePendingBody;
 
   @override
   Map<String, Object?> toPayload() => {};

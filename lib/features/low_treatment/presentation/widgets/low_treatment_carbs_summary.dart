@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../providers/low_treatment_context_providers.dart';
 
 class LowTreatmentCarbsSummary extends ConsumerWidget {
@@ -8,6 +9,7 @@ class LowTreatmentCarbsSummary extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = context.lang;
     final theme = Theme.of(context);
     final summary = ref.watch(lowTreatmentCarbsSummaryProvider);
     final labels = summary.when(
@@ -25,7 +27,7 @@ class LowTreatmentCarbsSummary extends ConsumerWidget {
       children: [
         Expanded(
           child: LowTreatmentSummaryTile(
-            label: 'Węglowodany',
+            label: lang.mealCarbsLabel,
             value: labels.carbs,
           ),
         ),

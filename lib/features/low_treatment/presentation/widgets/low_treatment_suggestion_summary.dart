@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class LowTreatmentSuggestionSummary extends StatelessWidget {
   const LowTreatmentSuggestionSummary({
     super.key,
@@ -12,6 +14,7 @@ class LowTreatmentSuggestionSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final hasSuggestion = suggestedCarbs > 0;
@@ -40,8 +43,10 @@ class LowTreatmentSuggestionSummary extends StatelessWidget {
                 children: [
                   Text(
                     hasSuggestion
-                        ? 'Sugestia AAPS: ${_formatCarbs(suggestedCarbs)} g'
-                        : 'Brak aktywnej sugestii AAPS',
+                        ? lang.lowTreatmentAapsSuggestion(
+                            _formatCarbs(suggestedCarbs),
+                          )
+                        : lang.lowTreatmentNoAapsSuggestion,
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: hasSuggestion
                           ? colorScheme.onTertiaryContainer
@@ -52,7 +57,7 @@ class LowTreatmentSuggestionSummary extends StatelessWidget {
                   if (hasSuggestion && suggestedWithinMinutes > 0) ...[
                     const SizedBox(height: 2),
                     Text(
-                      'W ciągu $suggestedWithinMinutes min',
+                      lang.lowTreatmentSuggestedWithin(suggestedWithinMinutes),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onTertiaryContainer,
                       ),

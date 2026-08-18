@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../data/drafts/ingredient_draft.dart';
 import '../../data/drafts/ingredient_draft_validation.dart';
 import '../../data/providers/ingredient_provider.dart';
@@ -37,7 +38,7 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
           children: [
             Expanded(
               child: NutritionValueTextFormField(
-                label: 'Węglowodany proste (carbs)',
+                label: context.lang.ingredientSimpleCarbsLabel,
                 initialValue: formatReferenceMacroInput(
                   ingredient.carbsPer100g,
                 ),
@@ -50,7 +51,7 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
             const SizedBox(width: 10),
             Expanded(
               child: NutritionValueTextFormField(
-                label: 'Węglowodany przedłużone (ecarbs)',
+                label: context.lang.ingredientExtendedCarbsLabel,
                 controller: extendedCarbsController,
                 icon: Icons.schedule,
                 onChanged: (value) {
@@ -79,7 +80,7 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Podział ecarbs: białko $proteinPercent% / tłuszcz $fatPercent%',
+          context.lang.ingredientEcarbsSplit(proteinPercent, fatPercent),
           style: Theme.of(context).textTheme.labelLarge,
         ),
         Slider(
@@ -87,7 +88,7 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
           min: 0,
           max: 1,
           divisions: 20,
-          label: '$fatPercent% tłuszcz',
+          label: context.lang.ingredientFatPercentLabel(fatPercent),
           onChanged: (value) {
             final ecarbs = parseReferenceMacroInput(
               extendedCarbsController.text,
@@ -113,8 +114,14 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Białko', style: Theme.of(context).textTheme.bodySmall),
-            Text('Tłuszcz', style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              context.lang.mealProteinLabel,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            Text(
+              context.lang.mealFatLabel,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
         ),
       ],
@@ -131,7 +138,7 @@ String? _validateRequiredEnergyMacro(
     return valueError;
   }
   if (!ingredient.hasEnergyMacros) {
-    return 'Uzupełnij carbs albo ecarbs';
+    return lang.ingredientReferenceMacroRequired;
   }
   return null;
 }
@@ -139,11 +146,11 @@ String? _validateRequiredEnergyMacro(
 String? _validateRequiredMacro(String? value) {
   final normalized = value?.trim().replaceAll(',', '.');
   if (normalized == null || normalized.isEmpty) {
-    return 'Podaj liczbę';
+    return lang.ingredientNumberRequired;
   }
   final parsed = double.tryParse(normalized);
   if (parsed == null || parsed < 0) {
-    return 'Podaj liczbę';
+    return lang.ingredientNumberRequired;
   }
   return null;
 }

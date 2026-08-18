@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../data/domain/use_cases/analyze_meal_use_case.dart';
 import '../../data/domain/use_cases/load_low_treatments_for_meal_use_case.dart';
 import '../../data/domain/use_cases/load_meal_details_use_case.dart';
@@ -49,6 +50,6 @@ class LowTreatmentMealPageException implements Exception {
 
   @override
   String toString() {
-    return 'Dosłodzenia są widoczne w powiązanym posiłku.';
+    return lang.mealLowTreatmentsVisibleInRelatedMeal;
   }
 }

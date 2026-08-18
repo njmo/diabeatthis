@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
@@ -19,8 +20,8 @@ class ReferenceIngredientCheckbox extends HookConsumerWidget {
 
     return CheckboxListTile(
       contentPadding: EdgeInsets.zero,
-      title: const Text('Danie referencyjne'),
-      subtitle: const Text('Używaj do restauracji/szkoły.'),
+      title: Text(context.lang.ingredientReferenceDishTitle),
+      subtitle: Text(context.lang.ingredientReferenceDishSubtitle),
       value: state.isReference, // <-- bool w Twoim stanie
       onChanged: (checked) {
         final v = checked ?? false;

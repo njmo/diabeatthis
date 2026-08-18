@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/fab_action_option.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
@@ -36,7 +37,7 @@ class DashboardFAB extends HookConsumerWidget with Logging {
         if (open.value) ...[
           FabActionOption(
             icon: Icons.directions_run,
-            label: 'Dodaj aktywność',
+            label: context.lang.dashboardAddActivity,
             onTap: () async {
               open.value = false;
               final action =
@@ -55,7 +56,7 @@ class DashboardFAB extends HookConsumerWidget with Logging {
           const SizedBox(height: 8),
           FabActionOption(
             icon: Icons.local_drink_outlined,
-            label: 'Dosłodź się',
+            label: context.lang.dashboardAddLowTreatment,
             onTap: () async {
               open.value = false;
               await showLowTreatmentSheet(context);
@@ -64,7 +65,7 @@ class DashboardFAB extends HookConsumerWidget with Logging {
           const SizedBox(height: 8),
           FabActionOption(
             icon: Icons.restaurant,
-            label: 'Zaplanuj posiłek',
+            label: context.lang.dashboardPlanMeal,
             onTap: () {
               ref.read(mealDraftProvider.notifier).reset();
               context.router.push(routes.AddMealRoute());
@@ -74,7 +75,7 @@ class DashboardFAB extends HookConsumerWidget with Logging {
           const SizedBox(height: 8),
           FabActionOption(
             icon: Icons.bakery_dining_rounded,
-            label: 'Zjedz coś na szybko',
+            label: context.lang.dashboardQuickMeal,
             enabled: quickMealEnabled,
             onTap: () async {
               open.value = false;
@@ -108,7 +109,7 @@ class DashboardFAB extends HookConsumerWidget with Logging {
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(_addMealErrorMessage(e))),
+                      SnackBar(content: Text(_addMealErrorMessage(context, e))),
                     );
                   }
                   ref.read(mealDraftProvider.notifier).reset();
@@ -175,11 +176,8 @@ class DashboardFAB extends HookConsumerWidget with Logging {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Aktywność w toku'),
-          content: const Text(
-            'Jedna aktywność jest już w trakcie.\n\n'
-            'Nie można rozpocząć nowej, dopóki obecna nie zostanie zakończona.',
-          ),
+          title: Text(context.lang.dashboardActivityInProgressTitle),
+          content: Text(context.lang.dashboardActivityInProgressMessage),
         );
       },
     );
@@ -190,21 +188,18 @@ class DashboardFAB extends HookConsumerWidget with Logging {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Problem z dodaniem aktywności'),
-          content: const Text(
-            'Taka aktywność już istnieje lub parametry nie są podane prawidłowo.\n'
-            'Pamiętaj: pre i post muszą być <100 i >0.',
-          ),
+          title: Text(context.lang.dashboardActivityAddFailedTitle),
+          content: Text(context.lang.dashboardActivityAddFailedMessage),
         );
       },
     );
   }
 }
 
-String _addMealErrorMessage(Object error) {
+String _addMealErrorMessage(BuildContext context, Object error) {
   if (error is ArgumentError && error.message is String) {
     return error.message as String;
   }
 
-  return 'Nie udało się dodać posiłku.';
+  return context.lang.dashboardAddMealFailed;
 }

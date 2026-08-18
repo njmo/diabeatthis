@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../data/models/low_treatment_sheet_state.dart';
@@ -62,12 +63,13 @@ class LowTreatmentSheetContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     return KeyboardAwareBottomSheet(
       header: Row(
         children: [
           Expanded(
             child: Text(
-              'Dosłodź się',
+              lang.lowTreatmentTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
@@ -89,7 +91,7 @@ class LowTreatmentSheetContent extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Zamknij',
+            tooltip: lang.commonCloseTooltip,
             onPressed: sheetState.isSaving
                 ? null
                 : () => Navigator.of(context).pop(),
@@ -142,7 +144,7 @@ class LowTreatmentSheetContent extends StatelessWidget {
               onPressed: sheetState.isSaving
                   ? null
                   : () => Navigator.of(context).pop(),
-              child: const Text('Anuluj'),
+              child: Text(lang.commonCancel),
             ),
           ),
           const SizedBox(width: 12),
@@ -151,6 +153,7 @@ class LowTreatmentSheetContent extends StatelessWidget {
               onPressed: !sheetState.canSave
                   ? null
                   : () async {
+                      final saveErrorMessage = lang.lowTreatmentSaveError;
                       try {
                         await controller.saveCurrentDraft();
                         if (!context.mounted) {
@@ -163,9 +166,7 @@ class LowTreatmentSheetContent extends StatelessWidget {
                         }
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(
-                              'Nie udało się zapisać dosłodzenia: $error',
-                            ),
+                            content: Text(saveErrorMessage(error.toString())),
                           ),
                         );
                       }
@@ -176,7 +177,9 @@ class LowTreatmentSheetContent extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.check),
-              label: Text(sheetState.isSaving ? 'Zapisywanie' : 'Zapisz'),
+              label: Text(
+                sheetState.isSaving ? lang.commonSaving : lang.settingsSave,
+              ),
             ),
           ),
         ],
@@ -190,17 +193,18 @@ class LowTreatmentSheetLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     return KeyboardAwareBottomSheet(
       header: Row(
         children: [
           Expanded(
             child: Text(
-              'Dosłodź się',
+              lang.lowTreatmentTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
           IconButton(
-            tooltip: 'Zamknij',
+            tooltip: lang.commonCloseTooltip,
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close),
           ),
@@ -219,28 +223,29 @@ class LowTreatmentSheetError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     return KeyboardAwareBottomSheet(
       header: Row(
         children: [
           Expanded(
             child: Text(
-              'Dosłodź się',
+              lang.lowTreatmentTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
           IconButton(
-            tooltip: 'Zamknij',
+            tooltip: lang.commonCloseTooltip,
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close),
           ),
         ],
       ),
-      body: Text('Nie udało się przygotować dosłodzenia: $error'),
+      body: Text(lang.lowTreatmentPrepareError(error.toString())),
       actions: SizedBox(
         width: double.infinity,
         child: FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Zamknij'),
+          child: Text(lang.commonCloseTooltip),
         ),
       ),
     );
@@ -259,13 +264,14 @@ class LowTreatmentAdvancedIngredientPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         OutlinedButton.icon(
           onPressed: isSaving ? null : onAddIngredient,
           icon: const Icon(Icons.search),
-          label: const Text('Dodaj składnik'),
+          label: Text(lang.mealAddNextIngredient),
         ),
         const SizedBox(height: 12),
         const LowTreatmentIngredientsList(),

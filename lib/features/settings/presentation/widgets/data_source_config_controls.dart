@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
 import 'data_source_dropdown.dart';
@@ -22,34 +23,34 @@ class DataSourceConfigControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final visibleConfig = availability.visibleConfigFor(config);
     final bgDropdown = DataSourceDropdown<BgSource>(
-      label: 'Cukier',
+      label: context.lang.settingsDataSourceBgLabel,
       value: visibleConfig.bgSource,
       values: availability.availableBgSources,
-      labelFor: (source) => source.label,
+      labelFor: (source) => source.label(context.lang),
       onChanged: (source) =>
           onChanged(visibleConfig.copyWith(bgSource: source)),
     );
     final treatmentsDropdown = DataSourceDropdown<TreatmentsSource>(
-      label: 'Zdarzenia',
+      label: context.lang.settingsDataSourceTreatmentsLabel,
       value: visibleConfig.treatmentsSource,
       values: availability.availableTreatmentsSources,
-      labelFor: (source) => source.label,
+      labelFor: (source) => source.label(context.lang),
       onChanged: (source) =>
           onChanged(visibleConfig.copyWith(treatmentsSource: source)),
     );
     final pumpStatusDropdown = DataSourceDropdown<PumpStatusSource>(
-      label: 'Status pompy',
+      label: context.lang.settingsDataSourcePumpStatusLabel,
       value: visibleConfig.pumpStatusSource,
       values: availability.availablePumpStatusSources,
-      labelFor: (source) => source.label,
+      labelFor: (source) => source.label(context.lang),
       onChanged: (source) =>
           onChanged(visibleConfig.copyWith(pumpStatusSource: source)),
     );
     final historyDropdown = DataSourceDropdown<HistorySource>(
-      label: 'Historia',
+      label: context.lang.settingsDataSourceHistoryLabel,
       value: visibleConfig.historySource,
       values: HistorySource.values,
-      labelFor: (source) => source.label,
+      labelFor: (source) => source.label(context.lang),
       onChanged: (source) =>
           onChanged(visibleConfig.copyWith(historySource: source)),
     );

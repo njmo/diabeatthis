@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../common/widgets/date_time_picker.dart';
 import '../../../../../common/widgets/form_section.dart';
 import '../../../data/providers/meal_draft_provider.dart';
@@ -22,8 +23,8 @@ class AddMealBasicInfoSection extends ConsumerWidget {
 
     return FormSection(
       icon: Icons.restaurant_menu,
-      title: 'Podstawowe informacje',
-      subtitle: 'Nazwij posiłek i wybierz, kiedy jest planowany.',
+      title: context.lang.addMealBasicInfoTitle,
+      subtitle: context.lang.addMealBasicInfoSubtitle,
       children: [
         TextFormField(
           key: ValueKey(mealName),
@@ -33,19 +34,20 @@ class AddMealBasicInfoSection extends ConsumerWidget {
           validator: (value) {
             final name = value?.trim() ?? '';
             if (name.length < 5) {
-              return 'Wpisz nazwę posiłku';
+              return context.lang.addMealNameRequired;
             }
             return null;
           },
           onSaved: (value) => onNameSaved(value!.trim()),
-          decoration: const InputDecoration(
-            labelText: 'Nazwa',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.lang.addMealNameLabel,
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
         FormField<DateTime>(
-          validator: (value) => value == null ? 'Wybierz datę' : null,
+          validator: (value) =>
+              value == null ? context.lang.addMealDateRequired : null,
           onSaved: (value) {
             if (value != null) {
               onPlannedAtSaved(value);
@@ -70,13 +72,13 @@ class AddMealBasicInfoSection extends ConsumerWidget {
               child: InputDecorator(
                 decoration: InputDecoration(
                   icon: const Icon(Icons.calendar_today_rounded),
-                  labelText: 'Planowana data',
+                  labelText: context.lang.addMealPlannedDateLabel,
                   border: const OutlineInputBorder(),
                   errorText: state.errorText,
                 ),
                 child: Text(
                   selectedDate == null
-                      ? 'Wybierz datę i godzinę'
+                      ? context.lang.addMealDateTimePlaceholder
                       : _formatPlannedAt(selectedDate),
                 ),
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../ingredients/presentation/widgets/ingredient_identity_text.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -21,7 +22,7 @@ class MealIngredientPreviewTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    final portionInfo = _portionInfo(ref, draft);
+    final portionInfo = _portionInfo(context, ref, draft);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -48,12 +49,12 @@ class MealIngredientPreviewTile extends ConsumerWidget {
             children: [
               if (onEdit != null)
                 IconButton(
-                  tooltip: 'Edytuj składnik',
+                  tooltip: context.lang.mealEditIngredientTooltip,
                   onPressed: onEdit,
                   icon: const Icon(Icons.edit_outlined),
                 ),
               IconButton(
-                tooltip: 'Usuń składnik',
+                tooltip: context.lang.mealRemoveIngredientTooltip,
                 onPressed: onRemove,
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -64,7 +65,11 @@ class MealIngredientPreviewTile extends ConsumerWidget {
     );
   }
 
-  String _portionInfo(WidgetRef ref, MealIngredientsDraft draft) {
+  String _portionInfo(
+    BuildContext context,
+    WidgetRef ref,
+    MealIngredientsDraft draft,
+  ) {
     var portionAmount = draft.ingredientPortion.amount;
     final amount = draft.amount;
 
@@ -92,7 +97,7 @@ class MealIngredientPreviewTile extends ConsumerWidget {
         return '$amount x $name: ${amount * portionAmount}$hint';
       },
       empty: () => draft.ingredient.isReference
-          ? '$amount porcji referencyjnych'
+          ? context.lang.mealReferencePortions(amount)
           : '${amount}g',
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../formatters/low_treatment_context_formatters.dart';
 
@@ -17,6 +18,7 @@ class LowTreatmentReasonSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final reasons = _availableReasons();
@@ -33,7 +35,7 @@ class LowTreatmentReasonSelector extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Powód dosłodzenia',
+              lang.lowTreatmentReasonTitle,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -99,7 +101,7 @@ class LowTreatmentReasonChoiceChip extends StatelessWidget {
             ? colorScheme.onSecondaryContainer
             : colorScheme.onSurfaceVariant,
       ),
-      label: Text(lowTreatmentReasonLabel(reason)),
+      label: Text(lowTreatmentReasonLabel(reason, context.lang)),
       selected: selected,
       onSelected: (_) => onSelected(),
       showCheckmark: false,

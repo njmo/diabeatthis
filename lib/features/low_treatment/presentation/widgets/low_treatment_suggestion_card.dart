@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class LowTreatmentSuggestionCard extends StatelessWidget {
   const LowTreatmentSuggestionCard({
     super.key,
@@ -14,6 +16,7 @@ class LowTreatmentSuggestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -43,7 +46,7 @@ class LowTreatmentSuggestionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Dosłodź ${_formatCarbs(carbsReq)} g',
+                      lang.lowTreatmentAddCarbs(_formatCarbs(carbsReq)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelLarge?.copyWith(
@@ -52,7 +55,7 @@ class LowTreatmentSuggestionCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      _sourceLabel(),
+                      _sourceLabel(lang),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelSmall?.copyWith(
@@ -64,7 +67,7 @@ class LowTreatmentSuggestionCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Tooltip(
-                message: 'Dodaj dosłodzenie',
+                message: lang.dashboardAddLowTreatment,
                 child: SizedBox.square(
                   dimension: 34,
                   child: Material(
@@ -89,12 +92,12 @@ class LowTreatmentSuggestionCard extends StatelessWidget {
     );
   }
 
-  String _sourceLabel() {
+  String _sourceLabel(AppLocalizations lang) {
     if (carbsReqWithin > 0) {
-      return 'Sugestia AAPS · w ciągu $carbsReqWithin min';
+      return lang.lowTreatmentAapsSuggestionWithin(carbsReqWithin);
     }
 
-    return 'Sugestia AAPS';
+    return lang.lowTreatmentReasonCarbsReq;
   }
 
   String _formatCarbs(double value) {

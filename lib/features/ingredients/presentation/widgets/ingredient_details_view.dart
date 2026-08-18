@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/models/ingredient_details_data.dart';
 import 'ingredient_identity_text.dart';
@@ -58,9 +59,9 @@ class _IngredientHeader extends StatelessWidget {
                   ),
                 ),
                 if (ingredient.isReference)
-                  const _StatusPill(
+                  _StatusPill(
                     icon: Icons.restaurant_menu,
-                    label: 'Referencyjny',
+                    label: context.lang.ingredientReferenceBadge,
                   ),
               ],
             ),
@@ -86,7 +87,9 @@ class _IngredientHeader extends StatelessWidget {
                 if (ingredient.barcode?.trim().isNotEmpty ?? false)
                   _StatusPill(
                     icon: Icons.qr_code_2_outlined,
-                    label: 'Kod: ${ingredient.barcode!.trim()}',
+                    label: context.lang.ingredientBarcodeLabel(
+                      ingredient.barcode!.trim(),
+                    ),
                   ),
               ],
             ),
@@ -117,22 +120,22 @@ class _MacroGrid extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           children: [
             _MacroTile(
-              label: 'Węglowodany',
+              label: context.lang.mealCarbsLabel,
               value: ingredient.carbsPer100g,
               icon: Icons.grain,
             ),
             _MacroTile(
-              label: 'Tłuszcz',
+              label: context.lang.mealFatLabel,
               value: ingredient.fatPer100g,
               icon: Icons.opacity,
             ),
             _MacroTile(
-              label: 'Białko',
+              label: context.lang.mealProteinLabel,
               value: ingredient.proteinPer100g,
               icon: Icons.fitness_center,
             ),
             _MacroTile(
-              label: 'Błonnik',
+              label: context.lang.mealFiberLabel,
               value: ingredient.fiberPer100g,
               icon: Icons.eco_outlined,
             ),

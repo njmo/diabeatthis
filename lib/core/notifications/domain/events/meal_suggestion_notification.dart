@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../../../../features/dashboard/data/utils/meal_advisor.dart';
 import '../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import '../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
@@ -38,34 +39,48 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
   NotificationKey get key => NotificationKey(type: type, entityId: mealId);
 
   @override
-  String get title =>
-      isAddOn ? 'Dokładka: wpisz w AAPS' : 'Sugestia odnośnie posiłku';
+  String get title => isAddOn
+      ? lang.notificationMealSuggestionAddOnTitle
+      : lang.notificationMealSuggestionTitle;
 
   @override
   String get body {
     if (isAddOn) {
       if (carbs > 0) {
-        return 'Nie widzę dodatkowego wpisu z AAPS. Wpisz +$carbs g węglowodanów za dokładkę.';
+        return lang.notificationMealSuggestionAddOnWithCarbs(carbs);
       }
-      return 'Nie widzę dodatkowego wpisu z AAPS. Wpisz węglowodany za dokładkę.';
+      return lang.notificationMealSuggestionAddOnWithoutCarbs;
     }
 
     final extendedCarbsText = extendedCarbs > 0
-        ? ' ${formatExtendedCarbsInstruction(
+        ? formatExtendedCarbsInstruction(
             extendedCarbs,
-            settings: ExtendedCarbsScheduleSettings(deliveryMode: extendedCarbsDeliveryMode, delayMinutes: extendedCarbsDelayMinutes, durationMinutes: extendedCarbsDurationMinutes),
-          )}'
+            settings: ExtendedCarbsScheduleSettings(
+              deliveryMode: extendedCarbsDeliveryMode,
+              delayMinutes: extendedCarbsDelayMinutes,
+              durationMinutes: extendedCarbsDurationMinutes,
+            ),
+          )
         : '';
 
     switch (decision) {
       case MealDecision.eatNowBolusLater:
-        return 'Zjedz teraz a insuline podaj po posiłku.$extendedCarbsText';
+        return lang.notificationMealSuggestionEatNowBolusLater(
+          extendedCarbsText,
+        );
       case MealDecision.bolusAndEatNow:
-        return 'Podaj insuline na $carbs g odnośnie posiłku i jedz teraz.$extendedCarbsText';
+        return lang.notificationMealSuggestionBolusAndEatNow(
+          carbs,
+          extendedCarbsText,
+        );
       case MealDecision.bolusWaitThenEat:
-        return 'Podaj insuline na $carbs g odnośnie posiłku i czekaj $minutes minut przed jedzeniem.$extendedCarbsText';
+        return lang.notificationMealSuggestionBolusWaitThenEat(
+          carbs,
+          minutes,
+          extendedCarbsText,
+        );
       case MealDecision.bolus:
-        return 'Podaj insuline na $carbs g odnośnie zjedzonego posiłku.$extendedCarbsText';
+        return lang.notificationMealSuggestionBolus(carbs, extendedCarbsText);
     }
   }
 

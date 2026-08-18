@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
@@ -32,9 +33,10 @@ class _IngredientPortionAmountSheetState
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     return KeyboardAwareBottomSheet(
       header: BottomSheetStepHeader(
-        title: 'Waga porcji',
+        title: lang.addIngredientPortionWeightTitle,
         onBack: () => Navigator.of(context).pop(),
       ),
       body: IngredientPortionAmountForm(
@@ -47,7 +49,7 @@ class _IngredientPortionAmountSheetState
       actions: FilledButton.icon(
         onPressed: _save,
         icon: const Icon(Icons.check),
-        label: const Text('Zapisz porcję'),
+        label: Text(lang.ingredientSavePortion),
       ),
     );
   }
@@ -108,7 +110,7 @@ class IngredientPortionAmountForm extends ConsumerWidget {
                     if (field.hasError) ...[
                       const SizedBox(height: 8),
                       Text(
-                        'Wybierz wagę większą od zera.',
+                        context.lang.amountGreaterThanZero,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.error,
                         ),
@@ -130,6 +132,7 @@ class IngredientPortionAmountHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -152,10 +155,13 @@ class IngredientPortionAmountHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Waga jednej porcji', style: textTheme.titleMedium),
+                  Text(
+                    lang.ingredientOnePortionWeightTitle,
+                    style: textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                    'Określ ile gramów ma porcja.',
+                    lang.ingredientOnePortionWeightSubtitle,
                     style: textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),

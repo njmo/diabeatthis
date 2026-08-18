@@ -12,7 +12,7 @@ import 'event/temp_target_notification_definition.dart';
 
 class NotificationDefinitionCatalogImpl
     implements NotificationDefinitionCatalog {
-  static const _definitions = [
+  List<NotificationDefinition> get _definitions => [
     mealReadyNotificationDefinition,
     tempTargetNotificationDefinition,
     mealSuggestionNotificationDefinition,

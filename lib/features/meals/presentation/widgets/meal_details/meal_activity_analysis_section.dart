@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../../app/router/app_router.dart';
+import '../../../../../common/l10n/language.dart';
 import '../../../data/models/meal_analysis_data.dart';
 import '../../controllers/meal_details_controller.dart';
 import 'meal_detail_components.dart';
@@ -22,7 +23,7 @@ class MealActivityAnalysisSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MealSectionTile(
-      title: 'Aktywności i zdarzenia',
+      title: context.lang.mealActivityEventsTitle,
       children: [
         for (final event in analysis.timelineEvents) ...[
           MealTimelineEventTile(mealId: mealId, event: event),

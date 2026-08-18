@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 Color getColorForValue(int value) {
   if (value >= 0 && value < 70) {
     return Colors.red;
@@ -54,9 +56,9 @@ IconData iconForDirection(String? dir) {
 }
 
 String formatAgo(Duration d) {
-  if(d.isNegative) return 'teraz';
-  if (d.inMinutes < 1) return '${d.inSeconds}s temu';
-  if (d.inHours < 1) return '${d.inMinutes} min temu';
-  if (d.inHours < 24) return '${d.inHours} h temu';
-  return '${d.inDays} d temu';
+  if (d.isNegative) return lang.relativeTimeNow;
+  if (d.inMinutes < 1) return lang.relativeTimeSecondsAgo(d.inSeconds);
+  if (d.inHours < 1) return lang.relativeTimeMinutesAgo(d.inMinutes);
+  if (d.inHours < 24) return lang.relativeTimeHoursAgo(d.inHours);
+  return lang.relativeTimeDaysAgo(d.inDays);
 }

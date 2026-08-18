@@ -9,6 +9,8 @@ import '../common/events/data/app/execute_command_event.dart';
 import '../common/events/data/app/lifecycle_state_event.dart';
 import '../common/events/data/app/sync_data_key.dart';
 import '../common/events/data/app_event_data.dart';
+import '../common/l10n/application_language.dart';
+import '../common/l10n/language.dart';
 import '../core/data/provider/initial_configuration_provider.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
 import '../core/logger/logger.dart';
@@ -147,8 +149,15 @@ class _MyAppState extends ConsumerState<MyApp>
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
+    final selectedLanguage = ref
+        .watch(applicationLanguageControllerProvider)
+        .maybeWhen(data: (language) => language, orElse: () => null);
 
     return MaterialApp.router(
+      locale: selectedLanguage?.locale,
+      onGenerateTitle: (context) => context.lang.appTitle,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router.config(
         navigatorObservers: () => [AutoRouteDebugObserver()],
       ),

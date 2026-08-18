@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/search_text_field.dart';
 import '../../data/models/ingredient_filter_limits.dart';
 import '../../data/providers/ingredient_filter_controller.dart';
@@ -102,7 +103,7 @@ class IngredientFilterButton extends StatelessWidget {
       width: height,
       height: height,
       child: IconButton.outlined(
-        tooltip: 'Dodaj filtr składników',
+        tooltip: context.lang.ingredientAddFilterTooltip,
         icon: const Icon(Icons.add_chart_sharp),
         style: IconButton.styleFrom(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),

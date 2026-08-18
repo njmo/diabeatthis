@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../ingredients/presentation/widgets/ingredient_list_filter.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/copied_meal_provider.dart';
@@ -33,7 +34,7 @@ class CopiedMealPicker extends HookConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           IngredientListFilter(
-            hintText: 'Szukaj podobnego posiłku lub szablonu',
+            hintText: context.lang.copiedMealSearchHint,
             onQueryChanged: (value) {
               query.value = value;
             },
@@ -80,7 +81,7 @@ class CopiedMealPickerTile extends ConsumerWidget {
       trailing: canPreview
           ? TextButton(
               onPressed: () => _openPreview(context, ref),
-              child: const Text('Podgląd'),
+              child: Text(context.lang.copiedMealPreview),
             )
           : null,
       onTap: onPick,
@@ -97,7 +98,7 @@ class CopiedMealPickerTile extends ConsumerWidget {
     }
     if (previewMealId == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Brak posiłku do podglądu')),
+        SnackBar(content: Text(context.lang.copiedMealNoPreview)),
       );
       return;
     }
@@ -141,7 +142,9 @@ class CopiedMealPickerTypeBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        isMeal ? 'Posiłek' : 'Szablon',
+        isMeal
+            ? context.lang.copiedMealMealBadge
+            : context.lang.copiedMealTemplateBadge,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: scheme.onSecondaryContainer,
           fontWeight: FontWeight.w600,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
+
 class IngredientEmptyState extends StatelessWidget {
   const IngredientEmptyState({super.key});
 
@@ -16,12 +18,12 @@ class IngredientEmptyState extends StatelessWidget {
             Icon(Icons.search_off, size: 36, color: colors.outline),
             const SizedBox(height: 12),
             Text(
-              'Brak pasujących składników',
+              context.lang.ingredientEmptyTitle,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 4),
             Text(
-              'Spróbuj wpisać inną nazwę albo markę.',
+              context.lang.ingredientEmptySubtitle,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),

@@ -1,3 +1,5 @@
+import '../../../../common/l10n/language.dart';
+
 export '../../domain/utils/meal_add_on_status.dart';
 
 class MealAddOnGuidance {
@@ -14,15 +16,16 @@ MealAddOnGuidance buildMealAddOnGuidance({
 }) {
   if (currentMealStatus == 'eating-then-bolus' && totalCarbsForBolus != null) {
     return MealAddOnGuidance(
-      title: 'Do AAPS: ${totalCarbsForBolus}g węglowodanów',
-      message:
-          'Podaj gramy na to, co zostało zjedzone: plan posiłku razem z dokładką. Dokładka dodała około ${addedCarbs}g, więc w AAPS wpisz łącznie ${totalCarbsForBolus}g.',
+      title: lang.mealAddOnGuidanceTotalTitle(totalCarbsForBolus),
+      message: lang.mealAddOnGuidanceTotalMessage(
+        addedCarbs,
+        totalCarbsForBolus,
+      ),
     );
   }
 
   return MealAddOnGuidance(
-    title: 'Dokładka: +${addedCarbs}g węglowodanów',
-    message:
-        'Wpisz +${addedCarbs}g w AAPS jako dodatkowe węglowodany. Posiłek zostaje w trakcie jedzenia.',
+    title: lang.mealAddOnGuidanceAddedTitle(addedCarbs),
+    message: lang.mealAddOnGuidanceAddedMessage(addedCarbs),
   );
 }

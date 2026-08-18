@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../models/notification_event.dart';
 import '../models/notification_event_type.dart';
 import '../models/notification_key.dart';
@@ -18,12 +19,14 @@ class FinishedEatingNotificationEvent implements NotificationEvent {
   NotificationKey get key => NotificationKey(type: type, entityId: mealId);
 
   @override
-  String get title => isAddOn ? 'Dokładka zjedzona?' : 'Zjadłeś już?';
+  String get title => isAddOn
+      ? lang.notificationFinishedAddOnTitle
+      : lang.notificationFinishedMealTitle;
 
   @override
   String get body => isAddOn
-      ? 'Daj znać, czy dokładka jest już zjedzona.'
-      : 'Daj znać, czy posiłek jest już zjedzony.';
+      ? lang.notificationFinishedAddOnBody
+      : lang.notificationFinishedMealBody;
 
   @override
   Map<String, Object?> toPayload() => {

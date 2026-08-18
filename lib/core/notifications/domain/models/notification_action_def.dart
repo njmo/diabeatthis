@@ -6,7 +6,7 @@ import 'notification_action_type.dart';
 part 'notification_action_def.freezed.dart';
 
 @freezed
-sealed class NotificationActionDef with _$NotificationActionDef{
+sealed class NotificationActionDef with _$NotificationActionDef {
   const NotificationActionDef._();
 
   const factory NotificationActionDef.plain({

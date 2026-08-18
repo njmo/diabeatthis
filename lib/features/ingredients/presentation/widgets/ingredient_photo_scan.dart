@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/llm/local_llm_client.dart';
 import '../../../../core/media/providers/camera_permission_service_provider.dart';
 import '../../../meal_advisor/data/models/ingredient_photo_scan_input.dart';
@@ -14,6 +15,7 @@ class IngredientPhotoScan extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = context.lang;
     final captureResult = useState<IngredientPhotoCaptureResult?>(null);
     final scanState = ref.watch(ingredientPhotoScanControllerProvider);
     final scanResult = scanState.value;
@@ -30,8 +32,8 @@ class IngredientPhotoScan extends HookConsumerWidget {
         children: [
           IngredientPhotoStepTile(
             icon: Icons.inventory_2_outlined,
-            title: 'Przód opakowania',
-            subtitle: 'Nazwa produktu i producent',
+            title: lang.ingredientPhotoFrontTitle,
+            subtitle: lang.ingredientPhotoFrontSubtitle,
             photoPath: scanInput.frontPhotoPath,
             onCapture: () => _capturePhoto(
               context,
@@ -43,8 +45,8 @@ class IngredientPhotoScan extends HookConsumerWidget {
           const SizedBox(height: 8),
           IngredientPhotoStepTile(
             icon: Icons.table_chart_outlined,
-            title: 'Tabela makro',
-            subtitle: 'Wartości odżywcze na 100 g',
+            title: lang.ingredientPhotoNutritionTitle,
+            subtitle: lang.ingredientPhotoNutritionSubtitle,
             photoPath: scanInput.nutritionLabelPhotoPath,
             onCapture: () => _capturePhoto(
               context,
@@ -142,7 +144,7 @@ class IngredientPhotoCaptureMessage extends StatelessWidget {
               const SizedBox(width: 8),
               TextButton(
                 onPressed: onOpenSettings,
-                child: const Text('Ustawienia'),
+                child: Text(context.lang.settingsTitle),
               ),
             ],
           ],
@@ -180,7 +182,7 @@ class IngredientPhotoScanProgressMessage extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Odczytuję dane ze zdjęć. To może potrwać kilkanaście sekund.',
+                context.lang.ingredientPhotoScanProgress,
                 style: TextStyle(color: colors.onPrimaryContainer),
               ),
             ),
@@ -194,36 +196,33 @@ class IngredientPhotoScanProgressMessage extends StatelessWidget {
 String _scanErrorMessage(Object error) {
   if (error is LlmRequestException) {
     return switch (error.failure) {
-      LlmRequestFailure.network =>
-        'Brak połączenia z AI. Sprawdź internet i spróbuj ponownie.',
+      LlmRequestFailure.network => lang.ingredientAiNetworkError,
       LlmRequestFailure.unauthorized =>
-        'Nie udało się potwierdzić aplikacji w Firebase. Spróbuj ponownie po konfiguracji App Check.',
-      LlmRequestFailure.quotaExceeded =>
-        'Limit odczytów AI został wyczerpany. Spróbuj później.',
-      LlmRequestFailure.timeout => 'Odczyt trwał zbyt długo. Spróbuj ponownie.',
-      LlmRequestFailure.unavailable =>
-        'AI jest chwilowo niedostępne. Spróbuj ponownie.',
+        lang.ingredientAiUnauthorizedWithAppCheck,
+      LlmRequestFailure.quotaExceeded => lang.ingredientAiQuotaExceeded,
+      LlmRequestFailure.timeout => lang.ingredientAiTimeout,
+      LlmRequestFailure.unavailable => lang.ingredientAiUnavailable,
     };
   }
   if (error is LocalLlmUnavailableException) {
-    return 'Lokalny model nie jest jeszcze skonfigurowany.';
+    return lang.ingredientLocalModelUnavailable;
   }
   if (error is FormatException) {
-    return 'Nie udało się odczytać odpowiedzi modelu. Spróbuj ponownie.';
+    return lang.ingredientAiParseFailed;
   }
-  return 'Nie udało się odczytać danych ze zdjęć. Spróbuj ponownie.';
+  return lang.ingredientPhotoScanFailed;
 }
 
 String _photoCaptureMessage(IngredientPhotoCaptureState state) {
   return switch (state) {
     IngredientPhotoCaptureState.permissionDenied =>
-      'Aparat jest potrzebny do zrobienia zdjęcia opakowania.',
+      lang.ingredientCameraPermissionDenied,
     IngredientPhotoCaptureState.permissionPermanentlyDenied =>
-      'Uprawnienie aparatu jest zablokowane. Włącz je w ustawieniach aplikacji.',
+      lang.ingredientCameraPermissionPermanentlyDenied,
     IngredientPhotoCaptureState.permissionRestricted =>
-      'Dostęp do aparatu jest ograniczony w ustawieniach urządzenia.',
+      lang.ingredientCameraPermissionRestricted,
     IngredientPhotoCaptureState.cameraUnavailable =>
-      'Nie udało się uruchomić aparatu. Spróbuj ponownie.',
+      lang.ingredientCameraUnavailable,
     IngredientPhotoCaptureState.captured ||
     IngredientPhotoCaptureState.cancelled => '',
   };
@@ -299,12 +298,10 @@ class IngredientPhotoScanErrorMessage extends StatelessWidget {
 
 String _retakeFallbackMessage(IngredientScanPhotoTarget photo) {
   return switch (photo) {
-    IngredientScanPhotoTarget.front =>
-      'Przód opakowania jest nieczytelny. Zrób zdjęcie jeszcze raz.',
+    IngredientScanPhotoTarget.front => lang.ingredientPhotoRetakeFront,
     IngredientScanPhotoTarget.nutritionLabel =>
-      'Tabela makro jest nieczytelna. Zrób zdjęcie jeszcze raz.',
-    IngredientScanPhotoTarget.both =>
-      'Zdjęcia są nieczytelne. Zrób je jeszcze raz.',
+      lang.ingredientPhotoRetakeNutrition,
+    IngredientScanPhotoTarget.both => lang.ingredientPhotoRetakeBoth,
   };
 }
 
@@ -334,7 +331,11 @@ class IngredientPhotoStepTile extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: colors.primary),
       title: Text(title),
-      subtitle: Text(isCaptured ? '$subtitle\nZdjęcie dodane' : subtitle),
+      subtitle: Text(
+        isCaptured
+            ? '$subtitle\n${context.lang.ingredientPhotoAdded}'
+            : subtitle,
+      ),
       isThreeLine: isCaptured,
       onTap: onCapture,
       trailing: Icon(

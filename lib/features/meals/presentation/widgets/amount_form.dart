@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../data/drafts/meal_draft.dart';
@@ -80,7 +81,7 @@ class AmountForm extends ConsumerWidget {
                       if (field.hasError) ...[
                         const SizedBox(height: 8),
                         Text(
-                          'Wybierz ilość większą od zera.',
+                          context.lang.amountGreaterThanZero,
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(context).colorScheme.error,
@@ -93,7 +94,7 @@ class AmountForm extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'Pewność ilości',
+                context.lang.amountConfidenceTitle,
                 style: Theme.of(context).textTheme.labelLarge,
               ),
               const SizedBox(height: 8),
@@ -155,7 +156,7 @@ class AmountFormInfo extends StatelessWidget {
             Text(draft.ingredient.name, style: textTheme.titleMedium),
             const SizedBox(height: 4),
             Text(
-              _description,
+              _description(context),
               style: textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -166,18 +167,22 @@ class AmountFormInfo extends StatelessWidget {
     );
   }
 
-  String get _description {
+  String _description(BuildContext context) {
     if (draft.usesGramAmount) {
-      return 'Podaj wagę składnika w gramach.';
+      return context.lang.amountWeightInGramsHint;
     }
     if (isLoadingPortionAmount) {
-      return 'Ładuję wagę porcji.';
+      return context.lang.amountLoadingPortionWeight;
     }
     final amount = gramsPerPortion;
     if (amount == null || amount <= 0) {
-      return 'Brak wagi porcji.';
+      return context.lang.amountMissingPortionWeight;
     }
-    return '1 ${unitLabelForAmount(1, draft.portionCountUnitLabel)} to ${amount.formattedAmount} ${draft.portionWeightUnitLabel}';
+    return context.lang.amountPortionWeightDescription(
+      unitLabelForAmount(1, draft.portionCountUnitLabel),
+      amount.formattedAmount,
+      draft.portionWeightUnitLabel,
+    );
   }
 }
 

@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/notifier_provider/simple_provider.dart';
 import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../meals/presentation/widgets/meal_list_today.dart';
@@ -23,7 +24,7 @@ class DashboardPage extends ConsumerWidget {
       appBar: AppBar(
         actions: <Widget>[
           IconButton(
-            tooltip: 'Zarządzanie',
+            tooltip: context.lang.dashboardManagementTooltip,
             icon: const Icon(Icons.admin_panel_settings_outlined),
             onPressed: () {
               context.router.pushPath('/management');
@@ -44,12 +45,16 @@ class DashboardPage extends ConsumerWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Text('Witaj ${name.asData?.value ?? 'Name'}!'),
+              Text(
+                context.lang.dashboardGreeting(
+                  name.asData?.value ?? context.lang.dashboardFallbackName,
+                ),
+              ),
               NightscoutPanel(),
               const DashboardStatusCard(),
               const SizedBox(height: 8),
               Text(
-                'Zaplanowane posiłki',
+                context.lang.dashboardPlannedMealsTitle,
                 textAlign: TextAlign.left,
                 style: TextStyle(fontSize: 20),
               ),

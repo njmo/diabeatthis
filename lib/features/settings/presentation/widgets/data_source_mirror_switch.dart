@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class DataSourceMirrorSwitch extends StatelessWidget {
   const DataSourceMirrorSwitch({
     super.key,
@@ -14,10 +16,8 @@ class DataSourceMirrorSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      title: const Text('Mirror do lokalnej bazy'),
-      subtitle: const Text(
-        'Zapisuj dane z chmury lokalnie, żeby później użyć ich bez sieci.',
-      ),
+      title: Text(context.lang.settingsMirrorTitle),
+      subtitle: Text(context.lang.settingsMirrorSubtitle),
       value: value,
       onChanged: onChanged,
     );

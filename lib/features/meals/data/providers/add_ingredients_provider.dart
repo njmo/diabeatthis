@@ -132,12 +132,6 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     final outcome = await ref
         .read(ingredientBarcodeLookupControllerProvider.notifier)
         .scan(barcode);
-    if (outcome.type == IngredientBarcodeScanOutcomeType.failed &&
-        outcome.error == null) {
-      ref
-          .read(ingredientBarcodeScanFeedbackProvider.notifier)
-          .show(ingredientBarcodeScanNoUsableDataMessage);
-    }
     return outcome;
   }
 

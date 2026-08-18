@@ -1,5 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/l10n/application_language.dart';
+import '../../../../common/l10n/language.dart';
 import '../../../../common/notifier_provider/simple_provider.dart';
 import '../../../../common/platform/external_app_installation_checker.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
@@ -23,12 +25,16 @@ class InitialConfigurationController extends _$InitialConfigurationController
       applyInitialConfigurationUseCaseProvider,
     );
     final config = await ref.read(dataSourceConfigProvider.future);
+    final language = await ref.read(
+      applicationLanguageControllerProvider.future,
+    );
     final nightscoutUrl = await ref.read(nightscoutUrlProvider.future);
     final nightscoutToken = await ref.read(nightscoutTokenProvider.future);
     final userName = await ref.read(nameProvider.future);
 
     return InitialConfigurationState(
       config: config,
+      language: language,
       nightscoutUrl: nightscoutUrl,
       nightscoutToken: nightscoutToken,
       userName: userName,
@@ -50,6 +56,12 @@ class InitialConfigurationController extends _$InitialConfigurationController
   void setUserName(String value) {
     _update((previous) {
       return previous.copyWith(userName: value, clearSubmitError: true);
+    });
+  }
+
+  void setLanguage(ApplicationLanguage value) {
+    _update((previous) {
+      return previous.copyWith(language: value, clearSubmitError: true);
     });
   }
 
@@ -77,6 +89,7 @@ class InitialConfigurationController extends _$InitialConfigurationController
         nightscoutUrl: (nightscoutUrl ?? current.nightscoutUrl).trim(),
         nightscoutToken: (nightscoutToken ?? current.nightscoutToken).trim(),
         childName: current.userName.trim(),
+        language: current.language,
       );
       return true;
     } on DataSourceConfigUnavailableException catch (e, st) {
@@ -91,8 +104,8 @@ class InitialConfigurationController extends _$InitialConfigurationController
       logE('Initial configuration failed', error: e, stackTrace: st);
       _setSubmitError(
         current.config.usesCloud
-            ? 'Nie udało się połączyć z Nightscout. Sprawdź adres URL.'
-            : 'Nie udało się zapisać konfiguracji. Spróbuj ponownie.',
+            ? lang.settingsConnectionError
+            : lang.settingsInitialSaveError,
       );
       return false;
     }
@@ -100,7 +113,7 @@ class InitialConfigurationController extends _$InitialConfigurationController
 
   String _unavailableSourceMessage(DataSourceConfigUnavailableException error) {
     final appNames = error.missingApps.map(_externalDataAppName).join(', ');
-    return 'Nie można zapisać konfiguracji. Brak aplikacji: $appNames.';
+    return lang.settingsMissingAppsSaveError(appNames);
   }
 
   String _externalDataAppName(ExternalDataApp app) {

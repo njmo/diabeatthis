@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/language.dart';
+
 class SearchTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
@@ -27,7 +29,7 @@ class SearchTextField extends StatelessWidget {
             suffixIcon: value.text.isEmpty
                 ? null
                 : IconButton(
-                    tooltip: 'Wyczyść',
+                    tooltip: context.lang.commonClearTooltip,
                     icon: const Icon(Icons.close),
                     onPressed: () {
                       controller.clear();

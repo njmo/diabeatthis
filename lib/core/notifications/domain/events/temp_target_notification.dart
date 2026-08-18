@@ -1,4 +1,5 @@
 import '../../../../common/events/data/notification/temp_target_type.dart';
+import '../../../../common/l10n/language.dart';
 import '../models/notification_event.dart';
 import '../models/notification_event_type.dart';
 import '../models/notification_key.dart';
@@ -39,10 +40,10 @@ class TempTargetNotificationEvent implements NotificationEvent {
   NotificationKey get key => NotificationKey(type: type, entityId: 0);
 
   @override
-  String get title => 'Propozycja zmiany targetu glikemii';
+  String get title => lang.notificationTempTargetTitle;
 
   @override
-  String get body => 'Ustaw target glikemii na $tempTargetString';
+  String get body => lang.notificationTempTargetBody(tempTargetString);
 
   @override
   Map<String, Object?> toPayload() => {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../domain/utils/ingredient_barcode_validator.dart';
 
 final ingredientBarcodeValidatorProvider = Provider<IngredientBarcodeValidator>(
@@ -38,6 +39,7 @@ class IngredientBarcodeScannerSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = context.lang;
     final colors = Theme.of(context).colorScheme;
     final controller = ref.watch(ingredientBarcodeScannerControllerProvider);
 
@@ -59,14 +61,14 @@ class IngredientBarcodeScannerSheet extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton.filledTonal(
-                    tooltip: 'Zamknij',
+                    tooltip: lang.commonCloseTooltip,
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Zeskanuj kod kreskowy',
+                      lang.ingredientScanBarcodeTitle,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: colors.onInverseSurface,
                         fontWeight: FontWeight.w700,
@@ -85,12 +87,15 @@ class IngredientBarcodeScannerSheet extends ConsumerWidget {
                   color: Colors.black.withValues(alpha: 0.62),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   child: Text(
-                    'Umieść kod w ramce. Po odczycie pobiorę dane z Open Food Facts.',
+                    lang.ingredientScanBarcodeInstruction,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ),

@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/router/observers/riverpod_debug_observer.dart';
 import '../../common/events/data/task/task_state_synchronization_payload.dart';
+import '../../common/l10n/application_language.dart';
 import '../../core/logger/logger.dart';
 import '../collector/device_status_collector.dart';
 import '../collector/foreground_collector.dart';
@@ -42,6 +43,7 @@ class MyTaskHandler extends TaskHandler with Logging {
     );
 
     LogRuntimeConfig.configure(enableBuffer: true, capacity: 20000);
+    await initializeLanguageStringsFromPreferences();
 
     _taskScheduler = WorkflowScheduler();
 

@@ -5,6 +5,8 @@ import '../../../app/providers/app_foreground_bridge_provider.dart';
 import '../../../app/providers/foreground_task_state_provider.dart';
 import '../../../common/events/data/app/execute_command_event.dart';
 import '../../../common/events/data/app/sync_data_key.dart';
+import '../../../common/l10n/application_language.dart';
+import '../../../common/l10n/application_language_storage_keys.dart';
 import '../../../core/data/provider/initial_configuration_provider.dart';
 import '../../../core/data/provider/monitor_service_enabled_provider.dart';
 import '../../../core/data/provider/shared_prefs_provider.dart';
@@ -34,6 +36,7 @@ class ApplyInitialConfigurationUseCase {
     required String nightscoutUrl,
     required String nightscoutToken,
     required String childName,
+    required ApplicationLanguage language,
   }) async {
     final availability = await _ref.read(
       dataSourceOptionAvailabilityProvider.future,
@@ -57,8 +60,10 @@ class ApplyInitialConfigurationUseCase {
       if (config.usesCloud)
         prefs.setString(nightscoutTokenKey, nightscoutToken.trim()),
       prefs.setString(childNameKey, childName.trim()),
+      prefs.setString(applicationLanguageCodeKey, language.code),
       prefs.setBool(initialConfigurationDoneKey, true),
     ]);
+    setLanguageStringsFromCode(language.code);
     await _ref
         .read(dataReceiverActivationControllerProvider)
         .enableConfiguredReceivers(config);

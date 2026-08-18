@@ -5,6 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/l10n/language.dart';
 import '../../data/providers/activity_provider.dart';
 import 'activity_log_card.dart';
 import 'activity_log_list_tail.dart';
@@ -34,7 +35,7 @@ class ActivityLogList extends HookConsumerWidget {
               activityLogListStreamProvider(activityId: activityId),
             ),
             icon: const Icon(Icons.refresh),
-            label: const Text('Spróbuj ponownie'),
+            label: Text(context.lang.commonRetry),
           ),
         ),
       ),
@@ -52,9 +53,9 @@ class ActivityLogList extends HookConsumerWidget {
         }
 
         if (activityLogs.isEmpty) {
-          return const SafeArea(
+          return SafeArea(
             top: false,
-            child: Center(child: Text('Brak logów aktywności')),
+            child: Center(child: Text(context.lang.activityLogsEmptyList)),
           );
         }
 

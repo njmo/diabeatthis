@@ -6,8 +6,6 @@ class AndroidNotificationActionInputMapper {
   const AndroidNotificationActionInputMapper();
 
   AndroidNotificationActionInput map(NotificationActionInputDef action) {
-    return AndroidNotificationActionInput(
-        label : action.title
-    );
+    return AndroidNotificationActionInput(label: action.title);
   }
 }

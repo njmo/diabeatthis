@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/platform/aaps_suggestion_prompt.dart';
 import '../../../../common/widgets/form_section.dart';
 import '../../../dashboard/data/utils/meal_advisor.dart';
@@ -30,10 +31,11 @@ class MealSummaryPage extends ConsumerWidget {
     final notifier = ref.read(mealSummaryControllerProvider(mealId).notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Ile zjadłeś?')),
+      appBar: AppBar(title: Text(context.lang.mealSummaryTitle)),
       body: asyncDraft.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Nie udało się wczytać: $e')),
+        error: (e, st) =>
+            Center(child: Text(context.lang.mealSummaryLoadError(e))),
         data: (draft) {
           final addOnAlreadyReported = _hasReportedAddOn(draft);
           return SafeArea(
@@ -41,14 +43,14 @@ class MealSummaryPage extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               children: [
                 Text(
-                  'Sprawdź posiłek',
+                  context.lang.mealSummaryCheckTitle,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   addOnAlreadyReported
-                      ? 'Dokładka została już zapisana. Popraw ilości albo dodaj składnik, jeśli zjadłeś coś jeszcze.'
-                      : 'Wybierz ile porcji zostało zjedzone. Jeśli była dokładka, dodaj ją niżej.',
+                      ? context.lang.mealSummaryAddOnReportedHint
+                      : context.lang.mealSummaryDefaultHint,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -61,8 +63,8 @@ class MealSummaryPage extends ConsumerWidget {
                 const SizedBox(height: 24),
                 FormSection(
                   icon: Icons.restaurant,
-                  title: 'Składniki z planu',
-                  subtitle: 'Dla każdego składnika ustaw zjedzoną ilość.',
+                  title: context.lang.mealSummaryPlannedIngredientsTitle,
+                  subtitle: context.lang.mealSummaryPlannedIngredientsSubtitle,
                   children: [
                     for (final itemId in itemIds)
                       MealSummaryItemRow(
@@ -99,7 +101,7 @@ class MealSummaryPage extends ConsumerWidget {
                       mode: MealSummarySaveMode.continueEating,
                     ),
                     icon: const Icon(Icons.restaurant),
-                    label: const Text('Zapisz dokładkę i wróć do jedzenia'),
+                    label: Text(context.lang.mealSummarySaveAddOn),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -115,7 +117,7 @@ class MealSummaryPage extends ConsumerWidget {
                     mode: MealSummarySaveMode.finishMeal,
                   ),
                   icon: const Icon(Icons.check),
-                  label: const Text('Zakończ posiłek'),
+                  label: Text(context.lang.mealSummaryFinishMeal),
                 ),
               ),
             ],
@@ -143,12 +145,12 @@ class MealSummaryPage extends ConsumerWidget {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Bolus nie został potwierdzony'),
+          title: Text(context.lang.mealSummaryBolusNotConfirmedTitle),
           content: Text(e.userMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
+              child: Text(context.lang.notificationActionOk),
             ),
           ],
         ),
@@ -163,12 +165,12 @@ class MealSummaryPage extends ConsumerWidget {
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(_dialogTitle(delta, draft)),
-        content: Text(_dialogMessage(delta, mode, draft)),
+        title: Text(_dialogTitle(context.lang, delta, draft)),
+        content: Text(_dialogMessage(context.lang, delta, mode, draft)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: Text(context.lang.notificationActionOk),
           ),
         ],
       ),
@@ -229,27 +231,32 @@ class MealSummaryPage extends ConsumerWidget {
     // failure, or showing the fallback message in the parent route.
   }
 
-  String _dialogTitle(MealSummaryCarbsDelta delta, MealSummaryDraft draft) {
+  String _dialogTitle(
+    AppLocalizations lang,
+    MealSummaryCarbsDelta delta,
+    MealSummaryDraft draft,
+  ) {
     final addOnAlreadyReported = _hasReportedAddOn(draft);
 
     if (addOnAlreadyReported && delta.isNeutral) {
-      return 'Podsumowanie zapisane';
+      return lang.mealSummarySavedTitle;
     }
 
     if (delta.isPositive) {
       return addOnAlreadyReported
-          ? 'Dodaj +${delta.roundedTotal}g w AAPS'
-          : '+${delta.roundedTotal}g węglowodanów';
+          ? lang.mealSummaryAddCarbsInAapsTitle(delta.roundedTotal)
+          : lang.mealSummaryPositiveCarbsTitle(delta.roundedTotal);
     }
     if (delta.isNegative) {
       return addOnAlreadyReported
-          ? 'Do AAPS: ${delta.roundedTotal}g'
-          : '${delta.roundedTotal}g węglowodanów';
+          ? lang.mealSummaryAapsCarbsTitle(delta.roundedTotal)
+          : lang.mealSummaryNegativeCarbsTitle(delta.roundedTotal);
     }
-    return 'Bez zmiany węglowodanów';
+    return lang.mealSummaryNoCarbsChangeTitle;
   }
 
   String _dialogMessage(
+    AppLocalizations lang,
     MealSummaryCarbsDelta delta,
     MealSummarySaveMode mode,
     MealSummaryDraft draft,
@@ -257,26 +264,33 @@ class MealSummaryPage extends ConsumerWidget {
     final addOnAlreadyReported = _hasReportedAddOn(draft);
 
     if (addOnAlreadyReported && delta.isNeutral) {
-      return 'Dokładka była już zapisana wcześniej. Nie dopisuj ponownie tych samych węglowodanów w AAPS.';
+      return lang.mealSummaryAddOnAlreadyReportedMessage;
     }
 
     final suffix = mode == MealSummarySaveMode.continueEating
-        ? '\n\nPosiłek wrócił do statusu jedzenia. Kolejne podsumowanie zacznie od zapisanych wartości.'
+        ? lang.mealSummaryContinueEatingSuffix
         : '';
 
     if (delta.isPositive) {
       if (addOnAlreadyReported) {
-        return 'Wpisz tylko różnicę: +${delta.roundedTotal}g w AAPS jako dodatkowe węglowodany. Wcześniej zapisana dokładka jest już uwzględniona.$suffix';
+        return lang.mealSummaryPositiveReportedMessage(
+          delta.roundedTotal,
+          suffix,
+        );
       }
-      return 'Wpisz +${delta.roundedTotal}g w AAPS jako dodatkowe węglowodany. AAPS policzy insulinę według profilu.$suffix';
+      return lang.mealSummaryPositiveMessage(delta.roundedTotal, suffix);
     }
     if (delta.isNegative) {
       if (addOnAlreadyReported) {
-        return 'Zjedzono o ${delta.roundedTotal.abs()}g węglowodanów mniej niż było już wpisane po dokładce. Jeśli AAPS przyjmuje korektę węglowodanów, wpisz ${delta.roundedTotal}g. Jeśli bolus był już podany, rozważ dojedzenie około ${delta.roundedTotal.abs()}g węglowodanów.$suffix';
+        return lang.mealSummaryNegativeReportedMessage(
+          delta.roundedTotal.abs(),
+          delta.roundedTotal,
+          suffix,
+        );
       }
-      return 'Zjedzono o ${delta.roundedTotal.abs()}g węglowodanów mniej niż plan. Jeśli bolus był na pełny plan, rozważ dojedzenie około ${delta.roundedTotal.abs()}g węglowodanów.$suffix';
+      return lang.mealSummaryNegativeMessage(delta.roundedTotal.abs(), suffix);
     }
-    return 'Zjedzone węglowodany są zgodne z planem.$suffix';
+    return lang.mealSummaryNeutralMessage(suffix);
   }
 
   bool _hasReportedAddOn(MealSummaryDraft draft) {

@@ -8,12 +8,17 @@ import '../../../../app/providers/app_lifecycle_state_provider.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../common/events/data/app/sync_data_key.dart';
 import '../../../../common/events/data/task/task_data_synchronization_payload.dart';
+import '../../../../common/l10n/application_language.dart';
+import '../../../../common/l10n/application_language_storage_keys.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../../core/notifications/bootstrap/local_notifications_bootstrap.dart'
+    as local_notifications_bootstrap;
+import '../../../../core/notifications/providers/local_notifications_plugin_provider.dart';
 import '../../../alarm/foreground_alarm_bridge.dart';
 import '../../../power_monitor/collect_tick_wake_lock.dart';
 import '../../../providers/task_event_router_provider.dart';
@@ -51,6 +56,15 @@ class AppEventHandler with Logging {
               sharedPrefsProvider.future,
             );
             await sharedPrefs.reload();
+            if (data.containsKey(applicationLanguageCodeKey)) {
+              setLanguageStringsFromCode(data[applicationLanguageCodeKey]);
+              await local_notifications_bootstrap.init(
+                runtimeContext.container.read(localNotificationsPluginProvider),
+              );
+              if (data.keys.every((key) => key == applicationLanguageCodeKey)) {
+                return;
+              }
+            }
             runtimeContext.container.invalidate(nightscoutUrlProvider);
             runtimeContext.container.invalidate(nightscoutTokenProvider);
             runtimeContext.container.invalidate(dataSourceConfigProvider);

@@ -22,6 +22,7 @@ import 'package:diabeatthis/core/notifications/domain/events/finished_eating_eve
 import 'package:diabeatthis/core/notifications/domain/events/meal_suggestion_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_summary_reminder_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/temp_target_notification.dart';
+import 'package:diabeatthis/core/notifications/domain/models/notification_action_type.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/utils/meal_advisor.dart';
@@ -224,11 +225,14 @@ void main() {
     });
 
     test('summary reminder notification has plan and acknowledge actions', () {
-      final labels = mealSummaryReminderNotificationDefinition.actions.map(
-        (action) => action.label,
+      final actionTypes = mealSummaryReminderNotificationDefinition.actions.map(
+        (action) => action.type,
       );
 
-      expect(labels, ['Zjadłem tyle co plan', 'OK']);
+      expect(actionTypes, [
+        NotificationActionType.agree,
+        NotificationActionType.dismiss,
+      ]);
     });
 
     test('temp target notification supports meal and activity sources', () {

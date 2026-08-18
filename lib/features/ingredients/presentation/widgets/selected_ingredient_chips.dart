@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/compact_clear_button.dart';
 import '../../data/models/ingredient_filter_item.dart';
 
@@ -30,7 +31,7 @@ class SelectedIngredientChips extends StatelessWidget {
           if (hasClearButton && index == 0) {
             return Center(
               child: CompactClearButton(
-                tooltip: 'Usuń wszystkie składniki',
+                tooltip: context.lang.ingredientClearAllTooltip,
                 onPressed: onClearAll!,
                 size: 24,
                 iconSize: 14,

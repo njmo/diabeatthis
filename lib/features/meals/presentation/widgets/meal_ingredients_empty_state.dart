@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class MealIngredientsEmptyState extends StatelessWidget {
   const MealIngredientsEmptyState({super.key, required this.onAdd});
 
@@ -25,10 +27,13 @@ class MealIngredientsEmptyState extends StatelessWidget {
               color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 8),
-            Text('Nie dodano składników', style: textTheme.titleSmall),
+            Text(
+              context.lang.mealNoIngredientsTitle,
+              style: textTheme.titleSmall,
+            ),
             const SizedBox(height: 4),
             Text(
-              'Dodaj pierwszy składnik, żeby zobaczyć podgląd makroskładników.',
+              context.lang.mealNoIngredientsSubtitle,
               textAlign: TextAlign.center,
               style: textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
@@ -38,7 +43,7 @@ class MealIngredientsEmptyState extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onAdd,
               icon: const Icon(Icons.add),
-              label: const Text('Dodaj pierwszy składnik'),
+              label: Text(context.lang.mealAddFirstIngredient),
             ),
           ],
         ),

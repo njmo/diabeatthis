@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
 
 class NutrientSummaryChart extends StatelessWidget {
@@ -22,10 +23,10 @@ class NutrientSummaryChart extends StatelessWidget {
     }
 
     final nutrients = [
-      _Nutrient('Węglowodany', carbs, Colors.blue),
-      _Nutrient('Białko', protein, Colors.green),
-      _Nutrient('Tłuszcz', fat, Colors.orange),
-      _Nutrient('Błonnik', fiber, Colors.purple),
+      _Nutrient(context.lang.mealCarbsLabel, carbs, Colors.blue),
+      _Nutrient(context.lang.mealProteinLabel, protein, Colors.green),
+      _Nutrient(context.lang.mealFatLabel, fat, Colors.orange),
+      _Nutrient(context.lang.mealFiberLabel, fiber, Colors.purple),
     ];
 
     final sections = nutrients
@@ -58,8 +59,8 @@ class NutrientSummaryChart extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Podział makroskładników',
+            Text(
+              context.lang.nutrientSummaryTitle,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),

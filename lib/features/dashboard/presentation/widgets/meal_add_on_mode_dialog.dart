@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import 'meal_status_dialog_result.dart';
 
 class MealAddOnModeDialog extends StatelessWidget {
@@ -8,27 +9,27 @@ class MealAddOnModeDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Dokładka'),
+      title: Text(context.lang.mealSummaryExtraTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
             leading: const Icon(Icons.looks_one_outlined),
-            title: const Text('1,5 porcji'),
+            title: Text(context.lang.mealAddOnOneAndHalf),
             onTap: () =>
                 Navigator.of(context).pop(MealAddOnChoice.oneAndHalfPortion),
           ),
           ListTile(
             leading: const Icon(Icons.looks_two_outlined),
-            title: const Text('2 porcje'),
+            title: Text(context.lang.mealAddOnDouble),
             onTap: () =>
                 Navigator.of(context).pop(MealAddOnChoice.doublePortion),
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.tune),
-            title: const Text('Tryb zaawansowany'),
-            subtitle: const Text('Zmień ilości albo dodaj składniki'),
+            title: Text(context.lang.mealAddOnAdvanced),
+            subtitle: Text(context.lang.mealAddOnAdvancedSubtitle),
             onTap: () => Navigator.of(context).pop(MealAddOnChoice.advanced),
           ),
         ],
@@ -36,7 +37,7 @@ class MealAddOnModeDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Anuluj'),
+          child: Text(context.lang.settingsCancel),
         ),
       ],
     );

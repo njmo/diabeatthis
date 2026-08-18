@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../common/l10n/language.dart';
 import '../../../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import '../../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../data/models/meal_details_data.dart';
@@ -15,43 +16,51 @@ class MealAdvisorResultSection extends StatelessWidget {
     final decision = details.advisorDecision;
 
     return MealSectionTile(
-      title: 'Decyzja Meal Advisora',
+      title: context.lang.mealAdvisorDecisionTitle,
       children: [
         if (decision == null)
-          const MealInfoRow(label: 'Wynik', value: '-')
+          MealInfoRow(label: context.lang.mealAdvisorResultLabel, value: '-')
         else ...[
-          MealInfoRow(label: 'Wynik', value: decision.result),
           MealInfoRow(
-            label: 'Początkowe czekanie',
+            label: context.lang.mealAdvisorResultLabel,
+            value: decision.result,
+          ),
+          MealInfoRow(
+            label: context.lang.mealAdvisorInitialWaitLabel,
             value: '${decision.initialWaitTime} min',
           ),
           MealInfoRow(
-            label: 'Finalne czekanie',
+            label: context.lang.mealAdvisorFinalWaitLabel,
             value: '${decision.finalWaitTime} min',
           ),
           MealInfoRow(
-            label: 'Czekanie pominięte',
-            value: decision.waitTimeIgnored ? 'tak' : 'nie',
+            label: context.lang.mealAdvisorWaitIgnoredLabel,
+            value: decision.waitTimeIgnored
+                ? context.lang.commonYes
+                : context.lang.commonNo,
           ),
           MealInfoRow(
-            label: 'Rodzaj obsługi WBT',
-            value: _wbtDeliveryModeValue(decision),
+            label: context.lang.mealAdvisorWbtModeLabel,
+            value: _wbtDeliveryModeValue(context, decision),
           ),
           MealInfoRow(
-            label: 'Czas do startu uwalniania',
+            label: context.lang.mealAdvisorReleaseStartLabel,
             value: _wbtReleaseStartValue(decision),
           ),
           MealInfoRow(
-            label: 'Czas trwania uwalniania',
+            label: context.lang.mealAdvisorReleaseDurationLabel,
             value: _wbtReleaseDurationValue(decision),
           ),
-          MealInfoRow(label: 'Wersja', value: decision.version.toString()),
           MealInfoRow(
-            label: 'Utworzono',
+            label: context.lang.mealAdvisorVersionLabel,
+            value: decision.version.toString(),
+          ),
+          MealInfoRow(
+            label: context.lang.mealAdvisorCreatedLabel,
             value: mealDateTime(decision.createdAt),
           ),
           MealInfoRow(
-            label: 'Zaktualizowano',
+            label: context.lang.mealAdvisorUpdatedLabel,
             value: mealDateTime(decision.updatedAt),
           ),
         ],
@@ -59,13 +68,17 @@ class MealAdvisorResultSection extends StatelessWidget {
     );
   }
 
-  String _wbtDeliveryModeValue(MealAdvisorDecisionData decision) {
-    if (decision.extendedCarbsGrams <= 0) return 'Brak';
+  String _wbtDeliveryModeValue(
+    BuildContext context,
+    MealAdvisorDecisionData decision,
+  ) {
+    if (decision.extendedCarbsGrams <= 0) return context.lang.commonNone;
 
     return switch (_scheduleSettings(decision)?.deliveryMode) {
       ExtendedCarbsDeliveryMode.extendedCarbs => 'Extended carbs',
-      ExtendedCarbsDeliveryMode.extraBolus => 'Dodatkowy bolus',
-      null => 'Brak konfiguracji',
+      ExtendedCarbsDeliveryMode.extraBolus =>
+        context.lang.mealAdvisorExtraBolus,
+      null => context.lang.mealAdvisorNoConfiguration,
     };
   }
 

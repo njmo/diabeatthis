@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/language.dart';
+
 Future<bool> showDeleteConfirmationDialog(
   BuildContext context, {
   required String title,
   required String message,
-  String cancelLabel = 'Anuluj',
-  String confirmLabel = 'Usuń',
+  String? cancelLabel,
+  String? confirmLabel,
 }) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => DeleteConfirmationDialog(
       title: title,
       message: message,
-      cancelLabel: cancelLabel,
-      confirmLabel: confirmLabel,
+      cancelLabel: cancelLabel ?? context.lang.commonCancel,
+      confirmLabel: confirmLabel ?? context.lang.commonDelete,
     ),
   );
   return confirmed ?? false;

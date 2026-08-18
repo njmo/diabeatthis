@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/detail_section_card.dart';
 import '../../../../core/domain/model/correction_bolus.dart';
 import '../../../../core/domain/model/extended_carb.dart';
@@ -29,10 +30,11 @@ class ActivityLogPage extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Log aktywności')),
+      appBar: AppBar(title: Text(context.lang.activityLogTitle)),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('error: $error')),
+        error: (error, _) =>
+            Center(child: Text(context.lang.activityError(error))),
         data: (state) {
           final log = state.data;
           final scheme = Theme.of(context).colorScheme;
@@ -81,7 +83,7 @@ class ActivityLogPage extends ConsumerWidget {
                             );
                           },
                           icon: const Icon(Icons.open_in_new),
-                          label: const Text('Zobacz aktywność'),
+                          label: Text(context.lang.activityViewActivity),
                         ),
                       ),
                     ],
@@ -90,30 +92,30 @@ class ActivityLogPage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               if (log.endedAt == null)
-                const DetailSectionCard(
-                  title: 'Analiza glikemii',
+                DetailSectionCard(
+                  title: context.lang.activityAnalysisTitle,
                   children: [
                     DetailInfoRow(
                       icon: Icons.insights,
-                      label: 'Status',
-                      value: 'Dostępna po zakończeniu aktywności',
+                      label: context.lang.activityStatusLabel,
+                      value: context.lang.activityAnalysisAvailableAfterFinish,
                     ),
                   ],
                 )
               else
                 state.analysis.when(
-                  loading: () => const DetailSectionCard(
-                    title: 'Analiza glikemii',
+                  loading: () => DetailSectionCard(
+                    title: context.lang.activityAnalysisTitle,
                     children: [
                       DetailInfoRow(
                         icon: Icons.insights,
-                        label: 'Status',
-                        value: 'Ładowanie analizy',
+                        label: context.lang.activityStatusLabel,
+                        value: context.lang.activityAnalysisLoading,
                       ),
                     ],
                   ),
                   error: (error, _) => DetailSectionCard(
-                    title: 'Analiza glikemii',
+                    title: context.lang.activityAnalysisTitle,
                     children: [
                       DetailInfoRow(
                         icon: Icons.cloud_off,
@@ -150,71 +152,73 @@ class ActivityLogPage extends ConsumerWidget {
               ),
               if (state.lowTreatments.isNotEmpty) const SizedBox(height: 12),
               DetailSectionCard(
-                title: 'Czas',
+                title: context.lang.activityTimeTitle,
                 children: [
                   DetailInfoRow(
                     icon: Icons.play_arrow,
-                    label: 'Start',
+                    label: context.lang.activityStartLabel,
                     value: _formatDateTime(log.startedAt),
                   ),
                   DetailInfoRow(
                     icon: Icons.stop,
-                    label: 'Koniec',
+                    label: context.lang.activityEndLabel,
                     value: log.endedAt == null
-                        ? 'W trakcie'
+                        ? context.lang.activityInProgress
                         : _formatDateTime(log.endedAt!),
                   ),
                   DetailInfoRow(
                     icon: Icons.timer,
-                    label: 'Czas trwania',
-                    value: _formatDuration(log.duration),
+                    label: context.lang.activityDurationLabel,
+                    value: _formatDuration(context.lang, log.duration),
                   ),
                   DetailInfoRow(
                     icon: Icons.schedule,
-                    label: 'Planowany czas',
-                    value: _formatMinutes(log.durationMinutes),
+                    label: context.lang.activityPlannedDurationLabel,
+                    value: _formatMinutes(context.lang, log.durationMinutes),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               DetailSectionCard(
-                title: 'Wpływ na insulinę',
+                title: context.lang.activityInsulinImpactTitle,
                 children: [
                   DetailInfoRow(
                     icon: Icons.schedule,
-                    label: '1h przed posiłkiem',
-                    value: '${log.percentagePre}% mniej',
+                    label: context.lang.activityBeforeMealLabel,
+                    value: context.lang.activityPercentLess(log.percentagePre),
                   ),
                   DetailInfoRow(
                     icon: Icons.sports_score,
-                    label: 'Po treningu',
-                    value: '${log.percentagePost}% mniej',
+                    label: context.lang.activityAfterWorkoutLabel,
+                    value: context.lang.activityPercentLess(log.percentagePost),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               DetailSectionCard(
-                title: 'Szczegóły',
+                title: context.lang.activityDetailsTitle,
                 children: [
                   DetailInfoRow(
                     icon: Icons.speed,
-                    label: 'Intensywność',
+                    label: context.lang.activityIntensityLabel,
                     value: _fallback(log.intensity),
                   ),
                   DetailInfoRow(
                     icon: Icons.notes,
-                    label: 'Notatki',
+                    label: context.lang.activityNotesLabel,
                     value: _fallback(log.notes),
                   ),
                   DetailInfoRow(
                     icon: Icons.sync,
-                    label: 'Synchronizacja',
-                    value: log.isSynced ? 'Zsynchronizowane' : 'Lokalne zmiany',
+                    label: context.lang.activitySyncLabel,
+                    value: log.isSynced
+                        ? context.lang.activitySynced
+                        : context.lang.activityLocalChanges,
                     valueColor: log.isSynced ? scheme.primary : scheme.error,
                   ),
                   DetailInfoRow(
                     icon: Icons.update,
-                    label: 'Ostatnia zmiana',
+                    label: context.lang.activityLastChangedLabel,
                     value: _formatDateTime(log.updatedAt),
                   ),
                 ],
@@ -243,9 +247,9 @@ class ActivityLogPage extends ConsumerWidget {
     return '$day.$month.$year $hour:$minute';
   }
 
-  static String _formatDuration(Duration? duration) {
+  static String _formatDuration(AppLocalizations lang, Duration? duration) {
     if (duration == null) {
-      return 'W trakcie';
+      return lang.activityInProgress;
     }
 
     final hours = duration.inHours;
@@ -256,9 +260,9 @@ class ActivityLogPage extends ConsumerWidget {
     return '${hours}h ${minutes.toString().padLeft(2, '0')} min';
   }
 
-  static String _formatMinutes(int? minutes) {
+  static String _formatMinutes(AppLocalizations lang, int? minutes) {
     if (minutes == null) {
-      return 'Do ręcznego zatrzymania';
+      return lang.activityManualStop;
     }
 
     final hours = minutes ~/ 60;
@@ -295,7 +299,7 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
-        active ? 'Aktywna' : 'Zakończona',
+        active ? context.lang.activityActive : context.lang.activityFinished,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           color: foreground,
           fontWeight: FontWeight.w600,
@@ -327,7 +331,7 @@ class _ActivityAnalysisSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DetailSectionCard(
-          title: 'Glikemia / COB / IOB i zdarzenia',
+          title: context.lang.activityChartEventsTitle,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -337,17 +341,20 @@ class _ActivityAnalysisSection extends StatelessWidget {
                 onTimestampSelected: onTimestampSelected,
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _LegendItem(color: Colors.green, label: '70-180'),
-                  _LegendItem(color: Colors.amber, label: '180-250'),
-                  _LegendItem(color: Colors.red, label: '<70 / >250'),
-                  _LegendItem(color: Colors.teal, label: 'Aktywność'),
-                  _LegendItem(color: Colors.blue, label: 'Temp target'),
+                  const _LegendItem(color: Colors.green, label: '70-180'),
+                  const _LegendItem(color: Colors.amber, label: '180-250'),
+                  const _LegendItem(color: Colors.red, label: '<70 / >250'),
+                  _LegendItem(
+                    color: Colors.teal,
+                    label: context.lang.activityLegendActivity,
+                  ),
+                  const _LegendItem(color: Colors.blue, label: 'Temp target'),
                 ],
               ),
             ),
@@ -355,34 +362,34 @@ class _ActivityAnalysisSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         DetailSectionCard(
-          title: 'Start aktywności',
+          title: context.lang.activityStartSectionTitle,
           children: [
             DetailInfoRow(
               icon: Icons.bloodtype,
-              label: 'Cukier na starcie',
+              label: context.lang.activityStartGlucoseLabel,
               value: analysis.glucoseAtStart == null
                   ? '-'
                   : '${analysis.glucoseAtStart} mg/dl',
             ),
             DetailInfoRow(
               icon: Icons.vaccines,
-              label: 'Aktywna insulina',
+              label: context.lang.activityActiveInsulinLabel,
               value: analysis.iobAtStart == null
                   ? '-'
                   : '${analysis.iobAtStart!.toStringAsFixed(2)} U',
             ),
             DetailInfoRow(
               icon: Icons.grain,
-              label: 'Aktywne węglowodany',
+              label: context.lang.activityActiveCarbsLabel,
               value: analysis.cobAtStart == null
                   ? '-'
                   : '${analysis.cobAtStart!.toStringAsFixed(1)} g',
             ),
             if (analysis.preActivityMeals.isEmpty)
-              const DetailInfoRow(
+              DetailInfoRow(
                 icon: Icons.restaurant,
-                label: 'Posiłek do 1h przed',
-                value: 'Brak',
+                label: context.lang.activityMealBeforeLabel,
+                value: context.lang.commonNone,
               )
             else
               ...analysis.preActivityMeals.map(_MealRow.new),
@@ -390,23 +397,23 @@ class _ActivityAnalysisSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         DetailSectionCard(
-          title: 'Podsumowanie glikemii',
+          title: context.lang.activityGlucoseSummaryTitle,
           children: [
             DetailInfoRow(
               icon: Icons.show_chart,
-              label: 'Średni cukier',
+              label: context.lang.activityAverageGlucoseLabel,
               value: average == null ? '-' : '${average.round()} mg/dl',
             ),
             DetailInfoRow(
               icon: Icons.swap_vert,
-              label: 'Zakres',
+              label: context.lang.activityRangeLabel,
               value: min == null || max == null ? '-' : '$min-$max mg/dl',
             ),
             DetailInfoRow(
               icon: Icons.bakery_dining,
-              label: 'Dodatkowe treat',
+              label: context.lang.activityExtraTreatLabel,
               value: treats.isEmpty
-                  ? 'Brak'
+                  ? context.lang.commonNone
                   : '${treats.length} (${analysis.treatCarbsDuringActivity} g)',
             ),
             if (treats.isNotEmpty) ...treats.map(_TreatRow.new),
@@ -414,13 +421,13 @@ class _ActivityAnalysisSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         DetailSectionCard(
-          title: 'Zdarzenia Nightscout',
+          title: context.lang.activityNightscoutEventsTitle,
           children: [
             if (analysis.chartTreatments.isEmpty)
-              const DetailInfoRow(
+              DetailInfoRow(
                 icon: Icons.event_busy,
-                label: 'Zdarzenia na wykresie',
-                value: 'Brak',
+                label: context.lang.activityChartEventsLabel,
+                value: context.lang.commonNone,
               )
             else
               ...analysis.chartTreatments.map(_TreatmentRow.new),
@@ -440,7 +447,7 @@ class _MealRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return DetailInfoRow(
       icon: Icons.restaurant,
-      label: 'Posiłek ${_formatTime(meal.createdAt)}',
+      label: context.lang.activityMealAt(_formatTime(meal.createdAt)),
       value:
           '${meal.carbs ?? 0} g, ${meal.insulin?.toStringAsFixed(2) ?? '-'} U',
     );
@@ -456,7 +463,7 @@ class _TreatRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return DetailInfoRow(
       icon: Icons.bakery_dining,
-      label: 'Treat ${_formatTime(treat.createdAt)}',
+      label: context.lang.activityTreatAt(_formatTime(treat.createdAt)),
       value: '${treat.carbs} g',
     );
   }

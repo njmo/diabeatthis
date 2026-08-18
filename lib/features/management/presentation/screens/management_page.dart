@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../activity/presentation/widgets/activity_list.dart';
@@ -20,10 +21,11 @@ class ManagementPage extends HookConsumerWidget {
     final dataSourceConfigAsync = ref.watch(dataSourceConfigProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Zarządzanie')),
+      appBar: AppBar(title: Text(context.lang.managementTitle)),
       body: dataSourceConfigAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Błąd ustawień: $error')),
+        error: (error, _) =>
+            Center(child: Text(context.lang.managementSettingsError(error))),
         data: (config) {
           if (config.historySource == HistorySource.local) {
             return const LocalHistoryBlockedView();
@@ -44,18 +46,18 @@ class ManagementPage extends HookConsumerWidget {
 
           return NavigationBar(
             selectedIndex: destination.value,
-            destinations: const <Widget>[
+            destinations: <Widget>[
               NavigationDestination(
-                icon: Icon(Icons.restaurant_sharp),
-                label: 'Posiłki',
+                icon: const Icon(Icons.restaurant_sharp),
+                label: context.lang.managementMealsTab,
               ),
               NavigationDestination(
-                icon: Icon(Icons.bakery_dining),
-                label: 'Składniki',
+                icon: const Icon(Icons.bakery_dining),
+                label: context.lang.managementIngredientsTab,
               ),
               NavigationDestination(
-                icon: Icon(Icons.sports_handball_outlined),
-                label: 'Aktywności',
+                icon: const Icon(Icons.sports_handball_outlined),
+                label: context.lang.managementActivitiesTab,
               ),
             ],
             onDestinationSelected: (int index) {

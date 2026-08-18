@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
@@ -25,6 +26,7 @@ class QuickLowTreatmentItemsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = context.lang;
     final asyncState = ref.watch(quickLowTreatmentItemsControllerProvider);
     final state =
         asyncState.value ??
@@ -36,7 +38,7 @@ class QuickLowTreatmentItemsSheet extends ConsumerWidget {
 
     return KeyboardAwareBottomSheet(
       header: BottomSheetStepHeader(
-        title: 'Szybkie dosłodzenia',
+        title: lang.quickLowTreatmentItemsTitle,
         onBack: () => Navigator.of(context).pop(),
       ),
       body: SizedBox(
@@ -128,7 +130,7 @@ class QuickLowTreatmentItemsSheet extends ConsumerWidget {
       actions: FilledButton.icon(
         onPressed: isBusy ? null : () => Navigator.of(context).pop(),
         icon: const Icon(Icons.check),
-        label: const Text('Gotowe'),
+        label: Text(lang.commonDone),
       ),
     );
   }
@@ -158,12 +160,13 @@ Future<void> _addOrEditQuickLowTreatmentItem({
           existingItem: slot.item,
         );
   } catch (error) {
+    final errorMessage = _quickItemSaveErrorMessage(error);
     if (!context.mounted) {
       return;
     }
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(_quickItemSaveErrorMessage(error))));
+    ).showSnackBar(SnackBar(content: Text(errorMessage)));
   }
 }
 
@@ -174,7 +177,7 @@ String _quickItemSaveErrorMessage(Object error) {
       return message.toString();
     }
   }
-  return 'Nie udało się zapisać szybkiego dosłodzenia.';
+  return lang.quickLowTreatmentSaveError;
 }
 
 class QuickLowTreatmentEmptySlotCard extends StatelessWidget {

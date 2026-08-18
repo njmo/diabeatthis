@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/date_time_picker.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
 import '../../../activity/data/drafts/activity_draft.dart';
@@ -35,12 +36,12 @@ class DashboardActivitySheet extends HookConsumerWidget {
         children: [
           Expanded(
             child: Text(
-              'Dodaj aktywność',
+              context.lang.dashboardAddActivity,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
           IconButton(
-            tooltip: 'Zamknij',
+            tooltip: context.lang.commonCloseTooltip,
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close),
           ),
@@ -61,7 +62,7 @@ class DashboardActivitySheet extends HookConsumerWidget {
                 }
               },
               icon: const Icon(Icons.search),
-              label: const Text('Wybierz aktywność'),
+              label: Text(context.lang.activityPickTitle),
             )
           else
             SelectedDashboardActivityCard(
@@ -84,8 +85,8 @@ class DashboardActivitySheet extends HookConsumerWidget {
               scheduled.value = value ?? false;
               startAt.value = _todayAt(startAt.value);
             },
-            title: const Text('Zaplanuj na później'),
-            subtitle: const Text('Wybierz godzinę startu na dzisiaj'),
+            title: Text(context.lang.dashboardScheduleLaterTitle),
+            subtitle: Text(context.lang.dashboardScheduleLaterSubtitle),
           ),
           if (scheduled.value) ...[
             const SizedBox(height: 4),
@@ -100,7 +101,9 @@ class DashboardActivitySheet extends HookConsumerWidget {
                 }
               },
               icon: const Icon(Icons.schedule),
-              label: Text('Start o ${_formatTime(startAt.value)}'),
+              label: Text(
+                context.lang.dashboardStartAt(_formatTime(startAt.value)),
+              ),
             ),
           ],
         ],
@@ -133,7 +136,11 @@ class DashboardActivitySheet extends HookConsumerWidget {
               icon: Icon(
                 scheduled.value ? Icons.event_available : Icons.play_arrow,
               ),
-              label: Text(scheduled.value ? 'Zaplanuj' : 'Wystartuj'),
+              label: Text(
+                scheduled.value
+                    ? context.lang.dashboardSchedule
+                    : context.lang.dashboardStart,
+              ),
             ),
           ),
         ],
@@ -207,7 +214,7 @@ class SelectedDashboardActivityCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    _formatDuration(duration),
+                    _formatDuration(context, duration),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -217,7 +224,7 @@ class SelectedDashboardActivityCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             IconButton(
-              tooltip: 'Zmień aktywność',
+              tooltip: context.lang.dashboardChangeActivityTooltip,
               onPressed: onChange,
               icon: const Icon(Icons.edit),
             ),
@@ -241,19 +248,21 @@ class SelectedDashboardActivityCard extends StatelessWidget {
     );
   }
 
-  static String _formatDuration(int? minutes) {
+  static String _formatDuration(BuildContext context, int? minutes) {
     if (minutes == null) {
-      return 'Zakończenie ręczne';
+      return context.lang.activityManualEnd;
     }
 
     final hours = minutes ~/ 60;
     final remainingMinutes = minutes.remainder(60);
     if (hours == 0) {
-      return 'Planowany czas: $minutes min';
+      return context.lang.dashboardPlannedDurationPrefix('$minutes min');
     }
     if (remainingMinutes == 0) {
-      return 'Planowany czas: ${hours}h';
+      return context.lang.dashboardPlannedDurationPrefix('${hours}h');
     }
-    return 'Planowany czas: ${hours}h ${remainingMinutes.toString().padLeft(2, '0')} min';
+    return context.lang.dashboardPlannedDurationPrefix(
+      '${hours}h ${remainingMinutes.toString().padLeft(2, '0')} min',
+    );
   }
 }

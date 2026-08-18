@@ -5,6 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/l10n/language.dart';
 import '../../data/providers/activity_provider.dart';
 
 class ActivityList extends HookConsumerWidget {
@@ -26,7 +27,7 @@ class ActivityList extends HookConsumerWidget {
           child: TextButton.icon(
             onPressed: () => ref.invalidate(activityListStreamProvider),
             icon: const Icon(Icons.refresh),
-            label: const Text('Spróbuj ponownie'),
+            label: Text(context.lang.commonRetry),
           ),
         ),
       ),
@@ -44,9 +45,9 @@ class ActivityList extends HookConsumerWidget {
         }
 
         if (activities.isEmpty) {
-          return const SafeArea(
+          return SafeArea(
             top: false,
-            child: Center(child: Text('Brak aktywności')),
+            child: Center(child: Text(context.lang.activityEmptyList)),
           );
         }
 
@@ -132,7 +133,7 @@ class _ActivityListTail extends StatelessWidget {
         child: TextButton.icon(
           onPressed: onRetry,
           icon: const Icon(Icons.refresh),
-          label: const Text('Spróbuj ponownie'),
+          label: Text(context.lang.commonRetry),
         ),
       );
     }
@@ -190,7 +191,7 @@ class _ActivityCard extends StatelessWidget {
                   const SizedBox(width: 20),
                   _MetaPill(
                     icon: Icons.timer,
-                    text: _formatDuration(durationMinutes),
+                    text: _formatDuration(context, durationMinutes),
                   ),
                 ],
               ),
@@ -202,9 +203,9 @@ class _ActivityCard extends StatelessWidget {
     );
   }
 
-  static String _formatDuration(int? minutes) {
+  static String _formatDuration(BuildContext context, int? minutes) {
     if (minutes == null) {
-      return 'Zakończenie ręczne';
+      return context.lang.activityManualEnd;
     }
 
     final hours = minutes ~/ 60;

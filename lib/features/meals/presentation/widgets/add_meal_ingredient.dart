@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/forms.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
@@ -82,64 +83,64 @@ class AddMealIngredient extends ConsumerWidget {
       header: switch (addingStage) {
         AddMealIngredientStage.dismiss => const SizedBox.shrink(),
         AddMealIngredientStage.ingredientSearch => BottomSheetStepHeader(
-          title: 'Wyszukaj składnik',
+          title: context.lang.addIngredientSearchTitle,
           onBack: () => Navigator.of(context).pop(),
         ),
         AddMealIngredientStage.ingredientPhotoScan => BottomSheetStepHeader(
-          title: 'Dodaj ze zdjęć',
+          title: context.lang.addIngredientFromPhotosTitle,
           onBack: addingStateNotifier.back,
         ),
         AddMealIngredientStage.ingredientForm => BottomSheetStepHeader(
-          title: 'Dodaj składnik',
+          title: context.lang.addIngredientTitle,
           onBack: addingStateNotifier.back,
           actions: [
             IconButton(
-              tooltip: 'Wyszukaj składnik',
+              tooltip: context.lang.addIngredientSearchTitle,
               onPressed: addingStateNotifier.toOppositeStage,
               icon: const Icon(Icons.search),
             ),
           ],
         ),
         AddMealIngredientStage.portionAddNewSearch => BottomSheetStepHeader(
-          title: 'Wybierz porcję dla składnika',
+          title: context.lang.addIngredientPickPortionTitle,
           onBack: addingStateNotifier.back,
           actions: [
             IconButton(
-              tooltip: 'Dodaj porcję',
+              tooltip: context.lang.addIngredientAddPortionTooltip,
               onPressed: addingStateNotifier.toOppositeStage,
               icon: const Icon(Icons.add),
             ),
           ],
         ),
         AddMealIngredientStage.definedPortionsSearch => BottomSheetStepHeader(
-          title: 'Wyszukaj istniejącą porcję',
+          title: context.lang.addIngredientSearchExistingPortionTitle,
           onBack: addingStateNotifier.back,
           actions: [
             IconButton(
-              tooltip: 'Dodaj porcję',
+              tooltip: context.lang.addIngredientAddPortionTooltip,
               onPressed: addingStateNotifier.toOppositeStage,
               icon: const Icon(Icons.add_box_outlined),
             ),
           ],
         ),
         AddMealIngredientStage.amountForm => BottomSheetStepHeader(
-          title: 'Ilość',
+          title: context.lang.addIngredientAmountTitle,
           onBack: addingStateNotifier.back,
         ),
         AddMealIngredientStage.summary => BottomSheetStepHeader(
-          title: 'Podsumowanie',
+          title: context.lang.addIngredientSummaryTitle,
           onBack: addingStateNotifier.back,
         ),
         AddMealIngredientStage.portionSpecifyAmount => BottomSheetStepHeader(
-          title: 'Waga porcji',
+          title: context.lang.addIngredientPortionWeightTitle,
           onBack: addingStateNotifier.back,
         ),
         AddMealIngredientStage.portionAddNewForm => BottomSheetStepHeader(
-          title: 'Dodaj nową porcję',
+          title: context.lang.addIngredientNewPortionTitle,
           onBack: addingStateNotifier.back,
           actions: [
             IconButton(
-              tooltip: 'Wyszukaj porcję',
+              tooltip: context.lang.addIngredientSearchPortionTooltip,
               onPressed: addingStateNotifier.toOppositeStage,
               icon: const Icon(Icons.search),
             ),
@@ -219,16 +220,16 @@ class AddMealIngredient extends ConsumerWidget {
                       }
                     },
               child: (addingStage == AddMealIngredientStage.summary)
-                  ? const Text('Dodaj')
+                  ? Text(context.lang.mealSummaryExtraAdd)
                   : Text(
                       isScanningIngredient
-                          ? 'Odczytuję...'
+                          ? context.lang.addIngredientReadingData
                           : addingStage ==
                                 AddMealIngredientStage.ingredientPhotoScan
                           ? photoScanInput.hasRequiredPhotos
-                                ? 'Odczytaj dane'
-                                : 'Dodaj zdjęcia'
-                          : 'Dalej',
+                                ? context.lang.addIngredientReadData
+                                : context.lang.addIngredientAddPhotos
+                          : context.lang.addIngredientNext,
                     ),
             ),
           ),
@@ -240,7 +241,7 @@ class AddMealIngredient extends ConsumerWidget {
                     onPressed: () {
                       addingStateNotifier.setOverride();
                     },
-                    child: const Text('Dodaj w gramach'),
+                    child: Text(context.lang.addIngredientAddInGrams),
                   ),
                 ),
           addingStage != AddMealIngredientStage.summary
@@ -251,22 +252,24 @@ class AddMealIngredient extends ConsumerWidget {
                       final result = await showDialog<bool>(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text('Odrzucić zmiany?'),
-                          content: const Text(
-                            'Czy na pewno chcesz odrzucić zmiany?',
+                          title: Text(
+                            context.lang.addIngredientDiscardChangesTitle,
+                          ),
+                          content: Text(
+                            context.lang.addIngredientDiscardChangesMessage,
                           ),
                           actions: [
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).pop(true);
                               },
-                              child: const Text('Tak'),
+                              child: Text(context.lang.commonYes),
                             ),
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).pop(false);
                               },
-                              child: const Text('Nie'),
+                              child: Text(context.lang.commonNo),
                             ),
                           ],
                         ),
@@ -277,7 +280,7 @@ class AddMealIngredient extends ConsumerWidget {
                         }
                       }
                     },
-                    child: const Text('Odrzuć'),
+                    child: Text(context.lang.addIngredientDiscard),
                   ),
                 ),
         ],

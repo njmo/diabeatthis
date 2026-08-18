@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/l10n/language.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/models/ingredient_history_entry_data.dart';
 import '../../data/models/ingredient_portion_data.dart';
@@ -17,12 +18,15 @@ class IngredientHistorySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeader(icon: Icons.history, title: 'Historia makro'),
+        _SectionHeader(
+          icon: Icons.history,
+          title: context.lang.ingredientMacroHistoryTitle,
+        ),
         const SizedBox(height: 8),
         if (history.isEmpty)
-          const _EmptyState(
+          _EmptyState(
             icon: Icons.history_toggle_off,
-            label: 'Brak zapisanych zmian makro',
+            label: context.lang.ingredientMacroHistoryEmpty,
           )
         else
           ...history.map((entry) => _HistoryItem(entry: entry)),
@@ -46,15 +50,15 @@ class IngredientPortionsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeader(
+        _SectionHeader(
           icon: Icons.straighten,
-          title: 'Zdefiniowane porcje',
+          title: context.lang.ingredientDefinedPortionsTitle,
         ),
         const SizedBox(height: 8),
         if (portions.isEmpty)
-          const _EmptyState(
+          _EmptyState(
             icon: Icons.straighten,
-            label: 'Brak zdefiniowanych porcji',
+            label: context.lang.ingredientDefinedPortionsEmpty,
           )
         else
           ...portions.map((portion) {
@@ -65,7 +69,7 @@ class IngredientPortionsSection extends StatelessWidget {
               trailing: '${_formatNumber(portion.gramsPerPortion)} g',
               onTap: onEdit == null ? null : () => onEdit!(portion),
               trailingIcon: onEdit == null ? null : Icons.edit_outlined,
-              trailingTooltip: 'Edytuj porcję',
+              trailingTooltip: context.lang.ingredientEditPortionTooltip,
             );
           }),
       ],
@@ -83,15 +87,15 @@ class IngredientMealsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionHeader(
+        _SectionHeader(
           icon: Icons.restaurant,
-          title: 'Użyty w posiłkach',
+          title: context.lang.ingredientUsedInMealsTitle,
         ),
         const SizedBox(height: 8),
         if (usages.isEmpty)
-          const _EmptyState(
+          _EmptyState(
             icon: Icons.no_meals_outlined,
-            label: 'Nie użyto jeszcze w żadnym posiłku',
+            label: context.lang.ingredientUsedInMealsEmpty,
           )
         else
           ...usages.map((meal) {
@@ -152,7 +156,10 @@ class _HistoryItem extends StatelessWidget {
                 _MacroChip(label: 'W', value: entry.carbsPer100g),
                 _MacroChip(label: 'T', value: entry.fatPer100g),
                 _MacroChip(label: 'B', value: entry.proteinPer100g),
-                _MacroChip(label: 'Bł', value: entry.fiberPer100g),
+                _MacroChip(
+                  label: context.lang.ingredientFiberShortLabel,
+                  value: entry.fiberPer100g,
+                ),
               ],
             ),
           ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/camera_search_icon.dart';
 import '../../../../common/widgets/forms.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
@@ -27,6 +28,7 @@ class IngredientSearch extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = context.lang;
     final query = useState('');
     final valuePicked = useState(-1);
     final normalizedQuery = query.value.trim();
@@ -139,7 +141,7 @@ class IngredientSearch extends HookConsumerWidget {
             key: formKey,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: StringFormField(
-              label: 'Nazwa',
+              label: lang.ingredientNameLabel,
               value: '',
               onChanged: (value) {
                 query.value = value;
@@ -152,15 +154,15 @@ class IngredientSearch extends HookConsumerWidget {
                   validator: (value) {
                     if (valuePicked.value < 0 &&
                         !selectedIngredient.hasSearchSelection) {
-                      return 'Wybierz składnik albo dodaj nowy.';
+                      return lang.ingredientPickOrAddNew;
                     }
                     return null;
                   },
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.search),
-                    labelText: 'Szukaj składnika',
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
+                    labelText: lang.ingredientSearchLabel,
                     counterText: '',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 );
               },
@@ -338,13 +340,14 @@ class IngredientSearchActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     return Row(
       children: [
         Expanded(
           child: IngredientSearchActionButton(
             icon: const Icon(Icons.add_box_outlined),
-            label: 'Ręcznie',
-            tooltip: 'Dodaj ręcznie',
+            label: lang.lowTreatmentReasonManual,
+            tooltip: lang.ingredientAddManualTooltip,
             onPressed: onAddManual,
           ),
         ),
@@ -352,8 +355,8 @@ class IngredientSearchActions extends StatelessWidget {
         Expanded(
           child: IngredientSearchActionButton(
             icon: const Icon(Icons.add_a_photo_outlined),
-            label: 'Etykieta',
-            tooltip: 'Odczytaj etykietę',
+            label: lang.ingredientLabelPhotoButton,
+            tooltip: lang.ingredientScanLabelTooltip,
             onPressed: onScanLabel,
           ),
         ),
@@ -361,8 +364,10 @@ class IngredientSearchActions extends StatelessWidget {
         Expanded(
           child: IngredientSearchActionButton(
             icon: const Icon(Icons.qr_code_scanner_outlined),
-            label: isBarcodeScanLoading ? 'Pobieram' : 'Kod',
-            tooltip: 'Skanuj kod kreskowy',
+            label: isBarcodeScanLoading
+                ? lang.commonLoading
+                : lang.ingredientCodeButton,
+            tooltip: lang.ingredientScanBarcodeTooltip,
             onPressed: isBarcodeScanLoading ? null : onScanBarcode,
           ),
         ),
@@ -370,8 +375,10 @@ class IngredientSearchActions extends StatelessWidget {
         Expanded(
           child: IngredientSearchActionButton(
             icon: const CameraSearchIcon(size: 18),
-            label: isPhotoSearchLoading ? 'Szukam' : 'Ze zdjęcia',
-            tooltip: 'Znajdź ze zdjęcia',
+            label: isPhotoSearchLoading
+                ? lang.ingredientSearching
+                : lang.ingredientFromPhotoButton,
+            tooltip: lang.ingredientFindFromPhotoTooltip,
             onPressed: isPhotoSearchLoading ? null : onSearchPhoto,
           ),
         ),
@@ -451,7 +458,7 @@ class IngredientPhotoSearchProgressMessage extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Szukam ze zdjęcia.',
+                context.lang.ingredientPhotoSearchProgress,
                 style: TextStyle(color: colors.onPrimaryContainer),
               ),
             ),
@@ -480,10 +487,12 @@ class IngredientPhotoSearchSummary extends StatelessWidget {
     final names = result.names.join(', ');
     final brand = result.brand;
     final recognizedText = switch ((names.isNotEmpty, brand)) {
-      (true, final String brand) => 'Rozpoznano: $names, marka: $brand',
-      (true, null) => 'Rozpoznano: $names',
-      (false, final String brand) => 'Rozpoznano markę: $brand',
-      (false, null) => 'Rozpoznano zdjęcie produktu.',
+      (true, final String brand) =>
+        context.lang.ingredientPhotoRecognizedWithBrand(names, brand),
+      (true, null) => context.lang.ingredientPhotoRecognized(names),
+      (false, final String brand) =>
+        context.lang.ingredientPhotoRecognizedBrand(brand),
+      (false, null) => context.lang.ingredientPhotoRecognizedProduct,
     };
 
     return Material(
@@ -519,7 +528,7 @@ class IngredientPhotoSearchSummary extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Wynik ze zdjęcia',
+                        context.lang.ingredientPhotoSearchResultTitle,
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                       const SizedBox(height: 2),
@@ -556,7 +565,7 @@ class IngredientPhotoSearchSummary extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Brak pasującego składnika w bazie.',
+                        context.lang.ingredientPhotoNoMatchingIngredient,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: colors.onSurfaceVariant,
                         ),
@@ -572,7 +581,7 @@ class IngredientPhotoSearchSummary extends StatelessWidget {
               child: FilledButton.tonalIcon(
                 onPressed: onAddNewIngredient,
                 icon: const Icon(Icons.add_box_outlined),
-                label: const Text('Dodaj nowy składnik'),
+                label: Text(context.lang.ingredientAddNew),
               ),
             ),
           ],
@@ -619,21 +628,17 @@ class IngredientPhotoSearchErrorMessage extends StatelessWidget {
 String _photoSearchErrorMessage(Object error) {
   if (error is LlmRequestException) {
     return switch (error.failure) {
-      LlmRequestFailure.network =>
-        'Brak połączenia z AI. Sprawdź internet i spróbuj ponownie.',
-      LlmRequestFailure.unauthorized =>
-        'Nie udało się potwierdzić aplikacji w Firebase.',
-      LlmRequestFailure.quotaExceeded =>
-        'Limit odczytów AI został wyczerpany. Spróbuj później.',
-      LlmRequestFailure.timeout => 'Odczyt trwał zbyt długo. Spróbuj ponownie.',
-      LlmRequestFailure.unavailable =>
-        'AI jest chwilowo niedostępne. Spróbuj ponownie.',
+      LlmRequestFailure.network => lang.ingredientAiNetworkError,
+      LlmRequestFailure.unauthorized => lang.ingredientAiUnauthorized,
+      LlmRequestFailure.quotaExceeded => lang.ingredientAiQuotaExceeded,
+      LlmRequestFailure.timeout => lang.ingredientAiTimeout,
+      LlmRequestFailure.unavailable => lang.ingredientAiUnavailable,
     };
   }
   if (error is FormatException) {
-    return 'Nie udało się odczytać odpowiedzi modelu. Spróbuj ponownie.';
+    return lang.ingredientAiParseFailed;
   }
-  return 'Nie udało się wyszukać produktu ze zdjęcia. Spróbuj ponownie.';
+  return lang.ingredientPhotoSearchFailed;
 }
 
 extension IngredientSearchSelectionX on IngredientDraft {

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/domain/model/device_status.dart';
 import '../../core/domain/model/glucose.dart';
+import '../l10n/language.dart';
 
 class TimelineAnalysisCharts extends StatefulWidget {
   final DateTime chartStart;
@@ -175,9 +176,9 @@ class TimelineGlucoseChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (glucoseReadings.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 260,
-        child: Center(child: Text('Brak odczytów glikemii w tym okresie')),
+        child: Center(child: Text(context.lang.commonNoGlucoseReadings)),
       );
     }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../../meals/presentation/widgets/meal_ingredient_preview_tile.dart';
@@ -31,7 +32,7 @@ class LowTreatmentIngredientsList extends ConsumerWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Text(
-            'Nie dodano jeszcze składników.',
+            context.lang.lowTreatmentNoIngredients,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,

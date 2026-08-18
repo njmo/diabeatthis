@@ -11,6 +11,9 @@ import '../../../../app/providers/foreground_task_state_provider.dart';
 import '../../../../common/events/data/app/dump_logs_event.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../common/events/data/app/sync_data_key.dart';
+import '../../../../common/l10n/application_language.dart';
+import '../../../../common/l10n/application_language_storage_keys.dart';
+import '../../../../common/l10n/language.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
@@ -20,13 +23,13 @@ import '../../../../core/data_sources/nightscout/providers/nightscout_repository
 import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../../../../core/data_sources/nightscout/repository/nightscout_repository_impl.dart';
 import '../../../../core/logger/logger.dart';
+import '../../data/settings_storage_keys.dart';
+import '../widgets/application_language_selector.dart';
 import '../widgets/data_source_settings_section.dart';
 import '../widgets/database_settings_section.dart';
 import '../widgets/meal_advisor_settings_section.dart';
 import '../widgets/nightscout_connection_fields.dart';
 import '../widgets/settings_section_card.dart';
-
-const _childNameKey = 'main-user-name';
 
 @RoutePage()
 class SettingsPage extends HookConsumerWidget with Logging {
@@ -49,9 +52,12 @@ class SettingsPage extends HookConsumerWidget with Logging {
     return prefsAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('Błąd: $e'))),
+      error: (e, _) => Scaffold(
+        body: Center(child: Text(context.lang.settingsGenericError(e))),
+      ),
       data: (prefs) {
         final dataSourceConfigAsync = ref.watch(dataSourceConfigProvider);
+        final languageAsync = ref.watch(applicationLanguageControllerProvider);
         final visibleDataSourceConfig =
             selectedDataSourceConfig.value ??
             dataSourceConfigAsync.maybeWhen(
@@ -62,7 +68,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
         if (!initialized.value) {
           urlController.text = prefs.getString(nightscoutUrlKey) ?? '';
           tokenController.text = prefs.getString(nightscoutTokenKey) ?? '';
-          childNameController.text = prefs.getString(_childNameKey) ?? '';
+          childNameController.text = prefs.getString(childNameKey) ?? '';
           initialized.value = true;
         }
 
@@ -81,12 +87,13 @@ class SettingsPage extends HookConsumerWidget with Logging {
           final oldUrl = prefs.getString(nightscoutUrlKey)?.trim() ?? '';
           logI('oldUrl: $oldUrl');
           final oldToken = prefs.getString(nightscoutTokenKey)?.trim() ?? '';
-          final oldChildName = prefs.getString(_childNameKey)?.trim() ?? '';
+          final oldChildName = prefs.getString(childNameKey)?.trim() ?? '';
 
           final urlChanged = newUrl != oldUrl;
           final tokenChanged = newToken != oldToken;
           final childNameChanged = newChildName != oldChildName;
           final nightscoutConnectionChanged = urlChanged || tokenChanged;
+          final connectionErrorMessage = context.lang.settingsConnectionError;
 
           isSaving.value = true;
 
@@ -115,7 +122,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
             }
 
             if (childNameChanged) {
-              await prefs.setString(_childNameKey, newChildName);
+              await prefs.setString(childNameKey, newChildName);
             }
 
             if (nightscoutConnectionChanged || childNameChanged) {
@@ -159,16 +166,15 @@ class SettingsPage extends HookConsumerWidget with Logging {
               context.router.replace(NamedRoute('DashboardRoute'));
             }
           } catch (e, st) {
-            logE('Błąd podczas zapisu ustawień Nightscout $e, $st');
-            submitError.value =
-                'Problem z połączeniem. Sprawdź adres Nightscout.';
+            logE('Nightscout settings save failed $e, $st');
+            submitError.value = connectionErrorMessage;
           } finally {
             isSaving.value = false;
           }
         }
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Ustawienia')),
+          appBar: AppBar(title: Text(context.lang.settingsTitle)),
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -182,14 +188,64 @@ class SettingsPage extends HookConsumerWidget with Logging {
                         selectedDataSourceConfig.value = config;
                       },
                     ),
+                    const SizedBox(height: 16),
+                    SettingsSectionCard(
+                      icon: Icons.language_outlined,
+                      title: context.lang.settingsLanguageTitle,
+                      subtitle: context.lang.settingsLanguageSubtitle,
+                      children: [
+                        languageAsync.when(
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (error, _) => Text(
+                            context.lang.settingsLanguageReadError(error),
+                          ),
+                          data: (language) => ApplicationLanguageSelector(
+                            value: language,
+                            onChanged: (value) async {
+                              final errorMessage =
+                                  context.lang.settingsLanguageSaveError;
+                              try {
+                                await ref
+                                    .read(
+                                      applicationLanguageControllerProvider
+                                          .notifier,
+                                    )
+                                    .setLanguage(value);
+                                ref
+                                    .read(appEventRouterProvider)
+                                    .send(
+                                      ExecuteCommandEvent.syncSettings(
+                                        data: {
+                                          applicationLanguageCodeKey:
+                                              value.code,
+                                        },
+                                      ),
+                                    );
+                              } catch (e, st) {
+                                logE(
+                                  'Language settings save failed',
+                                  error: e,
+                                  stackTrace: st,
+                                );
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(errorMessage)),
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                     if (visibleDataSourceConfig != null &&
                         _usesNightscout(visibleDataSourceConfig)) ...[
                       const SizedBox(height: 16),
                       SettingsSectionCard(
                         icon: Icons.cloud_outlined,
                         title: 'Nightscout',
-                        subtitle:
-                            'Podaj adres swojego Nightscout. Bez niego nie możemy pobrać danych.',
+                        subtitle: context.lang.settingsNightscoutSubtitle,
                         children: [
                           NightscoutConnectionFields(
                             urlController: urlController,
@@ -203,9 +259,9 @@ class SettingsPage extends HookConsumerWidget with Logging {
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: childNameController,
-                            decoration: const InputDecoration(
-                              labelText: 'Imię dziecka',
-                              hintText: 'Oliwier',
+                            decoration: InputDecoration(
+                              labelText: context.lang.settingsChildNameLabel,
+                              hintText: context.lang.settingsNameHint,
                             ),
                             textCapitalization: TextCapitalization.words,
                           ),
@@ -230,7 +286,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
                                     ),
                                   )
                                 : const Icon(Icons.save_outlined),
-                            label: const Text('Zapisz i przejdź dalej'),
+                            label: Text(context.lang.settingsSaveAndContinue),
                           ),
                         ],
                       ),
@@ -238,8 +294,8 @@ class SettingsPage extends HookConsumerWidget with Logging {
                     const SizedBox(height: 16),
                     SettingsSectionCard(
                       icon: Icons.receipt_long_outlined,
-                      title: 'Logi',
-                      subtitle: 'Zbierz pliki diagnostyczne z UI lub tła.',
+                      title: context.lang.settingsLogsTitle,
+                      subtitle: context.lang.settingsLogsSubtitle,
                       children: [
                         Wrap(
                           spacing: 10,
@@ -259,7 +315,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
                                 );
                               },
                               icon: const Icon(Icons.ios_share_outlined),
-                              label: const Text('Logi z UI'),
+                              label: Text(context.lang.settingsLogsUi),
                             ),
                             FilledButton.icon(
                               onPressed: () {
@@ -271,7 +327,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
                                 ref.read(appEventRouterProvider).send(payload);
                               },
                               icon: const Icon(Icons.download_outlined),
-                              label: const Text('Logi z tła'),
+                              label: Text(context.lang.settingsLogsForeground),
                             ),
                           ],
                         ),

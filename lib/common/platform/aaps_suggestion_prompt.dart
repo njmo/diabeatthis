@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logger/logger.dart';
 import '../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
 import '../../core/notifications/providers/notifications_controller_provider.dart';
+import '../l10n/language.dart';
 import 'aaps_launcher.dart';
 
 Future<void> openAapsWithSuggestionNotification({
@@ -22,11 +23,9 @@ Future<void> openAapsWithSuggestionNotification({
     return;
   }
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Nie udało się otworzyć AAPS. Otwórz aplikację ręcznie.'),
-    ),
-  );
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(context.lang.aapsOpenFailed)));
 }
 
 Future<void> showAapsBolusSuggestionNotification({

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/forms.dart';
 
 class PortionAmountForm extends HookConsumerWidget {
@@ -16,10 +17,10 @@ class PortionAmountForm extends HookConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Zdefiniuj ilość porcji'),
-            SizedBox(height: 16),
+            Text(context.lang.portionAmountTitle),
+            const SizedBox(height: 16),
             StringFormField(
-              label: 'Ilość porcji',
+              label: context.lang.portionAmountLabel,
               value: '',
               onChanged: (value) {
                 amount.value = value;
@@ -32,13 +33,13 @@ class PortionAmountForm extends HookConsumerWidget {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Podaj ilość porcji';
+                      return context.lang.portionAmountRequired;
                     }
                     return null;
                   },
-                  decoration: const InputDecoration(
-                    labelText: 'Ilość porcji',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.lang.portionAmountLabel,
+                    border: const OutlineInputBorder(),
                   ),
                 );
               },
@@ -54,13 +55,13 @@ class PortionAmountForm extends HookConsumerWidget {
                 onPressed: () {
                   Navigator.of(context).pop(int.tryParse(amount.value) ?? 0);
                 },
-                child: const Text('Dodaj'),
+                child: Text(context.lang.mealSummaryExtraAdd),
               ),
             ),
             Expanded(
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Anuluj'),
+                child: Text(context.lang.settingsCancel),
               ),
             ),
           ],

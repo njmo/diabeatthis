@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../../common/l10n/language.dart';
 import '../../data/clients/open_food_facts_product_client.dart';
 import '../models/ingredient_barcode_scan_outcome.dart';
 
@@ -36,7 +37,9 @@ class IngredientBarcodeScanOutcomeDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final viewData = IngredientBarcodeScanOutcomeViewData.fromOutcome(
+      lang,
       outcome,
       errorMessage,
     );
@@ -47,7 +50,7 @@ class IngredientBarcodeScanOutcomeDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Anuluj'),
+          child: Text(lang.commonCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
@@ -70,38 +73,36 @@ class IngredientBarcodeScanOutcomeViewData {
   });
 
   factory IngredientBarcodeScanOutcomeViewData.fromOutcome(
+    AppLocalizations lang,
     IngredientBarcodeScanOutcome outcome,
     String? errorMessage,
   ) {
     return switch (outcome.type) {
       IngredientBarcodeScanOutcomeType.existingIngredient =>
         IngredientBarcodeScanOutcomeViewData(
-          title: 'Znaleziono składnik',
-          message:
-              'Kod pasuje do składnika "${outcome.existingIngredient!.name}". Przejdziesz do wyboru porcji i ilości.',
-          actionLabel: 'Przejdź dalej',
+          title: lang.ingredientBarcodeExistingTitle,
+          message: lang.ingredientBarcodeExistingMessage(
+            outcome.existingIngredient!.name,
+          ),
+          actionLabel: lang.addIngredientNext,
         ),
       IngredientBarcodeScanOutcomeType.newDraft =>
-        const IngredientBarcodeScanOutcomeViewData(
-          title: 'Pobrano dane produktu',
-          message:
-              'Uzupełniłem szkic składnika danymi z Open Food Facts. Sprawdź pola przed dodaniem.',
-          actionLabel: 'Sprawdź szkic',
+        IngredientBarcodeScanOutcomeViewData(
+          title: lang.ingredientBarcodeNewDraftTitle,
+          message: lang.ingredientBarcodeNewDraftMessage,
+          actionLabel: lang.ingredientBarcodeReviewDraft,
         ),
       IngredientBarcodeScanOutcomeType.needsReview =>
-        const IngredientBarcodeScanOutcomeViewData(
-          title: 'Pobrano część danych',
-          message:
-              'Nie udało się uzupełnić wszystkich pól. Przejdziesz do formularza, żeby sprawdzić i uzupełnić składnik.',
-          actionLabel: 'Uzupełnij',
+        IngredientBarcodeScanOutcomeViewData(
+          title: lang.ingredientBarcodeNeedsReviewTitle,
+          message: lang.ingredientBarcodeNeedsReviewMessage,
+          actionLabel: lang.ingredientBarcodeFillIn,
         ),
       IngredientBarcodeScanOutcomeType.failed =>
         IngredientBarcodeScanOutcomeViewData(
-          title: 'Nie znaleziono danych składnika',
-          message:
-              errorMessage ??
-              'Kod został odczytany, ale nie udało się pobrać danych potrzebnych do uzupełnienia składnika.',
-          actionLabel: 'Wróć do wyszukiwania',
+          title: lang.ingredientBarcodeFailedTitle,
+          message: errorMessage ?? lang.ingredientBarcodeNoSupplementData,
+          actionLabel: lang.ingredientBarcodeBackToSearch,
         ),
     };
   }
@@ -175,30 +176,32 @@ class IngredientBarcodeScanErrorMessage extends StatelessWidget {
 
 String ingredientBarcodeScanErrorMessage(Object error) {
   if (error is OpenFoodFactsProductNotFoundException) {
-    return 'Nie znalazłem produktu w Open Food Facts.';
+    return lang.ingredientBarcodeProductNotFound;
   }
   if (error is OpenFoodFactsRequestException) {
-    return 'Nie udało się pobrać produktu z Open Food Facts.';
+    return lang.ingredientBarcodeProductRequestFailed;
   }
   if (error is TimeoutException) {
-    return 'Open Food Facts nie odpowiedziało na czas.';
+    return lang.ingredientBarcodeProductTimeout;
   }
   if (error is http.ClientException) {
     final details = error.message.trim();
     if (details.isEmpty) {
-      return 'Brak połączenia z Open Food Facts.';
+      return lang.ingredientBarcodeProductNoConnection;
     }
-    return 'Brak połączenia z Open Food Facts: $details';
+    return lang.ingredientBarcodeProductNoConnectionWithDetails(details);
   }
   if (error is FormatException) {
-    return 'Nie udało się odczytać danych produktu.';
+    return lang.ingredientBarcodeProductParseFailed;
   }
-  return 'Kod został odczytany, ale nie udało się pobrać danych produktu.';
+  return lang.ingredientBarcodeProductFetchFailed;
 }
 
 String ingredientBarcodeScanNoUsableDataMessageForError(Object? error) {
   if (error == null) {
-    return ingredientBarcodeScanNoUsableDataMessage;
+    return lang.ingredientBarcodeNoUsableData;
   }
-  return '${ingredientBarcodeScanErrorMessage(error)} Możesz wyszukać składnik ręcznie albo użyć zdjęć etykiety.';
+  return lang.ingredientBarcodeErrorWithFallback(
+    ingredientBarcodeScanErrorMessage(error),
+  );
 }

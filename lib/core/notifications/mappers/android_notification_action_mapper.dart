@@ -25,14 +25,11 @@ class AndroidNotificationActionMapper {
       action.label,
       showsUserInterface: false,
       cancelNotification: true,
-      inputs: [_inputMapper.map(action.inputActionDef),]
+      inputs: [_inputMapper.map(action.inputActionDef)],
     );
   }
 
   AndroidNotificationAction map(NotificationActionDef action) {
-    return action.map(
-      plain: (action) => _mapPlain(action),
-      text: (action) => _mapText(action),
-    );
+    return action.map(plain: _mapPlain, text: _mapText);
   }
 }

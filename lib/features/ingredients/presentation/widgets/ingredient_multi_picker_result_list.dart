@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/ingredient.dart';
 
 class IngredientMultiPickerResultList extends StatelessWidget {
@@ -17,15 +18,16 @@ class IngredientMultiPickerResultList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: ingredients.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) =>
-            Center(child: Text('Nie udało się wczytać składników: $error')),
+            Center(child: Text(lang.ingredientLoadError(error.toString()))),
         data: (items) {
           if (items.isEmpty) {
-            return const Center(child: Text('Brak składników'));
+            return Center(child: Text(lang.ingredientEmptyList));
           }
           return ListView.separated(
             padding: EdgeInsets.zero,
@@ -36,7 +38,7 @@ class IngredientMultiPickerResultList extends StatelessWidget {
               final selected = selectedIngredientIds.contains(ingredient.id);
               final brand = ingredient.brand?.trim();
               final brandLabel = brand == null || brand.isEmpty
-                  ? 'Bez marki'
+                  ? lang.ingredientNoBrand
                   : brand;
               final kcalLabel = ingredient.kcalPer100g?.round() ?? '-';
               return ListTile(

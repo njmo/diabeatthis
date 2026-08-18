@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class ActivityLogStatusChip extends StatelessWidget {
   final bool active;
 
@@ -22,7 +24,7 @@ class ActivityLogStatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        active ? 'Aktywna' : 'Zakończona',
+        active ? context.lang.activityActive : context.lang.activityFinished,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           color: foreground,
           fontWeight: FontWeight.w600,

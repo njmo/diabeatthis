@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/logger/logger.dart';
 import '../../data/provider/meal_template_add_provider.dart';
 import '../../data/provider/meal_template_draft_provider.dart';
@@ -18,7 +19,7 @@ class AddMealTemplatePage extends HookConsumerWidget with Logging {
     final mealDraft = ref.read(mealTemplateDraftProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Meal Template Page')),
+      appBar: AppBar(title: Text(context.lang.mealTemplateAddTitle)),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -45,20 +46,22 @@ class AddMealTemplatePage extends HookConsumerWidget with Logging {
                             logI("saving value $value");
                             mealDraft.setName(value!);
                           },
-                          decoration: const InputDecoration(
-                            labelText: 'Nazwa',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: context.lang.mealTemplateNameLabel,
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                         SingleChildScrollView(
                           child: MealTemplateIngredientsListEditor(),
                         ),
                         InkWell(
-                          child: const Text('Add all'),
+                          child: Text(context.lang.mealTemplateAddAll),
                           onTap: () async {
                             if (formKey.value.currentState!.validate()) {
                               formKey.value.currentState!.save();
-                              final updatedDraft = ref.read(mealTemplateDraftProvider);
+                              final updatedDraft = ref.read(
+                                mealTemplateDraftProvider,
+                              );
                               ref
                                   .watch(mealTemplateAddProvider.notifier)
                                   .addMealTemplate(updatedDraft);

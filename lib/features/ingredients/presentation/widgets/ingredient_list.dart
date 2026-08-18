@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/ingredient.dart';
 import '../../data/providers/ingredient_provider.dart';
 import 'ingredient_list/ingredient_list_content.dart';
@@ -82,8 +83,11 @@ class IngredientList extends HookConsumerWidget {
                   _openIngredientDetails(context, ingredient);
                 },
               ),
-              error: (e, st) =>
-                  Center(child: Text('Nie udało się wczytać: $e')),
+              error: (e, st) => Center(
+                child: Text(
+                  context.lang.ingredientLoadShortError(e.toString()),
+                ),
+              ),
               data: (items) {
                 return IngredientListContent(
                   ingredients: items,

@@ -52,6 +52,7 @@ coverage/
 
 # Freezed / Json Serializable / Drift / Riverpod generated files
 # (wszystkie pliki generowane przez build_runner)
+lib/common/l10n/generated/
 *.freezed.dart
 *.g.dart
 *.gr.dart

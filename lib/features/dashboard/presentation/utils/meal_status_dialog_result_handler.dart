@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/l10n/language.dart';
 import '../../../../common/platform/aaps_suggestion_prompt.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/drift/providers/database_provider.dart';
@@ -179,26 +180,26 @@ Future<void> handleMealAddOnChoice({
 
 String _addOnTitle(String? mealStatus, MealAddOnMultiplierResult result) {
   if (mealStatus == 'eating-then-bolus') {
-    return 'Wpisz ${result.roundedTotalNetCarbs}g w AAPS';
+    return lang.mealAddOnResultTotalTitle(result.roundedTotalNetCarbs);
   }
 
   if (result.roundedAddedNetCarbs <= 0) {
-    return 'Dokładka zapisana';
+    return lang.mealAddOnResultSavedTitle;
   }
 
-  return 'Dodaj +${result.roundedAddedNetCarbs}g w AAPS';
+  return lang.mealAddOnResultAddedTitle(result.roundedAddedNetCarbs);
 }
 
 String _addOnMessage(String? mealStatus, MealAddOnMultiplierResult result) {
   if (mealStatus == 'eating-then-bolus') {
-    return 'W AAPS wpisz ${result.roundedTotalNetCarbs}g węglowodanów za cały zjedzony posiłek. AAPS policzy insulinę według profilu.';
+    return lang.mealAddOnResultTotalMessage(result.roundedTotalNetCarbs);
   }
 
   if (result.roundedAddedNetCarbs <= 0) {
-    return 'Zapisano dokładkę. Nie wyszła dodatkowa ilość węglowodanów do wpisania w AAPS.';
+    return lang.mealAddOnResultSavedMessage;
   }
 
-  return 'Dokładka dodała około +${result.roundedAddedNetCarbs}g węglowodanów. W AAPS wpisz tę wartość jako dodatkowe węglowodany.';
+  return lang.mealAddOnResultAddedMessage(result.roundedAddedNetCarbs);
 }
 
 bool shouldOpenSummaryAfterMealStatusUpdate(String status) {

@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../data/drafts/meal_draft.dart';
 
@@ -40,20 +41,20 @@ extension MealIngredientPortionPresentationX on MealIngredientsDraft {
 
     return ingredientPortion.portion.map(
       empty: (_) => ingredient.isReference
-          ? '1 porcja referencyjna to 100 g'
-          : 'Dodawane w gramach',
+          ? lang.mealReferencePortionDescription
+          : lang.addIngredientAddedInGrams,
       draft: (_) {
         if (amountLabel == null) {
-          return 'Brak wagi porcji';
+          return lang.amountMissingPortionWeight;
         }
         return '1 ${unitLabelForAmount(1, unitLabel)} to $amountLabel $weightUnitLabel';
       },
       existing: (_) {
         if (isLoading) {
-          return 'Ładuję wagę porcji';
+          return lang.amountLoadingPortionWeight;
         }
         if (amountLabel == null) {
-          return 'Brak wagi porcji';
+          return lang.amountMissingPortionWeight;
         }
         return '1 ${unitLabelForAmount(1, unitLabel)} to $amountLabel $weightUnitLabel';
       },

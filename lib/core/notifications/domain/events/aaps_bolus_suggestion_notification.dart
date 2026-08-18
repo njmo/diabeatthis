@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import '../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../models/notification_event.dart';
@@ -40,7 +41,7 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   String get _calculatorInstruction {
     final carbsText = '${carbs}g';
     final extendedCarbsText = extendedCarbs > 0
-        ? ', ${_extendedCarbsScheduleText()}'
+        ? lang.notificationExtendedCarbsInline(_extendedCarbsScheduleText())
         : '';
 
     if (carbs == 0) {
@@ -48,14 +49,22 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
         throw StateError('AAPS suggestion requires carbs or extended carbs.');
       }
 
-      return 'Wpisz ${_extendedCarbsScheduleText()}';
+      return lang.notificationAapsSuggestionEnterExtended(
+        _extendedCarbsScheduleText(),
+      );
     }
 
     if (carbs <= 0) {
-      return 'Wpisz $carbsText$extendedCarbsText';
+      return lang.notificationAapsSuggestionEnterCarbs(
+        carbsText,
+        extendedCarbsText,
+      );
     }
 
-    return 'Podaj $carbsText$extendedCarbsText';
+    return lang.notificationAapsSuggestionDeliverCarbs(
+      carbsText,
+      extendedCarbsText,
+    );
   }
 
   String _extendedCarbsScheduleText() {
@@ -69,9 +78,11 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
       throw StateError('AAPS extended carbs suggestion requires schedule.');
     }
 
-    return 'extended ${extendedCarbs}g za '
-        '${formatExtendedCarbsScheduleMinutes(delayMinutes)}'
-        ' przez ${formatExtendedCarbsScheduleMinutes(durationMinutes)}';
+    return lang.notificationExtendedCarbsSchedule(
+      extendedCarbs,
+      formatExtendedCarbsScheduleMinutes(delayMinutes),
+      formatExtendedCarbsScheduleMinutes(durationMinutes),
+    );
   }
 
   @override

@@ -1,6 +1,8 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class LocalHistoryBlockedView extends StatelessWidget {
   const LocalHistoryBlockedView({super.key});
 
@@ -24,14 +26,13 @@ class LocalHistoryBlockedView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Historia lokalna nie jest jeszcze dostępna',
+                context.lang.managementLocalHistoryBlockedTitle,
                 style: theme.textTheme.titleMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                'Zarządzanie i analizy wymagają teraz historii z chmury. '
-                'Lokalny mirror zostanie podłączony w kolejnym etapie.',
+                context.lang.managementLocalHistoryBlockedMessage,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -41,7 +42,7 @@ class LocalHistoryBlockedView extends StatelessWidget {
               FilledButton.icon(
                 onPressed: () => context.router.pushPath('/settings'),
                 icon: const Icon(Icons.settings_outlined),
-                label: const Text('Zmień źródło historii'),
+                label: Text(context.lang.managementChangeHistorySource),
               ),
             ],
           ),

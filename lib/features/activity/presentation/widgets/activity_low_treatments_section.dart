@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/detail_section_card.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_details_tile.dart';
 import '../../../meals/data/models/meal_details_data.dart';
@@ -22,7 +23,7 @@ class ActivityLowTreatmentsSection extends StatelessWidget {
     }
 
     return DetailSectionCard(
-      title: 'Dosłodzenia',
+      title: context.lang.activityExtraTreatLabel,
       children: [
         for (final treatment in lowTreatments)
           ActivityLowTreatmentTile(
@@ -48,21 +49,21 @@ class ActivityLowTreatmentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return LowTreatmentDetailsTile(
       treatment: treatment,
-      timeLabel: _timeLabel(),
+      timeLabel: _timeLabel(context),
     );
   }
 
-  String _timeLabel() {
+  String _timeLabel(BuildContext context) {
     final treatmentTime = treatment.meal.eatenOrPlannedAt;
     final delay = treatmentTime.difference(activityStart);
-    return '${mealTime(treatmentTime)} • ${_formatDelayAfterStart(delay)}';
+    return '${mealTime(treatmentTime)} • ${_formatDelayAfterStart(context, delay)}';
   }
 }
 
-String _formatDelayAfterStart(Duration duration) {
+String _formatDelayAfterStart(BuildContext context, Duration duration) {
   final minutes = duration.inMinutes.abs();
   if (duration.isNegative) {
-    return '$minutes min przed startem';
+    return context.lang.activityDelayBeforeStart(minutes);
   }
-  return '$minutes min po starcie';
+  return context.lang.activityDelayAfterStart(minutes);
 }

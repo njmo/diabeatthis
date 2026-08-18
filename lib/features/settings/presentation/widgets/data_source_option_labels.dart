@@ -1,38 +1,39 @@
+import '../../../../common/l10n/language.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 
 extension BgSourceLabel on BgSource {
-  String get label {
+  String label(AppLocalizations lang) {
     return switch (this) {
-      BgSource.cloud => 'Chmura (Nightscout)',
-      BgSource.aaps => 'AAPS lokalnie',
-      BgSource.xdrip => 'xDrip+ lokalnie',
+      BgSource.cloud => lang.settingsDataSourceCloudNightscout,
+      BgSource.aaps => lang.settingsDataSourceAapsLocal,
+      BgSource.xdrip => lang.settingsDataSourceXdripLocal,
     };
   }
 }
 
 extension TreatmentsSourceLabel on TreatmentsSource {
-  String get label {
+  String label(AppLocalizations lang) {
     return switch (this) {
-      TreatmentsSource.cloud => 'Chmura (Nightscout)',
-      TreatmentsSource.aaps => 'AAPS lokalnie',
+      TreatmentsSource.cloud => lang.settingsDataSourceCloudNightscout,
+      TreatmentsSource.aaps => lang.settingsDataSourceAapsLocal,
     };
   }
 }
 
 extension PumpStatusSourceLabel on PumpStatusSource {
-  String get label {
+  String label(AppLocalizations lang) {
     return switch (this) {
-      PumpStatusSource.cloud => 'Chmura (Nightscout)',
-      PumpStatusSource.aaps => 'AAPS lokalnie',
+      PumpStatusSource.cloud => lang.settingsDataSourceCloudNightscout,
+      PumpStatusSource.aaps => lang.settingsDataSourceAapsLocal,
     };
   }
 }
 
 extension HistorySourceLabel on HistorySource {
-  String get label {
+  String label(AppLocalizations lang) {
     return switch (this) {
-      HistorySource.cloud => 'Chmura (Nightscout)',
-      HistorySource.local => 'Lokalnie',
+      HistorySource.cloud => lang.settingsDataSourceCloudNightscout,
+      HistorySource.local => lang.settingsDataSourceLocal,
     };
   }
 }

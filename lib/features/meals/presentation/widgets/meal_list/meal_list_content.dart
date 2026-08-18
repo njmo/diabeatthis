@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../core/domain/model/meal.dart' as domain;
 import 'meal_list_item.dart';
 
@@ -39,13 +40,13 @@ class MealListContent extends StatelessWidget {
         child: TextButton.icon(
           onPressed: onRetry,
           icon: const Icon(Icons.refresh),
-          label: const Text('Spróbuj ponownie'),
+          label: Text(context.lang.commonRetry),
         ),
       );
     }
 
     if (meals.isEmpty) {
-      return const Center(child: Text('Brak posiłków'));
+      return Center(child: Text(context.lang.mealEmptyList));
     }
 
     final bottomPadding = 24 + MediaQuery.viewPaddingOf(context).bottom;
@@ -68,7 +69,7 @@ class MealListContent extends StatelessWidget {
         itemCount: meals.length + 1,
         itemBuilder: (context, index) {
           if (index == meals.length) {
-            return _buildTail();
+            return _buildTail(context);
           }
 
           final meal = meals[index];
@@ -82,7 +83,7 @@ class MealListContent extends StatelessWidget {
     );
   }
 
-  Widget _buildTail() {
+  Widget _buildTail(BuildContext context) {
     if (isLoadingMore) {
       return const Padding(
         padding: EdgeInsets.all(16),
@@ -95,7 +96,7 @@ class MealListContent extends StatelessWidget {
         child: TextButton.icon(
           onPressed: onRetry,
           icon: const Icon(Icons.refresh),
-          label: const Text('Spróbuj ponownie'),
+          label: Text(context.lang.commonRetry),
         ),
       );
     }

@@ -5,6 +5,7 @@ import '../../../../app/providers/app_event_router_provider.dart';
 import '../../../../app/providers/app_foreground_bridge_provider.dart';
 import '../../../../app/providers/foreground_task_state_provider.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
+import '../../../../common/l10n/language.dart';
 import '../../../../common/platform/external_app_installation_checker.dart';
 import '../../../../core/data/provider/monitor_service_enabled_provider.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
@@ -29,15 +30,17 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
 
     return SettingsSectionCard(
       icon: Icons.hub_outlined,
-      title: 'Źródła danych',
-      subtitle: 'Wybierz źródło cukru, zdarzeń, statusu pompy i historii.',
+      title: context.lang.settingsDataSourcesTitle,
+      subtitle: context.lang.settingsDataSourcesSubtitle,
       children: [
         configAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Text('Błąd źródeł danych: $error'),
+          error: (error, _) =>
+              Text(context.lang.settingsDataSourcesError(error)),
           data: (config) => availabilityAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Text('Błąd dostępności źródeł: $error'),
+            error: (error, _) =>
+                Text(context.lang.settingsDataSourcesAvailabilityError(error)),
             data: (availability) => DataSourceConfigControls(
               config: config,
               availability: availability,
@@ -52,7 +55,9 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
                 } on DataSourceConfigUnavailableException catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(_unavailableSourceMessage(e))),
+                      SnackBar(
+                        content: Text(_unavailableSourceMessage(context, e)),
+                      ),
                     );
                   }
                   return;
@@ -120,9 +125,12 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
         previous.historySource != next.historySource;
   }
 
-  String _unavailableSourceMessage(DataSourceConfigUnavailableException error) {
+  String _unavailableSourceMessage(
+    BuildContext context,
+    DataSourceConfigUnavailableException error,
+  ) {
     final appNames = error.missingApps.map(_externalDataAppName).join(', ');
-    return 'Nie można wybrać tego źródła. Brak aplikacji: $appNames.';
+    return context.lang.settingsDataSourceUnavailable(appNames);
   }
 
   String _externalDataAppName(ExternalDataApp app) {

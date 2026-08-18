@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../data/models/ingredient_scan_result.dart';
 
 Future<bool?> showIngredientScanReviewDialog({
@@ -19,35 +20,41 @@ class IngredientScanReviewDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final nutrition = result.nutritionPer100g;
 
     return AlertDialog(
-      title: const Text('Niepełny odczyt'),
+      title: Text(lang.ingredientScanIncompleteTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IngredientScanReviewRow(label: 'Nazwa', value: result.name),
-          IngredientScanReviewRow(label: 'Producent', value: result.brand),
           IngredientScanReviewRow(
-            label: 'Węglowodany',
+            label: lang.ingredientNameLabel,
+            value: result.name,
+          ),
+          IngredientScanReviewRow(
+            label: lang.ingredientBrandLabel,
+            value: result.brand,
+          ),
+          IngredientScanReviewRow(
+            label: lang.mealCarbsLabel,
             value: _formatGrams(nutrition?.carbs),
           ),
           IngredientScanReviewRow(
-            label: 'Tłuszcz',
+            label: lang.mealFatLabel,
             value: _formatGrams(nutrition?.fat),
           ),
           IngredientScanReviewRow(
-            label: 'Białko',
+            label: lang.mealProteinLabel,
             value: _formatGrams(nutrition?.protein),
           ),
           IngredientScanReviewRow(
-            label: 'Błonnik',
+            label: lang.mealFiberLabel,
             value: _formatGrams(nutrition?.fiber),
           ),
           const SizedBox(height: 12),
           Text(
-            'Możesz kontynuować i uzupełnić brakujące pola ręcznie albo '
-            'spróbować ponownie zrobić zdjęcia.',
+            lang.ingredientScanIncompleteMessage,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
@@ -55,11 +62,11 @@ class IngredientScanReviewDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Spróbuj ponownie'),
+          child: Text(lang.commonRetry),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Kontynuuj ze szkicem'),
+          child: Text(lang.ingredientContinueWithDraft),
         ),
       ],
     );
@@ -87,7 +94,7 @@ class IngredientScanReviewRow extends StatelessWidget {
         children: [
           Expanded(child: Text(label)),
           Text(
-            hasValue ? value! : 'brak',
+            hasValue ? value! : context.lang.commonMissingLowercase,
             style: TextStyle(
               color: hasValue ? colors.onSurface : colors.error,
               fontWeight: hasValue ? FontWeight.w500 : FontWeight.w600,

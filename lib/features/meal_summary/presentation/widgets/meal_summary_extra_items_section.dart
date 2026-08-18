@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
@@ -36,10 +37,13 @@ class MealSummaryExtraItemsSection extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Dokładka', style: textTheme.titleMedium),
+                  Text(
+                    context.lang.mealSummaryExtraTitle,
+                    style: textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                    'Dodaj coś, czego nie było w planie posiłku.',
+                    context.lang.mealSummaryExtraSubtitle,
                     style: textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -51,7 +55,7 @@ class MealSummaryExtraItemsSection extends ConsumerWidget {
             FilledButton.icon(
               onPressed: () => _addExtraItem(context, ref),
               icon: const Icon(Icons.add),
-              label: const Text('Dodaj'),
+              label: Text(context.lang.mealSummaryExtraAdd),
             ),
           ],
         ),
@@ -65,7 +69,7 @@ class MealSummaryExtraItemsSection extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                'Brak dokładki. Jeśli dziecko dojadło coś ekstra, dodaj to tutaj.',
+                context.lang.mealSummaryExtraEmpty,
                 style: textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),

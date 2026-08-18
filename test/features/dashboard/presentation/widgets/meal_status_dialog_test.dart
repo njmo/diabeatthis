@@ -18,6 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../foreground/utils/fake_notifications_controller.dart';
 import '../../../../helpers/device_status_factory.dart';
+import '../../../../helpers/localized_material_app.dart';
 
 void main() {
   setUp(() {
@@ -50,7 +51,7 @@ void main() {
             ),
           ),
         ],
-        child: MaterialApp(home: MealStatusDialog(meal: meal)),
+        child: localizedMaterialApp(home: MealStatusDialog(meal: meal)),
       ),
     );
 
@@ -63,7 +64,7 @@ void main() {
     final scheduled = notifications.scheduledEvents.single;
     expect(scheduled.event, isA<MealAdvicePendingNotificationEvent>());
     expect(scheduled.duration, MealDialogController.pendingAdviceReminderDelay);
-    expect(find.text('Podaje bolusa'), findsOneWidget);
+    expect(find.text('Podaję bolusa'), findsOneWidget);
   });
 
   testWidgets('accepting advice cancels meal notifications', (tester) async {
@@ -96,7 +97,7 @@ void main() {
             (ref) => _NoopMealSnapshotController(ref: ref),
           ),
         ],
-        child: MaterialApp(home: MealStatusDialog(meal: meal)),
+        child: localizedMaterialApp(home: MealStatusDialog(meal: meal)),
       ),
     );
 
@@ -106,7 +107,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(notifications.scheduledEvents, hasLength(1));
 
-    await tester.tap(find.text('Podaje bolusa'));
+    await tester.tap(find.text('Podaję bolusa'));
     await tester.pumpAndSettle();
 
     expect(notifications.cancelAllCalled, isTrue);
@@ -143,7 +144,7 @@ void main() {
             ),
           ),
         ],
-        child: MaterialApp(home: MealStatusDialog(meal: meal)),
+        child: localizedMaterialApp(home: MealStatusDialog(meal: meal)),
       ),
     );
 
@@ -173,7 +174,7 @@ void main() {
         overrides: [
           notificationsControllerUiProvider.overrideWithValue(notifications),
         ],
-        child: MaterialApp(home: MealStatusDialog(meal: meal)),
+        child: localizedMaterialApp(home: MealStatusDialog(meal: meal)),
       ),
     );
 
@@ -200,7 +201,7 @@ void main() {
         overrides: [
           notificationsControllerUiProvider.overrideWithValue(notifications),
         ],
-        child: MaterialApp(
+        child: localizedMaterialApp(
           home: Builder(
             builder: (context) => TextButton(
               onPressed: () async {

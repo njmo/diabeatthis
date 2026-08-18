@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/forms.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
@@ -14,6 +15,7 @@ class PortionSearch extends HookConsumerWidget with Logging {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = context.lang;
     final query = useState('');
     final valuePicked = useState(-1);
     final filter = ref.watch(portionFilterProvider);
@@ -45,7 +47,7 @@ class PortionSearch extends HookConsumerWidget with Logging {
             key: formKey,
             autovalidateMode: AutovalidateMode.always,
             child: StringFormField(
-              label: 'Nazwa',
+              label: lang.portionNameLabel,
               value: '',
               onChanged: (value) {
                 query.value = value;
@@ -61,11 +63,11 @@ class PortionSearch extends HookConsumerWidget with Logging {
                     }
                     return null;
                   },
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.search),
-                    labelText: 'Szukaj porcji',
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
+                    labelText: lang.portionSearchLabel,
                     counterText: '',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 );
               },
@@ -167,7 +169,9 @@ class PortionSearchTile extends StatelessWidget {
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
-        subtitle: Text(unitHint.isEmpty ? 'bez jednostki' : unitHint),
+        subtitle: Text(
+          unitHint.isEmpty ? context.lang.portionNoUnit : unitHint,
+        ),
         trailing: selected ? const Icon(Icons.check_circle) : null,
       ),
     );
@@ -183,8 +187,8 @@ class PortionSearchEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final message = mode == PortionSearchMode.existing
-        ? 'Ten składnik nie ma jeszcze pasującej porcji.'
-        : 'Nie znaleziono pasującej porcji.';
+        ? context.lang.portionNoMatchingForIngredient
+        : context.lang.portionNoMatching;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -234,7 +238,7 @@ class PortionSearchErrorMessage extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Text(
-          'Nie udało się wczytać porcji: $error',
+          context.lang.portionLoadError(error.toString()),
           style: TextStyle(color: colorScheme.onErrorContainer),
         ),
       ),

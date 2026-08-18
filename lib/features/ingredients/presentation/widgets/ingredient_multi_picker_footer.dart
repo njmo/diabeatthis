@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class IngredientMultiPickerFooter extends StatelessWidget {
   final VoidCallback onConfirm;
 
@@ -12,7 +14,7 @@ class IngredientMultiPickerFooter extends StatelessWidget {
       child: FilledButton.icon(
         onPressed: onConfirm,
         icon: const Icon(Icons.check),
-        label: const Text('Zatwierdź'),
+        label: Text(context.lang.commonConfirm),
       ),
     );
   }

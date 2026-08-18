@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../helpers/localized_material_app.dart';
+
 void main() {
   testWidgets('disables quick meal action while another meal is active', (
     tester,
@@ -18,7 +20,7 @@ void main() {
             ),
           ),
         ],
-        child: const MaterialApp(home: Scaffold(body: DashboardFAB())),
+        child: localizedMaterialApp(home: const Scaffold(body: DashboardFAB())),
       ),
     );
     await tester.pumpAndSettle();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../common/widgets/form_section.dart';
 import '../meal_ingredients_list_editor.dart';
 
@@ -8,11 +9,11 @@ class AddMealIngredientsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const FormSection(
+    return FormSection(
       icon: Icons.list_alt,
-      title: 'Składniki',
-      subtitle: 'Dodaj składniki i sprawdź podsumowanie makroskładników.',
-      children: [MealIngredientsListEditor()],
+      title: context.lang.addMealIngredientsTitle,
+      subtitle: context.lang.addMealIngredientsSubtitle,
+      children: const [MealIngredientsListEditor()],
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/fab_action_option.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 
@@ -21,7 +22,7 @@ class ParentDashboardFAB extends HookConsumerWidget {
         if (open.value) ...[
           FabActionOption(
             icon: Icons.note_alt,
-            label: 'Dodaj notatkę',
+            label: context.lang.dashboardAddNote,
             onTap: () {
               open.value = false;
             },
@@ -29,7 +30,7 @@ class ParentDashboardFAB extends HookConsumerWidget {
           const SizedBox(height: 8),
           FabActionOption(
             icon: Icons.restaurant,
-            label: 'Zaplanuj posiłek',
+            label: context.lang.dashboardPlanMeal,
             onTap: () {
               ref.read(mealDraftProvider.notifier).reset();
               context.router.push(routes.AddMealRoute());
@@ -39,7 +40,7 @@ class ParentDashboardFAB extends HookConsumerWidget {
           const SizedBox(height: 8),
           FabActionOption(
             icon: Icons.post_add,
-            label: 'Dodaj szablon',
+            label: context.lang.dashboardAddTemplate,
             onTap: () {
               context.router.push(routes.AddMealTemplateRoute());
               open.value = false;

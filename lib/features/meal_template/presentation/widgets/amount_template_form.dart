@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/forms.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
@@ -12,10 +13,18 @@ class AmountTemplateForm extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mealIngredientAmountDraft = ref.read(mealTemplateIngredientAmountDraftProvider.notifier);
-    final mealIngredientAmountDraftState = ref.watch(mealTemplateIngredientAmountDraftProvider);
-    final mealIngredientConfidenceDraft = ref.read(mealTemplateIngredientConfidenceDraftProvider.notifier);
-    final mealIngredientConfidenceDraftState = ref.watch(mealTemplateIngredientConfidenceDraftProvider);
+    final mealIngredientAmountDraft = ref.read(
+      mealTemplateIngredientAmountDraftProvider.notifier,
+    );
+    final mealIngredientAmountDraftState = ref.watch(
+      mealTemplateIngredientAmountDraftProvider,
+    );
+    final mealIngredientConfidenceDraft = ref.read(
+      mealTemplateIngredientConfidenceDraftProvider.notifier,
+    );
+    final mealIngredientConfidenceDraftState = ref.watch(
+      mealTemplateIngredientConfidenceDraftProvider,
+    );
     final formKey = ref.watch(mealIngredientFormKeyProvider);
 
     return SingleChildScrollView(
@@ -29,7 +38,7 @@ class AmountTemplateForm extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               StringFormField(
-                label: 'Ilość porcji',
+                label: context.lang.portionAmountLabel,
                 value: mealIngredientAmountDraftState.toStringAsFixed(0),
                 onChanged: mealIngredientAmountDraft.setAmount,
                 builder: (context, controller) {
@@ -39,14 +48,16 @@ class AmountTemplateForm extends HookConsumerWidget {
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     validator: (value) {
-                      if ((value == null) || (value.isEmpty) || (int.tryParse(value) ?? 0) == 0) {
+                      if ((value == null) ||
+                          (value.isEmpty) ||
+                          (int.tryParse(value) ?? 0) == 0) {
                         return '';
                       }
                       return null;
                     },
-                    decoration: const InputDecoration(
-                      labelText: 'Ilość porcji',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: context.lang.portionAmountLabel,
+                      border: const OutlineInputBorder(),
                     ),
                   );
                 },
@@ -55,7 +66,7 @@ class AmountTemplateForm extends HookConsumerWidget {
               ConfidenceSlider(
                 value: mealIngredientConfidenceDraftState,
                 onChanged: mealIngredientConfidenceDraft.setConfidence,
-              )
+              ),
             ],
           ),
         ),

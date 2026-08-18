@@ -1,10 +1,4 @@
-enum NotificationActionType {
-  eating,
-  snooze,
-  dismiss,
-  skip,
-  agree
-}
+enum NotificationActionType { eating, snooze, dismiss, skip, agree }
 
 extension NotificationActionTypeExtension on NotificationActionType {
   String toDarwinString() {

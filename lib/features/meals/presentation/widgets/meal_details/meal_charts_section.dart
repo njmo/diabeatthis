@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../common/widgets/timeline_analysis_charts.dart';
 import '../../../data/models/meal_analysis_data.dart';
 import '../../../data/models/meal_details_data.dart';
@@ -28,18 +29,18 @@ class MealChartsSection extends ConsumerWidget {
 
     if (analysis == null) {
       return MealSectionTile(
-        title: 'Analiza glikemii',
+        title: context.lang.mealGlucoseAnalysisTitle,
         children: [
           MealInfoRow(
             label: 'Nightscout',
-            value: analysisError ?? 'Brak danych do analizy',
+            value: analysisError ?? context.lang.mealNoAnalysisData,
           ),
         ],
       );
     }
 
     return MealSectionTile(
-      title: 'Glikemia / COB / IOB',
+      title: context.lang.mealGlucoseCobIobTitle,
       initiallyExpanded: true,
       children: [
         TimelineAnalysisCharts(

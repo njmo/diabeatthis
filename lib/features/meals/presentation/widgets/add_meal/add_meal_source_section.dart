@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../common/widgets/form_section.dart';
 import '../../../data/model/copied_meal_type.dart';
 import '../copied_meal_form_field.dart';
@@ -20,9 +21,8 @@ class AddMealSourceSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return FormSection(
       icon: Icons.content_copy,
-      title: 'Znajdź podobny',
-      subtitle:
-          'Opcjonalnie skopiuj składniki z podobnego posiłku albo szablonu.',
+      title: context.lang.addMealSourceTitle,
+      subtitle: context.lang.addMealSourceSubtitle,
       children: [
         CopiedMealFormField(
           picker: picker,

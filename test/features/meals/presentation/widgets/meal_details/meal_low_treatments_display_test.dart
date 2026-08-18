@@ -7,6 +7,8 @@ import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/mea
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/localized_material_app.dart';
+
 void main() {
   testWidgets('shows low treatment chip and section for linked treatments', (
     tester,
@@ -14,7 +16,7 @@ void main() {
     final details = mealDetailsWithLowTreatment();
 
     await tester.pumpWidget(
-      MaterialApp(
+      localizedMaterialApp(
         home: Scaffold(
           body: ListView(
             children: [

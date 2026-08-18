@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../data/models/meal_details_data.dart';
 import '../../models/meal_metric_view_data.dart';
 import '../../models/meal_page_state.dart';
@@ -21,41 +22,42 @@ class MealHeader extends StatelessWidget {
     final metrics = [
       MealMetricTileData(
         icon: Icons.monitor_heart_outlined,
-        label: 'Szczyt glikemii',
+        label: lang.mealPeakGlucoseLabel,
         value: formatMgdl(stats?.peakGlucose),
       ),
       MealMetricTileData(
         icon: Icons.timer_outlined,
-        label: 'Czas do szczytu',
+        label: lang.mealTimeToPeakLabel,
         value: formatDurationOffset(stats?.timeToPeak),
       ),
       MealMetricTileData(
         icon: Icons.timeline,
-        label: 'Średnia glikemia',
+        label: lang.mealAverageGlucoseLabel,
         value: formatMgdl(stats?.averageGlucose?.round()),
       ),
       MealMetricTileData(
         icon: Icons.vaccines_outlined,
-        label: 'Insulina łącznie',
+        label: lang.mealTotalInsulinLabel,
         value: formatUnits(
           state.analysis?.totalInsulinUnits ?? details.totalInsulinUnits,
         ),
       ),
       MealMetricTileData(
         icon: Icons.grain,
-        label: 'Węglowodany',
+        label: lang.mealCarbsLabel,
         value: formatGrams(summary?.totalCarbsG),
       ),
       if (details.hasLowTreatments)
         MealMetricTileData(
           icon: Icons.bloodtype_outlined,
-          label:
-              'Dosłodzono ${formatDelayAfterMeal(details.firstLowTreatmentDelay)}',
+          label: lang.mealLowTreatmentDelay(
+            formatDelayAfterMeal(details.firstLowTreatmentDelay),
+          ),
           value: formatGrams(details.lowTreatmentNetCarbsG),
         ),
       MealMetricTileData(
         icon: Icons.more_time,
-        label: 'Węglowodany przedłużone',
+        label: lang.mealExtendedCarbsLabel,
         value: formatGrams(
           details.advisorDecision?.extendedCarbsGrams.toDouble(),
         ),
@@ -63,12 +65,12 @@ class MealHeader extends StatelessWidget {
       if (details.hasAddOn)
         MealMetricTileData(
           icon: Icons.add_circle_outline,
-          label: 'Dokładka',
+          label: lang.mealAddOnLabel,
           value: formatSignedGrams(details.addOnNetCarbsG),
         ),
       MealMetricTileData(
         icon: Icons.check_circle_outline,
-        label: 'Czas w zakresie',
+        label: lang.mealTimeInRangeLabel,
         value: formatPercent(stats?.timeInRangePercent),
       ),
     ];
@@ -111,7 +113,8 @@ class MealAnalysisProgressSummary extends StatelessWidget {
       chips.add(
         const HeaderStatusChip(
           icon: Icons.pending_actions,
-          label: 'Analiza oczekuje na dane',
+          label: '',
+          type: HeaderStatusChipType.analysisPending,
         ),
       );
       if (details.hasAddOn) chips.add(const HeaderStatusChip.addOn());
@@ -121,8 +124,9 @@ class MealAnalysisProgressSummary extends StatelessWidget {
       chips.add(
         HeaderStatusChip(
           icon: Icons.hourglass_top,
-          label: 'Analiza w toku',
-          detail: 'zbieranie do ${mealTime(analysis.expectedChartEnd)}',
+          label: '',
+          detail: mealTime(analysis.expectedChartEnd),
+          type: HeaderStatusChipType.analysisInProgress,
         ),
       );
       if (details.hasAddOn) chips.add(const HeaderStatusChip.addOn());
@@ -131,8 +135,9 @@ class MealAnalysisProgressSummary extends StatelessWidget {
     chips.add(
       HeaderStatusChip(
         icon: Icons.check_circle,
-        label: 'Analiza gotowa',
-        detail: 'okno glikemii ${analysis.postMealWindow.inMinutes} min',
+        label: '',
+        detail: analysis.postMealWindow.inMinutes.toString(),
+        type: HeaderStatusChipType.analysisReady,
       ),
     );
     if (shouldShowMissingExtendedCarbsWarning(
@@ -169,42 +174,49 @@ class HeaderStatusChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final String? detail;
+  final HeaderStatusChipType? type;
 
   const HeaderStatusChip({
     super.key,
     required this.icon,
     required this.label,
     this.detail,
+    this.type,
   });
 
   const HeaderStatusChip.addOn({super.key})
     : icon = Icons.add_circle_outline,
-      label = 'Dokładka',
-      detail = 'uwzględniona w posiłku';
+      label = '',
+      detail = null,
+      type = HeaderStatusChipType.addOn;
 
   const HeaderStatusChip.lowTreatment({super.key})
     : icon = Icons.bloodtype_outlined,
-      label = 'Dosłodzono',
-      detail = null;
+      label = '',
+      detail = null,
+      type = HeaderStatusChipType.lowTreatment;
 
   const HeaderStatusChip.copied({super.key})
     : icon = Icons.content_copy,
-      label = 'Skopiowany',
-      detail = null;
+      label = '',
+      detail = null,
+      type = HeaderStatusChipType.copied;
 
   const HeaderStatusChip.missingExtendedCarbs({super.key})
     : icon = Icons.warning_amber_rounded,
-      label = 'Nie podano extended carbs na WBT',
-      detail = null;
+      label = '',
+      detail = null,
+      type = HeaderStatusChipType.missingExtendedCarbs;
 
   const HeaderStatusChip.waitTimeIgnored({super.key})
     : icon = Icons.fast_forward_outlined,
-      label = 'Czekanie pominięte',
-      detail = null;
+      label = '',
+      detail = null,
+      type = HeaderStatusChipType.waitTimeIgnored;
 
   @override
   Widget build(BuildContext context) {
-    final text = detail == null ? label : '$label • $detail';
+    final text = _text(context.lang);
     return Chip(
       visualDensity: VisualDensity.compact,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -217,4 +229,36 @@ class HeaderStatusChip extends StatelessWidget {
       label: Text(text),
     );
   }
+
+  String _text(AppLocalizations lang) {
+    if (type == null) {
+      return detail == null ? label : '$label • $detail';
+    }
+    return switch (type!) {
+      HeaderStatusChipType.addOn => lang.mealHeaderAddOnChip,
+      HeaderStatusChipType.lowTreatment => lang.mealHeaderLowTreatmentChip,
+      HeaderStatusChipType.copied => lang.mealHeaderCopiedChip,
+      HeaderStatusChipType.missingExtendedCarbs =>
+        lang.mealHeaderMissingExtendedCarbsChip,
+      HeaderStatusChipType.waitTimeIgnored =>
+        lang.mealHeaderWaitTimeIgnoredChip,
+      HeaderStatusChipType.analysisPending => lang.mealHeaderAnalysisPending,
+      HeaderStatusChipType.analysisInProgress =>
+        lang.mealHeaderAnalysisInProgress(detail ?? ''),
+      HeaderStatusChipType.analysisReady => lang.mealHeaderAnalysisReady(
+        int.tryParse(detail ?? '') ?? 0,
+      ),
+    };
+  }
+}
+
+enum HeaderStatusChipType {
+  addOn,
+  lowTreatment,
+  copied,
+  missingExtendedCarbs,
+  waitTimeIgnored,
+  analysisPending,
+  analysisInProgress,
+  analysisReady,
 }

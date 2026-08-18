@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../models/meal_summary_draft.dart';
 import '../utils/meal_summary_carbs_delta.dart';
 
@@ -15,6 +16,7 @@ class MealSummaryCarbsHintCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final delta = calculateMealSummaryCarbsDelta(draft);
@@ -37,14 +39,14 @@ class MealSummaryCarbsHintCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _title(delta, addOnAlreadyReported),
+                    _title(lang, delta, addOnAlreadyReported),
                     style: textTheme.titleMedium?.copyWith(
                       color: foregroundColor,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _description(delta, addOnAlreadyReported),
+                    _description(lang, delta, addOnAlreadyReported),
                     style: textTheme.bodySmall?.copyWith(
                       color: foregroundColor,
                     ),
@@ -53,7 +55,11 @@ class MealSummaryCarbsHintCard extends StatelessWidget {
                       delta.roundedExtraItemsCarbs != 0) ...[
                     const SizedBox(height: 8),
                     Text(
-                      '${_itemsDeltaLabel(delta)}: ${_formatSigned(delta.roundedItemAmountDelta)}g • Dodatkowe składniki: +${delta.roundedExtraItemsCarbs}g',
+                      lang.mealSummaryCarbsDeltaBreakdown(
+                        _itemsDeltaLabel(lang, delta),
+                        _formatSigned(delta.roundedItemAmountDelta),
+                        delta.roundedExtraItemsCarbs,
+                      ),
                       style: textTheme.bodySmall?.copyWith(
                         color: foregroundColor,
                       ),
@@ -98,44 +104,54 @@ class MealSummaryCarbsHintCard extends StatelessWidget {
     return Icons.check_circle_outline;
   }
 
-  String _title(MealSummaryCarbsDelta delta, bool addOnAlreadyReported) {
+  String _title(
+    AppLocalizations lang,
+    MealSummaryCarbsDelta delta,
+    bool addOnAlreadyReported,
+  ) {
     if (delta.isPositive) {
-      return 'Do AAPS: +${delta.roundedTotal}g węglowodanów';
+      return lang.mealSummaryAapsPositive(delta.roundedTotal);
     }
     if (delta.isNegative) {
       return addOnAlreadyReported
-          ? 'Do AAPS: ${delta.roundedTotal}g węglowodanów'
-          : 'Zjedzono mniej: ${delta.roundedTotal}g węglowodanów';
+          ? lang.mealSummaryAapsNegative(delta.roundedTotal)
+          : lang.mealSummaryLessEaten(delta.roundedTotal);
     }
     return addOnAlreadyReported
-        ? 'Dokładka już uwzględniona'
-        : 'Węglowodany zgodne z planem';
+        ? lang.mealSummaryAddOnAlreadyReported
+        : lang.mealSummaryCarbsMatchPlan;
   }
 
-  String _description(MealSummaryCarbsDelta delta, bool addOnAlreadyReported) {
+  String _description(
+    AppLocalizations lang,
+    MealSummaryCarbsDelta delta,
+    bool addOnAlreadyReported,
+  ) {
     if (delta.isPositive) {
-      final prefix = addOnAlreadyReported
-          ? 'To tylko różnica względem dokładki wpisanej wcześniej. '
-          : '';
-      return '${prefix}Tę wartość wpisz jako dodatkowe węglowodany. AAPS policzy insulinę według profilu.';
+      return addOnAlreadyReported
+          ? lang.mealSummaryPositiveAfterReportedAddOn
+          : lang.mealSummaryPositiveDescription;
     }
     if (delta.isNegative) {
       if (addOnAlreadyReported) {
-        return 'To różnica względem dokładki wpisanej wcześniej. Jeśli AAPS przyjmuje korektę węglowodanów, wpisz ${delta.roundedTotal}g. Jeśli bolus był już podany, rozważ dojedzenie około ${delta.roundedTotal.abs()}g węglowodanów.';
+        return lang.mealSummaryNegativeAfterReportedAddOn(
+          delta.roundedTotal,
+          delta.roundedTotal.abs(),
+        );
       }
-      return 'Brakuje około ${delta.roundedTotal.abs()}g względem planu. Jeśli bolus był na pełny plan, rozważ dojedzenie tej ilości węglowodanów.';
+      return lang.mealSummaryNegativeDescription(delta.roundedTotal.abs());
     }
     if (addOnAlreadyReported) {
-      return 'Nie dopisuj ponownie tych samych węglowodanów w AAPS.';
+      return lang.mealSummaryNoRepeatCarbs;
     }
-    return 'Nie trzeba dopisywać dodatkowych węglowodanów.';
+    return lang.mealSummaryNoExtraCarbsNeeded;
   }
 
-  String _itemsDeltaLabel(MealSummaryCarbsDelta delta) {
+  String _itemsDeltaLabel(AppLocalizations lang, MealSummaryCarbsDelta delta) {
     if (delta.usesReportedBaseline) {
-      return 'Zmiana po dokładce';
+      return lang.mealSummaryChangeAfterAddOn;
     }
-    return 'Plan';
+    return lang.mealSummaryPlanLabel;
   }
 
   String _formatSigned(int value) {

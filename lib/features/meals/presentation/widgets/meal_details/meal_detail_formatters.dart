@@ -1,3 +1,4 @@
+import '../../../../../common/l10n/language.dart';
 import '../../../data/models/meal_analysis_data.dart';
 
 String mealDateTime(DateTime date) {
@@ -94,45 +95,45 @@ String formatNutritionValue(double value, String unit) {
 
 String mealStatusLabel(String status) {
   return switch (status) {
-    'planned' => 'Zaplanowany',
-    'waiting-for-bolus' => 'Oczekiwanie na bolus',
-    'bolused-waiting' => 'Bolus podany, oczekiwanie',
-    'bolused-eating' => 'Bolus podany, jedzenie',
-    'waited-eating' => 'Po oczekiwaniu, jedzenie',
-    'eating' => 'W trakcie jedzenia',
-    'eating-extra' => 'W trakcie dokładki',
-    'eating-then-bolus' => 'Jedzenie, bolus po posiłku',
-    'eaten' => 'Zjedzony',
-    'eaten-extra' => 'Zjedzony z dokładką',
-    'eaten-bolused' => 'Zjedzony po bolusie',
-    'summarized' => 'Podsumowany',
-    'skipped' => 'Pominięty',
+    'planned' => lang.mealStatusPlanned,
+    'waiting-for-bolus' => lang.mealStatusWaitingForBolus,
+    'bolused-waiting' => lang.mealStatusBolusedWaiting,
+    'bolused-eating' => lang.mealStatusBolusedEating,
+    'waited-eating' => lang.mealStatusWaitedEating,
+    'eating' => lang.mealStatusEating,
+    'eating-extra' => lang.mealStatusEatingExtra,
+    'eating-then-bolus' => lang.mealStatusEatingThenBolus,
+    'eaten' => lang.mealStatusEaten,
+    'eaten-extra' => lang.mealStatusEatenExtra,
+    'eaten-bolused' => lang.mealStatusEatenBolused,
+    'summarized' => lang.mealStatusSummarized,
+    'skipped' => lang.mealStatusSkipped,
     _ => status,
   };
 }
 
 String mealEntryTypeLabel(String entryType) {
   return switch (entryType) {
-    'planned' => 'Planowany',
-    'extra' => 'Dodatkowy',
+    'planned' => lang.mealEntryPlanned,
+    'extra' => lang.mealEntryExtra,
     _ => entryType,
   };
 }
 
 String timelineEventLabel(MealTimelineEventData event) {
   return switch (event.type) {
-    MealTimelineEventType.insulin => 'Insulina',
-    MealTimelineEventType.carbs => 'Węglowodany',
-    MealTimelineEventType.correction => 'Korekta',
+    MealTimelineEventType.insulin => lang.mealTimelineInsulin,
+    MealTimelineEventType.carbs => lang.mealCarbsLabel,
+    MealTimelineEventType.correction => lang.mealTimelineCorrection,
     MealTimelineEventType.activity => event.label,
     MealTimelineEventType.mealStatus => mealStatusLabel(event.label),
     MealTimelineEventType.localMeal =>
       event.label == 'Meal eaten'
-          ? 'Posiłek z aplikacji'
-          : 'Posiłek w aplikacji',
-    MealTimelineEventType.lowTreatment => 'Dosłodzenie',
-    MealTimelineEventType.nightscoutMeal => 'Posiłek z Nightscout',
-    MealTimelineEventType.deviceStatus => 'Status urządzenia',
+          ? lang.mealTimelineLocalMealEaten
+          : lang.mealTimelineLocalMeal,
+    MealTimelineEventType.lowTreatment => lang.lowTreatmentTitle,
+    MealTimelineEventType.nightscoutMeal => lang.mealTimelineNightscoutMeal,
+    MealTimelineEventType.deviceStatus => lang.mealTimelineDeviceStatus,
     MealTimelineEventType.tempTarget => 'Temp target',
   };
 }
@@ -143,7 +144,7 @@ String? timelineEventValueLabel(MealTimelineEventData event) {
 
   return switch (event.type) {
     MealTimelineEventType.mealStatus =>
-      value == 'current status' ? 'Aktualny status' : value,
+      value == 'current status' ? lang.mealTimelineCurrentStatus : value,
     MealTimelineEventType.localMeal =>
       event.label == 'Meal eaten' ? value : mealStatusLabel(value),
     _ => value,

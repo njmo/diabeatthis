@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../data/drafts/activity_draft.dart';
 import '../../data/providers/activity_provider.dart';
 import '../widgets/activity_details_card.dart';
@@ -23,10 +24,12 @@ class ActivityPage extends HookConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Aktywność'),
+        title: Text(context.lang.activityTitle),
         actions: [
           IconButton(
-            tooltip: isEditing.value ? 'Zamknij edycję' : 'Edytuj aktywność',
+            tooltip: isEditing.value
+                ? context.lang.activityCloseEditTooltip
+                : context.lang.activityEditTooltip,
             icon: Icon(isEditing.value ? Icons.close : Icons.edit),
             onPressed: isSaving.value
                 ? null
@@ -38,10 +41,11 @@ class ActivityPage extends HookConsumerWidget {
       ),
       body: activityState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('error: $error')),
+        error: (error, _) =>
+            Center(child: Text(context.lang.activityError(error))),
         data: (activity) {
           if (activity == null) {
-            return const Center(child: Text('Nie znaleziono aktywności'));
+            return Center(child: Text(context.lang.activityNotFound));
           }
 
           return Column(
@@ -74,8 +78,8 @@ class ActivityPage extends HookConsumerWidget {
                             isEditing.value = false;
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Aktywność zapisana'),
+                                SnackBar(
+                                  content: Text(context.lang.activitySaved),
                                 ),
                               );
                             }
@@ -84,7 +88,7 @@ class ActivityPage extends HookConsumerWidget {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Nie udało się zapisać: $error',
+                                    context.lang.activitySaveFailed(error),
                                   ),
                                 ),
                               );
@@ -104,7 +108,7 @@ class ActivityPage extends HookConsumerWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Text(
-                  'Logi aktywności',
+                  context.lang.activityLogsTitle,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class IngredientMultiPickerSearchField extends StatelessWidget {
   final TextEditingController controller;
   final String query;
@@ -16,6 +18,7 @@ class IngredientMultiPickerSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final scheme = Theme.of(context).colorScheme;
     const topRadius = BorderRadius.vertical(top: Radius.circular(24));
 
@@ -32,12 +35,12 @@ class IngredientMultiPickerSearchField extends StatelessWidget {
               textInputAction: TextInputAction.search,
               onChanged: onChanged,
               decoration: InputDecoration(
-                hintText: 'Szukaj składnika',
+                hintText: lang.ingredientSearchLabel,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: query.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: 'Wyczyść',
+                        tooltip: lang.commonClearTooltip,
                         icon: const Icon(Icons.close),
                         onPressed: onClear,
                       ),

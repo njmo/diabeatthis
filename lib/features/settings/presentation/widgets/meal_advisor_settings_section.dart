@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
 import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import 'settings_section_card.dart';
@@ -17,13 +18,13 @@ class MealAdvisorSettingsSection extends ConsumerWidget {
 
     return SettingsSectionCard(
       icon: Icons.restaurant_menu_outlined,
-      title: 'Meal Advisor',
-      subtitle:
-          'Ustaw domyślne rozłożenie extended carbs dla WBT większego niż 1.',
+      title: context.lang.settingsMealAdvisorTitle,
+      subtitle: context.lang.settingsMealAdvisorSubtitle,
       children: [
         settingsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Text('Błąd ustawień Meal Advisora: $error'),
+          error: (error, _) =>
+              Text(context.lang.settingsMealAdvisorError(error)),
           data: (settings) => _MealAdvisorSettingsControls(
             settings: settings,
             onChanged: (next) => ref
@@ -51,7 +52,7 @@ class _MealAdvisorSettingsControls extends StatelessWidget {
       builder: (context, constraints) {
         final useColumns = constraints.maxWidth >= 520;
         final delayDropdown = _MinutesDropdown(
-          label: 'Start extended carbs',
+          label: context.lang.settingsMealAdvisorDelayLabel,
           value: settings.delayMinutes,
           options: MealAdvisorSettingsSection._delayOptions,
           onChanged: (value) {
@@ -59,7 +60,7 @@ class _MealAdvisorSettingsControls extends StatelessWidget {
           },
         );
         final durationDropdown = _MinutesDropdown(
-          label: 'Czas trwania',
+          label: context.lang.settingsMealAdvisorDurationLabel,
           value: settings.durationMinutes,
           options: MealAdvisorSettingsSection._durationOptions,
           onChanged: (value) {
@@ -125,8 +126,10 @@ class _MinutesDropdown extends StatelessWidget {
   }
 
   String _formatMinutes(int minutes) {
-    if (minutes == 60) return '1 godz.';
-    if (minutes > 0 && minutes % 60 == 0) return '${minutes ~/ 60} godz.';
-    return '$minutes min';
+    if (minutes == 60) return lang.durationOneHourShort;
+    if (minutes > 0 && minutes % 60 == 0) {
+      return lang.durationHoursShort(minutes ~/ 60);
+    }
+    return lang.durationMinutesShort(minutes);
   }
 }

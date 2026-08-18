@@ -12,19 +12,20 @@ class DarwinNotificationActionMapper {
       action.label,
       options: action.openApp
           ? <DarwinNotificationActionOption>{
-        DarwinNotificationActionOption.foreground,
-      }
+              DarwinNotificationActionOption.foreground,
+            }
           : <DarwinNotificationActionOption>{},
     );
   }
+
   DarwinNotificationAction _mapText(TextNotificationActionDef action) {
     return DarwinNotificationAction.text(
       action.type.toDarwinString(),
       action.label,
       options: action.openApp
           ? <DarwinNotificationActionOption>{
-        DarwinNotificationActionOption.foreground,
-      }
+              DarwinNotificationActionOption.foreground,
+            }
           : <DarwinNotificationActionOption>{},
       buttonTitle: action.inputActionDef.title,
       placeholder: action.inputActionDef.placeholderText,
@@ -32,9 +33,6 @@ class DarwinNotificationActionMapper {
   }
 
   DarwinNotificationAction map(NotificationActionDef action) {
-    return action.map(
-      plain: (action) => _mapPlain(action),
-      text: (action) => _mapText(action),
-    );
+    return action.map(plain: _mapPlain, text: _mapText);
   }
 }

@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../models/notification_event.dart';
 import '../models/notification_event_type.dart';
 import '../models/notification_key.dart';
@@ -17,11 +18,10 @@ class MealSummaryReminderNotificationEvent implements NotificationEvent {
   NotificationKey get key => NotificationKey(type: type, entityId: mealId);
 
   @override
-  String get title => 'Zrób podsumowanie posiłku';
+  String get title => lang.notificationMealSummaryReminderTitle;
 
   @override
-  String get body =>
-      'Sprawdź, ile naprawdę zostało zjedzone i uzupełnij dokładkę, jeśli była.';
+  String get body => lang.notificationMealSummaryReminderBody;
 
   @override
   Map<String, Object?> toPayload() => {

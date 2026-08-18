@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import 'ingredient_form.dart';
 
 class IngredientEditMode extends StatelessWidget {
@@ -23,7 +24,7 @@ class IngredientEditMode extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Edycja składnika',
+                  context.lang.ingredientEditTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ],

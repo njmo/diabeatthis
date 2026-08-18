@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
@@ -23,13 +24,15 @@ class MealIngredientsListEditor extends ConsumerWidget {
         calculatedMacronutrients.when(
           data: (value) => NutrientSummaryChart(macros: value),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => Text('Składniki (błąd: $err)'),
+          error: (err, _) => Text(context.lang.mealIngredientsLoadError(err)),
         ),
         const SizedBox(height: 16),
         Text(
           ingredientDrafts.isEmpty
-              ? 'Lista składników'
-              : 'Lista składników (${ingredientDrafts.length})',
+              ? context.lang.mealIngredientsListTitle
+              : context.lang.mealIngredientsListCountTitle(
+                  ingredientDrafts.length,
+                ),
           style: Theme.of(context).textTheme.titleSmall,
         ),
         if (ingredientDrafts.isNotEmpty) ...[
@@ -39,7 +42,7 @@ class MealIngredientsListEditor extends ConsumerWidget {
             child: FilledButton.icon(
               onPressed: () => _addIngredient(context, ref),
               icon: const Icon(Icons.add),
-              label: const Text('Dodaj kolejny'),
+              label: Text(context.lang.mealAddNextIngredient),
             ),
           ),
         ],
@@ -64,7 +67,7 @@ class MealIngredientsListEditor extends ConsumerWidget {
           .addMealIngredient(mealIngredient);
       if (!added && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Składnik jest już na liście.')),
+          SnackBar(content: Text(context.lang.mealIngredientAlreadyOnList)),
         );
       }
     }

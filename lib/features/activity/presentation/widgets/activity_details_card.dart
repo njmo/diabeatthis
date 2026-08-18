@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/detail_section_card.dart';
 
 class ActivityDetailsCard extends StatelessWidget {
@@ -23,26 +24,26 @@ class ActivityDetailsCard extends StatelessWidget {
       children: [
         DetailInfoRow(
           icon: Icons.schedule,
-          label: 'Wrażliwość 1h przed posiłkiem',
-          value: '$percentagePre% mniej',
+          label: context.lang.activityPreMealSensitivityLabel,
+          value: context.lang.activityPercentLess(percentagePre),
         ),
         DetailInfoRow(
           icon: Icons.sports_score,
-          label: 'Wrażliwość po treningu',
-          value: '$percentagePost% mniej',
+          label: context.lang.activityPostWorkoutSensitivityLabel,
+          value: context.lang.activityPercentLess(percentagePost),
         ),
         DetailInfoRow(
           icon: Icons.timer,
-          label: 'Planowany czas',
-          value: _formatDuration(durationMinutes),
+          label: context.lang.activityPlannedDurationLabel,
+          value: _formatDuration(context, durationMinutes),
         ),
       ],
     );
   }
 
-  static String _formatDuration(int? minutes) {
+  static String _formatDuration(BuildContext context, int? minutes) {
     if (minutes == null) {
-      return 'Do ręcznego zatrzymania';
+      return context.lang.activityManualStop;
     }
 
     final hours = minutes ~/ 60;

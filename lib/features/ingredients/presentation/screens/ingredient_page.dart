@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/models/ingredient_portion_data.dart';
 import '../../data/providers/ingredient_provider.dart';
@@ -35,7 +36,8 @@ class IngredientPage extends ConsumerWidget {
             brandStyle: Theme.of(context).textTheme.bodySmall,
             spacing: 0,
           ),
-          orElse: () => Text('Składnik $ingredientId'),
+          orElse: () =>
+              Text(context.lang.ingredientFallbackTitle(ingredientId)),
         ),
         actions: state.maybeWhen(
           data: (s) => _appBarActions(context, ref, s),
@@ -44,7 +46,7 @@ class IngredientPage extends ConsumerWidget {
       ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('error: $e')),
+        error: (e, st) => Center(child: Text(context.lang.activityError(e))),
         data: (s) {
           if (s.isEditing) {
             ref.listen(ingredientPortionAmountDraftProvider, (_, _) {});
@@ -92,7 +94,7 @@ class IngredientPage extends ConsumerWidget {
     if (!state.isEditing) {
       return [
         IconButton(
-          tooltip: 'Edytuj składnik',
+          tooltip: context.lang.ingredientEditTooltip,
           icon: const Icon(Icons.edit),
           onPressed: state.isSaving ? null : controller.startEditing,
         ),
@@ -101,12 +103,12 @@ class IngredientPage extends ConsumerWidget {
 
     return [
       IconButton(
-        tooltip: 'Anuluj edycję',
+        tooltip: context.lang.ingredientCancelEditTooltip,
         icon: const Icon(Icons.close),
         onPressed: state.isSaving ? null : controller.cancelEditing,
       ),
       IconButton(
-        tooltip: 'Zapisz składnik',
+        tooltip: context.lang.ingredientSaveTooltip,
         onPressed: state.isSaving ? null : () => _saveIngredient(context, ref),
         icon: state.isSaving
             ? const SizedBox(
@@ -134,13 +136,13 @@ class IngredientPage extends ConsumerWidget {
       }
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Składnik zapisany')));
+      ).showSnackBar(SnackBar(content: Text(context.lang.ingredientSaved)));
     } catch (e) {
       if (!context.mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Nie udało się zapisać składnika: $e')),
+        SnackBar(content: Text(context.lang.ingredientSaveFailed(e))),
       );
     }
   }
@@ -168,15 +170,15 @@ class IngredientPage extends ConsumerWidget {
       if (!context.mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Porcja zapisana')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.lang.ingredientPortionSaved)),
+      );
     } catch (e) {
       if (!context.mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Nie udało się zapisać porcji: $e')),
+        SnackBar(content: Text(context.lang.ingredientPortionSaveFailed(e))),
       );
     }
   }

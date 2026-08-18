@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../controllers/meal_details_controller.dart';
 import '../models/meal_page_state.dart';
 import '../widgets/meal_details/meal_activity_analysis_section.dart';
@@ -34,7 +35,8 @@ class MealPage extends ConsumerWidget {
       ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Błąd: $error')),
+        error: (error, _) =>
+            Center(child: Text(context.lang.mealLoadError(error))),
         data: (value) => MealPageBody(state: value),
       ),
     );

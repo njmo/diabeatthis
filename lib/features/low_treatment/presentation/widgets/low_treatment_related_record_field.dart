@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../data/models/low_treatment_related_record.dart';
 import '../../data/models/low_treatment_sheet_state.dart';
 import '../controllers/low_treatment_context_controller.dart';
@@ -10,6 +11,7 @@ class LowTreatmentRelatedRecordField extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = context.lang;
     final sheetState = ref.watch(
       lowTreatmentContextControllerProvider.select((state) => state.value),
     );
@@ -25,18 +27,18 @@ class LowTreatmentRelatedRecordField extends ConsumerWidget {
 
     final config = record.map(
       meal: (record) => (
-        labelText: 'Powiązany posiłek',
+        labelText: lang.lowTreatmentRelatedMeal,
         title: record.name,
         actionIcon: Icons.directions_run,
-        actionTooltip: 'Podepnij aktywność',
-        detachTooltip: 'Odepnij posiłek',
+        actionTooltip: lang.dashboardAttachActivity,
+        detachTooltip: lang.lowTreatmentDetachMeal,
       ),
       activity: (record) => (
-        labelText: 'Powiązana aktywność',
+        labelText: lang.lowTreatmentRelatedActivity,
         title: record.name,
         actionIcon: Icons.restaurant,
-        actionTooltip: 'Podepnij posiłek',
-        detachTooltip: 'Odepnij aktywność',
+        actionTooltip: lang.lowTreatmentAttachMeal,
+        detachTooltip: lang.lowTreatmentDetachActivity,
       ),
     );
     final theme = Theme.of(context);

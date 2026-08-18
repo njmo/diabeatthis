@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../low_treatment/presentation/widgets/low_treatment_details_tile.dart';
 import '../../../data/models/meal_details_data.dart';
 import 'meal_detail_components.dart';
@@ -17,7 +18,7 @@ class MealLowTreatmentsSection extends StatelessWidget {
     }
 
     return MealSectionTile(
-      title: 'Dosłodzenia',
+      title: context.lang.activityExtraTreatLabel,
       initiallyExpanded: true,
       children: [
         for (final treatment in details.lowTreatments)

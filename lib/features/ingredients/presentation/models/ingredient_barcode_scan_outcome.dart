@@ -8,9 +8,6 @@ enum IngredientBarcodeScanOutcomeType {
   failed,
 }
 
-const ingredientBarcodeScanNoUsableDataMessage =
-    'Nie znaleziono danych do uzupełnienia składnika. Możesz wyszukać go ręcznie albo użyć zdjęć etykiety.';
-
 class IngredientBarcodeScanOutcome {
   final IngredientBarcodeScanOutcomeType type;
   final domain.Ingredient? existingIngredient;

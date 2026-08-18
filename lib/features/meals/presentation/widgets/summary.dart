@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -72,25 +73,26 @@ class AddIngredientSummaryContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final colorScheme = Theme.of(context).colorScheme;
     final amount = draft.amount;
     final amountLabel = draft.usesGramAmount
         ? '${amount.formattedAmount} g'
         : '${amount.formattedAmount} ${unitLabelForAmount(amount, draft.portionCountUnitLabel)}';
     final portionDescription = draft.usesGramAmount
-        ? 'Dodawane w gramach'
+        ? lang.addIngredientAddedInGrams
         : draft.portionDescription(
             portionAmount: gramsPerPortion,
             isLoading: isLoadingPortionAmount,
           );
     final totalGrams = _totalGrams(amount, gramsPerPortion, draft);
     final totalGramsLabel = isLoadingPortionAmount
-        ? 'Ładuję...'
+        ? lang.commonLoading
         : totalGrams == null
-        ? 'Brak wagi porcji'
+        ? lang.amountMissingPortionWeight
         : '${totalGrams.formattedAmount} g';
     final netCarbsLabel = isLoadingPortionAmount
-        ? 'Ładuję...'
+        ? lang.commonLoading
         : totalGrams == null
         ? '-'
         : '+${_netCarbs(totalGrams, draft).ceil()} g';
@@ -98,7 +100,7 @@ class AddIngredientSummaryContent extends StatelessWidget {
         draft.ingredient.wbtKcalPer100g ??
         (draft.ingredient.proteinPer100g * 4 + draft.ingredient.fatPer100g * 9);
     final extendedCarbsLabel = isLoadingPortionAmount
-        ? 'Ładuję...'
+        ? lang.commonLoading
         : totalGrams == null
         ? '-'
         : '+${const WbtExtendedCarbsCalculator().calculateFromKcal(wbtKcalPer100g * totalGrams / 100).grams} g';
@@ -121,10 +123,10 @@ class AddIngredientSummaryContent extends StatelessWidget {
             SummaryMetricGrid(
               amountLabel: amountLabel,
               portionWeightTitle: draft.usesGramAmount
-                  ? 'Jednostka'
-                  : 'Waga porcji',
+                  ? lang.portionUnitLabel
+                  : lang.addIngredientPortionWeightTitle,
               portionWeightLabel: isLoadingPortionAmount
-                  ? 'Ładuję...'
+                  ? lang.commonLoading
                   : gramsPerPortion == null
                   ? '-'
                   : '${gramsPerPortion!.formattedAmount} ${draft.portionWeightUnitLabel}',
@@ -221,6 +223,7 @@ class SummaryMetricGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     return Column(
       children: [
         Row(
@@ -228,7 +231,7 @@ class SummaryMetricGrid extends StatelessWidget {
             Expanded(
               child: SummaryMetricTile(
                 icon: Icons.format_list_numbered,
-                label: 'Ilość',
+                label: lang.addIngredientAmountTitle,
                 value: amountLabel,
               ),
             ),
@@ -245,7 +248,7 @@ class SummaryMetricGrid extends StatelessWidget {
         const SizedBox(height: 8),
         SummaryMetricTile(
           icon: Icons.calculate_outlined,
-          label: 'Łącznie',
+          label: lang.mealTotalMassLabel,
           value: totalGramsLabel,
           emphasized: true,
         ),
@@ -255,7 +258,7 @@ class SummaryMetricGrid extends StatelessWidget {
             Expanded(
               child: SummaryMetricTile(
                 icon: Icons.grain,
-                label: 'Węgle',
+                label: lang.mealCarbsLabel,
                 value: carbsLabel,
               ),
             ),

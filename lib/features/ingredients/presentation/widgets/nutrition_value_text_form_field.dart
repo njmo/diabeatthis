@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class NutritionValueTextFormField extends StatelessWidget {
   final String label;
   final String? initialValue;
@@ -49,7 +51,7 @@ class NutritionValueTextFormField extends StatelessWidget {
     }
     final parsed = double.tryParse(normalized);
     if (parsed == null || parsed < 0) {
-      return 'Podaj liczbę';
+      return lang.ingredientNumberRequired;
     }
     return null;
   }

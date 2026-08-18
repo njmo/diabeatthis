@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../app/router/app_router.dart';
+import '../../../../../common/l10n/language.dart';
 import '../../../data/models/meal_details_data.dart';
 import 'meal_detail_components.dart';
 import 'meal_detail_formatters.dart';
@@ -19,7 +20,7 @@ class MealCopyRelationsSection extends StatelessWidget {
     }
 
     return MealSectionTile(
-      title: 'Użyto jako bazę',
+      title: context.lang.mealCopyRelationsTitle,
       children: [
         for (final usage in copyUsages)
           MealCopyUsageTile(

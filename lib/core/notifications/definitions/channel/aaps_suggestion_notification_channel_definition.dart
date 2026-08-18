@@ -8,6 +8,6 @@ const aapsSuggestionNotificationChannelDefinition =
       type: NotificationChannelType.aapsSuggestion,
       id: 'aaps_suggestion_channel_v1',
       name: 'AAPS Suggestions',
-      description: 'Sugestie widoczne po przejściu do AAPS',
+      description: 'Suggestions visible after opening AAPS',
       importance: Importance.max,
     );
