@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/nutrition/ingredient_amount_calculator.dart';
 import '../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
@@ -153,13 +154,7 @@ Future<Macronutrients> calculateMealIngredientsMacronutrients(
       empty: (empty) => true,
     );
 
-    if (isEmpty) {
-      if (isReference) {
-        portionAmount = 100;
-      } else {
-        portionAmount = 1;
-      }
-    } else if (portionAmount == 0) {
+    if (!isEmpty && portionAmount == 0) {
       final ingredientDomain = mi.ingredient.toDomain();
       final portionDomain = mi.ingredientPortion.portion.toDomain();
 
@@ -172,7 +167,16 @@ Future<Macronutrients> calculateMealIngredientsMacronutrients(
 
       portionAmount = fetched ?? 0;
     }
-    final grams = mi.amount * portionAmount;
+    final gramsPerPortion =
+        resolveIngredientGramsPerPortion(
+          usesGramAmount: isEmpty && !isReference,
+          isReference: isEmpty && isReference,
+          portionGrams: portionAmount,
+          // Keep aggregation's resolved weight, including legacy zero/negative values.
+          storedGramsPerPortion: portionAmount,
+        ) ??
+        0;
+    final grams = mi.amount * gramsPerPortion;
     carbsTotal += (mi.ingredient.carbsPer100g * grams / 100).ceil();
     fatTotal += (mi.ingredient.fatPer100g * grams / 100).ceil();
     fiberTotal += (mi.ingredient.fiberPer100g * grams / 100).ceil();
