@@ -402,10 +402,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     );
                     logI("min waiting for ${advice.wait!.minMinutes} minutes");
                     logI("max waiting for ${advice.wait!.maxMinutes} minutes");
+                    nextExecutor = WaitForBolusExecutor(initialAdvice: advice);
                     if (advice.wait!.recommendedMinutes >= minutesLeft) {
-                      nextExecutor = WaitForBolusExecutor(
-                        initialAdvice: advice,
-                      );
                       shouldAbort = true;
                     }
                     break;
@@ -419,16 +417,19 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                   7,
                 );
               } on WaitTimeoutException catch (_) {
-                deviceStatus = null;
                 logI("No device status available for 7 minutes");
+                if (advice != null) {
+                  logI("Using last available meal advice after device timeout");
+                  break;
+                }
+                deviceStatus = null;
               }
             } while (--iterationsLeft > 0);
 
             logI("Ended loop");
 
-            // if device status is null means device status is old
-            // if advice is null means we don't have advice available
-            // but we don't want to show advice when device status is old
+            // A timeout may retain the last advice and its device status.
+            // Both must be available before showing a suggestion.
             if (advice == null || deviceStatus == null) {
               logI("No advice available, checking next meal");
               return NewMealCheckExecutor();

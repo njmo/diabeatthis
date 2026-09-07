@@ -17,6 +17,8 @@ import 'meal_monitor_state_executor.dart';
 import 'new_meal_check_executor.dart';
 
 class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
+  static const _defaultRecommendedMinutes = 15;
+
   int? recommendedMinutes;
 
   BolusThenWaitExecutor({this.recommendedMinutes});
@@ -68,14 +70,16 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       final mealAdvice = await runtimeContext.container.read(
         getMealAdviceProvider(mealMonitorContext.activeMeal!).future,
       );
-      if (mealAdvice == null) {
-        logI("Problem gathering meal advice, checking next meal");
-        return NewMealCheckExecutor();
-      }
-      final recommendedWait = mealAdvice.wait!.recommendedMinutes;
+      final recommendedWait = mealAdvice?.wait?.recommendedMinutes;
 
-      logI("Recommended wait: $recommendedWait minutes");
-      recommendedMinutes = recommendedWait;
+      if (recommendedWait == null) {
+        logI(
+          "Problem gathering meal wait advice, using default $_defaultRecommendedMinutes minutes",
+        );
+      } else {
+        logI("Recommended wait: $recommendedWait minutes");
+      }
+      recommendedMinutes = recommendedWait ?? _defaultRecommendedMinutes;
       triggeredByUser = true;
       logI("Now will wait for $recommendedMinutes minutes");
     }

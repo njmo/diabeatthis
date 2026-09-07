@@ -92,11 +92,13 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           ).future,
         );
         if (mealSummary == null) {
-          logI("Problem gathering meal advice, checking next meal");
-          return NewMealCheckExecutor();
+          logI(
+            "Problem gathering consumed meal summary, continuing finished meal detection",
+          );
+        } else {
+          grams = mealSummary.netCarbsGrams.ceil();
+          logI("Meal summary available with $grams grams of carbs");
         }
-        grams = mealSummary.netCarbsGrams.ceil();
-        logI("Meal summary available with $grams grams of carbs");
       }
     }
 
