@@ -1,11 +1,11 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/nutrition/confidence_level.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
-import '../../presentation/widgets/confidence_slider.dart';
 import '../drafts/meal_draft.dart';
 import '../model/copied_meal_type.dart';
 import '../models/meal_ingredient_replacement_result.dart';

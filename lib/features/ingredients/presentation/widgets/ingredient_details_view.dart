@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/nutrition/confidence_level.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/models/ingredient_details_data.dart';
 import 'ingredient_identity_text.dart';

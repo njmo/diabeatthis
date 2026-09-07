@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/nutrition/confidence_level.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
-import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../data/providers/ingredient_provider.dart';
 

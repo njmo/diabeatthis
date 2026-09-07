@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/nutrition/confidence_level.dart';
 import 'package:diabeatthis/core/media/camera_permission_service.dart';
 import 'package:diabeatthis/core/media/camera_photo_capture_service.dart';
 import 'package:diabeatthis/core/media/providers/camera_permission_service_provider.dart';
@@ -15,7 +16,6 @@ import 'package:diabeatthis/features/meal_advisor/presentation/controllers/ingre
 import 'package:diabeatthis/features/meals/data/drafts/meal_draft.dart';
 import 'package:diabeatthis/features/meals/data/providers/add_ingredients_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_draft_provider.dart';
-import 'package:diabeatthis/features/meals/presentation/widgets/confidence_slider.dart';
 import 'package:diabeatthis/features/portions/data/drafts/portion_draft.dart';
 import 'package:diabeatthis/features/portions/data/drafts/portion_filter.dart';
 import 'package:diabeatthis/features/portions/data/providers/portion_provider.dart';

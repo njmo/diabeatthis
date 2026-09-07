@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/nutrition/confidence_level.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
@@ -14,7 +15,6 @@ import '../../../meal_advisor/presentation/controllers/ingredient_photo_search_c
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/drafts/portion_filter.dart';
 import '../../../portions/data/providers/portion_provider.dart';
-import '../../presentation/widgets/confidence_slider.dart';
 import 'meal_draft_provider.dart';
 
 part 'add_ingredients_provider.g.dart';

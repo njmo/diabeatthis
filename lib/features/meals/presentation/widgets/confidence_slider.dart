@@ -1,38 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/nutrition/confidence_level.dart';
 
-enum ConfidenceLevel { low, medium, high, certain }
-
-extension ConfidenceLevelX on ConfidenceLevel {
+extension ConfidenceLevelLabelX on ConfidenceLevel {
   String get label => switch (this) {
     ConfidenceLevel.low => lang.confidenceLow,
     ConfidenceLevel.medium => lang.confidenceMedium,
     ConfidenceLevel.high => lang.confidenceHigh,
     ConfidenceLevel.certain => lang.confidenceCertain,
   };
-
-  /// Jeśli chcesz to zapisywać w bazie jako REAL 0..1.
-  double toDouble01() => switch (this) {
-    ConfidenceLevel.low => 0.25,
-    ConfidenceLevel.medium => 0.50,
-    ConfidenceLevel.high => 0.75,
-    ConfidenceLevel.certain => 0.95,
-  };
-
-  /// Odwrotność: wczytaj REAL z bazy i przypnij do najbliższego stopnia.
-  static ConfidenceLevel fromDouble01(double v) {
-    final clamped = v.clamp(0.0, 1.0);
-    // progi możesz dopasować pod siebie
-    if (clamped < 0.375) return ConfidenceLevel.low;
-    if (clamped < 0.625) return ConfidenceLevel.medium;
-    if (clamped < 0.85) return ConfidenceLevel.high;
-    return ConfidenceLevel.certain;
-  }
-
-  int toIndex() => index;
-  static ConfidenceLevel fromIndex(int i) =>
-      ConfidenceLevel.values[i.clamp(0, ConfidenceLevel.values.length - 1)];
 }
 
 class ConfidenceSlider extends StatelessWidget {

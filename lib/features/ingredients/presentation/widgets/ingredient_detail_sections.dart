@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/l10n/language.dart';
+import '../../../../common/nutrition/confidence_level.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/models/ingredient_history_entry_data.dart';
 import '../../data/models/ingredient_portion_data.dart';

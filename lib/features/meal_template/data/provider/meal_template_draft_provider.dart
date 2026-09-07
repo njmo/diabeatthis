@@ -1,8 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/nutrition/confidence_level.dart';
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
-import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../drafts/template_meal_draft.dart';
 
