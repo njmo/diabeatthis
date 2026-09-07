@@ -85,13 +85,6 @@ void main() {
             container.read(mealIngredientConfidenceDraftProvider),
             ConfidenceLevel.high,
           );
-          if (!isReference) {
-            // Keep the existing portion selection and advance to its amount form.
-            container
-                .read(portionDraftProvider.notifier)
-                .overrideDraft(original.ingredientPortion.portion);
-            await notifier.nextStage();
-          }
           await notifier.nextStage();
           expect(container.read(mealIngredientsDraftProvider), original);
 
@@ -301,7 +294,7 @@ void main() {
       );
     });
 
-    test('opens existing portions when modifying existing ingredient', () {
+    test('opens amount editing with a back path to existing portions', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
@@ -312,6 +305,11 @@ void main() {
 
       notifier.editIngredient(draft);
 
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.amountForm,
+      );
+      notifier.back();
       expect(
         container.read(addMealIngredientStageProvider),
         AddMealIngredientStage.definedPortionsSearch,
@@ -328,6 +326,81 @@ void main() {
         AddMealIngredientStage.dismiss,
       );
     });
+
+    test(
+      'allows choosing an existing portion after entering amount editing',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final draft = container
+            .read(mealIngredientsDraftProvider)
+            .copyWith(ingredient: _existingIngredient(id: 12), amount: 50);
+        final notifier = container.read(
+          addMealIngredientStageProvider.notifier,
+        );
+        notifier.editIngredient(draft);
+        notifier.back();
+        const portion = PortionSelection.existing(
+          id: 7,
+          name: 'łyżka',
+          unitHint: 'g',
+        );
+        container.read(portionDraftProvider.notifier).overrideDraft(portion);
+        await notifier.nextStage();
+        expect(
+          container.read(addMealIngredientStageProvider),
+          AddMealIngredientStage.amountForm,
+        );
+        expect(
+          container
+              .read(mealIngredientsDraftProvider)
+              .ingredientPortion
+              .portion,
+          portion,
+        );
+        notifier.back();
+        expect(
+          container.read(addMealIngredientStageProvider),
+          AddMealIngredientStage.definedPortionsSearch,
+        );
+      },
+    );
+
+    test(
+      'can add a portion for the edited ingredient without a separate ingredient draft',
+      () {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final draft = container
+            .read(mealIngredientsDraftProvider)
+            .copyWith(ingredient: _existingIngredient(id: 12), amount: 50);
+        final notifier = container.read(
+          addMealIngredientStageProvider.notifier,
+        );
+        notifier.editIngredient(draft);
+        notifier.back();
+        notifier.toOppositeStage();
+        expect(
+          container.read(addMealIngredientStageProvider),
+          AddMealIngredientStage.portionAddNewSearch,
+        );
+        expect(
+          container.read(portionFilterProvider),
+          const PortionFilter.allUnassignedForIngredient(ingredientId: 12),
+        );
+        notifier.toOppositeStage();
+        expect(
+          container.read(addMealIngredientStageProvider),
+          AddMealIngredientStage.portionAddNewForm,
+        );
+        notifier.back();
+        notifier.back();
+        expect(
+          container.read(addMealIngredientStageProvider),
+          AddMealIngredientStage.definedPortionsSearch,
+        );
+      },
+    );
 
     for (final savedAmount in [0.0, -2.0, 0.5]) {
       test('initializes reference editing with saved amount $savedAmount', () {
@@ -370,41 +443,41 @@ void main() {
       });
     }
 
-    test(
-      'starts editing a new ingredient at portion search and clears history',
-      () {
-        final container = ProviderContainer();
-        addTearDown(container.dispose);
-        final draft = container
-            .read(mealIngredientsDraftProvider)
-            .copyWith(amount: 2, quantityConfidence: 0.25);
-        final notifier = container.read(
-          addMealIngredientStageProvider.notifier,
-        );
-        notifier.startManualIngredient();
+    test('opens amount editing with a back path to new portion search', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final draft = container
+          .read(mealIngredientsDraftProvider)
+          .copyWith(amount: 2, quantityConfidence: 0.25);
+      final notifier = container.read(addMealIngredientStageProvider.notifier);
+      notifier.startManualIngredient();
 
-        notifier.editIngredient(draft);
+      notifier.editIngredient(draft);
 
-        expect(container.read(mealIngredientsDraftProvider), draft);
-        expect(
-          container.read(mealIngredientConfidenceDraftProvider),
-          ConfidenceLevel.low,
-        );
-        expect(
-          container.read(addMealIngredientStageProvider),
-          AddMealIngredientStage.portionAddNewSearch,
-        );
-        expect(
-          container.read(portionFilterProvider),
-          const PortionFilter.byQuery(),
-        );
-        notifier.back();
-        expect(
-          container.read(addMealIngredientStageProvider),
-          AddMealIngredientStage.dismiss,
-        );
-      },
-    );
+      expect(container.read(mealIngredientsDraftProvider), draft);
+      expect(
+        container.read(mealIngredientConfidenceDraftProvider),
+        ConfidenceLevel.low,
+      );
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.amountForm,
+      );
+      notifier.back();
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.portionAddNewSearch,
+      );
+      expect(
+        container.read(portionFilterProvider),
+        const PortionFilter.byQuery(),
+      );
+      notifier.back();
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.dismiss,
+      );
+    });
 
     test('opens existing portions for existing barcode ingredient', () {
       final container = ProviderContainer();

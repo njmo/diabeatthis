@@ -57,10 +57,6 @@ void main() {
         );
         await tester.tap(find.text('Edit'));
         await tester.pumpAndSettle();
-        if (!isReference) {
-          await tester.tap(find.text('Dodaj w gramach'));
-          await tester.pumpAndSettle();
-        }
         expect(
           tester
               .widget<FriendlyAmountSelector>(
@@ -74,6 +70,21 @@ void main() {
           ConfidenceLevel.high,
         );
         expect(container.read(mealIngredientsDraftProvider), original);
+        if (!isReference) {
+          await tester.tap(find.byIcon(Icons.arrow_back));
+          await tester.pumpAndSettle();
+          expect(find.text('Dodaj w gramach'), findsOneWidget);
+          await tester.tap(find.text('Dodaj w gramach'));
+          await tester.pumpAndSettle();
+          expect(
+            tester
+                .widget<FriendlyAmountSelector>(
+                  find.byType(FriendlyAmountSelector),
+                )
+                .value,
+            50,
+          );
+        }
         await tester.tap(find.text('Dalej'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Dodaj'));

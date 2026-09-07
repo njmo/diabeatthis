@@ -84,12 +84,11 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         ? PortionFilter.byQuery()
         : PortionFilter.byQueryForIngredient(ingredientId: ingredientId);
     ref.watch(portionFilterProvider.notifier).setFilter(filter);
-    if (ingredientId == null) {
-      state = AddMealIngredientStage.portionAddNewSearch;
-      return;
-    }
-
-    state = AddMealIngredientStage.definedPortionsSearch;
+    _openAmountForm(
+      backTo: ingredientId == null
+          ? AddMealIngredientStage.portionAddNewSearch
+          : AddMealIngredientStage.definedPortionsSearch,
+    );
   }
 
   void setOverride() {
@@ -258,7 +257,9 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         _moveBackTo(AddMealIngredientStage.ingredientSearch);
         break;
       case AddMealIngredientStage.definedPortionsSearch:
-        final ingredientDraft = ref.read(ingredientDraftProvider);
+        final ingredientDraft = ref
+            .read(mealIngredientsDraftProvider)
+            .ingredient;
         final portionsFilter = ref.read(portionFilterProvider.notifier);
         portionsFilter.setFilter(
           PortionFilter.allUnassignedForIngredient(
@@ -345,10 +346,10 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     state = stage;
   }
 
-  void _openAmountForm() {
+  void _openAmountForm({AddMealIngredientStage? backTo}) {
     final draft = ref.read(mealIngredientsDraftProvider);
     final amount = draft.amount > 0 ? draft.amount : 1.0;
     ref.read(mealIngredientAmountDraftProvider.notifier).setValue(amount);
-    _moveTo(AddMealIngredientStage.amountForm);
+    _moveTo(AddMealIngredientStage.amountForm, backTo: backTo);
   }
 }
