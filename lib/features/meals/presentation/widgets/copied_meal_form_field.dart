@@ -8,6 +8,8 @@ class CopiedMealFormField extends FormField<CopiedMealType?> {
     super.key,
     super.initialValue,
     super.validator,
+    super.enabled,
+    bool isLoading = false,
     required Future<CopiedMealType?> Function(BuildContext context) picker,
     required Future<bool> Function(CopiedMealType) onPicked,
   }) : super(
@@ -29,18 +31,36 @@ class CopiedMealFormField extends FormField<CopiedMealType?> {
              crossAxisAlignment: CrossAxisAlignment.start,
              children: [
                InkWell(
-                 onTap: () async {
-                   final result = await picker(state.context);
-                   if (result != null && state.mounted) {
-                     final applied = await onPicked(result);
-                     if (applied && state.mounted) {
-                       state.didChange(result);
-                     }
-                   }
-                 },
+                 onTap: !state.widget.enabled
+                     ? null
+                     : () async {
+                         final result = await picker(state.context);
+                         if (result != null &&
+                             state.mounted &&
+                             state.widget.enabled) {
+                           final applied = await onPicked(result);
+                           if (applied && state.mounted) {
+                             state.didChange(result);
+                           }
+                         }
+                       },
                  child: InputDecorator(
                    decoration: InputDecoration(
                      labelText: state.context.lang.copiedMealFieldLabel,
+                     enabled: state.widget.enabled,
+                     suffixIcon: isLoading
+                         ? Padding(
+                             padding: const EdgeInsets.all(12),
+                             child: SizedBox.square(
+                               dimension: 20,
+                               child: CircularProgressIndicator(
+                                 strokeWidth: 2,
+                                 semanticsLabel:
+                                     state.context.lang.commonLoading,
+                               ),
+                             ),
+                           )
+                         : null,
                      errorText: state.errorText,
                      border: const OutlineInputBorder(),
                    ),

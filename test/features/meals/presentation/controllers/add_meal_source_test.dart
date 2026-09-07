@@ -5,7 +5,7 @@ import 'package:diabeatthis/features/meals/data/drafts/meal_draft.dart';
 import 'package:diabeatthis/features/meals/data/model/copied_meal_type.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_draft_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
-import 'package:diabeatthis/features/meals/presentation/controllers/add_meal_controller.dart';
+import 'package:diabeatthis/features/meals/presentation/controllers/copy_meal_source_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -62,11 +62,11 @@ void main() {
         );
         addTearDown(draftSubscription.close);
         final controllerSubscription = container.listen(
-          addMealControllerProvider,
+          copyMealSourceControllerProvider,
           (_, _) {},
         );
         addTearDown(controllerSubscription.close);
-        await container.read(addMealControllerProvider.future);
+        await container.read(copyMealSourceControllerProvider.future);
         final draft = container.read(mealDraftProvider.notifier);
         final originalIngredient = container.read(mealIngredientsDraftProvider);
         draft.setName('Current meal');
@@ -83,7 +83,7 @@ void main() {
         addTearDown(subscription.close);
 
         final operation = container
-            .read(addMealControllerProvider.notifier)
+            .read(copyMealSourceControllerProvider.notifier)
             .copyFromSource(source);
         expect(container.read(mealDraftProvider), same(before));
         expect(updates, isEmpty);

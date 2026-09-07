@@ -7,6 +7,7 @@ import '../../../../common/l10n/language.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import '../controllers/add_meal_controller.dart';
+import '../controllers/copy_meal_source_controller.dart';
 import '../widgets/add_meal/add_meal_basic_info_section.dart';
 import '../widgets/add_meal/add_meal_ingredients_section.dart';
 import '../widgets/add_meal/add_meal_source_section.dart';
@@ -22,6 +23,9 @@ class AddMealPage extends HookConsumerWidget {
     final mealDraft = ref.read(mealDraftProvider.notifier);
     final addMealState = ref.watch(addMealControllerProvider);
     final isSaving = addMealState.isLoading;
+    final isCopying = ref.watch(copyMealSourceControllerProvider).isLoading;
+    final copyController = ref.read(copyMealSourceControllerProvider.notifier);
+    useEffect(() => copyController.cancelPendingCopy, [copyController]);
 
     return Scaffold(
       appBar: AppBar(title: Text(context.lang.addMealTitle)),
@@ -38,6 +42,8 @@ class AddMealPage extends HookConsumerWidget {
               const SizedBox(height: 24),
               AddMealSourceSection(
                 picker: showCopiedMealPicker,
+                isLoading: isCopying,
+                enabled: !isSaving,
                 onPicked: (value) => _copyFromSource(context, ref, value),
               ),
               const SizedBox(height: 24),
@@ -49,7 +55,7 @@ class AddMealPage extends HookConsumerWidget {
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         child: FilledButton.icon(
-          onPressed: isSaving
+          onPressed: isSaving || isCopying
               ? null
               : () => _saveMeal(context: context, ref: ref, formKey: formKey),
           icon: isSaving
@@ -81,8 +87,9 @@ class AddMealPage extends HookConsumerWidget {
     CopiedMealType source,
   ) async {
     try {
-      await ref.read(addMealControllerProvider.notifier).copyFromSource(source);
-      return true;
+      return await ref
+          .read(copyMealSourceControllerProvider.notifier)
+          .copyFromSource(source);
     } catch (error) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -98,6 +105,9 @@ class AddMealPage extends HookConsumerWidget {
     required WidgetRef ref,
     required GlobalKey<FormState> formKey,
   }) async {
+    if (ref.read(copyMealSourceControllerProvider).isLoading) {
+      return;
+    }
     final formState = formKey.currentState;
     if (formState == null || !formState.validate()) {
       return;
