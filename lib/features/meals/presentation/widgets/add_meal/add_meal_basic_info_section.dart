@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/widgets/controlled_text_form_field.dart';
 import '../../../../../common/widgets/date_time_picker.dart';
 import '../../../../../common/widgets/form_section.dart';
 import '../../../data/providers/meal_draft_provider.dart';
@@ -26,9 +27,9 @@ class AddMealBasicInfoSection extends ConsumerWidget {
       title: context.lang.addMealBasicInfoTitle,
       subtitle: context.lang.addMealBasicInfoSubtitle,
       children: [
-        TextFormField(
-          key: ValueKey(mealName),
-          initialValue: mealName,
+        ControlledTextFormField(
+          value: mealName,
+          onChanged: ref.read(mealDraftProvider.notifier).setName,
           maxLength: 120,
           textInputAction: TextInputAction.next,
           validator: (value) {

@@ -41,7 +41,7 @@ class AddMealPage extends HookConsumerWidget {
               ),
               const SizedBox(height: 24),
               AddMealSourceSection(
-                picker: showCopiedMealPicker,
+                picker: (context) => showCopiedMealPicker(context, ref),
                 isLoading: isCopying,
                 enabled: !isSaving,
                 onPicked: (value) => _copyFromSource(context, ref, value),
@@ -72,12 +72,17 @@ class AddMealPage extends HookConsumerWidget {
     );
   }
 
-  Future<CopiedMealType?> showCopiedMealPicker(BuildContext context) {
+  Future<CopiedMealType?> showCopiedMealPicker(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     return showModalBottomSheet<CopiedMealType>(
       useRootNavigator: false,
       isScrollControlled: true,
       context: context,
-      builder: (context) => const CopiedMealPicker(),
+      builder: (context) => CopiedMealPicker(
+        initialQuery: ref.read(mealDraftProvider).name.trim(),
+      ),
     );
   }
 

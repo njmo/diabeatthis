@@ -7,20 +7,20 @@ import '../../../ingredients/presentation/widgets/ingredient_list_filter.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/copied_meal_provider.dart';
 import '../screens/meal_page.dart';
+import 'copied_meal_ingredients_preview.dart';
 
 class CopiedMealPicker extends HookConsumerWidget {
-  const CopiedMealPicker({super.key});
+  const CopiedMealPicker({super.key, this.initialQuery = ''});
+
+  final String initialQuery;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final query = useState('');
-    final meals = ref.watch(copiedFromMealByQueryProvider(query.value));
-    final templates = ref.watch(
-      copiedFromMealTemplateByQueryProvider(query.value),
-    );
-
-    final copiedMeals = [...?meals.value, ...?templates.value];
-    copiedMeals.sort((a, b) => b.date.compareTo(a.date));
+    final query = useState(initialQuery);
+    final showTemplates = useState(false);
+    final results = showTemplates.value
+        ? ref.watch(copiedFromMealTemplateByQueryProvider(query.value))
+        : ref.watch(copiedFromMealByQueryProvider(query.value));
 
     return Padding(
       padding: EdgeInsets.only(
@@ -33,7 +33,24 @@ class CopiedMealPicker extends HookConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          SegmentedButton<bool>(
+            segments: [
+              ButtonSegment(
+                value: false,
+                label: Text(context.lang.copiedMealHistoryTab),
+              ),
+              ButtonSegment(
+                value: true,
+                label: Text(context.lang.copiedMealSavedTemplatesTab),
+              ),
+            ],
+            selected: {showTemplates.value},
+            onSelectionChanged: (selection) =>
+                showTemplates.value = selection.single,
+          ),
+          const SizedBox(height: 16),
           IngredientListFilter(
+            initialQuery: initialQuery,
             hintText: context.lang.copiedMealSearchHint,
             onQueryChanged: (value) {
               query.value = value;
@@ -41,18 +58,41 @@ class CopiedMealPicker extends HookConsumerWidget {
             padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 16),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 300),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: copiedMeals.length,
-              itemBuilder: (BuildContext context, int index) {
-                final copiedMeal = copiedMeals[index];
-                return CopiedMealPickerTile(
-                  copiedMeal: copiedMeal,
-                  onPick: () => Navigator.of(context).pop(copiedMeal),
-                );
-              },
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: results.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stackTrace) => TextButton(
+                  onPressed: () => ref.invalidate(
+                    showTemplates.value
+                        ? copiedFromMealTemplateByQueryProvider(query.value)
+                        : copiedFromMealByQueryProvider(query.value),
+                  ),
+                  child: Text(context.lang.copiedMealLoadRetry),
+                ),
+                data: (items) {
+                  final copiedMeals = [...items]
+                    ..sort((a, b) => b.date.compareTo(a.date));
+                  if (copiedMeals.isEmpty) {
+                    return Text(context.lang.copiedMealNoResults);
+                  }
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: copiedMeals.length,
+                    itemBuilder: (context, index) {
+                      final copiedMeal = copiedMeals[index];
+                      return CopiedMealPickerTile(
+                        key: ValueKey(
+                          '${copiedMeal.runtimeType}:${copiedMeal.id}',
+                        ),
+                        copiedMeal: copiedMeal,
+                        onPick: () => Navigator.of(context).pop(copiedMeal),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -61,7 +101,7 @@ class CopiedMealPicker extends HookConsumerWidget {
   }
 }
 
-class CopiedMealPickerTile extends ConsumerWidget {
+class CopiedMealPickerTile extends HookConsumerWidget {
   final CopiedMealType copiedMeal;
   final VoidCallback onPick;
 
@@ -75,16 +115,28 @@ class CopiedMealPickerTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final canPreview = copiedMeal is CopiedMealFromMeal;
 
-    return ListTile(
-      title: CopiedMealPickerTitle(copiedMeal: copiedMeal),
-      subtitle: Text(copiedMeal.date.toIso8601String()),
-      trailing: canPreview
-          ? TextButton(
+    final expanded = useState(false);
+    return Column(
+      children: [
+        ListTile(
+          title: CopiedMealPickerTitle(copiedMeal: copiedMeal),
+          subtitle: Text(
+            MaterialLocalizations.of(context).formatMediumDate(copiedMeal.date),
+          ),
+          trailing: Icon(
+            expanded.value ? Icons.expand_less : Icons.expand_more,
+          ),
+          onTap: () => expanded.value = !expanded.value,
+        ),
+        if (expanded.value) ...[
+          CopiedMealIngredientsPreview(source: copiedMeal, onUse: onPick),
+          if (canPreview)
+            TextButton(
               onPressed: () => _openPreview(context, ref),
-              child: Text(context.lang.copiedMealPreview),
-            )
-          : null,
-      onTap: onPick,
+              child: Text(context.lang.copiedMealHistoryDetails),
+            ),
+        ],
+      ],
     );
   }
 

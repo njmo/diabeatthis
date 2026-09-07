@@ -11,12 +11,14 @@ import 'selected_ingredient_chips.dart';
 
 class IngredientListFilter extends HookConsumerWidget {
   final String hintText;
+  final String initialQuery;
   final ValueChanged<String> onQueryChanged;
   final EdgeInsetsGeometry padding;
 
   const IngredientListFilter({
     super.key,
     required this.hintText,
+    this.initialQuery = '',
     required this.onQueryChanged,
     this.padding = const EdgeInsets.fromLTRB(12, 8, 12, 6),
   });
@@ -24,7 +26,7 @@ class IngredientListFilter extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const filterRowHeight = 48.0;
-    final queryController = useTextEditingController();
+    final queryController = useTextEditingController(text: initialQuery);
     final selectedIngredients = ref.watch(ingredientFilterProvider);
     final controller = ref.read(ingredientFilterProvider.notifier);
     final hasRemovableIngredients = selectedIngredients.any(
