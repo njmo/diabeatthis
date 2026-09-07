@@ -21,10 +21,10 @@ plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     id("com.android.application") version "9.1.0" apply false
     id("com.android.library") version "9.1.0" apply false
-    id("com.android.built-in-kotlin") version "9.1.0" apply false
     // START: FlutterFire Configuration
     id("com.google.gms.google-services") version("4.3.15") apply false
     // END: FlutterFire Configuration
+    // Override AGP's bundled Kotlin compiler without applying the legacy Android plugin.
     id("org.jetbrains.kotlin.android") version "2.4.0" apply false
 }
 

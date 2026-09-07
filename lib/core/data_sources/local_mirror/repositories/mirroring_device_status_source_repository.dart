@@ -6,10 +6,9 @@ import 'local_repository_mirroring.dart';
 class MirroringDeviceStatusSourceRepository
     implements DeviceStatusSourceRepository {
   MirroringDeviceStatusSourceRepository({
-    required DeviceStatusSourceRepository delegate,
+    required this._delegate,
     required LocalMirrorWriter mirrorWriter,
-  }) : _delegate = delegate,
-       _mirroring = LocalRepositoryMirroring(mirrorWriter);
+  }) : _mirroring = LocalRepositoryMirroring(mirrorWriter);
 
   final DeviceStatusSourceRepository _delegate;
   final LocalRepositoryMirroring _mirroring;

@@ -6,12 +6,10 @@ import 'local_repository_mirroring.dart';
 
 class MirroringTreatmentSourceRepository implements TreatmentSourceRepository {
   MirroringTreatmentSourceRepository({
-    required TreatmentSourceRepository delegate,
+    required this._delegate,
     required LocalMirrorWriter mirrorWriter,
-    required TreatmentsSource source,
-  }) : _delegate = delegate,
-       _mirroring = LocalRepositoryMirroring(mirrorWriter),
-       _source = source;
+    required this._source,
+  }) : _mirroring = LocalRepositoryMirroring(mirrorWriter);
 
   final TreatmentSourceRepository _delegate;
   final LocalRepositoryMirroring _mirroring;

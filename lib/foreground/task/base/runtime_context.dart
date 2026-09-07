@@ -42,13 +42,11 @@ class RuntimeContext with Logging {
     required this.emitEvent,
     required this.emitSignal,
     required this.tick,
-    required EventWaitFactory eventWaitFactory,
-    required SignalWaitFactory signalWaitFactory,
-    required DeadlineWaitFn deadlineWaitFactory,
+    required this._eventWaitFactory,
+    required this._signalWaitFactory,
+    required this._deadlineWaitFactory,
     required this.container,
-  }) : _eventWaitFactory = eventWaitFactory,
-       _signalWaitFactory = signalWaitFactory,
-       _deadlineWaitFactory = deadlineWaitFactory;
+  });
 
   RuntimeContext overrideControllers({
     TaskCancellation? cancellation,
@@ -288,9 +286,8 @@ class ScopedRuntimeContext extends RuntimeContext {
   final RuntimeContext _base;
   final WaitScope _scope;
 
-  ScopedRuntimeContext({required RuntimeContext base, required WaitScope scope})
+  ScopedRuntimeContext({required RuntimeContext base, required this._scope})
     : _base = base,
-      _scope = scope,
       super(
         cancellation: base.cancellation,
         interruptController: base.interruptController,

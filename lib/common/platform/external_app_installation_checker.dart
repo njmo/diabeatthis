@@ -27,11 +27,9 @@ class ExternalAppInstallationChecker {
   final TargetPlatform? _targetPlatform;
 
   const ExternalAppInstallationChecker({
-    ExternalAppLauncherClient client =
-        const LaunchAppExternalAppLauncherClient(),
-    TargetPlatform? targetPlatform,
-  }) : _client = client,
-       _targetPlatform = targetPlatform;
+    this._client = const LaunchAppExternalAppLauncherClient(),
+    this._targetPlatform,
+  });
 
   Future<bool> isInstalled(ExternalDataApp app) async {
     if ((_targetPlatform ?? defaultTargetPlatform) != TargetPlatform.android) {

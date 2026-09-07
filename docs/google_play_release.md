@@ -4,13 +4,15 @@ The Android release workflow builds a signed app bundle and APK, uploads both as
 
 ## Android build toolchain
 
-Both GitHub Actions workflows use Flutter 3.47.0 and Java 17. The project uses Gradle 9.3.1, Android Gradle Plugin 9.1.0, and Kotlin Gradle Plugin 2.4.0. Keep the Flutter version aligned in both workflows when upgrading it.
+Both GitHub Actions workflows use Flutter 3.47.0 and Java 17. The project uses Gradle 9.3.1, Android Gradle Plugin 9.1.0, and built-in Kotlin with compiler version 2.4.0. Keep the Flutter version aligned in both workflows when upgrading it.
 
-Android plugin versions are managed in `android/settings.gradle.kts`, including those used by the local `foreground_power_lock` plugin. The compatibility flags in `android/gradle.properties` retain support for Flutter plugins using the legacy Kotlin plugin and Android DSL.
+Android plugin versions are managed in `android/settings.gradle.kts`, including those used by the local `foreground_power_lock` plugin. Built-in Kotlin is enabled globally in `android/gradle.properties`; neither the app nor the local plugin applies the legacy Kotlin Android plugin. The Kotlin declaration with `apply false` selects the compiler version required by Flutter. The old Android DSL remains enabled for compatibility with Flutter dependencies.
 
-`android/build.gradle.kts` explicitly enables built-in Kotlin for `file_picker`, `firebase_ai`, and `firebase_app_check`, which require it on AGP 9. Review this list when upgrading Flutter plugins; remove the per-module setup once all dependencies support globally enabled built-in Kotlin.
+Commit `pubspec.lock` with dependency upgrades. Both workflows enforce it when resolving packages so builds use the plugin versions validated for built-in Kotlin. Some upstream plugins retain conditional KGP declarations for AGP 8; Flutter 3.47 may list them in its text-based warning even though those declarations do not run on AGP 9.
 
 CI builds a debug APK after analysis and tests; the release workflow builds the signed AAB and APK.
+
+The plugin upgrades also require the updated iOS configuration: Flutter 3.47 uses an iOS 15 deployment target and Swift Package Manager integration, with CocoaPods retained for plugins that still need it. Keep the Swift package resolution files and `ios/Podfile.lock` with dependency changes.
 
 ## Trigger
 

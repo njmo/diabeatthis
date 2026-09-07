@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -111,12 +109,7 @@ class _DatabaseSettingsSectionState
 
     PlatformFile? file;
     try {
-      final result = await FilePicker.pickFiles(
-        type: FileType.any,
-        allowMultiple: false,
-        withData: true,
-      );
-      file = result?.files.single;
+      file = await FilePicker.pickFile(type: FileType.any);
     } on MissingPluginException {
       if (!mounted) return;
       _showSnackBar(importerUnavailableMessage);
@@ -139,14 +132,16 @@ class _DatabaseSettingsSectionState
     setState(() => _isImporting = true);
     try {
       final service = ref.read(databaseBackupServiceProvider);
-      if (file.bytes == null && path == null) {
+      final List<int> bytes;
+      try {
+        bytes = await file.readAsBytes();
+      } catch (_) {
+        if (!mounted) return;
         _showSnackBar(fileReadFailedMessage);
         return;
       }
 
-      final result = file.bytes != null
-          ? await service.importFromBytes(file.bytes!)
-          : await service.importFromFile(File(path!));
+      final result = await service.importFromBytes(bytes);
       if (!mounted) return;
       _showSnackBar(importSuccessMessage(result.rowCount));
     } on FormatException {

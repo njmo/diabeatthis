@@ -60,7 +60,7 @@ jobs:
           cache: true
 
       - name: Get dependencies
-        run: flutter pub get
+        run: flutter pub get --enforce-lockfile
 
       - name: Generate code
         run: flutter pub run build_runner build --delete-conflicting-outputs

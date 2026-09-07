@@ -15,8 +15,7 @@ class WaitHandle<T> {
   final Future<T> future;
   final WaitCancel _cancel;
 
-  const WaitHandle({required this.future, required WaitCancel cancel})
-    : _cancel = cancel;
+  const WaitHandle({required this.future, required this._cancel});
 
   Future<void> cancel() async {
     await _cancel();

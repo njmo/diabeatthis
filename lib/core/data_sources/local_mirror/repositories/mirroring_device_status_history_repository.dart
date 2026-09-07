@@ -6,10 +6,9 @@ import 'local_repository_mirroring.dart';
 class MirroringDeviceStatusHistoryRepository
     implements DeviceStatusHistoryRepository {
   MirroringDeviceStatusHistoryRepository({
-    required DeviceStatusHistoryRepository delegate,
+    required this._delegate,
     required LocalMirrorWriter mirrorWriter,
-  }) : _delegate = delegate,
-       _mirroring = LocalRepositoryMirroring(mirrorWriter);
+  }) : _mirroring = LocalRepositoryMirroring(mirrorWriter);
 
   final DeviceStatusHistoryRepository _delegate;
   final LocalRepositoryMirroring _mirroring;

@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import flutter_local_notifications
+import flutter_foreground_task
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {

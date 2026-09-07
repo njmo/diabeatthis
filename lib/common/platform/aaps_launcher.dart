@@ -19,11 +19,9 @@ class AapsLauncher {
   final TargetPlatform? _targetPlatform;
 
   const AapsLauncher({
-    ExternalAppLauncherClient client =
-        const LaunchAppExternalAppLauncherClient(),
-    TargetPlatform? targetPlatform,
-  }) : _client = client,
-       _targetPlatform = targetPlatform;
+    this._client = const LaunchAppExternalAppLauncherClient(),
+    this._targetPlatform,
+  });
 
   Future<AapsLaunchResult> openAaps() async {
     if ((_targetPlatform ?? defaultTargetPlatform) != TargetPlatform.android) {
