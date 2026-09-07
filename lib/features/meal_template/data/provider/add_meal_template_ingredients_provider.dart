@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/navigation/step_history.dart';
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
@@ -32,18 +33,16 @@ GlobalKey<FormState> mealTemplateIngredientFormKey(Ref ref) {
 @riverpod
 class AddMealTemplateIngredientStageNotifier
     extends _$AddMealTemplateIngredientStageNotifier {
-  final _history = <AddMealTemplateIngredientStage>[];
+  final _history = StepHistory(root: AddMealTemplateIngredientStage.dismiss);
 
   @override
   AddMealTemplateIngredientStage build() {
-    _history.clear();
-    _history.add(AddMealTemplateIngredientStage.dismiss);
+    _history.reset();
     return AddMealTemplateIngredientStage.ingredientSearch;
   }
 
   void modifyIngredientStage(bool isReference) {
-    _history.clear();
-    _history.add(AddMealTemplateIngredientStage.dismiss);
+    _history.reset();
     if (isReference) {
       state = AddMealTemplateIngredientStage.amountForm;
       return;
@@ -192,22 +191,11 @@ class AddMealTemplateIngredientStageNotifier
   }
 
   void back() {
-    if (_history.isEmpty) {
-      state = AddMealTemplateIngredientStage.dismiss;
-      return;
-    }
-    state = _history.removeLast();
+    state = _history.pop();
   }
 
   void _moveTo(AddMealTemplateIngredientStage next) {
-    _pushHistory(state);
+    _history.push(state);
     state = next;
-  }
-
-  void _pushHistory(AddMealTemplateIngredientStage stage) {
-    if (_history.isNotEmpty && _history.last == stage) {
-      return;
-    }
-    _history.add(stage);
   }
 }

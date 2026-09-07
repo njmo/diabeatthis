@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/navigation/step_history.dart';
 import '../../../../common/nutrition/confidence_level.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
@@ -50,12 +51,11 @@ GlobalKey<FormState> ingredientFormKey(Ref ref) {
 
 @riverpod
 class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
-  final _history = <AddMealIngredientStage>[];
+  final _history = StepHistory(root: AddMealIngredientStage.dismiss);
 
   @override
   AddMealIngredientStage build() {
-    _history.clear();
-    _history.add(AddMealIngredientStage.dismiss);
+    _history.reset();
     return AddMealIngredientStage.ingredientSearch;
   }
 
@@ -63,8 +63,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     ref
         .read(mealIngredientsDraftProvider.notifier)
         .overrideMealIngredient(draft);
-    _history.clear();
-    _history.add(AddMealIngredientStage.dismiss);
+    _history.reset();
     ref
         .read(mealIngredientConfidenceDraftProvider.notifier)
         .setConfidence(ConfidenceLevelX.fromDouble01(draft.quantityConfidence));
@@ -309,15 +308,11 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
       ref.invalidate(ingredientPhotoScanControllerProvider);
       ref.invalidate(ingredientPhotoSearchControllerProvider);
     }
-    if (_history.isEmpty) {
-      state = AddMealIngredientStage.dismiss;
-      return;
-    }
-    state = _history.removeLast();
+    state = _history.pop();
   }
 
   void _moveTo(AddMealIngredientStage next, {AddMealIngredientStage? backTo}) {
-    _pushHistory(backTo ?? state);
+    _history.push(backTo ?? state);
     state = next;
   }
 
@@ -342,16 +337,8 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   }
 
   void _moveBackTo(AddMealIngredientStage stage) {
-    _history.clear();
-    _history.add(AddMealIngredientStage.dismiss);
+    _history.reset();
     state = stage;
-  }
-
-  void _pushHistory(AddMealIngredientStage stage) {
-    if (_history.isNotEmpty && _history.last == stage) {
-      return;
-    }
-    _history.add(stage);
   }
 
   void _openAmountForm() {
