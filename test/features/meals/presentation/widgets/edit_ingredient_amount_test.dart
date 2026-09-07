@@ -76,8 +76,12 @@ void main() {
           ConfidenceLevel.high,
         );
         expect(container.read(mealIngredientsDraftProvider), original);
+        expect(
+          find.text('Zmień miarę'),
+          isReference ? findsNothing : findsOneWidget,
+        );
         if (!isReference) {
-          await tester.tap(find.byIcon(Icons.arrow_back));
+          await tester.tap(find.text('Zmień miarę'));
           await tester.pumpAndSettle();
           expect(find.text('Dodaj w gramach'), findsOneWidget);
           await tester.tap(find.text('Dodaj w gramach'));

@@ -58,6 +58,9 @@ class AmountForm extends ConsumerWidget {
                 draft: draft,
                 gramsPerPortion: gramsPerPortion,
                 isLoadingPortionAmount: isLoadingPortionAmount,
+                onChangeMeasure: draft.ingredient.isReference
+                    ? null
+                    : ref.read(addMealIngredientStageProvider.notifier).back,
               ),
               const SizedBox(height: 16),
               FormField<double>(
@@ -124,11 +127,13 @@ class AmountFormInfo extends StatelessWidget {
   final MealIngredientsDraft draft;
   final double? gramsPerPortion;
   final bool isLoadingPortionAmount;
+  final VoidCallback? onChangeMeasure;
 
   const AmountFormInfo({
     required this.draft,
     required this.gramsPerPortion,
     required this.isLoadingPortionAmount,
+    this.onChangeMeasure,
     super.key,
   });
 
@@ -155,6 +160,12 @@ class AmountFormInfo extends StatelessWidget {
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
+            if (onChangeMeasure != null)
+              TextButton.icon(
+                onPressed: onChangeMeasure,
+                icon: const Icon(Icons.swap_horiz, size: 18),
+                label: Text(context.lang.amountChangeMeasure),
+              ),
           ],
         ),
       ),

@@ -746,5 +746,6 @@
   "copiedMealUseHint": "Using these ingredients replaces the current list in your new meal.",
   "copiedMealUseIngredients": "Use ingredients",
   "copiedMealBrowseTitle": "Find a similar meal",
-  "copiedMealBrowseSubtitle": "Preview ingredients and use them in your meal."
+  "copiedMealBrowseSubtitle": "Preview ingredients and use them in your meal.",
+  "amountChangeMeasure": "Change measure"
 }

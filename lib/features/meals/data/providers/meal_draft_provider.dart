@@ -71,6 +71,16 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
   void setIngredientPortion(PortionSelection portion) => state = state.copyWith(
     ingredientPortion: state.ingredientPortion.copyWith(portion: portion),
   );
+  void selectIngredientPortion(PortionSelection portion) {
+    if (state.ingredientPortion.portion == portion) return;
+    state = state.copyWith(
+      ingredientPortion: state.ingredientPortion.copyWith(
+        portion: portion,
+        amount: 0,
+      ),
+    );
+  }
+
   void setIngredientPortionAmount(double amount) => state = state.copyWith(
     ingredientPortion: state.ingredientPortion.copyWith(amount: amount),
   );

@@ -116,6 +116,101 @@ void main() {
       );
     }
 
+    final measures = [
+      const PortionSelection.empty(),
+      const PortionSelection.existing(id: 7, name: 'kromka', unitHint: 'g'),
+      const PortionSelection.existing(id: 8, name: 'łyżka', unitHint: 'g'),
+    ];
+    for (final originalPortion in measures) {
+      for (final selectedPortion in measures) {
+        test(
+          'amount follows measure identity: $originalPortion -> $selectedPortion',
+          () async {
+            final container = ProviderContainer();
+            addTearDown(container.dispose);
+            final original = container
+                .read(mealIngredientsDraftProvider)
+                .copyWith(
+                  ingredient: _existingIngredient(id: 12),
+                  ingredientPortion: IngredientPortionDraft(
+                    portion: originalPortion,
+                    amount: 35,
+                  ),
+                  amount: 50,
+                );
+            final notifier = container.read(
+              addMealIngredientStageProvider.notifier,
+            );
+            notifier.editIngredient(original);
+            container
+                .read(mealIngredientAmountDraftProvider.notifier)
+                .setValue(75);
+            notifier.back();
+            expect(container.read(mealIngredientAmountDraftProvider), 75);
+            if (selectedPortion == const PortionSelection.empty()) {
+              notifier.setOverride();
+            } else {
+              container
+                  .read(portionDraftProvider.notifier)
+                  .overrideDraft(selectedPortion);
+              await notifier.nextStage();
+            }
+            final changed = originalPortion != selectedPortion;
+            expect(
+              container.read(mealIngredientAmountDraftProvider),
+              changed ? 0 : 75,
+            );
+            expect(
+              container
+                  .read(mealIngredientsDraftProvider)
+                  .ingredientPortion
+                  .amount,
+              changed ? 0 : 35,
+            );
+            if (changed) expect(notifier.completeAmountForm, throwsStateError);
+          },
+        );
+      }
+    }
+
+    test(
+      'new portion keeps its entered weight but resets the ingredient amount',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final original = container
+            .read(mealIngredientsDraftProvider)
+            .copyWith(
+              ingredientPortion: const IngredientPortionDraft(
+                portion: PortionSelection.empty(),
+                amount: 1,
+              ),
+              amount: 50,
+            );
+        final notifier = container.read(
+          addMealIngredientStageProvider.notifier,
+        );
+        notifier.editIngredient(original);
+        notifier.back();
+        notifier.toOppositeStage();
+        container
+            .read(portionDraftProvider.notifier)
+            .overrideDraft(
+              const PortionSelection.draft(name: 'kromka', unitHint: 'g'),
+            );
+        await notifier.nextStage();
+        container
+            .read(mealIngredientsDraftProvider.notifier)
+            .setIngredientPortionAmount(35);
+        await notifier.nextStage();
+        expect(container.read(mealIngredientAmountDraftProvider), 0);
+        expect(
+          container.read(mealIngredientsDraftProvider).ingredientPortion.amount,
+          35,
+        );
+      },
+    );
+
     test('completes a new ingredient directly from its amount form', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);

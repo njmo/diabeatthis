@@ -874,5 +874,6 @@
   "copiedMealUseHint": "Użycie składników zastąpi obecną listę w tworzonym posiłku.",
   "copiedMealUseIngredients": "Użyj składników",
   "copiedMealBrowseTitle": "Znajdź podobny posiłek",
-  "copiedMealBrowseSubtitle": "Podejrzyj składniki i wykorzystaj je w swoim posiłku."
+  "copiedMealBrowseSubtitle": "Podejrzyj składniki i wykorzystaj je w swoim posiłku.",
+  "amountChangeMeasure": "Zmień miarę"
 }
