@@ -34,12 +34,11 @@ Future<MealIngredientsDraft?> showAddMealIngredientSheet({
   ref.invalidate(mealIngredientConfidenceDraftProvider);
 
   if (initialDraft != null) {
-    final mealIngredientDraft = ref.watch(
-      mealIngredientsDraftProvider.notifier,
-    );
-    final stageNotifier = ref.watch(addMealIngredientStageProvider.notifier);
-    mealIngredientDraft.overrideMealIngredient(initialDraft);
-    stageNotifier.modifyIngredientStage(initialDraft.ingredient.isReference);
+    // Keep the existing draft subscription while the editor moves between stages.
+    ref.watch(mealIngredientsDraftProvider.notifier);
+    ref
+        .watch(addMealIngredientStageProvider.notifier)
+        .editIngredient(initialDraft);
   }
 
   return showModalBottomSheet<MealIngredientsDraft>(

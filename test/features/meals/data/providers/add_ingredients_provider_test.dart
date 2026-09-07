@@ -52,9 +52,6 @@ void main() {
             (_, _) {},
           );
           addTearDown(amountSubscription.close);
-          final draftNotifier = container.read(
-            mealIngredientsDraftProvider.notifier,
-          );
           final original = container
               .read(mealIngredientsDraftProvider)
               .copyWith(
@@ -78,11 +75,10 @@ void main() {
                 consumedAmount: 1.5,
                 consumedConfidence: 0.95,
               );
-          draftNotifier.overrideMealIngredient(original);
           final notifier = container.read(
             addMealIngredientStageProvider.notifier,
           );
-          notifier.modifyIngredientStage(isReference);
+          notifier.editIngredient(original);
 
           expect(container.read(mealIngredientsDraftProvider), original);
           expect(
@@ -309,12 +305,12 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      container
-          .read(mealIngredientsDraftProvider.notifier)
-          .setIngredient(_existingIngredient(id: 12));
+      final draft = container
+          .read(mealIngredientsDraftProvider)
+          .copyWith(ingredient: _existingIngredient(id: 12));
       final notifier = container.read(addMealIngredientStageProvider.notifier);
 
-      notifier.modifyIngredientStage(false);
+      notifier.editIngredient(draft);
 
       expect(
         container.read(addMealIngredientStageProvider),
@@ -332,6 +328,83 @@ void main() {
         AddMealIngredientStage.dismiss,
       );
     });
+
+    for (final savedAmount in [0.0, -2.0, 0.5]) {
+      test('initializes reference editing with saved amount $savedAmount', () {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final notifier = container.read(
+          addMealIngredientStageProvider.notifier,
+        );
+        notifier.startManualIngredient();
+        final draft = container
+            .read(mealIngredientsDraftProvider)
+            .copyWith(
+              ingredient: _existingIngredient(
+                id: 12,
+              ).copyWith(isReference: true),
+              amount: savedAmount,
+              quantityConfidence: 0.8,
+            );
+
+        notifier.editIngredient(draft);
+
+        expect(container.read(mealIngredientsDraftProvider), draft);
+        expect(
+          container.read(mealIngredientAmountDraftProvider),
+          savedAmount > 0 ? savedAmount : 1.0,
+        );
+        expect(
+          container.read(mealIngredientConfidenceDraftProvider),
+          ConfidenceLevel.high,
+        );
+        expect(
+          container.read(addMealIngredientStageProvider),
+          AddMealIngredientStage.amountForm,
+        );
+        notifier.back();
+        expect(
+          container.read(addMealIngredientStageProvider),
+          AddMealIngredientStage.dismiss,
+        );
+      });
+    }
+
+    test(
+      'starts editing a new ingredient at portion search and clears history',
+      () {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final draft = container
+            .read(mealIngredientsDraftProvider)
+            .copyWith(amount: 2, quantityConfidence: 0.25);
+        final notifier = container.read(
+          addMealIngredientStageProvider.notifier,
+        );
+        notifier.startManualIngredient();
+
+        notifier.editIngredient(draft);
+
+        expect(container.read(mealIngredientsDraftProvider), draft);
+        expect(
+          container.read(mealIngredientConfidenceDraftProvider),
+          ConfidenceLevel.low,
+        );
+        expect(
+          container.read(addMealIngredientStageProvider),
+          AddMealIngredientStage.portionAddNewSearch,
+        );
+        expect(
+          container.read(portionFilterProvider),
+          const PortionFilter.byQuery(),
+        );
+        notifier.back();
+        expect(
+          container.read(addMealIngredientStageProvider),
+          AddMealIngredientStage.dismiss,
+        );
+      },
+    );
 
     test('opens existing portions for existing barcode ingredient', () {
       final container = ProviderContainer();

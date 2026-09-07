@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
-import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../../meals/presentation/widgets/meal_ingredient_preview_tile.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -118,12 +117,7 @@ class MealSummaryExtraItemsSection extends ConsumerWidget {
     WidgetRef ref,
     MealIngredientsDraft item,
   ) async {
-    ref
-        .read(mealIngredientsDraftProvider.notifier)
-        .overrideMealIngredient(item);
-    ref
-        .read(addMealIngredientStageProvider.notifier)
-        .modifyIngredientStage(item.ingredient.isReference);
+    ref.read(addMealIngredientStageProvider.notifier).editIngredient(item);
 
     final mealIngredient = await showModalBottomSheet<MealIngredientsDraft>(
       context: context,

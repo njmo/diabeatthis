@@ -15,6 +15,7 @@ import '../../../meal_advisor/presentation/controllers/ingredient_photo_search_c
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/drafts/portion_filter.dart';
 import '../../../portions/data/providers/portion_provider.dart';
+import '../drafts/meal_draft.dart';
 import 'meal_draft_provider.dart';
 
 part 'add_ingredients_provider.g.dart';
@@ -58,21 +59,23 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     return AddMealIngredientStage.ingredientSearch;
   }
 
-  void modifyIngredientStage(bool isReference) {
+  void editIngredient(MealIngredientsDraft draft) {
+    ref
+        .read(mealIngredientsDraftProvider.notifier)
+        .overrideMealIngredient(draft);
     _history.clear();
     _history.add(AddMealIngredientStage.dismiss);
-    final draft = ref.read(mealIngredientsDraftProvider);
     ref
         .read(mealIngredientConfidenceDraftProvider.notifier)
         .setConfidence(ConfidenceLevelX.fromDouble01(draft.quantityConfidence));
-    if (isReference) {
+    if (draft.ingredient.isReference) {
       final amount = draft.amount > 0 ? draft.amount : 1.0;
       ref.read(mealIngredientAmountDraftProvider.notifier).setValue(amount);
       state = AddMealIngredientStage.amountForm;
       return;
     }
 
-    final ingredientDraft = ref.read(mealIngredientsDraftProvider).ingredient;
+    final ingredientDraft = draft.ingredient;
     final ingredientId = ingredientDraft.getIngredientIdOrNull();
     final filter = ingredientId == null
         ? PortionFilter.byQuery()
