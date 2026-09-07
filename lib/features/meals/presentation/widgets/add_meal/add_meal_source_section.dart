@@ -10,12 +10,10 @@ class AddMealSourceSection extends StatelessWidget {
     super.key,
     required this.picker,
     required this.onPicked,
-    required this.onSaved,
   });
 
   final Future<CopiedMealType?> Function(BuildContext context) picker;
-  final ValueChanged<CopiedMealType?> onPicked;
-  final ValueChanged<CopiedMealType?> onSaved;
+  final Future<bool> Function(CopiedMealType) onPicked;
 
   @override
   Widget build(BuildContext context) {
@@ -23,13 +21,7 @@ class AddMealSourceSection extends StatelessWidget {
       icon: Icons.content_copy,
       title: context.lang.addMealSourceTitle,
       subtitle: context.lang.addMealSourceSubtitle,
-      children: [
-        CopiedMealFormField(
-          picker: picker,
-          onPicked: onPicked,
-          onSaved: onSaved,
-        ),
-      ],
+      children: [CopiedMealFormField(picker: picker, onPicked: onPicked)],
     );
   }
 }

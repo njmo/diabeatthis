@@ -4,10 +4,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
-import '../../../meal_template/data/provider/meal_template_ingredients_list_provider.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/meal_draft_provider.dart';
-import '../../data/providers/meal_ingredients_list_provider.dart';
 import '../controllers/add_meal_controller.dart';
 import '../widgets/add_meal/add_meal_basic_info_section.dart';
 import '../widgets/add_meal/add_meal_ingredients_section.dart';
@@ -40,8 +38,7 @@ class AddMealPage extends HookConsumerWidget {
               const SizedBox(height: 24),
               AddMealSourceSection(
                 picker: showCopiedMealPicker,
-                onPicked: (value) => _copyIngredientsFromSource(ref, value),
-                onSaved: (value) => _saveSource(ref, value),
+                onPicked: (value) => _copyFromSource(context, ref, value),
               ),
               const SizedBox(height: 24),
               const AddMealIngredientsSection(),
@@ -78,36 +75,21 @@ class AddMealPage extends HookConsumerWidget {
     );
   }
 
-  Future<void> _copyIngredientsFromSource(
+  Future<bool> _copyFromSource(
+    BuildContext context,
     WidgetRef ref,
-    CopiedMealType? value,
+    CopiedMealType source,
   ) async {
-    if (value is CopiedMealFromTemplate) {
-      final draft = ref.read(mealDraftProvider.notifier);
-      draft.setName(value.name);
-      final ingredients = await ref.read(
-        getMealIngredientsDraftForMealTemplateProvider(value.id).future,
-      );
-      draft.clearMealIngredients();
-      draft.addMealIngredients(ingredients);
-    } else if (value is CopiedMealFromMeal) {
-      final ingredients = await ref.read(
-        getMealIngredientsDraftForMealProvider(value.id).future,
-      );
-      final draft = ref.read(mealDraftProvider.notifier);
-      draft.clearMealIngredients();
-      draft.addMealIngredients(ingredients);
-    }
-  }
-
-  void _saveSource(WidgetRef ref, CopiedMealType? value) {
-    final draft = ref.read(mealDraftProvider.notifier);
-    if (value is CopiedMealFromTemplate) {
-      draft.setMealTemplateId(value.id);
-      draft.setBasedOnMealId(value.copiedFromMealId);
-    } else if (value is CopiedMealFromMeal) {
-      draft.setBasedOnMealId(value.copiedFromMealId ?? value.id);
-      draft.setMealTemplateId(value.copiedFromTemplateId);
+    try {
+      await ref.read(addMealControllerProvider.notifier).copyFromSource(source);
+      return true;
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.lang.mealIngredientsLoadError(error))),
+        );
+      }
+      return false;
     }
   }
 

@@ -7,10 +7,9 @@ class CopiedMealFormField extends FormField<CopiedMealType?> {
   CopiedMealFormField({
     super.key,
     super.initialValue,
-    super.onSaved,
     super.validator,
     required Future<CopiedMealType?> Function(BuildContext context) picker,
-    void Function(CopiedMealType? value)? onPicked,
+    required Future<bool> Function(CopiedMealType) onPicked,
   }) : super(
          builder: (state) {
            final value = state.value;
@@ -32,9 +31,11 @@ class CopiedMealFormField extends FormField<CopiedMealType?> {
                InkWell(
                  onTap: () async {
                    final result = await picker(state.context);
-                   if (result != null) {
-                     onPicked?.call(result);
-                     state.didChange(result);
+                   if (result != null && state.mounted) {
+                     final applied = await onPicked(result);
+                     if (applied && state.mounted) {
+                       state.didChange(result);
+                     }
                    }
                  },
                  child: InputDecorator(

@@ -7,6 +7,7 @@ import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../presentation/widgets/confidence_slider.dart';
 import '../drafts/meal_draft.dart';
+import '../model/copied_meal_type.dart';
 import '../models/meal_ingredient_replacement_result.dart';
 
 part 'meal_draft_provider.g.dart';
@@ -159,6 +160,25 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
   void clearMealIngredients() => state = state.copyWith(mealIngredients: []);
   void setMealIngredients(List<MealIngredientsDraft> mealIngredients) =>
       state = state.copyWith(mealIngredients: mealIngredients);
+
+  void applySource(
+    CopiedMealType source,
+    List<MealIngredientsDraft> ingredients,
+  ) {
+    state = switch (source) {
+      CopiedMealFromTemplate() => state.copyWith(
+        name: source.name,
+        mealIngredients: ingredients,
+        mealTemplateId: source.id,
+        basedOnMealId: source.copiedFromMealId,
+      ),
+      CopiedMealFromMeal() => state.copyWith(
+        mealIngredients: ingredients,
+        mealTemplateId: source.copiedFromTemplateId,
+        basedOnMealId: source.copiedFromMealId ?? source.id,
+      ),
+    };
+  }
 }
 
 extension MealIngredientsDraftIdentity on MealIngredientsDraft {
