@@ -601,6 +601,13 @@
   "amountLoadingPortionWeight": "Ładuję wagę porcji.",
   "amountMissingPortionWeight": "Brak wagi porcji.",
   "amountPortionWeightDescription": "1 {portionLabel} to {amount} {unitLabel}",
+  "@amountPortionWeightDescription": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "portionLabel": { "type": "String" },
+      "unitLabel": { "type": "String" }
+    }
+  },
   "mealSearchHint": "Szukaj posiłku po nazwie",
   "mealDeleteTitle": "Usunąć posiłek?",
   "mealDeleteMessage": "Posiłek \"{mealName}\" zostanie usunięty razem ze składnikami, podsumowaniem i wynikami analizy.",

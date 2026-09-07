@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/nutrition/ingredient_amount_calculator.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../data/drafts/meal_draft.dart';
@@ -31,8 +32,10 @@ class AmountForm extends ConsumerWidget {
             ),
           )
         : null;
-    final gramsPerPortion = _resolveGramsPerPortion(
-      draft: draft,
+    final gramsPerPortion = resolveIngredientGramsPerPortion(
+      usesGramAmount: draft.usesGramAmount,
+      isReference: draft.ingredient.isReference,
+      portionGrams: draft.ingredientPortion.amount,
       storedGramsPerPortion: storedPortionAmount?.maybeWhen(
         data: (value) => value,
         orElse: () => null,
@@ -108,22 +111,6 @@ class AmountForm extends ConsumerWidget {
       ),
     );
   }
-
-  double? _resolveGramsPerPortion({
-    required MealIngredientsDraft draft,
-    required double? storedGramsPerPortion,
-  }) {
-    if (draft.usesGramAmount) {
-      return 1;
-    }
-    if (draft.ingredient.isReference) {
-      return 100;
-    }
-    if (draft.ingredientPortion.amount > 0) {
-      return draft.ingredientPortion.amount;
-    }
-    return storedGramsPerPortion;
-  }
 }
 
 class AmountFormInfo extends StatelessWidget {
@@ -179,8 +166,8 @@ class AmountFormInfo extends StatelessWidget {
       return context.lang.amountMissingPortionWeight;
     }
     return context.lang.amountPortionWeightDescription(
-      unitLabelForAmount(1, draft.portionCountUnitLabel),
       amount.formattedAmount,
+      unitLabelForAmount(1, draft.portionCountUnitLabel),
       draft.portionWeightUnitLabel,
     );
   }

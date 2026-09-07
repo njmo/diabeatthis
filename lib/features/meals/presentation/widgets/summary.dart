@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/nutrition/ingredient_amount_calculator.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -23,8 +24,10 @@ class AddIngredientSummary extends ConsumerWidget {
             ),
           )
         : null;
-    final gramsPerPortion = _resolveGramsPerPortion(
-      draft: draft,
+    final gramsPerPortion = resolveIngredientGramsPerPortion(
+      usesGramAmount: draft.usesGramAmount,
+      isReference: draft.ingredient.isReference,
+      portionGrams: draft.ingredientPortion.amount,
       storedGramsPerPortion: storedPortionAmount?.maybeWhen(
         data: (value) => value,
         orElse: () => null,
@@ -40,22 +43,6 @@ class AddIngredientSummary extends ConsumerWidget {
         isLoadingPortionAmount: isLoadingPortionAmount,
       ),
     );
-  }
-
-  double? _resolveGramsPerPortion({
-    required MealIngredientsDraft draft,
-    required double? storedGramsPerPortion,
-  }) {
-    if (draft.usesGramAmount) {
-      return 1;
-    }
-    if (draft.ingredient.isReference) {
-      return 100;
-    }
-    if (draft.ingredientPortion.amount > 0) {
-      return draft.ingredientPortion.amount;
-    }
-    return storedGramsPerPortion;
   }
 }
 
@@ -85,7 +72,11 @@ class AddIngredientSummaryContent extends StatelessWidget {
             portionAmount: gramsPerPortion,
             isLoading: isLoadingPortionAmount,
           );
-    final totalGrams = _totalGrams(amount, gramsPerPortion, draft);
+    final totalGrams = calculateIngredientTotalGrams(
+      amount: amount,
+      usesGramAmount: draft.usesGramAmount,
+      gramsPerPortion: gramsPerPortion,
+    );
     final totalGramsLabel = isLoadingPortionAmount
         ? lang.commonLoading
         : totalGrams == null
@@ -138,20 +129,6 @@ class AddIngredientSummaryContent extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  double? _totalGrams(
-    double amount,
-    double? gramsPerPortion,
-    MealIngredientsDraft draft,
-  ) {
-    if (draft.usesGramAmount) {
-      return amount;
-    }
-    if (gramsPerPortion == null || gramsPerPortion <= 0) {
-      return null;
-    }
-    return amount * gramsPerPortion;
   }
 
   double _netCarbs(double totalGrams, MealIngredientsDraft draft) {

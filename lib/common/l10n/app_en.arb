@@ -473,6 +473,13 @@
   "amountLoadingPortionWeight": "Loading portion weight.",
   "amountMissingPortionWeight": "Missing portion weight.",
   "amountPortionWeightDescription": "1 {portionLabel} is {amount} {unitLabel}",
+  "@amountPortionWeightDescription": {
+    "placeholders": {
+      "amount": { "type": "String" },
+      "portionLabel": { "type": "String" },
+      "unitLabel": { "type": "String" }
+    }
+  },
   "mealSearchHint": "Search meal by name",
   "mealDeleteTitle": "Delete meal?",
   "mealDeleteMessage": "Meal \"{mealName}\" will be deleted with ingredients, summary, and analysis results.",
