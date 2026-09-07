@@ -2,6 +2,16 @@
 
 The Android release workflow builds a signed app bundle and APK, uploads both as GitHub Actions artifacts, creates a GitHub Release for version tags, and can upload the app bundle to Google Play.
 
+## Android build toolchain
+
+Both GitHub Actions workflows use Flutter 3.47.0 and Java 17. The project uses Gradle 9.3.1, Android Gradle Plugin 9.1.0, and Kotlin Gradle Plugin 2.4.0. Keep the Flutter version aligned in both workflows when upgrading it.
+
+Android plugin versions are managed in `android/settings.gradle.kts`, including those used by the local `foreground_power_lock` plugin. The compatibility flags in `android/gradle.properties` retain support for Flutter plugins using the legacy Kotlin plugin and Android DSL.
+
+`android/build.gradle.kts` explicitly enables built-in Kotlin for `file_picker`, `firebase_ai`, and `firebase_app_check`, which require it on AGP 9. Review this list when upgrading Flutter plugins; remove the per-module setup once all dependencies support globally enabled built-in Kotlin.
+
+CI builds a debug APK after analysis and tests; the release workflow builds the signed AAB and APK.
+
 ## Trigger
 
 Push a semantic version tag:
