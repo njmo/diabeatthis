@@ -228,17 +228,12 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         final quantityConfidence = ref.read(
           mealIngredientConfidenceDraftProvider,
         );
-        final mealIngredientsDraft = ref.watch(
-          mealIngredientsDraftProvider.notifier,
-        );
-        final currentConfidence = ref
-            .read(mealIngredientsDraftProvider)
-            .quantityConfidence;
-        if (ConfidenceLevelX.fromDouble01(currentConfidence) !=
-            quantityConfidence) {
-          mealIngredientsDraft.setQuantityConfidence(quantityConfidence);
-        }
-        mealIngredientsDraft.setAmount(amountDraft);
+        ref
+            .read(mealIngredientsDraftProvider.notifier)
+            .applyAmountForm(
+              amount: amountDraft,
+              confidence: quantityConfidence,
+            );
         _moveTo(AddMealIngredientStage.summary);
         break;
       case AddMealIngredientStage.summary:

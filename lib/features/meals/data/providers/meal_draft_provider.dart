@@ -74,7 +74,21 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
   void setIngredientPortionAmount(double amount) => state = state.copyWith(
     ingredientPortion: state.ingredientPortion.copyWith(amount: amount),
   );
-  void setAmount(double amount) => state = state.copyWith(amount: amount);
+  void applyAmountForm({
+    required double amount,
+    required ConfidenceLevel confidence,
+  }) {
+    // Preserve the original precision when the slider level has not changed.
+    final quantityConfidence =
+        ConfidenceLevelX.fromDouble01(state.quantityConfidence) == confidence
+        ? state.quantityConfidence
+        : confidence.toDouble01();
+    state = state.copyWith(
+      amount: amount,
+      quantityConfidence: quantityConfidence,
+    );
+  }
+
   void setQuantityConfidence(ConfidenceLevel confidence) =>
       state = state.copyWith(quantityConfidence: confidence.toDouble01());
 }

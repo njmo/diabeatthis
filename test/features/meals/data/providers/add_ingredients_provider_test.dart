@@ -12,6 +12,7 @@ import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_photo_s
 import 'package:diabeatthis/features/meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
 import 'package:diabeatthis/features/meal_advisor/data/providers/ingredient_photo_scan_client_provider.dart';
 import 'package:diabeatthis/features/meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
+import 'package:diabeatthis/features/meals/data/drafts/meal_draft.dart';
 import 'package:diabeatthis/features/meals/data/providers/add_ingredients_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_draft_provider.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/confidence_slider.dart';
@@ -99,13 +100,29 @@ void main() {
           expect(container.read(mealIngredientsDraftProvider), original);
 
           notifier.back();
+          final updates = <MealIngredientsDraft>[];
+          final updatesSubscription = container.listen(
+            mealIngredientsDraftProvider,
+            (_, next) => updates.add(next),
+          );
+          addTearDown(updatesSubscription.close);
+          container
+              .read(mealIngredientAmountDraftProvider.notifier)
+              .setValue(3.5);
           container
               .read(mealIngredientConfidenceDraftProvider.notifier)
               .setConfidence(ConfidenceLevel.low);
           await notifier.nextStage();
           expect(
             container.read(mealIngredientsDraftProvider),
-            original.copyWith(quantityConfidence: 0.25),
+            original.copyWith(amount: 3.5, quantityConfidence: 0.25),
+          );
+          expect(updates, [
+            original.copyWith(amount: 3.5, quantityConfidence: 0.25),
+          ]);
+          expect(
+            container.read(addMealIngredientStageProvider),
+            AddMealIngredientStage.summary,
           );
         },
       );
