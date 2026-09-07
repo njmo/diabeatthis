@@ -3,6 +3,7 @@ import 'package:diabeatthis/core/media/camera_photo_capture_service.dart';
 import 'package:diabeatthis/core/media/providers/camera_permission_service_provider.dart';
 import 'package:diabeatthis/core/media/providers/camera_photo_capture_service_provider.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
+import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import 'package:diabeatthis/features/ingredients/data/mappers/ingredient_draft_mapper.dart';
 import 'package:diabeatthis/features/ingredients/data/mappers/ingredient_scan_result_mapper.dart';
 import 'package:diabeatthis/features/ingredients/data/models/ingredient_scan_result.dart';
@@ -13,6 +14,8 @@ import 'package:diabeatthis/features/meal_advisor/data/providers/ingredient_phot
 import 'package:diabeatthis/features/meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
 import 'package:diabeatthis/features/meals/data/providers/add_ingredients_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_draft_provider.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/confidence_slider.dart';
+import 'package:diabeatthis/features/portions/data/drafts/portion_draft.dart';
 import 'package:diabeatthis/features/portions/data/drafts/portion_filter.dart';
 import 'package:diabeatthis/features/portions/data/providers/portion_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,6 +25,92 @@ import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   group('AddMealIngredientStageNotifier', () {
+    for (final isReference in [false, true]) {
+      test(
+        'preserves edited ingredient data (reference: $isReference)',
+        () async {
+          final container = ProviderContainer();
+          addTearDown(container.dispose);
+          final draftSubscription = container.listen(
+            mealIngredientsDraftProvider,
+            (_, _) {},
+          );
+          addTearDown(draftSubscription.close);
+          final confidenceSubscription = container.listen(
+            mealIngredientConfidenceDraftProvider,
+            (_, _) {},
+          );
+          addTearDown(confidenceSubscription.close);
+          final stageSubscription = container.listen(
+            addMealIngredientStageProvider,
+            (_, _) {},
+          );
+          addTearDown(stageSubscription.close);
+          final amountSubscription = container.listen(
+            mealIngredientAmountDraftProvider,
+            (_, _) {},
+          );
+          addTearDown(amountSubscription.close);
+          final draftNotifier = container.read(
+            mealIngredientsDraftProvider.notifier,
+          );
+          final original = container
+              .read(mealIngredientsDraftProvider)
+              .copyWith(
+                mealIngredientId: 42,
+                ingredient: _existingIngredient(
+                  id: 12,
+                ).copyWith(isReference: isReference),
+                ingredientPortion: IngredientPortionDraft(
+                  portion: isReference
+                      ? const PortionSelection.empty()
+                      : const PortionSelection.existing(
+                          id: 7,
+                          name: 'łyżka',
+                          unitHint: 'g',
+                        ),
+                  amount: isReference ? 100 : 20,
+                ),
+                amount: 2,
+                quantityConfidence: 0.8,
+                entryType: 'extra',
+                consumedAmount: 1.5,
+                consumedConfidence: 0.95,
+              );
+          draftNotifier.overrideMealIngredient(original);
+          final notifier = container.read(
+            addMealIngredientStageProvider.notifier,
+          );
+          notifier.modifyIngredientStage(isReference);
+
+          expect(container.read(mealIngredientsDraftProvider), original);
+          expect(
+            container.read(mealIngredientConfidenceDraftProvider),
+            ConfidenceLevel.high,
+          );
+          if (!isReference) {
+            // Keep the existing portion selection and advance to its amount form.
+            container
+                .read(portionDraftProvider.notifier)
+                .overrideDraft(original.ingredientPortion.portion);
+            await notifier.nextStage();
+          }
+          await notifier.nextStage();
+          expect(container.read(mealIngredientsDraftProvider), original);
+
+          notifier.back();
+          container
+              .read(mealIngredientConfidenceDraftProvider.notifier)
+              .setConfidence(ConfidenceLevel.low);
+          await notifier.nextStage();
+          expect(
+            container.read(mealIngredientsDraftProvider),
+            original.copyWith(quantityConfidence: 0.25),
+          );
+        },
+      );
+    }
+
     test(
       'goes back to ingredient search after successful photo scan draft',
       () async {

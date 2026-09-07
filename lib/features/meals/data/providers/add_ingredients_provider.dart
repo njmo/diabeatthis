@@ -14,6 +14,7 @@ import '../../../meal_advisor/presentation/controllers/ingredient_photo_search_c
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/drafts/portion_filter.dart';
 import '../../../portions/data/providers/portion_provider.dart';
+import '../../presentation/widgets/confidence_slider.dart';
 import 'meal_draft_provider.dart';
 
 part 'add_ingredients_provider.g.dart';
@@ -60,8 +61,11 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
   void modifyIngredientStage(bool isReference) {
     _history.clear();
     _history.add(AddMealIngredientStage.dismiss);
+    final draft = ref.read(mealIngredientsDraftProvider);
+    ref
+        .read(mealIngredientConfidenceDraftProvider.notifier)
+        .setConfidence(ConfidenceLevelX.fromDouble01(draft.quantityConfidence));
     if (isReference) {
-      final draft = ref.read(mealIngredientsDraftProvider);
       final amount = draft.amount > 0 ? draft.amount : 1.0;
       ref.read(mealIngredientAmountDraftProvider.notifier).setValue(amount);
       state = AddMealIngredientStage.amountForm;
@@ -227,7 +231,13 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         final mealIngredientsDraft = ref.watch(
           mealIngredientsDraftProvider.notifier,
         );
-        mealIngredientsDraft.setQuantityConfidence(quantityConfidence);
+        final currentConfidence = ref
+            .read(mealIngredientsDraftProvider)
+            .quantityConfidence;
+        if (ConfidenceLevelX.fromDouble01(currentConfidence) !=
+            quantityConfidence) {
+          mealIngredientsDraft.setQuantityConfidence(quantityConfidence);
+        }
         mealIngredientsDraft.setAmount(amountDraft);
         _moveTo(AddMealIngredientStage.summary);
         break;

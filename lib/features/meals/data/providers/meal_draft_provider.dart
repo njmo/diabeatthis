@@ -62,12 +62,7 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
   }
 
   void overrideMealIngredient(MealIngredientsDraft mealIngredient) =>
-      state = state.copyWith(
-        ingredient: mealIngredient.ingredient,
-        ingredientPortion: mealIngredient.ingredientPortion,
-        amount: mealIngredient.amount,
-        quantityConfidence: mealIngredient.quantityConfidence,
-      );
+      state = mealIngredient;
 
   void setIngredient(IngredientDraft ingredient) =>
       state = state.copyWith(ingredient: ingredient);
