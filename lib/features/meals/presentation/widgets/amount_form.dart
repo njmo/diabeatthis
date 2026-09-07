@@ -10,6 +10,7 @@ import '../../data/providers/add_ingredients_provider.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import '../utils/meal_ingredient_portion_formatters.dart';
 import 'confidence_slider.dart';
+import 'summary.dart';
 
 class AmountForm extends ConsumerWidget {
   const AmountForm({super.key});
@@ -60,7 +61,7 @@ class AmountForm extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               FormField<double>(
-                validator: (_) => amount > 0 ? null : '',
+                validator: (_) => amount.isFinite && amount > 0 ? null : '',
                 builder: (field) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -93,6 +94,13 @@ class AmountForm extends ConsumerWidget {
                     ],
                   );
                 },
+              ),
+              const SizedBox(height: 20),
+              AddIngredientSummaryContent(
+                draft: draft.copyWith(amount: amount),
+                gramsPerPortion: gramsPerPortion,
+                isLoadingPortionAmount: isLoadingPortionAmount,
+                inline: true,
               ),
               const SizedBox(height: 20),
               Text(

@@ -85,10 +85,9 @@ void main() {
             container.read(mealIngredientConfidenceDraftProvider),
             ConfidenceLevel.high,
           );
-          await notifier.nextStage();
+          notifier.completeAmountForm();
           expect(container.read(mealIngredientsDraftProvider), original);
 
-          notifier.back();
           final updates = <MealIngredientsDraft>[];
           final updatesSubscription = container.listen(
             mealIngredientsDraftProvider,
@@ -101,7 +100,7 @@ void main() {
           container
               .read(mealIngredientConfidenceDraftProvider.notifier)
               .setConfidence(ConfidenceLevel.low);
-          await notifier.nextStage();
+          notifier.completeAmountForm();
           expect(
             container.read(mealIngredientsDraftProvider),
             original.copyWith(amount: 3.5, quantityConfidence: 0.25),
@@ -111,11 +110,57 @@ void main() {
           ]);
           expect(
             container.read(addMealIngredientStageProvider),
-            AddMealIngredientStage.summary,
+            AddMealIngredientStage.amountForm,
           );
         },
       );
     }
+
+    test('completes a new ingredient directly from its amount form', () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(addMealIngredientStageProvider.notifier);
+      notifier.startManualIngredient();
+      await notifier.nextStage();
+      notifier.setOverride();
+      final before = container.read(mealIngredientsDraftProvider);
+      container.read(mealIngredientAmountDraftProvider.notifier).setValue(150);
+      container
+          .read(mealIngredientConfidenceDraftProvider.notifier)
+          .setConfidence(ConfidenceLevel.high);
+
+      final result = notifier.completeAmountForm();
+
+      expect(result, before.copyWith(amount: 150, quantityConfidence: 0.75));
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.amountForm,
+      );
+      expect(container.read(mealDraftProvider).mealIngredients, isEmpty);
+    });
+
+    test(
+      'rejects invalid completion without changing the ingredient draft',
+      () {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final notifier = container.read(
+          addMealIngredientStageProvider.notifier,
+        );
+        final original = container
+            .read(mealIngredientsDraftProvider)
+            .copyWith(amount: 50);
+        expect(notifier.completeAmountForm, throwsStateError);
+        notifier.editIngredient(original);
+        for (final amount in [0.0, double.nan, double.infinity]) {
+          container
+              .read(mealIngredientAmountDraftProvider.notifier)
+              .setValue(amount);
+          expect(notifier.completeAmountForm, throwsStateError);
+          expect(container.read(mealIngredientsDraftProvider), original);
+        }
+      },
+    );
 
     test(
       'goes back to ingredient search after successful photo scan draft',

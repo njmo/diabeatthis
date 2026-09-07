@@ -21,7 +21,6 @@ import '../../data/drafts/meal_draft.dart';
 import '../../data/providers/add_ingredients_provider.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import 'amount_form.dart';
-import 'summary.dart';
 
 Future<MealIngredientsDraft?> showAddMealIngredientSheet({
   required BuildContext context,
@@ -126,10 +125,6 @@ class AddMealIngredient extends ConsumerWidget {
           title: context.lang.addIngredientAmountTitle,
           onBack: addingStateNotifier.back,
         ),
-        AddMealIngredientStage.summary => BottomSheetStepHeader(
-          title: context.lang.addIngredientSummaryTitle,
-          onBack: addingStateNotifier.back,
-        ),
         AddMealIngredientStage.portionSpecifyAmount => BottomSheetStepHeader(
           title: context.lang.addIngredientPortionWeightTitle,
           onBack: addingStateNotifier.back,
@@ -160,7 +155,6 @@ class AddMealIngredient extends ConsumerWidget {
           AddMealIngredientStage.portionAddNewSearch => PortionSearch(),
           AddMealIngredientStage.definedPortionsSearch => PortionSearch(),
           AddMealIngredientStage.amountForm => AmountForm(),
-          AddMealIngredientStage.summary => AddIngredientSummary(),
           AddMealIngredientStage.portionSpecifyAmount =>
             IngredientPortionAmountForm(
               amount: ref.watch(
@@ -182,10 +176,14 @@ class AddMealIngredient extends ConsumerWidget {
               onPressed: isScanningIngredient || !canScanIngredientPhotos
                   ? null
                   : () async {
-                      if (addingStage == AddMealIngredientStage.summary) {
-                        Navigator.of(
-                          context,
-                        ).pop(ref.read(mealIngredientsDraftProvider));
+                      if (addingStage == AddMealIngredientStage.amountForm) {
+                        if (validateForm(
+                          ref.read(mealIngredientFormKeyProvider),
+                        )) {
+                          Navigator.of(
+                            context,
+                          ).pop(addingStateNotifier.completeAmountForm());
+                        }
                       } else if (addingStage ==
                           AddMealIngredientStage.ingredientPhotoScan) {
                         await addingStateNotifier.nextStage();
@@ -218,8 +216,8 @@ class AddMealIngredient extends ConsumerWidget {
                         }
                       }
                     },
-              child: (addingStage == AddMealIngredientStage.summary)
-                  ? Text(context.lang.mealSummaryExtraAdd)
+              child: (addingStage == AddMealIngredientStage.amountForm)
+                  ? Text(context.lang.addIngredientTitle)
                   : Text(
                       isScanningIngredient
                           ? context.lang.addIngredientReadingData
@@ -243,7 +241,7 @@ class AddMealIngredient extends ConsumerWidget {
                     child: Text(context.lang.addIngredientAddInGrams),
                   ),
                 ),
-          addingStage != AddMealIngredientStage.summary
+          addingStage != AddMealIngredientStage.amountForm
               ? SizedBox.shrink()
               : Expanded(
                   child: ElevatedButton(

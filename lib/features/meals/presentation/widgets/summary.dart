@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/nutrition/ingredient_amount_calculator.dart';
+import '../../../../common/widgets/nutrition_metric_tile.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../data/drafts/meal_draft.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import '../utils/meal_ingredient_portion_formatters.dart';
+import 'ingredient_amount_result.dart';
 
 class AddIngredientSummary extends ConsumerWidget {
   const AddIngredientSummary({super.key});
@@ -49,11 +51,13 @@ class AddIngredientSummaryContent extends StatelessWidget {
   final MealIngredientsDraft draft;
   final double? gramsPerPortion;
   final bool isLoadingPortionAmount;
+  final bool inline;
 
   const AddIngredientSummaryContent({
     required this.draft,
     required this.gramsPerPortion,
     required this.isLoadingPortionAmount,
+    this.inline = false,
     super.key,
   });
 
@@ -95,6 +99,16 @@ class AddIngredientSummaryContent extends StatelessWidget {
         ? '-'
         : '+${const WbtExtendedCarbsCalculator().calculateFromKcal(wbtKcalPer100g * totalGrams / 100).grams} g';
 
+    if (inline) {
+      return IngredientAmountResult(
+        totalGramsLabel: draft.usesGramAmount || draft.ingredient.isReference
+            ? null
+            : totalGramsLabel,
+        carbsLabel: netCarbsLabel,
+        extendedCarbsLabel: extendedCarbsLabel,
+      );
+    }
+
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border.all(color: colorScheme.outlineVariant),
@@ -105,11 +119,13 @@ class AddIngredientSummaryContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SummaryHeader(
-              title: draft.ingredient.name,
-              subtitle: portionDescription,
-            ),
-            const SizedBox(height: 16),
+            if (!inline) ...[
+              SummaryHeader(
+                title: draft.ingredient.name,
+                subtitle: portionDescription,
+              ),
+              const SizedBox(height: 16),
+            ],
             SummaryMetricGrid(
               amountLabel: amountLabel,
               portionWeightTitle: draft.usesGramAmount
@@ -205,7 +221,7 @@ class SummaryMetricGrid extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: SummaryMetricTile(
+              child: NutritionMetricTile(
                 icon: Icons.format_list_numbered,
                 label: lang.addIngredientAmountTitle,
                 value: amountLabel,
@@ -213,7 +229,7 @@ class SummaryMetricGrid extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: SummaryMetricTile(
+              child: NutritionMetricTile(
                 icon: Icons.scale_outlined,
                 label: portionWeightTitle,
                 value: portionWeightLabel,
@@ -222,7 +238,7 @@ class SummaryMetricGrid extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        SummaryMetricTile(
+        NutritionMetricTile(
           icon: Icons.calculate_outlined,
           label: lang.mealTotalMassLabel,
           value: totalGramsLabel,
@@ -232,7 +248,7 @@ class SummaryMetricGrid extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: SummaryMetricTile(
+              child: NutritionMetricTile(
                 icon: Icons.grain,
                 label: lang.mealCarbsLabel,
                 value: carbsLabel,
@@ -240,7 +256,7 @@ class SummaryMetricGrid extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: SummaryMetricTile(
+              child: NutritionMetricTile(
                 icon: Icons.schedule_outlined,
                 label: 'eCarbs',
                 value: extendedCarbsLabel,
@@ -249,73 +265,6 @@ class SummaryMetricGrid extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class SummaryMetricTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final bool emphasized;
-
-  const SummaryMetricTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.emphasized = false,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: emphasized
-            ? colorScheme.primaryContainer
-            : colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: emphasized
-                  ? colorScheme.onPrimaryContainer
-                  : colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: textTheme.labelSmall?.copyWith(
-                      color: emphasized
-                          ? colorScheme.onPrimaryContainer
-                          : colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    style: textTheme.titleMedium?.copyWith(
-                      color: emphasized ? colorScheme.onPrimaryContainer : null,
-                      fontWeight: emphasized ? FontWeight.w700 : null,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

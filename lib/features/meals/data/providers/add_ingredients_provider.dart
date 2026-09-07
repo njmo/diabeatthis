@@ -31,7 +31,6 @@ enum AddMealIngredientStage {
   portionSpecifyAmount,
   definedPortionsSearch,
   amountForm,
-  summary,
 }
 
 @riverpod
@@ -229,21 +228,29 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         _openAmountForm();
         break;
       case AddMealIngredientStage.amountForm:
-        final amountDraft = ref.read(mealIngredientAmountDraftProvider);
-        final quantityConfidence = ref.read(
-          mealIngredientConfidenceDraftProvider,
+        throw StateError(
+          'Complete the amount form to finish adding an ingredient',
         );
-        ref
-            .read(mealIngredientsDraftProvider.notifier)
-            .applyAmountForm(
-              amount: amountDraft,
-              confidence: quantityConfidence,
-            );
-        _moveTo(AddMealIngredientStage.summary);
-        break;
-      case AddMealIngredientStage.summary:
-        throw UnimplementedError();
     }
+  }
+
+  MealIngredientsDraft completeAmountForm() {
+    if (state != AddMealIngredientStage.amountForm) {
+      throw StateError('The amount form must be open before completing it');
+    }
+    final amount = ref.read(mealIngredientAmountDraftProvider);
+    if (amount <= 0 || !amount.isFinite) {
+      throw StateError(
+        'Ingredient amount must be finite and greater than zero',
+      );
+    }
+    ref
+        .read(mealIngredientsDraftProvider.notifier)
+        .applyAmountForm(
+          amount: amount,
+          confidence: ref.read(mealIngredientConfidenceDraftProvider),
+        );
+    return ref.read(mealIngredientsDraftProvider);
   }
 
   void toOppositeStage() {
@@ -280,7 +287,6 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
         _moveTo(AddMealIngredientStage.portionAddNewForm);
         break;
       case AddMealIngredientStage.amountForm:
-      case AddMealIngredientStage.summary:
       case AddMealIngredientStage.portionSpecifyAmount:
         throw UnimplementedError();
     }
