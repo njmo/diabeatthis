@@ -3,6 +3,7 @@ import 'package:diabeatthis/features/meals/data/model/copied_meal_type.dart';
 import 'package:diabeatthis/features/meals/data/providers/copied_meal_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_draft_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/copied_meal_ingredients_preview.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/copied_meal_picker.dart';
 import 'package:diabeatthis/features/portions/data/drafts/portion_draft.dart';
 import 'package:flutter/material.dart';
@@ -61,6 +62,117 @@ void main() {
     expect(find.text(meal.name), findsNothing);
   });
 
+  testWidgets('returns from preview to the same query and scroll position', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final meals = List.generate(
+      30,
+      (index) => CopiedMealFromMeal(
+        id: index + 1,
+        name: 'Obiad $index',
+        date: DateTime(2026).subtract(Duration(days: index)),
+        copiedFromMealId: null,
+        copiedFromTemplateId: null,
+      ),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        copiedFromMealByQueryProvider('Obiad').overrideWith((_) async => meals),
+        for (final meal in meals)
+          getMealIngredientsDraftForMealProvider(
+            meal.id,
+          ).overrideWith((_) async => []),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: localizedMaterialApp(
+          home: const Scaffold(body: CopiedMealPicker(initialQuery: 'Obiad')),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -450));
+    await tester.pumpAndSettle();
+    final scrollable = tester.state<ScrollableState>(
+      find.descendant(
+        of: find.byType(ListView),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    final offset = scrollable.position.pixels;
+    final visibleMeal = find.textContaining('Obiad ').hitTestable().first;
+    await tester.tap(visibleMeal);
+    await tester.pumpAndSettle();
+    expect(find.byType(CopiedMealIngredientsPreview), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      'Obiad',
+    );
+    expect(scrollable.position.pixels, offset);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'uses the selected source from a narrow sheet with keyboard insets',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetViewInsets);
+      final container = ProviderContainer(
+        overrides: [
+          copiedFromMealByQueryProvider('').overrideWith((_) async => [meal]),
+          getMealIngredientsDraftForMealProvider(1).overrideWith(
+            (ref) async => [ref.read(mealIngredientsDraftProvider)],
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      CopiedMealType? selected;
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: localizedMaterialApp(
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => TextButton(
+                  onPressed: () async =>
+                      selected = await showModalBottomSheet<CopiedMealType>(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (_) => const CopiedMealPicker(),
+                      ),
+                  child: const Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(meal.name));
+      await tester.pumpAndSettle();
+      expect(selected, isNull);
+      await tester.tap(find.text('Użyj składników'));
+      await tester.pumpAndSettle();
+      expect(selected, same(meal));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('preview does not mutate the draft or choose a source', (
     tester,
   ) async {
@@ -110,18 +222,16 @@ void main() {
         container: container,
         child: localizedMaterialApp(
           home: Scaffold(
-            body: SingleChildScrollView(
-              child: CopiedMealPickerTile(
-                copiedMeal: meal,
-                onPick: () => selected++,
-              ),
+            body: CopiedMealIngredientsPreview(
+              source: meal,
+              onUse: () => selected++,
+              onBack: () {},
             ),
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text(meal.name));
     await tester.pumpAndSettle();
     expect(find.text('Użyj składników'), findsOneWidget);
     expect(find.textContaining('150 g'), findsOneWidget);
@@ -152,17 +262,20 @@ void main() {
         container: container,
         child: localizedMaterialApp(
           home: Scaffold(
-            body: CopiedMealPickerTile(
-              copiedMeal: meal,
-              onPick: () => fail('Must not select'),
+            body: CopiedMealIngredientsPreview(
+              source: meal,
+              onUse: () => fail('Must not select'),
+              onBack: () {},
             ),
           ),
         ),
       ),
     );
-    await tester.tap(find.text(meal.name));
     await tester.pumpAndSettle();
-    expect(find.text('Użyj składników'), findsNothing);
+    expect(
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      isNull,
+    );
     shouldFail = false;
     await tester.tap(find.text('Nie udało się wczytać. Spróbuj ponownie'));
     await tester.pumpAndSettle();

@@ -872,5 +872,7 @@
   "copiedMealHistoryDetails": "Szczegóły historii",
   "copiedMealNoIngredients": "Brak składników do użycia.",
   "copiedMealUseHint": "Użycie składników zastąpi obecną listę w tworzonym posiłku.",
-  "copiedMealUseIngredients": "Użyj składników"
+  "copiedMealUseIngredients": "Użyj składników",
+  "copiedMealBrowseTitle": "Znajdź podobny posiłek",
+  "copiedMealBrowseSubtitle": "Podejrzyj składniki i wykorzystaj je w swoim posiłku."
 }
