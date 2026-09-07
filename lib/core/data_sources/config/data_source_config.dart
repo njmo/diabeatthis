@@ -70,7 +70,8 @@ enum PumpStatusSource {
 
 enum HistorySource {
   cloud('cloud'),
-  local('local');
+  local('local'),
+  localOnMobile('local_on_mobile');
 
   const HistorySource(this.storageValue);
 
@@ -110,7 +111,7 @@ class DataSourceConfig {
     return bgSource == BgSource.cloud ||
         treatmentsSource == TreatmentsSource.cloud ||
         pumpStatusSource == PumpStatusSource.cloud ||
-        historySource == HistorySource.cloud;
+        historySource != HistorySource.local;
   }
 
   DataSourceConfig copyWith({

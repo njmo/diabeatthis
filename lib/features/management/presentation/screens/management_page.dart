@@ -4,12 +4,10 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
-import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../activity/presentation/widgets/activity_list.dart';
 import '../../../ingredients/presentation/widgets/ingredient_list.dart';
 import '../../../meals/presentation/widgets/meal_list.dart';
-import '../widgets/local_history_blocked_view.dart';
 
 @RoutePage()
 class ManagementPage extends HookConsumerWidget {
@@ -27,10 +25,6 @@ class ManagementPage extends HookConsumerWidget {
         error: (error, _) =>
             Center(child: Text(context.lang.managementSettingsError(error))),
         data: (config) {
-          if (config.historySource == HistorySource.local) {
-            return const LocalHistoryBlockedView();
-          }
-
           return <Widget>[
             MealList(),
             IngredientList(),
@@ -40,10 +34,6 @@ class ManagementPage extends HookConsumerWidget {
       ),
       bottomNavigationBar: dataSourceConfigAsync.maybeWhen(
         data: (config) {
-          if (config.historySource == HistorySource.local) {
-            return null;
-          }
-
           return NavigationBar(
             selectedIndex: destination.value,
             destinations: <Widget>[

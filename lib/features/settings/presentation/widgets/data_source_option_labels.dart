@@ -34,6 +34,7 @@ extension HistorySourceLabel on HistorySource {
     return switch (this) {
       HistorySource.cloud => lang.settingsDataSourceCloudNightscout,
       HistorySource.local => lang.settingsDataSourceLocal,
+      HistorySource.localOnMobile => lang.settingsDataSourceLocalOnMobile,
     };
   }
 }

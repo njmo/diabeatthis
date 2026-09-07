@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
-import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../meal_template/data/provider/meal_template_ingredients_list_provider.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
 import 'copied_meal_history_button.dart';
-import 'copied_meal_ingredient_row.dart';
+import 'copied_meal_preview_header.dart';
+import 'copied_meal_preview_ingredient_list.dart';
 
 class CopiedMealIngredientsPreview extends ConsumerWidget {
   const CopiedMealIngredientsPreview({
@@ -28,60 +28,55 @@ class CopiedMealIngredientsPreview extends ConsumerWidget {
         : getMealIngredientsDraftForMealProvider(source.id);
     final ingredients = ref.watch(provider);
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        BottomSheetStepHeader(title: source.name, onBack: onBack),
-        Padding(
-          padding: const EdgeInsets.only(left: 48, bottom: 16),
-          child: Text(
-            MaterialLocalizations.of(context).formatMediumDate(source.date),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+        CopiedMealPreviewHeader(
+          source: source,
+          onBack: onBack,
+          onUse:
+              ingredients.isLoading ||
+                  ingredients.hasError ||
+                  (ingredients.value?.isEmpty ?? true)
+              ? null
+              : onUse,
         ),
-        Expanded(
+        Flexible(
           child: ingredients.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                heightFactor: 1,
+                child: CircularProgressIndicator(),
+              ),
+            ),
             error: (error, stackTrace) => Center(
+              heightFactor: 1,
               child: TextButton(
                 onPressed: () => ref.invalidate(provider),
                 child: Text(context.lang.copiedMealLoadRetry),
               ),
             ),
             data: (items) => items.isEmpty
-                ? Center(child: Text(context.lang.copiedMealNoIngredients))
-                : ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    itemCount: items.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (_, index) =>
-                        CopiedMealIngredientRow(item: items[index]),
-                  ),
+                ? Center(
+                    heightFactor: 1,
+                    child: Text(context.lang.copiedMealNoIngredients),
+                  )
+                : CopiedMealPreviewIngredientList(items: items),
           ),
         ),
-        if (source is CopiedMealFromMeal)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: CopiedMealHistoryButton(source: source),
-          ),
         const SizedBox(height: 12),
         Text(
           context.lang.copiedMealUseHint,
+          textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 12),
-        FilledButton.icon(
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-          onPressed:
-              ingredients.isLoading ||
-                  ingredients.hasError ||
-                  (ingredients.value?.isEmpty ?? true)
-              ? null
-              : onUse,
-          icon: const Icon(Icons.content_copy),
-          label: Text(context.lang.copiedMealUseIngredients),
-        ),
+        if (source is CopiedMealFromMeal) ...[
+          const SizedBox(height: 16),
+          CopiedMealHistoryButton(source: source),
+        ],
       ],
     );
   }

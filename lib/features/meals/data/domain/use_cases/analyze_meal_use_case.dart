@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../core/data_sources/providers/on_demand_history_repositories_provider.dart';
 import '../../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../../core/domain/model/correction_bolus.dart';
 import '../../../../../core/domain/model/extended_carb.dart';
@@ -25,7 +26,10 @@ class AnalyzeMealUseCase {
 
   const AnalyzeMealUseCase({required this.ref});
 
-  Future<MealAnalysisData?> call(MealDetailsData details) async {
+  Future<MealAnalysisData?> call(
+    MealDetailsData details, {
+    bool forceCloud = false,
+  }) async {
     if (!details.meal.isEaten) {
       return null;
     }
@@ -40,15 +44,18 @@ class AnalyzeMealUseCase {
     final eventEnd = chartEnd;
     final targetFetchStart = chartStart.subtract(const Duration(hours: 4));
 
-    final glucoseRepository = await ref.read(
-      glucoseHistoryRepositoryProvider.future,
-    );
-    final treatmentRepository = await ref.read(
-      treatmentsHistoryRepositoryProvider.future,
-    );
-    final deviceStatusRepository = await ref.read(
-      deviceStatusHistoryRepositoryProvider.future,
-    );
+    final onDemand = forceCloud
+        ? await ref.read(onDemandHistoryRepositoriesProvider.future)
+        : null;
+    final glucoseRepository = onDemand != null
+        ? onDemand.glucose
+        : await ref.read(glucoseHistoryRepositoryProvider.future);
+    final treatmentRepository = onDemand != null
+        ? onDemand.treatments
+        : await ref.read(treatmentsHistoryRepositoryProvider.future);
+    final deviceStatusRepository = onDemand != null
+        ? onDemand.deviceStatuses
+        : await ref.read(deviceStatusHistoryRepositoryProvider.future);
     final glucose = await glucoseRepository.fetchGlucoseBetween(
       chartStart,
       chartEnd,

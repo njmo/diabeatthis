@@ -351,7 +351,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
     return config.bgSource == BgSource.cloud ||
         config.treatmentsSource == TreatmentsSource.cloud ||
         config.pumpStatusSource == PumpStatusSource.cloud ||
-        config.historySource == HistorySource.cloud;
+        config.historySource != HistorySource.local;
   }
 
   Future<void> _validateNightscoutConnection(

@@ -32,6 +32,35 @@ class MealDetailsControllerNotifier extends _$MealDetailsControllerNotifier {
     }
   }
 
+  Future<void> downloadHistory() async {
+    final current = state.value;
+    if (current == null ||
+        current.isDownloadingHistory ||
+        !current.details.meal.isEaten) {
+      return;
+    }
+    state = AsyncData(current.copyWith(isDownloadingHistory: true));
+    try {
+      final analysis = await ref
+          .read(analyzeMealUseCaseProvider)
+          .call(current.details, forceCloud: true);
+      if (!ref.mounted) return;
+      state = AsyncData(
+        MealPageState(
+          details: current.details,
+          analysis: analysis,
+          selectedTimestamp: state.value?.selectedTimestamp,
+        ),
+      );
+    } catch (error) {
+      if (!ref.mounted) return;
+      state = AsyncData(
+        (state.value ?? current).copyWith(isDownloadingHistory: false),
+      );
+      rethrow;
+    }
+  }
+
   void selectTimestamp(DateTime timestamp) {
     final current = state.value;
     if (current == null) return;

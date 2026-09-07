@@ -8,10 +8,12 @@ class CopiedMealPickerTile extends StatelessWidget {
     super.key,
     required this.copiedMeal,
     required this.onPreview,
+    required this.onUse,
   });
 
   final CopiedMealType copiedMeal;
   final VoidCallback onPreview;
+  final VoidCallback onUse;
 
   @override
   Widget build(BuildContext context) {
@@ -67,9 +69,10 @@ class CopiedMealPickerTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right,
-                color: theme.colorScheme.onSurfaceVariant,
+              IconButton.filledTonal(
+                onPressed: onUse,
+                tooltip: context.lang.copiedMealUseIngredients,
+                icon: const Icon(Icons.content_copy_rounded, size: 20),
               ),
             ],
           ),

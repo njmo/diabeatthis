@@ -11,6 +11,8 @@ import '../widgets/meal_details/meal_basic_info_section.dart';
 import '../widgets/meal_details/meal_charts_section.dart';
 import '../widgets/meal_details/meal_copy_relations_section.dart';
 import '../widgets/meal_details/meal_header.dart';
+import '../widgets/meal_details/meal_history_download_button.dart';
+import '../widgets/meal_details/meal_history_status.dart';
 import '../widgets/meal_details/meal_low_treatments_section.dart';
 import '../widgets/meal_details/meal_nutrition_analysis_section.dart';
 import '../widgets/meal_details/meal_snapshots_section.dart';
@@ -33,6 +35,12 @@ class MealPage extends ConsumerWidget {
           orElse: () => Text(''),
         ),
       ),
+      floatingActionButton: state.maybeWhen(
+        data: (value) => value.showHistoryDownload
+            ? MealHistoryDownloadButton(state: value)
+            : null,
+        orElse: () => null,
+      ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) =>
@@ -51,13 +59,16 @@ class MealPageBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final details = state.details;
-    final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
+    final bottomPadding =
+        (state.showHistoryDownload ? 96 : 16) +
+        MediaQuery.viewPaddingOf(context).bottom;
 
     return ListView(
       padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding),
       children: [
         MealHeader(state: state),
         const SizedBox(height: 12),
+        if (details.meal.isEaten) MealHistoryStatus(analysis: state.analysis),
         MealBasicInfoSection(details: details),
         MealNutritionAnalysisSection(details: details),
         MealCopyRelationsSection(details: details),

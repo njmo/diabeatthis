@@ -19,6 +19,10 @@ void main() {
       expect(TreatmentsSource.fromStorage('aaps'), TreatmentsSource.aaps);
       expect(PumpStatusSource.fromStorage('aaps'), PumpStatusSource.aaps);
       expect(HistorySource.fromStorage('local'), HistorySource.local);
+      expect(
+        HistorySource.fromStorage('local_on_mobile'),
+        HistorySource.localOnMobile,
+      );
     });
 
     test('falls back to cloud for missing or unknown values', () {
@@ -65,6 +69,12 @@ void main() {
       );
 
       expect(localOnly.usesCloud, isFalse);
+      expect(
+        localOnly
+            .copyWith(historySource: HistorySource.localOnMobile)
+            .usesCloud,
+        isTrue,
+      );
       expect(cloudHistory.usesCloud, isTrue);
       expect(const DataSourceConfig.defaults().usesCloud, isTrue);
     });

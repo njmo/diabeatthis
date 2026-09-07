@@ -29,12 +29,16 @@ class CopiedMealPicker extends HookConsumerWidget {
       padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          height: (mediaQuery.size.height * 0.88 - mediaQuery.viewInsets.bottom)
-              .clamp(200.0, mediaQuery.size.height),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight:
+                (mediaQuery.size.height * 0.88 - mediaQuery.viewInsets.bottom)
+                    .clamp(200.0, mediaQuery.size.height),
+          ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   width: 36,
@@ -45,14 +49,14 @@ class CopiedMealPicker extends HookConsumerWidget {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                Expanded(
+                Flexible(
                   child: PopScope(
                     canPop: selected.value == null,
                     onPopInvokedWithResult: (didPop, result) {
                       if (!didPop) selected.value = null;
                     },
                     child: Stack(
-                      fit: StackFit.expand,
+                      fit: StackFit.loose,
                       children: [
                         Offstage(
                           offstage: selected.value != null,
@@ -147,6 +151,9 @@ class CopiedMealPicker extends HookConsumerWidget {
                                       itemBuilder: (context, index) =>
                                           CopiedMealPickerTile(
                                             copiedMeal: copiedMeals[index],
+                                            onUse: () => Navigator.of(
+                                              context,
+                                            ).pop(copiedMeals[index]),
                                             onPreview: () {
                                               FocusScope.of(context).unfocus();
                                               selected.value =

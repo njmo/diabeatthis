@@ -1,3 +1,4 @@
+import '../../../../common/history/time_series_coverage.dart';
 import '../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../core/domain/model/correction_bolus.dart';
 import '../../../../core/domain/model/device_status.dart';
@@ -37,6 +38,20 @@ class MealAnalysisData {
     required this.linkedMeals,
     required this.timelineEvents,
   });
+
+  bool get hasHistoryData =>
+      glucoseReadings.isNotEmpty ||
+      treatments.isNotEmpty ||
+      temporaryTargets.isNotEmpty ||
+      deviceStatuses.isNotEmpty;
+
+  TimeSeriesCoverage get glucoseCoverage => TimeSeriesCoverage.fromTimestamps(
+    timestamps: glucoseReadings.map((reading) => reading.date),
+    start: chartStart,
+    end: chartEnd,
+  );
+
+  bool get needsHistoryDownload => glucoseCoverage.isBelowHalf;
 
   bool get hasFullGlucoseWindow {
     return !chartEnd.isBefore(expectedChartEnd);

@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:diabeatthis/common/platform/network_connection_provider.dart';
 import 'package:diabeatthis/core/data_sources/cloud/cloud_device_status_source_repository.dart';
 import 'package:diabeatthis/core/data_sources/cloud/cloud_glucose_source_repository.dart';
 import 'package:diabeatthis/core/data_sources/cloud/cloud_treatment_source_repository.dart';
@@ -18,6 +22,7 @@ import 'package:diabeatthis/core/data_sources/local_mirror/repositories/mirrorin
 import 'package:diabeatthis/core/data_sources/local_mirror/repositories/mirroring_treatments_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/repository/nightscout_repository.dart';
+import 'package:diabeatthis/core/data_sources/providers/on_demand_history_repositories_provider.dart';
 import 'package:diabeatthis/core/data_sources/providers/source_repository_providers.dart';
 import 'package:diabeatthis/core/domain/model/bolus_calculator_result.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart' as domain;
@@ -36,6 +41,65 @@ import '../../../helpers/device_status_factory.dart';
 
 void main() {
   group('source repository providers', () {
+    test('switches all history repositories as the network changes', () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      final connections = StreamController<List<ConnectivityResult>>();
+      addTearDown(connections.close);
+      final container = ProviderContainer(
+        overrides: [
+          dataSourceConfigProvider.overrideWithValue(
+            AsyncData(
+              const DataSourceConfig.defaults().copyWith(
+                historySource: HistorySource.localOnMobile,
+                mirrorToLocal: true,
+              ),
+            ),
+          ),
+          networkConnectionProvider.overrideWith((ref) => connections.stream),
+          databaseProvider.overrideWithValue(db),
+          nightscoutRepositoryProvider.overrideWithValue(
+            AsyncData(_FakeNightscoutRepository()),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.listen(glucoseHistoryRepositoryProvider, (_, _) {});
+      container.listen(treatmentsHistoryRepositoryProvider, (_, _) {});
+      container.listen(deviceStatusHistoryRepositoryProvider, (_, _) {});
+
+      for (final network in [
+        [ConnectivityResult.wifi],
+        [ConnectivityResult.mobile],
+        [ConnectivityResult.wifi, ConnectivityResult.mobile],
+        [ConnectivityResult.mobile],
+        [ConnectivityResult.ethernet],
+      ]) {
+        connections.add(network);
+        await container.pump();
+        final local =
+            network.length == 1 && network.single == ConnectivityResult.mobile;
+        expect(
+          await container.read(glucoseHistoryRepositoryProvider.future),
+          local
+              ? isA<LocalGlucoseHistoryRepository>()
+              : isA<MirroringGlucoseHistoryRepository>(),
+        );
+        expect(
+          await container.read(treatmentsHistoryRepositoryProvider.future),
+          local
+              ? isA<LocalTreatmentsHistoryRepository>()
+              : isA<MirroringTreatmentsHistoryRepository>(),
+        );
+        expect(
+          await container.read(deviceStatusHistoryRepositoryProvider.future),
+          local
+              ? isA<LocalDeviceStatusHistoryRepository>()
+              : isA<MirroringDeviceStatusHistoryRepository>(),
+        );
+      }
+    });
+
     test('uses cloud repositories for cloud config', () async {
       const config = DataSourceConfig.defaults();
       final nightscoutRepository = _FakeNightscoutRepository();
@@ -417,177 +481,190 @@ void main() {
       expect(mirroredCorrectionBoluses.single.insulin, 0.7);
     });
 
-    test(
-      'mirrors cloud history reads into local storage when enabled',
-      () async {
-        final db = DatabaseImpl(NativeDatabase.memory());
-        addTearDown(db.close);
+    for (final forceCloud in [false, true]) {
+      test(
+        forceCloud
+            ? 'downloads and mirrors on demand despite local source and disabled mirror'
+            : 'mirrors cloud history reads into local storage when enabled',
+        () async {
+          final db = DatabaseImpl(NativeDatabase.memory());
+          addTearDown(db.close);
 
-        final now = DateTime.fromMillisecondsSinceEpoch(1000);
-        final glucose = domain.Glucose(
-          externalId: 'history-glucose-1',
-          source: domain.GlucoseSource.cloud,
-          date: now,
-          sgv: 128,
-          direction: 'Flat',
-        );
-        final deviceStatus = testDeviceStatus(
-          externalId: 'history-status-1',
-          date: now,
-          iob: 0.6,
-          cob: 10,
-          tick: '+2',
-          bg: 128,
-        );
-        final bolusWizard = domain.BolusWizard(
-          nightscoutObjectId: 'history-bolus-wizard-1',
-          createdAt: now,
-          date: now,
-          glucose: 128,
-          units: 'mg/dl',
-          notes: null,
-          calculatorResult: _testBolusCalculatorResult(
-            carbs: 35,
-            totalInsulin: 2.8,
-          ),
-        );
-        final temporaryTarget = domain.TemporaryTarget(
-          nightscoutId: 'history-target-1',
-          createdAt: now.add(const Duration(minutes: 5)),
-          durationInMiliseconds: Duration.minutesPerHour * 60 * 1000,
-          duration: 60,
-          targetBottom: 95,
-          targetTop: 125,
-        );
-        final correctionBolus = domain.CorrectionBolus(
-          externalId: 'history-correction-1',
-          createdAt: now.add(const Duration(minutes: 6)),
-          insulin: 0.8,
-        );
-
-        const config = DataSourceConfig(
-          bgSource: BgSource.cloud,
-          treatmentsSource: TreatmentsSource.cloud,
-          pumpStatusSource: PumpStatusSource.cloud,
-          historySource: HistorySource.cloud,
-          mirrorToLocal: true,
-        );
-        final nightscoutRepository = _FakeNightscoutRepository(
-          glucoseReadings: [glucose],
-          deviceStatuses: [deviceStatus],
-          treatments: [bolusWizard, temporaryTarget, correctionBolus],
-        );
-        final container = ProviderContainer(
-          overrides: [
-            dataSourceConfigProvider.overrideWithValue(const AsyncData(config)),
-            nightscoutRepositoryProvider.overrideWithValue(
-              AsyncData(nightscoutRepository),
+          final now = DateTime.fromMillisecondsSinceEpoch(1000);
+          final glucose = domain.Glucose(
+            externalId: 'history-glucose-1',
+            source: domain.GlucoseSource.cloud,
+            date: now,
+            sgv: 128,
+            direction: 'Flat',
+          );
+          final deviceStatus = testDeviceStatus(
+            externalId: 'history-status-1',
+            date: now,
+            iob: 0.6,
+            cob: 10,
+            tick: '+2',
+            bg: 128,
+          );
+          final bolusWizard = domain.BolusWizard(
+            nightscoutObjectId: 'history-bolus-wizard-1',
+            createdAt: now,
+            date: now,
+            glucose: 128,
+            units: 'mg/dl',
+            notes: null,
+            calculatorResult: _testBolusCalculatorResult(
+              carbs: 35,
+              totalInsulin: 2.8,
             ),
-            databaseProvider.overrideWithValue(db),
-          ],
-        );
-        addTearDown(container.dispose);
+          );
+          final temporaryTarget = domain.TemporaryTarget(
+            nightscoutId: 'history-target-1',
+            createdAt: now.add(const Duration(minutes: 5)),
+            durationInMiliseconds: Duration.minutesPerHour * 60 * 1000,
+            duration: 60,
+            targetBottom: 95,
+            targetTop: 125,
+          );
+          final correctionBolus = domain.CorrectionBolus(
+            externalId: 'history-correction-1',
+            createdAt: now.add(const Duration(minutes: 6)),
+            insulin: 0.8,
+          );
 
-        final glucoseRepository = await container.read(
-          glucoseHistoryRepositoryProvider.future,
-        );
-        final treatmentRepository = await container.read(
-          treatmentsHistoryRepositoryProvider.future,
-        );
-        final deviceStatusRepository = await container.read(
-          deviceStatusHistoryRepositoryProvider.future,
-        );
+          final config = DataSourceConfig(
+            bgSource: BgSource.cloud,
+            treatmentsSource: TreatmentsSource.cloud,
+            pumpStatusSource: PumpStatusSource.cloud,
+            historySource: forceCloud
+                ? HistorySource.local
+                : HistorySource.cloud,
+            mirrorToLocal: !forceCloud,
+          );
+          final nightscoutRepository = _FakeNightscoutRepository(
+            glucoseReadings: [glucose],
+            deviceStatuses: [deviceStatus],
+            treatments: [bolusWizard, temporaryTarget, correctionBolus],
+          );
+          final container = ProviderContainer(
+            overrides: [
+              dataSourceConfigProvider.overrideWithValue(AsyncData(config)),
+              nightscoutRepositoryProvider.overrideWithValue(
+                AsyncData(nightscoutRepository),
+              ),
+              databaseProvider.overrideWithValue(db),
+            ],
+          );
+          addTearDown(container.dispose);
 
-        final returnedGlucose = await glucoseRepository.fetchGlucoseBetween(
-          DateTime.fromMillisecondsSinceEpoch(0),
-          DateTime.fromMillisecondsSinceEpoch(2000),
-        );
-        final returnedRecentGlucose = await glucoseRepository
-            .fetchRecentGlucose(1);
-        final returnedTreatments = await treatmentRepository
-            .fetchTreatmentsBetween(
-              DateTime.fromMillisecondsSinceEpoch(0),
-              DateTime.fromMillisecondsSinceEpoch(400000),
-            );
-        final returnedDeviceStatuses = await deviceStatusRepository
-            .fetchDeviceStatusBetween(
-              DateTime.fromMillisecondsSinceEpoch(0),
-              DateTime.fromMillisecondsSinceEpoch(2000),
-            );
-        final returnedLastDeviceStatus = await deviceStatusRepository
-            .fetchLastDeviceStatusBefore(
-              DateTime.fromMillisecondsSinceEpoch(2000),
-            );
+          final onDemand = forceCloud
+              ? await container.read(onDemandHistoryRepositoriesProvider.future)
+              : null;
+          final glucoseRepository = onDemand != null
+              ? onDemand.glucose
+              : await container.read(glucoseHistoryRepositoryProvider.future);
+          final treatmentRepository = onDemand != null
+              ? onDemand.treatments
+              : await container.read(
+                  treatmentsHistoryRepositoryProvider.future,
+                );
+          final deviceStatusRepository = onDemand != null
+              ? onDemand.deviceStatuses
+              : await container.read(
+                  deviceStatusHistoryRepositoryProvider.future,
+                );
 
-        expect(returnedGlucose, [glucose]);
-        expect(returnedRecentGlucose, [glucose]);
-        expect(returnedTreatments, [
-          bolusWizard,
-          temporaryTarget,
-          correctionBolus,
-        ]);
-        expect(returnedDeviceStatuses, [deviceStatus]);
-        expect(returnedLastDeviceStatus, deviceStatus);
+          final returnedGlucose = await glucoseRepository.fetchGlucoseBetween(
+            DateTime.fromMillisecondsSinceEpoch(0),
+            DateTime.fromMillisecondsSinceEpoch(2000),
+          );
+          final returnedRecentGlucose = await glucoseRepository
+              .fetchRecentGlucose(1);
+          final returnedTreatments = await treatmentRepository
+              .fetchTreatmentsBetween(
+                DateTime.fromMillisecondsSinceEpoch(0),
+                DateTime.fromMillisecondsSinceEpoch(400000),
+              );
+          final returnedDeviceStatuses = await deviceStatusRepository
+              .fetchDeviceStatusBetween(
+                DateTime.fromMillisecondsSinceEpoch(0),
+                DateTime.fromMillisecondsSinceEpoch(2000),
+              );
+          final returnedLastDeviceStatus = await deviceStatusRepository
+              .fetchLastDeviceStatusBefore(
+                DateTime.fromMillisecondsSinceEpoch(2000),
+              );
 
-        final mirroredGlucose = await db.localMirrorDao
-            .getGlucoseReadingsBetween(
-              DateTime.fromMillisecondsSinceEpoch(0),
-              DateTime.fromMillisecondsSinceEpoch(2000),
-            );
-        final mirroredStatuses = await db.localMirrorDao
-            .getDeviceStatusesBetween(
-              DateTime.fromMillisecondsSinceEpoch(0),
-              DateTime.fromMillisecondsSinceEpoch(2000),
-            );
-        final mirroredBolusWizards = await db.localMirrorDao
-            .getBolusWizardsBetween(
-              DateTime.fromMillisecondsSinceEpoch(0),
-              DateTime.fromMillisecondsSinceEpoch(2000),
-            );
-        final mirroredTargets = await db.localMirrorDao
-            .getTemporaryTargetsBetween(
-              DateTime.fromMillisecondsSinceEpoch(0),
-              DateTime.fromMillisecondsSinceEpoch(400000),
-            );
-        final mirroredCorrectionBoluses = await db.localMirrorDao
-            .getCorrectionBolusesBetween(
-              DateTime.fromMillisecondsSinceEpoch(0),
-              DateTime.fromMillisecondsSinceEpoch(500000),
-            );
+          expect(returnedGlucose, [glucose]);
+          expect(returnedRecentGlucose, [glucose]);
+          expect(returnedTreatments, [
+            bolusWizard,
+            temporaryTarget,
+            correctionBolus,
+          ]);
+          expect(returnedDeviceStatuses, [deviceStatus]);
+          expect(returnedLastDeviceStatus, deviceStatus);
 
-        expect(mirroredGlucose, hasLength(1));
-        expect(mirroredGlucose.single.externalId, 'history-glucose-1');
-        expect(mirroredGlucose.single.sgv, 128);
+          final mirroredGlucose = await db.localMirrorDao
+              .getGlucoseReadingsBetween(
+                DateTime.fromMillisecondsSinceEpoch(0),
+                DateTime.fromMillisecondsSinceEpoch(2000),
+              );
+          final mirroredStatuses = await db.localMirrorDao
+              .getDeviceStatusesBetween(
+                DateTime.fromMillisecondsSinceEpoch(0),
+                DateTime.fromMillisecondsSinceEpoch(2000),
+              );
+          final mirroredBolusWizards = await db.localMirrorDao
+              .getBolusWizardsBetween(
+                DateTime.fromMillisecondsSinceEpoch(0),
+                DateTime.fromMillisecondsSinceEpoch(2000),
+              );
+          final mirroredTargets = await db.localMirrorDao
+              .getTemporaryTargetsBetween(
+                DateTime.fromMillisecondsSinceEpoch(0),
+                DateTime.fromMillisecondsSinceEpoch(400000),
+              );
+          final mirroredCorrectionBoluses = await db.localMirrorDao
+              .getCorrectionBolusesBetween(
+                DateTime.fromMillisecondsSinceEpoch(0),
+                DateTime.fromMillisecondsSinceEpoch(500000),
+              );
 
-        expect(mirroredStatuses, hasLength(1));
-        expect(mirroredStatuses.single.externalId, 'history-status-1');
-        expect(mirroredStatuses.single.bg, 128);
+          expect(mirroredGlucose, hasLength(1));
+          expect(mirroredGlucose.single.externalId, 'history-glucose-1');
+          expect(mirroredGlucose.single.sgv, 128);
 
-        expect(mirroredBolusWizards, hasLength(1));
-        expect(
-          mirroredBolusWizards.single.externalId,
-          'history-bolus-wizard-1',
-        );
-        expect(mirroredBolusWizards.single.carbs, 35);
-        expect(mirroredBolusWizards.single.insulin, 2.8);
+          expect(mirroredStatuses, hasLength(1));
+          expect(mirroredStatuses.single.externalId, 'history-status-1');
+          expect(mirroredStatuses.single.bg, 128);
 
-        expect(mirroredTargets, hasLength(1));
-        expect(mirroredTargets.single.externalId, 'history-target-1');
-        expect(mirroredTargets.single.targetBottom, 95);
-        expect(mirroredTargets.single.targetTop, 125);
+          expect(mirroredBolusWizards, hasLength(1));
+          expect(
+            mirroredBolusWizards.single.externalId,
+            'history-bolus-wizard-1',
+          );
+          expect(mirroredBolusWizards.single.carbs, 35);
+          expect(mirroredBolusWizards.single.insulin, 2.8);
 
-        expect(mirroredCorrectionBoluses, hasLength(1));
-        expect(
-          mirroredCorrectionBoluses.single.externalId,
-          'history-correction-1',
-        );
-        expect(
-          mirroredCorrectionBoluses.single.source,
-          TreatmentsSource.cloud.storageValue,
-        );
-        expect(mirroredCorrectionBoluses.single.insulin, 0.8);
-      },
-    );
+          expect(mirroredTargets, hasLength(1));
+          expect(mirroredTargets.single.externalId, 'history-target-1');
+          expect(mirroredTargets.single.targetBottom, 95);
+          expect(mirroredTargets.single.targetTop, 125);
+
+          expect(mirroredCorrectionBoluses, hasLength(1));
+          expect(
+            mirroredCorrectionBoluses.single.externalId,
+            'history-correction-1',
+          );
+          expect(
+            mirroredCorrectionBoluses.single.source,
+            TreatmentsSource.cloud.storageValue,
+          );
+          expect(mirroredCorrectionBoluses.single.insulin, 0.8);
+        },
+      );
+    }
   });
 }
 

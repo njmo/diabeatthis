@@ -28,6 +28,7 @@ import '../local_mirror/repositories/mirroring_treatment_source_repository.dart'
 import '../local_mirror/repositories/mirroring_treatments_history_repository.dart';
 import '../local_mirror/services/local_mirror_writer.dart';
 import '../nightscout/providers/nightscout_repository_provider.dart';
+import 'effective_history_source_provider.dart';
 
 part 'source_repository_providers.g.dart';
 
@@ -86,7 +87,8 @@ Future<TreatmentSourceRepository> treatmentsSourceRepository(Ref ref) async {
 Future<GlucoseHistoryRepository> glucoseHistoryRepository(Ref ref) async {
   final config = await ref.watch(dataSourceConfigProvider.future);
 
-  switch (config.historySource) {
+  switch (await ref.watch(effectiveHistorySourceProvider.future)) {
+    case HistorySource.localOnMobile:
     case HistorySource.cloud:
       final nightscoutRepository = await ref.watch(
         nightscoutRepositoryProvider.future,
@@ -109,7 +111,8 @@ Future<GlucoseHistoryRepository> glucoseHistoryRepository(Ref ref) async {
 Future<TreatmentsHistoryRepository> treatmentsHistoryRepository(Ref ref) async {
   final config = await ref.watch(dataSourceConfigProvider.future);
 
-  switch (config.historySource) {
+  switch (await ref.watch(effectiveHistorySourceProvider.future)) {
+    case HistorySource.localOnMobile:
     case HistorySource.cloud:
       final nightscoutRepository = await ref.watch(
         nightscoutRepositoryProvider.future,
@@ -135,7 +138,8 @@ Future<DeviceStatusHistoryRepository> deviceStatusHistoryRepository(
 ) async {
   final config = await ref.watch(dataSourceConfigProvider.future);
 
-  switch (config.historySource) {
+  switch (await ref.watch(effectiveHistorySourceProvider.future)) {
+    case HistorySource.localOnMobile:
     case HistorySource.cloud:
       final nightscoutRepository = await ref.watch(
         nightscoutRepositoryProvider.future,
