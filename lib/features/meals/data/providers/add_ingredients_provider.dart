@@ -55,6 +55,10 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
 
   @override
   AddMealIngredientStage build() {
+    // The flow owns these drafts even when the active stage does not display them.
+    ref.watch(mealIngredientsDraftProvider.notifier);
+    ref.watch(mealIngredientAmountDraftProvider.notifier);
+    ref.watch(mealIngredientConfidenceDraftProvider.notifier);
     _history.reset();
     return AddMealIngredientStage.ingredientSearch;
   }
