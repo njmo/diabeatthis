@@ -52,6 +52,31 @@ void main() {
     return result;
   }
 
+  for (final brand in <String?>[null, '', '   ', '  ACME  ']) {
+    test('saves a meal with normalized optional brand: $brand', () async {
+      final draft = transactionMealDraft(usePortions: false);
+      await container
+          .read(addMealUseCaseProvider)
+          .call(
+            draft.copyWith(
+              mealIngredients: draft.mealIngredients
+                  .map(
+                    (item) => item.copyWith(
+                      ingredient: item.ingredient.copyWith(brand: brand),
+                    ),
+                  )
+                  .toList(),
+            ),
+          );
+      final ingredients = await db.select(db.ingredient).get();
+      expect(ingredients, hasLength(2));
+      expect(
+        ingredients.map((item) => item.brand),
+        everyElement(brand == '  ACME  ' ? 'ACME' : isNull),
+      );
+    });
+  }
+
   test('rolls back all meal writes when the second ingredient fails', () async {
     await db.customStatement(
       "INSERT INTO portion (name, unit_hint) VALUES ('Existing portion', 'g')",

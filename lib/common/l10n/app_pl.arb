@@ -879,5 +879,7 @@
   "plannedTimeNow": "Teraz",
   "plannedTimeIn15Minutes": "Za 15 min",
   "plannedTimeIn45Minutes": "Za 45 min",
-  "plannedTimeChoose": "Wybierz termin"
+  "plannedTimeChoose": "Wybierz termin",
+  "ingredientBrandOptionalLabel": "Producent (opcjonalnie)",
+  "ingredientBrandTooShort": "Wpisz co najmniej 2 znaki lub pozostaw pole puste."
 }

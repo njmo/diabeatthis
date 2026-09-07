@@ -51,7 +51,7 @@ class IngredientForm extends ConsumerWidget {
             onChanged: draft.setBrand,
             validator: _validateOptionalBrand,
             decoration: InputDecoration(
-              labelText: context.lang.ingredientBrandLabel,
+              labelText: context.lang.ingredientBrandOptionalLabel,
               border: const OutlineInputBorder(),
             ),
           ),
@@ -86,8 +86,7 @@ String? _validateName(String? value) {
 }
 
 String? _validateOptionalBrand(String? value) {
-  if ((value == null) || (value.isEmpty) || (value.length < 2)) {
-    return '';
-  }
-  return null;
+  final brand = value?.trim() ?? '';
+  if (brand.isEmpty) return null;
+  return brand.length < 2 ? lang.ingredientBrandTooShort : null;
 }

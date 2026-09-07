@@ -1,3 +1,4 @@
+import '../../../../common/utils/normalize_optional_text.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/drift/database_impl.dart';
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
@@ -18,6 +19,7 @@ Future<domain.Ingredient> insertIngredientDraft(
       final fiberPer100g = draft.isReference ? 0.0 : draft.fiberPer100g;
       final ingredient = draft.copyWith(
         name: name,
+        brand: normalizeOptionalText(draft.brand),
         fiberPer100g: fiberPer100g,
         barcode: draft.normalizedBarcode,
       );

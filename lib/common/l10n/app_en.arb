@@ -751,5 +751,7 @@
   "plannedTimeNow": "Now",
   "plannedTimeIn15Minutes": "In 15 min",
   "plannedTimeIn45Minutes": "In 45 min",
-  "plannedTimeChoose": "Choose date and time"
+  "plannedTimeChoose": "Choose date and time",
+  "ingredientBrandOptionalLabel": "Brand (optional)",
+  "ingredientBrandTooShort": "Enter at least 2 characters or leave this field empty."
 }

@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../common/nutrition/confidence_level.dart';
+import '../../../../common/utils/normalize_optional_text.dart';
 import '../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/domain/model/portion.dart' as domain;
@@ -175,7 +176,8 @@ class IngredientDraftNotifier extends _$IngredientDraftNotifier {
 
   String? getBrand() =>
       state.map(draft: (d) => d.brand, existing: (e) => e.brand);
-  void setBrand(String value) => state = state.copyWith(brand: value);
+  void setBrand(String value) =>
+      state = state.copyWith(brand: normalizeOptionalText(value));
 
   void setBarcode(String value) {
     final normalized = value.trim();
