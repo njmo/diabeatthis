@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../common/nutrition/ingredient_amount_calculator.dart';
+import '../../../../common/nutrition/ingredient_amount_kind.dart';
 import '../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
@@ -169,8 +170,11 @@ Future<Macronutrients> calculateMealIngredientsMacronutrients(
     }
     final gramsPerPortion =
         resolveIngredientGramsPerPortion(
-          usesGramAmount: isEmpty && !isReference,
-          isReference: isEmpty && isReference,
+          kind: !isEmpty
+              ? IngredientAmountKind.portion
+              : isReference
+              ? IngredientAmountKind.referencePortion
+              : IngredientAmountKind.grams,
           portionGrams: portionAmount,
           // Keep aggregation's resolved weight, including legacy zero/negative values.
           storedGramsPerPortion: portionAmount,

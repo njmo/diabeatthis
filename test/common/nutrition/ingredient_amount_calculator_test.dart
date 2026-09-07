@@ -1,11 +1,11 @@
 import 'package:diabeatthis/common/nutrition/ingredient_amount_calculator.dart';
+import 'package:diabeatthis/common/nutrition/ingredient_amount_kind.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('gram amounts ignore portion weights', () {
     final multiplier = resolveIngredientGramsPerPortion(
-      usesGramAmount: true,
-      isReference: false,
+      kind: IngredientAmountKind.grams,
       portionGrams: 35,
       storedGramsPerPortion: 40,
     );
@@ -13,7 +13,7 @@ void main() {
     expect(
       calculateIngredientTotalGrams(
         amount: 150,
-        usesGramAmount: true,
+        kind: IngredientAmountKind.grams,
         gramsPerPortion: multiplier,
       ),
       150,
@@ -22,8 +22,7 @@ void main() {
 
   test('reference portions retain the existing 100 g multiplier', () {
     final multiplier = resolveIngredientGramsPerPortion(
-      usesGramAmount: false,
-      isReference: true,
+      kind: IngredientAmountKind.referencePortion,
       portionGrams: 35,
       storedGramsPerPortion: 40,
     );
@@ -31,7 +30,7 @@ void main() {
     expect(
       calculateIngredientTotalGrams(
         amount: 0.5,
-        usesGramAmount: false,
+        kind: IngredientAmountKind.referencePortion,
         gramsPerPortion: multiplier,
       ),
       50,
@@ -40,8 +39,7 @@ void main() {
 
   test('explicit portion weight takes precedence over stored weight', () {
     final multiplier = resolveIngredientGramsPerPortion(
-      usesGramAmount: false,
-      isReference: false,
+      kind: IngredientAmountKind.portion,
       portionGrams: 35,
       storedGramsPerPortion: 40,
     );
@@ -49,7 +47,7 @@ void main() {
     expect(
       calculateIngredientTotalGrams(
         amount: 2,
-        usesGramAmount: false,
+        kind: IngredientAmountKind.portion,
         gramsPerPortion: multiplier,
       ),
       70,
@@ -58,8 +56,7 @@ void main() {
 
   test('uses stored weight when portion weight is unspecified', () {
     final multiplier = resolveIngredientGramsPerPortion(
-      usesGramAmount: false,
-      isReference: false,
+      kind: IngredientAmountKind.portion,
       portionGrams: 0,
       storedGramsPerPortion: 35,
     );
@@ -67,7 +64,7 @@ void main() {
     expect(
       calculateIngredientTotalGrams(
         amount: 1.5,
-        usesGramAmount: false,
+        kind: IngredientAmountKind.portion,
         gramsPerPortion: multiplier,
       ),
       52.5,
@@ -79,15 +76,14 @@ void main() {
       'does not invent total weight for missing or invalid portion weight ($storedWeight)',
       () {
         final multiplier = resolveIngredientGramsPerPortion(
-          usesGramAmount: false,
-          isReference: false,
+          kind: IngredientAmountKind.portion,
           portionGrams: 0,
           storedGramsPerPortion: storedWeight,
         );
         expect(
           calculateIngredientTotalGrams(
             amount: 2,
-            usesGramAmount: false,
+            kind: IngredientAmountKind.portion,
             gramsPerPortion: multiplier,
           ),
           isNull,
@@ -95,7 +91,7 @@ void main() {
         expect(
           calculateIngredientTotalGrams(
             amount: 150,
-            usesGramAmount: true,
+            kind: IngredientAmountKind.grams,
             gramsPerPortion: multiplier,
           ),
           150,
@@ -108,7 +104,7 @@ void main() {
     expect(
       calculateIngredientTotalGrams(
         amount: 0.25,
-        usesGramAmount: false,
+        kind: IngredientAmountKind.portion,
         gramsPerPortion: 35,
       ),
       8.75,

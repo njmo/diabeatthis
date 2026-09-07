@@ -1,4 +1,5 @@
 import '../../../../common/l10n/language.dart';
+import '../../../../common/nutrition/ingredient_amount_kind.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../data/drafts/meal_draft.dart';
 
@@ -8,6 +9,12 @@ extension MealIngredientPortionPresentationX on MealIngredientsDraft {
     draft: (_) => false,
     existing: (_) => false,
   );
+
+  IngredientAmountKind get amountKind {
+    if (usesGramAmount) return IngredientAmountKind.grams;
+    if (ingredient.isReference) return IngredientAmountKind.referencePortion;
+    return IngredientAmountKind.portion;
+  }
 
   bool get shouldLoadStoredPortionAmount =>
       ingredientPortion.amount <= 0 &&

@@ -25,8 +25,7 @@ class AddIngredientSummary extends ConsumerWidget {
           )
         : null;
     final gramsPerPortion = resolveIngredientGramsPerPortion(
-      usesGramAmount: draft.usesGramAmount,
-      isReference: draft.ingredient.isReference,
+      kind: draft.amountKind,
       portionGrams: draft.ingredientPortion.amount,
       storedGramsPerPortion: storedPortionAmount?.maybeWhen(
         data: (value) => value,
@@ -74,7 +73,7 @@ class AddIngredientSummaryContent extends StatelessWidget {
           );
     final totalGrams = calculateIngredientTotalGrams(
       amount: amount,
-      usesGramAmount: draft.usesGramAmount,
+      kind: draft.amountKind,
       gramsPerPortion: gramsPerPortion,
     );
     final totalGramsLabel = isLoadingPortionAmount

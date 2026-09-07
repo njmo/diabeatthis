@@ -33,8 +33,7 @@ class AmountForm extends ConsumerWidget {
           )
         : null;
     final gramsPerPortion = resolveIngredientGramsPerPortion(
-      usesGramAmount: draft.usesGramAmount,
-      isReference: draft.ingredient.isReference,
+      kind: draft.amountKind,
       portionGrams: draft.ingredientPortion.amount,
       storedGramsPerPortion: storedPortionAmount?.maybeWhen(
         data: (value) => value,
