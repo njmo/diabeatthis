@@ -116,7 +116,7 @@ Future<GlobalKey<FormState>> mountMealNameForm(
             key: key,
             child: AddMealBasicInfoSection(
               onNameSaved: container.read(mealDraftProvider.notifier).setName,
-              onPlannedAtSaved: container
+              onPlannedAtChanged: container
                   .read(mealDraftProvider.notifier)
                   .setPlannedAt,
             ),

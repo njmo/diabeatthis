@@ -37,7 +37,7 @@ class AddMealPage extends HookConsumerWidget {
             children: [
               AddMealBasicInfoSection(
                 onNameSaved: mealDraft.setName,
-                onPlannedAtSaved: mealDraft.setPlannedAt,
+                onPlannedAtChanged: mealDraft.setPlannedAt,
               ),
               const SizedBox(height: 24),
               AddMealSourceSection(

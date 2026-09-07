@@ -747,5 +747,9 @@
   "copiedMealUseIngredients": "Use ingredients",
   "copiedMealBrowseTitle": "Find a similar meal",
   "copiedMealBrowseSubtitle": "Preview ingredients and use them in your meal.",
-  "amountChangeMeasure": "Change measure"
+  "amountChangeMeasure": "Change measure",
+  "plannedTimeNow": "Now",
+  "plannedTimeIn15Minutes": "In 15 min",
+  "plannedTimeIn45Minutes": "In 45 min",
+  "plannedTimeChoose": "Choose date and time"
 }

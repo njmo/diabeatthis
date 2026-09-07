@@ -875,5 +875,9 @@
   "copiedMealUseIngredients": "Użyj składników",
   "copiedMealBrowseTitle": "Znajdź podobny posiłek",
   "copiedMealBrowseSubtitle": "Podejrzyj składniki i wykorzystaj je w swoim posiłku.",
-  "amountChangeMeasure": "Zmień miarę"
+  "amountChangeMeasure": "Zmień miarę",
+  "plannedTimeNow": "Teraz",
+  "plannedTimeIn15Minutes": "Za 15 min",
+  "plannedTimeIn45Minutes": "Za 45 min",
+  "plannedTimeChoose": "Wybierz termin"
 }
