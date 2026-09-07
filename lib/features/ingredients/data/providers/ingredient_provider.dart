@@ -8,8 +8,7 @@ import '../../../../core/drift/providers/database_provider.dart';
 import '../../../meal_advisor/data/models/ingredient_photo_search_result.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../drafts/ingredient_draft.dart';
-import '../drafts/ingredient_draft_validation.dart';
-import '../mappers/ingredient_draft_mapper.dart';
+import '../persistence/insert_ingredient_draft.dart';
 
 part 'ingredient_provider.g.dart';
 
@@ -108,33 +107,7 @@ Future<domain.Ingredient> insertIngredient(
   Ref ref,
   IngredientDraft ingredient,
 ) async {
-  return ingredient.map(
-    draft: (draft) async {
-      final name = draft.name.trim();
-      if (name.isEmpty) {
-        throw ArgumentError('Ingredient name cannot be empty');
-      }
-      final fiberPer100g = draft.isReference ? 0.0 : draft.fiberPer100g;
-      final ingredient = draft.copyWith(
-        name: name,
-        fiberPer100g: fiberPer100g,
-        barcode: draft.normalizedBarcode,
-      );
-      ingredient.validateMacroRanges();
-      ingredient.validateBarcode();
-
-      final db = ref.watch(databaseProvider);
-      final value = await db
-          .into(db.ingredient)
-          .insertReturningOrNull(ingredient.toCompanion());
-      if (value != null) {
-        return value.toDomain();
-      } else {
-        throw Exception('Could not insert ingredient');
-      }
-    },
-    existing: (_) => ingredient.toDomain(),
-  );
+  return insertIngredientDraft(ref.watch(databaseProvider), ingredient);
 }
 
 @riverpod

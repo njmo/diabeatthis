@@ -6,7 +6,7 @@ import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/meal_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../drafts/meal_draft.dart';
-import '../mapper/meal_draft_drift_mapper.dart';
+import '../persistence/insert_meal_draft.dart';
 
 part 'meal_database_provider.g.dart';
 
@@ -113,13 +113,5 @@ Future<domain.Meal?> getNearestMeal(Ref ref) async {
 
 @riverpod
 Future<domain.Meal> insertMeal(Ref ref, MealDraft meal) async {
-  final db = ref.watch(databaseProvider);
-  final value = await db
-      .into(db.meal)
-      .insertReturningOrNull(meal.toCompanion());
-  if (value != null) {
-    return value.toDomain();
-  } else {
-    throw Exception('Could not insert meal');
-  }
+  return insertMealDraft(ref.watch(databaseProvider), meal);
 }

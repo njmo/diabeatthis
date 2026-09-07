@@ -8,7 +8,7 @@ import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../drafts/portion_draft.dart';
 import '../drafts/portion_filter.dart';
-import '../mappers/portion_draft_mapper.dart';
+import '../persistence/resolve_portion_selection.dart';
 
 part 'portion_provider.g.dart';
 
@@ -79,21 +79,7 @@ Future<double?> gramsPerPortion(
 
 @riverpod
 Future<domain.Portion?> insertPortion(Ref ref, PortionSelection portion) async {
-  return portion.map(
-    draft: (e) async {
-      final db = ref.watch(databaseProvider);
-      final value = await db
-          .into(db.portion)
-          .insertReturningOrNull(portion.toCompanion());
-      if (value != null) {
-        return value.toDomain();
-      } else {
-        throw Exception('Could not insert ingredient');
-      }
-    },
-    existing: (e) => e.toDomain(),
-    empty: (_) => null,
-  );
+  return resolvePortionSelection(ref.watch(databaseProvider), portion);
 }
 
 @riverpod
