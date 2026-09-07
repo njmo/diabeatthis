@@ -1,6 +1,7 @@
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import 'package:diabeatthis/features/meals/data/drafts/meal_draft.dart';
+import 'package:diabeatthis/features/meals/data/models/meal_ingredient_replacement_result.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_draft_provider.dart';
 import 'package:diabeatthis/features/portions/data/drafts/portion_draft.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -51,6 +52,86 @@ void main() {
       expect(firstAdded, true);
       expect(secondAdded, false);
       expect(container.read(mealDraftProvider).mealIngredients, hasLength(1));
+    });
+
+    for (final isReference in [false, true]) {
+      test('edits in place with one update (reference: $isReference)', () {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final notifier = container.read(mealDraftProvider.notifier);
+        final first = _mealIngredient(ingredientId: 11);
+        final original = _mealIngredient(ingredientId: 12);
+        final middle = original.copyWith(
+          ingredient: original.ingredient.copyWith(isReference: isReference),
+        );
+        final last = _mealIngredient(ingredientId: 13);
+        notifier.setMealIngredients([first, middle, last]);
+        final updates = <MealDraft>[];
+        final subscription = container.listen(mealDraftProvider, (_, next) {
+          updates.add(next);
+        });
+        addTearDown(subscription.close);
+        final replacement = middle.copyWith(amount: 2);
+
+        final result = notifier.replaceMealIngredient(middle, replacement);
+
+        expect(result, MealIngredientReplacementResult.replaced);
+        expect(container.read(mealDraftProvider).mealIngredients, [
+          first,
+          replacement,
+          last,
+        ]);
+        expect(updates, hasLength(1));
+        expect(updates.single.mealIngredients, [first, replacement, last]);
+      });
+    }
+
+    final duplicateCandidates = {
+      'ingredient ID': _mealIngredient(ingredientId: 12),
+      'barcode': _mealIngredient(barcode: '8714800048378'),
+      'new ingredient draft': _mealIngredient(),
+    };
+    for (final entry in duplicateCandidates.entries) {
+      test('rejects duplicate by ${entry.key} without changing the draft', () {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+        final notifier = container.read(mealDraftProvider.notifier);
+        final original = _mealIngredient(ingredientId: 11);
+        notifier.setMealIngredients([original, entry.value]);
+        final before = container.read(mealDraftProvider);
+
+        final result = notifier.replaceMealIngredient(
+          original,
+          entry.value.copyWith(
+            amount: 80,
+            ingredient: entry.key == 'new ingredient draft'
+                ? entry.value.ingredient
+                : entry.value.ingredient.copyWith(name: 'Updated product name'),
+          ),
+        );
+
+        expect(result, MealIngredientReplacementResult.duplicate);
+        expect(container.read(mealDraftProvider), same(before));
+      });
+    }
+
+    test('does not restore an ingredient removed while editing', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final notifier = container.read(mealDraftProvider.notifier);
+      final original = _mealIngredient(ingredientId: 12);
+      final remaining = _mealIngredient(ingredientId: 13);
+      notifier.setMealIngredients([original, remaining]);
+      notifier.removeMealIngredient(original);
+      final before = container.read(mealDraftProvider);
+
+      final result = notifier.replaceMealIngredient(
+        original,
+        original.copyWith(amount: 80),
+      );
+
+      expect(result, MealIngredientReplacementResult.notFound);
+      expect(container.read(mealDraftProvider), same(before));
     });
 
     test('removes only one matching entry from the list', () {

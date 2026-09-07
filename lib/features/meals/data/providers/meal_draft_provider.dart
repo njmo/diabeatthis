@@ -7,6 +7,7 @@ import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../presentation/widgets/confidence_slider.dart';
 import '../drafts/meal_draft.dart';
+import '../models/meal_ingredient_replacement_result.dart';
 
 part 'meal_draft_provider.g.dart';
 
@@ -127,6 +128,28 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
       mealIngredients: [...state.mealIngredients, mealIngredient],
     );
     return true;
+  }
+
+  MealIngredientReplacementResult replaceMealIngredient(
+    MealIngredientsDraft original,
+    MealIngredientsDraft replacement,
+  ) {
+    final ingredients = [...state.mealIngredients];
+    final index = ingredients.indexOf(original);
+    if (index < 0) {
+      return MealIngredientReplacementResult.notFound;
+    }
+
+    for (var otherIndex = 0; otherIndex < ingredients.length; otherIndex++) {
+      if (otherIndex != index &&
+          ingredients[otherIndex].isSameIngredientAs(replacement)) {
+        return MealIngredientReplacementResult.duplicate;
+      }
+    }
+
+    ingredients[index] = replacement;
+    state = state.copyWith(mealIngredients: ingredients);
+    return MealIngredientReplacementResult.replaced;
   }
 
   void addMealIngredients(List<MealIngredientsDraft> mealIngredients) =>

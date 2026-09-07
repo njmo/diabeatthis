@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../data/drafts/meal_draft.dart';
+import '../../data/models/meal_ingredient_replacement_result.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
 import 'add_meal_ingredient.dart';
 import 'meal_ingredient_preview_tile.dart';
@@ -42,22 +43,14 @@ class MealIngredientsList extends ConsumerWidget {
       ref: ref,
       initialDraft: draft,
     );
-    if (mealIngredient != null) {
+    if (mealIngredient != null && context.mounted) {
       final mealDraft = ref.read(mealDraftProvider.notifier);
-      final wouldDuplicate = ref
-          .read(mealDraftProvider)
-          .mealIngredients
-          .where((ingredient) => ingredient != draft)
-          .any((ingredient) => ingredient.isSameIngredientAs(mealIngredient));
-      if (wouldDuplicate && context.mounted) {
+      final result = mealDraft.replaceMealIngredient(draft, mealIngredient);
+      if (result == MealIngredientReplacementResult.duplicate) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.lang.mealIngredientAlreadyOnList)),
         );
-        return;
       }
-
-      mealDraft.removeMealIngredient(draft);
-      mealDraft.addMealIngredient(mealIngredient);
     }
   }
 }
