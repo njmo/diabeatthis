@@ -1,4 +1,5 @@
 import '../../../../common/history/glucose_window_summary.dart';
+import '../../../../common/history/history_event_type.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
 import '../../../../common/history/time_series_coverage.dart';
 import '../../../../core/domain/model/bolus_wizard.dart';
@@ -220,18 +221,7 @@ class MealTimelineEventData {
   });
 }
 
-enum MealTimelineEventType {
-  mealStatus,
-  manualCorrection,
-  carbs,
-  correction,
-  activity,
-  localMeal,
-  lowTreatment,
-  nightscoutMeal,
-  deviceStatus,
-  tempTarget,
-}
+typedef MealTimelineEventType = HistoryEventType;
 
 class MealSnapshotComparisonRowData {
   final String label;

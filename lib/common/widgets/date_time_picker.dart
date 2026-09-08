@@ -20,7 +20,7 @@ Future<DateTime?> showDateTimePicker({
 
   if (selectedDate == null) return null;
 
-  if (!context.mounted) return selectedDate;
+  if (!context.mounted) return null;
 
   final selectedTime = await showTimePicker(
     context: context,
@@ -28,7 +28,7 @@ Future<DateTime?> showDateTimePicker({
   );
 
   return selectedTime == null
-      ? selectedDate
+      ? null
       : DateTime(
           selectedDate.year,
           selectedDate.month,
@@ -57,5 +57,18 @@ Future<DateTime?> showTodayTimePicker({
     today.day,
     selectedTime.hour,
     selectedTime.minute,
+  );
+}
+
+/// Places an end time on the start date, or the following day for overnight events.
+DateTime endTimeForStart(DateTime start, TimeOfDay time) {
+  final overnight =
+      time.hour * 60 + time.minute < start.hour * 60 + start.minute;
+  return DateTime(
+    start.year,
+    start.month,
+    start.day + (overnight ? 1 : 0),
+    time.hour,
+    time.minute,
   );
 }

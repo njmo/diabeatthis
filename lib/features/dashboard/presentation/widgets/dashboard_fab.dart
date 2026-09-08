@@ -11,6 +11,7 @@ import '../../../../core/logger/logger.dart';
 import '../../../activity/data/drafts/activity_log_draft.dart';
 import '../../../activity/data/providers/activity_provider.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_sheet.dart';
+import '../../../manual_events/presentation/widgets/manual_event_sheet.dart';
 import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_activation_guard_provider.dart';
@@ -35,6 +36,15 @@ class DashboardFAB extends HookConsumerWidget with Logging {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (open.value) ...[
+          FabActionOption(
+            icon: Icons.event_note_outlined,
+            label: context.lang.manualEventAddStress,
+            onTap: () async {
+              open.value = false;
+              await showManualEventSheet(context);
+            },
+          ),
+          const SizedBox(height: 8),
           FabActionOption(
             icon: Icons.directions_run,
             label: context.lang.dashboardAddActivity,

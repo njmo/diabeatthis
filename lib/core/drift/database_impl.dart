@@ -14,6 +14,7 @@ import 'dao/meal_template_ingredients_dao.dart';
 import 'dao/portion_dao.dart';
 import 'dao/quick_low_treatment_item_dao.dart';
 import 'database.dart';
+import 'migrations/migrate_stress_events.dart';
 
 part 'database_impl.g.dart';
 
@@ -38,7 +39,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 16;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -83,6 +84,9 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
         await customStatement(
           'CREATE UNIQUE INDEX IF NOT EXISTS ingredient_barcode_unique ON ingredient(barcode) WHERE barcode IS NOT NULL',
         );
+      }
+      if (from < 16) {
+        await migrateStressEvents(this, m);
       }
     },
     beforeOpen: (details) async {

@@ -7,6 +7,7 @@ import '../../../../../core/domain/model/correction_bolus.dart';
 import '../../../../../core/domain/model/extended_carb.dart';
 import '../../../../../core/domain/model/manual_bolus.dart';
 import '../../../../../core/domain/model/meal.dart';
+import '../../../../../core/domain/model/stress_event_treatment.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
 import '../../../../../core/domain/model/treat.dart';
 import '../../../../../core/domain/model/treatment_base.dart';
@@ -245,6 +246,14 @@ class AnalyzeMealUseCase {
 
   MealTimelineEventData _treatmentEvent(Treatment treatment) {
     final createdAt = treatment.createdAt ?? clock.now();
+    if (treatment is StressEventTreatment) {
+      return MealTimelineEventData(
+        timestamp: createdAt,
+        type: MealTimelineEventType.stress,
+        label: 'Stress',
+        value: treatment.getParts(),
+      );
+    }
     if (treatment is ManualBolus) {
       return MealTimelineEventData(
         timestamp: createdAt,

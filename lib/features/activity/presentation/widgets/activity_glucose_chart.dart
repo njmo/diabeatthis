@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/history/treatment_presentation.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/stress_event_chart_ranges.dart';
 import '../../../../common/widgets/timeline_analysis_charts.dart';
-import '../../../../core/domain/model/correction_bolus.dart';
-import '../../../../core/domain/model/extended_carb.dart';
-import '../../../../core/domain/model/manual_bolus.dart';
-import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/temporary_target.dart';
-import '../../../../core/domain/model/treat.dart';
-import '../../../../core/domain/model/treatment_base.dart';
 import '../../data/models/activity_log_analysis_data.dart';
 
 class ActivityAnalysisCharts extends StatelessWidget {
@@ -44,6 +40,12 @@ List<TimelineChartRange> _activityRanges(
   ActivityLogAnalysisData analysis,
 ) {
   return [
+    ...stressEventChartRanges(
+      treatments: analysis.chartTreatments,
+      start: analysis.chartStart,
+      end: analysis.chartEnd,
+      messages: context.lang,
+    ),
     TimelineChartRange(
       start: analysis.activityStart,
       end: analysis.activityEnd,
@@ -83,24 +85,13 @@ List<TimelineChartEvent> _activityEvents(
   ActivityLogAnalysisData analysis,
 ) {
   return analysis.chartTreatments.map((treatment) {
+    final presentation = treatmentPresentation(context.lang, treatment);
     return TimelineChartEvent(
       timestamp: treatment.createdAt ?? analysis.chartStart,
-      icon: treatment.getIcon(),
-      color: treatment.getColor(),
-      label: _treatmentName(context, treatment),
+      icon: presentation.icon,
+      color: presentation.color,
+      label: presentation.label,
       value: treatment.getParts(),
     );
   }).toList();
-}
-
-String _treatmentName(BuildContext context, Treatment treatment) {
-  if (treatment is Meal) return context.lang.activityTreatmentMeal;
-  if (treatment is TemporaryTarget) return 'Temp target';
-  if (treatment is Treat) return 'Treat';
-  if (treatment is ManualBolus) return 'Bolus';
-  if (treatment is CorrectionBolus) {
-    return context.lang.activityTreatmentCorrection;
-  }
-  if (treatment is ExtendedCarb) return 'Extended carbs';
-  return context.lang.activityTreatmentEvent;
 }

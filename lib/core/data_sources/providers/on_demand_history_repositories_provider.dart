@@ -12,6 +12,8 @@ import '../local_mirror/repositories/mirroring_device_status_history_repository.
 import '../local_mirror/repositories/mirroring_glucose_history_repository.dart';
 import '../local_mirror/repositories/mirroring_treatments_history_repository.dart';
 import '../nightscout/providers/nightscout_repository_provider.dart';
+import '../stress_events/stress_event_repository.dart';
+import '../stress_events/stress_treatments_history_repository.dart';
 
 // Explicit downloads bypass source preferences and populate the local mirror.
 final onDemandHistoryRepositoriesProvider =
@@ -29,10 +31,13 @@ final onDemandHistoryRepositoriesProvider =
           delegate: CloudGlucoseHistoryRepository(nightscout),
           mirrorWriter: writer,
         ),
-        treatments: MirroringTreatmentsHistoryRepository(
-          delegate: CloudTreatmentsHistoryRepository(nightscout),
-          mirrorWriter: writer,
-          source: TreatmentsSource.cloud,
+        treatments: StressTreatmentsHistoryRepository(
+          MirroringTreatmentsHistoryRepository(
+            delegate: CloudTreatmentsHistoryRepository(nightscout),
+            mirrorWriter: writer,
+            source: TreatmentsSource.cloud,
+          ),
+          ref.watch(stressEventRepositoryProvider),
         ),
         deviceStatuses: MirroringDeviceStatusHistoryRepository(
           delegate: CloudDeviceStatusHistoryRepository(nightscout),

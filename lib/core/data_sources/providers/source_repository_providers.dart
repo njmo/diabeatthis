@@ -28,6 +28,8 @@ import '../local_mirror/repositories/mirroring_treatment_source_repository.dart'
 import '../local_mirror/repositories/mirroring_treatments_history_repository.dart';
 import '../local_mirror/services/local_mirror_writer.dart';
 import '../nightscout/providers/nightscout_repository_provider.dart';
+import '../stress_events/stress_event_repository.dart';
+import '../stress_events/stress_treatments_history_repository.dart';
 import 'effective_history_source_provider.dart';
 
 part 'source_repository_providers.g.dart';
@@ -118,16 +120,27 @@ Future<TreatmentsHistoryRepository> treatmentsHistoryRepository(Ref ref) async {
         nightscoutRepositoryProvider.future,
       );
       final repository = CloudTreatmentsHistoryRepository(nightscoutRepository);
-      if (!config.mirrorToLocal) return repository;
+      if (!config.mirrorToLocal) {
+        return StressTreatmentsHistoryRepository(
+          repository,
+          ref.watch(stressEventRepositoryProvider),
+        );
+      }
 
-      return MirroringTreatmentsHistoryRepository(
-        delegate: repository,
-        mirrorWriter: _localMirrorWriter(ref),
-        source: TreatmentsSource.cloud,
+      return StressTreatmentsHistoryRepository(
+        MirroringTreatmentsHistoryRepository(
+          delegate: repository,
+          mirrorWriter: _localMirrorWriter(ref),
+          source: TreatmentsSource.cloud,
+        ),
+        ref.watch(stressEventRepositoryProvider),
       );
     case HistorySource.local:
-      return LocalTreatmentsHistoryRepository(
-        ref.watch(databaseProvider).localMirrorDao,
+      return StressTreatmentsHistoryRepository(
+        LocalTreatmentsHistoryRepository(
+          ref.watch(databaseProvider).localMirrorDao,
+        ),
+        ref.watch(stressEventRepositoryProvider),
       );
   }
 }

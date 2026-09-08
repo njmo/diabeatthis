@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../../core/domain/model/meal.dart';
+import '../../../../../core/domain/model/stress_event_treatment.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
 import '../../models/activity_log_analysis_data.dart';
 import '../../models/activity_log_details_data.dart';
@@ -54,6 +55,11 @@ class LoadActivityLogAnalysisUseCase {
     final chartTreatments = treatments.where((treatment) {
       final createdAt = treatment.createdAt;
       if (createdAt == null) return false;
+      if (treatment is StressEventTreatment &&
+          treatment.event.endedAt != null) {
+        return !createdAt.isAfter(chartEnd) &&
+            !treatment.event.endedAt!.isBefore(chartStart);
+      }
       return _isBetween(createdAt, chartStart, chartEnd);
     }).toList();
 

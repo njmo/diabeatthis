@@ -24,11 +24,17 @@ import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_re
 import 'package:diabeatthis/core/data_sources/nightscout/repository/nightscout_repository.dart';
 import 'package:diabeatthis/core/data_sources/providers/on_demand_history_repositories_provider.dart';
 import 'package:diabeatthis/core/data_sources/providers/source_repository_providers.dart';
+import 'package:diabeatthis/core/data_sources/stress_events/stress_event_repository.dart';
+import 'package:diabeatthis/core/data_sources/stress_events/stress_treatments_history_repository.dart';
 import 'package:diabeatthis/core/domain/model/bolus_calculator_result.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart' as domain;
 import 'package:diabeatthis/core/domain/model/correction_bolus.dart' as domain;
 import 'package:diabeatthis/core/domain/model/device_status.dart' as domain;
 import 'package:diabeatthis/core/domain/model/glucose.dart' as domain;
+import 'package:diabeatthis/core/domain/model/stress_event.dart' as domain;
+import 'package:diabeatthis/core/domain/model/stress_event_treatment.dart'
+    as domain;
+import 'package:diabeatthis/core/domain/model/stress_level.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart' as domain;
 import 'package:diabeatthis/core/domain/model/treatment_base.dart' as domain;
 import 'package:diabeatthis/core/drift/database_impl.dart';
@@ -88,8 +94,16 @@ void main() {
         expect(
           await container.read(treatmentsHistoryRepositoryProvider.future),
           local
-              ? isA<LocalTreatmentsHistoryRepository>()
-              : isA<MirroringTreatmentsHistoryRepository>(),
+              ? isA<StressTreatmentsHistoryRepository>().having(
+                  (repository) => repository.delegate,
+                  'delegate',
+                  isA<LocalTreatmentsHistoryRepository>(),
+                )
+              : isA<StressTreatmentsHistoryRepository>().having(
+                  (repository) => repository.delegate,
+                  'delegate',
+                  isA<MirroringTreatmentsHistoryRepository>(),
+                ),
         );
         expect(
           await container.read(deviceStatusHistoryRepositoryProvider.future),
@@ -168,7 +182,13 @@ void main() {
       );
       await expectLater(
         container.read(treatmentsHistoryRepositoryProvider.future),
-        completion(isA<MirroringTreatmentsHistoryRepository>()),
+        completion(
+          isA<StressTreatmentsHistoryRepository>().having(
+            (repository) => repository.delegate,
+            'delegate',
+            isA<MirroringTreatmentsHistoryRepository>(),
+          ),
+        ),
       );
       await expectLater(
         container.read(deviceStatusHistoryRepositoryProvider.future),
@@ -231,7 +251,13 @@ void main() {
       );
       await expectLater(
         container.read(treatmentsHistoryRepositoryProvider.future),
-        completion(isA<LocalTreatmentsHistoryRepository>()),
+        completion(
+          isA<StressTreatmentsHistoryRepository>().having(
+            (repository) => repository.delegate,
+            'delegate',
+            isA<LocalTreatmentsHistoryRepository>(),
+          ),
+        ),
       );
       await expectLater(
         container.read(deviceStatusHistoryRepositoryProvider.future),
@@ -240,6 +266,8 @@ void main() {
     });
 
     test('uses cloud history repositories for cloud history config', () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
       const config = DataSourceConfig(
         bgSource: BgSource.aaps,
         treatmentsSource: TreatmentsSource.aaps,
@@ -249,6 +277,7 @@ void main() {
       );
       final container = ProviderContainer(
         overrides: [
+          databaseProvider.overrideWithValue(db),
           dataSourceConfigProvider.overrideWithValue(const AsyncData(config)),
           nightscoutRepositoryProvider.overrideWithValue(
             AsyncData(_FakeNightscoutRepository()),
@@ -263,7 +292,13 @@ void main() {
       );
       await expectLater(
         container.read(treatmentsHistoryRepositoryProvider.future),
-        completion(isA<CloudTreatmentsHistoryRepository>()),
+        completion(
+          isA<StressTreatmentsHistoryRepository>().having(
+            (repository) => repository.delegate,
+            'delegate',
+            isA<CloudTreatmentsHistoryRepository>(),
+          ),
+        ),
       );
       await expectLater(
         container.read(deviceStatusHistoryRepositoryProvider.future),
@@ -557,6 +592,15 @@ void main() {
           );
           addTearDown(container.dispose);
 
+          await container
+              .read(stressEventRepositoryProvider)
+              .save(
+                domain.StressEvent(
+                  source: 'manual',
+                  occurredAt: now,
+                  stressLevel: StressLevel.high,
+                ),
+              );
           final onDemand = forceCloud
               ? await container.read(onDemandHistoryRepositoriesProvider.future)
               : null;
@@ -597,11 +641,18 @@ void main() {
 
           expect(returnedGlucose, [glucose]);
           expect(returnedRecentGlucose, [glucose]);
-          expect(returnedTreatments, [
-            bolusWizard,
-            temporaryTarget,
-            correctionBolus,
-          ]);
+          expect(
+            returnedTreatments.where((t) => t is! domain.StressEventTreatment),
+            [bolusWizard, temporaryTarget, correctionBolus],
+          );
+          expect(
+            returnedTreatments
+                .whereType<domain.StressEventTreatment>()
+                .single
+                .event
+                .stressLevel,
+            StressLevel.high,
+          );
           expect(returnedDeviceStatuses, [deviceStatus]);
           expect(returnedLastDeviceStatus, deviceStatus);
 

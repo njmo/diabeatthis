@@ -3,13 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/history/treatment_presentation.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/detail_section_card.dart';
-import '../../../../core/domain/model/correction_bolus.dart';
-import '../../../../core/domain/model/extended_carb.dart';
-import '../../../../core/domain/model/manual_bolus.dart';
 import '../../../../core/domain/model/meal.dart';
-import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../../core/domain/model/treatment_base.dart';
 import '../../data/models/activity_log_analysis_data.dart';
@@ -477,18 +474,19 @@ class _TreatmentRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final createdAt = treatment.createdAt;
+    final presentation = treatmentPresentation(context.lang, treatment);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          Icon(treatment.getIcon(), color: treatment.getColor()),
+          Icon(presentation.icon, color: presentation.color),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               createdAt == null
-                  ? _treatmentName(treatment)
-                  : '${_formatTime(createdAt)} • ${_treatmentName(treatment)}',
+                  ? presentation.label
+                  : '${_formatTime(createdAt)} • ${presentation.label}',
             ),
           ),
           const SizedBox(width: 16),
@@ -510,16 +508,6 @@ String _formatTime(DateTime? date) {
   final hour = date.hour.toString().padLeft(2, '0');
   final minute = date.minute.toString().padLeft(2, '0');
   return '$hour:$minute';
-}
-
-String _treatmentName(Treatment treatment) {
-  if (treatment is Meal) return 'Meal';
-  if (treatment is TemporaryTarget) return 'Temp target';
-  if (treatment is Treat) return 'Treat';
-  if (treatment is ManualBolus) return 'Bolus';
-  if (treatment is CorrectionBolus) return 'Korekta';
-  if (treatment is ExtendedCarb) return 'Extended carbs';
-  return 'Treatment';
 }
 
 class _LegendItem extends StatelessWidget {

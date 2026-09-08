@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/data_sources/stress_events/stress_event_repository.dart';
 import '../../data/domain/use_cases/load_activity_log_analysis_use_case.dart';
 import '../../data/domain/use_cases/load_activity_log_details_use_case.dart';
 import '../../data/domain/use_cases/load_low_treatments_for_activity_log_use_case.dart';
@@ -12,6 +13,7 @@ class ActivityLogDetailsControllerNotifier
     extends _$ActivityLogDetailsControllerNotifier {
   @override
   Future<ActivityLogPageState> build(int activityLogId) async {
+    ref.watch(stressEventsProvider);
     final detailsUseCase = ref.read(loadActivityLogDetailsUseCaseProvider);
     final data = await detailsUseCase.call(activityLogId);
     final lowTreatments = await ref.read(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/stress_event_chart_ranges.dart';
 import '../../../../common/widgets/timeline_analysis_charts.dart';
 import '../../../../core/domain/model/temporary_target.dart';
 import '../../data/models/meal_analysis_data.dart';
@@ -17,7 +18,8 @@ List<TimelineChartEvent> mealTimelineChartEvents(
         (event) =>
             !correctionsOnly ||
             event.type == MealTimelineEventType.manualCorrection ||
-            event.type == MealTimelineEventType.correction,
+            event.type == MealTimelineEventType.correction ||
+            event.type == MealTimelineEventType.stress,
       )
       .map((event) {
         return TimelineChartEvent(
@@ -40,6 +42,12 @@ List<TimelineChartRange> mealTimelineChartRanges(
   final start = details.recordedEatingStartedAt;
   final end = details.recordedEatingEndedAt;
   return [
+    ...stressEventChartRanges(
+      treatments: analysis.treatments,
+      start: analysis.chartStart,
+      end: analysis.chartEnd,
+      messages: messages,
+    ),
     ...analysis.temporaryTargets.map(_temporaryTargetRange),
     if (start != null &&
         end != null &&

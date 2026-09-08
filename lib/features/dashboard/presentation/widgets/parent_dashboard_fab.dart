@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/fab_action_option.dart';
+import '../../../manual_events/presentation/widgets/manual_event_sheet.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 
 class ParentDashboardFAB extends HookConsumerWidget {
@@ -20,6 +21,15 @@ class ParentDashboardFAB extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (open.value) ...[
+          FabActionOption(
+            icon: Icons.event_note_outlined,
+            label: context.lang.manualEventAddStress,
+            onTap: () async {
+              open.value = false;
+              await showManualEventSheet(context);
+            },
+          ),
+          const SizedBox(height: 8),
           FabActionOption(
             icon: Icons.note_alt,
             label: context.lang.dashboardAddNote,

@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../core/data_sources/stress_events/stress_event_repository.dart';
 import '../../data/domain/use_cases/analyze_meal_use_case.dart';
 import '../../data/domain/use_cases/load_low_treatments_for_meal_use_case.dart';
 import '../../data/domain/use_cases/load_meal_details_use_case.dart';
@@ -18,6 +19,7 @@ class MealDetailsControllerNotifier extends _$MealDetailsControllerNotifier {
       throw const LowTreatmentMealPageException();
     }
 
+    ref.watch(stressEventsProvider);
     final lowTreatments = await ref.watch(
       mealLowTreatmentsForMealUseCaseProvider(mealId).future,
     );

@@ -1,3 +1,4 @@
+import '../../../../../common/history/history_event_presentation.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../data/models/meal_analysis_data.dart';
 
@@ -122,19 +123,13 @@ String mealEntryTypeLabel(String entryType) {
 
 String timelineEventLabel(MealTimelineEventData event) {
   return switch (event.type) {
-    MealTimelineEventType.manualCorrection => lang.mealReviewManualCorrection,
-    MealTimelineEventType.carbs => lang.mealCarbsLabel,
-    MealTimelineEventType.correction => lang.mealTimelineCorrection,
     MealTimelineEventType.activity => event.label,
     MealTimelineEventType.mealStatus => mealStatusLabel(event.label),
     MealTimelineEventType.localMeal =>
       event.label == 'Meal eaten'
           ? lang.mealTimelineLocalMealEaten
           : lang.mealTimelineLocalMeal,
-    MealTimelineEventType.lowTreatment => lang.lowTreatmentTitle,
-    MealTimelineEventType.nightscoutMeal => lang.mealTimelineNightscoutMeal,
-    MealTimelineEventType.deviceStatus => lang.mealTimelineDeviceStatus,
-    MealTimelineEventType.tempTarget => 'Temp target',
+    _ => historyEventLabel(lang, event.type),
   };
 }
 
