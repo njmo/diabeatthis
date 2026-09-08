@@ -1,6 +1,7 @@
 import '../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
+import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
 
 class MealDetailsData {
@@ -49,6 +50,37 @@ class MealDetailsData {
       lowTreatments: lowTreatments ?? this.lowTreatments,
     );
   }
+
+  DateTime? get recordedEatingStartedAt {
+    final starts =
+        statusHistory
+            .where((entry) => mealStatusesStartingEating.contains(entry.status))
+            .map((entry) => entry.createdAt)
+            .toList()
+          ..sort();
+    return starts.firstOrNull;
+  }
+
+  DateTime? get recordedEatingEndedAt {
+    final start = recordedEatingStartedAt;
+    if (start == null) return null;
+    final ordered =
+        statusHistory
+            .where((entry) => !entry.createdAt.isBefore(start))
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    var eatingBeforeBolus = false;
+    for (final entry in ordered) {
+      if (entry.status == 'eating-then-bolus') eatingBeforeBolus = true;
+      if (mealStatusReadyToSummarize(entry.status) ||
+          (eatingBeforeBolus && entry.status == 'waiting-for-bolus')) {
+        return entry.createdAt;
+      }
+    }
+    return null;
+  }
+
+  DateTime get analysisTime => recordedEatingStartedAt ?? meal.analysisTime;
 
   bool get hasConsumedData => consumedSnapshot != null;
 

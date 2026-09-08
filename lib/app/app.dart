@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -11,6 +10,10 @@ import '../common/events/data/app/sync_data_key.dart';
 import '../common/events/data/app_event_data.dart';
 import '../common/l10n/application_language.dart';
 import '../common/l10n/language.dart';
+import '../common/theme/application_theme.dart';
+import '../common/theme/application_theme_controller.dart';
+import '../common/theme/application_theme_data.dart';
+import '../common/theme/application_theme_mode_controller.dart';
 import '../core/data/provider/initial_configuration_provider.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
 import '../core/logger/logger.dart';
@@ -153,6 +156,10 @@ class _MyAppState extends ConsumerState<MyApp>
         .watch(applicationLanguageControllerProvider)
         .maybeWhen(data: (language) => language, orElse: () => null);
 
+    final appearance =
+        ref.watch(applicationThemeControllerProvider).asData?.value ??
+        ApplicationTheme.classic;
+
     return MaterialApp.router(
       locale: selectedLanguage?.locale,
       onGenerateTitle: (context) => context.lang.appTitle,
@@ -161,10 +168,11 @@ class _MyAppState extends ConsumerState<MyApp>
       routerConfig: router.config(
         navigatorObservers: () => [AutoRouteDebugObserver()],
       ),
-      theme: ThemeData(
-        textTheme: GoogleFonts.nunitoSansTextTheme(),
-        useMaterial3: true,
-      ),
+      theme: applicationThemeData(appearance),
+      darkTheme: applicationThemeData(appearance, brightness: Brightness.dark),
+      themeMode:
+          ref.watch(applicationThemeModeControllerProvider).asData?.value ??
+          ThemeMode.system,
     );
   }
 }

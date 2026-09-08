@@ -34,7 +34,7 @@ class AnalyzeMealUseCase {
       return null;
     }
 
-    final mealTime = details.meal.analysisTime;
+    final mealTime = details.analysisTime;
     final chartStart = mealTime.subtract(const Duration(minutes: 45));
     final postMealWindow = _postMealGlucoseWindow(details);
     final requestedChartEnd = mealTime.add(postMealWindow);
@@ -153,14 +153,18 @@ class AnalyzeMealUseCase {
   }) {
     final events = <MealTimelineEventData>[
       MealTimelineEventData(
-        timestamp: details.meal.analysisTime,
+        timestamp: details.analysisTime,
         type: MealTimelineEventType.localMeal,
         label: 'Meal eaten',
         value: details.meal.name,
         mealId: details.meal.id,
       ),
       ..._mealStatusEvents(details),
-      ...treatments.map(_treatmentEvent),
+      ...treatments
+          .where(
+            (treatment) => treatment.isValid && treatment.createdAt != null,
+          )
+          .map(_treatmentEvent),
       ...activities.map((activity) {
         return MealTimelineEventData(
           timestamp: activity.startedAt,
@@ -244,7 +248,7 @@ class AnalyzeMealUseCase {
     if (treatment is ManualBolus) {
       return MealTimelineEventData(
         timestamp: createdAt,
-        type: MealTimelineEventType.insulin,
+        type: MealTimelineEventType.manualCorrection,
         label: 'Bolus',
         value: treatment.getParts(),
       );

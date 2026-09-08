@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../common/l10n/language.dart';
-import '../../../../../common/widgets/detail_section_card.dart';
 import '../../../data/models/meal_analysis_data.dart';
+import 'meal_detail_formatters.dart';
 
 class MealHistoryStatus extends StatelessWidget {
   const MealHistoryStatus({super.key, required this.analysis});
@@ -14,24 +14,24 @@ class MealHistoryStatus extends StatelessWidget {
     final data = analysis;
     if (data == null) return const SizedBox.shrink();
     final messages = context.lang;
-    final coverage = data.glucoseCoverage;
-    return DetailSectionCard(
-      title: data.needsHistoryDownload
-          ? messages.mealHistoryIncomplete
-          : messages.mealHistoryAvailable,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: Text(
-            messages.mealHistoryCoverage(coverage.available, coverage.expected),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: Text(
+              '${messages.mealReviewTimeReference}: ${mealTime(data.mealTime)}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            children: [
+              Text(messages.mealReviewTimeNote),
+              const SizedBox(height: 8),
+            ],
           ),
-        ),
-        if (!data.hasFullGlucoseWindow)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Text(messages.mealHistoryWindowInProgress),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

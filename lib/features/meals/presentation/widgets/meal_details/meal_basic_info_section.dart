@@ -18,7 +18,7 @@ class MealBasicInfoSection extends StatelessWidget {
 
     return MealSectionTile(
       title: context.lang.mealBasicInfoTitle,
-      initiallyExpanded: true,
+      initiallyExpanded: !details.meal.isEaten,
       children: [
         MealInfoRow(label: context.lang.mealNameTypeLabel, value: meal.name),
         MealInfoRow(

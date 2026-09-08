@@ -11,6 +11,8 @@ class TimelineAnalysisCharts extends StatefulWidget {
   final DateTime chartStart;
   final DateTime chartEnd;
   final DateTime? focusTimestamp;
+  final bool fitToWidth;
+  final bool showDeviceMetrics;
   final DateTime? selectedTimestamp;
   final List<Glucose> glucoseReadings;
   final List<DeviceStatus> deviceStatuses;
@@ -23,6 +25,8 @@ class TimelineAnalysisCharts extends StatefulWidget {
     required this.chartStart,
     required this.chartEnd,
     this.focusTimestamp,
+    this.fitToWidth = false,
+    this.showDeviceMetrics = true,
     this.selectedTimestamp,
     required this.glucoseReadings,
     required this.deviceStatuses,
@@ -49,7 +53,8 @@ class _TimelineAnalysisChartsState extends State<TimelineAnalysisCharts> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.chartStart != widget.chartStart ||
         oldWidget.chartEnd != widget.chartEnd ||
-        oldWidget.focusTimestamp != widget.focusTimestamp) {
+        oldWidget.focusTimestamp != widget.focusTimestamp ||
+        oldWidget.fitToWidth != widget.fitToWidth) {
       _scheduleFocusScroll();
     }
   }
@@ -67,7 +72,9 @@ class _TimelineAnalysisChartsState extends State<TimelineAnalysisCharts> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final viewportWidth = math.max(1.0, constraints.maxWidth);
-        final chartWidth = math.max(viewportWidth, minutes.abs() * 7.0);
+        final chartWidth = widget.fitToWidth
+            ? viewportWidth
+            : math.max(viewportWidth, minutes.abs() * 7.0);
 
         return SingleChildScrollView(
           controller: _scrollController,
@@ -85,31 +92,43 @@ class _TimelineAnalysisChartsState extends State<TimelineAnalysisCharts> {
                   glucoseReadings: widget.glucoseReadings,
                   events: widget.events,
                   ranges: widget.ranges,
-                  showBottomTitles: false,
+                  showBottomTitles: !widget.showDeviceMetrics,
                   onTimestampSelected: widget.onTimestampSelected,
                 ),
-                const SizedBox(height: 12),
-                TimelineDeviceMetricChart(
-                  chartStart: widget.chartStart,
-                  chartEnd: widget.chartEnd,
-                  selectedTimestamp: widget.selectedTimestamp,
-                  deviceStatuses: widget.deviceStatuses,
-                  metric: TimelineDeviceMetric.cob,
-                  ranges: widget.ranges,
-                  showBottomTitles: false,
-                  onTimestampSelected: widget.onTimestampSelected,
-                ),
-                const SizedBox(height: 12),
-                TimelineDeviceMetricChart(
-                  chartStart: widget.chartStart,
-                  chartEnd: widget.chartEnd,
-                  selectedTimestamp: widget.selectedTimestamp,
-                  deviceStatuses: widget.deviceStatuses,
-                  metric: TimelineDeviceMetric.iob,
-                  ranges: widget.ranges,
-                  showBottomTitles: true,
-                  onTimestampSelected: widget.onTimestampSelected,
-                ),
+                if (widget.showDeviceMetrics) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    context.lang.mealReviewCob,
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  TimelineDeviceMetricChart(
+                    chartStart: widget.chartStart,
+                    chartEnd: widget.chartEnd,
+                    selectedTimestamp: widget.selectedTimestamp,
+                    deviceStatuses: widget.deviceStatuses,
+                    metric: TimelineDeviceMetric.cob,
+                    ranges: widget.ranges,
+                    showBottomTitles: false,
+                    onTimestampSelected: widget.onTimestampSelected,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    context.lang.mealReviewIob,
+                    style: Theme.of(context).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  TimelineDeviceMetricChart(
+                    chartStart: widget.chartStart,
+                    chartEnd: widget.chartEnd,
+                    selectedTimestamp: widget.selectedTimestamp,
+                    deviceStatuses: widget.deviceStatuses,
+                    metric: TimelineDeviceMetric.iob,
+                    ranges: widget.ranges,
+                    showBottomTitles: true,
+                    onTimestampSelected: widget.onTimestampSelected,
+                  ),
+                ],
               ],
             ),
           ),
@@ -188,10 +207,15 @@ class TimelineGlucoseChart extends StatelessWidget {
       chartEnd: chartEnd,
       glucoseReadings: glucoseReadings,
     );
-    final allEvents = [
-      ...events,
-      ...ranges.expand((range) => range.boundaryEvents),
-    ]..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    final allEvents =
+        [...events, ...ranges.expand((range) => range.boundaryEvents)]
+            .where(
+              (event) =>
+                  !event.timestamp.isBefore(chartStart) &&
+                  !event.timestamp.isAfter(chartEnd),
+            )
+            .toList()
+          ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
     return SizedBox(
       height: 260,
@@ -206,7 +230,12 @@ class TimelineGlucoseChart extends StatelessWidget {
             horizontalRangeAnnotations: _glucoseRanges(bounds),
             verticalRangeAnnotations: _verticalRanges(bounds),
           ),
-          extraLinesData: _extraLines(bounds, selectedTimestamp, ranges),
+          extraLinesData: _extraLines(
+            bounds,
+            selectedTimestamp,
+            ranges,
+            scheme.onSurface,
+          ),
           lineBarsData: [
             ..._glucoseSegments(bounds),
             ..._eventMarkers(bounds, allEvents),
@@ -348,9 +377,39 @@ class TimelineGlucoseChart extends StatelessWidget {
 
     final segments = <LineChartBarData>[];
     for (var i = 0; i < glucoseReadings.length - 1; i++) {
+      if (glucoseReadings[i + 1].date.difference(glucoseReadings[i].date) >
+          const Duration(minutes: 10)) {
+        continue;
+      }
       segments.addAll(
         _splitSegment(bounds, glucoseReadings[i], glucoseReadings[i + 1]),
       );
+    }
+    for (var i = 0; i < glucoseReadings.length; i++) {
+      final reading = glucoseReadings[i];
+      final isolatedBefore =
+          i == 0 ||
+          reading.date.difference(glucoseReadings[i - 1].date) >
+              const Duration(minutes: 10);
+      final isolatedAfter =
+          i == glucoseReadings.length - 1 ||
+          glucoseReadings[i + 1].date.difference(reading.date) >
+              const Duration(minutes: 10);
+      if (isolatedBefore && isolatedAfter) {
+        segments.add(
+          LineChartBarData(
+            spots: [
+              FlSpot(
+                bounds.minutesFromStart(reading.date),
+                reading.sgv.toDouble(),
+              ),
+            ],
+            color: _glucoseColor(reading.sgv.toDouble()),
+            barWidth: 0,
+            dotData: const FlDotData(show: true),
+          ),
+        );
+      }
     }
     return segments;
   }
@@ -439,11 +498,12 @@ class TimelineGlucoseChart extends StatelessWidget {
       leftTitles: AxisTitles(
         sideTitles: SideTitles(
           showTitles: true,
-          reservedSize: 38,
+          reservedSize: 38 * MediaQuery.textScalerOf(context).scale(12) / 12,
           interval: 50,
           getTitlesWidget: (value, meta) {
             return SideTitleWidget(
               meta: meta,
+              fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
               child: Text(
                 value.round().toString(),
                 style: Theme.of(context).textTheme.labelSmall,
@@ -456,11 +516,18 @@ class TimelineGlucoseChart extends StatelessWidget {
         sideTitles: SideTitles(
           showTitles: showBottomTitles,
           reservedSize: showBottomTitles ? 28 : 0,
-          interval: math.max(15, bounds.totalMinutes / 4).toDouble(),
+          interval: math
+              .max(
+                15,
+                bounds.totalMinutes /
+                    (MediaQuery.textScalerOf(context).scale(12) > 17 ? 2 : 3),
+              )
+              .toDouble(),
           getTitlesWidget: (value, meta) {
             final time = chartStart.add(Duration(minutes: value.round()));
             return SideTitleWidget(
               meta: meta,
+              fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
               child: Text(
                 _formatTime(time),
                 style: Theme.of(context).textTheme.labelSmall,
@@ -529,7 +596,12 @@ class TimelineDeviceMetricChart extends StatelessWidget {
           rangeAnnotations: RangeAnnotations(
             verticalRangeAnnotations: _verticalRanges(bounds),
           ),
-          extraLinesData: _extraLines(bounds, selectedTimestamp, ranges),
+          extraLinesData: _extraLines(
+            bounds,
+            selectedTimestamp,
+            ranges,
+            scheme.onSurface,
+          ),
           lineBarsData: [
             LineChartBarData(
               spots: spots,
@@ -598,10 +670,11 @@ class TimelineDeviceMetricChart extends StatelessWidget {
       leftTitles: AxisTitles(
         sideTitles: SideTitles(
           showTitles: true,
-          reservedSize: 38,
+          reservedSize: 38 * MediaQuery.textScalerOf(context).scale(12) / 12,
           getTitlesWidget: (value, meta) {
             return SideTitleWidget(
               meta: meta,
+              fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
               child: Text(
                 value.round().toString(),
                 style: Theme.of(context).textTheme.labelSmall,
@@ -614,11 +687,18 @@ class TimelineDeviceMetricChart extends StatelessWidget {
         sideTitles: SideTitles(
           showTitles: showBottomTitles,
           reservedSize: showBottomTitles ? 28 : 0,
-          interval: math.max(15, bounds.totalMinutes / 4).toDouble(),
+          interval: math
+              .max(
+                15,
+                bounds.totalMinutes /
+                    (MediaQuery.textScalerOf(context).scale(12) > 17 ? 2 : 3),
+              )
+              .toDouble(),
           getTitlesWidget: (value, meta) {
             final time = chartStart.add(Duration(minutes: value.round()));
             return SideTitleWidget(
               meta: meta,
+              fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
               child: Text(
                 _formatTime(time),
                 style: Theme.of(context).textTheme.labelSmall,
@@ -745,8 +825,8 @@ class TimelineChartBounds {
     final values = glucoseReadings.map((g) => g.sgv).toList();
     final minValue = values.reduce(math.min);
     final maxValue = values.reduce(math.max);
-    final minY = minValue * 0.85;
-    final maxY = maxValue * 1.15;
+    final minY = math.min(60.0, minValue * 0.85);
+    final maxY = math.max(190.0, maxValue * 1.15);
     return TimelineChartBounds(
       start: chartStart,
       end: chartEnd,
@@ -794,19 +874,26 @@ List<FlSpot> deviceMetricSpots({
 }) {
   if (statuses.isEmpty) return const [];
 
+  final ordered =
+      statuses
+          .where(
+            (status) =>
+                !status.date.isBefore(bounds.start) &&
+                !status.date.isAfter(bounds.end),
+          )
+          .toList()
+        ..sort((a, b) => a.date.compareTo(b.date));
   final spots = <FlSpot>[];
-  for (var index = 0; index < statuses.length; index++) {
-    final status = statuses[index];
-    final effectiveDate = index == 0 ? status.date : statuses[index - 1].date;
+  for (var index = 0; index < ordered.length; index++) {
+    final status = ordered[index];
+    if (index > 0 &&
+        status.date.difference(ordered[index - 1].date) >
+            const Duration(minutes: 10)) {
+      spots.add(FlSpot.nullSpot);
+    }
     spots.add(
-      FlSpot(bounds.minutesFromStart(effectiveDate), metric.value(status)),
+      FlSpot(bounds.minutesFromStart(status.date), metric.value(status)),
     );
-  }
-
-  final lastStatus = statuses.last;
-  final lastX = bounds.minutesFromStart(lastStatus.date);
-  if (spots.last.x < lastX) {
-    spots.add(FlSpot(lastX, metric.value(lastStatus)));
   }
 
   return spots;
@@ -941,6 +1028,7 @@ ExtraLinesData _extraLines(
   TimelineChartBounds bounds,
   DateTime? selectedTimestamp,
   List<TimelineChartRange> ranges,
+  Color selectionColor,
 ) {
   return ExtraLinesData(
     verticalLines: [
@@ -958,10 +1046,12 @@ ExtraLinesData _extraLines(
           dashArray: [3, 3],
         ),
       ],
-      if (selectedTimestamp != null)
+      if (selectedTimestamp != null &&
+          !selectedTimestamp.isBefore(bounds.start) &&
+          !selectedTimestamp.isAfter(bounds.end))
         VerticalLine(
           x: bounds.minutesFromStart(selectedTimestamp),
-          color: Colors.black.withValues(alpha: 0.45),
+          color: selectionColor.withValues(alpha: 0.65),
           strokeWidth: 1.2,
           dashArray: [4, 4],
         ),

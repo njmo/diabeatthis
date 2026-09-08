@@ -122,7 +122,7 @@ String mealEntryTypeLabel(String entryType) {
 
 String timelineEventLabel(MealTimelineEventData event) {
   return switch (event.type) {
-    MealTimelineEventType.insulin => lang.mealTimelineInsulin,
+    MealTimelineEventType.manualCorrection => lang.mealReviewManualCorrection,
     MealTimelineEventType.carbs => lang.mealCarbsLabel,
     MealTimelineEventType.correction => lang.mealTimelineCorrection,
     MealTimelineEventType.activity => event.label,

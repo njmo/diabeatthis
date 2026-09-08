@@ -4,7 +4,7 @@ import '../../../data/models/meal_analysis_data.dart';
 
 IconData mealTimelineEventIcon(MealTimelineEventType type) {
   return switch (type) {
-    MealTimelineEventType.insulin => Icons.vaccines,
+    MealTimelineEventType.manualCorrection => Icons.person_outline,
     MealTimelineEventType.carbs => Icons.bakery_dining,
     MealTimelineEventType.correction => Icons.medical_services,
     MealTimelineEventType.activity => Icons.directions_run,
@@ -19,7 +19,7 @@ IconData mealTimelineEventIcon(MealTimelineEventType type) {
 
 Color mealTimelineEventColor(MealTimelineEventType type) {
   return switch (type) {
-    MealTimelineEventType.insulin => Colors.blue,
+    MealTimelineEventType.manualCorrection => Colors.blue,
     MealTimelineEventType.carbs => Colors.green,
     MealTimelineEventType.correction => Colors.deepPurple,
     MealTimelineEventType.activity => Colors.teal,

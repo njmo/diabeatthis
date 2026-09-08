@@ -17,7 +17,9 @@ class GlucoseDashboard extends ConsumerWidget {
     final timeNow = ref.watch(timeNowProvider).value;
     final lastUpdate = timeNow?.difference(glucose.date);
     final oldReading = (lastUpdate?.inMinutes ?? 0) > 10;
-    final bgColor = oldReading ? Colors.black : getColorForValue(glucose.sgv);
+    final bgColor = oldReading
+        ? Theme.of(context).colorScheme.onSurface
+        : getColorForValue(glucose.sgv);
     final trendIcon = iconForDirection(glucose.direction);
 
     return RepaintBoundary(

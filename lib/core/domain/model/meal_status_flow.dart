@@ -17,3 +17,10 @@ bool mealStatusReadyToSummarize(String? status) {
       status == 'eaten-extra' ||
       status == 'eaten-bolused';
 }
+
+const mealStatusesStartingEating = {
+  'eating',
+  'eating-then-bolus',
+  'bolused-eating',
+  'waited-eating',
+};

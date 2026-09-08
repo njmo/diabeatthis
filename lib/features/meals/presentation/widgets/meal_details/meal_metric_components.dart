@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/widgets/responsive_metric_list.dart';
 import '../../models/meal_metric_view_data.dart';
 
 class MealMetricGrid extends StatelessWidget {
@@ -16,24 +17,9 @@ class MealMetricGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 720
-            ? wideColumns
-            : compactColumns;
-        return GridView.count(
-          crossAxisCount: columns,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          padding: EdgeInsets.zero,
-          childAspectRatio: columns >= 4 ? 1.65 : 1.85,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            for (final metric in metrics) MealMetricTile(metric: metric),
-          ],
-        );
-      },
+    return ResponsiveMetricList(
+      maxColumns: wideColumns,
+      children: [for (final metric in metrics) MealMetricTile(metric: metric)],
     );
   }
 }
@@ -57,9 +43,10 @@ class MealMetricTile extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(metric.icon, size: 20, color: colors.primary),
+            const SizedBox(height: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -101,12 +88,10 @@ class MealCompactMetricBar extends StatelessWidget {
       margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
+        child: ResponsiveMetricList(
+          maxColumns: 4,
           children: [
-            for (var index = 0; index < metrics.length; index++) ...[
-              Expanded(child: MealCompactMetric(metric: metrics[index])),
-              if (index != metrics.length - 1) const _MealMetricDivider(),
-            ],
+            for (final metric in metrics) MealCompactMetric(metric: metric),
           ],
         ),
       ),
@@ -132,20 +117,6 @@ class MealCompactMetric extends StatelessWidget {
           style: Theme.of(context).textTheme.titleSmall,
         ),
       ],
-    );
-  }
-}
-
-class _MealMetricDivider extends StatelessWidget {
-  const _MealMetricDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 32,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      color: Theme.of(context).colorScheme.outlineVariant,
     );
   }
 }

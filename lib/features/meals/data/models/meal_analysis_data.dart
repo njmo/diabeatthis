@@ -1,9 +1,9 @@
+import '../../../../common/history/glucose_window_summary.dart';
+import '../../../../common/history/insulin_bolus_summary.dart';
 import '../../../../common/history/time_series_coverage.dart';
 import '../../../../core/domain/model/bolus_wizard.dart';
-import '../../../../core/domain/model/correction_bolus.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
-import '../../../../core/domain/model/manual_bolus.dart';
 import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../../core/domain/model/treatment_base.dart';
@@ -62,10 +62,12 @@ class MealAnalysisData {
   }
 
   GlucoseStatsData get glucoseStats {
-    final statsReadings = glucoseReadings.where((reading) {
-      return !reading.date.isBefore(mealTime) &&
-          !reading.date.isAfter(chartEnd);
-    }).toList();
+    final window = GlucoseWindowSummary(
+      readings: glucoseReadings,
+      start: mealTime,
+      end: chartEnd,
+    );
+    final statsReadings = window.readings;
     final values = statsReadings.map((g) => g.sgv).toList();
     if (values.isEmpty) {
       return const GlucoseStatsData.empty();
@@ -76,25 +78,20 @@ class MealAnalysisData {
     final peak = statsReadings.reduce(
       (best, item) => item.sgv > best.sgv ? item : best,
     );
-    final first = statsReadings.first;
-    final last = statsReadings.last;
-    final inRange = statsReadings
-        .where((g) => g.sgv >= 70 && g.sgv <= 180)
-        .length;
-    final aboveRange = statsReadings.where((g) => g.sgv > 180).length;
-    final belowRange = statsReadings.where((g) => g.sgv < 70).length;
-
     return GlucoseStatsData(
       averageGlucose: sum / values.length,
       minGlucose: values.first,
       maxGlucose: values.last,
       peakGlucose: peak.sgv,
       timeToPeak: peak.date.difference(mealTime),
-      timeInRangePercent: inRange / statsReadings.length * 100,
-      timeAboveRangePercent: aboveRange / statsReadings.length * 100,
-      timeBelowRangePercent: belowRange / statsReadings.length * 100,
-      glucoseDelta: last.sgv - first.sgv,
-      glucoseRateMgDlPerMinute: _rate(first, last),
+      timeInRangePercent: window.percent(window.inRange),
+      timeAboveRangePercent: window.percent(window.aboveRange),
+      timeBelowRangePercent: window.percent(window.belowRange),
+      glucoseDelta: window.endDelta,
+      glucoseRateMgDlPerMinute:
+          window.baseline == null || window.endpoint == null
+          ? null
+          : _rate(window.baseline!, window.endpoint!),
     );
   }
 
@@ -108,17 +105,11 @@ class MealAnalysisData {
     return deviceStatuses.last.iob;
   }
 
-  double get totalInsulinUnits {
-    return treatments.fold<double>(0, (sum, treatment) {
-      if (treatment is ManualBolus) {
-        return sum + treatment.insulin;
-      }
-      if (treatment is CorrectionBolus) {
-        return sum + treatment.insulin;
-      }
-      return sum;
-    });
-  }
+  double get totalInsulinUnits => InsulinBolusSummary.fromTreatments(
+    treatments: treatments,
+    start: eventStart,
+    end: eventEnd,
+  ).units;
 
   double get totalTreatmentCarbs {
     return treatments.fold<double>(0, (sum, treatment) {
@@ -231,7 +222,7 @@ class MealTimelineEventData {
 
 enum MealTimelineEventType {
   mealStatus,
-  insulin,
+  manualCorrection,
   carbs,
   correction,
   activity,

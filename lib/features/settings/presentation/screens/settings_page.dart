@@ -25,6 +25,7 @@ import '../../../../core/data_sources/nightscout/repository/nightscout_repositor
 import '../../../../core/logger/logger.dart';
 import '../../data/settings_storage_keys.dart';
 import '../widgets/application_language_selector.dart';
+import '../widgets/application_theme_settings_section.dart';
 import '../widgets/data_source_settings_section.dart';
 import '../widgets/database_settings_section.dart';
 import '../widgets/meal_advisor_settings_section.dart';
@@ -188,6 +189,8 @@ class SettingsPage extends HookConsumerWidget with Logging {
                         selectedDataSourceConfig.value = config;
                       },
                     ),
+                    const SizedBox(height: 16),
+                    const ApplicationThemeSettingsSection(),
                     const SizedBox(height: 16),
                     SettingsSectionCard(
                       icon: Icons.language_outlined,

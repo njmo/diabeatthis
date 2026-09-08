@@ -54,7 +54,9 @@ class TrailingWaitAfterBolusStatus extends HookConsumerWidget with Logging {
           maxLines: 1,
           style: TextStyle(
             fontSize: 12,
-            color: minutesLeft > 0 ? Colors.black : Colors.red,
+            color: minutesLeft > 0
+                ? Theme.of(context).colorScheme.onSurface
+                : Colors.red,
           ),
         ),
       ),

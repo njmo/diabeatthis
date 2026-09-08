@@ -19,7 +19,9 @@ class DeviceStatusDashboard extends ConsumerWidget {
     final oldReading = ref.watch(isReadingOldProvider.select((v) => v));
     final bg = deviceStatus.bg;
     final tick = parseTick(deviceStatus.tick);
-    final bgColor = (oldReading) ? Colors.black : getColorForValue(bg);
+    final bgColor = (oldReading)
+        ? Theme.of(context).colorScheme.onSurface
+        : getColorForValue(bg);
     final trendIcon = iconForDirection(directionForTick(tick));
 
     final sign = tick > 0 ? '+' : '';

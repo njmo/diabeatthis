@@ -29,6 +29,44 @@ void main() {
       expect(analysis.totalInsulinUnits, 1.5);
     });
 
+    test('ignores invalid and out-of-window insulin deliveries', () {
+      final analysis = _analysis(
+        treatments: [
+          ManualBolus(
+            externalId: 'invalid',
+            createdAt: _now,
+            insulin: 5,
+            isValid: false,
+          ),
+          ManualBolus(
+            externalId: 'outside',
+            createdAt: _now.subtract(const Duration(minutes: 1)),
+            insulin: 5,
+          ),
+          CorrectionBolus(externalId: 'valid', createdAt: _now, insulin: 0.4),
+        ],
+      );
+      expect(analysis.totalInsulinUnits, 0.4);
+    });
+
+    test(
+      'total insulin shares positive finite dose rules with correction summary',
+      () {
+        final analysis = _analysis(
+          treatments: [
+            ManualBolus(externalId: 'negative', createdAt: _now, insulin: -1),
+            CorrectionBolus(
+              externalId: 'non-finite',
+              createdAt: _now,
+              insulin: double.nan,
+            ),
+            ManualBolus(externalId: 'valid', createdAt: _now, insulin: 0.05),
+          ],
+        );
+        expect(analysis.totalInsulinUnits, 0.05);
+      },
+    );
+
     test('still counts bolus wizard carbs in treatment carbs', () {
       final analysis = _analysis(
         treatments: [

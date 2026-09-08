@@ -29,7 +29,7 @@ class MealNutritionAnalysisSection extends StatelessWidget {
 
     return MealSectionTile(
       title: context.lang.mealNutritionTitle,
-      initiallyExpanded: true,
+      initiallyExpanded: !details.meal.isEaten,
       children: [
         MealNutritionMacroSummary(
           snapshot: snapshot,

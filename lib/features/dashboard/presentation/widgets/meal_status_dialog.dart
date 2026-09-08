@@ -39,7 +39,9 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                         decoration: BoxDecoration(
                           shape: BoxShape.rectangle,
                           borderRadius: BorderRadius.all(Radius.circular(15)),
-                          color: Colors.white70,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
                         ),
                         child: InkWell(
                           onTap: c.chooseEat,
@@ -61,7 +63,9 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                         decoration: BoxDecoration(
                           shape: BoxShape.rectangle,
                           borderRadius: BorderRadius.all(Radius.circular(15)),
-                          color: Colors.white70,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
                         ),
                         child: InkWell(
                           onTap: c.chooseSkip,
