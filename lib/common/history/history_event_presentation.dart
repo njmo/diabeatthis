@@ -5,6 +5,7 @@ import 'history_event_type.dart';
 
 IconData historyEventIcon(HistoryEventType type) {
   return switch (type) {
+    HistoryEventType.bgCheck => Icons.bloodtype_outlined,
     HistoryEventType.stress => Icons.psychology_outlined,
     HistoryEventType.manualCorrection => Icons.person_outline,
     HistoryEventType.carbs => Icons.bakery_dining,
@@ -21,6 +22,7 @@ IconData historyEventIcon(HistoryEventType type) {
 
 Color historyEventColor(HistoryEventType type) {
   return switch (type) {
+    HistoryEventType.bgCheck => Colors.red,
     HistoryEventType.stress => Colors.orange,
     HistoryEventType.manualCorrection => Colors.blue,
     HistoryEventType.carbs => Colors.green,
@@ -37,6 +39,7 @@ Color historyEventColor(HistoryEventType type) {
 
 String historyEventLabel(AppLocalizations messages, HistoryEventType type) =>
     switch (type) {
+      HistoryEventType.bgCheck => messages.historyBgCheck,
       HistoryEventType.stress => messages.manualEventStress,
       HistoryEventType.manualCorrection => messages.mealReviewManualCorrection,
       HistoryEventType.carbs => messages.mealCarbsLabel,

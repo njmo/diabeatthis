@@ -20,12 +20,48 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     with _$LocalMirrorDaoMixin {
   LocalMirrorDao(super.db);
 
+  Future<void> deleteSpotGlucose(String source, String externalId) async {
+    await (delete(db.glucoseReading)..where(
+          (t) =>
+              t.source.equals(source) &
+              t.externalId.equals(externalId) &
+              t.type.equals('cgm').not(),
+        ))
+        .go();
+  }
+
+  Future<void> upsertSpotGlucose(GlucoseReadingCompanion reading) =>
+      transaction(() async {
+        await deleteSpotGlucose(
+          reading.source.value,
+          reading.externalId.value!,
+        );
+        await into(db.glucoseReading).insert(reading);
+      });
+
+  Future<List<GlucoseReadingData>> getSpotGlucoseBetween(
+    DateTime start,
+    DateTime end,
+  ) =>
+      (select(db.glucoseReading)..where(
+            (t) =>
+                t.type.equals('cgm').not() &
+                t.createdAt.isBetweenValues(
+                  start.millisecondsSinceEpoch,
+                  end.millisecondsSinceEpoch,
+                ),
+          ))
+          .get();
+
   Future<void> upsertGlucoseReading(GlucoseReadingCompanion reading) {
     final table = db.glucoseReading;
 
     return into(table).insert(
       reading,
-      onConflict: DoUpdate((_) => reading, target: [table.createdAt]),
+      onConflict: DoUpdate(
+        (_) => reading,
+        target: [table.createdAt, table.type, table.measurementId],
+      ),
     );
   }
 
@@ -146,6 +182,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     String? source,
   }) {
     final query = select(db.glucoseReading)
+      ..where((row) => row.type.equals('cgm'))
       ..where(
         (row) => row.createdAt.isBetweenValues(
           start.millisecondsSinceEpoch,
@@ -164,6 +201,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
   Future<List<GlucoseReadingData>> getRecentGlucoseReadings(int limit) async {
     final rows =
         await (select(db.glucoseReading)
+              ..where((row) => row.type.equals('cgm'))
               ..orderBy([(row) => OrderingTerm.desc(row.createdAt)])
               ..limit(limit))
             .get();

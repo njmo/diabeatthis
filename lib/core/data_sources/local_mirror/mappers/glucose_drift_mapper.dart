@@ -10,8 +10,15 @@ extension GlucoseDriftMapper on domain.Glucose {
       externalId: externalId != null
           ? Value(externalId!)
           : const Value.absent(),
-      createdAt: Value(date.millisecondsSinceEpoch),
+      createdAt: date.millisecondsSinceEpoch,
       sgv: sgv,
+      type: Value(type.name),
+      measurementId: Value(
+        type == domain.GlucoseType.cgm
+            ? ''
+            : '${source.storageValue}:${externalId ?? ''}',
+      ),
+      notes: Value(notes),
       direction: Value(direction),
     );
   }
@@ -25,6 +32,8 @@ extension GlucoseDomainMapper on GlucoseReadingData {
       date: DateTime.fromMillisecondsSinceEpoch(createdAt),
       sgv: sgv,
       direction: direction ?? '',
+      type: domain.GlucoseType.values.byName(type),
+      notes: notes,
     );
   }
 }

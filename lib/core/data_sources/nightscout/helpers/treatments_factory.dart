@@ -5,6 +5,7 @@ import '../dto/extended_carb_dto.dart';
 import '../dto/manual_bolus_dto.dart';
 import '../dto/temporary_target_dto.dart';
 import '../dto/treat_dto.dart';
+import '../mappers/bg_check_mapper.dart';
 import '../mappers/bolus_wizard_mapper.dart';
 import '../mappers/correction_bolus_mapper.dart';
 import '../mappers/extended_carb_mapper.dart';
@@ -20,6 +21,11 @@ class TreatmentFactory {
       final t = treatments[i];
 
       final type = (t['eventType'] ?? '').toString().toLowerCase();
+      if (type.trim() == 'bg check' && t is Map<String, dynamic>) {
+        final check = parseBgCheck(t);
+        if (check != null) list.add(check);
+        continue;
+      }
       if (type.contains('temporary target')) {
         list.add(TemporaryTargetDto.fromJson(t).toDomain());
         continue;

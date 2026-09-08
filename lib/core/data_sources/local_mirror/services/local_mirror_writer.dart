@@ -1,3 +1,4 @@
+import '../../../domain/model/bg_check.dart';
 import '../../../domain/model/bolus_wizard.dart';
 import '../../../domain/model/correction_bolus.dart';
 import '../../../domain/model/device_status.dart';
@@ -35,6 +36,15 @@ class LocalMirrorWriter {
   ) async {
     for (final treatment in treatments) {
       switch (treatment) {
+        case BgCheck():
+          if (treatment.isValid) {
+            await _dao.upsertSpotGlucose(treatment.reading.toCompanion());
+          } else {
+            await _dao.deleteSpotGlucose(
+              treatment.reading.source.storageValue,
+              treatment.reading.externalId!,
+            );
+          }
         case BolusWizard():
           if (treatment.isValid) {
             await _dao.upsertBolusWizard(treatment.toCompanion(source));

@@ -2,6 +2,8 @@ import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/widgets/stress_event_chart_ranges.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/services/local_mirror_writer.dart';
+import 'package:diabeatthis/core/data_sources/nightscout/helpers/treatments_factory.dart';
 import 'package:diabeatthis/core/data_sources/stress_events/stress_event_repository.dart';
 import 'package:diabeatthis/core/domain/model/stress_event.dart';
 import 'package:diabeatthis/core/domain/model/stress_level.dart';
@@ -33,6 +35,19 @@ void main() {
       final time = DateTime(2026, 1, 1, 12);
       try {
         final store = container.read(stressEventRepositoryProvider);
+        await LocalMirrorWriter(db.localMirrorDao).mirrorTreatments(
+          TreatmentFactory().parseTreatments([
+            {
+              '_id': 'meal-meter',
+              'eventType': 'BG Check',
+              'created_at': time.toUtc().toIso8601String(),
+              'glucose': 123,
+              'units': 'mg/dl',
+              'glucoseType': 'Finger',
+            },
+          ]),
+          TreatmentsSource.cloud,
+        );
         await store.save(
           StressEvent(
             source: 'manual',
@@ -82,7 +97,11 @@ void main() {
           containsAll([MealTimelineEventType.stress]),
         );
         final chart = mealTimelineChartEvents(result, correctionsOnly: true);
-        expect(chart, hasLength(2));
+        expect(chart, hasLength(3));
+        final measurement = chart.singleWhere(
+          (event) => event.label == 'Pomiar glikemii',
+        );
+        expect(measurement.value, '123 mg/dl · Glukometr');
         final ranges = stressEventChartRanges(
           treatments: result.treatments,
           start: result.chartStart,

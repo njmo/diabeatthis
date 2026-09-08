@@ -1,3 +1,4 @@
+import '../../../domain/model/bg_check.dart';
 import '../../../domain/model/temporary_target.dart';
 import '../../../domain/model/treatment_base.dart';
 import '../../../drift/dao/local_mirror_dao.dart';
@@ -5,6 +6,7 @@ import '../../domain/treatments_history_repository.dart';
 import '../mappers/bolus_wizard_drift_mapper.dart';
 import '../mappers/correction_bolus_drift_mapper.dart';
 import '../mappers/extended_carb_drift_mapper.dart';
+import '../mappers/glucose_drift_mapper.dart';
 import '../mappers/manual_bolus_drift_mapper.dart';
 import '../mappers/temporary_target_drift_mapper.dart';
 import '../mappers/treat_drift_mapper.dart';
@@ -21,6 +23,10 @@ class LocalTreatmentsHistoryRepository implements TreatmentsHistoryRepository {
   ) async {
     final treatments =
         <Treatment>[
+          ...(await _dao.getSpotGlucoseBetween(
+            start,
+            end,
+          )).map((row) => BgCheck(row.toDomain())),
           ...(await _dao.getBolusWizardsBetween(
             start,
             end,

@@ -19,7 +19,8 @@ List<TimelineChartEvent> mealTimelineChartEvents(
             !correctionsOnly ||
             event.type == MealTimelineEventType.manualCorrection ||
             event.type == MealTimelineEventType.correction ||
-            event.type == MealTimelineEventType.stress,
+            event.type == MealTimelineEventType.stress ||
+            event.type == MealTimelineEventType.bgCheck,
       )
       .map((event) {
         return TimelineChartEvent(

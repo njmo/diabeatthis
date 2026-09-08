@@ -931,5 +931,9 @@
   "manualEventStressEnd": "To",
   "manualEventStressIntervalInvalid": "The end must be after the start.",
   "historyTemporaryTarget": "Temporary target",
-  "historyExtendedCarbs": "Extended carbohydrates"
+  "historyExtendedCarbs": "Extended carbohydrates",
+  "historyBgCheck": "Glucose measurement",
+  "historyGlucoseMeter": "Glucose meter",
+  "historyGlucoseSensor": "Sensor",
+  "historyGlucoseManual": "Manual measurement"
 }

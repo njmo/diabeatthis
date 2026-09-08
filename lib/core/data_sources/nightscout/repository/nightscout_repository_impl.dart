@@ -68,6 +68,7 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
       'find[\$or][1][eventType]': 'Bolus Wizard',
       'find[\$or][2][eventType]': 'Correction Bolus',
       'find[\$or][3][eventType]': 'Carb Correction',
+      'find[\$or][4][eventType]': 'BG Check',
     };
     final url = _buildUri('/api/v1/treatments.json', qp);
     final data = await service.fetchNightscoutData(url);
@@ -129,6 +130,7 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
       'find[\$or][2][eventType]': 'Correction Bolus',
       'find[\$or][3][eventType]': 'Carb Correction',
       'find[\$or][4][eventType]': 'Temporary Target',
+      'find[\$or][5][eventType]': 'BG Check',
     };
     final url = _buildUri('/api/v1/treatments.json', qp);
     final data = await service.fetchNightscoutData(url);
@@ -148,6 +150,7 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
       'find[\$or][2][eventType]': 'Correction Bolus',
       'find[\$or][3][eventType]': 'Carb Correction',
       'find[\$or][4][eventType]': 'Temporary Target',
+      'find[\$or][5][eventType]': 'BG Check',
       'count': '1000',
     };
     final url = _buildUri('/api/v1/treatments.json', qp);

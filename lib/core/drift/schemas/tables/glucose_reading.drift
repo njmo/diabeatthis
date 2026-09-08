@@ -7,8 +7,11 @@ CREATE TABLE glucose_reading (
 
   sgv INTEGER NOT NULL CHECK (sgv >= 0),
   direction TEXT,
+  type TEXT NOT NULL DEFAULT 'cgm' CHECK (type IN ('cgm', 'finger', 'sensor', 'manual', 'other')),
+  measurement_id TEXT NOT NULL DEFAULT '',
+  notes TEXT,
 
-  PRIMARY KEY (created_at)
+  PRIMARY KEY (created_at, type, measurement_id)
 );
 
 CREATE INDEX idx_glucose_reading_created_at

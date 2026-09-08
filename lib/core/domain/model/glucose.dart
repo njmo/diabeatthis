@@ -21,6 +21,9 @@ enum GlucoseSource {
   }
 }
 
+/// CGM samples form the glucose time series; the other types are spot checks.
+enum GlucoseType { cgm, finger, sensor, manual, other }
+
 @freezed
 abstract class Glucose with _$Glucose {
   const factory Glucose({
@@ -29,6 +32,8 @@ abstract class Glucose with _$Glucose {
     required DateTime date,
     required int sgv,
     required String direction,
+    @Default(GlucoseType.cgm) GlucoseType type,
+    String? notes,
   }) = _Glucose;
 
   factory Glucose.fromJson(Map<String, dynamic> json) =>

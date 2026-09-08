@@ -1059,5 +1059,9 @@
   "manualEventStressEnd": "Do",
   "manualEventStressIntervalInvalid": "Godzina zakończenia musi być późniejsza niż początek.",
   "historyTemporaryTarget": "Cel tymczasowy",
-  "historyExtendedCarbs": "Węglowodany rozłożone w czasie"
+  "historyExtendedCarbs": "Węglowodany rozłożone w czasie",
+  "historyBgCheck": "Pomiar glikemii",
+  "historyGlucoseMeter": "Glukometr",
+  "historyGlucoseSensor": "Sensor",
+  "historyGlucoseManual": "Pomiar ręczny"
 }

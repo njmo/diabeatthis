@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/domain/model/bg_check.dart';
 import '../../core/domain/model/correction_bolus.dart';
 import '../../core/domain/model/extended_carb.dart';
 import '../../core/domain/model/manual_bolus.dart';
@@ -19,6 +20,7 @@ TreatmentPresentation treatmentPresentation(
   Treatment treatment,
 ) {
   final type = switch (treatment) {
+    BgCheck() => HistoryEventType.bgCheck,
     StressEventTreatment() => HistoryEventType.stress,
     Meal() => HistoryEventType.nightscoutMeal,
     TemporaryTarget() => HistoryEventType.tempTarget,

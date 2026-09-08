@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../core/data_sources/providers/on_demand_history_repositories_provider.dart';
 import '../../../../../core/data_sources/providers/source_repository_providers.dart';
+import '../../../../../core/domain/model/bg_check.dart';
 import '../../../../../core/domain/model/correction_bolus.dart';
 import '../../../../../core/domain/model/extended_carb.dart';
 import '../../../../../core/domain/model/manual_bolus.dart';
@@ -246,6 +247,14 @@ class AnalyzeMealUseCase {
 
   MealTimelineEventData _treatmentEvent(Treatment treatment) {
     final createdAt = treatment.createdAt ?? clock.now();
+    if (treatment is BgCheck) {
+      return MealTimelineEventData(
+        timestamp: createdAt,
+        type: MealTimelineEventType.bgCheck,
+        label: 'BG Check',
+        value: treatment.getParts(),
+      );
+    }
     if (treatment is StressEventTreatment) {
       return MealTimelineEventData(
         timestamp: createdAt,

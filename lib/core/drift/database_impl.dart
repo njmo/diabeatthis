@@ -39,7 +39,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -87,6 +87,19 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       }
       if (from < 16) {
         await migrateStressEvents(this, m);
+      }
+      if (from < 17) {
+        await m.alterTable(
+          // ignore: experimental_member_use
+          TableMigration(
+            glucoseReading,
+            newColumns: [
+              glucoseReading.type,
+              glucoseReading.measurementId,
+              glucoseReading.notes,
+            ],
+          ),
+        );
       }
     },
     beforeOpen: (details) async {

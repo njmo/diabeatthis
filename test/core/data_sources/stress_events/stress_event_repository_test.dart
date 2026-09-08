@@ -173,6 +173,16 @@ void main() {
           );
           raw.execute('DROP INDEX idx_stress_event_occurred_at');
         }
+        raw.execute(
+          'ALTER TABLE glucose_reading RENAME TO glucose_reading_new',
+        );
+        raw.execute(
+          "CREATE TABLE glucose_reading (source TEXT NOT NULL, external_id TEXT, created_at INTEGER NOT NULL PRIMARY KEY, received_at INTEGER NOT NULL DEFAULT 0, sgv INTEGER NOT NULL, direction TEXT)",
+        );
+        raw.execute(
+          'INSERT INTO glucose_reading (source, external_id, created_at, received_at, sgv, direction) SELECT source, external_id, created_at, received_at, sgv, direction FROM glucose_reading_new',
+        );
+        raw.execute('DROP TABLE glucose_reading_new');
         raw.execute('PRAGMA user_version = 15');
         raw.dispose();
         final upgraded = DatabaseImpl(NativeDatabase(file));
@@ -214,10 +224,24 @@ void main() {
       final old = DatabaseImpl(NativeDatabase(file));
       await old
           .into(old.glucoseReading)
-          .insert(GlucoseReadingCompanion.insert(source: 'cloud', sgv: 123));
+          .insert(
+            GlucoseReadingCompanion.insert(
+              source: 'cloud',
+              createdAt: 1000,
+              sgv: 123,
+            ),
+          );
       await old.close();
       final raw = sqlite3.open(file.path);
       raw.execute('DROP TABLE stress_event');
+      raw.execute('ALTER TABLE glucose_reading RENAME TO glucose_reading_new');
+      raw.execute(
+        "CREATE TABLE glucose_reading (source TEXT NOT NULL, external_id TEXT, created_at INTEGER NOT NULL PRIMARY KEY, received_at INTEGER NOT NULL DEFAULT 0, sgv INTEGER NOT NULL, direction TEXT)",
+      );
+      raw.execute(
+        'INSERT INTO glucose_reading (source, external_id, created_at, received_at, sgv, direction) SELECT source, external_id, created_at, received_at, sgv, direction FROM glucose_reading_new',
+      );
+      raw.execute('DROP TABLE glucose_reading_new');
       raw.execute('PRAGMA user_version = 14');
       raw.dispose();
       final upgraded = DatabaseImpl(NativeDatabase(file));
@@ -232,7 +256,9 @@ void main() {
         );
         expect(await store.between(time, time), hasLength(1));
         expect(
-          (await upgraded.select(upgraded.glucoseReading).get()).single.sgv,
+          (await (upgraded.select(
+            upgraded.glucoseReading,
+          )..where((row) => row.type.equals('cgm'))).get()).single.sgv,
           123,
         );
         expect(

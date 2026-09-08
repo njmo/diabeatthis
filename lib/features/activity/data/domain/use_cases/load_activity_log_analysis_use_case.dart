@@ -54,7 +54,7 @@ class LoadActivityLogAnalysisUseCase {
 
     final chartTreatments = treatments.where((treatment) {
       final createdAt = treatment.createdAt;
-      if (createdAt == null) return false;
+      if (createdAt == null || !treatment.isValid) return false;
       if (treatment is StressEventTreatment &&
           treatment.event.endedAt != null) {
         return !createdAt.isAfter(chartEnd) &&

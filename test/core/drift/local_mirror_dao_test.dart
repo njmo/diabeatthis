@@ -20,7 +20,7 @@ void main() {
       GlucoseReadingCompanion.insert(
         source: BgSource.cloud.storageValue,
         externalId: const Value('sgv-1'),
-        createdAt: const Value(1000),
+        createdAt: 1000,
         sgv: 120,
         direction: const Value('Flat'),
       ),
@@ -30,7 +30,7 @@ void main() {
       GlucoseReadingCompanion.insert(
         source: BgSource.cloud.storageValue,
         externalId: const Value('sgv-1'),
-        createdAt: const Value(1000),
+        createdAt: 1000,
         sgv: 121,
         direction: const Value('FortyFiveUp'),
       ),
@@ -38,7 +38,7 @@ void main() {
     await db.localMirrorDao.upsertGlucoseReading(
       GlucoseReadingCompanion.insert(
         source: BgSource.xdrip.storageValue,
-        createdAt: const Value(2000),
+        createdAt: 2000,
         sgv: 130,
       ),
     );

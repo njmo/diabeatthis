@@ -1,4 +1,5 @@
 enum HistoryEventType {
+  bgCheck,
   stress,
   mealStatus,
   manualCorrection,
