@@ -18,6 +18,7 @@ List<TimelineChartEvent> mealTimelineChartEvents(
         (event) =>
             !correctionsOnly ||
             event.type == MealTimelineEventType.manualCorrection ||
+            event.type == MealTimelineEventType.bolusWizard ||
             event.type == MealTimelineEventType.correction ||
             event.type == MealTimelineEventType.stress ||
             event.type == MealTimelineEventType.bgCheck,

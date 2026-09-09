@@ -39,7 +39,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 19;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -57,6 +57,12 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
+      if (from < 19) {
+        await m.alterTable(
+          // ignore: experimental_member_use
+          TableMigration(mealAdvisorResult),
+        );
+      }
       if (from < 9) {
         await m.addColumn(meal, meal.purpose);
         await m.createTable(lowTreatmentContext);

@@ -11,10 +11,31 @@ part 'meal_dao.g.dart';
 class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   MealDao(super.db);
 
-  Future<void> updateMealStatus(int id, String status) async {
-    await (update(db.meal)..where((t) => t.id.equals(id))).write(
-      MealCompanion(status: Value(status)),
-    );
+  Future<void> updateMealStatus(
+    int id,
+    String status, {
+    DateTime? occurredAt,
+  }) async {
+    await transaction(() async {
+      await (update(db.meal)..where((t) => t.id.equals(id))).write(
+        MealCompanion(status: Value(status)),
+      );
+      if (occurredAt != null) {
+        final timestamp = occurredAt.millisecondsSinceEpoch;
+        // The normal status trigger creates the event; replay supplies its time.
+        await (update(db.mealStatusHistory)
+              ..where((t) => t.mealId.equals(id) & t.status.equals(status)))
+            .write(MealStatusHistoryCompanion(createdAt: Value(timestamp)));
+        await (update(db.meal)..where((t) => t.id.equals(id))).write(
+          MealCompanion(
+            updatedAt: Value(timestamp),
+            summarizedAt: status == 'summarized'
+                ? Value(timestamp)
+                : const Value.absent(),
+          ),
+        );
+      }
+    });
   }
 
   Future<MealData> createLowTreatmentEntry({

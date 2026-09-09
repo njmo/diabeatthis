@@ -125,6 +125,28 @@ void main() {
     expect(context.deviceStatus, isNull);
   });
 
+  test(
+    'both analyses use the latest wait before eating and ignore future events',
+    () {
+      final details = base.copyWith(
+        statusHistory: [
+          status('bolused-waiting', 10),
+          status('bolused-waiting', -15),
+          status('waited-eating', 0),
+          status('bolused-waiting', -30),
+        ],
+      );
+      expect(details.recordedWait, const Duration(minutes: 15));
+      expect(
+        MealStartContextData(
+          details: details,
+          analysis: history(),
+        ).recordedWait,
+        details.recordedWait,
+      );
+    },
+  );
+
   test('missing start does not turn summary time into actual waiting', () {
     final context = MealStartContextData(details: base, analysis: history());
     expect(context.hasRecordedStart, isFalse);

@@ -14,7 +14,7 @@ CREATE TABLE meal_advisor_result (
   extended_carbs_duration_minutes INTEGER,
   decision_reason TEXT,
 
-  version INTEGER NOT NULL DEFAULT 2,
+  version INTEGER DEFAULT 2,
 
   is_synced BOOL NOT NULL DEFAULT 0,
 

@@ -80,6 +80,22 @@ class MealDetailsData {
     return null;
   }
 
+  /// Elapsed status time, distinct from a recorded insulin dose.
+  Duration? get recordedWait {
+    final start = recordedEatingStartedAt;
+    if (start == null) return null;
+    final waiting =
+        statusHistory
+            .where(
+              (entry) =>
+                  entry.status == 'bolused-waiting' &&
+                  !entry.createdAt.isAfter(start),
+            )
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return waiting.isEmpty ? null : start.difference(waiting.last.createdAt);
+  }
+
   DateTime get analysisTime => recordedEatingStartedAt ?? meal.analysisTime;
 
   bool get hasConsumedData => consumedSnapshot != null;
@@ -94,6 +110,18 @@ class MealDetailsData {
   double get totalInsulinUnits {
     return advisorDecision?.recommendedInsulinUnits ?? 0;
   }
+
+  bool get hasConsumedPlannedAmounts =>
+      ingredients.isNotEmpty &&
+      !hasAddOn &&
+      ingredients.every(
+        (ingredient) =>
+            ingredient.consumedAmount != null &&
+            ingredient.consumedAmount == ingredient.plannedAmount &&
+            (ingredient.consumedTotalGrams - ingredient.plannedTotalGrams)
+                    .abs() <
+                0.000001,
+      );
 
   bool get hasAddOn {
     return meal.hasAddOnStatus ||
@@ -312,6 +340,7 @@ class MealRecordData {
 }
 
 class MealAdvisorDecisionData {
+  bool get isManual => result == 'manual';
   final String result;
   final int initialWaitTime;
   final int finalWaitTime;
@@ -321,7 +350,7 @@ class MealAdvisorDecisionData {
   final int? extendedCarbsDelayMinutes;
   final int? extendedCarbsDurationMinutes;
   final String? decisionReason;
-  final int version;
+  final int? version;
   final bool isSynced;
   final DateTime createdAt;
   final DateTime updatedAt;

@@ -3,6 +3,7 @@ enum HistoryEventType {
   stress,
   mealStatus,
   manualCorrection,
+  bolusWizard,
   carbs,
   correction,
   activity,

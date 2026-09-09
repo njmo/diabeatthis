@@ -823,6 +823,67 @@ void main() {
         });
       });
     });
+    test('manual wait retains selected duration despite falling glucose', () {
+      fakeAsync((async) {
+        final start = DateTime(2026, 3, 23, 12, 0);
+        withFakeClock(async, start, () {
+          final notifications = FakeNotificationsController();
+          final meal = Meal(
+            id: 1,
+            name: 'asd',
+            plannedAt: clock.now().add(Duration(minutes: 15)),
+          );
+          final container = ProviderContainer(
+            overrides: [
+              notificationsControllerForegroundProvider.overrideWithValue(
+                notifications,
+              ),
+              deviceStatusValueProvider.overrideWithValue(
+                testDeviceStatus(
+                  date: start,
+                  bg: 100,
+                  iob: 1,
+                  cob: 0,
+                  tick: '-20',
+                ),
+              ),
+              getMealAdviceProvider(meal).overrideWithValue(
+                AsyncData(
+                  MealAdvice.full(
+                    MealDecision.bolusWaitThenEat,
+                    WaitSuggestion(8, 8, 8),
+                    clock.now().subtract(Duration(minutes: 20)),
+                    source: 'manual',
+                  ),
+                ),
+              ),
+            ],
+          );
+          final harness = FakeRuntimeHarness(container: container);
+          final executor = BolusThenWaitExecutor(recommendedMinutes: null);
+
+          unawaited(
+            executor.execute(
+              harness.runtimeContext,
+              MealMonitorContext(activeMeal: meal),
+            ),
+          );
+          _settle(async);
+
+          _advanceMinutes(harness, async, 7);
+
+          expect(notifications.shownEvents, isEmpty);
+
+          _advanceMinutes(harness, async, 1);
+
+          expect(notifications.shownEvents, hasLength(1));
+          final event = notifications.shownEvents.single;
+          expect(event, isA<EatNowNotificationEvent>());
+          expect((event as EatNowNotificationEvent).mealId, 1);
+          expect(event.minutes, 8);
+        });
+      });
+    });
     test(
       'status driven bolus wait falls back when saved advice is missing',
       () {

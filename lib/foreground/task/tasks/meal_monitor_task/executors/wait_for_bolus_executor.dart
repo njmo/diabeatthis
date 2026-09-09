@@ -151,6 +151,7 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
     if (decision == MealDecision.bolusWaitThenEat) {
       return BolusThenWaitExecutor(
         recommendedMinutes: advice?.wait?.recommendedMinutes,
+        isManual: advice?.source == 'manual',
       );
     }
 

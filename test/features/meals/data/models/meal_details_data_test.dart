@@ -3,6 +3,51 @@ import 'package:diabeatthis/features/meals/data/models/meal_details_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('whole meal requires matching amounts of every ingredient', () {
+    MealDetailsData details(List<MealIngredientDetailsData> ingredients) =>
+        MealDetailsData(
+          meal: _meal(status: 'summarized'),
+          advisorDecision: null,
+          ingredients: ingredients,
+          plannedSnapshot: null,
+          consumedSnapshot: null,
+          statusHistory: const [],
+        );
+    MealIngredientDetailsData item(
+      double consumed, {
+      String entryType = 'planned',
+    }) => _ingredient(
+      entryType: entryType,
+      plannedAmount: 1,
+      consumedAmount: consumed,
+      plannedTotalGrams: 100,
+      consumedTotalGrams: consumed * 100,
+      carbsPer100g: 0,
+      fiberPer100g: 0,
+    );
+    final changed = details([item(0.5), item(1.5)]);
+    expect(changed.hasAddOn, isFalse);
+    expect(changed.hasConsumedPlannedAmounts, isFalse);
+    expect(details([item(1), item(1)]).hasConsumedPlannedAmounts, isTrue);
+    expect(details([]).hasConsumedPlannedAmounts, isFalse);
+    expect(
+      details([item(1, entryType: 'extra')]).hasConsumedPlannedAmounts,
+      isFalse,
+    );
+    expect(
+      details([
+        _ingredient(
+          plannedTotalGrams: 100,
+          consumedTotalGrams: 100,
+          consumedAmount: null,
+          carbsPer100g: 0,
+          fiberPer100g: 0,
+        ),
+      ]).hasConsumedPlannedAmounts,
+      isFalse,
+    );
+  });
+
   group('MealDetailsData add-on metrics', () {
     test('sums extra item and larger consumed planned item net carbs', () {
       final details = MealDetailsData(

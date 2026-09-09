@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/domain/model/bg_check.dart';
+import '../../core/domain/model/bolus_wizard.dart';
 import '../../core/domain/model/correction_bolus.dart';
 import '../../core/domain/model/extended_carb.dart';
 import '../../core/domain/model/manual_bolus.dart';
@@ -26,6 +27,7 @@ TreatmentPresentation treatmentPresentation(
     TemporaryTarget() => HistoryEventType.tempTarget,
     Treat() || ExtendedCarb() => HistoryEventType.carbs,
     ManualBolus() => HistoryEventType.manualCorrection,
+    BolusWizard() => HistoryEventType.bolusWizard,
     CorrectionBolus() => HistoryEventType.correction,
     _ => null,
   };

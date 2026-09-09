@@ -53,10 +53,10 @@ void main() {
           find.byType(TimelineAnalysisCharts),
         );
         expect(
-          basicChart.events.any((event) => event.label == 'Korekta ręczna'),
+          basicChart.events.any((event) => event.label == 'Bolus'),
           isTrue,
         );
-        expect(find.text('Ręcznie · rodzic / opiekun'), findsOneWidget);
+        expect(find.text('Bolusy standardowe'), findsOneWidget);
         expect(find.text('Pozostałe korekty'), findsOneWidget);
         expect(find.text('O 5 min krócej niż proponowano'), findsOneWidget);
         final eating = basicChart.ranges.singleWhere(

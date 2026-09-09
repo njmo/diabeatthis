@@ -7,6 +7,49 @@ import 'package:diabeatthis/features/meal_advisor/domain/utils/wbt_extended_carb
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  for (final entry in {
+    'eating-then-bolus': MealDecision.eatNowBolusLater,
+    'bolused-eating': MealDecision.bolusAndEatNow,
+    'bolused-waiting': MealDecision.bolusWaitThenEat,
+  }.entries) {
+    test('manual result reconstructs ${entry.value} from history', () async {
+      final store = FakeMealAdvisorResultStore()..statuses = [entry.key];
+      final useCase = MealAdvisorResultUseCase(store);
+      await useCase.saveMealAdvice(
+        9,
+        MealAdvice(entry.value, null, source: 'manual'),
+      );
+      expect(store.savedResult!.result, 'manual');
+      expect((await useCase.loadMealAdvice(9))!.decision, entry.value);
+    });
+    test('existing ${entry.key} remains an advisor result', () async {
+      final store = FakeMealAdvisorResultStore();
+      final useCase = MealAdvisorResultUseCase(store);
+      await useCase.saveMealAdvice(9, MealAdvice(entry.value, null));
+      expect(store.savedResult!.result, entry.key);
+      expect((await useCase.loadMealAdvice(9))!.source, 'mealAdvisor');
+    });
+  }
+
+  test('manual decision and selected wait survive persistence', () async {
+    final store = FakeMealAdvisorResultStore();
+    final useCase = MealAdvisorResultUseCase(store);
+    await useCase.saveMealAdvice(
+      7,
+      MealAdvice(
+        MealDecision.bolusWaitThenEat,
+        WaitSuggestion(12, 12, 12),
+        source: 'manual',
+      ),
+    );
+    expect(store.savedResult!.result, 'manual');
+    expect(store.savedResult!.waitTimeIgnored, isFalse);
+    final loaded = await useCase.loadMealAdvice(7);
+    expect(loaded!.source, 'manual');
+    expect(loaded.decision, MealDecision.bolusWaitThenEat);
+    expect(loaded.wait!.recommendedMinutes, 12);
+  });
+
   test(
     'saveMealAdvice stores nullable extended carbs schedule without WBT',
     () async {
@@ -61,6 +104,10 @@ void main() {
 
 class FakeMealAdvisorResultStore implements MealAdvisorResultStore {
   PersistedMealAdvisorResult? savedResult;
+  List<String> statuses = [];
+
+  @override
+  Future<List<String>> getMealStatusHistory(int mealId) async => statuses;
 
   @override
   Future<PersistedMealAdvisorResult?> getMealAdvisorResult(int mealId) async {

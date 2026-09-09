@@ -32,7 +32,7 @@ class MealAdvisorResultDriftMapper {
       extendedCarbsDeliveryMode: Value(result.extendedCarbsDeliveryMode),
       extendedCarbsDelayMinutes: Value(result.extendedCarbsDelayMinutes),
       extendedCarbsDurationMinutes: Value(result.extendedCarbsDurationMinutes),
-      version: const Value(2),
+      version: Value(result.source == 'manual' ? null : 2),
     );
   }
 }

@@ -1,4 +1,5 @@
 class PersistedMealAdvisorResult {
+  String get source => result == 'manual' ? 'manual' : 'mealAdvisor';
   final int mealId;
   final String result;
   final int initialWaitTime;

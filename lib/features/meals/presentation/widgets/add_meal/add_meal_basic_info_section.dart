@@ -10,10 +10,12 @@ import 'meal_planned_time_field.dart';
 class AddMealBasicInfoSection extends ConsumerWidget {
   const AddMealBasicInfoSection({
     super.key,
+    this.retrospective = false,
     required this.onNameSaved,
     required this.onPlannedAtChanged,
   });
 
+  final bool retrospective;
   final ValueChanged<String> onNameSaved;
   final ValueChanged<DateTime> onPlannedAtChanged;
 
@@ -45,7 +47,10 @@ class AddMealBasicInfoSection extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        MealPlannedTimeField(onChanged: onPlannedAtChanged),
+        MealPlannedTimeField(
+          onChanged: onPlannedAtChanged,
+          retrospective: retrospective,
+        ),
       ],
     );
   }

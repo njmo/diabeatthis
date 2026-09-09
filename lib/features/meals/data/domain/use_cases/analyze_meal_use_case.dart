@@ -1,9 +1,11 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../common/history/bolus_wizard_grouping.dart';
 import '../../../../../core/data_sources/providers/on_demand_history_repositories_provider.dart';
 import '../../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../../core/domain/model/bg_check.dart';
+import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/domain/model/correction_bolus.dart';
 import '../../../../../core/domain/model/extended_carb.dart';
 import '../../../../../core/domain/model/manual_bolus.dart';
@@ -153,6 +155,7 @@ class AnalyzeMealUseCase {
     required List<MealLinkedActivityData> activities,
     required List<MealLinkedMealData> meals,
   }) {
+    final wizardGrouping = BolusWizardGrouping(treatments);
     final events = <MealTimelineEventData>[
       MealTimelineEventData(
         timestamp: details.analysisTime,
@@ -163,6 +166,7 @@ class AnalyzeMealUseCase {
       ),
       ..._mealStatusEvents(details),
       ...treatments
+          .where((treatment) => !wizardGrouping.isRelated(treatment))
           .where(
             (treatment) => treatment.isValid && treatment.createdAt != null,
           )
@@ -260,6 +264,14 @@ class AnalyzeMealUseCase {
         timestamp: createdAt,
         type: MealTimelineEventType.stress,
         label: 'Stress',
+        value: treatment.getParts(),
+      );
+    }
+    if (treatment is BolusWizard) {
+      return MealTimelineEventData(
+        timestamp: createdAt,
+        type: MealTimelineEventType.bolusWizard,
+        label: 'Bolus Wizard',
         value: treatment.getParts(),
       );
     }

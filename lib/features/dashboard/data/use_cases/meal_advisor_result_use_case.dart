@@ -1,3 +1,4 @@
+import '../../../../common/meal/manual_meal_decision.dart';
 import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../models/persisted_meal_advisor_result.dart';
@@ -14,11 +15,17 @@ class MealAdvisorResultUseCase {
     if (result == null) return null;
 
     return MealAdvice.full(
-      _decisionFromStatus(result.result),
+      result.result == 'manual'
+          ? manualMealDecisionFromHistory(
+              await store.getMealStatusHistory(mealId),
+              selectedWaitMinutes: result.initialWaitTime,
+            )
+          : _decisionFromStatus(result.result),
       result.waitTimeIgnored
           ? null
           : WaitSuggestion(result.initialWaitTime, 0, 0),
       DateTime.fromMillisecondsSinceEpoch(result.createdAt),
+      source: result.source,
       extendedCarbs: _extendedCarbsFromResult(result),
     );
   }
@@ -36,10 +43,12 @@ class MealAdvisorResultUseCase {
     return store.insertMealAdvisorResult(
       PersistedMealAdvisorResult(
         mealId: mealId,
-        result: decision.status,
+        result: advice.source == 'manual' ? 'manual' : decision.status,
         finalWaitTime: waitTime,
         initialWaitTime: waitTime,
-        waitTimeIgnored: advice.wait == null,
+        waitTimeIgnored: advice.source == 'manual'
+            ? false
+            : advice.wait == null,
         extendedCarbsGrams: advice.extendedCarbs.grams,
         extendedCarbsDeliveryMode: shouldSuggestExtendedCarbs
             ? scheduleSettings.deliveryMode.name

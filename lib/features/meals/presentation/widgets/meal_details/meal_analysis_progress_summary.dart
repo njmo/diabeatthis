@@ -24,6 +24,11 @@ class MealAnalysisProgressSummary extends StatelessWidget {
     final details = state.details;
     final analysis = state.analysis;
     final chips = [if (details.isCopied) const HeaderStatusChip.copied()];
+    if (details.advisorDecision?.isManual == true) {
+      chips.add(
+        HeaderStatusChip(icon: Icons.edit_outlined, label: 'Decyzja ręczna'),
+      );
+    }
     if (details.hasLowTreatments) {
       chips.add(const HeaderStatusChip.lowTreatment());
     }
@@ -86,5 +91,6 @@ class MealAnalysisProgressSummary extends StatelessWidget {
 
 bool _shouldShowWaitTimeIgnoredChip(MealAdvisorDecisionData? decision) {
   return decision?.result == 'bolused-waiting' &&
+      decision?.isManual != true &&
       decision?.waitTimeIgnored == true;
 }

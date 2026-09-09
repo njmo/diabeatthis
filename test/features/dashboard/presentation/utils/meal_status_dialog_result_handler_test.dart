@@ -1,8 +1,71 @@
+import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
+import 'package:diabeatthis/features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import 'package:diabeatthis/features/dashboard/presentation/utils/meal_status_dialog_result_handler.dart';
+import 'package:diabeatthis/features/dashboard/presentation/widgets/meal_status_dialog_result.dart';
+import 'package:diabeatthis/features/meals/data/providers/meal_database_provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  for (final alreadySaved in [true, false]) {
+    testWidgets(
+      'handles status without repeating a completed write: $alreadySaved',
+      (tester) async {
+        const meal = Meal(id: 1, name: 'Obiad', status: 'planned');
+        var currentStatus = 'bolused-eating';
+        var writes = 0;
+        var adviceReads = 0;
+        Future<void>? operation;
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              updateMealProvider.overrideWith((ref, args) async {
+                writes++;
+                currentStatus = args.$2;
+              }),
+              getMealAdviceProvider(meal).overrideWith((ref) async {
+                adviceReads++;
+                return null;
+              }),
+            ],
+            child: MaterialApp(
+              home: Scaffold(
+                body: Consumer(
+                  builder: (context, ref, _) => TextButton(
+                    onPressed: () {
+                      operation = handleMealStatusDialogResult(
+                        context: context,
+                        ref: ref,
+                        meal: meal,
+                        result: MealStatusUpdateResult(
+                          'eating-then-bolus',
+                          alreadySaved: alreadySaved,
+                        ),
+                      );
+                    },
+                    child: const Text('Handle'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Handle'));
+        await tester.pumpAndSettle();
+        await operation;
+        expect(writes, alreadySaved ? 0 : 1);
+        expect(
+          currentStatus,
+          alreadySaved ? 'bolused-eating' : 'eating-then-bolus',
+        );
+        expect(adviceReads, 1);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   group('shouldOpenSummaryAfterMealStatusUpdate', () {
     test('opens summary for regular eaten statuses', () {
       expect(shouldOpenSummaryAfterMealStatusUpdate('eaten'), isTrue);

@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/search_bar_action_button.dart';
 import '../../../../common/widgets/search_text_field.dart';
 import '../../data/models/ingredient_filter_limits.dart';
 import '../../data/providers/ingredient_filter_controller.dart';
@@ -14,11 +15,13 @@ class IngredientListFilter extends HookConsumerWidget {
   final String initialQuery;
   final ValueChanged<String> onQueryChanged;
   final EdgeInsetsGeometry padding;
+  final List<Widget> trailingActions;
 
   const IngredientListFilter({
     super.key,
     required this.hintText,
     this.initialQuery = '',
+    this.trailingActions = const [],
     required this.onQueryChanged,
     this.padding = const EdgeInsets.fromLTRB(12, 8, 12, 6),
   });
@@ -71,6 +74,10 @@ class IngredientListFilter extends HookConsumerWidget {
                   onPressed: addIngredientFilter,
                 ),
               ],
+              for (final action in trailingActions) ...[
+                const SizedBox(width: 8),
+                action,
+              ],
             ],
           ),
           if (selectedIngredients.isNotEmpty) ...[
@@ -101,17 +108,11 @@ class IngredientFilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: height,
-      height: height,
-      child: IconButton.outlined(
-        tooltip: context.lang.ingredientAddFilterTooltip,
-        icon: const Icon(Icons.add_chart_sharp),
-        style: IconButton.styleFrom(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-        ),
-        onPressed: onPressed,
-      ),
+    return SearchBarActionButton(
+      size: height,
+      tooltip: context.lang.ingredientAddFilterTooltip,
+      icon: const Icon(Icons.add_chart_sharp),
+      onPressed: onPressed,
     );
   }
 }

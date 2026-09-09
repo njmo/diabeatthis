@@ -3,9 +3,10 @@ sealed class MealStatusDialogResult {
 }
 
 class MealStatusUpdateResult extends MealStatusDialogResult {
-  const MealStatusUpdateResult(this.status);
+  const MealStatusUpdateResult(this.status, {this.alreadySaved = false});
 
   final String status;
+  final bool alreadySaved;
 }
 
 class MealStatusAddOnResult extends MealStatusDialogResult {

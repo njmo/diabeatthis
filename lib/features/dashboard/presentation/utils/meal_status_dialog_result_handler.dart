@@ -22,13 +22,17 @@ Future<void> handleMealStatusDialogResult({
   bool openSummaryAfterEaten = true,
 }) async {
   switch (result) {
-    case MealStatusUpdateResult(:final status):
-      if (meal.status == 'bolused-waiting' && status == 'waited-eating') {
+    case MealStatusUpdateResult(:final status, :final alreadySaved):
+      if (!alreadySaved &&
+          meal.status == 'bolused-waiting' &&
+          status == 'waited-eating') {
         await ref.read(completeBolusWaitUseCaseProvider).call(meal);
         return;
       }
 
-      await ref.read(updateMealProvider(meal, status).future);
+      if (!alreadySaved) {
+        await ref.read(updateMealProvider(meal, status).future);
+      }
       if (!context.mounted) {
         return;
       }

@@ -3,6 +3,7 @@ import '../../../../core/drift/mappers/meal_advisor_result_drift_mapper.dart';
 import '../models/persisted_meal_advisor_result.dart';
 
 abstract interface class MealAdvisorResultStore {
+  Future<List<String>> getMealStatusHistory(int mealId);
   Future<PersistedMealAdvisorResult?> getMealAdvisorResult(int mealId);
 
   Future<int> insertMealAdvisorResult(PersistedMealAdvisorResult result);
@@ -16,6 +17,10 @@ class DriftMealAdvisorResultStore implements MealAdvisorResultStore {
     required this.dao,
     this.mapper = const MealAdvisorResultDriftMapper(),
   });
+
+  @override
+  Future<List<String>> getMealStatusHistory(int mealId) =>
+      dao.getMealStatusHistory(mealId);
 
   @override
   Future<PersistedMealAdvisorResult?> getMealAdvisorResult(int mealId) async {

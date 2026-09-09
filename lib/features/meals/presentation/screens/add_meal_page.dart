@@ -5,20 +5,24 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../data/model/copied_meal_type.dart';
+import '../../data/models/retrospective_meal_timing.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import '../controllers/add_meal_controller.dart';
 import '../controllers/copy_meal_source_controller.dart';
 import '../widgets/add_meal/add_meal_basic_info_section.dart';
 import '../widgets/add_meal/add_meal_ingredients_section.dart';
 import '../widgets/add_meal/add_meal_source_section.dart';
+import '../widgets/add_meal/retrospective_meal_fields.dart';
 import '../widgets/copied_meal_picker.dart';
 
 @RoutePage()
 class AddMealPage extends HookConsumerWidget {
-  const AddMealPage({super.key});
+  final bool retrospective;
+  const AddMealPage({super.key, this.retrospective = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final timing = useState(const RetrospectiveMealTiming());
     final formKey = useMemoized(GlobalKey<FormState>.new);
     final mealDraft = ref.read(mealDraftProvider.notifier);
     final addMealState = ref.watch(addMealControllerProvider);
@@ -28,27 +32,44 @@ class AddMealPage extends HookConsumerWidget {
     useEffect(() => copyController.cancelPendingCopy, [copyController]);
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.lang.addMealTitle)),
+      appBar: AppBar(
+        title: Text(
+          retrospective
+              ? 'Zarejestruj posiłek wstecz'
+              : context.lang.addMealTitle,
+        ),
+      ),
       body: SafeArea(
         child: Form(
           key: formKey,
-          child: ListView(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-            children: [
-              AddMealBasicInfoSection(
-                onNameSaved: mealDraft.setName,
-                onPlannedAtChanged: mealDraft.setPlannedAt,
-              ),
-              const SizedBox(height: 24),
-              AddMealSourceSection(
-                picker: (context) => showCopiedMealPicker(context, ref),
-                isLoading: isCopying,
-                enabled: !isSaving,
-                onPicked: (value) => _copyFromSource(context, ref, value),
-              ),
-              const SizedBox(height: 24),
-              const AddMealIngredientsSection(),
-            ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AddMealBasicInfoSection(
+                  retrospective: retrospective,
+                  onNameSaved: mealDraft.setName,
+                  onPlannedAtChanged: mealDraft.setPlannedAt,
+                ),
+                const SizedBox(height: 24),
+                AddMealSourceSection(
+                  picker: (context) => showCopiedMealPicker(context, ref),
+                  isLoading: isCopying,
+                  enabled: !isSaving,
+                  onPicked: (value) => _copyFromSource(context, ref, value),
+                ),
+                const SizedBox(height: 24),
+                const AddMealIngredientsSection(),
+                if (retrospective) ...[
+                  const SizedBox(height: 24),
+                  RetrospectiveMealFields(
+                    value: timing.value,
+                    onChanged: (value) => timing.value = value,
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),
@@ -57,7 +78,12 @@ class AddMealPage extends HookConsumerWidget {
         child: FilledButton.icon(
           onPressed: isSaving || isCopying
               ? null
-              : () => _saveMeal(context: context, ref: ref, formKey: formKey),
+              : () => _saveMeal(
+                  context: context,
+                  ref: ref,
+                  formKey: formKey,
+                  timing: retrospective ? timing.value : null,
+                ),
           icon: isSaving
               ? const SizedBox.square(
                   dimension: 18,
@@ -109,6 +135,7 @@ class AddMealPage extends HookConsumerWidget {
     required BuildContext context,
     required WidgetRef ref,
     required GlobalKey<FormState> formKey,
+    RetrospectiveMealTiming? timing,
   }) async {
     if (ref.read(copyMealSourceControllerProvider).isLoading) {
       return;
@@ -122,7 +149,9 @@ class AddMealPage extends HookConsumerWidget {
     final updatedDraft = ref.read(mealDraftProvider);
 
     try {
-      await ref.read(addMealControllerProvider.notifier).addMeal(updatedDraft);
+      await ref
+          .read(addMealControllerProvider.notifier)
+          .addMeal(updatedDraft, retrospective: timing);
       if (context.mounted) {
         context.router.pop();
       }

@@ -4,11 +4,14 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/add_meal_icon.dart';
 import '../../../../common/widgets/delete_confirmation_dialog.dart';
+import '../../../../common/widgets/search_bar_action_button.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../ingredients/data/providers/ingredient_filter_controller.dart';
 import '../../../ingredients/presentation/widgets/ingredient_list_filter.dart';
 import '../../data/domain/use_cases/load_meal_page_by_filter_use_case.dart';
+import '../../data/providers/meal_draft_provider.dart';
 import '../controllers/meal_list_controller.dart';
 import 'meal_list/meal_list_content.dart';
 
@@ -40,6 +43,17 @@ class MealList extends ConsumerWidget {
           IngredientListFilter(
             hintText: context.lang.mealSearchHint,
             onQueryChanged: controller.setQuery,
+            trailingActions: [
+              SearchBarActionButton(
+                icon: const AddMealIcon(),
+                label: 'Dodaj',
+                tooltip: 'Zarejestruj posiłek wstecz',
+                onPressed: () {
+                  ref.read(mealDraftProvider.notifier).reset();
+                  context.router.push(routes.AddMealRoute(retrospective: true));
+                },
+              ),
+            ],
           ),
           Expanded(
             child: MealListContent(

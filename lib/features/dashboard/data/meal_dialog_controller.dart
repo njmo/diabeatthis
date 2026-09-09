@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/meal/manual_meal_decision.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/meal_advice_pending_notification.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -10,6 +11,7 @@ import '../../meals/data/providers/meal_activation_guard_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
 import 'meal_dialog_state.dart';
 import 'providers/device_status_ui_provider.dart';
+import 'use_cases/accept_meal_decision_use_case.dart';
 import 'utils/meal_advisor.dart';
 
 part 'meal_dialog_controller.g.dart';
@@ -27,6 +29,9 @@ class MealDialogController extends _$MealDialogController with Logging {
   }
 
   String waitTimeMessage(WaitSuggestion w) {
+    if (state.advice.source == 'manual') {
+      return 'Odczekaj ${w.recommendedMinutes} min przed rozpoczęciem posiłku.';
+    }
     return "Odczekaj około ${w.recommendedMinutes} min "
         "(zakres ${w.minMinutes}–${w.maxMinutes} min) przed rozpoczęciem posiłku.";
   }
@@ -65,7 +70,7 @@ class MealDialogController extends _$MealDialogController with Logging {
     );
   }
 
-  Future<void> chooseEat() async {
+  Future<void> chooseEat({ManualMealDecision? manual}) async {
     final blockingMeal = await ref.read(
       mealBlockingActivationProvider(mealId).future,
     );
@@ -85,6 +90,27 @@ class MealDialogController extends _$MealDialogController with Logging {
     final fatGrams = mealStatus?.fatGrams ?? 0;
     final fiberGrams = mealStatus?.fiberGrams ?? 0;
     final proteinGrams = mealStatus?.proteinGrams ?? 0;
+    if (manual != null) {
+      state = state.copyWith(
+        skipMeal: false,
+        step: MealDialogStep.confirm,
+        carbsGrams: carbs,
+        extendedCarbsGrams: 0,
+        advice: MealAdvice(
+          manual.decision,
+          manual.waitMinutes > 0
+              ? WaitSuggestion(
+                  manual.waitMinutes,
+                  manual.waitMinutes,
+                  manual.waitMinutes,
+                )
+              : null,
+          source: 'manual',
+        ),
+        clearActivationBlock: true,
+      );
+      return;
+    }
     final extendedCarbsScheduleSettings = await ref.read(
       extendedCarbsScheduleSettingsProvider.future,
     );
@@ -131,6 +157,9 @@ class MealDialogController extends _$MealDialogController with Logging {
         throw UnimplementedError();
     }
   }
+
+  Future<void> confirmAdvice() =>
+      AcceptMealDecisionUseCase(ref).call(mealId, state.advice);
 
   void chooseSkip() {
     state = state.copyWith(

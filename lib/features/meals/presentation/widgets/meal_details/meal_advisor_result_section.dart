@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../../../../../common/l10n/language.dart';
 import '../../../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import '../../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../data/models/meal_details_data.dart';
+import 'manual_meal_decision_section.dart';
 import 'meal_detail_components.dart';
 import 'meal_detail_formatters.dart';
 
@@ -14,6 +16,9 @@ class MealAdvisorResultSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final decision = details.advisorDecision;
+    if (decision?.isManual == true) {
+      return ManualMealDecisionSection(details: details);
+    }
 
     return MealSectionTile(
       title: context.lang.mealAdvisorDecisionTitle,
@@ -53,7 +58,7 @@ class MealAdvisorResultSection extends StatelessWidget {
           ),
           MealInfoRow(
             label: context.lang.mealAdvisorVersionLabel,
-            value: decision.version.toString(),
+            value: decision.version?.toString() ?? '—',
           ),
           MealInfoRow(
             label: context.lang.mealAdvisorCreatedLabel,

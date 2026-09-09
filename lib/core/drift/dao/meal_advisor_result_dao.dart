@@ -9,6 +9,13 @@ class MealAdvisorResultDao extends DatabaseAccessor<DatabaseImpl>
     with _$MealAdvisorResultDaoMixin {
   MealAdvisorResultDao(super.db);
 
+  Future<List<String>> getMealStatusHistory(int mealId) async {
+    final rows = await (select(
+      db.mealStatusHistory,
+    )..where((t) => t.mealId.equals(mealId))).get();
+    return rows.map((row) => row.status).toList();
+  }
+
   Future<MealAdvisorResultData?> getMealAdvisorResult(int mealId) async {
     final query = select(db.mealAdvisorResult)
       ..where((tbl) => tbl.mealId.equals(mealId));

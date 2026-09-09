@@ -33,20 +33,5 @@ class MealStartContextData {
       ? referenceTime.difference(precedingBolus!.createdAt)
       : null;
 
-  /// Elapsed application status time is distinct from a recorded insulin dose.
-  Duration? get recordedWait {
-    if (!hasRecordedStart) return null;
-    final waiting =
-        details.statusHistory
-            .where(
-              (entry) =>
-                  entry.status == 'bolused-waiting' &&
-                  !entry.createdAt.isAfter(referenceTime),
-            )
-            .toList()
-          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    return waiting.isEmpty
-        ? null
-        : referenceTime.difference(waiting.last.createdAt);
-  }
+  Duration? get recordedWait => details.recordedWait;
 }

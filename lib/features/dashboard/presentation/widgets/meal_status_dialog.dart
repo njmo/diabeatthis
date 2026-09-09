@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+
 import '../../../../common/l10n/language.dart';
+import '../../../../common/meal/manual_meal_decision.dart';
+import '../../../../common/widgets/manual_meal_decision_dialog.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../meal_summary/domain/utils/meal_add_on_status.dart';
 import '../../data/meal_dialog_controller.dart';
 import '../../data/meal_dialog_state.dart';
-import '../../data/providers/meal_advisor_result_provider.dart';
-import '../../data/providers/meal_snapshot_controller_provider.dart';
 import '../../data/utils/meal_advisor.dart';
 import 'meal_add_on_mode_dialog.dart';
 import 'meal_status_dialog_result.dart';
 
-class MealStatusDialog extends ConsumerWidget with Logging {
+class MealStatusDialog extends HookConsumerWidget with Logging {
   final Meal meal;
   const MealStatusDialog({required this.meal, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final saving = useState(false);
     final s = ref.watch(mealDialogControllerProvider(meal.id, getStep()));
     final c = ref.read(
       mealDialogControllerProvider(meal.id, getStep()).notifier,
@@ -104,9 +107,11 @@ class MealStatusDialog extends ConsumerWidget with Logging {
                 Text(context.lang.mealStatusConfirmSkipMessage)
               else if (s.advice.decision != null)
                 Text(
-                  context.lang.mealStatusAdviceToApply(
-                    c.mealAdviceString() ?? '',
-                  ),
+                  s.advice.source == 'manual'
+                      ? 'Decyzja ręczna\n${c.mealAdviceString() ?? ''}'
+                      : context.lang.mealStatusAdviceToApply(
+                          c.mealAdviceString() ?? '',
+                        ),
                 ),
             ],
           );
@@ -144,46 +149,56 @@ class MealStatusDialog extends ConsumerWidget with Logging {
         case MealDialogStep.confirm:
           return [
             TextButton(
-              onPressed: () async {
-                if (!s.skipMeal) {
-                  await c.cancelAllMealNotifications();
-                }
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
+              onPressed: saving.value
+                  ? null
+                  : () async {
+                      if (!s.skipMeal) {
+                        await c.cancelAllMealNotifications();
+                      }
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
               child: Text(context.lang.settingsCancel),
             ),
             ElevatedButton(
-              onPressed: () async {
-                if (context.mounted) {
-                  if (!s.skipMeal) {
-                    await c.cancelAllMealNotifications();
+              onPressed:
+                  saving.value || (!s.skipMeal && s.advice.decision == null)
+                  ? null
+                  : () async {
+                      saving.value = true;
+                      if (context.mounted) {
+                        if (!s.skipMeal) {
+                          await c.cancelAllMealNotifications();
 
-                    await ref.read(insertAdviceProvider(meal, s.advice).future);
-
-                    try {
-                      final mealSummaryController = ref.read(
-                        mealSnapshotControllerProvider,
-                      );
-                      await mealSummaryController.createPlannedSnapshot(
-                        meal.id,
-                      );
-                    } catch (e) {
-                      logE("Error creating snapshot for meal: $e");
-                    }
-                  }
-                  if (context.mounted) {
-                    Navigator.of(context).pop(
-                      MealStatusUpdateResult(
-                        s.skipMeal
-                            ? 'skipped'
-                            : s.advice.decision!.acceptedStatus,
-                      ),
-                    );
-                  }
-                }
-              },
+                          try {
+                            await c.confirmAdvice();
+                          } catch (e) {
+                            if (context.mounted) {
+                              saving.value = false;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Nie udało się zapisać decyzji: $e',
+                                  ),
+                                ),
+                              );
+                            }
+                            return;
+                          }
+                        }
+                        if (context.mounted) {
+                          Navigator.of(context).pop(
+                            MealStatusUpdateResult(
+                              s.skipMeal
+                                  ? 'skipped'
+                                  : s.advice.decision!.acceptedStatus,
+                              alreadySaved: !s.skipMeal,
+                            ),
+                          );
+                        }
+                      }
+                    },
               child: Text(_buttonText(s.advice.decision)),
             ),
           ];
@@ -276,10 +291,41 @@ class MealStatusDialog extends ConsumerWidget with Logging {
       }
     }
 
-    return AlertDialog(
-      title: Text(meal.name),
-      content: content(),
-      actions: actions(),
+    return PopScope(
+      canPop: !saving.value,
+      child: AlertDialog(
+        title: Row(
+          children: [
+            Expanded(child: Text(meal.name)),
+            if (s.step == MealDialogStep.confirm && !s.skipMeal)
+              IconButton(
+                tooltip: 'Wybierz decyzję ręcznie',
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: saving.value
+                    ? null
+                    : () async {
+                        final manual = await showDialog<ManualMealDecision>(
+                          context: context,
+                          builder: (_) => ManualMealDecisionDialog(
+                            initialValue: ManualMealDecision(
+                              decision:
+                                  s.advice.decision ??
+                                  MealDecision.bolusAndEatNow,
+                              waitMinutes:
+                                  s.advice.wait?.recommendedMinutes ?? 0,
+                            ),
+                          ),
+                        );
+                        if (manual != null && context.mounted) {
+                          await c.chooseEat(manual: manual);
+                        }
+                      },
+              ),
+          ],
+        ),
+        content: content(),
+        actions: actions(),
+      ),
     );
   }
 

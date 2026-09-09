@@ -6,39 +6,17 @@
 // - `trend` is treated as mg/dL per minute (IMPORTANT). If your trend is per 5 minutes,
 //   convert before calling (e.g., trendPerMin = (trendPer5Min / 5).round()).
 // - This is a simulation heuristic, not medical advice.
-
 import 'package:clock/clock.dart';
 
+import '../../../../common/meal/meal_decision.dart';
 import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 
-enum MealDecision {
-  eatNowBolusLater, // in this version: "eat now, no bolus now; log carbs"
-  bolusAndEatNow,
-  bolusWaitThenEat,
-  bolus,
-}
-
-extension MealDecisionX on MealDecision {
-  String get status => switch (this) {
-    MealDecision.eatNowBolusLater => 'eating-then-bolus',
-    MealDecision.bolusAndEatNow => 'bolused-eating',
-    MealDecision.bolusWaitThenEat => 'bolused-waiting',
-    // TODO: Handle this case.
-    MealDecision.bolus => throw UnimplementedError(),
-  };
-
-  String get acceptedStatus => switch (this) {
-    MealDecision.eatNowBolusLater => 'eating-then-bolus',
-    MealDecision.bolusAndEatNow => 'waiting-for-bolus',
-    MealDecision.bolusWaitThenEat => 'waiting-for-bolus',
-    // TODO: Handle this case.
-    MealDecision.bolus => throw UnimplementedError(),
-  };
-}
+export '../../../../common/meal/meal_decision.dart';
 
 class MealAdvice {
   final MealDecision? decision;
+  final String source;
   final WaitSuggestion? wait;
   final WbtExtendedCarbsSuggestion extendedCarbs;
   final DateTime createdAt;
@@ -46,6 +24,7 @@ class MealAdvice {
   MealAdvice(
     this.decision,
     this.wait, {
+    this.source = 'mealAdvisor',
     WbtExtendedCarbsSuggestion? extendedCarbs,
   }) : extendedCarbs = extendedCarbs ?? const WbtExtendedCarbsSuggestion.none(),
        createdAt = clock.now();
@@ -54,11 +33,13 @@ class MealAdvice {
     this.decision,
     this.wait,
     this.createdAt, {
+    this.source = 'mealAdvisor',
     WbtExtendedCarbsSuggestion? extendedCarbs,
   }) : extendedCarbs = extendedCarbs ?? const WbtExtendedCarbsSuggestion.none();
 
   MealAdvice.empty()
-    : decision = null,
+    : source = 'mealAdvisor',
+      decision = null,
       wait = null,
       extendedCarbs = const WbtExtendedCarbsSuggestion.none(),
       createdAt = clock.now();

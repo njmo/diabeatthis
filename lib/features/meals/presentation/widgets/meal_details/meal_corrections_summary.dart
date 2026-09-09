@@ -35,6 +35,12 @@ class MealCorrectionsSummary extends StatelessWidget {
         ResponsiveMetricList(
           maxColumns: 2,
           children: [
+            if (summary.wizardCount > 0)
+              AnalysisMetric(
+                icon: mealTimelineEventIcon(MealTimelineEventType.bolusWizard),
+                label: messages.historyBolusWizard,
+                value: value(summary.wizardCount, summary.wizardUnits),
+              ),
             AnalysisMetric(
               icon: mealTimelineEventIcon(
                 MealTimelineEventType.manualCorrection,

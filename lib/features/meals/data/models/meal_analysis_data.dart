@@ -1,3 +1,4 @@
+import '../../../../common/history/bolus_wizard_grouping.dart';
 import '../../../../common/history/glucose_window_summary.dart';
 import '../../../../common/history/history_event_type.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
@@ -113,7 +114,9 @@ class MealAnalysisData {
   ).units;
 
   double get totalTreatmentCarbs {
+    final grouping = BolusWizardGrouping(treatments);
     return treatments.fold<double>(0, (sum, treatment) {
+      if (grouping.isRelated(treatment)) return sum;
       if (treatment is Treat) {
         return sum + treatment.carbs;
       }

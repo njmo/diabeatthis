@@ -14,7 +14,7 @@ class MealWaitComparison extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final advice = data.details.advisorDecision;
-    if (advice == null || advice.initialWaitTime <= 0) {
+    if (advice == null || advice.isManual || advice.initialWaitTime <= 0) {
       return const SizedBox.shrink();
     }
     final messages = context.lang;

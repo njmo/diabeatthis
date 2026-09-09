@@ -20,8 +20,9 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
   static const _defaultRecommendedMinutes = 15;
 
   int? recommendedMinutes;
+  bool isManual;
 
-  BolusThenWaitExecutor({this.recommendedMinutes});
+  BolusThenWaitExecutor({this.recommendedMinutes, this.isManual = false});
 
   @override
   List<Type> get interruptableEvents => [
@@ -70,6 +71,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       final mealAdvice = await runtimeContext.container.read(
         getMealAdviceProvider(mealMonitorContext.activeMeal!).future,
       );
+      isManual = mealAdvice?.source == 'manual';
       final recommendedWait = mealAdvice?.wait?.recommendedMinutes;
 
       if (recommendedWait == null) {
@@ -97,6 +99,12 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
     final waitStartedAt = clock.now();
     logI("Waiting for $recommendedMinutes minutes before showing eat now");
     while (_elapsedWaitMinutes(waitStartedAt) < recommendedMinutes!) {
+      if (isManual) {
+        final remaining =
+            recommendedMinutes! - _elapsedWaitMinutes(waitStartedAt);
+        await runtimeContext.waitForDuration(Duration(minutes: remaining));
+        continue;
+      }
       final deviceStatus = runtimeContext.container.read(
         deviceStatusValueProvider,
       );
