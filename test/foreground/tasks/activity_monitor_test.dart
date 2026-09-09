@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/events/data/notification/activity_finished_response_event.dart';
+import 'package:diabeatthis/common/monitoring/activity_monitoring_phase.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart' as domain;
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
@@ -10,6 +11,7 @@ import 'package:diabeatthis/core/notifications/domain/events/activity_finished_n
 import 'package:diabeatthis/core/notifications/domain/events/temp_target_notification.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/foreground/event/internal/activity_event.dart';
+import 'package:diabeatthis/foreground/event/internal/monitoring_status_changed.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
 import 'package:diabeatthis/foreground/task/tasks/activity_monitor_task/activity_monitor_task.dart';
@@ -83,6 +85,17 @@ void main() {
         final event = notifications.shownEvents.last;
         expect(event, isA<ActivityFinishedNotificationEvent>());
         expect((event as ActivityFinishedNotificationEvent).activityLogId, 1);
+        expect(
+          harness.emittedEvents
+              .whereType<ActivityMonitoringStatusChanged>()
+              .map((event) => event.status.phase),
+          [
+            ActivityMonitoringPhase.planned,
+            ActivityMonitoringPhase.preparing,
+            ActivityMonitoringPhase.active,
+            ActivityMonitoringPhase.waitingForFinish,
+          ],
+        );
       });
     });
 

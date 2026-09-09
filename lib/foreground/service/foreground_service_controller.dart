@@ -17,7 +17,7 @@ class ForegroundServiceController with Logging {
     logI("Starting monitor task");
     final result = await FlutterForegroundTask.startService(
       serviceId: 256,
-      notificationTitle: 'Monitoring aktywny',
+      notificationTitle: 'Uruchamianie monitorowania',
       notificationText: 'Uruchamianie...',
       callback: startCallback,
     );

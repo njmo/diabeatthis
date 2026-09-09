@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../common/monitoring/activity_monitoring_phase.dart';
+import '../../../../common/monitoring/activity_monitoring_status.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../event/internal/activity_event.dart';
+import '../../../event/internal/monitoring_status_changed.dart';
 import '../../../event/model/foreground_event.dart';
 import '../../base/runtime_context.dart';
 import '../../base/workflow_task.dart';
@@ -16,6 +19,12 @@ import 'executors/new_activity_check_executor.dart';
 import 'helpers/activity_monitor_context_loader.dart';
 
 class ActivityMonitorTask extends InterruptableWorkflowTask with Logging {
+  @override
+  ForegroundEvent get unexpectedStopEvent =>
+      const ActivityMonitoringStatusChanged(
+        ActivityMonitoringStatus(phase: ActivityMonitoringPhase.unavailable),
+      );
+
   @override
   List<bool Function(ForegroundEvent)> get interruptableEventsMatcher => [
     (e) => e is NextActivityEvent,

@@ -5,11 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/logger/logger.dart';
 import '../../event/model/foreground_event.dart';
+import '../../runtime/event_inbox.dart';
 import '../../runtime/task_cancellation.dart';
 import '../../runtime/task_cancelled_exception.dart';
 import '../../runtime/task_interrupt_controller.dart';
 import '../../runtime/wait_handle.dart';
 import '../../runtime/wait_scope.dart';
+
+typedef EventInboxFactory = EventInbox<T> Function<T extends ForegroundEvent>();
 
 typedef EmitEventFn = void Function(ForegroundEvent event);
 typedef EmitSignalFn = void Function(String signalKey);
@@ -31,6 +34,7 @@ class RuntimeContext with Logging {
   final EmitEventFn emitEvent;
   final EmitSignalFn emitSignal;
   final EventWaitFactory _eventWaitFactory;
+  final EventInboxFactory _eventInboxFactory;
   final SignalWaitFactory _signalWaitFactory;
   final ProviderContainer container;
   final DeadlineWaitFn _deadlineWaitFactory;
@@ -43,10 +47,18 @@ class RuntimeContext with Logging {
     required this.emitSignal,
     required this.tick,
     required this._eventWaitFactory,
+    required this._eventInboxFactory,
     required this._signalWaitFactory,
     required this._deadlineWaitFactory,
     required this.container,
   });
+
+  EventInbox<T> openEventInbox<T extends ForegroundEvent>() {
+    cancellation.throwIfCancelled();
+    final inbox = _eventInboxFactory<T>();
+    unawaited(cancellation.onCancel.then((_) => inbox.close()));
+    return inbox;
+  }
 
   RuntimeContext overrideControllers({
     TaskCancellation? cancellation,
@@ -58,6 +70,7 @@ class RuntimeContext with Logging {
       emitEvent: emitEvent,
       emitSignal: emitSignal,
       eventWaitFactory: _eventWaitFactory,
+      eventInboxFactory: _eventInboxFactory,
       signalWaitFactory: _signalWaitFactory,
       deadlineWaitFactory: _deadlineWaitFactory,
       container: container,
@@ -294,6 +307,7 @@ class ScopedRuntimeContext extends RuntimeContext {
         emitEvent: base.emitEvent,
         emitSignal: base.emitSignal,
         eventWaitFactory: base._eventWaitFactory,
+        eventInboxFactory: base._eventInboxFactory,
         signalWaitFactory: base._signalWaitFactory,
         deadlineWaitFactory: base._deadlineWaitFactory,
         container: base.container,

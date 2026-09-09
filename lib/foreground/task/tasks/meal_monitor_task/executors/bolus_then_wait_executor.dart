@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/eat_now_response_event.dart';
+import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/base/notifications_controller.dart';
 import '../../../../../core/notifications/domain/events/eat_now_event_notification.dart';
@@ -56,6 +57,10 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
+    mealMonitorContext.publishStatus(
+      runtimeContext,
+      MealMonitoringPhase.waitingToEat,
+    );
     logI("MealMonitorStateWaitAfterBolus");
     logI("Meal scheduled on ${mealMonitorContext.activeMeal!.plannedAt}");
     final notificationProvider = runtimeContext.container.read(

@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/finished_eating_response_event.dart';
+import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/domain/events/finished_eating_event_notification.dart';
@@ -68,6 +69,14 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
+    mealMonitorContext.publishStatus(
+      runtimeContext,
+      isAddOn
+          ? MealMonitoringPhase.waitingForBolus
+          : shouldBolus
+          ? MealMonitoringPhase.eatingThenBolus
+          : MealMonitoringPhase.eating,
+    );
     logI("DetectFinishedEatingExecutor shouldBolus $shouldBolus");
 
     if (isAddOn) {
@@ -78,6 +87,10 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       if (!bolusRecorded) {
         return NewMealCheckExecutor();
       }
+      mealMonitorContext.publishStatus(
+        runtimeContext,
+        MealMonitoringPhase.eatingExtra,
+      );
     } else if (shouldBolus) {
       logI("Checking if needed data is present");
       // if below passes it means that user manually went

@@ -23,10 +23,12 @@ import '../task/base/collector_context.dart';
 import '../task/tasks/activity_monitor_task/activity_monitor_task.dart';
 import '../task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import '../task/tasks/service_status_updater_task.dart';
+import 'foreground_runtime_disposer.dart';
 import 'workflow_scheduler.dart';
 
 class MyTaskHandler extends TaskHandler with Logging {
   bool isUiRunning = false;
+  bool _isStopping = false;
 
   ProviderContainer? _container;
   ExternalEventHandler? _externalEventHandler;
@@ -37,6 +39,7 @@ class MyTaskHandler extends TaskHandler with Logging {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     logI('onStart(starter: $starter)');
+    _isStopping = false;
 
     _container = ProviderContainer(
       observers: [if (kDebugMode) RiverpodDebugObserver(env: 'fg')],
@@ -64,9 +67,9 @@ class MyTaskHandler extends TaskHandler with Logging {
     );
 
     final tasks = [
+      ServiceStatusUpdaterTask(),
       MealMonitorTask(),
       ActivityMonitorTask(),
-      ServiceStatusUpdaterTask(),
     ];
     for (final task in tasks) {
       _taskScheduler!.startTask(task, runtimeContext);
@@ -83,11 +86,6 @@ class MyTaskHandler extends TaskHandler with Logging {
     for (final collector in _collectors!) {
       collector.start(collectorContext);
     }
-
-    await FlutterForegroundTask.updateService(
-      notificationTitle: 'Monitoring aktywny',
-      notificationText: 'Oczekiwanie na dane...',
-    );
   }
 
   @override
@@ -95,17 +93,27 @@ class MyTaskHandler extends TaskHandler with Logging {
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
-    _container?.dispose();
-    _container = null;
-    _externalEventHandler = null;
-    _taskScheduler = null;
-    _pendingData.clear();
+    _isStopping = true;
+    try {
+      await ForegroundRuntimeDisposer().dispose(
+        scheduler: _taskScheduler,
+        collectors: _collectors ?? const [],
+        container: _container,
+      );
+    } finally {
+      _collectors = null;
+      _container = null;
+      _externalEventHandler = null;
+      _taskScheduler = null;
+      _pendingData.clear();
+    }
 
     logI('onDestroy(isTimeout: $isTimeout)');
   }
 
   @override
   void onReceiveData(Object data) {
+    if (_isStopping) return;
     final handler = _externalEventHandler;
     if (handler == null) {
       logI('External event handler is not ready, queueing data');

@@ -21,7 +21,7 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
   @override
   void start(CollectorContext context) {
     logI("Starting treatments collector");
-    _runner = _run(context);
+    _runner = runGuarded(() => _run(context));
   }
 
   Future<void> _run(CollectorContext context) async {
@@ -43,13 +43,16 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
       try {
         treatments = await _pollTreatments(context);
       } catch (e, st) {
+        if (_disposed) return;
         logW("Error fetching treatments $e\n$st");
       }
 
+      if (_disposed) return;
       for (final treatment in treatments.reversed) {
         try {
           _handleTreatment(context, treatment);
         } catch (e, st) {
+          if (_disposed) return;
           logW("Error handling treatment $treatment: $e\n$st");
         }
       }

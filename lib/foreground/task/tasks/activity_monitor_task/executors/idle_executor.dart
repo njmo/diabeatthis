@@ -1,3 +1,4 @@
+import '../../../../../common/monitoring/activity_monitoring_phase.dart';
 import '../../../../event/internal/activity_event.dart';
 import '../../../base/runtime_context.dart';
 import '../activity_monitor_context.dart';
@@ -25,6 +26,10 @@ class ActivityMonitorStateIdle extends ActivityMonitorStateExecutor {
     RuntimeContext runtimeContext,
     ActivityMonitorContext activityMonitorContext,
   ) async {
+    activityMonitorContext.publishStatus(
+      runtimeContext,
+      ActivityMonitoringPhase.idle,
+    );
     logI("ActivityMonitorStateIdle");
     await runtimeContext.waitForDuration(const Duration(minutes: 15));
     return this;

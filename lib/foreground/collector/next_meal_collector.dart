@@ -20,16 +20,17 @@ class NextMealCollector extends ForegroundCollector {
         .mealDao
         .getAllMealForToday()
         .listen((_) {
-      context.emitSignal('next_meal_db_changed');
-    });
+          context.emitSignal('next_meal_db_changed');
+        });
 
-    unawaited(_run(context));
+    unawaited(runGuarded(() => _run(context)));
   }
 
   Future<void> _run(CollectorContext context) async {
     while (!_disposed) {
       final db = context.container.read(databaseProvider);
       final current = await db.mealDao.getNearestMeal();
+      if (_disposed) return;
 
       if (current == null) {
         _lastMealId = null;
@@ -41,21 +42,23 @@ class NextMealCollector extends ForegroundCollector {
 
       final changed =
           _lastMealId != current.id ||
-              _lastPlannedAt != current.plannedAt ||
-              _lastStatus != current.status;
+          _lastPlannedAt != current.plannedAt ||
+          _lastStatus != current.status;
 
       if (changed) {
         _lastMealId = current.id;
         _lastPlannedAt = current.plannedAt;
         _lastStatus = current.status;
 
-        final plannedAt = DateTime.fromMillisecondsSinceEpoch(current.plannedAt);
+        final plannedAt = DateTime.fromMillisecondsSinceEpoch(
+          current.plannedAt,
+        );
 
         logI("Nearest meal from database $current");
         logI(
           "Detected nearest meal change: ${current.id}, "
-              "status: ${current.status}, "
-              "at: ${plannedAt.toIso8601String()}",
+          "status: ${current.status}, "
+          "at: ${plannedAt.toIso8601String()}",
         );
 
         context.emitEvent(NextMealEvent(current.id, plannedAt));
@@ -74,10 +77,7 @@ class NextMealCollector extends ForegroundCollector {
       final dbHandle = context.signalWait('next_meal_db_changed');
 
       try {
-        await Future.any([
-          timeHandle.future,
-          dbHandle.future,
-        ]);
+        await Future.any([timeHandle.future, dbHandle.future]);
       } finally {
         await timeHandle.cancel();
         await dbHandle.cancel();

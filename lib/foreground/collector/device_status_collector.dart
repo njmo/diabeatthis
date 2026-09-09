@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:clock/clock.dart';
 
 import '../../common/events/data/task/task_data_synchronization_payload.dart';
@@ -27,11 +28,12 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
   @override
   void start(CollectorContext context) {
     logI("Starting device status collector");
-    _runner = _run(context);
+    _runner = runGuarded(() => _run(context));
   }
 
   Future<void> _run(CollectorContext context) async {
     final source = await _readPumpStatusSource(context);
+    if (_disposed) return;
     if (source.isPushBased) {
       logI(
         'Device status collector is idle because ${source.storageValue} '
@@ -45,8 +47,10 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
       if (last == null) {
         try {
           last = await _pollDeviceStatus(context);
+          if (_disposed) return;
           _handleDeviceStatus(context, last);
         } catch (e, st) {
+          if (_disposed) return;
           logW("Device status fetch failed: $e\n$st");
           ForegroundAlarmBridge.scheduleCollectTick(
             clock.now().add(_fallbackWait),
@@ -68,6 +72,7 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
       while (!_disposed) {
         try {
           final current = await _pollDeviceStatus(context);
+          if (_disposed) return;
 
           final isNewStatus = current.date.isAfter(knownLast.date);
 
@@ -78,6 +83,7 @@ class DeviceStatusCollector extends ForegroundCollector with Logging {
             break;
           }
         } catch (e, st) {
+          if (_disposed) return;
           logW("Device status fetch failed: $e\n$st");
         }
 

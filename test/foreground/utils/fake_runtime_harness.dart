@@ -5,6 +5,7 @@ import 'package:diabeatthis/foreground/event/internal/treatment_available_event.
 import 'package:diabeatthis/foreground/event/model/foreground_event.dart';
 import 'package:diabeatthis/foreground/providers/latest_bolus_wizard_provider.dart';
 import 'package:diabeatthis/foreground/runtime/deadline_waiter.dart';
+import 'package:diabeatthis/foreground/runtime/event_inbox.dart';
 import 'package:diabeatthis/foreground/runtime/runtime_input.dart';
 import 'package:diabeatthis/foreground/runtime/runtime_waiter.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancellation.dart';
@@ -27,6 +28,7 @@ class FakeRuntimeHarness {
   final List<String> logs = [];
 
   final List<RuntimeWaiter> _waiters = [];
+  final List<EventInbox<ForegroundEvent>> _inboxes = [];
 
   late final RuntimeContext runtimeContext;
 
@@ -43,6 +45,7 @@ class FakeRuntimeHarness {
       emitEvent: _emitEvent,
       emitSignal: _emitSignal,
       eventWaitFactory: _createEventWaitHandle,
+      eventInboxFactory: _openEventInbox,
       signalWaitFactory: _createSignalWaitHandle,
       deadlineWaitFactory: _createDeadlineWaitHandle,
       container: this.container,
@@ -50,8 +53,19 @@ class FakeRuntimeHarness {
     );
   }
 
+  EventInbox<T> _openEventInbox<T extends ForegroundEvent>() {
+    cancellation.throwIfCancelled();
+    late final EventInbox<T> inbox;
+    inbox = EventInbox<T>(onClose: () => _inboxes.remove(inbox));
+    _inboxes.add(inbox);
+    return inbox;
+  }
+
   void _emitEvent(ForegroundEvent event) {
     emittedEvents.add(event);
+    for (final inbox in _inboxes) {
+      inbox.add(event);
+    }
   }
 
   void _emitSignal(String signalKey) {
@@ -143,6 +157,9 @@ class FakeRuntimeHarness {
 
   void cancel() {
     cancellation.cancel();
+    for (final inbox in List<EventInbox<ForegroundEvent>>.of(_inboxes)) {
+      inbox.close();
+    }
 
     final error = const TaskCancelledException();
     final stack = StackTrace.current;
@@ -216,6 +233,11 @@ class FakeRuntimeHarness {
   }
 
   void _deliverInput(RuntimeInput input) {
+    if (input is RuntimeEventInput) {
+      for (final inbox in _inboxes) {
+        inbox.add(input.event);
+      }
+    }
     final snapshot = List<RuntimeWaiter>.from(_waiters);
 
     for (final waiter in snapshot) {

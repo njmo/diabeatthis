@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 
+import '../../../../../common/monitoring/activity_monitoring_phase.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
 import '../../../../../core/notifications/domain/events/temp_target_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -65,6 +66,10 @@ class MonitorUntilActivityExecutor extends ActivityMonitorStateExecutor {
       return const MonitorActiveActivityExecutor();
     }
 
+    activityMonitorContext.publishStatus(
+      runtimeContext,
+      ActivityMonitoringPhase.planned,
+    );
     final timeToActivity = startsAt.difference(clock.now());
     if (timeToActivity <= Duration.zero) {
       return const MonitorActiveActivityExecutor();
@@ -79,6 +84,10 @@ class MonitorUntilActivityExecutor extends ActivityMonitorStateExecutor {
       await runtimeContext.waitForDuration(waitTime);
     }
 
+    activityMonitorContext.publishStatus(
+      runtimeContext,
+      ActivityMonitoringPhase.preparing,
+    );
     while (startsAt.isAfter(clock.now())) {
       final activityLogId = activityMonitorContext.activityLogId;
       if (activityLogId == null) {

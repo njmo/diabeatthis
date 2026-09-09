@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 
 import '../../../../../common/events/data/notification/activity_finished_response_event.dart';
+import '../../../../../common/monitoring/activity_monitoring_phase.dart';
 import '../../../../../core/drift/entity/activity.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/notifications/domain/events/activity_finished_notification.dart';
@@ -54,6 +55,10 @@ class MonitorActiveActivityExecutor extends ActivityMonitorStateExecutor {
     RuntimeContext runtimeContext,
     ActivityMonitorContext activityMonitorContext,
   ) async {
+    activityMonitorContext.publishStatus(
+      runtimeContext,
+      ActivityMonitoringPhase.active,
+    );
     logI("MonitorActiveActivityExecutor");
 
     final activityLogId = activityMonitorContext.activityLogId;
@@ -86,6 +91,10 @@ class MonitorActiveActivityExecutor extends ActivityMonitorStateExecutor {
       activityMonitorContext.finishReminderShown = true;
     }
 
+    activityMonitorContext.publishStatus(
+      runtimeContext,
+      ActivityMonitoringPhase.waitingForFinish,
+    );
     final response = await runtimeContext
         .waitForEvent<ActivityFinishedResponseEvent>(
           predicate: (event) => event.activityLogId == activityLogId,
@@ -97,6 +106,10 @@ class MonitorActiveActivityExecutor extends ActivityMonitorStateExecutor {
         return const FinishActivityExecutor();
       },
       dismiss: (_) async {
+        activityMonitorContext.publishStatus(
+          runtimeContext,
+          ActivityMonitoringPhase.active,
+        );
         logI("User will finish activity manually");
         await runtimeContext.waitForEvent<ForegroundEvent>(
           predicate: (event) => _isActivityClosedEvent(event, activityLogId),

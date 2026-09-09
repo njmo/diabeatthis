@@ -9,6 +9,9 @@ abstract class WorkflowTask {
 
   bool get interruptable => false;
 
+  /// Published when this task returns or fails without being cancelled.
+  ForegroundEvent? get unexpectedStopEvent => null;
+
   Future<void> run(RuntimeContext context);
 }
 
@@ -16,22 +19,21 @@ abstract class InterruptableWorkflowTask extends WorkflowTask {
   @override
   bool get interruptable => true;
 
-  List<bool Function(ForegroundEvent)> get interruptableEventsMatcher => [
-  ];
+  List<bool Function(ForegroundEvent)> get interruptableEventsMatcher => [];
 
   bool shouldInterrupt(ForegroundEvent event) {
     return false;
   }
 
   Future<void> runLoop(
-      RuntimeContext context, {
-        ForegroundEvent? interruptedEvent,
-      });
+    RuntimeContext context, {
+    ForegroundEvent? interruptedEvent,
+  });
 
   Future<ForegroundEvent?> onInterrupted(
-      RuntimeContext context,
-      ForegroundEvent event,
-      ) async {
+    RuntimeContext context,
+    ForegroundEvent event,
+  ) async {
     return event;
   }
 

@@ -25,13 +25,14 @@ class NextActivityCollector extends ForegroundCollector {
           context.emitSignal('next_activity_db_changed');
         });
 
-    unawaited(_run(context));
+    unawaited(runGuarded(() => _run(context)));
   }
 
   Future<void> _run(CollectorContext context) async {
     while (!_disposed) {
       final db = context.container.read(databaseProvider);
       final current = await db.activityDao.getNearestActivityLog();
+      if (_disposed) return;
 
       if (current == null) {
         await _emitPreviousActivityEndIfNeeded(context);

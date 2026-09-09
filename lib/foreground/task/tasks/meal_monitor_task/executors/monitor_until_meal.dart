@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
+import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../core/domain/model/device_status.dart';
 import '../../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
@@ -247,6 +248,10 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       logI("No meal to monitor");
       return MealMonitorStateIdle();
     }
+    mealMonitorContext.publishStatus(
+      runtimeContext,
+      MealMonitoringPhase.planned,
+    );
     final mealPlannedAt = mealMonitorContext.activeMeal!.plannedAt!;
     final timeToMeal = mealPlannedAt.difference(clock.now());
     logI("Meal planned at ${mealPlannedAt.toIso8601String()}");
@@ -273,8 +278,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     final mealAdvisorBuffer = 5;
     if (timeToMealNormalized.inMinutes < mealAdvisorBuffer) {
       logI("User probably added new meal manually using quick method");
-      // will wait for user further actions.
-      return MealMonitorStateIdle();
+      // The meal remains current while the user continues in the app.
+      return MealMonitorStateIdle(phase: MealMonitoringPhase.waitingForUser);
     }
 
     var mealTempTargetDetected = false;
@@ -283,6 +288,14 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       final now = clock.now();
       final timeToMeal = normalizedMealTime.difference(now);
       final pathDecision = detectPathDecision(timeToMeal);
+      if (pathDecision != PathDecision.abort) {
+        mealMonitorContext.publishStatus(
+          runtimeContext,
+          pathDecision == PathDecision.waitUntilMealMonitorWindow
+              ? MealMonitoringPhase.planned
+              : MealMonitoringPhase.preparing,
+        );
+      }
       final maxWaitMinutes = minutesTillNextPath(timeToMeal);
       logI("Time now ${now.toIso8601String()}");
       logI("Path decision: $pathDecision");
@@ -504,7 +517,9 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 logI(
                   "No action from user, clicked on notification he will continue in-app",
                 );
-                nextExecutor = MealMonitorStateIdle();
+                nextExecutor = MealMonitorStateIdle(
+                  phase: MealMonitoringPhase.waitingForUser,
+                );
               },
             );
 

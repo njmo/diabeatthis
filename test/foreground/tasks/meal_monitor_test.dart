@@ -7,6 +7,7 @@ import 'package:diabeatthis/common/events/data/notification/meal_suggestion_resp
 import 'package:diabeatthis/common/events/data/notification/meal_summary_reminder_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/temp_target_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/temp_target_type.dart';
+import 'package:diabeatthis/common/monitoring/meal_monitoring_phase.dart';
 import 'package:diabeatthis/core/domain/model/bolus_calculator_result.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/core/domain/model/device_status.dart';
@@ -34,6 +35,7 @@ import 'package:diabeatthis/foreground/event/external/notification/notification_
 import 'package:diabeatthis/foreground/event/external/notification/notification_response_event_handler.dart';
 import 'package:diabeatthis/foreground/event/internal/data_available_event.dart';
 import 'package:diabeatthis/foreground/event/internal/meal_status_changed_event.dart';
+import 'package:diabeatthis/foreground/event/internal/monitoring_status_changed.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/providers/device_status_value_provider.dart';
 import 'package:diabeatthis/foreground/providers/latest_bolus_wizard_provider.dart';
@@ -684,6 +686,14 @@ void main() {
           _settle(async);
 
           expect(task.state, isA<BolusThenWaitExecutor>());
+          expect(
+            harness.emittedEvents
+                .whereType<MealMonitoringStatusChanged>()
+                .last
+                .status
+                .phase,
+            MealMonitoringPhase.waitingToEat,
+          );
 
           harness.dispatchEventToTask(
             task,
@@ -1295,6 +1305,14 @@ void main() {
           _settle(async);
 
           expect(task.state, isA<WaitForBolusExecutor>());
+          expect(
+            harness.emittedEvents
+                .whereType<MealMonitoringStatusChanged>()
+                .last
+                .status
+                .phase,
+            MealMonitoringPhase.waitingForBolus,
+          );
 
           _advanceMinutes(harness, async, 5);
 

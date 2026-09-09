@@ -19,6 +19,16 @@ class TaskCancellation {
     }
   }
 
+  Future<T> bind<T>(Future<T> operation) async {
+    throwIfCancelled();
+    final result = await Future.any<T>([
+      operation,
+      onCancel.then<T>((_) => throw const TaskCancelledException()),
+    ]);
+    throwIfCancelled();
+    return result;
+  }
+
   void throwIfCancelled() {
     if (_isCancelled) {
       throw const TaskCancelledException();

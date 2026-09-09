@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../../common/monitoring/meal_monitoring_phase.dart';
+import '../../../../common/monitoring/meal_monitoring_status.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../event/internal/meal_event.dart';
 import '../../../event/internal/meal_status_changed_event.dart';
+import '../../../event/internal/monitoring_status_changed.dart';
 import '../../../event/model/foreground_event.dart';
 import '../../base/runtime_context.dart';
 import '../../base/workflow_task.dart';
@@ -18,6 +21,11 @@ import 'meal_monitor_context.dart';
 import 'meal_monitor_transition.dart';
 
 class MealMonitorTask extends InterruptableWorkflowTask with Logging {
+  @override
+  ForegroundEvent get unexpectedStopEvent => const MealMonitoringStatusChanged(
+    MealMonitoringStatus(phase: MealMonitoringPhase.unavailable),
+  );
+
   @override
   List<bool Function(ForegroundEvent)> get interruptableEventsMatcher => [
     (e) => e is NextMealEvent,

@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 
+import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -59,6 +60,10 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
+    mealMonitorContext.publishStatus(
+      runtimeContext,
+      MealMonitoringPhase.waitingForBolus,
+    );
     final meal = mealMonitorContext.activeMeal!;
     final status = meal.status;
     if (status == 'skipped' || status == 'summarized') {

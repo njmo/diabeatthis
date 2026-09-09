@@ -27,11 +27,12 @@ class GlucoseCollector extends ForegroundCollector {
   @override
   void start(CollectorContext context) {
     logI('Starting glucose collector');
-    _runner = _run(context);
+    _runner = runGuarded(() => _run(context));
   }
 
   Future<void> _run(CollectorContext context) async {
     final bgSource = await _readBgSource(context);
+    if (_disposed) return;
 
     if (bgSource.isPushBased) {
       logI(
@@ -46,10 +47,12 @@ class GlucoseCollector extends ForegroundCollector {
       if (last == null) {
         try {
           last = await _pollGlucose(context);
+          if (_disposed) return;
           if (last != null) {
             _handleGlucose(context, last);
           }
         } catch (e, st) {
+          if (_disposed) return;
           logW('Glucose fetch failed: $e\n$st');
         }
 
@@ -73,12 +76,14 @@ class GlucoseCollector extends ForegroundCollector {
       while (!_disposed) {
         try {
           final current = await _pollGlucose(context);
+          if (_disposed) return;
           if (current != null && current.date.isAfter(knownLast.date)) {
             last = current;
             _handleGlucose(context, current);
             break;
           }
         } catch (e, st) {
+          if (_disposed) return;
           logW('Glucose fetch failed: $e\n$st');
         }
 

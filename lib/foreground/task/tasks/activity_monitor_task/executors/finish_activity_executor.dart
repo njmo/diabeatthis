@@ -1,3 +1,4 @@
+import '../../../../../common/monitoring/activity_monitoring_phase.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../activity_monitor_context.dart';
@@ -23,6 +24,10 @@ class FinishActivityExecutor extends ActivityMonitorStateExecutor {
     RuntimeContext runtimeContext,
     ActivityMonitorContext activityMonitorContext,
   ) async {
+    activityMonitorContext.publishStatus(
+      runtimeContext,
+      ActivityMonitoringPhase.idle,
+    );
     logI("FinishActivityExecutor");
     activityMonitorContext.clear();
 
