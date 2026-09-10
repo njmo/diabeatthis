@@ -15,6 +15,8 @@ import '../../../../../core/domain/model/temporary_target.dart';
 import '../../../../../core/domain/model/treat.dart';
 import '../../../../../core/domain/model/treatment_base.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
+import '../../../../low_treatment/data/providers/recorded_low_treatment_repository_provider.dart';
+import '../../../../low_treatment/domain/models/recorded_low_treatment.dart';
 import '../../models/meal_analysis_data.dart';
 import '../../models/meal_details_data.dart';
 
@@ -84,7 +86,11 @@ class AnalyzeMealUseCase {
       eventStart,
       eventEnd,
     );
+    final lowTreatments = await ref
+        .read(recordedLowTreatmentRepositoryProvider)
+        .fetchBetween(eventStart, eventEnd);
     final timelineEvents = _buildTimelineEvents(
+      lowTreatments: lowTreatments,
       details: details,
       treatments: treatments,
       activities: linkedActivities,
@@ -100,6 +106,7 @@ class AnalyzeMealUseCase {
       mealTime: mealTime,
       glucoseReadings: glucose,
       treatments: treatments,
+      lowTreatments: lowTreatments,
       temporaryTargets: temporaryTargets,
       deviceStatuses: deviceStatuses,
       linkedActivities: linkedActivities,
@@ -152,10 +159,14 @@ class AnalyzeMealUseCase {
   List<MealTimelineEventData> _buildTimelineEvents({
     required MealDetailsData details,
     required List<Treatment> treatments,
+    required List<RecordedLowTreatment> lowTreatments,
     required List<MealLinkedActivityData> activities,
     required List<MealLinkedMealData> meals,
   }) {
     final wizardGrouping = BolusWizardGrouping(treatments);
+    final relatedLowTreatmentIds = details.lowTreatments
+        .map((treatment) => treatment.meal.id)
+        .toSet();
     final events = <MealTimelineEventData>[
       MealTimelineEventData(
         timestamp: details.analysisTime,
@@ -190,6 +201,11 @@ class AnalyzeMealUseCase {
         );
       }),
       ...details.lowTreatments.map(_lowTreatmentEvent),
+      ...lowTreatments
+          .where(
+            (treatment) => !relatedLowTreatmentIds.contains(treatment.mealId),
+          )
+          .map(_recordedLowTreatmentEvent),
     ]..sort((a, b) => a.timestamp.compareTo(b.timestamp));
     return events;
   }
@@ -247,6 +263,20 @@ class AnalyzeMealUseCase {
 
   String _lowTreatmentIngredientValue(MealIngredientDetailsData ingredient) {
     return '${ingredient.ingredientName} ${_formatNumber(ingredient.consumedTotalGrams)} g';
+  }
+
+  MealTimelineEventData _recordedLowTreatmentEvent(
+    RecordedLowTreatment treatment,
+  ) {
+    final carbs = treatment.netCarbsGrams;
+    return MealTimelineEventData(
+      timestamp: treatment.eatenAt,
+      type: MealTimelineEventType.lowTreatment,
+      label: 'Dosłodzenie',
+      value: carbs == null
+          ? 'Ilość nieznana'
+          : '${_formatNumber(carbs)} g netto',
+    );
   }
 
   MealTimelineEventData _treatmentEvent(Treatment treatment) {

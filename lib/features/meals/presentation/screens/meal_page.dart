@@ -9,6 +9,7 @@ import '../../data/models/meal_start_context_data.dart';
 import '../controllers/meal_details_controller.dart';
 import '../models/meal_page_state.dart';
 import '../widgets/meal_details/meal_activity_analysis_section.dart';
+import '../widgets/meal_details/meal_advice_history_section.dart';
 import '../widgets/meal_details/meal_advisor_result_section.dart';
 import '../widgets/meal_details/meal_basic_info_section.dart';
 import '../widgets/meal_details/meal_charts_section.dart';
@@ -142,6 +143,11 @@ class MealPageBody extends HookConsumerWidget {
             MealSnapshotsSection(details: details),
             MealNutritionAnalysisSection(details: details),
             MealAdvisorResultSection(details: details),
+            if (details.meal.isEaten)
+              MealAdviceHistorySection(
+                details: details,
+                analysis: state.analysis,
+              ),
             if (details.meal.isEaten && state.analysis != null)
               MealComparisonSection(
                 details: details,

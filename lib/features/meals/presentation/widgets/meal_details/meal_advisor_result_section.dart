@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/meal/stored_meal_decision.dart';
 import '../../../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import '../../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../data/models/meal_details_data.dart';
@@ -28,7 +29,7 @@ class MealAdvisorResultSection extends StatelessWidget {
         else ...[
           MealInfoRow(
             label: context.lang.mealAdvisorResultLabel,
-            value: decision.result,
+            value: storedMealDecisionLabel(decision.result),
           ),
           MealInfoRow(
             label: context.lang.mealAdvisorInitialWaitLabel,

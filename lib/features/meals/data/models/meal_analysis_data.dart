@@ -9,6 +9,7 @@ import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../../core/domain/model/treatment_base.dart';
+import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
 
 class MealAnalysisData {
   final DateTime chartStart;
@@ -19,6 +20,7 @@ class MealAnalysisData {
   final DateTime mealTime;
   final List<Glucose> glucoseReadings;
   final List<Treatment> treatments;
+  final List<RecordedLowTreatment> lowTreatments;
   final List<TemporaryTarget> temporaryTargets;
   final List<DeviceStatus> deviceStatuses;
   final List<MealLinkedActivityData> linkedActivities;
@@ -34,6 +36,7 @@ class MealAnalysisData {
     required this.mealTime,
     required this.glucoseReadings,
     required this.treatments,
+    this.lowTreatments = const [],
     required this.temporaryTargets,
     required this.deviceStatuses,
     required this.linkedActivities,
