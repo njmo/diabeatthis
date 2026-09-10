@@ -10,8 +10,8 @@ import '../../../../../core/notifications/domain/events/temp_target_notification
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../../features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
-import '../../../../../features/dashboard/data/utils/nightscout_utils.dart';
 import '../../../../../features/meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
+import '../../../../../features/meal_advisor/data/providers/get_meal_advice_use_case_provider.dart';
 import '../../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../../../features/meals/data/providers/meal_ingredients_list_provider.dart';
@@ -212,31 +212,6 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     return alignToNextCgmReading(mealPlannedAt, deviceStatus.date);
   }
 
-  MealAdvice getMealAdvice(
-    MealMacroSummary mealStatus,
-    DeviceStatus deviceStatus,
-    ExtendedCarbsScheduleSettings extendedCarbsScheduleSettings,
-  ) {
-    final carbs = mealStatus.netCarbsGrams;
-    final fatGrams = mealStatus.fatGrams;
-    final fiberGrams = mealStatus.fiberGrams;
-    final proteinGrams = mealStatus.proteinGrams;
-    return MealAdvisor(
-      config: MealAdvisorConfig(
-        extendedCarbsScheduleSettings: extendedCarbsScheduleSettings,
-      ),
-    ).getMealAdvice(
-      bg: deviceStatus.bg,
-      iob: deviceStatus.iob,
-      cob: deviceStatus.cob,
-      trend: (parseTick(deviceStatus.tick) / 5).round(),
-      mealCarbs: carbs,
-      fatGrams: fatGrams,
-      proteinGrams: proteinGrams,
-      fiberGrams: fiberGrams,
-    );
-  }
-
   @override
   Future<MealMonitorStateExecutor> execute(
     RuntimeContext runtimeContext,
@@ -378,11 +353,13 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 logI(
                   'deviceStatus: $iterationsLeft date ${deviceStatus.date.toIso8601String()} now ${clock.now().toIso8601String()} meal planned at ${mealPlannedAt.toIso8601String()}',
                 );
-                advice = getMealAdvice(
-                  mealStatus,
-                  deviceStatus,
-                  extendedCarbsScheduleSettings,
-                );
+                advice = runtimeContext.container
+                    .read(getMealAdviceUseCaseProvider)
+                    .call(
+                      macros: mealStatus,
+                      deviceStatus: deviceStatus,
+                      settings: extendedCarbsScheduleSettings,
+                    );
 
                 final iterationsRemaining = iterationsLeft - 1;
                 final minutesLeft = iterationsRemaining * 5;

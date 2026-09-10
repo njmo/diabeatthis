@@ -10,6 +10,8 @@ class MealAdvisorResultDriftMapper {
     return PersistedMealAdvisorResult(
       mealId: data.mealId,
       result: data.result,
+      decisionReason: data.decisionReason,
+      version: data.version,
       initialWaitTime: data.initialWaitTime,
       finalWaitTime: data.finalWaitTime,
       waitTimeIgnored: data.waitTimeIgnored,
@@ -25,6 +27,8 @@ class MealAdvisorResultDriftMapper {
     return MealAdvisorResultCompanion(
       mealId: Value(result.mealId),
       result: Value(result.result),
+      decisionReason: Value(result.decisionReason),
+      createdAt: Value(result.createdAt),
       initialWaitTime: Value(result.initialWaitTime),
       finalWaitTime: Value(result.finalWaitTime),
       waitTimeIgnored: Value(result.waitTimeIgnored),
@@ -32,7 +36,7 @@ class MealAdvisorResultDriftMapper {
       extendedCarbsDeliveryMode: Value(result.extendedCarbsDeliveryMode),
       extendedCarbsDelayMinutes: Value(result.extendedCarbsDelayMinutes),
       extendedCarbsDurationMinutes: Value(result.extendedCarbsDurationMinutes),
-      version: Value(result.source == 'manual' ? null : 2),
+      version: Value(result.source == 'manual' ? null : result.version),
     );
   }
 }

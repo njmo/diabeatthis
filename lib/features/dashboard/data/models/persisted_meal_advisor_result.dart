@@ -1,6 +1,8 @@
 class PersistedMealAdvisorResult {
   String get source => result == 'manual' ? 'manual' : 'mealAdvisor';
   final int mealId;
+  final String? decisionReason;
+  final int? version;
   final String result;
   final int initialWaitTime;
   final int finalWaitTime;
@@ -13,6 +15,8 @@ class PersistedMealAdvisorResult {
 
   const PersistedMealAdvisorResult({
     required this.mealId,
+    this.decisionReason,
+    this.version = 2,
     required this.result,
     required this.initialWaitTime,
     required this.finalWaitTime,

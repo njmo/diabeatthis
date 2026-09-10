@@ -1,10 +1,12 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/meal/manual_meal_decision.dart';
+import '../../../core/domain/model/meal_macro_summary.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/meal_advice_pending_notification.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
+import '../../meal_advisor/data/providers/get_meal_advice_use_case_provider.dart';
 import '../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import '../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../meals/data/providers/meal_activation_guard_provider.dart';
@@ -36,14 +38,6 @@ class MealDialogController extends _$MealDialogController with Logging {
         "(zakres ${w.minMinutes}–${w.maxMinutes} min) przed rozpoczęciem posiłku.";
   }
 
-  int parseTick(String? tickRaw) {
-    if (tickRaw == null) return 0;
-    final cleaned = tickRaw.trim().replaceAll(',', '.');
-    return int.tryParse(cleaned) ??
-        int.tryParse(cleaned.replaceAll('+', '')) ??
-        0;
-  }
-
   Future<MealAdvice?> _getAdvice(
     double carbs,
     double fatGrams,
@@ -54,20 +48,20 @@ class MealDialogController extends _$MealDialogController with Logging {
     final deviceStatusValue = ref.read(deviceStatusUiProvider);
     if (deviceStatusValue == null) return null;
 
-    return MealAdvisor(
-      config: MealAdvisorConfig(
-        extendedCarbsScheduleSettings: extendedCarbsScheduleSettings,
-      ),
-    ).getMealAdvice(
-      bg: deviceStatusValue.bg,
-      iob: deviceStatusValue.iob,
-      cob: deviceStatusValue.cob,
-      trend: (parseTick(deviceStatusValue.tick) / 5).round(),
-      mealCarbs: carbs,
-      fatGrams: fatGrams,
-      proteinGrams: proteinGrams,
-      fiberGrams: fiberGrams,
-    );
+    return ref
+        .read(getMealAdviceUseCaseProvider)
+        .call(
+          macros: MealMacroSummary(
+            carbsGrams: carbs,
+            netCarbsGrams: carbs,
+            fatGrams: fatGrams,
+            proteinGrams: proteinGrams,
+            fiberGrams: fiberGrams,
+            totalGrams: 0,
+          ),
+          deviceStatus: deviceStatusValue,
+          settings: extendedCarbsScheduleSettings,
+        );
   }
 
   Future<void> chooseEat({ManualMealDecision? manual}) async {
