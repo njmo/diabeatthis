@@ -27,9 +27,18 @@ abstract class DeviceStatus with _$DeviceStatus {
     required DeviceStatusSource source,
     required DateTime date,
     required double iob,
+    @Default(true) bool hasIob,
+    @Default(true) bool hasCob,
     required double basalIob,
     required double bolusIob,
+
+    /// Modelled total insulin activity in units per minute, supplied by AAPS.
     required double insulinActivity,
+    @Default(true) bool hasInsulinActivity,
+    DateTime? insulinActivityAt,
+
+    /// Original AAPS prediction timestamp and named series, encoded as JSON.
+    String? aapsPredictionsJson,
     required double cob,
     required String tick,
     required int bg,

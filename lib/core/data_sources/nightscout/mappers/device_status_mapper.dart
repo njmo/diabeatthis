@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../../domain/model/device_status.dart';
 import '../dto/device_status_dto.dart';
 
@@ -10,8 +12,7 @@ extension DeviceStatusMapper on DeviceStatusDto {
     final iobData = _iobData(openaps?['iob']);
     final totalIob =
         (iobData['iob'] as num?)?.toDouble() ??
-        (suggested['IOB'] as num?)?.toDouble() ??
-        0;
+        (suggested['IOB'] as num?)?.toDouble();
     final basalIob = (iobData['basaliob'] as num?)?.toDouble() ?? 0;
     final pumpExtended = _mapValue(pump?['extended']);
 
@@ -19,10 +20,22 @@ extension DeviceStatusMapper on DeviceStatusDto {
       externalId: id,
       source: source,
       date: DateTime.parse(createdAt).toLocal(),
-      iob: totalIob,
+      iob: totalIob ?? 0,
+      hasIob: totalIob != null,
+      hasCob: suggested['COB'] is num,
       basalIob: basalIob,
-      bolusIob: totalIob - basalIob,
+      bolusIob: (totalIob ?? 0) - basalIob,
       insulinActivity: (iobData['activity'] as num?)?.toDouble() ?? 0,
+      hasInsulinActivity: iobData['activity'] is num,
+      insulinActivityAt: iobData['time'] is String
+          ? DateTime.tryParse(iobData['time'] as String)
+          : null,
+      aapsPredictionsJson: suggested['predBGs'] is Map
+          ? jsonEncode({
+              'timestamp': suggested['timestamp'],
+              'predBGs': suggested['predBGs'],
+            })
+          : null,
       cob: (suggested['COB'] as num?)?.toDouble() ?? 0,
       tick: (suggested['tick'] as String?) ?? '',
       bg: (suggested['bg'] as num?)?.toInt() ?? 0,

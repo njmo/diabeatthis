@@ -167,6 +167,10 @@ void main() {
         'INSERT INTO glucose_reading (source, external_id, created_at, received_at, sgv, direction) SELECT source, external_id, created_at, received_at, sgv, direction FROM glucose_reading_new',
       );
       raw.execute('DROP TABLE glucose_reading_new');
+      raw.execute(
+        'ALTER TABLE device_status DROP COLUMN aaps_predictions_json',
+      );
+      raw.execute('ALTER TABLE device_status DROP COLUMN insulin_activity_at');
       raw.execute('PRAGMA user_version = 16');
       raw.dispose();
       final upgraded = DatabaseImpl(NativeDatabase(file));

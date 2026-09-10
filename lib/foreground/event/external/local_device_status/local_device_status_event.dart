@@ -1,5 +1,6 @@
 import '../../../../core/data_sources/nightscout/dto/device_status_dto.dart';
 import '../../../../core/data_sources/nightscout/mappers/device_status_mapper.dart';
+import '../../../../core/domain/model/aaps_prediction_snapshot.dart';
 import '../../../../core/domain/model/device_status.dart';
 
 class LocalDeviceStatusEvent {
@@ -21,8 +22,9 @@ class LocalDeviceStatusEvent {
       'created_at': data.date.toIso8601String(),
       'openaps': {
         'suggested': {
-          'IOB': data.iob,
-          'COB': data.cob,
+          ...?AapsPredictionSnapshot.decode(data.aapsPredictionsJson)?.toJson(),
+          if (data.hasIob) 'IOB': data.iob,
+          if (data.hasCob) 'COB': data.cob,
           'tick': data.tick,
           'bg': data.bg,
           'carbsReq': data.carbsReq,
@@ -31,9 +33,11 @@ class LocalDeviceStatusEvent {
           'isfMgdlForCarbs': data.isfMgdlForCarbs,
         },
         'iob': {
-          'iob': data.iob,
+          if (data.hasIob) 'iob': data.iob,
           'basaliob': data.basalIob,
-          'activity': data.insulinActivity,
+          if (data.hasInsulinActivity) 'activity': data.insulinActivity,
+          if (data.insulinActivityAt != null)
+            'time': data.insulinActivityAt!.toIso8601String(),
         },
       },
       'pump': {
