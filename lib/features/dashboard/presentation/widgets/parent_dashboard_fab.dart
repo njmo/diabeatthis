@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/anchored_fab_menu.dart';
 import '../../../../common/widgets/fab_action_option.dart';
 import '../../../manual_events/presentation/widgets/manual_event_sheet.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
@@ -16,10 +17,11 @@ class ParentDashboardFAB extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final open = useState(false);
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
+    return AnchoredFabMenu(
+      open: open.value,
+      onToggle: () => open.value = !open.value,
+      onDismiss: () => open.value = false,
+      actions: [
         if (open.value) ...[
           FabActionOption(
             icon: Icons.event_note_outlined,
@@ -56,12 +58,7 @@ class ParentDashboardFAB extends HookConsumerWidget {
               open.value = false;
             },
           ),
-          const SizedBox(height: 16),
         ],
-        FloatingActionButton(
-          onPressed: () => open.value = !open.value,
-          child: Icon(open.value ? Icons.close : Icons.add),
-        ),
       ],
     );
   }
