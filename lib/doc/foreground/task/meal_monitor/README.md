@@ -10,7 +10,8 @@ Meal monitor to foreground task odpowiedzialny za prowadzenie uzytkownika od zap
 - Normalizuje czas posilku do rytmu odczytow CGM, uzywajac ostatniego `DeviceStatus`.
 - Przed posilkiem dzieli prace na okna: oczekiwanie do okna monitorowania, sugestie temp targetu oraz meal advisor.
 - W oknie temp targetu prosi o ustawienie meal temp targetu, gdy glikemia jest powyzej 100.
-- Ponawia prosbe o meal temp target co 5 minut, az collector treatments wykryje `TemporaryTarget` albo monitor przejdzie do kolejnego okna.
+- Przed pierwsza prosba i kazdym ponowieniem sprawdza cache synchronizacji: dowolny aktywny temp target wycisza przypomnienie.
+- Ponawia prosbe o meal temp target co 5 minut, az wykryje aktywny `TemporaryTarget` w cache lub zdarzeniu treatments albo monitor przejdzie do kolejnego okna.
 - W oknie meal advisor zbiera makroskladniki posilku oraz aktualny `DeviceStatus`.
 - Wylicza rekomendacje: jedz teraz i bolus pozniej, bolus i jedz teraz albo bolus, poczekaj i dopiero jedz.
 - Wysyla powiadomienie z rekomendacja i czeka na decyzje uzytkownika.
@@ -43,6 +44,6 @@ Meal monitor to foreground task odpowiedzialny za prowadzenie uzytkownika od zap
 
 ## Obecne ograniczenia
 
-- Wykrycie ustawienia temp targetu opiera sie na pojawieniu sie `TreatmentAvailableEvent<TemporaryTarget>`, bez dodatkowego sprawdzenia, czy target na pewno dotyczy konkretnego posilku.
+- Wykrycie temp targetu korzysta z cache synchronizacji i `TreatmentAvailableEvent<TemporaryTarget>`. Target musi byc wazny i aktualnie aktywny; nie musi dotyczyc konkretnego posilku.
 - Jesli brakuje aktualnego `DeviceStatus` albo danych makro, monitor czesto wraca do idle zamiast prowadzic alternatywny przeplyw naprawczy.
 - Czesc timeoutow i progow jest obecnie zaszyta w executorach, na przyklad 5 minut dla ponawiania, 20 minut dla treatmentu z kalkulatora i 2 minuty dla przypomnienia o podsumowaniu.

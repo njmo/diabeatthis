@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
+import '../../../../../common/monitoring/is_temporary_target_active.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../core/domain/model/device_status.dart';
 import '../../../../../core/domain/model/meal_macro_summary.dart';
@@ -26,6 +27,7 @@ import '../../../../event/internal/treatment_available_event.dart';
 import '../../../../event/model/foreground_event.dart';
 import '../../../../providers/device_status_value_provider.dart';
 import '../../../../runtime/wait_handle.dart';
+import '../../../../synchronization/synchronization_cache_controller.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
 import 'detect_finished_eating_executor.dart';
@@ -128,6 +130,15 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     final deadline = clock.now().add(maxWait);
 
     while (clock.now().isBefore(deadline)) {
+      final target = context.container
+          .read(synchronizationCacheControllerProvider)
+          .cache
+          .targetCache;
+      if (isTemporaryTargetActive(target)) {
+        logI("Active temporary target already available");
+        return true;
+      }
+
       logI("showing temp target suggestion notification");
       showTempTargetNotification(context, mealId);
 
@@ -139,7 +150,10 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       final targetEvent = await context
           .waitForEventWithTimeoutOrNull<
             TreatmentAvailableEvent<TemporaryTarget>
-          >(waitTime);
+          >(
+            waitTime,
+            predicate: (event) => isTemporaryTargetActive(event.data),
+          );
 
       if (targetEvent != null) {
         logI("Meal temp target detected");
