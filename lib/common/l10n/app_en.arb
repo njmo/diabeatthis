@@ -936,5 +936,73 @@
   "historyBgCheck": "Glucose measurement",
   "historyGlucoseMeter": "Glucose meter",
   "historyGlucoseSensor": "Sensor",
-  "historyGlucoseManual": "Manual measurement"
+  "historyGlucoseManual": "Manual measurement",
+  "dashboardDayTab": "Day",
+  "dayDraftTitle": "Today · draft",
+  "dayRefresh": "Refresh",
+  "daySourceUnavailable": "Data unavailable. Try refreshing.",
+  "dayGlucoseMean": "Time-weighted mean",
+  "dayGlucoseExtremes": "Reading minimum–maximum",
+  "dayInRange": "In range 70–180 mg/dl",
+  "dayBelowRange": "Below 70 mg/dl",
+  "dayAboveRange": "Above 180 mg/dl",
+  "dayCoverage": "CGM coverage",
+  "dayGlucoseMethod": "Range percentages use observed time. Each sample covers at most 5 minutes; gaps remain unknown.",
+  "dayInsulinTitle": "Insulin · recorded deliveries",
+  "dayRecordedBoluses": "Recorded bolus total",
+  "dayManualBoluses": "Manual boluses, including Wizard",
+  "dayCorrectionBoluses": "Correction boluses",
+  "dayNightBoluses": "Boluses in the night window",
+  "dayInsulinLimit": "The total excludes basal and is not total daily insulin. History does not confirm delivery completeness or distinguish SMB from other corrections.",
+  "dayMealsTitle": "Meals and low treatments",
+  "dayMealsCount": "Started or eaten meals",
+  "dayCarbs": "Net carbohydrates",
+  "dayProtein": "Protein",
+  "dayFat": "Fat",
+  "dayMacroLimit": "Partial or planned macros: {planned} planned meals, {missing} without a summary.",
+  "dayLowCount": "Confirmed low treatments",
+  "dayLowCarbs": "Known low-treatment carbohydrates",
+  "dayLowUnknown": "Some low treatments have no recorded carbohydrate amount.",
+  "dayLocalMealsNote": "Meals and low treatments recorded in this app. AAPS carbohydrate entries are not counted again as separate meals.",
+  "dayActivityTitle": "Activities",
+  "dayNoActivities": "No recorded activities in this period.",
+  "dayOngoing": "ongoing",
+  "dayAsOf": "Data through {time}",
+  "dayPartialFailure": "Some sources are unavailable. Other results are shown below.",
+  "dayGlucoseTitle": "Glucose since midnight",
+  "dayNightTitle": "Last night · 22:00–06:00",
+  "dayNightNote": "Night is a clock window, not measured sleep. Before 06:00 only elapsed time is shown. Night boluses are not added again to the day total.",
+  "@dayMacroLimit": {
+    "placeholders": {
+      "planned": {
+        "type": "int"
+      },
+      "missing": {
+        "type": "int"
+      }
+    }
+  },
+  "@dayAsOf": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dayDevicesTitle": "Sensor and pod",
+  "daySensorAge": "Sensor age",
+  "dayPodAge": "Pod / infusion-site age",
+  "dayDeviceAgeUnknown": "No recorded change",
+  "dayDeviceAgeValue": "{days} days {hours} hours",
+  "dayDeviceAgeSource": "Nightscout: sensor and insulin changes. For Omnipod DASH, insulin change is treated as pod/site change. Age at the data update time.",
+  "@dayDeviceAgeValue": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  }
 }

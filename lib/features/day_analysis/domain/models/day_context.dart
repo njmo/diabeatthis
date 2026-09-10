@@ -1,0 +1,56 @@
+import '../../../../common/history/glucose_period_summary.dart';
+import '../../../../common/history/insulin_bolus_summary.dart';
+import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
+import 'day_activity_summary.dart';
+import 'day_meal_summary.dart';
+
+enum DayDataSource {
+  glucose,
+  treatments,
+  meals,
+  lowTreatments,
+  activities,
+  sensorAge,
+  podAge,
+}
+
+/// An on-demand draft. Null means unavailable, not an empty or zero result.
+class DayContext {
+  final DateTime start;
+  final DateTime asOf;
+  final DateTime builtAt;
+  final GlucosePeriodSummary? glucose;
+  final GlucosePeriodSummary? nightGlucose;
+  final InsulinBolusSummary? boluses;
+  final InsulinBolusSummary? nightBoluses;
+  final DayMealSummary? meals;
+  final List<RecordedLowTreatment>? lowTreatments;
+  final List<DayActivitySummary>? activities;
+
+  /// Nightscout Sensor Change, evaluated at asOf.
+  final Duration? sensorAge;
+
+  /// Nightscout Insulin Change; interpreted as pod age for Omnipod DASH.
+  final Duration? podAge;
+  final Set<DayDataSource> failedSources;
+
+  DayContext({
+    this.sensorAge,
+    this.podAge,
+    required this.start,
+    required this.asOf,
+    required this.builtAt,
+    required this.glucose,
+    required this.nightGlucose,
+    required this.boluses,
+    required this.nightBoluses,
+    required this.meals,
+    required List<RecordedLowTreatment>? lowTreatments,
+    required List<DayActivitySummary>? activities,
+    required Set<DayDataSource> failedSources,
+  }) : lowTreatments = lowTreatments == null
+           ? null
+           : List.unmodifiable(lowTreatments),
+       activities = activities == null ? null : List.unmodifiable(activities),
+       failedSources = Set.unmodifiable(failedSources);
+}

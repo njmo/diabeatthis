@@ -1064,5 +1064,73 @@
   "historyBgCheck": "Pomiar glikemii",
   "historyGlucoseMeter": "Glukometr",
   "historyGlucoseSensor": "Sensor",
-  "historyGlucoseManual": "Pomiar ręczny"
+  "historyGlucoseManual": "Pomiar ręczny",
+  "dashboardDayTab": "Dzień",
+  "dayDraftTitle": "Dzisiaj · wersja robocza",
+  "dayRefresh": "Odśwież",
+  "daySourceUnavailable": "Nie udało się pobrać danych. Spróbuj odświeżyć.",
+  "dayGlucoseMean": "Średnia ważona czasem",
+  "dayGlucoseExtremes": "Minimum–maksimum odczytów",
+  "dayInRange": "W zakresie 70–180 mg/dl",
+  "dayBelowRange": "Poniżej 70 mg/dl",
+  "dayAboveRange": "Powyżej 180 mg/dl",
+  "dayCoverage": "Pokrycie odczytami CGM",
+  "dayGlucoseMethod": "Procenty zakresów dotyczą czasu z odczytami. Próbka reprezentuje najwyżej 5 minut; luki pozostają nieznane.",
+  "dayInsulinTitle": "Insulina · zapisane podania",
+  "dayRecordedBoluses": "Suma zapisanych bolusów",
+  "dayManualBoluses": "Bolusy ręczne, także z Wizarda",
+  "dayCorrectionBoluses": "Bolusy korekcyjne",
+  "dayNightBoluses": "Bolusy w oknie nocy",
+  "dayInsulinLimit": "Suma nie obejmuje bazy i nie jest całkowitą dawką dobową. Historia nie potwierdza kompletności podań ani nie rozróżnia SMB od innych korekt.",
+  "dayMealsTitle": "Posiłki i dosłodzenia",
+  "dayMealsCount": "Rozpoczęte lub zjedzone posiłki",
+  "dayCarbs": "Węglowodany netto",
+  "dayProtein": "Białko",
+  "dayFat": "Tłuszcz",
+  "dayMacroLimit": "Makro częściowe lub planowane: {planned} posiłków z planu, {missing} bez podsumowania.",
+  "dayLowCount": "Potwierdzone dosłodzenia",
+  "dayLowCarbs": "Znane węglowodany z dosłodzeń",
+  "dayLowUnknown": "Nie wszystkie dosłodzenia mają zapisaną ilość węglowodanów.",
+  "dayLocalMealsNote": "Posiłki i dosłodzenia z zapisów aplikacji. Wpisy węglowodanów AAPS nie są liczone ponownie jako osobne posiłki.",
+  "dayActivityTitle": "Aktywności",
+  "dayNoActivities": "Brak zapisanych aktywności w tym okresie.",
+  "dayOngoing": "w trakcie",
+  "dayAsOf": "Dane do {time}",
+  "dayPartialFailure": "Część źródeł jest niedostępna. Pozostałe wyniki pokazano poniżej.",
+  "dayGlucoseTitle": "Glikemia od północy",
+  "dayNightTitle": "Ostatnia noc · 22:00–06:00",
+  "dayNightNote": "Noc to przedział godzinowy, nie pomiar snu. Przed 06:00 pokazujemy tylko część, która upłynęła. Nocnych bolusów nie dodajemy ponownie do sumy dnia.",
+  "@dayMacroLimit": {
+    "placeholders": {
+      "planned": {
+        "type": "int"
+      },
+      "missing": {
+        "type": "int"
+      }
+    }
+  },
+  "@dayAsOf": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dayDevicesTitle": "Sensor i pod",
+  "daySensorAge": "Wiek sensora",
+  "dayPodAge": "Wiek poda / wkłucia",
+  "dayDeviceAgeUnknown": "Brak zapisu wymiany",
+  "dayDeviceAgeValue": "{days} dni {hours} godz.",
+  "dayDeviceAgeSource": "Nightscout: wymiana sensora i wymiana insuliny. Dla Omnipod DASH wymianę insuliny traktujemy jako wymianę poda/wkłucia. Wiek na moment aktualizacji danych.",
+  "@dayDeviceAgeValue": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  }
 }
