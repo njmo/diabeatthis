@@ -10,8 +10,10 @@ import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../../core/domain/model/treatment_base.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
+import '../../../meal_analysis/domain/models/meal_outcome_context.dart';
 
 class MealAnalysisData {
+  final MealOutcomeContext? outcomeContext;
   final DateTime chartStart;
   final DateTime chartEnd;
   final DateTime expectedChartEnd;
@@ -28,6 +30,7 @@ class MealAnalysisData {
   final List<MealTimelineEventData> timelineEvents;
 
   const MealAnalysisData({
+    this.outcomeContext,
     required this.chartStart,
     required this.chartEnd,
     required this.expectedChartEnd,

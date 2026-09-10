@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../common/history/bolus_wizard_grouping.dart';
+import '../../../../../common/history/treatment_overlaps_window.dart';
 import '../../../../../core/data_sources/providers/on_demand_history_repositories_provider.dart';
 import '../../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../../core/domain/model/bg_check.dart';
@@ -17,6 +18,11 @@ import '../../../../../core/domain/model/treatment_base.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../low_treatment/data/providers/recorded_low_treatment_repository_provider.dart';
 import '../../../../low_treatment/domain/models/recorded_low_treatment.dart';
+import '../../../../meal_analysis/data/repositories/meal_context_local_history_repository.dart';
+import '../../../../meal_analysis/domain/models/meal_activity_observation.dart';
+import '../../../../meal_analysis/domain/models/meal_observation_window.dart';
+import '../../../../meal_analysis/domain/models/recorded_meal_context.dart';
+import '../../../../meal_analysis/domain/use_cases/build_meal_outcome_context_use_case.dart';
 import '../../models/meal_analysis_data.dart';
 import '../../models/meal_details_data.dart';
 
@@ -62,20 +68,26 @@ class AnalyzeMealUseCase {
     final deviceStatusRepository = onDemand != null
         ? onDemand.deviceStatuses
         : await ref.read(deviceStatusHistoryRepositoryProvider.future);
-    final glucose = await glucoseRepository.fetchGlucoseBetween(
-      chartStart,
-      chartEnd,
-    );
-    final treatments = await treatmentRepository.fetchTreatmentsBetween(
-      eventStart,
-      eventEnd,
-    );
-    final targetTreatments = await treatmentRepository.fetchTreatmentsBetween(
-      targetFetchStart,
-      chartEnd,
-    );
-    final deviceStatuses = await deviceStatusRepository
-        .fetchDeviceStatusBetween(chartStart, chartEnd);
+    // One treatment fetch serves the existing timeline, targets and overlapping
+    // earlier eCarbs schedules. Keep the timeline's original event window.
+    final treatmentHistoryStart = mealTime.subtract(const Duration(hours: 24));
+    final (glucose, treatmentHistory, deviceStatuses) = await (
+      glucoseRepository.fetchGlucoseBetween(chartStart, chartEnd),
+      treatmentRepository.fetchTreatmentsBetween(
+        treatmentHistoryStart,
+        chartEnd,
+      ),
+      deviceStatusRepository.fetchDeviceStatusBetween(chartStart, chartEnd),
+    ).wait;
+    final treatments = treatmentHistory
+        .where((t) => treatmentOverlapsWindow(t, eventStart, eventEnd))
+        .toList();
+    final targetTreatments = treatmentHistory
+        .where(
+          (t) =>
+              t.createdAt != null && !t.createdAt!.isBefore(targetFetchStart),
+        )
+        .toList();
     final temporaryTargets = targetTreatments
         .whereType<TemporaryTarget>()
         .where((target) => _overlapsChart(target, chartStart, chartEnd))
@@ -97,7 +109,41 @@ class AnalyzeMealUseCase {
       meals: linkedMeals,
     );
 
+    List<RecordedMealContext>? subsequentMeals;
+    try {
+      subsequentMeals = await MealContextLocalHistoryRepository(
+        ref.read(databaseProvider),
+      ).loadMeals(mealTime, chartEnd, details.meal.id);
+    } catch (_) {
+      // Optional context must not hide the existing charts or timeline.
+      subsequentMeals = null;
+    }
+    final outcome = const BuildMealOutcomeContextUseCase()(
+      mealTime: mealTime,
+      window: postMealWindow,
+      asOf: chartEnd,
+      builtAt: clock.now(),
+      treatmentHistoryStart: treatmentHistoryStart,
+      mealId: details.meal.id,
+      glucose: glucose,
+      deviceStatuses: deviceStatuses,
+      treatments: treatmentHistory,
+      lowTreatments: lowTreatments,
+      activities: linkedActivities
+          .map(
+            (a) => MealActivityObservation(
+              logId: a.activityLogId,
+              name: a.activityName,
+              startedAt: a.startedAt,
+              endedAt: a.endedAt,
+              intensity: a.intensity,
+            ),
+          )
+          .toList(),
+      subsequentMeals: subsequentMeals,
+    );
     return MealAnalysisData(
+      outcomeContext: outcome,
       chartStart: chartStart,
       chartEnd: chartEnd,
       expectedChartEnd: requestedChartEnd,
@@ -374,9 +420,7 @@ class AnalyzeMealUseCase {
           0,
           (sum, ingredient) => sum + ingredient.consumedWbtKcalContribution,
         );
-    return wbtKcal > 100
-        ? const Duration(hours: 3)
-        : const Duration(minutes: 90);
+    return MealObservationWindow.forWbtKcal(wbtKcal);
   }
 
   String _formatNumber(double value) {

@@ -7,7 +7,7 @@ import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/meals/data/domain/use_cases/analyze_meal_use_case.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_analysis_data.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_details_data.dart';
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -85,6 +85,16 @@ void main() {
           insulin: const Value(1),
         ),
       );
+      await db.customStatement(
+        'INSERT INTO extended_carb (source,external_id,created_at,carbs,duration_minutes) VALUES (?,?,?,?,?)',
+        [
+          'cloud',
+          'earlier-plan',
+          time.subtract(const Duration(hours: 2)).millisecondsSinceEpoch,
+          24,
+          240,
+        ],
+      );
       final analysis = (await container
           .read(analyzeMealUseCaseProvider)
           .call(details))!;
@@ -101,6 +111,16 @@ void main() {
       );
       expect(analysis.linkedActivities, hasLength(1));
       expect(analysis.treatments, hasLength(1));
+      expect(analysis.outcomeContext, isNotNull);
+      expect(analysis.outcomeContext!.lowTreatments.map((e) => e.mealId), [
+        after,
+      ]);
+      expect(analysis.outcomeContext!.boluses.units, 1);
+      expect(
+        analysis.outcomeContext!.extendedCarbs.single.startedBeforeMeal,
+        true,
+      );
+      expect(analysis.outcomeContext!.extendedCarbs.single.scheduledGrams, 9);
       // Existing linked entries retain their rich timeline presentation even
       // outside the new time-window query; window-only entries still appear.
       final original = mealDetailsWithLowTreatment().lowTreatments.single;
@@ -144,6 +164,23 @@ void main() {
         contains('Glukoza 10 g'),
       );
       expect(withLinked.lowTreatments, hasLength(2));
+      // A failure in the new optional meal-snapshot read must not discard
+      // the existing chart, insulin records or timeline.
+      await db.customStatement(
+        "INSERT INTO meal (name,planned_at,status,updated_at) VALUES ('Another meal',?,'eaten',?)",
+        [
+          time.add(const Duration(minutes: 10)).millisecondsSinceEpoch,
+          time.add(const Duration(minutes: 10)).millisecondsSinceEpoch,
+        ],
+      );
+      await db.customStatement('DROP TABLE meal_snapshot');
+      final partial = (await container
+          .read(analyzeMealUseCaseProvider)
+          .call(details))!;
+      expect(partial.outcomeContext!.subsequentMeals == null, true);
+      expect(partial.timelineEvents, isNotEmpty);
+      expect(partial.treatments, hasLength(1));
+      expect(partial.lowTreatments, hasLength(2));
     },
   );
 }
