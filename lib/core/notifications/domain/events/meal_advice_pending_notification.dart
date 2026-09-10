@@ -4,7 +4,12 @@ import '../models/notification_event_type.dart';
 import '../models/notification_key.dart';
 
 class MealAdvicePendingNotificationEvent implements NotificationEvent {
-  const MealAdvicePendingNotificationEvent({required this.mealId});
+  const MealAdvicePendingNotificationEvent({
+    required this.mealId,
+    this.unavailable = false,
+  });
+
+  final bool unavailable;
 
   final int mealId;
 
@@ -18,20 +23,30 @@ class MealAdvicePendingNotificationEvent implements NotificationEvent {
   NotificationKey get key => NotificationKey(type: type, entityId: mealId);
 
   @override
-  String get title => lang.notificationMealAdvicePendingTitle;
+  String get title => unavailable
+      ? 'Brak aktualnych danych do porady'
+      : lang.notificationMealAdvicePendingTitle;
 
   @override
-  String get body => lang.notificationMealAdvicePendingBody;
+  String get body => unavailable
+      ? 'Brakuje aktualnych odczytów CGM lub kompletnych danych IOB/COB. Otwórz posiłek i wybierz decyzję ręcznie.'
+      : lang.notificationMealAdvicePendingBody;
 
   @override
   Map<String, Object?> toPayload() => {};
 
   @override
-  Map<String, Object?> toJson() => {'mealId': mealId};
+  Map<String, Object?> toJson() => {
+    'mealId': mealId,
+    'unavailable': unavailable,
+  };
 
   factory MealAdvicePendingNotificationEvent.fromPayload(
     Map<String, dynamic> json,
   ) {
-    return MealAdvicePendingNotificationEvent(mealId: json['mealId'] as int);
+    return MealAdvicePendingNotificationEvent(
+      mealId: json['mealId'] as int,
+      unavailable: json['unavailable'] as bool? ?? false,
+    );
   }
 }

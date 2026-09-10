@@ -1,14 +1,18 @@
+import 'package:clock/clock.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_advice_pending_notification.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/meal_dialog_controller.dart';
+import 'package:diabeatthis/features/dashboard/data/meal_dialog_state.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/device_status_ui_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/meal_snapshot_controller_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/utils/meal_snapshot_controller.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/meal_status_dialog.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/meal_status_dialog_result.dart';
+import 'package:diabeatthis/features/meal_advisor/data/providers/check_meal_advice_eligibility_use_case_provider.dart';
+import 'package:diabeatthis/features/meal_advisor/domain/models/meal_advice_eligibility.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_activation_guard_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +21,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../foreground/utils/fake_notifications_controller.dart';
+import '../../../../helpers/available_meal_advice_eligibility.dart';
 import '../../../../helpers/device_status_factory.dart';
 import '../../../../helpers/localized_material_app.dart';
 
@@ -24,6 +29,125 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });
+
+  testWidgets(
+    'expired history blocks acceptance and leaves manual choice available',
+    (tester) async {
+      final eligibility = AvailableMealAdviceEligibility();
+      final meal = Meal(
+        id: 1,
+        status: 'planned',
+        name: 'Obiad',
+        plannedAt: DateTime(2026, 3, 23, 12, 20),
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
+              eligibility,
+            ),
+            mealBlockingActivationProvider(1).overrideWith((ref) async => null),
+            notificationsControllerUiProvider.overrideWithValue(
+              FakeNotificationsController(),
+            ),
+            mealMacronutrientsSummaryProvider(1).overrideWithValue(
+              AsyncData(
+                MealMacroSummary(
+                  fatGrams: 4,
+                  proteinGrams: 8,
+                  fiberGrams: 0,
+                  carbsGrams: 20,
+                  totalGrams: 80,
+                ),
+              ),
+            ),
+          ],
+          child: localizedMaterialApp(home: MealStatusDialog(meal: meal)),
+        ),
+      );
+      _setDeviceStatus(tester);
+      await tester.tap(find.text('Zjem'));
+      await tester.pumpAndSettle();
+      eligibility.result = MealAdviceEligibility.staleReadings;
+      final context = tester.element(find.byType(MealStatusDialog));
+      final container = ProviderScope.containerOf(context);
+      final controller = container.read(
+        mealDialogControllerProvider(1, MealDialogStep.choose).notifier,
+      );
+      await expectLater(controller.confirmAdvice(), throwsException);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Brak aktualnych danych do automatycznej porady'),
+        findsOneWidget,
+      );
+      expect(find.byTooltip('Wybierz decyzję ręcznie'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'expired original status blocks acceptance even after fresh status arrives',
+    (tester) async {
+      final eligibility = AvailableMealAdviceEligibility();
+      final meal = Meal(
+        id: 1,
+        status: 'planned',
+        name: 'Obiad',
+        plannedAt: DateTime(2026, 3, 23, 12, 20),
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
+              eligibility,
+            ),
+            mealBlockingActivationProvider(1).overrideWith((ref) async => null),
+            notificationsControllerUiProvider.overrideWithValue(
+              FakeNotificationsController(),
+            ),
+            mealMacronutrientsSummaryProvider(1).overrideWithValue(
+              AsyncData(
+                MealMacroSummary(
+                  fatGrams: 4,
+                  proteinGrams: 8,
+                  fiberGrams: 0,
+                  carbsGrams: 20,
+                  totalGrams: 80,
+                ),
+              ),
+            ),
+          ],
+          child: localizedMaterialApp(home: MealStatusDialog(meal: meal)),
+        ),
+      );
+      _setDeviceStatus(tester);
+      await tester.tap(find.text('Zjem'));
+      await tester.pumpAndSettle();
+      final before = ProviderScope.containerOf(
+        tester.element(find.byType(MealStatusDialog)),
+      );
+      expect(
+        before
+            .read(mealDialogControllerProvider(1, MealDialogStep.choose))
+            .advice
+            .decision,
+        isNotNull,
+      );
+      await tester.pump(const Duration(minutes: 6));
+      _setDeviceStatus(tester);
+      final context = tester.element(find.byType(MealStatusDialog));
+      final container = ProviderScope.containerOf(context);
+      final controller = container.read(
+        mealDialogControllerProvider(1, MealDialogStep.choose).notifier,
+      );
+      await expectLater(controller.confirmAdvice(), throwsException);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Brak aktualnych danych do automatycznej porady'),
+        findsOneWidget,
+      );
+      expect(find.byTooltip('Wybierz decyzję ręcznie'), findsOneWidget);
+    },
+  );
 
   testWidgets('eat choice schedules pending advice reminder', (tester) async {
     final notifications = FakeNotificationsController();
@@ -37,6 +161,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
+            AvailableMealAdviceEligibility(),
+          ),
           mealBlockingActivationProvider(1).overrideWith((ref) async => null),
           notificationsControllerUiProvider.overrideWithValue(notifications),
           mealMacronutrientsSummaryProvider(1).overrideWithValue(
@@ -79,6 +206,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
+            AvailableMealAdviceEligibility(),
+          ),
           mealBlockingActivationProvider(1).overrideWith((ref) async => null),
           notificationsControllerUiProvider.overrideWithValue(notifications),
           mealMacronutrientsSummaryProvider(1).overrideWithValue(
@@ -130,6 +260,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
+            AvailableMealAdviceEligibility(),
+          ),
           mealBlockingActivationProvider(1).overrideWith((ref) async => null),
           notificationsControllerUiProvider.overrideWithValue(notifications),
           mealMacronutrientsSummaryProvider(1).overrideWithValue(
@@ -172,6 +305,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
+            AvailableMealAdviceEligibility(),
+          ),
           notificationsControllerUiProvider.overrideWithValue(notifications),
         ],
         child: localizedMaterialApp(home: MealStatusDialog(meal: meal)),
@@ -199,6 +335,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
+            AvailableMealAdviceEligibility(),
+          ),
           notificationsControllerUiProvider.overrideWithValue(notifications),
         ],
         child: localizedMaterialApp(
@@ -246,12 +385,6 @@ void _setDeviceStatus(WidgetTester tester) {
   container
       .read(deviceStatusUiProvider.notifier)
       .update(
-        testDeviceStatus(
-          bg: 120,
-          iob: 0,
-          cob: 0,
-          date: DateTime(2026, 3, 23, 12, 0),
-          tick: '',
-        ),
+        testDeviceStatus(bg: 120, iob: 0, cob: 0, date: clock.now(), tick: ''),
       );
 }

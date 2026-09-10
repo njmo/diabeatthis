@@ -112,6 +112,10 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
                       : context.lang.mealStatusAdviceToApply(
                           c.mealAdviceString() ?? '',
                         ),
+                )
+              else
+                const Text(
+                  'Brak aktualnych danych do automatycznej porady. Wymagane są 3 kolejne odczyty CGM, a najnowszy musi być młodszy niż 10 minut. Wymagane są też kompletne dane IOB/COB młodsze niż 6 minut. Możesz wybrać decyzję ręcznie.',
                 ),
             ],
           );
@@ -172,7 +176,11 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
                           await c.cancelAllMealNotifications();
 
                           try {
-                            await c.confirmAdvice();
+                            final accepted = await c.confirmAdvice();
+                            if (!accepted) {
+                              if (context.mounted) saving.value = false;
+                              return;
+                            }
                           } catch (e) {
                             if (context.mounted) {
                               saving.value = false;

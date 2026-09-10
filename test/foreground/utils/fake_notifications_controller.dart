@@ -29,6 +29,10 @@ class FakeNotificationsController implements NotificationsController {
     _showResponses.add(() async => throw error);
   }
 
+  void enqueueScheduleFuture(Future<void> result) {
+    _scheduleResponses.add(() => result);
+  }
+
   void enqueueScheduleSuccess() {
     _scheduleResponses.add(() async {});
   }

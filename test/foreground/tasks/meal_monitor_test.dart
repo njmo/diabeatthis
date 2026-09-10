@@ -20,6 +20,7 @@ import 'package:diabeatthis/core/logger/logger.dart';
 import 'package:diabeatthis/core/notifications/definitions/event/meal_summary_reminder_notification_definition.dart';
 import 'package:diabeatthis/core/notifications/domain/events/eat_now_event_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/finished_eating_event_notification.dart';
+import 'package:diabeatthis/core/notifications/domain/events/meal_advice_pending_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_suggestion_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_summary_reminder_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/temp_target_notification.dart';
@@ -27,6 +28,9 @@ import 'package:diabeatthis/core/notifications/domain/models/notification_action
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/utils/meal_advisor.dart';
+import 'package:diabeatthis/features/meal_advisor/data/providers/check_meal_advice_eligibility_use_case_provider.dart';
+import 'package:diabeatthis/features/meal_advisor/data/providers/check_meal_advisor_device_status_use_case_provider.dart';
+import 'package:diabeatthis/features/meal_advisor/domain/use_cases/check_meal_advice_eligibility_use_case.dart';
 import 'package:diabeatthis/features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import 'package:diabeatthis/features/meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_database_provider.dart';
@@ -55,6 +59,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/available_meal_advice_eligibility.dart';
+import '../../helpers/available_meal_advisor_device_status.dart';
 import '../../helpers/device_status_factory.dart';
 import '../utils/fake_notifications_controller.dart';
 import '../utils/fake_runtime_harness.dart';
@@ -144,6 +150,12 @@ final fakeNotifications = FakeNotificationsController();
 
 final parentContainer = ProviderContainer(
   overrides: [
+    checkMealAdvisorDeviceStatusUseCaseProvider.overrideWithValue(
+      const AvailableMealAdvisorDeviceStatus(),
+    ),
+    checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
+      AvailableMealAdviceEligibility(),
+    ),
     notificationsControllerForegroundProvider.overrideWithValue(
       fakeNotifications,
     ),
@@ -195,6 +207,90 @@ class UpdateMealSpy {
 }
 
 void main() {
+  test(
+    'foreground rejects expired advice input despite fresh current status',
+    () async {
+      final now = DateTime(2026, 9, 9, 12);
+      await withClock(Clock.fixed(now), () async {
+        final notifications = FakeNotificationsController();
+        final current = testDeviceStatus(
+          date: now,
+          iob: 0,
+          cob: 0,
+          tick: '0',
+          bg: 120,
+        );
+        final container = ProviderContainer(
+          overrides: [
+            notificationsControllerForegroundProvider.overrideWithValue(
+              notifications,
+            ),
+            checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
+              AvailableMealAdviceEligibility(),
+            ),
+            deviceStatusValueProvider.overrideWithValue(current),
+          ],
+        );
+        addTearDown(container.dispose);
+        final harness = FakeRuntimeHarness(container: container);
+        final monitor = MonitorUntilMeal();
+        expect(
+          await monitor.checkAdviceEligibility(
+            harness.runtimeContext,
+            7,
+            adviceStatus: current,
+          ),
+          isTrue,
+        );
+        expect(
+          await monitor.checkAdviceEligibility(
+            harness.runtimeContext,
+            7,
+            adviceStatus: current.copyWith(
+              date: now.subtract(const Duration(minutes: 6)),
+            ),
+          ),
+          isFalse,
+        );
+        expect(
+          notifications.lastShownEvent,
+          isA<MealAdvicePendingNotificationEvent>(),
+        );
+      });
+    },
+  );
+
+  test(
+    'unavailable history produces manual-only foreground notification',
+    () async {
+      final notifications = FakeNotificationsController();
+      final container = ProviderContainer(
+        overrides: [
+          notificationsControllerForegroundProvider.overrideWithValue(
+            notifications,
+          ),
+          checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
+            CheckMealAdviceEligibilityUseCase(
+              loadRepository: () async => throw Exception('offline'),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final harness = FakeRuntimeHarness(container: container);
+      final available = await MonitorUntilMeal().checkAdviceEligibility(
+        harness.runtimeContext,
+        7,
+      );
+      expect(available, isFalse);
+      expect(notifications.shownEvents, hasLength(1));
+      final event =
+          notifications.lastShownEvent as MealAdvicePendingNotificationEvent;
+      expect(event.mealId, 7);
+      expect(event.unavailable, isTrue);
+    },
+  );
+
   LogRuntimeConfig.configure(isUnitTest: true, enableBuffer: false);
 
   group("MealMonitorTask tests", () {

@@ -1,14 +1,18 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/meal/manual_meal_decision.dart';
+import '../../../core/domain/model/device_status.dart';
 import '../../../core/domain/model/meal_macro_summary.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/meal_advice_pending_notification.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../meal_advisor/data/providers/check_meal_advice_eligibility_use_case_provider.dart';
+import '../../meal_advisor/data/providers/check_meal_advisor_device_status_use_case_provider.dart';
 import '../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
 import '../../meal_advisor/data/providers/get_meal_advice_use_case_provider.dart';
+import '../../meal_advisor/domain/models/meal_advice_eligibility.dart';
+import '../../meal_advisor/domain/models/meal_advice_unavailable_exception.dart';
 import '../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
-import '../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../meals/data/providers/meal_activation_guard_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
 import 'meal_dialog_state.dart';
@@ -23,6 +27,8 @@ class MealDialogController extends _$MealDialogController with Logging {
   static const pendingAdviceReminderDelay = Duration(minutes: 2);
 
   late final int mealId;
+  int _adviceRequest = 0;
+  DeviceStatus? _adviceDeviceStatus;
 
   @override
   MealDialogState build(int mId, MealDialogStep initialStep) {
@@ -38,36 +44,12 @@ class MealDialogController extends _$MealDialogController with Logging {
         "(zakres ${w.minMinutes}–${w.maxMinutes} min) przed rozpoczęciem posiłku.";
   }
 
-  Future<MealAdvice?> _getAdvice(
-    double carbs,
-    double fatGrams,
-    double proteinGrams,
-    double fiberGrams,
-    ExtendedCarbsScheduleSettings extendedCarbsScheduleSettings,
-  ) async {
-    final deviceStatusValue = ref.read(deviceStatusUiProvider);
-    if (deviceStatusValue == null) return null;
-
-    return ref
-        .read(getMealAdviceUseCaseProvider)
-        .call(
-          macros: MealMacroSummary(
-            carbsGrams: carbs,
-            netCarbsGrams: carbs,
-            fatGrams: fatGrams,
-            proteinGrams: proteinGrams,
-            fiberGrams: fiberGrams,
-            totalGrams: 0,
-          ),
-          deviceStatus: deviceStatusValue,
-          settings: extendedCarbsScheduleSettings,
-        );
-  }
-
   Future<void> chooseEat({ManualMealDecision? manual}) async {
+    final request = ++_adviceRequest;
     final blockingMeal = await ref.read(
       mealBlockingActivationProvider(mealId).future,
     );
+    if (!ref.mounted || request != _adviceRequest) return;
     if (blockingMeal != null) {
       state = state.copyWith(
         activationBlockedByMealName: blockingMeal.name,
@@ -80,10 +62,8 @@ class MealDialogController extends _$MealDialogController with Logging {
       mealMacronutrientsSummaryProvider(mealId).future,
     );
 
+    if (!ref.mounted || request != _adviceRequest) return;
     final carbs = mealStatus?.netCarbsGrams ?? 0;
-    final fatGrams = mealStatus?.fatGrams ?? 0;
-    final fiberGrams = mealStatus?.fiberGrams ?? 0;
-    final proteinGrams = mealStatus?.proteinGrams ?? 0;
     if (manual != null) {
       state = state.copyWith(
         skipMeal: false,
@@ -108,17 +88,47 @@ class MealDialogController extends _$MealDialogController with Logging {
     final extendedCarbsScheduleSettings = await ref.read(
       extendedCarbsScheduleSettingsProvider.future,
     );
-    final advice =
-        await _getAdvice(
-          carbs,
-          fatGrams,
-          proteinGrams,
-          fiberGrams,
-          extendedCarbsScheduleSettings,
-        ) ??
-        MealAdvice.empty();
+    if (!ref.mounted || request != _adviceRequest) return;
+    final deviceStatus = ref.read(deviceStatusUiProvider);
+    _adviceDeviceStatus = deviceStatus;
+    var advice =
+        ref
+                    .read(checkMealAdvisorDeviceStatusUseCaseProvider)
+                    .call(deviceStatus) !=
+                MealAdviceEligibility.available ||
+            deviceStatus == null
+        ? MealAdvice.empty()
+        : ref
+              .read(getMealAdviceUseCaseProvider)
+              .call(
+                macros:
+                    mealStatus ??
+                    MealMacroSummary(
+                      carbsGrams: 0,
+                      fatGrams: 0,
+                      proteinGrams: 0,
+                      fiberGrams: 0,
+                      totalGrams: 0,
+                    ),
+                deviceStatus: deviceStatus,
+                settings: extendedCarbsScheduleSettings,
+              );
+    if (advice.decision != null) {
+      final eligibility = await ref
+          .read(checkMealAdviceEligibilityUseCaseProvider)
+          .call();
+      if (!ref.mounted || request != _adviceRequest) return;
+      if (eligibility != MealAdviceEligibility.available ||
+          ref
+                  .read(checkMealAdvisorDeviceStatusUseCaseProvider)
+                  .call(deviceStatus) !=
+              MealAdviceEligibility.available) {
+        advice = MealAdvice.empty();
+      }
+    }
     if (advice.decision != null) {
       await schedulePendingAdviceReminder();
+      if (!ref.mounted || request != _adviceRequest) return;
     }
 
     state = state.copyWith(
@@ -152,10 +162,43 @@ class MealDialogController extends _$MealDialogController with Logging {
     }
   }
 
-  Future<void> confirmAdvice() =>
-      AcceptMealDecisionUseCase(ref).call(mealId, state.advice);
+  /// Returns false if the choice changed while its inputs were being checked.
+  Future<bool> confirmAdvice() async {
+    final request = _adviceRequest;
+    final advice = state.advice;
+    final adviceDeviceStatus = _adviceDeviceStatus;
+    if (advice.source != 'manual') {
+      final eligibility = await ref
+          .read(checkMealAdviceEligibilityUseCaseProvider)
+          .call();
+      if (!ref.mounted ||
+          request != _adviceRequest ||
+          !identical(state.advice, advice)) {
+        return false;
+      }
+      final statusEligibility = ref
+          .read(checkMealAdvisorDeviceStatusUseCaseProvider)
+          .call(ref.read(deviceStatusUiProvider));
+      if (eligibility != MealAdviceEligibility.available ||
+          statusEligibility != MealAdviceEligibility.available ||
+          ref
+                  .read(checkMealAdvisorDeviceStatusUseCaseProvider)
+                  .call(adviceDeviceStatus) !=
+              MealAdviceEligibility.available) {
+        state = state.copyWith(
+          advice: MealAdvice.empty(),
+          extendedCarbsGrams: 0,
+        );
+        await cancelAllMealNotifications();
+        throw const MealAdviceUnavailableException();
+      }
+    }
+    await AcceptMealDecisionUseCase(ref).call(mealId, advice);
+    return true;
+  }
 
   void chooseSkip() {
+    _adviceRequest++;
     state = state.copyWith(
       skipMeal: true,
       step: MealDialogStep.confirm,
@@ -164,6 +207,7 @@ class MealDialogController extends _$MealDialogController with Logging {
   }
 
   void back() {
+    _adviceRequest++;
     if (state.step == MealDialogStep.confirm) {
       state = state.copyWith(
         step: state.skipMeal ? MealDialogStep.choose : MealDialogStep.choose,

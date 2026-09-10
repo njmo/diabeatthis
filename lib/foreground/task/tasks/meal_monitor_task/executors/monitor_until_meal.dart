@@ -5,13 +5,17 @@ import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../core/domain/model/device_status.dart';
 import '../../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
+import '../../../../../core/notifications/domain/events/meal_advice_pending_notification.dart';
 import '../../../../../core/notifications/domain/events/meal_suggestion_notification.dart';
 import '../../../../../core/notifications/domain/events/temp_target_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../../features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
+import '../../../../../features/meal_advisor/data/providers/check_meal_advice_eligibility_use_case_provider.dart';
+import '../../../../../features/meal_advisor/data/providers/check_meal_advisor_device_status_use_case_provider.dart';
 import '../../../../../features/meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
 import '../../../../../features/meal_advisor/data/providers/get_meal_advice_use_case_provider.dart';
+import '../../../../../features/meal_advisor/domain/models/meal_advice_eligibility.dart';
 import '../../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../../../features/meals/data/providers/meal_ingredients_list_provider.dart';
@@ -212,6 +216,34 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     return alignToNextCgmReading(mealPlannedAt, deviceStatus.date);
   }
 
+  Future<bool> checkAdviceEligibility(
+    RuntimeContext context,
+    int mealId, {
+    DeviceStatus? adviceStatus,
+  }) async {
+    final eligibility = await context.container
+        .read(checkMealAdviceEligibilityUseCaseProvider)
+        .call();
+    final statusEligibility = context.container
+        .read(checkMealAdvisorDeviceStatusUseCaseProvider)
+        .call(context.container.read(deviceStatusValueProvider));
+    if (eligibility == MealAdviceEligibility.available &&
+        statusEligibility == MealAdviceEligibility.available &&
+        (adviceStatus == null ||
+            context.container
+                    .read(checkMealAdvisorDeviceStatusUseCaseProvider)
+                    .call(adviceStatus) ==
+                MealAdviceEligibility.available)) {
+      return true;
+    }
+    await context.container
+        .read(notificationsControllerForegroundProvider)
+        .show(
+          MealAdvicePendingNotificationEvent(mealId: mealId, unavailable: true),
+        );
+    return false;
+  }
+
   @override
   Future<MealMonitorStateExecutor> execute(
     RuntimeContext runtimeContext,
@@ -353,6 +385,16 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 logI(
                   'deviceStatus: $iterationsLeft date ${deviceStatus.date.toIso8601String()} now ${clock.now().toIso8601String()} meal planned at ${mealPlannedAt.toIso8601String()}',
                 );
+                if (runtimeContext.container
+                        .read(checkMealAdvisorDeviceStatusUseCaseProvider)
+                        .call(deviceStatus) !=
+                    MealAdviceEligibility.available) {
+                  await checkAdviceEligibility(
+                    runtimeContext,
+                    mealMonitorContext.activeMeal!.id,
+                  );
+                  return MealMonitorStateIdle();
+                }
                 advice = runtimeContext.container
                     .read(getMealAdviceUseCaseProvider)
                     .call(
@@ -424,7 +466,15 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               logI("No advice available, checking next meal");
               return NewMealCheckExecutor();
             }
+            if (!await checkAdviceEligibility(
+              runtimeContext,
+              mealMonitorContext.activeMeal!.id,
+              adviceStatus: deviceStatus,
+            )) {
+              return MealMonitorStateIdle();
+            }
             final mealAdvice = advice;
+            final adviceDeviceStatus = deviceStatus;
 
             // notify user about suggestion (if any)
             final notificationProvider = runtimeContext.container.read(
@@ -454,6 +504,14 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             logI("Received response from user");
             await response.when(
               agree: (e) async {
+                if (!await checkAdviceEligibility(
+                  runtimeContext,
+                  mealMonitorContext.activeMeal!.id,
+                  adviceStatus: adviceDeviceStatus,
+                )) {
+                  nextExecutor = MealMonitorStateIdle();
+                  return;
+                }
                 final decisionStatus = mealAdvice.decision!.acceptedStatus;
                 logI("User agreed meal, decision: $decisionStatus");
                 await runtimeContext.container.read(
