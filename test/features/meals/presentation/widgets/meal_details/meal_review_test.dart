@@ -56,7 +56,7 @@ void main() {
           basicChart.events.any((event) => event.label == 'Bolus'),
           isTrue,
         );
-        expect(find.text('Bolusy standardowe'), findsOneWidget);
+        expect(find.text('Bolusy ręczne'), findsOneWidget);
         expect(find.text('Pozostałe korekty'), findsOneWidget);
         expect(find.text('O 5 min krócej niż proponowano'), findsOneWidget);
         final eating = basicChart.ranges.singleWhere(

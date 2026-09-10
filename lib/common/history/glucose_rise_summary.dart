@@ -5,7 +5,8 @@ import '../../core/domain/model/glucose.dart';
 class GlucoseRiseSummary {
   static const minimumRate = 2.0;
   static const minimumDuration = Duration(minutes: 10);
-  static const maximumGap = Duration(minutes: 5);
+  // Allow timestamp jitter around the nominal five-minute CGM cadence.
+  static const maximumGap = Duration(minutes: 6);
 
   final DateTime? startedAt;
   final bool hasObservation;

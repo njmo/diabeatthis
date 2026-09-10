@@ -12,6 +12,51 @@ void main() {
     direction: 'Flat',
   );
 
+  test('timestamp jitter does not erase a valid observation', () {
+    final values = [
+      reading(0, 100),
+      reading(
+        5,
+        102,
+      ).copyWith(date: start.add(const Duration(minutes: 5, seconds: 1))),
+      reading(
+        10,
+        104,
+      ).copyWith(date: start.add(const Duration(minutes: 10, seconds: 2))),
+    ];
+    final result = GlucoseRiseSummary.fromReadings(values);
+    expect(result.hasObservation, isTrue);
+    expect(result.startedAt, isNull);
+  });
+
+  test(
+    'detects sustained rise with jitter but rejects gaps over six minutes',
+    () {
+      final result = GlucoseRiseSummary.fromReadings([
+        reading(0, 100),
+        reading(
+          5,
+          111,
+        ).copyWith(date: start.add(const Duration(minutes: 5, seconds: 1))),
+        reading(
+          10,
+          122,
+        ).copyWith(date: start.add(const Duration(minutes: 10, seconds: 2))),
+      ]);
+      expect(result.startedAt, start);
+      final gap = GlucoseRiseSummary.fromReadings([
+        reading(0, 100),
+        reading(
+          6,
+          120,
+        ).copyWith(date: start.add(const Duration(minutes: 6, seconds: 1))),
+        reading(11, 140),
+      ]);
+      expect(gap.hasObservation, isFalse);
+      expect(gap.startedAt, isNull);
+    },
+  );
+
   test('finds the beginning of a sustained rise after an initial fall', () {
     final result = GlucoseRiseSummary.fromReadings([
       reading(0, 120),
