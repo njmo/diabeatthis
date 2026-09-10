@@ -39,7 +39,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -57,6 +57,18 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
+      if (from < 24) {
+        await m.addColumn(deviceStatus, deviceStatus.basalObservedAt);
+        await m.addColumn(deviceStatus, deviceStatus.tempBasalAbsoluteRate);
+        await m.addColumn(deviceStatus, deviceStatus.tempBasalStartedAt);
+        await m.addColumn(deviceStatus, deviceStatus.enactedBasalRate);
+        await m.addColumn(deviceStatus, deviceStatus.enactedBasalAt);
+        await m.addColumn(
+          deviceStatus,
+          deviceStatus.enactedBasalDurationMinutes,
+        );
+        await m.addColumn(deviceStatus, deviceStatus.enactedBasalReceived);
+      }
       if (from < 19 || (from >= 20 && from < 23)) {
         await m.alterTable(
           // ignore: experimental_member_use

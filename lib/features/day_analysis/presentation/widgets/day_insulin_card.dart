@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
+
+import '../../../../common/history/insulin_basal_summary.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
 import '../../../../common/l10n/language.dart';
+import 'day_basal_rows.dart';
 import 'day_stat_row.dart';
 import 'day_summary_card.dart';
 
 class DayInsulinCard extends StatelessWidget {
   final InsulinBolusSummary? summary;
   final InsulinBolusSummary? night;
-  const DayInsulinCard({super.key, required this.summary, required this.night});
+  final InsulinBasalSummary? basal;
+  final InsulinBasalSummary? nightBasal;
+  const DayInsulinCard({
+    super.key,
+    required this.summary,
+    required this.night,
+    this.basal,
+    this.nightBasal,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +46,8 @@ class DayInsulinCard extends StatelessWidget {
           value: units(summary?.otherUnits),
         ),
         DayStatRow(label: lang.dayNightBoluses, value: units(night?.units)),
+        DayBasalRows(summary: basal, boluses: summary),
+        DayBasalRows(summary: nightBasal, boluses: night, isNight: true),
         Text(lang.dayInsulinLimit),
       ],
     );

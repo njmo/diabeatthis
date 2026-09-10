@@ -1,10 +1,13 @@
 import 'dart:async';
+
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/core/domain/model/manual_bolus.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_context.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_meal_summary.dart';
 import 'package:diabeatthis/features/day_analysis/domain/use_cases/build_day_context_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/device_status_factory.dart';
 
 const emptyMeals = DayMealSummary(
   count: 0,
@@ -16,6 +19,51 @@ const emptyMeals = DayMealSummary(
 );
 
 void main() {
+  test(
+    'loads basal history once for day and night and isolates its failure',
+    () async {
+      final cutoff = DateTime(2026, 9, 10, 0, 10);
+      final midnight = DateTime(2026, 9, 10);
+      var calls = 0;
+      for (final fail in [false, true]) {
+        final day = await BuildDayContextUseCase(
+          now: () => cutoff,
+          loadGlucose: (_, _) async => [],
+          loadTreatments: (_, _) async => [],
+          loadMeals: (_, _) async => emptyMeals,
+          loadLowTreatments: (_, _) async => [],
+          loadActivities: (_, _) async => [],
+          loadDeviceStatuses: (start, end) async {
+            calls++;
+            expect(start, DateTime(2026, 9, 9, 21, 50));
+            expect(end, cutoff);
+            if (fail) throw StateError('offline');
+            return [
+              testDeviceStatus(
+                date: midnight,
+                iob: 0,
+                cob: 0,
+                tick: '',
+                bg: 120,
+                baseBasalRate: 0.6,
+              ).copyWith(basalObservedAt: midnight),
+            ];
+          },
+        )();
+        if (fail) {
+          expect(day.failedSources, {DayDataSource.deviceStatus});
+          expect(day.basal, isNull);
+          expect(day.meals, isNotNull);
+        } else {
+          expect(day.basal!.units, closeTo(0.1, 1e-9));
+          expect(day.basal!.coverage, 1);
+          expect(day.nightBasal!.coveredDuration, const Duration(minutes: 10));
+          expect(day.nightBasal!.coverage, lessThan(1));
+        }
+      }
+      expect(calls, 2);
+    },
+  );
   test(
     'loads device ages at the shared cutoff and isolates failures',
     () async {

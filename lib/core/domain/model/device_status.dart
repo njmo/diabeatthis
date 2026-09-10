@@ -46,6 +46,15 @@ abstract class DeviceStatus with _$DeviceStatus {
     required int carbsReqWithin,
     required double sensitivityRatio,
     required double isfMgdlForCarbs,
+
+    /// Pump snapshot time; absent in legacy history without basal evidence.
+    DateTime? basalObservedAt,
+    double? tempBasalAbsoluteRate,
+    String? tempBasalStartedAt,
+    double? enactedBasalRate,
+    DateTime? enactedBasalAt,
+    int? enactedBasalDurationMinutes,
+    bool? enactedBasalReceived,
     required double baseBasalRate,
     required int tempBasalRemainingMinutes,
     required double lastBolusAmount,

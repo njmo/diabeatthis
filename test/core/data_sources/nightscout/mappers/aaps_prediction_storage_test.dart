@@ -11,6 +11,8 @@ import 'package:diabeatthis/foreground/event/external/local_device_status/local_
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/basal_schema_columns.dart';
+
 void main() {
   final now = DateTime.utc(2026, 9, 9, 10);
   DeviceStatus status({
@@ -77,6 +79,11 @@ void main() {
       await db.customStatement(
         'ALTER TABLE device_status DROP COLUMN aaps_predictions_json',
       );
+      for (final column in basalSchemaColumns) {
+        await db.customStatement(
+          'ALTER TABLE device_status DROP COLUMN $column',
+        );
+      }
       await db.customStatement('PRAGMA user_version = 21');
       await db.close();
       db = drift.DatabaseImpl(NativeDatabase(file));

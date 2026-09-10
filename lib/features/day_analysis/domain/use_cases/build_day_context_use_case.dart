@@ -1,5 +1,7 @@
 import '../../../../common/history/glucose_period_summary.dart';
+import '../../../../common/history/insulin_basal_summary.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
+import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/treatment_base.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
@@ -17,6 +19,8 @@ class BuildDayContextUseCase {
   loadActivities;
   final Future<Duration?> Function(DateTime)? loadSensorAge;
   final Future<Duration?> Function(DateTime)? loadPodAge;
+  final Future<List<DeviceStatus>> Function(DateTime, DateTime)?
+  loadDeviceStatuses;
   final DateTime Function() now;
   final Duration timeout;
 
@@ -27,6 +31,7 @@ class BuildDayContextUseCase {
     required this.loadLowTreatments,
     required this.loadActivities,
     required this.now,
+    this.loadDeviceStatuses,
     this.loadSensorAge,
     this.loadPodAge,
     this.timeout = const Duration(seconds: 15),
@@ -52,6 +57,15 @@ class BuildDayContextUseCase {
       }
     }
 
+    final statusesFuture = loadDeviceStatuses == null
+        ? Future<List<DeviceStatus>?>.value(null)
+        : fetch(
+            DayDataSource.deviceStatus,
+            () => loadDeviceStatuses!(
+              nightStart.subtract(InsulinBasalSummary.maxSnapshotAge),
+              asOf,
+            ),
+          );
     final glucoseFuture = fetch(
       DayDataSource.glucose,
       () => loadGlucose(nightStart.subtract(const Duration(minutes: 5)), asOf),
@@ -95,7 +109,14 @@ class BuildDayContextUseCase {
     final activities = await activitiesFuture;
     final sensorAge = await sensorAgeFuture;
     final podAge = await podAgeFuture;
+    final statuses = await statusesFuture;
     return DayContext(
+      basal: statuses == null
+          ? null
+          : InsulinBasalSummary.calculate(statuses, start, asOf),
+      nightBasal: statuses == null
+          ? null
+          : InsulinBasalSummary.calculate(statuses, nightStart, nightEnd),
       sensorAge: sensorAge,
       podAge: podAge,
       start: start,

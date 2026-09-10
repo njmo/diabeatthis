@@ -21,6 +21,15 @@ class LocalDeviceStatusEvent {
       '_id': data.externalId,
       'created_at': data.date.toIso8601String(),
       'openaps': {
+        'enacted': {
+          if (data.enactedBasalAt != null)
+            'timestamp': data.enactedBasalAt!.toIso8601String(),
+          if (data.enactedBasalRate != null) 'rate': data.enactedBasalRate,
+          if (data.enactedBasalDurationMinutes != null)
+            'duration': data.enactedBasalDurationMinutes,
+          if (data.enactedBasalReceived != null)
+            'received': data.enactedBasalReceived,
+        },
         'suggested': {
           ...?AapsPredictionSnapshot.decode(data.aapsPredictionsJson)?.toJson(),
           if (data.hasIob) 'IOB': data.iob,
@@ -41,8 +50,14 @@ class LocalDeviceStatusEvent {
         },
       },
       'pump': {
+        if (data.basalObservedAt != null)
+          'clock': data.basalObservedAt!.toIso8601String(),
         'extended': {
           'BaseBasalRate': data.baseBasalRate,
+          if (data.tempBasalAbsoluteRate != null)
+            'TempBasalAbsoluteRate': data.tempBasalAbsoluteRate,
+          if (data.tempBasalStartedAt != null)
+            'TempBasalStart': data.tempBasalStartedAt,
           'TempBasalRemaining': data.tempBasalRemainingMinutes,
           'LastBolusAmount': data.lastBolusAmount,
           'LastBolus': data.lastBolusAt,

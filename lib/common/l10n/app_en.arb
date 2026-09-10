@@ -953,7 +953,7 @@
   "dayManualBoluses": "Manual boluses, including Wizard",
   "dayCorrectionBoluses": "Correction boluses",
   "dayNightBoluses": "Boluses in the night window",
-  "dayInsulinLimit": "The total excludes basal and is not total daily insulin. History does not confirm delivery completeness or distinguish SMB from other corrections.",
+  "dayInsulinLimit": "Basal is estimated from pump reports. Gaps do not mean zero delivery. The total includes recorded boluses; completeness of their history is unverified. Night overlaps with today — do not add these results together.",
   "dayMealsTitle": "Meals and low treatments",
   "dayMealsCount": "Started or eaten meals",
   "dayCarbs": "Net carbohydrates",
@@ -1004,5 +1004,13 @@
         "type": "int"
       }
     }
-  }
+  },
+  "dayBasalTitle": "Reconstructed basal",
+  "dayNightBasalTitle": "Night basal (22:00–06:00)",
+  "dayProfileBasal": "Profile basal during covered intervals",
+  "dayAddedBasal": "Basal above profile",
+  "dayReducedBasal": "Basal withheld relative to profile",
+  "dayBasalCoverage": "Basal history coverage",
+  "dayInsulinSum": "Basal and recorded bolus total",
+  "dayInsulinPartialSum": "Partial basal and recorded bolus total"
 }

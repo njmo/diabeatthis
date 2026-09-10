@@ -1081,7 +1081,7 @@
   "dayManualBoluses": "Bolusy ręczne, także z Wizarda",
   "dayCorrectionBoluses": "Bolusy korekcyjne",
   "dayNightBoluses": "Bolusy w oknie nocy",
-  "dayInsulinLimit": "Suma nie obejmuje bazy i nie jest całkowitą dawką dobową. Historia nie potwierdza kompletności podań ani nie rozróżnia SMB od innych korekt.",
+  "dayInsulinLimit": "Baza jest szacunkiem z raportów pompy. Luki nie oznaczają zerowej podaży. Suma obejmuje zapisane bolusy; kompletność ich historii nie jest potwierdzona. Noc częściowo pokrywa się z dzisiejszym dniem — nie należy dodawać tych wyników.",
   "dayMealsTitle": "Posiłki i dosłodzenia",
   "dayMealsCount": "Rozpoczęte lub zjedzone posiłki",
   "dayCarbs": "Węglowodany netto",
@@ -1132,5 +1132,13 @@
         "type": "int"
       }
     }
-  }
+  },
+  "dayBasalTitle": "Baza odtworzona",
+  "dayNightBasalTitle": "Baza w nocy (22:00–06:00)",
+  "dayProfileBasal": "Baza z profilu w pokrytym okresie",
+  "dayAddedBasal": "Baza dodana ponad profil",
+  "dayReducedBasal": "Baza ograniczona względem profilu",
+  "dayBasalCoverage": "Pokrycie historii bazy",
+  "dayInsulinSum": "Suma bazy i zapisanych bolusów",
+  "dayInsulinPartialSum": "Suma częściowa bazy i zapisanych bolusów"
 }

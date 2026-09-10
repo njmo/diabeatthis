@@ -16,6 +16,8 @@ extension DeviceStatusMapper on DeviceStatusDto {
     final basalIob = (iobData['basaliob'] as num?)?.toDouble() ?? 0;
     final pumpExtended = _mapValue(pump?['extended']);
 
+    final enacted = _mapValue(openaps?['enacted']);
+    final pumpClock = pump?['clock'];
     return DeviceStatus(
       externalId: id,
       source: source,
@@ -44,6 +46,19 @@ extension DeviceStatusMapper on DeviceStatusDto {
       sensitivityRatio:
           (suggested['sensitivityRatio'] as num?)?.toDouble() ?? 1,
       isfMgdlForCarbs: (suggested['isfMgdlForCarbs'] as num?)?.toDouble() ?? 0,
+      basalObservedAt:
+          pumpExtended?['BaseBasalRate'] is num && pumpClock is String
+          ? DateTime.tryParse(pumpClock)?.toUtc()
+          : null,
+      tempBasalAbsoluteRate: (pumpExtended?['TempBasalAbsoluteRate'] as num?)
+          ?.toDouble(),
+      tempBasalStartedAt: pumpExtended?['TempBasalStart'] as String?,
+      enactedBasalRate: (enacted?['rate'] as num?)?.toDouble(),
+      enactedBasalAt: enacted?['timestamp'] is String
+          ? DateTime.tryParse(enacted!['timestamp'] as String)?.toUtc()
+          : null,
+      enactedBasalDurationMinutes: (enacted?['duration'] as num?)?.toInt(),
+      enactedBasalReceived: enacted?['received'] as bool?,
       baseBasalRate: (pumpExtended?['BaseBasalRate'] as num?)?.toDouble() ?? 0,
       tempBasalRemainingMinutes:
           (pumpExtended?['TempBasalRemaining'] as num?)?.toInt() ?? 0,

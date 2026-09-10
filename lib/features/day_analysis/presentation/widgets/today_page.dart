@@ -68,7 +68,12 @@ class TodayPage extends ConsumerWidget {
                     title: lang.dayGlucoseTitle,
                     summary: day.glucose,
                   ),
-                  DayInsulinCard(summary: day.boluses, night: day.nightBoluses),
+                  DayInsulinCard(
+                    summary: day.boluses,
+                    night: day.nightBoluses,
+                    basal: day.basal,
+                    nightBasal: day.nightBasal,
+                  ),
                   DayMealsCard(day: day),
                   DayGlucoseCard(
                     title: lang.dayNightTitle,

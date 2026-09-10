@@ -1,4 +1,5 @@
 import '../../../../common/history/glucose_period_summary.dart';
+import '../../../../common/history/insulin_basal_summary.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
 import 'day_activity_summary.dart';
@@ -6,6 +7,7 @@ import 'day_meal_summary.dart';
 
 enum DayDataSource {
   glucose,
+  deviceStatus,
   treatments,
   meals,
   lowTreatments,
@@ -21,6 +23,8 @@ class DayContext {
   final DateTime builtAt;
   final GlucosePeriodSummary? glucose;
   final GlucosePeriodSummary? nightGlucose;
+  final InsulinBasalSummary? basal;
+  final InsulinBasalSummary? nightBasal;
   final InsulinBolusSummary? boluses;
   final InsulinBolusSummary? nightBoluses;
   final DayMealSummary? meals;
@@ -35,6 +39,8 @@ class DayContext {
   final Set<DayDataSource> failedSources;
 
   DayContext({
+    this.basal,
+    this.nightBasal,
     this.sensorAge,
     this.podAge,
     required this.start,

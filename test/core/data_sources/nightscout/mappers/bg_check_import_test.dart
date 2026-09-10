@@ -14,6 +14,8 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 
+import '../../../../helpers/basal_schema_columns.dart';
+
 Map<String, dynamic> meterPayload({
   String id = 'meter-1',
   Object value = 108,
@@ -171,6 +173,9 @@ void main() {
         'ALTER TABLE device_status DROP COLUMN aaps_predictions_json',
       );
       raw.execute('ALTER TABLE device_status DROP COLUMN insulin_activity_at');
+      for (final column in basalSchemaColumns) {
+        raw.execute('ALTER TABLE device_status DROP COLUMN $column');
+      }
       raw.execute('PRAGMA user_version = 16');
       raw.dispose();
       final upgraded = DatabaseImpl(NativeDatabase(file));

@@ -4,6 +4,8 @@ import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/basal_schema_columns.dart';
+
 void main() {
   for (final oldVersion in [17, 18, 19, 20, 21, 22]) {
     test('version $oldVersion keeps existing advice and removes redundant fields', () async {
@@ -69,6 +71,11 @@ void main() {
         if (oldVersion < 21) {
           await db.customStatement(
             'ALTER TABLE device_status DROP COLUMN insulin_activity_at',
+          );
+        }
+        for (final column in basalSchemaColumns) {
+          await db.customStatement(
+            'ALTER TABLE device_status DROP COLUMN $column',
           );
         }
         await db.customStatement('PRAGMA user_version = $oldVersion');

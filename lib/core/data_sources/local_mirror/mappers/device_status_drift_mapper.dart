@@ -24,6 +24,13 @@ extension DeviceStatusDriftMapper on domain.DeviceStatus {
       carbsReqWithin: Value(carbsReqWithin),
       sensitivityRatio: Value(sensitivityRatio),
       isfMgdlForCarbs: Value(isfMgdlForCarbs),
+      basalObservedAt: Value(basalObservedAt?.millisecondsSinceEpoch),
+      tempBasalAbsoluteRate: Value(tempBasalAbsoluteRate),
+      tempBasalStartedAt: Value(tempBasalStartedAt),
+      enactedBasalRate: Value(enactedBasalRate),
+      enactedBasalAt: Value(enactedBasalAt?.millisecondsSinceEpoch),
+      enactedBasalDurationMinutes: Value(enactedBasalDurationMinutes),
+      enactedBasalReceived: Value(enactedBasalReceived),
       baseBasalRate: Value(baseBasalRate),
       tempBasalRemainingMinutes: Value(tempBasalRemainingMinutes),
       lastBolusAmount: Value(lastBolusAmount),
@@ -56,6 +63,17 @@ extension DeviceStatusDomainMapper on DeviceStatusData {
       carbsReqWithin: carbsReqWithin ?? 0,
       sensitivityRatio: sensitivityRatio ?? 0,
       isfMgdlForCarbs: isfMgdlForCarbs ?? 0,
+      basalObservedAt: basalObservedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(basalObservedAt!, isUtc: true),
+      tempBasalAbsoluteRate: tempBasalAbsoluteRate,
+      tempBasalStartedAt: tempBasalStartedAt,
+      enactedBasalRate: enactedBasalRate,
+      enactedBasalAt: enactedBasalAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(enactedBasalAt!, isUtc: true),
+      enactedBasalDurationMinutes: enactedBasalDurationMinutes,
+      enactedBasalReceived: enactedBasalReceived,
       baseBasalRate: baseBasalRate ?? 0,
       tempBasalRemainingMinutes: tempBasalRemainingMinutes ?? 0,
       lastBolusAmount: lastBolusAmount ?? 0,

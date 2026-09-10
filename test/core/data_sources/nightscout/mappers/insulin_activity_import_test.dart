@@ -9,6 +9,8 @@ import 'package:diabeatthis/foreground/event/external/local_device_status/local_
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/basal_schema_columns.dart';
+
 void main() {
   const timestamp = '2026-09-09T10:00:00Z';
   const envelopeTime = '2026-09-09T10:04:00Z';
@@ -80,6 +82,11 @@ void main() {
         await db.customStatement(
           'ALTER TABLE device_status DROP COLUMN insulin_activity_at',
         );
+        for (final column in basalSchemaColumns) {
+          await db.customStatement(
+            'ALTER TABLE device_status DROP COLUMN $column',
+          );
+        }
         await db.customStatement('PRAGMA user_version = 20');
         await db.close();
         db = drift.DatabaseImpl(NativeDatabase(file));

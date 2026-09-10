@@ -15,6 +15,9 @@ final dayContextProvider = FutureProvider.autoDispose<DayContext>((ref) {
   final treatmentsRepository = ref.watch(
     treatmentsHistoryRepositoryProvider.future,
   );
+  final statusesRepository = ref.watch(
+    deviceStatusHistoryRepositoryProvider.future,
+  );
   final local = DayLocalHistoryRepository(ref.watch(databaseProvider));
   final lows = ref.watch(recordedLowTreatmentRepositoryProvider);
   return BuildDayContextUseCase(
@@ -22,6 +25,8 @@ final dayContextProvider = FutureProvider.autoDispose<DayContext>((ref) {
         (await glucoseRepository).fetchGlucoseBetween(start, end),
     loadTreatments: (start, end) async =>
         (await treatmentsRepository).fetchTreatmentsBetween(start, end),
+    loadDeviceStatuses: (start, end) async =>
+        (await statusesRepository).fetchDeviceStatusBetween(start, end),
     loadMeals: local.loadMeals,
     loadLowTreatments: lows.fetchBetween,
     loadActivities: local.loadActivities,
