@@ -1,0 +1,26 @@
+import 'meal.drift';
+import 'bolus_wizard.drift';
+
+CREATE TABLE meal_wizard_link (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  meal_id INTEGER NOT NULL REFERENCES meal(id) ON DELETE CASCADE,
+  local_wizard_id TEXT REFERENCES bolus_wizard(local_id) ON DELETE SET NULL,
+  remote_wizard_id TEXT,
+  remote_source TEXT,
+  relation_type TEXT NOT NULL CHECK (relation_type IN ('initial', 'continuation', 'correction')),
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
+  CHECK (local_wizard_id IS NOT NULL OR remote_wizard_id IS NOT NULL),
+  CHECK ((remote_wizard_id IS NULL AND remote_source IS NULL) OR
+    (remote_wizard_id IS NOT NULL AND remote_source IS NOT NULL AND length(trim(remote_wizard_id)) > 0 AND length(trim(remote_source)) > 0)),
+  UNIQUE (local_wizard_id),
+  UNIQUE (remote_source, remote_wizard_id)
+);
+
+-- An invalidated local-only event no longer has an identity to link.
+-- Remote-backed links survive mirror deletion via ON DELETE SET NULL.
+CREATE TRIGGER remove_local_only_wizard_links
+BEFORE DELETE ON bolus_wizard
+BEGIN
+  DELETE FROM meal_wizard_link
+  WHERE local_wizard_id = OLD.local_id AND remote_wizard_id IS NULL;
+END;

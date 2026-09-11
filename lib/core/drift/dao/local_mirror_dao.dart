@@ -1,6 +1,9 @@
 import 'package:drift/drift.dart';
 
 import '../database_impl.dart';
+import '../helpers/merge_bolus_wizard.dart';
+import '../helpers/validate_wizard_identity.dart';
+import '../models/wizard_identity_conflict.dart';
 
 part 'local_mirror_dao.g.dart';
 
@@ -65,14 +68,44 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     );
   }
 
-  Future<void> upsertBolusWizard(BolusWizardCompanion event) {
-    final table = db.bolusWizard;
-
-    return into(table).insert(
-      event,
-      onConflict: DoUpdate((_) => event, target: [table.createdAt]),
-    );
-  }
+  Future<void> upsertBolusWizard(BolusWizardCompanion event) =>
+      transaction(() async {
+        final table = db.bolusWizard;
+        if (event.nightscoutId.present &&
+            event.nightscoutId.value != null &&
+            event.remoteSource.present &&
+            event.remoteSource.value != null) {
+          final remoteMatch =
+              await (select(table)..where(
+                    (row) =>
+                        row.nightscoutId.equals(event.nightscoutId.value!) &
+                        row.remoteSource.equals(event.remoteSource.value!),
+                  ))
+                  .getSingleOrNull();
+          if (remoteMatch != null &&
+              remoteMatch.createdAt != event.createdAt.value) {
+            throw WizardIdentityConflict(
+              'A known remote wizard has a different timestamp',
+            );
+          }
+        }
+        final existing =
+            await (select(table)
+                  ..where((row) => row.createdAt.equals(event.createdAt.value)))
+                .getSingleOrNull();
+        if (existing == null) {
+          await into(table).insert(event);
+        } else {
+          await (update(table)
+                ..where((row) => row.localId.equals(existing.localId)))
+              .write(mergeBolusWizard(existing, event));
+        }
+        final saved =
+            await (select(table)
+                  ..where((row) => row.createdAt.equals(event.createdAt.value)))
+                .getSingle();
+        await db.mealWizardLinkDao.reconcile(saved);
+      });
 
   Future<void> upsertTemporaryTarget(TemporaryTargetCompanion event) {
     final table = db.temporaryTarget;
@@ -119,13 +152,19 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     );
   }
 
-  Future<void> deleteBolusWizardByCreatedAt(DateTime? createdAt) async {
-    final table = db.bolusWizard;
-    final reference = _matchesTreatmentReference(table.createdAt, createdAt);
-    if (reference == null) return;
-
-    await (delete(table)..where((row) => reference)).go();
-  }
+  Future<void> deleteBolusWizard(BolusWizardCompanion event) =>
+      transaction(() async {
+        final table = db.bolusWizard;
+        final stored =
+            await (select(table)
+                  ..where((row) => row.createdAt.equals(event.createdAt.value)))
+                .getSingleOrNull();
+        if (stored == null) return;
+        validateWizardIdentity(stored, event);
+        await (delete(
+          table,
+        )..where((row) => row.localId.equals(stored.localId))).go();
+      });
 
   Future<void> deleteTemporaryTargetByCreatedAt(DateTime? createdAt) async {
     final table = db.temporaryTarget;

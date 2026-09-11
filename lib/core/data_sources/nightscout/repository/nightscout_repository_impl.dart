@@ -10,6 +10,7 @@ import '../dto/bolus_wizard_dto.dart';
 import '../dto/device_status_dto.dart';
 import '../dto/glucose_dto.dart';
 import '../dto/temporary_target_dto.dart';
+import '../helpers/nightscout_source_key.dart';
 import '../helpers/treatments_factory.dart';
 import '../mappers/bolus_wizard_mapper.dart';
 import '../mappers/device_status_mapper.dart';
@@ -29,6 +30,9 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
     this.nightscoutToken = '',
     NightscoutService? service,
   }) : service = service ?? NightscoutService(nightscoutUrl: nightscoutUrl);
+
+  String get _remoteSourceKey =>
+      nightscoutSourceKey(_buildUri('', const {}).toString());
 
   Uri _buildUri(String path, Map<String, String> qp) {
     final uri = Uri.parse(nightscoutUrl);
@@ -72,7 +76,10 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
     };
     final url = _buildUri('/api/v1/treatments.json', qp);
     final data = await service.fetchNightscoutData(url);
-    return treatmentFactory.parseTreatments(data);
+    return treatmentFactory.parseTreatments(
+      data,
+      remoteSource: _remoteSourceKey,
+    );
   }
 
   @override
@@ -86,7 +93,11 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
     final url = _buildUri('/api/v1/treatments.json', qp);
     final data = await service.fetchNightscoutData(url);
     return (data as List)
-        .map((e) => BolusWizardDto.fromJson(e).toDomain())
+        .map(
+          (e) => BolusWizardDto.fromJson(
+            e,
+          ).toDomain(remoteSource: _remoteSourceKey),
+        )
         .toList();
   }
 
@@ -99,7 +110,11 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
     final url = _buildUri('/api/v1/treatments.json', qp);
     final data = await service.fetchNightscoutData(url);
     return (data as List)
-        .map((e) => BolusWizardDto.fromJson(e).toDomain())
+        .map(
+          (e) => BolusWizardDto.fromJson(
+            e,
+          ).toDomain(remoteSource: _remoteSourceKey),
+        )
         .toList();
   }
 
@@ -134,7 +149,10 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
     };
     final url = _buildUri('/api/v1/treatments.json', qp);
     final data = await service.fetchNightscoutData(url);
-    return treatmentFactory.parseTreatments(data);
+    return treatmentFactory.parseTreatments(
+      data,
+      remoteSource: _remoteSourceKey,
+    );
   }
 
   @override
@@ -155,7 +173,10 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
     };
     final url = _buildUri('/api/v1/treatments.json', qp);
     final data = await service.fetchNightscoutData(url);
-    final treatments = treatmentFactory.parseTreatments(data);
+    final treatments = treatmentFactory.parseTreatments(
+      data,
+      remoteSource: _remoteSourceKey,
+    );
     treatments.sort((a, b) {
       final aDate = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
       final bDate = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);

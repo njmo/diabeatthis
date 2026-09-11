@@ -11,10 +11,12 @@ import 'dao/meal_dao.dart';
 import 'dao/meal_ingredients_dao.dart';
 import 'dao/meal_template_dao.dart';
 import 'dao/meal_template_ingredients_dao.dart';
+import 'dao/meal_wizard_link_dao.dart';
 import 'dao/portion_dao.dart';
 import 'dao/quick_low_treatment_item_dao.dart';
 import 'database.dart';
 import 'migrations/migrate_stress_events.dart';
+import 'migrations/migrate_wizard_identity.dart';
 
 part 'database_impl.g.dart';
 
@@ -24,6 +26,7 @@ part 'database_impl.g.dart';
     IngredientDao,
     PortionDao,
     MealDao,
+    MealWizardLinkDao,
     MealAdvisorResultDao,
     LocalMirrorDao,
     ActivityDao,
@@ -39,7 +42,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 25;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -57,6 +60,9 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
+      if (from < 25) {
+        await migrateWizardIdentity(this, m);
+      }
       if (from < 24) {
         await m.addColumn(deviceStatus, deviceStatus.basalObservedAt);
         await m.addColumn(deviceStatus, deviceStatus.tempBasalAbsoluteRate);

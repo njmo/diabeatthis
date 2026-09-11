@@ -14,7 +14,10 @@ import '../mappers/temporary_target_mapper.dart';
 import '../mappers/treat_mapper.dart';
 
 class TreatmentFactory {
-  List<Treatment> parseTreatments(List<dynamic> treatments) {
+  List<Treatment> parseTreatments(
+    List<dynamic> treatments, {
+    String? remoteSource,
+  }) {
     final list = <Treatment>[];
 
     for (var i = 0; i < treatments.length; i++) {
@@ -31,7 +34,9 @@ class TreatmentFactory {
         continue;
       }
       if (type.contains('bolus wizard')) {
-        list.add(BolusWizardDto.fromJson(t).toDomain());
+        list.add(
+          BolusWizardDto.fromJson(t).toDomain(remoteSource: remoteSource),
+        );
         continue;
       }
       if (t is Map<String, dynamic> &&

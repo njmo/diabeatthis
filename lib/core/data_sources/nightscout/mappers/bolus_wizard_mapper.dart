@@ -3,13 +3,14 @@ import '../../../domain/model/bolus_wizard.dart';
 import '../dto/bolus_wizard_dto.dart';
 
 extension BolusWizardMapper on BolusWizardDto {
-  BolusWizard toDomain() {
+  BolusWizard toDomain({String? remoteSource}) {
     final calculatorResult = bolusCalculatorResult?.toBolusCalculatorResult();
 
     return BolusWizard(
       createdAt: DateTime.parse(createdAt).toLocal(),
       date: _dateTimeFromMilliseconds(date),
       nightscoutObjectId: id,
+      remoteSource: remoteSource,
       glucose: glucose,
       units: units,
       notes: notes,

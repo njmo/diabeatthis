@@ -9,6 +9,8 @@ import '../../../domain/model/temporary_target.dart';
 import '../../../domain/model/treat.dart';
 import '../../../domain/model/treatment_base.dart';
 import '../../../drift/dao/local_mirror_dao.dart';
+import '../../../drift/models/wizard_identity_conflict.dart';
+import '../../../logger/logger.dart';
 import '../../config/data_source_config.dart';
 import '../mappers/bolus_wizard_drift_mapper.dart';
 import '../mappers/correction_bolus_drift_mapper.dart';
@@ -19,7 +21,7 @@ import '../mappers/manual_bolus_drift_mapper.dart';
 import '../mappers/temporary_target_drift_mapper.dart';
 import '../mappers/treat_drift_mapper.dart';
 
-class LocalMirrorWriter {
+class LocalMirrorWriter with Logging {
   const LocalMirrorWriter(this._dao);
 
   final LocalMirrorDao _dao;
@@ -46,10 +48,15 @@ class LocalMirrorWriter {
             );
           }
         case BolusWizard():
-          if (treatment.isValid) {
-            await _dao.upsertBolusWizard(treatment.toCompanion(source));
-          } else {
-            await _dao.deleteBolusWizardByCreatedAt(treatment.createdAt);
+          try {
+            final record = treatment.toCompanion(source);
+            if (treatment.isValid) {
+              await _dao.upsertBolusWizard(record);
+            } else {
+              await _dao.deleteBolusWizard(record);
+            }
+          } on WizardIdentityConflict catch (error) {
+            logW('Wizard mirror conflict: ${error.message}');
           }
         case TemporaryTarget():
           if (treatment.isValid) {

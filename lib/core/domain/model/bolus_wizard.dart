@@ -12,6 +12,8 @@ abstract class BolusWizard with _$BolusWizard implements Treatment {
 
   const factory BolusWizard({
     required String? nightscoutObjectId,
+    String? localId,
+    String? remoteSource,
     required DateTime createdAt,
     required DateTime? date,
     required int glucose,

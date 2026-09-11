@@ -18,3 +18,4 @@ import 'tables/manual_bolus.drift';
 import 'tables/treat.drift';
 import 'tables/extended_carb.drift';
 import 'tables/stress_event.drift';
+import 'tables/meal_wizard_link.drift';

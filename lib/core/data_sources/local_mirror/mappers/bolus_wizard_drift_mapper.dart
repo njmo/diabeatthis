@@ -11,11 +11,13 @@ extension BolusWizardDriftMapper on domain.BolusWizard {
 
     return drift.BolusWizardCompanion.insert(
       source: source.storageValue,
+      localId: Value.absentIfNull(localId),
       externalId: nightscoutObjectId != null
           ? Value(nightscoutObjectId!)
           : const Value.absent(),
       createdAt: Value(createdAt.millisecondsSinceEpoch),
       nightscoutId: Value(nightscoutObjectId),
+      remoteSource: Value(remoteSource),
       glucose: Value(glucose),
       units: Value(units),
       carbs: Value(calculator?.carbs),
@@ -62,6 +64,8 @@ extension BolusWizardDriftMapper on domain.BolusWizard {
 extension BolusWizardDomainMapper on drift.BolusWizardData {
   domain.BolusWizard toDomain() {
     return domain.BolusWizard(
+      localId: localId,
+      remoteSource: remoteSource,
       nightscoutObjectId: nightscoutId,
       createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
       date: DateTime.fromMillisecondsSinceEpoch(createdAt),
