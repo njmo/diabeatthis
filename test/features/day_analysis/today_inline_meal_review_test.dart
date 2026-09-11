@@ -3,6 +3,7 @@ import 'package:diabeatthis/features/day_analysis/data/providers/day_context_pro
 import 'package:diabeatthis/features/day_analysis/data/providers/day_meal_review_provider.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_meal_review_entry.dart';
 import 'package:diabeatthis/features/day_analysis/domain/use_cases/build_day_context_use_case.dart';
+import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_meal_review_section.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/today_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,7 +58,13 @@ void main() {
         250,
       );
       await tester.pumpAndSettle();
-      expect(find.text('1 do sprawdzenia'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(DayMealReviewSection),
+          matching: find.text('1 do sprawdzenia'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Przejrzyj i uzupełnij posiłki'), findsNothing);
       expect(find.byTooltip('Dodaj posiłek wstecz'), findsOneWidget);
       await tester.tap(find.text('Wpis kalkulatora do sprawdzenia'));

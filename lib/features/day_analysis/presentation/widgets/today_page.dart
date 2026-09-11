@@ -6,13 +6,15 @@ import 'package:intl/intl.dart';
 import '../../../../common/l10n/language.dart';
 import '../../data/providers/day_context_provider.dart';
 import '../../data/providers/day_meal_review_provider.dart';
+import '../../domain/use_cases/accept_day_summary_use_case.dart';
 import 'day_activity_card.dart';
 import 'day_date_selector.dart';
 import 'day_device_age_card.dart';
 import 'day_glucose_card.dart';
 import 'day_insulin_card.dart';
-import 'day_meal_review_section.dart';
 import 'day_meals_card.dart';
+import 'day_review_section.dart';
+import 'day_summary_sheet.dart';
 
 class TodayPage extends ConsumerStatefulWidget {
   const TodayPage({super.key});
@@ -99,7 +101,24 @@ class TodayPageState extends ConsumerState<TodayPage> {
                     nightBasal: day.nightBasal,
                   ),
                   DayMealsCard(day: day),
-                  DayMealReviewSection(date: day.start),
+                  DayReviewSection(date: day.start),
+                  if (AcceptDaySummaryUseCase.isAvailable(
+                    day.start,
+                    clock.now(),
+                  ))
+                    FilledButton.icon(
+                      onPressed: () => showModalBottomSheet<void>(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        builder: (_) => FractionallySizedBox(
+                          heightFactor: 0.9,
+                          child: DaySummarySheet(date: day.start),
+                        ),
+                      ),
+                      icon: const Icon(Icons.fact_check_outlined),
+                      label: const Text('Podsumowanie dnia'),
+                    ),
                   DayGlucoseCard(
                     title: lang.dayNightTitle,
                     summary: day.nightGlucose,
