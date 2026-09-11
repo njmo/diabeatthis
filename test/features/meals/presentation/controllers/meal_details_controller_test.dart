@@ -3,11 +3,15 @@ import 'dart:convert';
 import 'package:diabeatthis/common/history/insulin_bolus_summary.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/history/local_device_status_history_repository.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/history/local_glucose_history_repository.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/history/local_treatments_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/services/local_mirror_writer.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/helpers/treatments_factory.dart';
 import 'package:diabeatthis/core/data_sources/providers/on_demand_history_repositories_provider.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
+import 'package:diabeatthis/features/meals/data/providers/similar_meals_provider.dart';
 import 'package:diabeatthis/features/meals/presentation/controllers/meal_details_controller.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_analysis_charts.dart';
 import 'package:drift/drift.dart' show Value;
@@ -18,8 +22,10 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   late DatabaseImpl db;
   late ProviderContainer container;
+  late bool offline;
 
   setUp(() {
+    offline = true;
     db = DatabaseImpl(NativeDatabase.memory());
     container = ProviderContainer(
       overrides: [
@@ -31,9 +37,16 @@ void main() {
             ),
           ),
         ),
-        onDemandHistoryRepositoriesProvider.overrideWith(
-          (ref) => throw StateError('Offline'),
-        ),
+        onDemandHistoryRepositoriesProvider.overrideWith((ref) {
+          if (offline) throw StateError('Offline');
+          return (
+            glucose: LocalGlucoseHistoryRepository(db.localMirrorDao),
+            treatments: LocalTreatmentsHistoryRepository(db.localMirrorDao),
+            deviceStatuses: LocalDeviceStatusHistoryRepository(
+              db.localMirrorDao,
+            ),
+          );
+        }),
       ],
     );
   });
@@ -42,6 +55,37 @@ void main() {
     container.dispose();
     await db.close();
   });
+
+  test(
+    'shared refresh invalidates active contexts and stays available',
+    () async {
+      offline = false;
+      final meal = await db
+          .into(db.meal)
+          .insertReturning(
+            MealCompanion.insert(
+              name: 'Meal',
+              plannedAt: DateTime(2026, 5, 24, 13).millisecondsSinceEpoch,
+              status: const Value('eaten'),
+            ),
+          );
+      final provider = mealDetailsControllerProvider(meal.id);
+      final subscription = container.listen(provider, (_, _) {});
+      addTearDown(subscription.close);
+      final initial = await container.read(provider.future);
+      final matches = similarMealsProvider(initial.details);
+      final matchSubscription = container.listen(matches, (_, _) {});
+      addTearDown(matchSubscription.close);
+      final previous = container.read(matches.future);
+      await previous;
+      await container.read(provider.notifier).downloadHistory();
+      final refreshed = container.read(matches.future);
+      expect(identical(previous, refreshed), false);
+      await refreshed;
+      expect(container.read(provider).value!.showHistoryDownload, true);
+      expect(container.read(provider).value!.isDownloadingHistory, false);
+    },
+  );
 
   test(
     'preserves local analysis and clears busy state after download failure',

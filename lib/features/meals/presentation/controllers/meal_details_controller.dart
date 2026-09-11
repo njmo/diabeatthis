@@ -1,10 +1,15 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../core/data_sources/config/data_source_config.dart';
+import '../../../../core/data_sources/providers/effective_history_source_provider.dart';
 import '../../../../core/data_sources/stress_events/stress_event_repository.dart';
 import '../../data/domain/use_cases/analyze_meal_use_case.dart';
 import '../../data/domain/use_cases/load_low_treatments_for_meal_use_case.dart';
 import '../../data/domain/use_cases/load_meal_details_use_case.dart';
+import '../../data/providers/meal_before_context_provider.dart';
+import '../../data/providers/similar_meal_glucose_provider.dart';
+import '../../data/providers/similar_meals_provider.dart';
 import '../models/meal_page_state.dart';
 
 part 'meal_details_controller.g.dart';
@@ -25,12 +30,24 @@ class MealDetailsControllerNotifier extends _$MealDetailsControllerNotifier {
     );
     final details = baseDetails.copyWith(lowTreatments: lowTreatments);
 
+    var usesLocalHistory = false;
     final analysisUseCase = ref.read(analyzeMealUseCaseProvider);
     try {
+      usesLocalHistory =
+          await ref.watch(effectiveHistorySourceProvider.future) ==
+          HistorySource.local;
       final analysis = await analysisUseCase.call(details);
-      return MealPageState(details: details, analysis: analysis);
+      return MealPageState(
+        details: details,
+        analysis: analysis,
+        usesLocalHistory: usesLocalHistory,
+      );
     } catch (error) {
-      return MealPageState(details: details, analysisError: error.toString());
+      return MealPageState(
+        details: details,
+        analysisError: error.toString(),
+        usesLocalHistory: usesLocalHistory,
+      );
     }
   }
 
@@ -47,9 +64,16 @@ class MealDetailsControllerNotifier extends _$MealDetailsControllerNotifier {
           .read(analyzeMealUseCaseProvider)
           .call(current.details, forceCloud: true);
       if (!ref.mounted) return;
+      // Rebuild active context sections from the refreshed history. Inactive
+      // auto-disposed sections will load on expansion as usual.
+      ref.invalidate(mealBeforeContextProvider);
+      ref.invalidate(similarMealsProvider);
+      ref.invalidate(similarMealGlucoseProvider);
       state = AsyncData(
         MealPageState(
           details: current.details,
+          usesLocalHistory: current.usesLocalHistory,
+          hasFetchedCloudHistory: true,
           analysis: analysis,
           selectedTimestamp: state.value?.selectedTimestamp,
         ),

@@ -7,6 +7,10 @@ class MealPageState {
   final String? analysisError;
   final DateTime? selectedTimestamp;
   final bool isDownloadingHistory;
+  final bool usesLocalHistory;
+
+  /// A successful explicit fetch may legitimately return no AAPS records.
+  final bool hasFetchedCloudHistory;
 
   const MealPageState({
     required this.details,
@@ -14,11 +18,17 @@ class MealPageState {
     this.analysisError,
     this.selectedTimestamp,
     this.isDownloadingHistory = false,
+    this.usesLocalHistory = false,
+    this.hasFetchedCloudHistory = false,
   });
 
   bool get showHistoryDownload =>
       details.meal.isEaten &&
-      (isDownloadingHistory || (analysis?.needsHistoryDownload ?? true));
+      usesLocalHistory &&
+      (isDownloadingHistory ||
+          analysis == null ||
+          !analysis!.hasContinuousGlucoseHistory ||
+          (!hasFetchedCloudHistory && !analysis!.hasContinuousDeviceHistory));
 
   MealPageState copyWith({
     MealDetailsData? details,
@@ -30,6 +40,8 @@ class MealPageState {
   }) {
     return MealPageState(
       details: details ?? this.details,
+      usesLocalHistory: usesLocalHistory,
+      hasFetchedCloudHistory: hasFetchedCloudHistory,
       isDownloadingHistory: isDownloadingHistory ?? this.isDownloadingHistory,
       analysis: analysis ?? this.analysis,
       analysisError: analysisError ?? this.analysisError,

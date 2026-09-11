@@ -16,12 +16,10 @@ class MealHistoryDownloadButton extends ConsumerWidget {
     return AsyncActionFab(
       icon: Icons.cloud_download_outlined,
       isLoading: state.isDownloadingHistory,
-      label: state.analysis?.hasHistoryData ?? false
-          ? context.lang.mealCompleteHistoryFab
-          : context.lang.mealDownloadHistoryFab,
+      label: context.lang.mealCompleteHistoryFab,
       tooltip: state.isDownloadingHistory
           ? context.lang.mealDownloadingHistory
-          : context.lang.mealDownloadHistory,
+          : context.lang.mealCompleteHistoryFab,
       onPressed: () async {
         final messages = context.lang;
         final messenger = ScaffoldMessenger.of(context);
