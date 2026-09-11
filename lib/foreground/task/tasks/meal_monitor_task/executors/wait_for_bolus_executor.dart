@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 
+import '../../../../../common/meal/meal_bolus_timing.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/logger/logger.dart';
@@ -100,9 +101,11 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
     final latestBolus = runtimeContext.container.read(
       latestBolusWizardProvider,
     );
-    final bolusLookupSince = meal.updatedAt ?? waitingSince;
     if (latestBolus != null &&
-        !latestBolus.createdAt.isBefore(bolusLookupSince)) {
+        isMealBolusRecent(
+          bolusAt: latestBolus.createdAt,
+          referenceTime: meal.updatedAt ?? waitingSince,
+        )) {
       logI("Recent calculator response already available");
       calculatorResponse = TreatmentAvailableEvent<BolusWizard>(latestBolus);
     }
@@ -125,6 +128,9 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
         runtimeContext,
         notificationProvider,
         meal.id,
+        onBolusRecorded: (wizard) {
+          calculatorResponse = TreatmentAvailableEvent<BolusWizard>(wizard);
+        },
         carbs: suggestion.carbs,
         extendedCarbs: suggestion.extendedCarbs,
         extendedCarbsDeliveryMode: suggestion.extendedCarbsDeliveryMode,
@@ -148,6 +154,10 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
     await runtimeContext.container.read(
       updateMealProvider(meal, nextStatus).future,
     );
+    final recordedBolus = calculatorResponse;
+    if (recordedBolus != null) {
+      consumeBolusWizard(runtimeContext.container, recordedBolus.data);
+    }
 
     if (decision == MealDecision.eatNowBolusLater) {
       return FinalizeMealExecutor();

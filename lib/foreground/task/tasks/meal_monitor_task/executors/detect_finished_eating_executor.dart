@@ -12,6 +12,7 @@ import '../../../../../features/meals/data/providers/meal_ingredients_list_provi
 import '../../../../event/internal/meal_status_changed_event.dart';
 import '../../../../event/internal/treatment_available_event.dart';
 import '../../../../event/model/foreground_event.dart';
+import '../../../../providers/latest_bolus_wizard_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../helpers/bolus_reminder_helper.dart';
 import '../meal_monitor_context.dart';
@@ -199,6 +200,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       await runtimeContext.container
           .read(notificationsControllerForegroundProvider)
           .cancelAll();
+      consumeBolusWizard(runtimeContext.container, calculatorResponse.data);
       return true;
     }
 
@@ -214,6 +216,8 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       mealMonitorContext.activeMeal!.id,
       carbs: grams,
       isAddOn: true,
+      onBolusRecorded: (wizard) =>
+          consumeBolusWizard(runtimeContext.container, wizard),
     );
   }
 }

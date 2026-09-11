@@ -46,6 +46,19 @@ class NextMealCollector extends ForegroundCollector {
           _lastStatus != current.status;
 
       if (changed) {
+        // Let meal status transitions settle before announcing the next meal.
+        await Future<void>.delayed(const Duration(seconds: 1));
+        if (_disposed) return;
+
+        final latest = await db.mealDao.getNearestMeal();
+        if (_disposed) return;
+        if (latest == null ||
+            latest.id != current.id ||
+            latest.plannedAt != current.plannedAt ||
+            latest.status != current.status) {
+          continue;
+        }
+
         _lastMealId = current.id;
         _lastPlannedAt = current.plannedAt;
         _lastStatus = current.status;

@@ -119,6 +119,7 @@ class BolusReminderHelper with Logging {
     int extendedCarbsDelayMinutes = 45,
     int extendedCarbsDurationMinutes = 120,
     bool isAddOn = false,
+    void Function(BolusWizard)? onBolusRecorded,
   }) async {
     while (true) {
       logI("Cancelling previous notifications before showing bolus reminder");
@@ -148,6 +149,7 @@ class BolusReminderHelper with Logging {
       }
 
       if (result is TreatmentAvailableEvent<BolusWizard>) {
+        onBolusRecorded?.call(result.data);
         logI(
           "Calculator response available, cancelling notifications and marking meal as bolused",
         );
@@ -190,6 +192,7 @@ class BolusReminderHelper with Logging {
             delay,
           );
       if (bolusResponse != null) {
+        onBolusRecorded?.call(bolusResponse.data);
         logI(
           "Calculator response available, cancelling notifications and marking meal as bolused",
         );
