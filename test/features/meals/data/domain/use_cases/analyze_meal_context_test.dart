@@ -111,6 +111,16 @@ void main() {
       );
       expect(analysis.linkedActivities, hasLength(1));
       expect(analysis.treatments, hasLength(1));
+      final bounded = (await container.read(analyzeMealUseCaseProvider)(
+        details,
+        asOf: time.add(const Duration(minutes: 15)),
+      ))!;
+      expect(
+        bounded.outcomeContext!.observedUntil,
+        time.add(const Duration(minutes: 15)),
+      );
+      expect(bounded.outcomeContext!.lowTreatments, isEmpty);
+      expect(bounded.outcomeContext!.isTimeWindowComplete, false);
       expect(analysis.outcomeContext, isNotNull);
       expect(analysis.outcomeContext!.lowTreatments.map((e) => e.mealId), [
         after,

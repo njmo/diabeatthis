@@ -1,4 +1,5 @@
 import '../../../../common/history/latest_reading_at.dart';
+import '../../../../common/history/nearest_cgm_reading.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/manual_bolus.dart';
@@ -14,8 +15,10 @@ class MealStartContextData {
   DateTime get referenceTime => details.analysisTime;
   bool get hasRecordedStart => details.recordedEatingStartedAt != null;
 
-  Glucose? get glucose =>
-      latestReadingAt(analysis.glucoseReadings, referenceTime, (g) => g.date);
+  Glucose? get glucose => nearestCgmReading(
+    analysis.glucoseReadings.where((g) => !g.date.isAfter(analysis.chartEnd)),
+    referenceTime,
+  );
   DeviceStatus? get deviceStatus =>
       latestReadingAt(analysis.deviceStatuses, referenceTime, (s) => s.date);
 

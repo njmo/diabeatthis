@@ -3,6 +3,7 @@ import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
+import '../../../meal_analysis/domain/models/meal_observation_window.dart';
 
 class MealDetailsData {
   final MealRecordData meal;
@@ -95,6 +96,14 @@ class MealDetailsData {
           ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     return waiting.isEmpty ? null : start.difference(waiting.last.createdAt);
   }
+
+  Duration get observationWindow => MealObservationWindow.forWbtKcal(
+    preferredSummarySnapshot?.wbtKcal ??
+        ingredients.fold<double>(
+          0,
+          (sum, ingredient) => sum + ingredient.consumedWbtKcalContribution,
+        ),
+  );
 
   DateTime get analysisTime => recordedEatingStartedAt ?? meal.analysisTime;
 

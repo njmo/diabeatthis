@@ -11,8 +11,9 @@ class GlucosePeriodSummary {
   factory GlucosePeriodSummary.calculate(
     Iterable<Glucose> readings,
     DateTime start,
-    DateTime end,
-  ) {
+    DateTime end, {
+    GlucoseBaselinePolicy baselinePolicy = GlucoseBaselinePolicy.atOrBefore,
+  }) {
     final ordered = {
       for (final g in readings)
         if (g.type == GlucoseType.cgm && g.sgv > 0 && !g.date.isAfter(end))
@@ -34,7 +35,12 @@ class GlucosePeriodSummary {
       covered += milliseconds;
     }
     return GlucosePeriodSummary(
-      window: GlucoseWindowSummary(readings: ordered, start: start, end: end),
+      window: GlucoseWindowSummary(
+        readings: ordered,
+        start: start,
+        end: end,
+        baselinePolicy: baselinePolicy,
+      ),
       mean: covered == 0 ? null : weighted / covered,
     );
   }

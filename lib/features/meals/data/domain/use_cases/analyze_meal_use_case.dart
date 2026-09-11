@@ -20,7 +20,6 @@ import '../../../../low_treatment/data/providers/recorded_low_treatment_reposito
 import '../../../../low_treatment/domain/models/recorded_low_treatment.dart';
 import '../../../../meal_analysis/data/repositories/meal_context_local_history_repository.dart';
 import '../../../../meal_analysis/domain/models/meal_activity_observation.dart';
-import '../../../../meal_analysis/domain/models/meal_observation_window.dart';
 import '../../../../meal_analysis/domain/models/recorded_meal_context.dart';
 import '../../../../meal_analysis/domain/use_cases/build_meal_outcome_context_use_case.dart';
 import '../../models/meal_analysis_data.dart';
@@ -41,6 +40,7 @@ class AnalyzeMealUseCase {
   Future<MealAnalysisData?> call(
     MealDetailsData details, {
     bool forceCloud = false,
+    DateTime? asOf,
   }) async {
     if (!details.meal.isEaten) {
       return null;
@@ -48,9 +48,13 @@ class AnalyzeMealUseCase {
 
     final mealTime = details.analysisTime;
     final chartStart = mealTime.subtract(const Duration(minutes: 45));
-    final postMealWindow = _postMealGlucoseWindow(details);
+    final postMealWindow = details.observationWindow;
     final requestedChartEnd = mealTime.add(postMealWindow);
-    final now = clock.now();
+    final currentTime = clock.now();
+    final now = asOf != null && asOf.isBefore(currentTime) ? asOf : currentTime;
+    if (now.isBefore(mealTime)) {
+      throw ArgumentError.value(asOf, 'asOf', 'Must not precede the meal');
+    }
     final chartEnd = requestedChartEnd.isAfter(now) ? now : requestedChartEnd;
     final eventStart = mealTime.subtract(const Duration(hours: 1));
     final eventEnd = chartEnd;
@@ -410,17 +414,6 @@ class AnalyzeMealUseCase {
   ) {
     final targetEnd = target.createdAt.add(Duration(minutes: target.duration));
     return target.createdAt.isBefore(chartEnd) && targetEnd.isAfter(chartStart);
-  }
-
-  Duration _postMealGlucoseWindow(MealDetailsData details) {
-    final summary = details.preferredSummarySnapshot;
-    final wbtKcal =
-        summary?.wbtKcal ??
-        details.ingredients.fold<double>(
-          0,
-          (sum, ingredient) => sum + ingredient.consumedWbtKcalContribution,
-        );
-    return MealObservationWindow.forWbtKcal(wbtKcal);
   }
 
   String _formatNumber(double value) {

@@ -1,4 +1,5 @@
 import '../../../../common/history/glucose_period_summary.dart';
+import '../../../../common/history/glucose_window_summary.dart';
 import '../../../../common/history/insulin_basal_summary.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
 import '../../../../common/history/treatment_overlaps_window.dart';
@@ -115,7 +116,12 @@ class BuildMealOutcomeContextUseCase {
       observedUntil: end,
       expectedUntil: expected,
       builtAt: builtAt,
-      glucoseSummary: GlucosePeriodSummary.calculate(readings, mealTime, end),
+      glucoseSummary: GlucosePeriodSummary.calculate(
+        readings,
+        mealTime,
+        end,
+        baselinePolicy: GlucoseBaselinePolicy.nearest,
+      ),
       basal: InsulinBasalSummary.calculate(statuses, mealTime, end),
       boluses: InsulinBolusSummary.fromTreatments(
         treatments: history,

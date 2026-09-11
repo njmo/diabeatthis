@@ -1,4 +1,7 @@
 import '../../core/domain/model/glucose.dart';
+import 'nearest_cgm_reading.dart';
+
+enum GlucoseBaselinePolicy { atOrBefore, nearest }
 
 /// A reading represents at most one CGM interval. Missing time stays unknown.
 class GlucoseWindowSummary {
@@ -26,6 +29,7 @@ class GlucoseWindowSummary {
     required Iterable<Glucose> readings,
     required DateTime start,
     required DateTime end,
+    GlucoseBaselinePolicy baselinePolicy = GlucoseBaselinePolicy.atOrBefore,
   }) {
     final byTime = {
       for (final reading in readings)
@@ -35,13 +39,15 @@ class GlucoseWindowSummary {
     final ordered = byTime.values.toList()
       ..sort((a, b) => a.date.compareTo(b.date));
     final window = ordered.where((g) => !g.date.isBefore(start)).toList();
-    final baseline = ordered
-        .where(
-          (g) =>
-              !g.date.isAfter(start) &&
-              start.difference(g.date) <= readingInterval,
-        )
-        .lastOrNull;
+    final baseline = baselinePolicy == GlucoseBaselinePolicy.nearest
+        ? nearestCgmReading(ordered, start)
+        : ordered
+              .where(
+                (g) =>
+                    !g.date.isAfter(start) &&
+                    start.difference(g.date) <= readingInterval,
+              )
+              .lastOrNull;
     var below = Duration.zero;
     var within = Duration.zero;
     var above = Duration.zero;

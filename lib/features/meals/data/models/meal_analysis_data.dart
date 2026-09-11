@@ -1,5 +1,6 @@
 import '../../../../common/history/bolus_wizard_grouping.dart';
 import '../../../../common/history/glucose_window_summary.dart';
+import '../../../../common/history/has_continuous_history.dart';
 import '../../../../common/history/history_event_type.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
 import '../../../../common/history/time_series_coverage.dart';
@@ -59,6 +60,20 @@ class MealAnalysisData {
     end: chartEnd,
   );
 
+  bool get hasContinuousGlucoseHistory => hasContinuousHistory(
+    timestamps: glucoseReadings
+        .where((g) => g.type == GlucoseType.cgm && g.sgv > 0)
+        .map((g) => g.date),
+    start: chartStart,
+    end: chartEnd,
+  );
+
+  bool get hasContinuousDeviceHistory => hasContinuousHistory(
+    timestamps: deviceStatuses.map((s) => s.date),
+    start: chartStart,
+    end: chartEnd,
+  );
+
   bool get needsHistoryDownload => glucoseCoverage.isBelowHalf;
 
   bool get hasFullGlucoseWindow {
@@ -71,6 +86,7 @@ class MealAnalysisData {
 
   GlucoseStatsData get glucoseStats {
     final window = GlucoseWindowSummary(
+      baselinePolicy: GlucoseBaselinePolicy.nearest,
       readings: glucoseReadings,
       start: mealTime,
       end: chartEnd,

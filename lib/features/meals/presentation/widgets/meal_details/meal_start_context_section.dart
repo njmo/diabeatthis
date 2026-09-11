@@ -70,7 +70,9 @@ class MealStartContextSection extends StatelessWidget {
                         ],
                       ),
                       Text(
-                        directionLabel(context, glucose?.direction),
+                        glucose == null
+                            ? messages.mealReviewNoNearbyReading
+                            : directionLabel(context, glucose.direction),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
