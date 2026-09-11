@@ -1,8 +1,10 @@
 import 'package:drift/drift.dart';
 
+import '../../../../core/domain/model/meal_snapshot.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../../../core/drift/mappers/meal_snapshot_drift_mapper.dart';
 import '../../domain/models/meal_activity_context.dart';
+import '../../domain/models/meal_composition.dart';
 import '../../domain/models/recorded_meal_context.dart';
 
 class MealContextLocalHistoryRepository {
@@ -69,6 +71,76 @@ class MealContextLocalHistoryRepository {
           ),
         )
         .toList();
+  });
+
+  /// Batch ingredient read only for similarity search; regular contexts stay cheap.
+  /// Portion conversions are current because they have no revision history.
+  Future<List<RecordedMealContext>> loadSimilarMeals(
+    DateTime start,
+    DateTime cutoff,
+    int? excludeMealId,
+  ) => db.transaction(() async {
+    final meals = await loadMeals(start, cutoff, excludeMealId);
+    if (meals.isEmpty) return meals;
+    final rows = await db
+        .customSelect(
+          '''SELECT mi.*, i.is_reference,
+      ip.grams_per_portion FROM meal_ingredients mi
+      JOIN ingredient i ON i.id = mi.ingredient_id
+      LEFT JOIN ingredient_portions ip ON ip.ingredient_id = mi.ingredient_id AND ip.portion_id = mi.portion_id
+      WHERE mi.meal_id IN (${List.filled(meals.length, '?').join(',')})''',
+          variables: [for (final meal in meals) Variable.withInt(meal.mealId)],
+        )
+        .get();
+    final ingredientsByMeal = <int, List<QueryRow>>{};
+    for (final row in rows) {
+      (ingredientsByMeal[row.read<int>('meal_id')] ??= []).add(row);
+    }
+    final result = <RecordedMealContext>[];
+    for (final meal in meals) {
+      final ingredients = ingredientsByMeal[meal.mealId] ?? const <QueryRow>[];
+      final grams = <int, double>{};
+      var valid = true;
+      for (final row in ingredients) {
+        if (row.read<int>('updated_at') > cutoff.millisecondsSinceEpoch ||
+            row.read<int>('created_at') > cutoff.millisecondsSinceEpoch) {
+          valid = false;
+          break;
+        }
+        final extra = row.read<String>('entry_type') == 'extra';
+        final consumed =
+            meal.snapshot?.snapshotType == MealSnapshotType.consumed;
+        if (!consumed && extra) continue;
+        final amount = consumed
+            ? row.readNullable<double>('consumed_amount') ??
+                  (extra ? 0 : row.read<double>('amount'))
+            : row.read<double>('amount');
+        final conversion = row.read<int>('is_reference') == 1
+            ? 100.0
+            : row.readNullable<int>('portion_id') == null
+            ? 1.0
+            : row.readNullable<double>('grams_per_portion');
+        if (conversion == null || !amount.isFinite || amount < 0) {
+          valid = false;
+          break;
+        }
+        if (amount == 0) continue;
+        final id = row.read<int>('ingredient_id');
+        grams[id] = (grams[id] ?? 0) + amount * conversion;
+      }
+      result.add(
+        RecordedMealContext(
+          mealId: meal.mealId,
+          name: meal.name,
+          eatenAt: meal.eatenAt,
+          snapshot: meal.snapshot,
+          composition: valid && grams.isNotEmpty
+              ? MealComposition(grams)
+              : null,
+        ),
+      );
+    }
+    return result;
   });
 
   Future<List<MealActivityContext>> loadActivities(
