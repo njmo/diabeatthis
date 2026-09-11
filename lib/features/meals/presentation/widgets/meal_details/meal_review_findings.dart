@@ -4,6 +4,8 @@ import '../../../../../common/history/glucose_window_summary.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/utils/format_duration_label.dart';
 import '../../../../../common/widgets/detail_section_card.dart';
+import '../../../../../common/widgets/responsive_metric_list.dart';
+import '../../../common/widgets/meal_stat_tile.dart';
 import '../../../data/models/meal_analysis_data.dart';
 import '../../../data/models/meal_details_data.dart';
 import 'meal_detail_formatters.dart';
@@ -23,6 +25,7 @@ class MealReviewFindings extends StatelessWidget {
   Widget build(BuildContext context) {
     final messages = context.lang;
     final summary = GlucoseWindowSummary(
+      baselinePolicy: GlucoseBaselinePolicy.nearest,
       readings: analysis.glucoseReadings,
       start: analysis.mealTime,
       end: analysis.chartEnd,
@@ -31,24 +34,48 @@ class MealReviewFindings extends StatelessWidget {
     final returned = summary.firstReturnAfterPeak;
     final planned = details.plannedSnapshot;
     final consumed = details.consumedSnapshot;
-    final findings = [
+    final findings = <Widget>[
       if (peak != null)
-        messages.mealReviewPeakFinding(
-          formatMgdl(peak.sgv),
-          formatDurationLabel(peak.date.difference(analysis.mealTime)),
+        MealStatTile(
+          icon: Icons.trending_up_rounded,
+          label: messages.mealReviewPeak,
+          value: formatMgdl(peak.sgv),
+          detail: formatDurationOffset(peak.date.difference(analysis.mealTime)),
         ),
       if (returned != null)
-        messages.mealReviewReturnFinding(mealTime(returned.date)),
+        MealStatTile(
+          icon: Icons.check_circle_outline_rounded,
+          label: messages.mealReviewReturn,
+          value: mealTime(returned.date),
+        ),
       if (planned != null &&
           consumed != null &&
           planned.totalCarbsG != consumed.totalCarbsG)
-        messages.mealReviewPortionFinding(
-          formatSignedGrams(consumed.totalCarbsG - planned.totalCarbsG),
+        MealStatTile(
+          icon: Icons.restaurant_rounded,
+          label: messages.mealPortionDifference,
+          value: formatSignedGrams(consumed.totalCarbsG - planned.totalCarbsG),
         ),
-      if (analysis.linkedMeals.isNotEmpty) messages.mealReviewOtherMeals,
-      if (analysis.linkedActivities.isNotEmpty) messages.mealReviewActivity,
+      if (analysis.linkedMeals.isNotEmpty)
+        MealStatTile(
+          icon: Icons.restaurant_menu_rounded,
+          label: messages.mealOtherEventsCount,
+          value: '${analysis.linkedMeals.length}',
+          detail: messages.mealReviewOtherMeals,
+        ),
+      if (analysis.linkedActivities.isNotEmpty)
+        MealStatTile(
+          icon: Icons.directions_run_rounded,
+          label: messages.mealActivitiesCount,
+          value: '${analysis.linkedActivities.length}',
+          detail: messages.mealReviewActivity,
+        ),
       if (summary.missing > Duration.zero)
-        messages.mealReviewMissingFinding(formatDurationLabel(summary.missing)),
+        MealStatTile(
+          icon: Icons.signal_cellular_connected_no_internet_0_bar,
+          label: messages.mealReviewMissing,
+          value: formatDurationLabel(summary.missing),
+        ),
     ];
     return DetailSectionCard(
       title: messages.mealReviewFindings,
@@ -58,22 +85,7 @@ class MealReviewFindings extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              for (final finding in findings)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.subdirectory_arrow_right_rounded,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(child: Text(finding)),
-                    ],
-                  ),
-                ),
+              ResponsiveMetricList(maxColumns: 2, children: findings),
               const SizedBox(height: 8),
               Text(
                 messages.mealReviewContext,

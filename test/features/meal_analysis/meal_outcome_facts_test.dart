@@ -38,6 +38,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('obserwacja częściowa'), findsOneWidget);
       expect(find.textContaining('3 g'), findsOneWidget);
+      await tester.ensureVisible(find.text('Szczegóły kontekstu'));
+      await tester.tap(find.text('Szczegóły kontekstu'));
+      await tester.pumpAndSettle();
       expect(
         find.textContaining('nie oznacza rzeczywistego wchłaniania'),
         findsOneWidget,

@@ -1013,16 +1013,19 @@
   "mealReviewCorrectionsValue": "{count} × · {units} j.",
   "@mealReviewCorrectionsValue": {"placeholders": {"count": {"type": "int"}, "units": {"type": "String"}}},
   "mealResponsePeakTime": "Czas do szczytu",
-  "mealResponseRiseTime": "Początek szybkiego wzrostu",
+  "mealRangeObservedBasis": "Zakresy: % dostępnych danych · braki osobno",
+  "mealResponseRiseTime": "Początek wzrostu glikemii",
   "mealResponseDelta": "Koniec − start",
   "mealResponseDeltaSoFar": "Teraz − start",
   "mealResponseNoRise": "Nie wykryto w danych",
   "mealResponseMissing": "Za mało danych",
   "mealResponseMissingEndpoints": "Brak pomiaru przy starcie lub końcu",
-  "mealResponseRiseMethod": "Szybki wzrost: co najmniej 2 mg/dl/min przez minimum 10 min, z tolerancją odstępów między pomiarami do 6 min. To przybliżony początek wzrostu w danych CGM, nie pomiar wchłaniania posiłku.",
-  "mealResponseMethodTitle": "Jak liczymy szybki wzrost?",
+  "mealResponseRiseMethod": "Utrzymujący się wzrost: średnio co najmniej 1,5 mg/dl/min w oknie 10–15 min i co najmniej 1 mg/dl/min w każdym odcinku. Wymagane minimum trzy pomiary, odstępy do 6 min; tolerancja długości okna ±30 s. To przybliżony początek wzrostu w CGM, nie pomiar wchłaniania ani działania insuliny.",
+  "mealResponseMethodTitle": "Jak wyznaczamy wzrost?",
   "mealResponseObserved": "W dostępnym okresie obserwacji",
   "mealResponseOngoing": "Obserwacja trwa — wynik może się zmienić",
+  "mealResponseRiseInterval": "{start}–{end} min",
+  "@mealResponseRiseInterval": {"placeholders": {"start": {"type": "int"}, "end": {"type": "int"}}},
   "mealResponseAfter": "Po {duration}",
   "mealResponseDeltaValues": "{start} → {end} mg/dl · {time}",
   "@mealResponseAfter": {"placeholders": {"duration": {"type": "String"}}},
@@ -1142,8 +1145,6 @@
   "dayInsulinSum": "Suma bazy i zapisanych bolusów",
   "dayInsulinPartialSum": "Suma częściowa bazy i zapisanych bolusów",
   "beforeMealTitle": "Historia przed posiłkiem",
-  "beforeMealRefresh": "Odśwież",
-  "beforeMealDownload": "Pobierz kontekst z Nightscout",
   "beforeMealLoadFailed": "Nie udało się zbudować kontekstu. Spróbuj ponownie.",
   "beforeMealUnavailable": "Brak danych",
   "beforeMealPreviousMeals": "Wcześniejsze posiłki",
@@ -1169,5 +1170,103 @@
   "mealOutcomeWindowPartial": "obserwacja częściowa",
   "mealOutcomeEarlierEcarbs": "Wcześniejsze eCarbs w oknie obserwacji",
   "mealOutcomeActivities": "Aktywności w oknie",
-  "mealOutcomeSubsequentMeals": "Inne rozpoczęte posiłki"
+  "mealOutcomeSubsequentMeals": "Inne rozpoczęte posiłki",
+  "similarMealsTitle": "Podobne posiłki",
+  "similarMealsExplanation": "Podobny skład lub makro · ostatnie 90 dni. Wybierz posiłek, aby zobaczyć jego analizę.",
+  "similarMealsMissingMacros": "Brak zapisanego makro do porównania.",
+  "similarMealsEmpty": "Nie znaleziono podobnych posiłków.",
+  "similarMealsConsumed": "spożyte",
+  "similarMealsPlanned": "planowane",
+  "similarMealsMacros": "Węglowodany netto: {carbs} g · Białko: {protein} g · Tłuszcz: {fat} g",
+  "@similarMealsMacros": {
+    "placeholders": {
+      "carbs": {
+        "type": "String"
+      },
+      "protein": {
+        "type": "String"
+      },
+      "fat": {
+        "type": "String"
+      }
+    }
+  },
+  "mealAnalysisRetry": "Spróbuj ponownie",
+  "mealRefreshAnalysis": "Odśwież analizę",
+  "similarMealNetCarbs": "WW netto",
+  "similarMealProtein": "Białko",
+  "similarMealFat": "Tłuszcz",
+  "beforeMealDetailsTitle": "Szczegóły kontekstu",
+  "similarMealComposition": "Podobny skład",
+  "similarMealMacrosOnly": "Podobne makro",
+  "similarMealPortion": "Porcja: {percent}% aktualnego posiłku",
+  "@similarMealPortion": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "similarMealPortionCompact": "{percent}% porcji",
+  "@similarMealPortionCompact": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mealComparisonCurrent": "Ten posiłek",
+  "mealMacroEnergyRatio": "Udział energii WW/B/T: {carbs}% / {protein}% / {fat}%",
+  "@mealMacroEnergyRatio": {
+    "placeholders": {
+      "carbs": {
+        "type": "String"
+      },
+      "protein": {
+        "type": "String"
+      },
+      "fat": {
+        "type": "String"
+      }
+    }
+  },
+  "similarMealMissing": "Brak",
+  "similarMealMean": "Śr. {value} mg/dl",
+  "similarMealMaximum": "Max {value} mg/dl",
+  "similarMealRise": "Wzrost: {value}",
+  "@similarMealMean": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "@similarMealMaximum": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "@similarMealRise": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "mealChartStartGlucose": "Początek posiłku",
+  "mealGlucoseChapter": "Przebieg glikemii",
+  "mealGlucoseChapterHint": "Zobacz, kiedy cukier rósł i co działo się w tym czasie.",
+  "mealContextChapter": "Co mogło mieć znaczenie",
+  "mealContextChapterHint": "Punkt wyjścia, aktywność i wcześniejsze zdarzenia.",
+  "mealFoodChapter": "Co zostało zjedzone",
+  "mealFoodChapterHint": "Porównaj plan z faktyczną porcją i sprawdź skład.",
+  "mealDecisionsChapter": "Decyzje i ich przebieg",
+  "mealDecisionsChapterHint": "Zapisane sugestie, oczekiwanie i podana insulina.",
+  "mealTechnicalTitle": "Szczegóły zapisu",
+  "mealTechnicalSubtitle": "Źródła danych, powiązania i historia statusów",
+  "mealPortionDifference": "Różnica węglowodanów względem planu",
+  "mealOtherEventsCount": "Inne posiłki w tym czasie",
+  "mealActivitiesCount": "Aktywności w tym czasie"
 }

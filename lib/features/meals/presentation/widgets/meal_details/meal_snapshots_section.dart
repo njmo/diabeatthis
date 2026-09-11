@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../common/l10n/language.dart';
-import '../../../../../common/widgets/analysis_metric.dart';
-import '../../../../../common/widgets/responsive_metric_list.dart';
 import '../../../data/models/meal_analysis_data.dart';
 import '../../../data/models/meal_details_data.dart';
 import 'meal_detail_components.dart';
 import 'meal_detail_formatters.dart';
+import 'meal_snapshot_comparison_row.dart';
 
 class MealSnapshotsSection extends StatelessWidget {
   final MealDetailsData details;
@@ -20,33 +19,7 @@ class MealSnapshotsSection extends StatelessWidget {
     return MealSectionTile(
       title: context.lang.mealSnapshotsTitle,
       children: [
-        for (final row in rows) ...[
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              row.label,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ResponsiveMetricList(
-            children: [
-              AnalysisMetric(
-                label: context.lang.mealSnapshotsPlanColumn,
-                value: formatSnapshotValue(row.plannedValue, row.unit),
-              ),
-              AnalysisMetric(
-                label: context.lang.mealSnapshotsConsumedColumn,
-                value: formatSnapshotValue(row.consumedValue, row.unit),
-              ),
-              AnalysisMetric(
-                label: context.lang.mealSnapshotsDifferenceColumn,
-                value: formatSnapshotDiff(row.difference, row.unit),
-              ),
-            ],
-          ),
-          const Divider(height: 32),
-        ],
+        for (final row in rows) MealSnapshotComparisonRow(row: row),
         const SizedBox(height: 8),
         for (final ingredient in details.ingredients.where((i) => i.isExtra))
           MealInfoRow(

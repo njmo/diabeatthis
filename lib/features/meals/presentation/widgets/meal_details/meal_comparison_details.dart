@@ -45,11 +45,13 @@ class MealComparisonDetails extends ConsumerWidget {
             ? currentDuration
             : previousDuration;
         final first = GlucoseWindowSummary(
+          baselinePolicy: GlucoseBaselinePolicy.nearest,
           readings: current.glucoseReadings,
           start: current.mealTime,
           end: current.mealTime.add(duration),
         );
         final second = GlucoseWindowSummary(
+          baselinePolicy: GlucoseBaselinePolicy.nearest,
           readings: previous.glucoseReadings,
           start: previous.mealTime,
           end: previous.mealTime.add(duration),

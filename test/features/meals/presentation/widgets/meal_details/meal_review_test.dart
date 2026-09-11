@@ -47,7 +47,7 @@ void main() {
         expect(tester.takeException(), isNull);
         expect(find.byType(MealOutcomeSection), findsOneWidget);
         expect(find.text('Czas do szczytu'), findsOneWidget);
-        expect(find.text('Początek szybkiego wzrostu'), findsOneWidget);
+        expect(find.text('Początek wzrostu glikemii'), findsOneWidget);
         expect(find.byType(Slider), findsNothing);
         final basicChart = tester.widget<TimelineAnalysisCharts>(
           find.byType(TimelineAnalysisCharts),

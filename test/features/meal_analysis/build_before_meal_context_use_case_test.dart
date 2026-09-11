@@ -11,6 +11,7 @@ import 'package:diabeatthis/core/domain/model/stress_level.dart';
 import 'package:diabeatthis/core/domain/model/treatment_base.dart';
 import 'package:diabeatthis/features/meal_analysis/domain/models/before_meal_context.dart';
 import 'package:diabeatthis/features/meal_analysis/domain/models/meal_activity_context.dart';
+import 'package:diabeatthis/features/meal_analysis/domain/models/recorded_meal_context.dart';
 import 'package:diabeatthis/features/meal_analysis/domain/use_cases/build_before_meal_context_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -37,6 +38,7 @@ BuildBeforeMealContextUseCase builder({
   List<DeviceStatus>? statuses,
   List<Treatment> treatments = const [],
   List<MealActivityContext> activities = const [],
+  List<RecordedMealContext> meals = const [],
   Duration timeout = const Duration(seconds: 15),
 }) => BuildBeforeMealContextUseCase(
   loadGlucose: glucose ?? (_, _) async => [],
@@ -53,7 +55,7 @@ BuildBeforeMealContextUseCase builder({
         ),
       ],
   loadTreatments: (_, _) async => treatments,
-  loadMeals: (_, _, _) async => [],
+  loadMeals: (_, _, _) async => meals,
   loadLowTreatments: (_, _) async => [],
   loadActivities: (_, _, _) async => activities,
   loadPodAge: (_) async => const Duration(days: 2),

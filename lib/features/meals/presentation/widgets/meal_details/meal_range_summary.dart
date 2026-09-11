@@ -5,6 +5,8 @@ import '../../../../../common/history/glucose_window_summary.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/utils/format_duration_label.dart';
 import '../../../../../common/widgets/responsive_metric_list.dart';
+import '../../../common/theme/analysis_chart_colors.dart';
+import '../../../common/widgets/glucose_range_bar.dart';
 import 'meal_range_legend_item.dart';
 
 class MealRangeSummary extends StatelessWidget {
@@ -24,18 +26,7 @@ class MealRangeSummary extends StatelessWidget {
           : '${NumberFormat('0.#', messages.localeName).format(value)}%';
     }
 
-    final durations = [
-      summary.inRange,
-      summary.aboveRange,
-      summary.belowRange,
-      summary.missing,
-    ];
-    final colors = [
-      scheme.primary,
-      scheme.tertiary,
-      scheme.error,
-      scheme.outlineVariant,
-    ];
+    final palette = AnalysisChartColors(theme.brightness);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -65,28 +56,15 @@ class MealRangeSummary extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 4),
+        Text(
+          messages.mealRangeObservedBasis,
+          style: theme.textTheme.labelSmall,
+        ),
         const SizedBox(height: 14),
         Semantics(
           label: '${messages.mealReviewRange}: ${percent(summary.inRange)}',
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: SizedBox(
-              height: 10,
-              child: Row(
-                children: [
-                  for (var i = 0; i < durations.length; i++)
-                    if (durations[i].inMilliseconds > 0)
-                      Expanded(
-                        flex: durations[i].inMilliseconds,
-                        child: ColoredBox(
-                          color: colors[i],
-                          child: const SizedBox.expand(),
-                        ),
-                      ),
-                ],
-              ),
-            ),
-          ),
+          child: GlucoseRangeBar(summary: summary, height: 12),
         ),
         const SizedBox(height: 16),
         ResponsiveMetricList(
@@ -94,13 +72,13 @@ class MealRangeSummary extends StatelessWidget {
           minimumWidth: 110,
           children: [
             MealRangeLegendItem(
-              color: scheme.tertiary,
+              color: palette.aboveRange,
               label: messages.mealReviewAbove,
               value:
                   '${percent(summary.aboveRange)} · ${formatDurationLabel(summary.aboveRange)}',
             ),
             MealRangeLegendItem(
-              color: scheme.error,
+              color: palette.belowRange,
               label: messages.mealReviewBelow,
               value:
                   '${percent(summary.belowRange)} · ${formatDurationLabel(summary.belowRange)}',
@@ -110,7 +88,7 @@ class MealRangeSummary extends StatelessWidget {
         if (summary.missing > Duration.zero) ...[
           const SizedBox(height: 14),
           MealRangeLegendItem(
-            color: scheme.outlineVariant,
+            color: palette.missing,
             label: messages.mealReviewMissing,
             value: formatDurationLabel(summary.missing),
           ),

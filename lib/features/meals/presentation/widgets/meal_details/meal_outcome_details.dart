@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../../common/history/glucose_window_summary.dart';
 import '../../../../../common/l10n/language.dart';
-import '../../../../../common/widgets/analysis_metric.dart';
 import '../../../../../common/widgets/responsive_metric_list.dart';
+import '../../../common/widgets/meal_stat_tile.dart';
 import 'meal_detail_formatters.dart';
 
 class MealOutcomeDetails extends StatelessWidget {
@@ -26,7 +26,7 @@ class MealOutcomeDetails extends StatelessWidget {
         ResponsiveMetricList(
           maxColumns: 2,
           children: [
-            AnalysisMetric(
+            MealStatTile(
               label: messages.mealReviewMinimum,
               value: formatMgdl(summary.minimum?.sgv),
               detail: summary.minimum == null
@@ -34,7 +34,7 @@ class MealOutcomeDetails extends StatelessWidget {
                   : mealTime(summary.minimum!.date),
             ),
             if ((summary.peak?.sgv ?? 0) > 180)
-              AnalysisMetric(
+              MealStatTile(
                 label: messages.mealReviewReturn,
                 value: returned == null ? '—' : mealTime(returned.date),
                 detail: returned == null

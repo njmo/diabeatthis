@@ -885,16 +885,19 @@
   "mealReviewCorrectionsValue": "{count} × · {units} U",
   "@mealReviewCorrectionsValue": {"placeholders": {"count": {"type": "int"}, "units": {"type": "String"}}},
   "mealResponsePeakTime": "Time to peak",
-  "mealResponseRiseTime": "Rapid rise onset",
+  "mealRangeObservedBasis": "Ranges: % of available data · gaps shown separately",
+  "mealResponseRiseTime": "Glucose rise onset",
   "mealResponseDelta": "End − start",
   "mealResponseDeltaSoFar": "Now − start",
   "mealResponseNoRise": "Not detected in data",
   "mealResponseMissing": "Insufficient data",
   "mealResponseMissingEndpoints": "Missing start or end reading",
-  "mealResponseRiseMethod": "Rapid rise: at least 2 mg/dL/min for at least 10 min, allowing intervals between readings up to 6 min. This estimates the onset of a rise in CGM data, not meal absorption.",
-  "mealResponseMethodTitle": "How is rapid rise calculated?",
+  "mealResponseRiseMethod": "Sustained rise: an average of at least 1.5 mg/dL/min over 10–15 min, with at least 1 mg/dL/min in each interval. Requires at least three readings, gaps up to 6 min and a window duration tolerance of ±30 s. This estimates CGM rise onset, not absorption or insulin action.",
+  "mealResponseMethodTitle": "How is the rise detected?",
   "mealResponseObserved": "Within the available observation period",
   "mealResponseOngoing": "Observation ongoing — results may change",
+  "mealResponseRiseInterval": "{start}–{end} min",
+  "@mealResponseRiseInterval": {"placeholders": {"start": {"type": "int"}, "end": {"type": "int"}}},
   "mealResponseAfter": "After {duration}",
   "mealResponseDeltaValues": "{start} → {end} mg/dL · {time}",
   "@mealResponseAfter": {"placeholders": {"duration": {"type": "String"}}},
@@ -1014,8 +1017,6 @@
   "dayInsulinSum": "Basal and recorded bolus total",
   "dayInsulinPartialSum": "Partial basal and recorded bolus total",
   "beforeMealTitle": "History before the meal",
-  "beforeMealRefresh": "Refresh",
-  "beforeMealDownload": "Download context from Nightscout",
   "beforeMealLoadFailed": "Unable to build context. Try again.",
   "beforeMealUnavailable": "Unavailable",
   "beforeMealPreviousMeals": "Previous meals",
@@ -1041,5 +1042,103 @@
   "mealOutcomeWindowPartial": "partial observation",
   "mealOutcomeEarlierEcarbs": "Earlier eCarbs overlapping observation",
   "mealOutcomeActivities": "Activities in window",
-  "mealOutcomeSubsequentMeals": "Other meals started"
+  "mealOutcomeSubsequentMeals": "Other meals started",
+  "similarMealsTitle": "Similar meals",
+  "similarMealsExplanation": "Similar ingredients or macros · last 90 days. Select a meal to view its analysis.",
+  "similarMealsMissingMacros": "No saved macros to compare.",
+  "similarMealsEmpty": "No similar meals found.",
+  "similarMealsConsumed": "consumed",
+  "similarMealsPlanned": "planned",
+  "similarMealsMacros": "Net carbs: {carbs} g · Protein: {protein} g · Fat: {fat} g",
+  "@similarMealsMacros": {
+    "placeholders": {
+      "carbs": {
+        "type": "String"
+      },
+      "protein": {
+        "type": "String"
+      },
+      "fat": {
+        "type": "String"
+      }
+    }
+  },
+  "mealAnalysisRetry": "Try again",
+  "mealRefreshAnalysis": "Refresh analysis",
+  "similarMealNetCarbs": "Net carbs",
+  "similarMealProtein": "Protein",
+  "similarMealFat": "Fat",
+  "beforeMealDetailsTitle": "Context details",
+  "similarMealComposition": "Similar ingredients",
+  "similarMealMacrosOnly": "Similar macros",
+  "similarMealPortion": "Portion: {percent}% of the current meal",
+  "@similarMealPortion": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "similarMealPortionCompact": "{percent}% portion",
+  "@similarMealPortionCompact": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mealComparisonCurrent": "This meal",
+  "mealMacroEnergyRatio": "Energy share C/P/F: {carbs}% / {protein}% / {fat}%",
+  "@mealMacroEnergyRatio": {
+    "placeholders": {
+      "carbs": {
+        "type": "String"
+      },
+      "protein": {
+        "type": "String"
+      },
+      "fat": {
+        "type": "String"
+      }
+    }
+  },
+  "similarMealMissing": "Missing",
+  "similarMealMean": "Avg {value} mg/dl",
+  "similarMealMaximum": "Max {value} mg/dl",
+  "similarMealRise": "Rise: {value}",
+  "@similarMealMean": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "@similarMealMaximum": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "@similarMealRise": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "mealChartStartGlucose": "Meal start",
+  "mealGlucoseChapter": "Glucose response",
+  "mealGlucoseChapterHint": "See when glucose rose and what happened alongside it.",
+  "mealContextChapter": "What else was happening",
+  "mealContextChapterHint": "Starting conditions, activity and earlier events.",
+  "mealFoodChapter": "What was eaten",
+  "mealFoodChapterHint": "Compare planned and eaten portions and explore ingredients.",
+  "mealDecisionsChapter": "Decisions and recorded events",
+  "mealDecisionsChapterHint": "Recorded suggestions, waiting time and insulin delivered.",
+  "mealTechnicalTitle": "Record details",
+  "mealTechnicalSubtitle": "Data sources, related records and status history",
+  "mealPortionDifference": "Carbohydrate difference from plan",
+  "mealOtherEventsCount": "Other meals in this period",
+  "mealActivitiesCount": "Activities in this period"
 }

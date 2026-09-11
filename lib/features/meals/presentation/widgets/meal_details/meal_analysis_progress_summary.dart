@@ -11,13 +11,8 @@ import 'meal_header_status_row.dart';
 
 class MealAnalysisProgressSummary extends StatelessWidget {
   final MealPageState state;
-  final bool showCompletedStatus;
 
-  const MealAnalysisProgressSummary({
-    super.key,
-    required this.state,
-    this.showCompletedStatus = true,
-  });
+  const MealAnalysisProgressSummary({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -65,16 +60,14 @@ class MealAnalysisProgressSummary extends StatelessWidget {
       if (details.hasAddOn) chips.add(const HeaderStatusChip.addOn());
       return MealHeaderStatusRow(chips: chips);
     }
-    if (showCompletedStatus) {
-      chips.add(
-        HeaderStatusChip(
-          icon: Icons.check_circle,
-          label: '',
-          detail: analysis.postMealWindow.inMinutes.toString(),
-          type: HeaderStatusChipType.analysisReady,
-        ),
-      );
-    }
+    chips.add(
+      HeaderStatusChip(
+        icon: Icons.check_circle,
+        label: '',
+        detail: analysis.postMealWindow.inMinutes.toString(),
+        type: HeaderStatusChipType.analysisReady,
+      ),
+    );
     if (shouldShowMissingExtendedCarbsWarning(
       details: details,
       analysis: analysis,

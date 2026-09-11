@@ -4,8 +4,9 @@ import '../../../../../common/history/glucose_rise_summary.dart';
 import '../../../../../common/history/glucose_window_summary.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/utils/format_duration_label.dart';
-import '../../../../../common/widgets/analysis_metric.dart';
 import '../../../../../common/widgets/responsive_metric_list.dart';
+import '../../../common/formatters/format_meal_rise_timing.dart';
+import '../../../common/widgets/meal_stat_tile.dart';
 import 'meal_detail_formatters.dart';
 
 class MealResponseSummary extends StatelessWidget {
@@ -34,7 +35,7 @@ class MealResponseSummary extends StatelessWidget {
         ResponsiveMetricList(
           maxColumns: 2,
           children: [
-            AnalysisMetric(
+            MealStatTile(
               icon: Icons.schedule,
               label: messages.mealResponsePeakTime,
               value: peak == null ? '—' : after(peak.date),
@@ -42,17 +43,20 @@ class MealResponseSummary extends StatelessWidget {
                   ? messages.mealResponseMissing
                   : '${peak.sgv} mg/dl · ${mealTime(peak.date)}',
             ),
-            AnalysisMetric(
+            MealStatTile(
               icon: Icons.trending_up,
               label: messages.mealResponseRiseTime,
-              value: riseStart == null ? '—' : after(riseStart),
+              value: formatMealRiseTiming(rise, summary.start, messages),
               detail: riseStart != null
-                  ? mealTime(riseStart)
-                  : rise.hasObservation
-                  ? messages.mealResponseNoRise
-                  : messages.mealResponseMissing,
+                  ? '${mealTime(riseStart)}–${mealTime(rise.onsetIntervalEnd!)}'
+                  : formatMealRiseAbsence(
+                      rise,
+                      summary,
+                      messages,
+                      complete: complete,
+                    ),
             ),
-            AnalysisMetric(
+            MealStatTile(
               icon: Icons.compare_arrows,
               label: complete
                   ? messages.mealResponseDelta

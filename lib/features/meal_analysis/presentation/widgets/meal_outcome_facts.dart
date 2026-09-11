@@ -47,30 +47,48 @@ class MealOutcomeFacts extends StatelessWidget {
                   label: lang.beforeMealLows,
                   value: '${data.lowTreatments.length}',
                 ),
+                AnalysisMetric(
+                  icon: Icons.directions_run,
+                  label: lang.mealOutcomeActivities,
+                  value: '${data.activities.length}',
+                ),
+                AnalysisMetric(
+                  icon: Icons.restaurant,
+                  label: lang.mealOutcomeSubsequentMeals,
+                  value: data.subsequentMeals?.length.toString() ?? '—',
+                ),
+                AnalysisMetric(
+                  icon: Icons.schedule,
+                  label: lang.mealOutcomeEarlierEcarbs,
+                  value:
+                      '${number.format(data.extendedCarbs.where((e) => e.startedBeforeMeal).fold(0.0, (sum, e) => sum + e.scheduledGrams))} g',
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            Text(
-              lang.mealOutcomeEarlierEcarbs,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            Text(lang.beforeMealScheduleOnly),
-            if (!data.extendedCarbs.any((e) => e.startedBeforeMeal))
-              Text(lang.beforeMealNoEvents),
-            for (final overlap in data.extendedCarbs.where(
-              (e) => e.startedBeforeMeal,
-            ))
-              Text(
-                '${time(overlap.overlapStart)}–${time(overlap.overlapEnd)} · ${number.format(overlap.scheduledGrams)} g',
-              ),
-            const SizedBox(height: 12),
-            Text('${lang.mealOutcomeActivities}: ${data.activities.length}'),
-            Text(
-              '${lang.mealOutcomeSubsequentMeals}: ${data.subsequentMeals?.length.toString() ?? lang.beforeMealUnavailable}',
-            ),
-            Text(
-              lang.beforeMealReconstruction,
-              style: Theme.of(context).textTheme.bodySmall,
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: Text(lang.beforeMealDetailsTitle),
+              children: [
+                Text(
+                  lang.mealOutcomeEarlierEcarbs,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                Text(lang.beforeMealScheduleOnly),
+                if (!data.extendedCarbs.any((e) => e.startedBeforeMeal))
+                  Text(lang.beforeMealNoEvents),
+                for (final overlap in data.extendedCarbs.where(
+                  (e) => e.startedBeforeMeal,
+                ))
+                  Text(
+                    '${time(overlap.overlapStart)}–${time(overlap.overlapEnd)} · ${number.format(overlap.scheduledGrams)} g',
+                  ),
+                const SizedBox(height: 12),
+                Text(
+                  lang.beforeMealReconstruction,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
             ),
           ],
         ),

@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../core/domain/model/meal_snapshot.dart';
+import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
 import '../../domain/models/before_meal_context.dart';
+import '../../domain/models/extended_carb_plan_context.dart';
+import '../../domain/models/meal_activity_context.dart';
+import '../../domain/models/recorded_meal_context.dart';
 
 class BeforeMealHistoryFacts extends StatelessWidget {
   final BeforeMealContext data;
@@ -28,17 +33,18 @@ class BeforeMealHistoryFacts extends StatelessWidget {
           '${time(data.asOf.subtract(data.windows.meals))}–${time(data.asOf)}',
         ),
         if (data.priorMeals?.isNotEmpty != true) Text(empty(data.priorMeals)),
-        for (final meal in data.priorMeals ?? [])
+        for (final meal in data.priorMeals ?? const <RecordedMealContext>[])
           Text(
             '${time(meal.eatenAt)} · ${meal.name} · ${grams(meal.snapshot?.totalNetCarbsG)} ${lang.beforeMealCarbs}'
-            '${meal.snapshot == null ? ' · ${lang.beforeMealUnknownMacros}' : ' · ${meal.snapshot!.snapshotType.name == 'planned' ? lang.beforeMealPlannedMacros : lang.beforeMealConsumedMacros}'}',
+            '${meal.snapshot == null ? ' · ${lang.beforeMealUnknownMacros}' : ' · ${meal.snapshot!.snapshotType == MealSnapshotType.planned ? lang.beforeMealPlannedMacros : lang.beforeMealConsumedMacros}'}',
           ),
         const SizedBox(height: 12),
         Text(lang.beforeMealEcarbs, style: style),
         Text(lang.beforeMealScheduleOnly),
         if (data.extendedCarbPlans?.isNotEmpty != true)
           Text(empty(data.extendedCarbPlans)),
-        for (final plan in data.extendedCarbPlans ?? [])
+        for (final plan
+            in data.extendedCarbPlans ?? const <ExtendedCarbPlanContext>[])
           Text(
             '${time(plan.treatment.createdAt)}–${time(plan.endsAt)} · ${lang.beforeMealRemaining}: ${grams(plan.scheduledAfterCutoffGrams)} / ${grams(plan.treatment.carbs)}',
           ),
@@ -46,7 +52,7 @@ class BeforeMealHistoryFacts extends StatelessWidget {
         Text(lang.beforeMealLows, style: style),
         if (data.lowTreatments?.isNotEmpty != true)
           Text(empty(data.lowTreatments)),
-        for (final low in data.lowTreatments ?? [])
+        for (final low in data.lowTreatments ?? const <RecordedLowTreatment>[])
           Text('${time(low.eatenAt)} · ${grams(low.netCarbsGrams)}'),
         const SizedBox(height: 12),
         Text(lang.beforeMealActivities, style: style),
@@ -54,7 +60,7 @@ class BeforeMealHistoryFacts extends StatelessWidget {
           '${time(data.asOf.subtract(data.windows.activities))}–${time(data.asOf.add(data.windows.upcomingActivities))}',
         ),
         if (data.activities?.isNotEmpty != true) Text(empty(data.activities)),
-        for (final activity in data.activities ?? [])
+        for (final activity in data.activities ?? const <MealActivityContext>[])
           Text(
             '${time(activity.startedAt)} · ${activity.name} · ${activity.startedAt.isAfter(data.asOf)
                 ? lang.beforeMealPlanned

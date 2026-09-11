@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../../common/history/glucose_period_summary.dart';
+import '../../../../../common/history/glucose_window_summary.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/widgets/detail_section_card.dart';
 import '../../../../../common/widgets/timeline_analysis_charts.dart';
 import '../../../../../common/widgets/timeline_selection_summary.dart';
+import '../../../common/widgets/glucose_boundary_metrics.dart';
+import '../../../common/widgets/meal_empty_state.dart';
 import '../../../data/models/meal_analysis_data.dart';
 import '../../../data/models/meal_details_data.dart';
 import '../../controllers/meal_details_controller.dart';
@@ -39,10 +43,7 @@ class MealChartsSection extends HookConsumerWidget {
       return DetailSectionCard(
         title: messages.mealReviewTimeline,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(analysisError ?? messages.mealNoAnalysisData),
-          ),
+          MealEmptyState(message: analysisError ?? messages.mealNoAnalysisData),
         ],
       );
     }
@@ -62,8 +63,6 @@ class MealChartsSection extends HookConsumerWidget {
                 '${mealTime(data.chartStart)}–${mealTime(data.chartEnd)} · mg/dl',
               ),
               const SizedBox(height: 16),
-              MealCorrectionsSummary(analysis: data),
-              const SizedBox(height: 12),
               if (advanced)
                 Wrap(
                   spacing: 8,
@@ -107,6 +106,20 @@ class MealChartsSection extends HookConsumerWidget {
                 onTimestampSelected: advanced ? select : null,
               ),
               const SizedBox(height: 8),
+              MealCorrectionsSummary(analysis: data),
+              const SizedBox(height: 12),
+              GlucoseBoundaryMetrics(
+                summary:
+                    data.outcomeContext?.glucoseSummary.window ??
+                    GlucosePeriodSummary.calculate(
+                      data.glucoseReadings,
+                      data.mealTime,
+                      data.chartEnd,
+                      baselinePolicy: GlucoseBaselinePolicy.nearest,
+                    ).window,
+                startLabel: messages.mealChartStartGlucose,
+              ),
+              const SizedBox(height: 12),
               MealEatingPeriodLegend(details: details),
               const SizedBox(height: 8),
               Text(

@@ -14,10 +14,9 @@ class MealBeforeContextSection extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final expanded = useState(false);
-    final forceCloud = useState(false);
     final provider = mealBeforeContextProvider((
       details: details,
-      forceCloud: forceCloud.value,
+      forceCloud: false,
     ));
     final result = expanded.value ? ref.watch(provider) : null;
     final lang = context.lang;
@@ -39,32 +38,15 @@ class MealBeforeContextSection extends HookConsumerWidget {
                 hasRecordedStart: details.recordedEatingStartedAt != null,
               ),
             ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: [
-                TextButton.icon(
-                  icon: const Icon(Icons.refresh),
-                  label: Text(lang.beforeMealRefresh),
-                  onPressed: result.isLoading
-                      ? null
-                      : () => ref.invalidate(provider),
-                ),
-                TextButton.icon(
-                  icon: const Icon(Icons.cloud_download_outlined),
-                  label: Text(lang.beforeMealDownload),
-                  onPressed: result.isLoading
-                      ? null
-                      : () {
-                          if (forceCloud.value) {
-                            ref.invalidate(provider);
-                          } else {
-                            forceCloud.value = true;
-                          }
-                        },
-                ),
-              ],
-            ),
+            if (result.hasError ||
+                (result.value?.failedSources.isNotEmpty ?? false))
+              TextButton.icon(
+                icon: const Icon(Icons.refresh),
+                label: Text(lang.mealAnalysisRetry),
+                onPressed: result.isLoading
+                    ? null
+                    : () => ref.invalidate(provider),
+              ),
           ],
         ],
       ),

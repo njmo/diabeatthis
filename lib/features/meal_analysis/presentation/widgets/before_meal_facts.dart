@@ -5,6 +5,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/analysis_metric.dart';
 import '../../../../common/widgets/responsive_metric_list.dart';
 import '../../domain/models/before_meal_context.dart';
+import 'before_meal_event_metrics.dart';
 import 'before_meal_history_facts.dart';
 
 class BeforeMealFacts extends StatelessWidget {
@@ -70,32 +71,45 @@ class BeforeMealFacts extends StatelessWidget {
               label: 'COB',
               value: value(status?.hasCob == true ? status!.cob : null, 'g'),
             ),
-            AnalysisMetric(
-              label: lang.dayRecordedBoluses,
-              value: value(data.boluses?.units, 'U'),
-              detail:
-                  '${time(data.asOf.subtract(data.windows.insulin))}–${time(data.asOf)}',
-            ),
-            AnalysisMetric(
-              label: lang.dayBasalTitle,
-              value: value(hasBasal ? basal.units : null, 'U'),
-              detail:
-                  '${lang.dayBasalCoverage}: ${value(basal == null ? null : basal.coverage * 100, '%')}',
-            ),
-            AnalysisMetric(
-              label: lang.beforeMealPod,
-              value: data.podAge == null
-                  ? '—'
-                  : '${data.podAge!.inDays} d ${data.podAge!.inHours.remainder(24)} h',
-            ),
           ],
         ),
         const SizedBox(height: 12),
-        Text(
-          lang.beforeMealReconstruction,
-          style: Theme.of(context).textTheme.bodySmall,
+        BeforeMealEventMetrics(data: data),
+        ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          title: Text(lang.beforeMealDetailsTitle),
+          children: [
+            ResponsiveMetricList(
+              maxColumns: 3,
+              minimumWidth: 110,
+              children: [
+                AnalysisMetric(
+                  label: lang.dayRecordedBoluses,
+                  value: value(data.boluses?.units, 'U'),
+                  detail:
+                      '${time(data.asOf.subtract(data.windows.insulin))}–${time(data.asOf)}',
+                ),
+                AnalysisMetric(
+                  label: lang.dayBasalTitle,
+                  value: value(hasBasal ? basal.units : null, 'U'),
+                  detail:
+                      '${lang.dayBasalCoverage}: ${value(basal == null ? null : basal.coverage * 100, '%')}',
+                ),
+                AnalysisMetric(
+                  label: lang.beforeMealPod,
+                  value: data.podAge == null
+                      ? '—'
+                      : '${data.podAge!.inDays} d ${data.podAge!.inHours.remainder(24)} h',
+                ),
+              ],
+            ),
+            BeforeMealHistoryFacts(data: data),
+            Text(
+              lang.beforeMealReconstruction,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
         ),
-        BeforeMealHistoryFacts(data: data),
       ],
     );
   }

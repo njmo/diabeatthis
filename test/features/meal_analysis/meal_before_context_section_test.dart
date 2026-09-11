@@ -34,61 +34,59 @@ void main() {
       expect(data.macros, isNull);
     },
   );
-  testWidgets(
-    'loads only when expanded, retries errors and explicitly switches to cloud',
-    (tester) async {
-      final details = mealDetailsWithLowTreatment();
-      final data = await builder()(asOf: cutoff, macros: macros);
-      var localCalls = 0;
-      var cloudCalls = 0;
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            mealBeforeContextProvider((
-              details: details,
-              forceCloud: false,
-            )).overrideWith((ref) async {
-              localCalls++;
-              if (localCalls == 1) throw StateError('offline');
-              return data;
-            }),
-            mealBeforeContextProvider((
-              details: details,
-              forceCloud: true,
-            )).overrideWith((ref) async {
-              cloudCalls++;
-              return data;
-            }),
-          ],
-          child: localizedMaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: MealBeforeContextSection(details: details),
-              ),
+  testWidgets('loads only when expanded and offers retry only on error', (
+    tester,
+  ) async {
+    final details = mealDetailsWithLowTreatment();
+    final data = await builder()(asOf: cutoff, macros: macros);
+    var localCalls = 0;
+    var cloudCalls = 0;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          mealBeforeContextProvider((
+            details: details,
+            forceCloud: false,
+          )).overrideWith((ref) async {
+            localCalls++;
+            if (localCalls == 1) throw StateError('offline');
+            return data;
+          }),
+          mealBeforeContextProvider((
+            details: details,
+            forceCloud: true,
+          )).overrideWith((ref) async {
+            cloudCalls++;
+            return data;
+          }),
+        ],
+        child: localizedMaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: MealBeforeContextSection(details: details),
             ),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
-      expect(localCalls, 0);
-      await tester.tap(find.text('Historia przed posiłkiem'));
-      await tester.pumpAndSettle();
-      expect(localCalls, 1);
-      expect(
-        find.text('Nie udało się zbudować kontekstu. Spróbuj ponownie.'),
-        findsOneWidget,
-      );
-      await tester.tap(find.text('Odśwież'));
-      await tester.pumpAndSettle();
-      expect(localCalls, 2);
-      expect(find.byType(BeforeMealFacts), findsOneWidget);
-      await tester.ensureVisible(find.text('Pobierz kontekst z Nightscout'));
-      await tester.tap(find.text('Pobierz kontekst z Nightscout'));
-      await tester.pumpAndSettle();
-      expect(cloudCalls, 1);
-      expect(tester.takeException(), isNull);
-    },
-  );
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(localCalls, 0);
+    await tester.tap(find.text('Historia przed posiłkiem'));
+    await tester.pumpAndSettle();
+    expect(localCalls, 1);
+    expect(
+      find.text('Nie udało się zbudować kontekstu. Spróbuj ponownie.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Spróbuj ponownie'));
+    await tester.pumpAndSettle();
+    expect(localCalls, 2);
+    expect(find.byType(BeforeMealFacts), findsOneWidget);
+    expect(find.text('Spróbuj ponownie'), findsNothing);
+    expect(find.text('Pobierz kontekst z Nightscout'), findsNothing);
+    expect(cloudCalls, 0);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('partial context fits narrow layout and large text', (
     tester,
   ) async {
@@ -116,6 +114,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Brak danych:'), findsOneWidget);
     expect(find.text('Trwające harmonogramy eCarbs'), findsOneWidget);
+    expect(find.text('Szczegóły kontekstu'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

@@ -8,9 +8,8 @@ import 'meal_macro_strip.dart';
 
 class MealHeader extends StatelessWidget {
   final MealPageState state;
-  final bool advanced;
 
-  const MealHeader({super.key, required this.state, this.advanced = true});
+  const MealHeader({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -43,10 +42,7 @@ class MealHeader extends StatelessWidget {
             MealMacroStrip(snapshot: snapshot),
           ],
           const SizedBox(height: 12),
-          MealAnalysisProgressSummary(
-            state: state,
-            showCompletedStatus: advanced,
-          ),
+          MealAnalysisProgressSummary(state: state),
           if (details.hasLowTreatments) ...[
             const SizedBox(height: 8),
             Text(

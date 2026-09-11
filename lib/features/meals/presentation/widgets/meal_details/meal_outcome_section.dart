@@ -17,11 +17,13 @@ import 'meal_response_summary.dart';
 class MealOutcomeSection extends StatelessWidget {
   final MealAnalysisData analysis;
   final bool advanced;
+  final Widget? chart;
 
   const MealOutcomeSection({
     super.key,
     required this.analysis,
     this.advanced = false,
+    this.chart,
   });
 
   @override
@@ -30,6 +32,7 @@ class MealOutcomeSection extends StatelessWidget {
     final summary =
         analysis.outcomeContext?.glucoseSummary.window ??
         GlucoseWindowSummary(
+          baselinePolicy: GlucoseBaselinePolicy.nearest,
           readings: analysis.glucoseReadings,
           start: analysis.mealTime,
           end: analysis.chartEnd,
@@ -74,6 +77,7 @@ class MealOutcomeSection extends StatelessWidget {
             ],
           ),
         ),
+        if (chart != null) ...[const SizedBox(height: 8), chart!],
         const SizedBox(height: 6),
         Card(
           child: Padding(
@@ -81,12 +85,13 @@ class MealOutcomeSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                MealRangeSummary(summary: summary),
+                const SizedBox(height: 20),
                 MealResponseSummary(
                   summary: summary,
                   complete: analysis.hasFullGlucoseWindow,
                 ),
-                const SizedBox(height: 20),
-                MealRangeSummary(summary: summary),
+                const SizedBox(height: 16),
                 MealExcursionSummary(summary: summary),
                 const SizedBox(height: 8),
                 if (advanced) MealOutcomeDetails(summary: summary),
