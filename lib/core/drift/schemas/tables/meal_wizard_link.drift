@@ -3,6 +3,7 @@ import 'bolus_wizard.drift';
 
 CREATE TABLE meal_wizard_link (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  dismissed BOOLEAN NOT NULL DEFAULT FALSE,
   meal_id INTEGER NOT NULL REFERENCES meal(id) ON DELETE CASCADE,
   local_wizard_id TEXT REFERENCES bolus_wizard(local_id) ON DELETE SET NULL,
   remote_wizard_id TEXT,

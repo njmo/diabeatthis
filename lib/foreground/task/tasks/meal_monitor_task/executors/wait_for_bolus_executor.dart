@@ -14,6 +14,7 @@ import '../../../../event/model/foreground_event.dart';
 import '../../../../providers/latest_bolus_wizard_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../helpers/bolus_reminder_helper.dart';
+import '../helpers/record_meal_wizard_link.dart';
 import '../meal_monitor_context.dart';
 import 'bolus_then_wait_executor.dart';
 import 'detect_finished_eating_executor.dart';
@@ -156,6 +157,11 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
     );
     final recordedBolus = calculatorResponse;
     if (recordedBolus != null) {
+      await const RecordMealWizardLink()(
+        runtimeContext,
+        recordedBolus.data,
+        meal.id,
+      );
       consumeBolusWizard(runtimeContext.container, recordedBolus.data);
     }
 

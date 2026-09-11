@@ -18,7 +18,12 @@ import '../widgets/copied_meal_picker.dart';
 @RoutePage()
 class AddMealPage extends HookConsumerWidget {
   final bool retrospective;
-  const AddMealPage({super.key, this.retrospective = false});
+  final DateTime? initialEatenAt;
+  const AddMealPage({
+    super.key,
+    this.retrospective = false,
+    this.initialEatenAt,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,6 +54,7 @@ class AddMealPage extends HookConsumerWidget {
               children: [
                 AddMealBasicInfoSection(
                   retrospective: retrospective,
+                  initialEatenAt: initialEatenAt,
                   onNameSaved: mealDraft.setName,
                   onPlannedAtChanged: mealDraft.setPlannedAt,
                 ),
@@ -149,11 +155,11 @@ class AddMealPage extends HookConsumerWidget {
     final updatedDraft = ref.read(mealDraftProvider);
 
     try {
-      await ref
+      final meal = await ref
           .read(addMealControllerProvider.notifier)
           .addMeal(updatedDraft, retrospective: timing);
       if (context.mounted) {
-        context.router.pop();
+        context.router.pop(meal);
       }
     } catch (e) {
       if (context.mounted) {

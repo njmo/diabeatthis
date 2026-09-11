@@ -8,6 +8,7 @@ import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../dashboard/data/providers/meal_snapshot_controller_provider.dart';
 import '../../drafts/meal_draft.dart';
 import '../../models/retrospective_meal_timing.dart';
+import '../../persistence/record_retrospective_meal_history.dart';
 import 'add_meal_use_case.dart';
 
 class LogRetrospectiveMealUseCase {
@@ -37,32 +38,17 @@ class LogRetrospectiveMealUseCase {
       final snapshotController = ref.read(mealSnapshotControllerProvider);
       await snapshotController.createPlannedSnapshot(meal.id);
       await snapshotController.saveConsumedSnapshot(meal.id);
-      await db
-          .into(db.mealAdvisorResult)
-          .insert(
-            MealAdvisorResultCompanion.insert(
-              mealId: Value(meal.id),
-              version: const Value(null),
-              createdAt: Value(history.values.first.millisecondsSinceEpoch),
-              updatedAt: Value(history.values.first.millisecondsSinceEpoch),
-              result: 'manual',
-              initialWaitTime: timing.choice.waitMinutes,
-              finalWaitTime: timing.choice.waitMinutes,
-              waitTimeIgnored: false,
-            ),
-          );
       await (db.update(db.meal)..where((row) => row.id.equals(meal.id))).write(
         MealCompanion(
           createdAt: Value(history.values.first.millisecondsSinceEpoch),
         ),
       );
-      for (final event in history.entries) {
-        await db.mealDao.updateMealStatus(
-          meal.id,
-          event.key,
-          occurredAt: event.value,
-        );
-      }
+      await recordRetrospectiveMealHistory(
+        db,
+        meal.id,
+        timing,
+        draft.plannedAt,
+      );
       return meal.copyWith(
         status: 'summarized',
         createdAt: history.values.first,

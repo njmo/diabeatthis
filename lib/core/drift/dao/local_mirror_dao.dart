@@ -68,7 +68,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     );
   }
 
-  Future<void> upsertBolusWizard(BolusWizardCompanion event) =>
+  Future<BolusWizardData> upsertBolusWizard(BolusWizardCompanion event) =>
       transaction(() async {
         final table = db.bolusWizard;
         if (event.nightscoutId.present &&
@@ -105,6 +105,7 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
                   ..where((row) => row.createdAt.equals(event.createdAt.value)))
                 .getSingle();
         await db.mealWizardLinkDao.reconcile(saved);
+        return saved;
       });
 
   Future<void> upsertTemporaryTarget(TemporaryTargetCompanion event) {

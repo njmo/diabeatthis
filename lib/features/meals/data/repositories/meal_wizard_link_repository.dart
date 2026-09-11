@@ -1,8 +1,10 @@
 import '../../../../core/data_sources/nightscout/helpers/nightscout_source_key.dart';
+import '../../../../core/domain/model/bolus_wizard.dart' as domain;
 import '../../../../core/drift/database_impl.dart';
+import '../../common/models/meal_wizard_assignment.dart';
 import '../../common/models/meal_wizard_relation_type.dart';
 
-/// Explicit user-confirmed links. No matching by proximity or carb summation.
+/// Persists confirmed links and explicit dismissals. Matching belongs to use cases.
 class MealWizardLinkRepository {
   final DatabaseImpl db;
   const MealWizardLinkRepository(this.db);
@@ -13,6 +15,7 @@ class MealWizardLinkRepository {
     String? remoteWizardId,
     String? remoteSource,
     MealWizardRelationType relationType = MealWizardRelationType.initial,
+    bool automatic = false,
   }) async {
     if (localWizardId == null && remoteWizardId == null) {
       throw ArgumentError('A wizard identity is required');
@@ -30,7 +33,39 @@ class MealWizardLinkRepository {
       remoteWizardId: remoteWizardId,
       source: source,
       relationType: relationType.name,
+      automatic: automatic,
     );
+  }
+
+  Future<List<MealWizardAssignment>> forWizards(
+    List<domain.BolusWizard> wizards,
+  ) async {
+    final rows = await db.mealWizardLinkDao.forWizardIds(
+      localIds: wizards
+          .map((w) => w.localId)
+          .whereType<String>()
+          .toSet()
+          .toList(),
+      remoteIds: wizards
+          .map((w) => w.nightscoutObjectId)
+          .whereType<String>()
+          .toSet()
+          .toList(),
+    );
+    return rows
+        .map(
+          (row) => MealWizardAssignment(
+            id: row.id,
+            dismissed: row.dismissed,
+            mealId: row.mealId,
+            localId: row.localWizardId,
+            remoteId: row.remoteWizardId,
+            remoteSource: row.remoteSource,
+            type: MealWizardRelationType.values.byName(row.relationType),
+          ),
+        )
+        .where((link) => wizards.any(link.matches))
+        .toList();
   }
 
   Future<List<MealWizardLinkData>> forMeal(int mealId) =>

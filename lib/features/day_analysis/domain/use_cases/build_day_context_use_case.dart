@@ -1,16 +1,18 @@
 import '../../../../common/history/glucose_period_summary.dart';
 import '../../../../common/history/insulin_basal_summary.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
+import '../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/treatment_base.dart';
+import '../../../../core/logger/logger.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
 import '../models/day_activity_summary.dart';
 import '../models/day_analysis_window.dart';
 import '../models/day_context.dart';
 import '../models/day_meal_summary.dart';
 
-class BuildDayContextUseCase {
+class BuildDayContextUseCase with Logging {
   final Future<List<Glucose>> Function(DateTime, DateTime) loadGlucose;
   final Future<List<Treatment>> Function(DateTime, DateTime) loadTreatments;
   final Future<DayMealSummary> Function(DateTime, DateTime) loadMeals;
@@ -52,7 +54,8 @@ class BuildDayContextUseCase {
     ) async {
       try {
         return await action().timeout(timeout);
-      } catch (_) {
+      } catch (error) {
+        logW('Day context ${source.name} failed: ${error.runtimeType}');
         failures.add(source);
         return null;
       }
@@ -95,13 +98,28 @@ class BuildDayContextUseCase {
       Future<Duration?> Function(DateTime)? load,
     ) async {
       if (load == null) return null;
-      return fetch<Duration?>(source, () async {
-        final age = await load(asOf);
+      Future<Duration?> readAge() async {
+        final age = await load(asOf).timeout(timeout);
         if (age != null && age.isNegative) {
-          throw StateError('Negative device age');
+          throw ArgumentError('Negative device age');
         }
         return age;
-      });
+      }
+
+      try {
+        return await readAge();
+      } on ArgumentError {
+        failures.add(source);
+        return null;
+      } on FormatException {
+        failures.add(source);
+        return null;
+      } catch (error) {
+        logW('Retrying day context ${source.name}: ${error.runtimeType}');
+        // One retry handles transient transport/startup failures. An empty
+        // successful response stays unknown and is not retried.
+        return fetch<Duration?>(source, readAge);
+      }
     }
 
     final sensorAgeFuture = fetchAge(DayDataSource.sensorAge, loadSensorAge);
@@ -126,6 +144,12 @@ class BuildDayContextUseCase {
         ?.where((s) => !s.date.isAfter(queryEnd))
         .toList();
     return DayContext(
+      wizards: treatments
+          ?.whereType<BolusWizard>()
+          .where(
+            (wizard) => wizard.isValid && !wizard.createdAt.isBefore(start),
+          )
+          .toList(),
       basal: statuses == null
           ? null
           : InsulinBasalSummary.calculate(statuses, start, asOf),

@@ -24,6 +24,9 @@ final dayContextForDateProvider = FutureProvider.autoDispose
       final statusesRepository = ref.watch(
         deviceStatusHistoryRepositoryProvider.future,
       );
+      final nightscoutRepository = ref.watch(
+        nightscoutRepositoryProvider.future,
+      );
       final local = DayLocalHistoryRepository(ref.watch(databaseProvider));
       final lows = ref.watch(recordedLowTreatmentRepositoryProvider);
       return BuildDayContextUseCase(
@@ -37,18 +40,14 @@ final dayContextForDateProvider = FutureProvider.autoDispose
         loadLowTreatments: lows.fetchBetween,
         loadActivities: local.loadActivities,
         loadSensorAge: (asOf) async {
-          final repository = await ref.read(
-            nightscoutRepositoryProvider.future,
-          );
+          final repository = await nightscoutRepository;
           return withClock(
             Clock.fixed(asOf),
             repository.getLatestSensorChangeAge,
           );
         },
         loadPodAge: (asOf) async {
-          final repository = await ref.read(
-            nightscoutRepositoryProvider.future,
-          );
+          final repository = await nightscoutRepository;
           return withClock(
             Clock.fixed(asOf),
             repository.getLatestInsulinChangeAge,

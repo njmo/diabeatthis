@@ -6,10 +6,13 @@ import '../../../../../common/widgets/manual_meal_decision_fields.dart';
 import '../../../data/models/retrospective_meal_timing.dart';
 
 class RetrospectiveMealFields extends StatelessWidget {
+  final String subtitle;
   final RetrospectiveMealTiming value;
   final ValueChanged<RetrospectiveMealTiming> onChanged;
   const RetrospectiveMealFields({
     super.key,
+    this.subtitle =
+        'Zjedzono całość zgodnie z planem, bez dokładki. Decyzja zostanie zapisana jako ręczna.',
     required this.value,
     required this.onChanged,
   });
@@ -18,8 +21,7 @@ class RetrospectiveMealFields extends StatelessWidget {
   Widget build(BuildContext context) => FormSection(
     icon: Icons.history,
     title: 'Przebieg posiłku',
-    subtitle:
-        'Zjedzono całość zgodnie z planem, bez dokładki. Decyzja zostanie zapisana jako ręczna.',
+    subtitle: subtitle,
     children: [
       TextFormField(
         keyboardType: TextInputType.number,

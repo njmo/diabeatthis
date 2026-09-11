@@ -42,7 +42,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 26;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -62,6 +62,14 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     onUpgrade: (m, from, to) async {
       if (from < 25) {
         await migrateWizardIdentity(this, m);
+      }
+      if (from < 26) {
+        final columns = await customSelect(
+          'PRAGMA table_info(meal_wizard_link)',
+        ).get();
+        if (!columns.any((row) => row.read<String>('name') == 'dismissed')) {
+          await m.addColumn(mealWizardLink, mealWizardLink.dismissed);
+        }
       }
       if (from < 24) {
         await m.addColumn(deviceStatus, deviceStatus.basalObservedAt);

@@ -35,6 +35,7 @@ import 'package:diabeatthis/features/meal_advisor/domain/utils/extended_carbs_sc
 import 'package:diabeatthis/features/meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_database_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
+import 'package:diabeatthis/features/meals/data/providers/meal_wizard_recorder_provider.dart';
 import 'package:diabeatthis/foreground/event/external/notification/notification_response_event.dart';
 import 'package:diabeatthis/foreground/event/external/notification/notification_response_event_handler.dart';
 import 'package:diabeatthis/foreground/event/internal/data_available_event.dart';
@@ -150,6 +151,7 @@ final fakeNotifications = FakeNotificationsController();
 
 final parentContainer = ProviderContainer(
   overrides: [
+    mealWizardRecorderProvider.overrideWithValue((_, _, _) async {}),
     checkMealAdvisorDeviceStatusUseCaseProvider.overrideWithValue(
       const AvailableMealAdvisorDeviceStatus(),
     ),

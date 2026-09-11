@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/domain/model/meal.dart';
@@ -119,7 +121,7 @@ class BolusReminderHelper with Logging {
     int extendedCarbsDelayMinutes = 45,
     int extendedCarbsDurationMinutes = 120,
     bool isAddOn = false,
-    void Function(BolusWizard)? onBolusRecorded,
+    FutureOr<void> Function(BolusWizard)? onBolusRecorded,
   }) async {
     while (true) {
       logI("Cancelling previous notifications before showing bolus reminder");
@@ -149,7 +151,7 @@ class BolusReminderHelper with Logging {
       }
 
       if (result is TreatmentAvailableEvent<BolusWizard>) {
-        onBolusRecorded?.call(result.data);
+        await onBolusRecorded?.call(result.data);
         logI(
           "Calculator response available, cancelling notifications and marking meal as bolused",
         );

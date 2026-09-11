@@ -7,6 +7,7 @@ import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/domain/events/finished_eating_event_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
+import '../../../../../features/meals/common/models/meal_wizard_relation_type.dart';
 import '../../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../../../features/meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../../event/internal/meal_status_changed_event.dart';
@@ -15,6 +16,7 @@ import '../../../../event/model/foreground_event.dart';
 import '../../../../providers/latest_bolus_wizard_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../helpers/bolus_reminder_helper.dart';
+import '../helpers/record_meal_wizard_link.dart';
 import '../meal_monitor_context.dart';
 import 'finalize_meal_executor.dart';
 import 'meal_monitor_state_executor.dart';
@@ -200,6 +202,12 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       await runtimeContext.container
           .read(notificationsControllerForegroundProvider)
           .cancelAll();
+      await const RecordMealWizardLink()(
+        runtimeContext,
+        calculatorResponse.data,
+        mealMonitorContext.activeMeal!.id,
+        type: MealWizardRelationType.continuation,
+      );
       consumeBolusWizard(runtimeContext.container, calculatorResponse.data);
       return true;
     }
@@ -216,8 +224,15 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       mealMonitorContext.activeMeal!.id,
       carbs: grams,
       isAddOn: true,
-      onBolusRecorded: (wizard) =>
-          consumeBolusWizard(runtimeContext.container, wizard),
+      onBolusRecorded: (wizard) async {
+        await const RecordMealWizardLink()(
+          runtimeContext,
+          wizard,
+          mealMonitorContext.activeMeal!.id,
+          type: MealWizardRelationType.continuation,
+        );
+        consumeBolusWizard(runtimeContext.container, wizard);
+      },
     );
   }
 }

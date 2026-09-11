@@ -10,7 +10,12 @@ class MealPlannedTimeField extends FormField<DateTime> {
     super.key,
     required ValueChanged<DateTime> onChanged,
     bool retrospective = false,
+    DateTime? initialDate,
   }) : super(
+         initialValue: initialDate,
+         onSaved: (value) {
+           if (value != null) onChanged(value);
+         },
          validator: (value) => value == null ? lang.addMealDateRequired : null,
          builder: (state) {
            void select(DateTime value) {

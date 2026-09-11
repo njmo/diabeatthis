@@ -17,15 +17,30 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     DateTime? occurredAt,
   }) async {
     await transaction(() async {
+      if (occurredAt != null) {
+        // Historical confirmation replaces this status's time. Remove the old
+        // slot before the status trigger inserts it again (unique meal/status).
+        await (delete(
+          db.mealStatusHistory,
+        )..where((t) => t.mealId.equals(id) & t.status.equals(status))).go();
+      }
       await (update(db.meal)..where((t) => t.id.equals(id))).write(
         MealCompanion(status: Value(status)),
       );
       if (occurredAt != null) {
         final timestamp = occurredAt.millisecondsSinceEpoch;
-        // The normal status trigger creates the event; replay supplies its time.
-        await (update(db.mealStatusHistory)
-              ..where((t) => t.mealId.equals(id) & t.status.equals(status)))
-            .write(MealStatusHistoryCompanion(createdAt: Value(timestamp)));
+        // Also covers replaying the current status, when the trigger is idle.
+        await into(db.mealStatusHistory).insert(
+          MealStatusHistoryCompanion.insert(
+            mealId: id,
+            status: status,
+            createdAt: Value(timestamp),
+          ),
+          onConflict: DoUpdate(
+            (_) => MealStatusHistoryCompanion(createdAt: Value(timestamp)),
+            target: [db.mealStatusHistory.mealId, db.mealStatusHistory.status],
+          ),
+        );
         await (update(db.meal)..where((t) => t.id.equals(id))).write(
           MealCompanion(
             updatedAt: Value(timestamp),
@@ -36,6 +51,28 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
         );
       }
     });
+  }
+
+  /// Called inside confirmation's transaction, before replaying confirmed eating.
+  /// Planning and skipping remain as audit events, not active eating stages.
+  Future<void> clearInterruptedEatingHistory(int mealId) async {
+    // These are replayable eating stages, independent of monitor activation rules.
+    const statuses = [
+      'eating',
+      'eating-extra',
+      'eating-then-bolus',
+      'waiting-for-bolus',
+      'bolused-waiting',
+      'waited-eating',
+      'bolused-eating',
+      'eaten',
+      'eaten-extra',
+      'eaten-bolused',
+    ];
+    await (delete(db.mealStatusHistory)..where(
+          (row) => row.mealId.equals(mealId) & row.status.isIn(statuses),
+        ))
+        .go();
   }
 
   Future<MealData> createLowTreatmentEntry({

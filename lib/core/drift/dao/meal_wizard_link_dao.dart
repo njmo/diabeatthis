@@ -16,6 +16,7 @@ class MealWizardLinkDao extends DatabaseAccessor<DatabaseImpl>
     String? remoteWizardId,
     String? source,
     required String relationType,
+    bool automatic = false,
   }) async {
     await transaction(() async {
       BolusWizardData? wizard;
@@ -52,7 +53,20 @@ class MealWizardLinkDao extends DatabaseAccessor<DatabaseImpl>
         remoteId,
         resolvedSource,
       ).getSingleOrNull();
-      if (existing != null && existing.mealId != mealId) {
+      if (automatic) {
+        // A dismissed row is deliberately retained to prevent recreation.
+        if (existing != null) return;
+        final assigned =
+            await (db.select(table)..where(
+                  (row) =>
+                      row.mealId.equals(mealId) & row.dismissed.equals(false),
+                ))
+                .get();
+        if (assigned.isNotEmpty) return;
+      }
+      if (existing != null &&
+          !existing.dismissed &&
+          existing.mealId != mealId) {
         throw WizardIdentityConflict(
           'Wizard is already linked to another meal',
         );
@@ -63,6 +77,7 @@ class MealWizardLinkDao extends DatabaseAccessor<DatabaseImpl>
         remoteWizardId: Value(remoteId),
         remoteSource: Value(resolvedSource),
         relationType: relationType,
+        dismissed: const Value(false),
       );
       if (existing == null) {
         await db.into(table).insert(values);
@@ -101,10 +116,13 @@ class MealWizardLinkDao extends DatabaseAccessor<DatabaseImpl>
     final table = db.mealWizardLink;
     final links = await _matchingLinks(wizard.localId, remoteId, source).get();
     if (links.isEmpty) return;
-    final first = links.first;
+    final first =
+        links.where((link) => !link.dismissed).firstOrNull ?? links.first;
     for (final link in links) {
-      if (link.mealId != first.mealId ||
-          link.relationType != first.relationType ||
+      if ((!link.dismissed &&
+              !first.dismissed &&
+              (link.mealId != first.mealId ||
+                  link.relationType != first.relationType)) ||
           (link.remoteWizardId != null &&
               (link.remoteWizardId != remoteId ||
                   link.remoteSource != source)) ||
@@ -115,7 +133,7 @@ class MealWizardLinkDao extends DatabaseAccessor<DatabaseImpl>
         );
       }
     }
-    for (final duplicate in links.skip(1)) {
+    for (final duplicate in links.where((link) => link.id != first.id)) {
       await (db.delete(
         table,
       )..where((row) => row.id.equals(duplicate.id))).go();
@@ -129,13 +147,27 @@ class MealWizardLinkDao extends DatabaseAccessor<DatabaseImpl>
     );
   }
 
-  Future<List<MealWizardLinkData>> forMeal(int mealId) => (db.select(
-    db.mealWizardLink,
-  )..where((row) => row.mealId.equals(mealId))).get();
+  Future<List<MealWizardLinkData>> forWizardIds({
+    required List<String> localIds,
+    required List<String> remoteIds,
+  }) {
+    if (localIds.isEmpty && remoteIds.isEmpty) return Future.value([]);
+    return (db.select(db.mealWizardLink)..where(
+          (row) =>
+              row.localWizardId.isIn(localIds) |
+              row.remoteWizardId.isIn(remoteIds),
+        ))
+        .get();
+  }
+
+  Future<List<MealWizardLinkData>> forMeal(int mealId) =>
+      (db.select(db.mealWizardLink)..where(
+            (row) => row.mealId.equals(mealId) & row.dismissed.equals(false),
+          ))
+          .get();
 
   Future<void> unlink(int id) async {
-    await (db.delete(
-      db.mealWizardLink,
-    )..where((row) => row.id.equals(id))).go();
+    await (db.update(db.mealWizardLink)..where((row) => row.id.equals(id)))
+        .write(const MealWizardLinkCompanion(dismissed: Value(true)));
   }
 }

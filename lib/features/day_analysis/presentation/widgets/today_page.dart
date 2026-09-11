@@ -5,11 +5,13 @@ import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../data/providers/day_context_provider.dart';
+import '../../data/providers/day_meal_review_provider.dart';
 import 'day_activity_card.dart';
 import 'day_date_selector.dart';
 import 'day_device_age_card.dart';
 import 'day_glucose_card.dart';
 import 'day_insulin_card.dart';
+import 'day_meal_review_section.dart';
 import 'day_meals_card.dart';
 
 class TodayPage extends ConsumerStatefulWidget {
@@ -32,6 +34,8 @@ class TodayPageState extends ConsumerState<TodayPage> {
     final lang = context.lang;
     Future<void> refresh() async {
       ref.invalidate(provider);
+      ref.invalidate(dayMealReviewProvider(selectedDate ?? today));
+      ref.invalidate(dayMealCandidatesProvider(selectedDate ?? today));
       try {
         await ref.read(provider.future);
       } catch (_) {
@@ -95,6 +99,7 @@ class TodayPageState extends ConsumerState<TodayPage> {
                     nightBasal: day.nightBasal,
                   ),
                   DayMealsCard(day: day),
+                  DayMealReviewSection(date: day.start),
                   DayGlucoseCard(
                     title: lang.dayNightTitle,
                     summary: day.nightGlucose,

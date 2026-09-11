@@ -11,11 +11,13 @@ class AddMealBasicInfoSection extends ConsumerWidget {
   const AddMealBasicInfoSection({
     super.key,
     this.retrospective = false,
+    this.initialEatenAt,
     required this.onNameSaved,
     required this.onPlannedAtChanged,
   });
 
   final bool retrospective;
+  final DateTime? initialEatenAt;
   final ValueChanged<String> onNameSaved;
   final ValueChanged<DateTime> onPlannedAtChanged;
 
@@ -50,6 +52,7 @@ class AddMealBasicInfoSection extends ConsumerWidget {
         MealPlannedTimeField(
           onChanged: onPlannedAtChanged,
           retrospective: retrospective,
+          initialDate: initialEatenAt,
         ),
       ],
     );
