@@ -1,0 +1,5 @@
+CREATE TABLE accepted_day_summary (
+  day_key TEXT NOT NULL PRIMARY KEY,
+  accepted_at INTEGER NOT NULL,
+  payload TEXT NOT NULL
+);

@@ -19,3 +19,6 @@ import 'tables/treat.drift';
 import 'tables/extended_carb.drift';
 import 'tables/stress_event.drift';
 import 'tables/meal_wizard_link.drift';
+
+import 'tables/low_treatment_review.drift';
+import 'tables/accepted_day_summary.drift';

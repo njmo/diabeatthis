@@ -1,0 +1,10 @@
+import 'meal.drift';
+
+-- Same exact timestamp identity as the local treat history.
+CREATE TABLE low_treatment_review (
+  occurred_at INTEGER NOT NULL PRIMARY KEY,
+  external_id TEXT,
+  meal_id INTEGER REFERENCES meal(id) ON DELETE CASCADE,
+  dismissed BOOLEAN NOT NULL DEFAULT FALSE,
+  CHECK ((meal_id IS NOT NULL AND dismissed = FALSE) OR (meal_id IS NULL AND dismissed = TRUE))
+);

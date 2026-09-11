@@ -42,7 +42,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 26;
+  int get schemaVersion => 28;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -60,6 +60,18 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
+      if (from < 28) {
+        final existing = await customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'accepted_day_summary'",
+        ).getSingleOrNull();
+        if (existing == null) await m.createTable(acceptedDaySummary);
+      }
+      if (from < 27) {
+        final existing = await customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'low_treatment_review'",
+        ).getSingleOrNull();
+        if (existing == null) await m.createTable(lowTreatmentReview);
+      }
       if (from < 25) {
         await migrateWizardIdentity(this, m);
       }
