@@ -38,6 +38,10 @@ class DayContext {
   final Duration? podAge;
   final Set<DayDataSource> failedSources;
 
+  /// Completion concerns elapsed calendar time, not source completeness.
+  bool get isComplete =>
+      !asOf.isBefore(DateTime(start.year, start.month, start.day + 1));
+
   DayContext({
     this.basal,
     this.nightBasal,

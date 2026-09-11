@@ -6,6 +6,7 @@ import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/treatment_base.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
 import '../models/day_activity_summary.dart';
+import '../models/day_analysis_window.dart';
 import '../models/day_context.dart';
 import '../models/day_meal_summary.dart';
 
@@ -37,13 +38,13 @@ class BuildDayContextUseCase {
     this.timeout = const Duration(seconds: 15),
   });
 
-  Future<DayContext> call() async {
-    final asOf = now().toLocal();
-    final start = DateTime(asOf.year, asOf.month, asOf.day);
-    // Explicit clock window, not an inferred sleep interval.
-    final nightStart = DateTime(asOf.year, asOf.month, asOf.day - 1, 22);
-    final morning = DateTime(asOf.year, asOf.month, asOf.day, 6);
-    final nightEnd = asOf.isBefore(morning) ? asOf : morning;
+  Future<DayContext> call({DateTime? date}) async {
+    final window = DayAnalysisWindow(now: now(), date: date);
+    final start = window.start;
+    final asOf = window.end;
+    final queryEnd = window.queryEnd;
+    final nightStart = window.nightStart;
+    final nightEnd = window.nightEnd;
     final failures = <DayDataSource>{};
     Future<T?> fetch<T>(
       DayDataSource source,
@@ -63,24 +64,27 @@ class BuildDayContextUseCase {
             DayDataSource.deviceStatus,
             () => loadDeviceStatuses!(
               nightStart.subtract(InsulinBasalSummary.maxSnapshotAge),
-              asOf,
+              queryEnd,
             ),
           );
     final glucoseFuture = fetch(
       DayDataSource.glucose,
-      () => loadGlucose(nightStart.subtract(const Duration(minutes: 5)), asOf),
+      () => loadGlucose(
+        nightStart.subtract(const Duration(minutes: 5)),
+        queryEnd,
+      ),
     );
     final treatmentsFuture = fetch(
       DayDataSource.treatments,
-      () => loadTreatments(nightStart, asOf),
+      () => loadTreatments(nightStart, queryEnd),
     );
     final mealsFuture = fetch(
       DayDataSource.meals,
-      () => loadMeals(start, asOf),
+      () => loadMeals(start, queryEnd),
     );
     final lowsFuture = fetch(
       DayDataSource.lowTreatments,
-      () => loadLowTreatments(start, asOf),
+      () => loadLowTreatments(start, queryEnd),
     );
     final activitiesFuture = fetch(
       DayDataSource.activities,
@@ -102,14 +106,25 @@ class BuildDayContextUseCase {
 
     final sensorAgeFuture = fetchAge(DayDataSource.sensorAge, loadSensorAge);
     final podAgeFuture = fetchAge(DayDataSource.podAge, loadPodAge);
-    final glucose = await glucoseFuture;
-    final treatments = await treatmentsFuture;
+    final glucose = (await glucoseFuture)
+        ?.where((g) => !g.date.isAfter(queryEnd))
+        .toList();
+    final treatments = (await treatmentsFuture)
+        ?.where((t) => t.createdAt == null || !t.createdAt!.isAfter(queryEnd))
+        .toList();
     final meals = await mealsFuture;
-    final lows = await lowsFuture;
+    final lows = (await lowsFuture)
+        ?.where(
+          (low) =>
+              !low.eatenAt.isBefore(start) && !low.eatenAt.isAfter(queryEnd),
+        )
+        .toList();
     final activities = await activitiesFuture;
     final sensorAge = await sensorAgeFuture;
     final podAge = await podAgeFuture;
-    final statuses = await statusesFuture;
+    final statuses = (await statusesFuture)
+        ?.where((s) => !s.date.isAfter(queryEnd))
+        .toList();
     return DayContext(
       basal: statuses == null
           ? null

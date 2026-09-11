@@ -10,34 +10,50 @@ import '../../domain/use_cases/build_day_context_use_case.dart';
 import '../repositories/day_local_history_repository.dart';
 
 /// Auto-disposal prevents a completed request from replacing a refreshed page.
-final dayContextProvider = FutureProvider.autoDispose<DayContext>((ref) {
-  final glucoseRepository = ref.watch(glucoseHistoryRepositoryProvider.future);
-  final treatmentsRepository = ref.watch(
-    treatmentsHistoryRepositoryProvider.future,
-  );
-  final statusesRepository = ref.watch(
-    deviceStatusHistoryRepositoryProvider.future,
-  );
-  final local = DayLocalHistoryRepository(ref.watch(databaseProvider));
-  final lows = ref.watch(recordedLowTreatmentRepositoryProvider);
-  return BuildDayContextUseCase(
-    loadGlucose: (start, end) async =>
-        (await glucoseRepository).fetchGlucoseBetween(start, end),
-    loadTreatments: (start, end) async =>
-        (await treatmentsRepository).fetchTreatmentsBetween(start, end),
-    loadDeviceStatuses: (start, end) async =>
-        (await statusesRepository).fetchDeviceStatusBetween(start, end),
-    loadMeals: local.loadMeals,
-    loadLowTreatments: lows.fetchBetween,
-    loadActivities: local.loadActivities,
-    loadSensorAge: (asOf) async {
-      final repository = await ref.read(nightscoutRepositoryProvider.future);
-      return withClock(Clock.fixed(asOf), repository.getLatestSensorChangeAge);
-    },
-    loadPodAge: (asOf) async {
-      final repository = await ref.read(nightscoutRepositoryProvider.future);
-      return withClock(Clock.fixed(asOf), repository.getLatestInsulinChangeAge);
-    },
-    now: clock.now,
-  )();
-});
+final dayContextProvider = dayContextForDateProvider(null);
+
+/// Null follows today; an explicit date keeps historical requests isolated.
+final dayContextForDateProvider = FutureProvider.autoDispose
+    .family<DayContext, DateTime?>((ref, date) {
+      final glucoseRepository = ref.watch(
+        glucoseHistoryRepositoryProvider.future,
+      );
+      final treatmentsRepository = ref.watch(
+        treatmentsHistoryRepositoryProvider.future,
+      );
+      final statusesRepository = ref.watch(
+        deviceStatusHistoryRepositoryProvider.future,
+      );
+      final local = DayLocalHistoryRepository(ref.watch(databaseProvider));
+      final lows = ref.watch(recordedLowTreatmentRepositoryProvider);
+      return BuildDayContextUseCase(
+        loadGlucose: (start, end) async =>
+            (await glucoseRepository).fetchGlucoseBetween(start, end),
+        loadTreatments: (start, end) async =>
+            (await treatmentsRepository).fetchTreatmentsBetween(start, end),
+        loadDeviceStatuses: (start, end) async =>
+            (await statusesRepository).fetchDeviceStatusBetween(start, end),
+        loadMeals: local.loadMeals,
+        loadLowTreatments: lows.fetchBetween,
+        loadActivities: local.loadActivities,
+        loadSensorAge: (asOf) async {
+          final repository = await ref.read(
+            nightscoutRepositoryProvider.future,
+          );
+          return withClock(
+            Clock.fixed(asOf),
+            repository.getLatestSensorChangeAge,
+          );
+        },
+        loadPodAge: (asOf) async {
+          final repository = await ref.read(
+            nightscoutRepositoryProvider.future,
+          );
+          return withClock(
+            Clock.fixed(asOf),
+            repository.getLatestInsulinChangeAge,
+          );
+        },
+        now: clock.now,
+      )(date: date);
+    });
