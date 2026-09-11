@@ -20,6 +20,14 @@ class DayDeviceAgeCard extends StatelessWidget {
 
     return DaySummaryCard(
       title: lang.dayDevicesTitle,
+      warnings: [
+        if (day.sensorAge == null ||
+            day.failedSources.contains(DayDataSource.sensorAge))
+          '${lang.daySensorAge}: ${age(day.sensorAge, DayDataSource.sensorAge)}',
+        if (day.podAge == null ||
+            day.failedSources.contains(DayDataSource.podAge))
+          '${lang.dayPodAge}: ${age(day.podAge, DayDataSource.podAge)}',
+      ],
       children: [
         DayStatRow(
           label: lang.daySensorAge,

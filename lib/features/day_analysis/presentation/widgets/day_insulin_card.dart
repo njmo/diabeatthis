@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../common/history/insulin_basal_summary.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/utils/format_duration_label.dart';
 import 'day_basal_rows.dart';
 import 'day_stat_row.dart';
 import 'day_summary_card.dart';
@@ -27,6 +28,18 @@ class DayInsulinCard extends StatelessWidget {
         value == null ? '—' : '${value.toStringAsFixed(2)} U';
     return DaySummaryCard(
       title: lang.dayInsulinTitle,
+      warnings: [
+        if (summary == null || night == null)
+          '${lang.dayRecordedBoluses}: ${lang.daySourceUnavailable}',
+        for (final entry in [
+          (lang.dayBasalTitle, basal),
+          (lang.dayNightBasalTitle, nightBasal),
+        ])
+          if (entry.$2 == null)
+            '${entry.$1}: ${lang.daySourceUnavailable}'
+          else if (entry.$2!.coveredDuration < entry.$2!.duration)
+            '${entry.$1}: ${lang.dayWarningMissingDuration(formatDurationLabel(entry.$2!.duration - entry.$2!.coveredDuration))}',
+      ],
       children: [
         if (summary == null) Text(lang.daySourceUnavailable),
         DayStatRow(

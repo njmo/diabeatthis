@@ -4,9 +4,9 @@ import 'package:intl/intl.dart';
 import '../../../../../common/history/glucose_window_summary.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/utils/format_duration_label.dart';
+import '../../../../../common/widgets/glucose_range_bar.dart';
 import '../../../../../common/widgets/responsive_metric_list.dart';
 import '../../../common/theme/analysis_chart_colors.dart';
-import '../../../common/widgets/glucose_range_bar.dart';
 import 'meal_range_legend_item.dart';
 
 class MealRangeSummary extends StatelessWidget {

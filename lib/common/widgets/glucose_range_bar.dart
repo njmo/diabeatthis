@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../common/history/glucose_window_summary.dart';
-import '../theme/analysis_chart_colors.dart';
+import '../history/glucose_window_summary.dart';
+import '../theme/glucose_range_colors.dart';
 
 class GlucoseRangeBar extends StatelessWidget {
   final GlucoseWindowSummary summary;
@@ -10,7 +10,7 @@ class GlucoseRangeBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = AnalysisChartColors(Theme.of(context).brightness);
+    final palette = GlucoseRangeColors(Theme.of(context).brightness);
     final durations = [
       summary.inRange,
       summary.aboveRange,

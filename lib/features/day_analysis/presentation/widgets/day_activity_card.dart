@@ -11,6 +11,7 @@ class DayActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DaySummaryCard(
     title: context.lang.dayActivityTitle,
+    warnings: [if (activities == null) context.lang.daySourceUnavailable],
     children: [
       if (activities == null)
         Text(context.lang.daySourceUnavailable)

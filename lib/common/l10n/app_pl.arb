@@ -1084,7 +1084,7 @@
   "dayManualBoluses": "Bolusy ręczne, także z Wizarda",
   "dayCorrectionBoluses": "Bolusy korekcyjne",
   "dayNightBoluses": "Bolusy w oknie nocy",
-  "dayInsulinLimit": "Baza jest szacunkiem z raportów pompy. Luki nie oznaczają zerowej podaży. Suma obejmuje zapisane bolusy; kompletność ich historii nie jest potwierdzona. Noc częściowo pokrywa się z dzisiejszym dniem — nie należy dodawać tych wyników.",
+  "dayInsulinLimit": "Baza jest szacunkiem z raportów pompy. Luki nie oznaczają zerowej podaży. Suma obejmuje zapisane bolusy; kompletność ich historii nie jest potwierdzona. Noc częściowo pokrywa się z analizowanym dniem — nie należy dodawać tych wyników.",
   "dayMealsTitle": "Posiłki i dosłodzenia",
   "dayMealsCount": "Rozpoczęte lub zjedzone posiłki",
   "dayCarbs": "Węglowodany netto",
@@ -1099,7 +1099,6 @@
   "dayNoActivities": "Brak zapisanych aktywności w tym okresie.",
   "dayOngoing": "w trakcie",
   "dayAsOf": "Dane do {time}",
-  "dayPartialFailure": "Część źródeł jest niedostępna. Pozostałe wyniki pokazano poniżej.",
   "dayGlucoseTitle": "Glikemia od północy",
   "dayNightTitle": "Ostatnia noc · 22:00–06:00",
   "dayNightNote": "Noc to przedział godzinowy, nie pomiar snu. Przed 06:00 pokazujemy tylko część, która upłynęła. Nocnych bolusów nie dodajemy ponownie do sumy dnia.",
@@ -1268,5 +1267,22 @@
   "mealTechnicalSubtitle": "Źródła danych, powiązania i historia statusów",
   "mealPortionDifference": "Różnica węglowodanów względem planu",
   "mealOtherEventsCount": "Inne posiłki w tym czasie",
-  "mealActivitiesCount": "Aktywności w tym czasie"
+  "mealActivitiesCount": "Aktywności w tym czasie",
+  "dayMissingGlucose": "Brak odczytów",
+  "dayGlucoseBarBasis": "Pasek przedstawia cały analizowany okres, także czas bez odczytów.",
+  "dayNoGlucoseObservation": "Brak odczytów pozwalających obliczyć czas w zakresach.",
+  "dayHistoricalDraftTitle": "Dzień · wersja robocza",
+  "dayPreviousDate": "Poprzedni dzień",
+  "dayNextDate": "Następny dzień",
+  "dayBackToToday": "Wróć do dzisiaj",
+  "daySelectDate": "Wybierz dzień",
+  "dayFinishedDraftNote": "Dzień zakończony · podsumowanie robocze, niezaakceptowane",
+  "dayWarningMissingDuration": "Brakuje danych z {duration} analizowanego okresu.",
+  "@dayWarningMissingDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  }
 }

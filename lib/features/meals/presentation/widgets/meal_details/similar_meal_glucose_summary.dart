@@ -4,11 +4,11 @@ import 'package:intl/intl.dart';
 import '../../../../../common/history/glucose_rise_summary.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/widgets/chart_color_label.dart';
+import '../../../../../common/widgets/glucose_range_bar.dart';
 import '../../../../meal_analysis/domain/models/meal_glucose_analysis.dart';
 import '../../../../meal_analysis/domain/services/meal_glucose_observation.dart';
 import '../../../common/formatters/format_meal_rise_timing.dart';
 import '../../../common/theme/analysis_chart_colors.dart';
-import '../../../common/widgets/glucose_range_bar.dart';
 
 class SimilarMealGlucoseSummary extends StatelessWidget {
   final MealGlucoseAnalysis data;

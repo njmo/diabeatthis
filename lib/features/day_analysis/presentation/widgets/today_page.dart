@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -5,22 +6,34 @@ import 'package:intl/intl.dart';
 import '../../../../common/l10n/language.dart';
 import '../../data/providers/day_context_provider.dart';
 import 'day_activity_card.dart';
+import 'day_date_selector.dart';
 import 'day_device_age_card.dart';
 import 'day_glucose_card.dart';
 import 'day_insulin_card.dart';
 import 'day_meals_card.dart';
 
-class TodayPage extends ConsumerWidget {
+class TodayPage extends ConsumerStatefulWidget {
   const TodayPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(dayContextProvider);
+  ConsumerState<TodayPage> createState() => TodayPageState();
+}
+
+class TodayPageState extends ConsumerState<TodayPage> {
+  DateTime? selectedDate;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = selectedDate == null
+        ? dayContextProvider
+        : dayContextForDateProvider(selectedDate);
+    final state = ref.watch(provider);
+    final today = DateUtils.dateOnly(clock.now().toLocal());
     final lang = context.lang;
     Future<void> refresh() async {
-      ref.invalidate(dayContextProvider);
+      ref.invalidate(provider);
       try {
-        await ref.read(dayContextProvider.future);
+        await ref.read(provider.future);
       } catch (_) {
         /* Rendered below. */
       }
@@ -34,7 +47,9 @@ class TodayPage extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  lang.dayDraftTitle,
+                  selectedDate == null
+                      ? lang.dayDraftTitle
+                      : lang.dayHistoricalDraftTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
@@ -46,6 +61,11 @@ class TodayPage extends ConsumerWidget {
             ],
           ),
         ),
+        DayDateSelector(
+          date: selectedDate ?? today,
+          today: today,
+          onSelected: (date) => setState(() => selectedDate = date),
+        ),
         Expanded(
           child: state.when(
             skipLoadingOnRefresh: false,
@@ -54,16 +74,16 @@ class TodayPage extends ConsumerWidget {
             data: (day) => RefreshIndicator(
               onRefresh: refresh,
               child: ListView(
+                key: ValueKey(day.start),
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
+                  if (day.isComplete) Text(lang.dayFinishedDraftNote),
                   Text(
                     lang.dayAsOf(
                       DateFormat('dd.MM.yyyy HH:mm').format(day.asOf),
                     ),
                   ),
-                  if (day.failedSources.isNotEmpty)
-                    Text(lang.dayPartialFailure),
                   DayGlucoseCard(
                     title: lang.dayGlucoseTitle,
                     summary: day.glucose,

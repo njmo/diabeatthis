@@ -971,7 +971,6 @@
   "dayNoActivities": "No recorded activities in this period.",
   "dayOngoing": "ongoing",
   "dayAsOf": "Data through {time}",
-  "dayPartialFailure": "Some sources are unavailable. Other results are shown below.",
   "dayGlucoseTitle": "Glucose since midnight",
   "dayNightTitle": "Last night · 22:00–06:00",
   "dayNightNote": "Night is a clock window, not measured sleep. Before 06:00 only elapsed time is shown. Night boluses are not added again to the day total.",
@@ -1140,5 +1139,22 @@
   "mealTechnicalSubtitle": "Data sources, related records and status history",
   "mealPortionDifference": "Carbohydrate difference from plan",
   "mealOtherEventsCount": "Other meals in this period",
-  "mealActivitiesCount": "Activities in this period"
+  "mealActivitiesCount": "Activities in this period",
+  "dayMissingGlucose": "Missing readings",
+  "dayGlucoseBarBasis": "The bar represents the entire analysis period, including time without readings.",
+  "dayNoGlucoseObservation": "No readings available to calculate time in ranges.",
+  "dayHistoricalDraftTitle": "Day · draft",
+  "dayPreviousDate": "Previous day",
+  "dayNextDate": "Next day",
+  "dayBackToToday": "Back to today",
+  "daySelectDate": "Select day",
+  "dayFinishedDraftNote": "Day finished · draft summary, not accepted",
+  "dayWarningMissingDuration": "Data is missing for {duration} of the analysis period.",
+  "@dayWarningMissingDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  }
 }

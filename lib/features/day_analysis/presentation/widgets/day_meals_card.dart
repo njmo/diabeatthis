@@ -22,6 +22,18 @@ class DayMealsCard extends StatelessWidget {
         (meals.count == 0 || meals.count > meals.missingSnapshotCount);
     return DaySummaryCard(
       title: lang.dayMealsTitle,
+      warnings: [
+        if (meals == null)
+          '${lang.dayMealsCount}: ${lang.daySourceUnavailable}',
+        if (lows == null) '${lang.dayLowCount}: ${lang.daySourceUnavailable}',
+        if (meals != null &&
+            (meals.plannedFallbackCount > 0 || meals.missingSnapshotCount > 0))
+          lang.dayMacroLimit(
+            meals.plannedFallbackCount,
+            meals.missingSnapshotCount,
+          ),
+        if (lows != null && knownLows!.length < lows.length) lang.dayLowUnknown,
+      ],
       children: [
         DayStatRow(
           label: lang.dayMealsCount,
