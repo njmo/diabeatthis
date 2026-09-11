@@ -23,6 +23,8 @@ part 'low_treatment_context_controller.g.dart';
 
 @riverpod
 class LowTreatmentContextController extends _$LowTreatmentContextController {
+  LowTreatmentContextController({this.historicalAt});
+  final DateTime? historicalAt;
   late AddMealUseCase _addMealUseCase;
   late AddLowTreatmentContextEntryUseCase _addContextUseCase;
 
@@ -30,6 +32,22 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
   Future<LowTreatmentSheetState> build() async {
     _addMealUseCase = ref.watch(addMealUseCaseProvider);
     _addContextUseCase = ref.watch(addLowTreatmentContextEntryUseCaseProvider);
+
+    if (historicalAt != null) {
+      return LowTreatmentSheetState(
+        contextDraft: LowTreatmentContextDraft(
+          meal: MealDraft(
+            name: lang.lowTreatmentMealName,
+            mealIngredients: const [],
+            plannedAt: historicalAt!,
+            purpose: MealPurpose.lowTreatment,
+            status: 'confirmed',
+          ),
+          source: LowTreatmentContextSource.manual,
+          reason: LowTreatmentReason.manual,
+        ),
+      );
+    }
 
     final deviceStatus = ref.read(deviceStatusUiProvider);
     final hasAapsSuggestion = (deviceStatus?.carbsReq ?? 0) > 0;
@@ -252,7 +270,12 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
 
     final db = ref.read(databaseProvider);
     final result = await db.transaction(() async {
-      final mealDraft = draft.meal.copyWith(plannedAt: clock.now());
+      if (historicalAt?.isAfter(clock.now()) ?? false) {
+        throw ArgumentError('Historical low treatment cannot be in the future');
+      }
+      final mealDraft = draft.meal.copyWith(
+        plannedAt: historicalAt ?? clock.now(),
+      );
       final meal = await _addMealUseCase.call(
         mealDraft.copyWith(purpose: MealPurpose.lowTreatment),
       );

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../data/models/low_treatment_sheet_state.dart';
 import '../controllers/low_treatment_context_controller.dart';
@@ -14,12 +16,24 @@ import 'low_treatment_related_record_field.dart';
 import 'low_treatment_suggestion_summary.dart';
 import 'quick_low_treatment_selector.dart';
 
-Future<void> showLowTreatmentSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
+Future<LowTreatmentContext?> showLowTreatmentSheet(
+  BuildContext context, {
+  DateTime? historicalAt,
+}) {
+  return showModalBottomSheet<LowTreatmentContext>(
     context: context,
     useRootNavigator: false,
     isScrollControlled: true,
-    builder: (_) => const LowTreatmentSheet(),
+    builder: (_) => historicalAt == null
+        ? const LowTreatmentSheet()
+        : ProviderScope(
+            overrides: [
+              lowTreatmentContextControllerProvider.overrideWith(
+                () => LowTreatmentContextController(historicalAt: historicalAt),
+              ),
+            ],
+            child: const LowTreatmentSheet(),
+          ),
   );
 }
 
@@ -69,7 +83,9 @@ class LowTreatmentSheetContent extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              lang.lowTreatmentTitle,
+              controller.historicalAt == null
+                  ? lang.lowTreatmentTitle
+                  : '${lang.lowTreatmentTitle} · ${DateFormat('dd.MM HH:mm').format(controller.historicalAt!)}',
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),
@@ -155,11 +171,11 @@ class LowTreatmentSheetContent extends StatelessWidget {
                   : () async {
                       final saveErrorMessage = lang.lowTreatmentSaveError;
                       try {
-                        await controller.saveCurrentDraft();
+                        final saved = await controller.saveCurrentDraft();
                         if (!context.mounted) {
                           return;
                         }
-                        Navigator.of(context).pop();
+                        Navigator.of(context).pop(saved);
                       } catch (error) {
                         if (!context.mounted) {
                           return;

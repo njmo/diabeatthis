@@ -4,6 +4,7 @@ import '../../../../common/history/insulin_bolus_summary.dart';
 import '../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
+import '../../../../core/domain/model/treat.dart';
 import '../../../../core/domain/model/treatment_base.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
@@ -144,6 +145,15 @@ class BuildDayContextUseCase with Logging {
         ?.where((s) => !s.date.isAfter(queryEnd))
         .toList();
     return DayContext(
+      carbEntries: treatments
+          ?.whereType<Treat>()
+          .where(
+            (entry) =>
+                entry.isValid &&
+                entry.carbs > 0 &&
+                !entry.createdAt.isBefore(start),
+          )
+          .toList(),
       wizards: treatments
           ?.whereType<BolusWizard>()
           .where(

@@ -2,6 +2,7 @@ import '../../../../common/history/glucose_period_summary.dart';
 import '../../../../common/history/insulin_basal_summary.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
 import '../../../../core/domain/model/bolus_wizard.dart';
+import '../../../../core/domain/model/treat.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
 import 'day_activity_summary.dart';
 import 'day_meal_summary.dart';
@@ -32,6 +33,7 @@ class DayContext {
 
   /// Already fetched day records shared with inline review; never persisted.
   final List<BolusWizard>? wizards;
+  final List<Treat>? carbEntries;
   final List<RecordedLowTreatment>? lowTreatments;
   final List<DayActivitySummary>? activities;
 
@@ -60,10 +62,14 @@ class DayContext {
     required this.nightBoluses,
     required this.meals,
     List<BolusWizard>? wizards,
+    List<Treat>? carbEntries,
     required List<RecordedLowTreatment>? lowTreatments,
     required List<DayActivitySummary>? activities,
     required Set<DayDataSource> failedSources,
-  }) : wizards = wizards == null ? null : List.unmodifiable(wizards),
+  }) : carbEntries = carbEntries == null
+           ? null
+           : List.unmodifiable(carbEntries),
+       wizards = wizards == null ? null : List.unmodifiable(wizards),
        lowTreatments = lowTreatments == null
            ? null
            : List.unmodifiable(lowTreatments),
