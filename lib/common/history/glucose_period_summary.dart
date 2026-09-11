@@ -1,5 +1,6 @@
 import '../../core/domain/model/glucose.dart';
 import 'glucose_window_summary.dart';
+import 'has_continuous_history.dart';
 
 /// Time-weighted statistics; samples cover at most five minutes, never gaps.
 class GlucosePeriodSummary {
@@ -43,6 +44,33 @@ class GlucosePeriodSummary {
       ),
       mean: covered == 0 ? null : weighted / covered,
     );
+  }
+
+  /// Sampling completeness is separate from conservative measured coverage.
+  /// Small clock drift must not accumulate into an apparent missing reading.
+  bool get hasContinuousReadings {
+    final readings = window.readings;
+    if (!hasContinuousHistory(
+      timestamps: readings.map((reading) => reading.date),
+      start: window.start,
+      end: window.end,
+    )) {
+      return false;
+    }
+    final interval = GlucoseWindowSummary.readingInterval;
+    final expected =
+        window.end.difference(window.start).inMilliseconds ~/
+        interval.inMilliseconds;
+    if (readings.length >= expected) return true;
+
+    // A shifted stream with small clock drift can lose one boundary sample.
+    // Allow that only when the observed mean cadence is still five minutes
+    // (within one second), not for a systematically slower stream.
+    if (readings.length < 2 || readings.length != expected - 1) return false;
+    final span = readings.last.date.difference(readings.first.date);
+    return span.inMilliseconds <=
+        (readings.length - 1) *
+            (interval + const Duration(seconds: 1)).inMilliseconds;
   }
 
   double? get coveragePercent {

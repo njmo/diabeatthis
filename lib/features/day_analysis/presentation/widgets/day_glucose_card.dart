@@ -24,7 +24,7 @@ class DayGlucoseCard extends StatelessWidget {
           lang.daySourceUnavailable
         else if (s.window.observed == Duration.zero)
           lang.dayNoGlucoseObservation
-        else if (s.window.missing > Duration.zero)
+        else if (s.window.missing > Duration.zero && !s.hasContinuousReadings)
           lang.dayWarningMissingDuration(formatDurationLabel(s.window.missing)),
       ],
       children: [
