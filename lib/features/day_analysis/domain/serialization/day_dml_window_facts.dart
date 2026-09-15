@@ -1,6 +1,9 @@
 import '../../../../common/history/glucose_period_summary.dart';
 import '../../../../common/history/insulin_basal_summary.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
+import '../../../../core/domain/model/glucose.dart';
+
+import 'day_dml_timestamp.dart';
 
 /// Shared serialization for night intervals and already-calculated meal outcomes.
 Map<String, Object?> dayDmlWindowFacts({
@@ -12,12 +15,36 @@ Map<String, Object?> dayDmlWindowFacts({
 }) {
   num? finite(num? n) => n != null && n.isFinite ? n : null;
   final observedBasal = basal != null && basal.coverage > 0 ? basal : null;
+  final points = <(DateTime, int), ({Glucose reading, List<String> roles})>{};
+  void point(String role, Glucose? reading) {
+    if (reading == null) return;
+    final key = (reading.date.toUtc(), reading.sgv);
+    final entry = points.putIfAbsent(key, () => (reading: reading, roles: []));
+    entry.roles.add(role);
+  }
+
+  point('baseline', glucose?.window.baseline);
+  point('minimum', glucose?.window.minimum);
+  point('maximum', glucose?.window.peak);
+  point('last_observed', glucose?.window.last);
+  final ordered = points.values.toList()
+    ..sort((a, b) => a.reading.date.compareTo(b.reading.date));
   return {
-    'start': start.toUtc().toIso8601String(),
-    'end': end.toUtc().toIso8601String(),
+    'start': dayDmlTimestamp(start),
+    'end': dayDmlTimestamp(end),
     'mean_mg_dl': finite(glucose?.mean),
     'min_mg_dl': glucose?.window.minimum?.sgv,
     'max_mg_dl': glucose?.window.peak?.sgv,
+    'chronological_points': glucose == null
+        ? null
+        : [
+            for (final point in ordered)
+              {
+                'at': dayDmlTimestamp(point.reading.date),
+                'mg_dl': point.reading.sgv,
+                'roles': point.roles,
+              },
+          ],
     'cgm_observed_min': glucose?.window.observed.inMinutes,
     'below70_min': glucose?.window.belowRange.inMinutes,
     'in70_180_min': glucose?.window.inRange.inMinutes,

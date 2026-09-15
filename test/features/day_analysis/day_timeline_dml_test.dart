@@ -125,10 +125,15 @@ void main() {
       expect(rows.first['analyze'], false);
       expect(rows[1]['analyze'], true);
       expect(rows[2]['analyze'], false);
-      expect(rows[1]['outcome']['expected_until'], '2026-10-26T01:30:00.000Z');
       expect(
-        rows[1]['outcome']['other_meals_at'],
-        contains('2026-10-25T23:30:00.000Z'),
+        DateTime.parse(rows[1]['outcome']['expected_until'] as String),
+        DateTime.utc(2026, 10, 26, 1, 30),
+      );
+      expect(
+        (rows[1]['outcome']['other_meals_at'] as List).map(
+          (at) => DateTime.parse(at as String),
+        ),
+        contains(DateTime.utc(2026, 10, 25, 23, 30)),
       );
       expect(
         rows[1]['before']['active_ecarbs'].first['scheduled_remaining_g'],
@@ -210,7 +215,9 @@ void main() {
       );
       final interval =
           (dmlSection(doc.text, 'NIGHT_COURSE')['intervals'] as List)
-              .singleWhere((w) => w['start'] == start.toIso8601String());
+              .singleWhere(
+                (w) => DateTime.parse(w['start'] as String) == start,
+              );
       expect(interval['basal_u'], closeTo(1.2, 0.0001));
       expect(interval['basal_profile_u'], closeTo(0.6, 0.0001));
       expect(interval['basal_added_u'], closeTo(0.6, 0.0001));

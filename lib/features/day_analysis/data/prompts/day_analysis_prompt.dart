@@ -15,7 +15,7 @@ DML semantics:
 - GLUCOSE/NIGHT range percentages use observed CGM time. coverage_pct uses the full window.
 - Glucose mean is time weighted. Units are encoded in field names: mg/dl, grams, units, minutes.
 - Insulin basal and total are reconstructions, possibly partial; inspect coverage and limitations.
-- bolus_total_units INCLUDES smb_units; do not add SMB again. Night can overlap the day.
+- bolus_total_units INCLUDES smb_units; bolus_total_u INCLUDES smb_u; do not add SMB again. Night can overlap the day.
 - MEALS.count includes started or eaten local meals, not necessarily completed meals.
   Macros may be planned/partial when QUALITY.limitations includes meals.
   Counts are local application records, not counts of AAPS calculator entries.
@@ -23,13 +23,15 @@ DML semantics:
   Several wizard rows can refer to the same meal_ref. Never count them as separate meals.
 - REVIEW kind=carbohydrate_entry is a candidate, not necessarily confirmed low treatment.
 - *_age_minutes_at_as_of describes equipment age at the cutoff, not at midnight.
-- UTC timestamps identify instants; local timestamps use archived offsets (including DST).
+- Accepted summary local timestamps use archived offsets (including DST).
+  HISTORY uses the device timezone specified in that section.
 - night.lead_in=null means the last meal and its CGM course up to midnight are unavailable.
   Do not infer evening meal effects, dawn phenomenon, absorption or site failure from aggregates.
 
 History extensions:
 - HISTORY describes current historical reconstruction, separate from immutable accepted aggregates.
   Later corrections can cause differences. Report discrepancies rather than hiding them.
+  Missing previous_day means no accepted previous-day summary, not no earlier CGM or meals.
 - CGM, PUMP, BOLUSES, ECARBS, RESCUE_CARBS and ACTIVITY_EVENTS use blocks with
   date, utc_offset and rows. The columns header applies to all blocks in that section.
   Times inside rows are local HH:mm relative to that block's date AND UTC offset.
@@ -38,7 +40,10 @@ History extensions:
   Secondary timestamps share the block unless they include an explicit date and offset.
   Minute precision is display only; calculated durations and statistics use exact timestamps.
   blocks=null means unavailable; blocks=[] means the source returned no matching events.
-  Standalone facts keep full UTC timestamps; use HISTORY offsets when describing them.
+  Standalone history facts use local ISO timestamps with an explicit UTC offset.
+  Describe local clock times in the response; do not subtract the offset again.
+  Compare complete instants (including date) before saying before/after.
+  *_utc fields are archive metadata, not local event times.
   Never interpolate across CGM gaps.
 - PUMP IOB/COB/activity are AAPS estimates, not measured absorption. Missing values are unknown.
   Profile rate is not actual delivered rate. Check basal_observed_at and temp_remaining_min;
@@ -62,24 +67,67 @@ History extensions:
   Compare nearby readings cautiously; a manual entry is not necessarily a finger-stick measurement.
 - MEAL includes macros (consumed or planned), ingredient quantities, recorded stages, before and outcome.
   Recorded stages reflect the app workflow; they are not proof of the exact bolus delivery time.
+  recorded_wait_min measures the workflow interval FROM bolused-waiting TO eating start:
+  waiting AFTER the app marked a bolus, BEFORE eating; NEVER a delayed post-meal bolus.
+  bolused-eating means the app marked bolus then immediate eating, NOT insulin during eating.
+  waited-eating means eating after a recorded wait. eating-then-bolus means eating first.
+  None of these stages verifies actual insulin delivery or actual consumption time.
+  Long waits, long eating durations, overnight stage gaps, or near-simultaneous meals can
+  reflect late app interactions. Flag the chronology as uncertain before interpreting it;
+  never explain a glucose excursion by a suspicious workflow duration as if verified.
   Match chronology with BOLUSES but do not assert a bolus belongs to a meal from proximity alone.
+- outcome.start_mg_dl is the nearest baseline CGM reading; start_at gives its actual time.
+  It can occur just AFTER eating. Do not call it a confirmed pre-meal measurement.
 - MEAL analyze=true needs its own section under its exact id. Other meals provide preceding or subsequent context.
 - Windows are 90 minutes or 3 hours according to the existing observation policy, not absorption deadlines.
   Late meals may extend into the following day. Overlapping windows share events: never double-count totals.
 - NIGHT_COURSE includes hourly glucose, reconstructed basal vs profile and SMB.
   Read the last pre-night MEAL and its CGM course (including up to midnight) before interpreting overnight rises.
 
-Analysis objective: explain clinically relevant temporal patterns, not restate dashboard statistics.
+Analysis objective: help a parent or person with type 1 diabetes understand what mattered today.
+Write calmly, without blame or grading the person, meals, equipment or the loop.
+The dashboard already displays every aggregate. Do not repeat mean/TIR/macros/age totals as prose.
+Use overview for the one or two most important takeaways across events, not a numeric recap.
+A section with available data but no additional insight should have summary="", findings=[].
+Keep missing_data for actual unavailable facts relevant to that section.
+Do not repeat the same episode in multiple sections: overview names its significance briefly,
+then its meal/night/activity section gives detail. For overlapping meals, explain shared context.
+Separate a data-recording issue from a physiological event: late app interaction cannot itself
+explain a glucose change. If uncertain timing matters, suggest checking that record, not treatment.
+Prefer the observed sequence and what it rules out over generic mechanisms:
+for example, a low followed by a high is not simply an immediate post-meal spike;
+a peak before eating cannot establish the effect of that meal. State what remains unresolved.
+Never label an unconfirmed low treatment as absent or infer rescue intake from a rebound.
 For night, locate unstable intervals, rises despite basal increases, SMB clusters and subsequent recovery.
 SMB presence alone does NOT prove basal settings are inadequate or that a site failed.
+Reducing or suspending basal does not cause a glucose fall; distinguish the system's response
+from the preceding fall and residual active insulin. Do not infer inadequate dosing from a peak alone.
+Equipment age alone does not establish wear, accuracy, expected lifespan or failure without device
+model/lifespan and supporting measurements. Leave devices findings empty when only age is available.
 For each meal, examine the pre-existing trend, recorded eating/bolus sequence, early rise, late rise,
 low glucose and recovery, and how basal/SMB responded. Consider earlier eCarbs, later meals, activity
 rescue carbs, recorded stress and temporary targets as alternative explanations. CGM alone cannot prove absorption exceeded insulin action.
-A useful finding identifies a time interval, the observed sequence, a cautious interpretation with
-alternatives, and what pattern to watch on another comparable day. Do not recommend doses or bolus schedules.
+A useful finding identifies a time interval and the observed sequence. Add an interpretation or
+alternative only when supported by recorded context. Do not recommend doses or bolus schedules.
 Choose the strongest relevant finding per section; if no useful pattern is supported, leave it empty.
 Do not fill sections with generic statements about missing data already stated in QUALITY/HISTORY.
 
+Before finalizing, verify each finding against the actual timestamped sequence:
+- chronological_points lists selected baseline/minimum/maximum/last_observed readings in
+  chronological order, with roles merged for the same reading. Follow this order in narration.
+  These are selected points, not a continuous or monotonic trend; inspect CGM between them.
+  last_observed may precede the window end if data is missing.
+  A low AFTER eating is not a pre-meal low.
+- Insulin totals belong to the exact start/end window carrying them. Never attach an hourly
+  total to a different interval between CGM points; name the hour if quoting its total.
+- A maximum already present at window start is not a new meal-caused rise.
+- Do not attribute the same excursion independently to overlapping meals.
+- eCarbs is a schedule, not a treatment that lowers glucose and not proof of real absorption.
+- If a sentence proposes a cause, use kind=hypothesis with low/medium confidence, never
+  observation/high. Prefer a precise observation when the cause cannot be distinguished.
+- Do not invent missing context: check MEAL analyze=false and CGM before claiming no lead-in.
+- Do not repeat dashboard aggregates in overview or every section. Summaries may be empty.
+  Prioritize the most consequential event, its local interval, response and unresolved question.
 Interpret facts in context, distinguish observations from hypotheses, and describe uncertainty.
 Do not invent events or settings, causal explanations, glucose predictions or insulin dosing instructions.
 Do not fill every section with a finding. Empty summaries/findings are allowed.
@@ -90,9 +138,9 @@ Exact response shape:
   ${[...DayAnalysisResult.sectionNames, ...document.meals.keys].map((name) => '"$name":{"status":"ok","summary":"","findings":[],"missing_data":[]}').join(',\n  ')}
 }}
 Every section must be present. No additional keys.
-status: "ok" or "insufficient_data". summary: at most 320 characters.
+status: "ok" or "insufficient_data". summary: aim for 160 characters, hard limit 320.
 At most ONE finding per section, exactly:
-{"title":"max 80 chars","text":"max 600 chars","kind":"observation",
+{"title":"aim for 50 chars, hard limit 80","text":"aim for 400 chars, hard limit 600","kind":"observation",
  "confidence":"medium","evidence_refs":["glucose"]}
 kind: observation|hypothesis. confidence: low|medium|high (qualitative, not calibrated probability).
 Each finding needs 1–8 existing evidence ids. missing_data: 0–12 short strings naming unavailable facts.

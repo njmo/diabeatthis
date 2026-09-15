@@ -1,3 +1,5 @@
+import 'day_dml_timestamp.dart';
+
 /// Values may include secondary timestamps (for example an activity end).
 typedef DayDmlTimedRow = ({DateTime at, List<Object?> values});
 
@@ -13,11 +15,7 @@ List<Map<String, Object?>>? dayDmlTimeBlocks(
   DateTime wallTime(DateTime at) => at.toUtc().add(offsetAt(at));
   String date(DateTime at) => wallTime(at).toIso8601String().substring(0, 10);
   String time(DateTime at) => wallTime(at).toIso8601String().substring(11, 16);
-  String offset(DateTime at) {
-    final minutes = offsetAt(at).inMinutes;
-    final absolute = minutes.abs();
-    return '${minutes < 0 ? '-' : '+'}${(absolute ~/ 60).toString().padLeft(2, '0')}:${(absolute % 60).toString().padLeft(2, '0')}';
-  }
+  String offset(DateTime at) => dayDmlUtcOffset(offsetAt(at));
 
   final ordered = rows.indexed.toList()
     ..sort((a, b) {

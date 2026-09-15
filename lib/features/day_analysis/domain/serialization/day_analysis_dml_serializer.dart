@@ -8,6 +8,7 @@ import '../models/day_analysis_context.dart';
 import '../models/day_dml_document.dart';
 import '../use_cases/build_day_dml_use_case.dart';
 import 'day_dml_time_blocks.dart';
+import 'day_dml_timestamp.dart';
 import 'day_dml_treatment_context.dart';
 import 'day_dml_window_facts.dart';
 
@@ -24,7 +25,7 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
     text.writeln('$kind ${jsonEncode({'id': id, ...data})}');
   }
 
-  String at(DateTime t) => t.toUtc().toIso8601String();
+  String at(DateTime t) => dayDmlTimestamp(t);
   num? finite(num? value) => value != null && value.isFinite ? value : null;
   final seriesStart = context.seriesStart;
   bool inSeries(DateTime t) =>
@@ -52,7 +53,7 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
     'accepted_aggregates_are_not_recomputed': true,
     'series_start': at(seriesStart),
     'timestamps':
-        'UTC for standalone facts; local HH:mm within dated series blocks',
+        'Local time with explicit offset for standalone facts; local HH:mm within dated series blocks',
     'local_clock_source': 'device_timezone_at_generation',
     'local_offset_minutes_at_series_start': seriesStart
         .toLocal()
@@ -204,6 +205,7 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
           ? null
           : at(meal.eatingEndedAt!),
       'recorded_wait_min': meal.wait?.inMinutes,
+      'timing_source': 'app_workflow_not_verified_delivery_or_consumption',
       'macro_source': meal.macroSource,
       'macros': macro == null
           ? null
@@ -260,9 +262,11 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
         'start_mg_dl': history.glucose == null
             ? null
             : outcome.glucoseSummary.window.baseline?.sgv,
-        'peak_at': outcome.glucoseSummary.window.peak == null
+        'start_at':
+            history.glucose == null ||
+                outcome.glucoseSummary.window.baseline == null
             ? null
-            : at(outcome.glucoseSummary.window.peak!.date),
+            : at(outcome.glucoseSummary.window.baseline!.date),
         'ecarbs_overlap': history.treatments == null
             ? null
             : [
