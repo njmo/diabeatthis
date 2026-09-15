@@ -1381,5 +1381,12 @@
   "dayAiResponseCopied": "AI response copied",
   "dayAiOutputLimit": "The response was cut short by the model output limit. You can inspect the partial response or try again.",
   "dayAiPreparingInput": "Preparing day and meal history…",
-  "dayMacroEnergyShare": "Energy share by macro"
+  "dayMacroEnergyShare": "Energy share by macro",
+  "dayAiLoadFailed": "Could not load the saved analysis. Try again.",
+  "dayAiSaveFailed": "Could not save the analysis. The preview is still available.",
+  "dayAiSaved": "Saved analysis",
+  "dayAiAccept": "Accept and save",
+  "dayAiReplace": "Accept and replace saved analysis",
+  "dayAiDiscard": "Discard preview",
+  "dayAiOriginalPromptUnavailable": "This archive does not contain the original prompt. The saved DML follows."
 }

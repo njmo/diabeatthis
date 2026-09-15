@@ -9,11 +9,15 @@ import 'day_ai_text_dialog.dart';
 class DayAiInputButton extends StatelessWidget {
   final AsyncValue<DayDmlDocument?> document;
   final String language;
+  final String? exactPrompt;
+  final bool isHistoricalInput;
   final VoidCallback onRetry;
   const DayAiInputButton({
     super.key,
     required this.document,
     required this.language,
+    this.exactPrompt,
+    this.isHistoricalInput = false,
     required this.onRetry,
   });
 
@@ -41,7 +45,11 @@ class DayAiInputButton extends StatelessWidget {
           : () => showDialog<void>(
               context: context,
               builder: (_) => DayAiTextDialog(
-                text: buildDayAnalysisPrompt(value, language),
+                text:
+                    exactPrompt ??
+                    (isHistoricalInput
+                        ? '${context.lang.dayAiOriginalPromptUnavailable}\n\n${value.text}'
+                        : buildDayAnalysisPrompt(value, language)),
               ),
             ),
     );

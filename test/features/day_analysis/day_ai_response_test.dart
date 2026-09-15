@@ -1,3 +1,4 @@
+import 'package:diabeatthis/features/day_analysis/data/providers/accepted_day_ai_provider.dart';
 import 'package:diabeatthis/features/day_analysis/data/providers/day_analysis_provider.dart';
 import 'package:diabeatthis/features/day_analysis/data/providers/day_summary_provider.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_analysis_invalid_response.dart';
@@ -29,6 +30,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          acceptedDayAiProvider.overrideWith((ref, date) async => null),
           dayDmlProvider(
             date,
           ).overrideWith(() => FixtureDayAnalysisInputController(date)),

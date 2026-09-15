@@ -26,8 +26,14 @@ void main() {
           container.read(dayAnalysisClientProvider) as LlmDayAnalysisClient;
       final transport = client.transport as FirebaseAiLlmClient;
       final config = transport.gateway.generationConfig.toJson();
+      expect(client.modelId, 'gemini-2.5-flash');
+      expect(transport.modelName, client.modelId);
+      expect(client.timeout, const Duration(seconds: 60));
       expect(config['maxOutputTokens'], 8192);
-      expect(config['thinkingConfig'], containsPair('thinkingBudget', 2048));
+      expect(config['temperature'], 0.1);
+      expect(config['responseMimeType'], 'application/json');
+      expect(config['thinkingConfig'], {'thinkingBudget': 2048});
+      expect(const FirebaseAiLlmClient().modelName, 'gemini-2.5-flash');
       expect(const FirebaseAiGenerateContentGateway().maxOutputTokens, 2048);
       expect(const FirebaseAiGenerateContentGateway().thinkingBudget, isNull);
     },

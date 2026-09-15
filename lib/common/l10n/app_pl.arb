@@ -1821,5 +1821,12 @@
   "dayAiResponseCopied": "Skopiowano odpowiedź AI",
   "dayAiOutputLimit": "Odpowiedź została przerwana przez limit długości modelu. Możesz podejrzeć jej fragment lub spróbować ponownie.",
   "dayAiPreparingInput": "Przygotowuję historię dnia i posiłków…",
-  "dayMacroEnergyShare": "Udział energii z makro"
+  "dayMacroEnergyShare": "Udział energii z makro",
+  "dayAiLoadFailed": "Nie udało się odczytać zapisanej analizy. Spróbuj ponownie.",
+  "dayAiSaveFailed": "Nie udało się zapisać analizy. Propozycja pozostaje dostępna.",
+  "dayAiSaved": "Zapisana analiza",
+  "dayAiAccept": "Zaakceptuj i zapisz",
+  "dayAiReplace": "Zaakceptuj i zastąp zapisaną analizę",
+  "dayAiDiscard": "Odrzuć propozycję",
+  "dayAiOriginalPromptUnavailable": "Ten zapis nie zawiera oryginalnego promptu. Poniżej zachowane dane DML."
 }

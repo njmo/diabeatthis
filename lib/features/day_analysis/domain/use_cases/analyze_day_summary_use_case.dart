@@ -26,7 +26,8 @@ class AnalyzeDaySummaryUseCase with Logging {
     logI(
       'Requesting day analysis: model=${client.modelId}, language=$language',
     );
-    final response = await client.analyze(document, language: language);
+    final generated = await client.analyze(document, language: language);
+    final response = generated.text;
     logI('Validating day analysis: responseCharacters=${response.length}');
     final DayAnalysisResult result;
     try {
@@ -47,6 +48,7 @@ class AnalyzeDaySummaryUseCase with Logging {
     logI('Day analysis prepared');
     return DayAnalysisDraft(
       document: document,
+      prompt: generated.prompt,
       rawResponse: response,
       result: result,
       modelId: client.modelId,

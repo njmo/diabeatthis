@@ -1,6 +1,7 @@
 import '../../../../core/llm/llm_output_limit_exception.dart';
 import '../../../../core/llm/local_llm_client.dart';
 import '../../domain/models/day_analysis_invalid_response.dart';
+import '../../domain/models/day_analysis_response.dart';
 import '../../domain/models/day_dml_document.dart';
 import '../../domain/services/day_analysis_client.dart';
 import '../prompts/day_analysis_prompt.dart';
@@ -19,23 +20,19 @@ class LlmDayAnalysisClient implements DayAnalysisClient {
   });
 
   @override
-  Future<String> analyze(
+  Future<DayAnalysisResponse> analyze(
     DayDmlDocument document, {
     required String language,
   }) async {
     if (language != 'pl' && language != 'en') {
       throw ArgumentError.value(language, 'language');
     }
+    final prompt = buildDayAnalysisPrompt(document, language);
     try {
       final response = await transport
-          .generate(
-            LocalLlmRequest(
-              prompt: buildDayAnalysisPrompt(document, language),
-              timeout: timeout,
-            ),
-          )
+          .generate(LocalLlmRequest(prompt: prompt, timeout: timeout))
           .timeout(timeout);
-      return response.text;
+      return DayAnalysisResponse(prompt: prompt, text: response.text);
     } on LlmOutputLimitException catch (error) {
       throw DayAnalysisInvalidResponse(
         response: error.response,

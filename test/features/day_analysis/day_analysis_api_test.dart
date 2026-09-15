@@ -66,6 +66,7 @@ void main() {
       expect(draft.result.sections.keys, DayAnalysisResult.sectionNames);
       expect(transport.request!.imagePaths, isEmpty);
       expect(transport.request!.prompt, contains(draft.document.text));
+      expect(draft.prompt, transport.request!.prompt);
       expect(
         transport.request!.prompt,
         contains('bolus_total_units INCLUDES smb_units'),

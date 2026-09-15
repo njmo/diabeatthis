@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:diabeatthis/features/day_analysis/data/prompts/day_analysis_prompt.dart';
+import 'package:diabeatthis/features/day_analysis/data/providers/accepted_day_ai_provider.dart';
 import 'package:diabeatthis/features/day_analysis/data/providers/day_analysis_provider.dart';
 import 'package:diabeatthis/features/day_analysis/data/providers/day_summary_provider.dart';
+import 'package:diabeatthis/features/day_analysis/domain/models/day_analysis_response.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_dml_document.dart';
 import 'package:diabeatthis/features/day_analysis/domain/services/day_analysis_client.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/controllers/day_analysis_input_controller.dart';
@@ -21,9 +24,17 @@ class ButtonTestAnalysisClient implements DayAnalysisClient {
   int calls = 0;
   final pending = Completer<String>();
   @override
-  Future<String> analyze(DayDmlDocument document, {required String language}) {
+  Future<DayAnalysisResponse> analyze(
+    DayDmlDocument document, {
+    required String language,
+  }) {
     calls++;
-    return pending.future;
+    return pending.future.then(
+      (text) => DayAnalysisResponse(
+        prompt: buildDayAnalysisPrompt(document, language),
+        text: text,
+      ),
+    );
   }
 }
 
@@ -36,6 +47,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            acceptedDayAiProvider.overrideWith((ref, date) async => null),
             dayDmlProvider(
               date,
             ).overrideWith(() => FixtureDayAnalysisInputController(date)),
@@ -78,6 +90,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          acceptedDayAiProvider.overrideWith((ref, date) async => null),
           dayDmlProvider(
             date,
           ).overrideWith(() => FixtureDayAnalysisInputController(date)),
@@ -103,6 +116,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          acceptedDayAiProvider.overrideWith((ref, date) async => null),
           dayDmlProvider(
             date,
           ).overrideWith(() => FixtureDayAnalysisInputController(date)),
