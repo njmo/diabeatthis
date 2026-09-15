@@ -1,6 +1,7 @@
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/features/day_analysis/data/providers/day_context_provider.dart';
 import 'package:diabeatthis/features/day_analysis/data/providers/day_meal_review_provider.dart';
+import 'package:diabeatthis/features/day_analysis/data/providers/day_summary_provider.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_meal_review_entry.dart';
 import 'package:diabeatthis/features/day_analysis/domain/use_cases/build_day_context_use_case.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_meal_review_section.dart';
@@ -38,6 +39,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            acceptedDaySummaryProvider.overrideWith((ref, date) async => null),
             dayContextProvider.overrideWith((ref) async => day),
             dayMealReviewProvider(day.start).overrideWith(
               (ref) async => [

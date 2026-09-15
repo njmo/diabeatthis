@@ -1,9 +1,10 @@
-import '../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
-import '../../../../core/domain/model/meal_status_flow.dart';
-import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../meal_analysis/domain/models/meal_observation_window.dart';
+import '../../domain/models/ingredient_nutrition_data.dart';
+import '../../domain/models/recorded_meal_timing.dart';
+
+export '../../domain/models/ingredient_nutrition_data.dart';
 
 class MealDetailsData {
   final MealRecordData meal;
@@ -52,50 +53,15 @@ class MealDetailsData {
     );
   }
 
-  DateTime? get recordedEatingStartedAt {
-    final starts =
-        statusHistory
-            .where((entry) => mealStatusesStartingEating.contains(entry.status))
-            .map((entry) => entry.createdAt)
-            .toList()
-          ..sort();
-    return starts.firstOrNull;
-  }
+  RecordedMealTiming get recordedTiming => RecordedMealTiming([
+    for (final entry in statusHistory)
+      (status: entry.status, at: entry.createdAt),
+  ]);
 
-  DateTime? get recordedEatingEndedAt {
-    final start = recordedEatingStartedAt;
-    if (start == null) return null;
-    final ordered =
-        statusHistory
-            .where((entry) => !entry.createdAt.isBefore(start))
-            .toList()
-          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    var eatingBeforeBolus = false;
-    for (final entry in ordered) {
-      if (entry.status == 'eating-then-bolus') eatingBeforeBolus = true;
-      if (mealStatusReadyToSummarize(entry.status) ||
-          (eatingBeforeBolus && entry.status == 'waiting-for-bolus')) {
-        return entry.createdAt;
-      }
-    }
-    return null;
-  }
-
-  /// Elapsed status time, distinct from a recorded insulin dose.
-  Duration? get recordedWait {
-    final start = recordedEatingStartedAt;
-    if (start == null) return null;
-    final waiting =
-        statusHistory
-            .where(
-              (entry) =>
-                  entry.status == 'bolused-waiting' &&
-                  !entry.createdAt.isAfter(start),
-            )
-            .toList()
-          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    return waiting.isEmpty ? null : start.difference(waiting.last.createdAt);
-  }
+  DateTime? get recordedEatingStartedAt =>
+      recordedTiming.recordedEatingStartedAt;
+  DateTime? get recordedEatingEndedAt => recordedTiming.recordedEatingEndedAt;
+  Duration? get recordedWait => recordedTiming.recordedWait;
 
   Duration get observationWindow => MealObservationWindow.forWbtKcal(
     preferredSummarySnapshot?.wbtKcal ??
@@ -513,51 +479,6 @@ class MealStatusTransitionData {
     required this.timestamp,
     required this.isCurrent,
   });
-}
-
-class IngredientNutritionData {
-  final double carbsPer100g;
-  final double fatPer100g;
-  final double fiberPer100g;
-  final double proteinPer100g;
-  final CarbsLabelMode carbsLabelMode;
-  final double nutritionConfidence;
-  final DateTime? effectiveAt;
-
-  const IngredientNutritionData({
-    required this.carbsPer100g,
-    required this.fatPer100g,
-    required this.fiberPer100g,
-    required this.proteinPer100g,
-    required this.carbsLabelMode,
-    required this.nutritionConfidence,
-    required this.effectiveAt,
-  });
-
-  double get kcalPer100g {
-    return proteinPer100g * 4 + carbsPer100g * 4 + fatPer100g * 9;
-  }
-
-  double get wbtKcalPer100g {
-    return proteinPer100g * 4 + fatPer100g * 9;
-  }
-
-  double get safeNetCarbsPer100g {
-    return calculateNetCarbs(
-      carbs: carbsPer100g,
-      fiber: fiberPer100g,
-      labelMode: carbsLabelMode,
-    );
-  }
-
-  bool differsFrom(IngredientNutritionData other) {
-    return carbsPer100g != other.carbsPer100g ||
-        fatPer100g != other.fatPer100g ||
-        fiberPer100g != other.fiberPer100g ||
-        proteinPer100g != other.proteinPer100g ||
-        carbsLabelMode != other.carbsLabelMode ||
-        nutritionConfidence != other.nutritionConfidence;
-  }
 }
 
 class MealSnapshotDetailsData {

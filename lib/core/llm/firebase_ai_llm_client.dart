@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import 'firebase_ai_response.dart';
 import 'local_llm_client.dart';
 
 const firebaseAiDefaultModel = 'gemini-2.5-flash';
@@ -83,7 +84,22 @@ LlmRequestFailure _firebaseFailure(FirebaseException error) {
 }
 
 class FirebaseAiGenerateContentGateway {
-  const FirebaseAiGenerateContentGateway();
+  final int maxOutputTokens;
+  final int? thinkingBudget;
+
+  const FirebaseAiGenerateContentGateway({
+    this.maxOutputTokens = 2048,
+    this.thinkingBudget,
+  });
+
+  GenerationConfig get generationConfig => GenerationConfig(
+    maxOutputTokens: maxOutputTokens,
+    temperature: 0.1,
+    responseMimeType: 'application/json',
+    thinkingConfig: thinkingBudget == null
+        ? null
+        : ThinkingConfig.withThinkingBudget(thinkingBudget),
+  );
 
   Future<String> generate({
     required String modelName,
@@ -92,11 +108,7 @@ class FirebaseAiGenerateContentGateway {
   }) async {
     final model = FirebaseAI.googleAI().generativeModel(
       model: modelName,
-      generationConfig: GenerationConfig(
-        maxOutputTokens: 2048,
-        temperature: 0.1,
-        responseMimeType: 'application/json',
-      ),
+      generationConfig: generationConfig,
     );
     final response = await model.generateContent([
       Content.multi([
@@ -104,10 +116,6 @@ class FirebaseAiGenerateContentGateway {
         for (final image in images) InlineDataPart(image.mimeType, image.bytes),
       ]),
     ]);
-    final text = response.text;
-    if (text == null || text.trim().isEmpty) {
-      throw const FormatException('Firebase AI returned an empty response');
-    }
-    return text;
+    return readFirebaseAiResponse(response);
   }
 }

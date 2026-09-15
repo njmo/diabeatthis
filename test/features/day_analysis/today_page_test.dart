@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:diabeatthis/common/widgets/data_warning_indicator.dart';
 import 'package:diabeatthis/features/day_analysis/data/providers/day_context_provider.dart';
+import 'package:diabeatthis/features/day_analysis/data/providers/day_summary_provider.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_context.dart';
 import 'package:diabeatthis/features/day_analysis/domain/use_cases/build_day_context_use_case.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_glucose_card.dart';
@@ -30,6 +31,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            acceptedDaySummaryProvider.overrideWith((ref, date) async => null),
             dayContextProvider.overrideWith((ref) {
               calls++;
               return calls == 1 ? Future.value(day) : pending.future;

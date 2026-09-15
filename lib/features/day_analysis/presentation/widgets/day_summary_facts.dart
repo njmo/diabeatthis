@@ -6,6 +6,7 @@ import '../../domain/models/day_summary_snapshot.dart';
 import '../formatters/day_stat_formatter.dart';
 import 'day_archived_glucose_ranges.dart';
 import 'day_insulin_breakdown.dart';
+import 'day_meals_overview.dart';
 import 'day_metric_grid.dart';
 import 'day_summary_card.dart';
 
@@ -13,26 +14,8 @@ class DaySummaryFacts extends StatelessWidget {
   final DaySummarySnapshot snapshot;
   const DaySummaryFacts({super.key, required this.snapshot});
 
-  num? observedValue(DaySummaryMetric metric) {
-    final coverageMetric = switch (metric) {
-      DaySummaryMetric.basalUnits ||
-      DaySummaryMetric.basalAddedUnits ||
-      DaySummaryMetric.basalReducedUnits ||
-      DaySummaryMetric.totalInsulinUnits =>
-        DaySummaryMetric.basalCoveragePercent,
-      DaySummaryMetric.nightBasalUnits =>
-        DaySummaryMetric.nightBasalCoveragePercent,
-      _ => null,
-    };
-    if (coverageMetric != null) {
-      final coverage = snapshot.metrics[coverageMetric];
-      if (coverage == null || !coverage.isFinite || coverage <= 0) return null;
-    }
-    return snapshot.metrics[metric];
-  }
-
   String value(BuildContext context, DaySummaryMetric metric) {
-    final number = observedValue(metric);
+    final number = snapshot.observedMetric(metric);
     if (number == null) return context.lang.beforeMealUnavailable;
     if (metric == DaySummaryMetric.sensorAgeMinutes ||
         metric == DaySummaryMetric.podAgeMinutes) {
@@ -108,7 +91,9 @@ class DaySummaryFacts extends StatelessWidget {
             grid([DaySummaryMetric.totalInsulinUnits]),
             const SizedBox(height: 16),
             DayInsulinBreakdown(
-              basal: observedValue(DaySummaryMetric.basalUnits)?.toDouble(),
+              basal: snapshot
+                  .observedMetric(DaySummaryMetric.basalUnits)
+                  ?.toDouble(),
               boluses: snapshot.metrics[DaySummaryMetric.bolusUnits]
                   ?.toDouble(),
               smb: snapshot.metrics[DaySummaryMetric.smbUnits]?.toDouble(),
@@ -143,14 +128,24 @@ class DaySummaryFacts extends StatelessWidget {
           title: lang.dayMealsTitle,
           information: lang.dayLocalMealsNote,
           children: [
-            grid([
-              DaySummaryMetric.mealCount,
-              DaySummaryMetric.netCarbsGrams,
-              DaySummaryMetric.proteinGrams,
-              DaySummaryMetric.fatGrams,
-              DaySummaryMetric.lowTreatmentCount,
-              DaySummaryMetric.lowTreatmentCarbsGrams,
-            ]),
+            DayMealsOverview(
+              mealCount: snapshot.observedMetric(DaySummaryMetric.mealCount),
+              netCarbs: snapshot
+                  .observedMetric(DaySummaryMetric.netCarbsGrams)
+                  ?.toDouble(),
+              protein: snapshot
+                  .observedMetric(DaySummaryMetric.proteinGrams)
+                  ?.toDouble(),
+              fat: snapshot
+                  .observedMetric(DaySummaryMetric.fatGrams)
+                  ?.toDouble(),
+              lowCount: snapshot.observedMetric(
+                DaySummaryMetric.lowTreatmentCount,
+              ),
+              lowCarbs: snapshot
+                  .observedMetric(DaySummaryMetric.lowTreatmentCarbsGrams)
+                  ?.toDouble(),
+            ),
           ],
         ),
         DaySummaryCard(

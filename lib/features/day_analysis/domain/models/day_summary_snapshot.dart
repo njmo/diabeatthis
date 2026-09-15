@@ -86,6 +86,26 @@ class DaySummarySnapshot {
     ),
   );
 
+  /// Read-only interpretation shared by the dashboard and DML export.
+  /// Zero reconstructed basal with no observation is not zero delivery.
+  num? observedMetric(DaySummaryMetric metric) {
+    final coverageMetric = switch (metric) {
+      DaySummaryMetric.basalUnits ||
+      DaySummaryMetric.basalAddedUnits ||
+      DaySummaryMetric.basalReducedUnits ||
+      DaySummaryMetric.totalInsulinUnits =>
+        DaySummaryMetric.basalCoveragePercent,
+      DaySummaryMetric.nightBasalUnits =>
+        DaySummaryMetric.nightBasalCoveragePercent,
+      _ => null,
+    };
+    if (coverageMetric != null) {
+      final coverage = metrics[coverageMetric];
+      if (coverage == null || !coverage.isFinite || coverage <= 0) return null;
+    }
+    return metrics[metric];
+  }
+
   String encode() => jsonEncode(toJson());
 
   Map<String, dynamic> toJson() => {

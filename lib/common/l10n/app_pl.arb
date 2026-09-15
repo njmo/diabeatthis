@@ -1022,7 +1022,7 @@
   "dayInsulinLimit": "Baza jest szacunkiem z raportów pompy. Luki nie oznaczają zerowej podaży. Suma obejmuje zapisane bolusy; kompletność ich historii nie jest potwierdzona. Noc częściowo pokrywa się z analizowanym dniem — nie należy dodawać tych wyników.",
   "dayMealsTitle": "Posiłki i dosłodzenia",
   "dayMealsCount": "Posiłki",
-  "dayCarbs": "Węglowodany netto",
+  "dayCarbs": "WW netto",
   "dayProtein": "Białko",
   "dayFat": "Tłuszcz",
   "dayMacroLimit": "Makro częściowe lub planowane: {planned} posiłków z planu, {missing} bez podsumowania.",
@@ -1240,7 +1240,6 @@
   "dayReviewImmutableNote": "Zatwierdzony zapis pozostanie niezmienny, także po synchronizacji. Późniejsze poprawki historii nie zmienią tego podsumowania.",
   "dayReviewAccept": "Zatwierdź podsumowanie",
   "dayReviewReturn": "Wróć do uzupełniania dnia",
-  "dayReviewSummary": "Podsumowanie dnia",
   "dayReviewPendingCount": "{count} do sprawdzenia",
   "@dayReviewPendingCount": {
     "placeholders": {
@@ -1791,5 +1790,36 @@
         "type": "String"
       }
     }
-  }
+  },
+  "dayAiTitle": "Analiza AI",
+  "dayAiClose": "Zamknij analizę",
+  "dayAiOverview": "Podsumowanie",
+  "dayAiInsufficientData": "Za mało danych do pełnej oceny.",
+  "dayAiHypothesis": "Możliwe wyjaśnienie",
+  "dayAiNoFindings": "Brak dodatkowych wniosków.",
+  "dayAiNeedsAcceptedDay": "Analiza AI będzie dostępna po zatwierdzeniu podsumowania zakończonego dnia.",
+  "dayAiGenerating": "Analizuję podsumowanie dnia…",
+  "dayAiFailed": "Nie udało się przygotować analizy. Spróbuj ponownie.",
+  "dayAiPreview": "Podgląd analizy — nie jest zapisany.",
+  "dayAiIntro": "Przygotuj analizę na podstawie zatwierdzonego podsumowania dnia.",
+  "dayAiGenerate": "Analizuj dzień",
+  "dayAiRegenerate": "Wygeneruj ponownie",
+  "dayAiInvalidResponse": "Model zwrócił nieprawidłową lub niepełną odpowiedź. Spróbuj wygenerować analizę ponownie.",
+  "dayAiTimeout": "Przygotowanie analizy trwało zbyt długo. Spróbuj ponownie.",
+  "dayAiNetworkError": "Nie udało się połączyć z usługą AI. Sprawdź połączenie z internetem.",
+  "dayAiUnauthorized": "Usługa AI odmówiła dostępu. Sprawdź konfigurację dostępu do AI.",
+  "dayAiQuotaExceeded": "Osiągnięto limit usługi AI. Spróbuj później.",
+  "dayAiUnavailable": "Usługa AI jest niedostępna. Spróbuj później.",
+  "dayAiShowInput": "Dane wejściowe AI",
+  "dayAiCopyInput": "Kopiuj cały tekst",
+  "dayAiInputCopied": "Skopiowano dane wejściowe AI",
+  "dayAcceptedTitle": "Dzień · podsumowany",
+  "daySummaryAcceptedView": "Podsumowany · zobacz podsumowanie",
+  "daySummaryAvailableTomorrow": "Dzień trwa · podsumowanie dostępne jutro",
+  "daySummaryNotAcceptedAction": "Niepodsumowany · podsumuj dzień",
+  "dayAiShowResponse": "Odpowiedź AI · JSON",
+  "dayAiResponseCopied": "Skopiowano odpowiedź AI",
+  "dayAiOutputLimit": "Odpowiedź została przerwana przez limit długości modelu. Możesz podejrzeć jej fragment lub spróbować ponownie.",
+  "dayAiPreparingInput": "Przygotowuję historię dnia i posiłków…",
+  "dayMacroEnergyShare": "Udział energii z makro"
 }

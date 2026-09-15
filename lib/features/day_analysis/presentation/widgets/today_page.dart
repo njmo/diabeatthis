@@ -6,15 +6,16 @@ import 'package:intl/intl.dart';
 import '../../../../common/l10n/language.dart';
 import '../../data/providers/day_context_provider.dart';
 import '../../data/providers/day_meal_review_provider.dart';
-import '../../domain/use_cases/accept_day_summary_use_case.dart';
+import '../../data/providers/day_summary_provider.dart';
 import 'day_activity_card.dart';
+import 'day_ai_button.dart';
 import 'day_date_selector.dart';
 import 'day_device_age_card.dart';
 import 'day_glucose_card.dart';
 import 'day_insulin_card.dart';
 import 'day_meals_card.dart';
 import 'day_review_section.dart';
-import 'day_summary_sheet.dart';
+import 'day_summary_status.dart';
 
 class TodayPage extends ConsumerStatefulWidget {
   const TodayPage({super.key});
@@ -34,6 +35,9 @@ class TodayPageState extends ConsumerState<TodayPage> {
     final state = ref.watch(provider);
     final today = DateUtils.dateOnly(clock.now().toLocal());
     final lang = context.lang;
+    final accepted = ref.watch(
+      acceptedDaySummaryProvider(selectedDate ?? today),
+    );
     Future<void> refresh() async {
       ref.invalidate(provider);
       ref.invalidate(dayMealReviewProvider(selectedDate ?? today));
@@ -53,12 +57,16 @@ class TodayPageState extends ConsumerState<TodayPage> {
             children: [
               Expanded(
                 child: Text(
-                  selectedDate == null
+                  accepted.asData?.value != null
+                      ? lang.dayAcceptedTitle
+                      : selectedDate == null
                       ? lang.dayDraftTitle
                       : lang.dayHistoricalDraftTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
+              DayAiButton(date: selectedDate ?? today),
+              const SizedBox(width: 4),
               IconButton(
                 tooltip: lang.dayRefresh,
                 onPressed: state.isLoading ? null : refresh,
@@ -89,6 +97,7 @@ class TodayPageState extends ConsumerState<TodayPage> {
                       DateFormat('dd.MM.yyyy HH:mm').format(day.asOf),
                     ),
                   ),
+                  DaySummaryStatus(date: day.start),
                   DayGlucoseCard(
                     title: lang.dayGlucoseTitle,
                     summary: day.glucose,
@@ -101,23 +110,6 @@ class TodayPageState extends ConsumerState<TodayPage> {
                   ),
                   DayMealsCard(day: day),
                   DayReviewSection(date: day.start),
-                  if (AcceptDaySummaryUseCase.isAvailable(
-                    day.start,
-                    clock.now(),
-                  ))
-                    FilledButton.icon(
-                      onPressed: () => showModalBottomSheet<void>(
-                        context: context,
-                        isScrollControlled: true,
-                        useSafeArea: true,
-                        builder: (_) => FractionallySizedBox(
-                          heightFactor: 0.9,
-                          child: DaySummarySheet(date: day.start),
-                        ),
-                      ),
-                      icon: const Icon(Icons.fact_check_outlined),
-                      label: Text(context.lang.dayReviewSummary),
-                    ),
                   DayGlucoseCard(
                     title: lang.dayNightTitle,
                     summary: day.nightGlucose,

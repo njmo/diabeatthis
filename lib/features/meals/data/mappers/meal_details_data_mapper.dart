@@ -1,6 +1,7 @@
-import '../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../models/meal_details_data.dart';
+import '../repositories/meal_ingredient_amounts_repository.dart';
+import 'ingredient_nutrition_mapper.dart';
 
 class MealDetailsDataMapper {
   const MealDetailsDataMapper({required this.db});
@@ -84,17 +85,15 @@ class MealDetailsDataMapper {
     required MealSnapshotData? plannedSnapshot,
     required MealSnapshotData? consumedSnapshot,
   }) async {
-    final ingredient = await db.ingredientDao.getIngredientById(
-      mealIngredient.ingredientId,
-    );
+    final amounts = await MealIngredientAmountsRepository(
+      db,
+    ).load(mealIngredient);
+    final ingredient = amounts.ingredient;
+    final gramsPerPortion = amounts.gramsPerPortion;
     final history = await db.ingredientDao.getIngredientStatusHistory(
       ingredient.id,
     );
-    final gramsPerPortion = await _gramsPerPortion(
-      ingredientId: ingredient.id,
-      portionId: mealIngredient.portionId,
-      isReference: ingredient.isReference == 1,
-    );
+    const nutritionMapper = IngredientNutritionMapper();
     final portionLabel = await _portionLabel(
       portionId: mealIngredient.portionId,
       gramsPerPortion: gramsPerPortion,
@@ -108,36 +107,29 @@ class MealDetailsDataMapper {
     final consumedReference = consumedSnapshot == null
         ? date(mealIngredient.createdAt)
         : date(consumedSnapshot.createdAt);
-    final currentNutrition = _currentNutrition(ingredient);
-    final plannedVersion = _nutritionAt(
+    final currentNutrition = nutritionMapper.current(ingredient);
+    final plannedVersion = nutritionMapper.at(
       ingredient: ingredient,
       history: history,
       reference: plannedReference,
     );
-    final consumedVersion = _nutritionAt(
+    final consumedVersion = nutritionMapper.at(
       ingredient: ingredient,
       history: history,
       reference: consumedReference,
     );
-    final plannedAmount = mealIngredient.entryType == 'extra'
-        ? 0.0
-        : mealIngredient.amount;
-    final consumedAmount = mealIngredient.entryType == 'extra'
-        ? (mealIngredient.consumedAmount ?? 0)
-        : (mealIngredient.consumedAmount ?? mealIngredient.amount);
-
     return MealIngredientDetailsData(
       mealIngredientId: mealIngredient.id,
       ingredientId: ingredient.id,
       ingredientName: ingredient.name,
       entryType: mealIngredient.entryType,
       portionLabel: portionLabel,
-      plannedAmount: plannedAmount,
+      plannedAmount: amounts.plannedAmount,
       consumedAmount: mealIngredient.consumedAmount,
       quantityConfidence: mealIngredient.quantityConfidence,
       consumedConfidence: mealIngredient.consumedConfidence,
-      plannedTotalGrams: plannedAmount * gramsPerPortion,
-      consumedTotalGrams: consumedAmount * gramsPerPortion,
+      plannedTotalGrams: amounts.plannedGrams,
+      consumedTotalGrams: amounts.consumedGrams,
       prepMethod: mealIngredient.prepMethod,
       notes: mealIngredient.notes,
       createdAt: date(mealIngredient.createdAt),
@@ -160,20 +152,6 @@ class MealDetailsDataMapper {
     return DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
   }
 
-  Future<double> _gramsPerPortion({
-    required int ingredientId,
-    required int? portionId,
-    required bool isReference,
-  }) async {
-    if (isReference) {
-      return 100;
-    }
-    if (portionId == null) {
-      return 1;
-    }
-    return await db.portionDao.getGramsPerPortion(ingredientId, portionId) ?? 1;
-  }
-
   Future<String> _portionLabel({
     required int? portionId,
     required double gramsPerPortion,
@@ -189,76 +167,10 @@ class MealDetailsDataMapper {
     return '${portion.name} (${_formatNumber(gramsPerPortion)}g)';
   }
 
-  _ResolvedNutrition _nutritionAt({
-    required IngredientData ingredient,
-    required List<IngredientStatusHistoryData> history,
-    required DateTime reference,
-  }) {
-    final sorted = history.toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    IngredientStatusHistoryData? selected;
-    for (final entry in sorted) {
-      if (date(entry.createdAt).isAfter(reference)) {
-        break;
-      }
-      selected = entry;
-    }
-
-    if (selected != null) {
-      return _ResolvedNutrition(
-        nutrition: IngredientNutritionData(
-          carbsPer100g: selected.carbsPer100g,
-          fatPer100g: selected.fatPer100g,
-          fiberPer100g: selected.fiberPer100g,
-          proteinPer100g: selected.proteinPer100g,
-          carbsLabelMode: CarbsLabelModeX.fromStorage(
-            ingredient.carbsLabelMode,
-          ),
-          nutritionConfidence: selected.nutritionConfidence,
-          effectiveAt: date(selected.createdAt),
-        ),
-        historicalUnavailable: false,
-      );
-    }
-
-    final current = _currentNutrition(ingredient);
-    final changedAfterReference = history.any(
-      (entry) => date(entry.createdAt).isAfter(reference),
-    );
-    return _ResolvedNutrition(
-      nutrition: current,
-      historicalUnavailable:
-          changedAfterReference &&
-          date(ingredient.updatedAt).isAfter(reference),
-    );
-  }
-
-  IngredientNutritionData _currentNutrition(IngredientData ingredient) {
-    return IngredientNutritionData(
-      carbsPer100g: ingredient.carbsPer100g,
-      fatPer100g: ingredient.fatPer100g,
-      fiberPer100g: ingredient.fiberPer100g,
-      proteinPer100g: ingredient.proteinPer100g,
-      carbsLabelMode: CarbsLabelModeX.fromStorage(ingredient.carbsLabelMode),
-      nutritionConfidence: ingredient.nutritionConfidence,
-      effectiveAt: date(ingredient.updatedAt),
-    );
-  }
-
   String _formatNumber(double value) {
     if (value == value.roundToDouble()) {
       return value.round().toString();
     }
     return value.toStringAsFixed(1);
   }
-}
-
-class _ResolvedNutrition {
-  const _ResolvedNutrition({
-    required this.nutrition,
-    required this.historicalUnavailable,
-  });
-
-  final IngredientNutritionData nutrition;
-  final bool historicalUnavailable;
 }
