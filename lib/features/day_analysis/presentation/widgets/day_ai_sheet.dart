@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../core/llm/local_llm_client.dart';
 import '../../data/providers/accepted_day_ai_provider.dart';
 import '../../data/providers/day_summary_provider.dart';
 import '../../domain/models/day_analysis_invalid_response.dart';
@@ -10,6 +11,7 @@ import '../../domain/models/day_dml_document.dart';
 import '../controllers/day_ai_controller.dart';
 import '../controllers/day_analysis_input_controller.dart';
 import 'day_ai_actions.dart';
+import 'day_ai_error_details_button.dart';
 import 'day_ai_error_message.dart';
 import 'day_ai_input_button.dart';
 import 'day_ai_result.dart';
@@ -103,6 +105,8 @@ class DayAiSheet extends ConsumerWidget {
                     child: Text(lang.dayAiLoadFailed),
                   ),
                 if (analysis.saveError != null) Text(lang.dayAiSaveFailed),
+                if (error is LlmRequestException)
+                  DayAiErrorDetailsButton(error: error),
                 if (archive.isLoading)
                   const LinearProgressIndicator()
                 else if (archive.hasError)

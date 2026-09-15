@@ -1828,5 +1828,6 @@
   "dayAiAccept": "Zaakceptuj i zapisz",
   "dayAiReplace": "Zaakceptuj i zastąp zapisaną analizę",
   "dayAiDiscard": "Odrzuć propozycję",
+  "dayAiErrorDetails": "Szczegóły błędu AI",
   "dayAiOriginalPromptUnavailable": "Ten zapis nie zawiera oryginalnego promptu. Poniżej zachowane dane DML."
 }

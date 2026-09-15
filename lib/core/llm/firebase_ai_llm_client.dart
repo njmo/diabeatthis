@@ -40,6 +40,22 @@ class FirebaseAiLlmClient implements LocalLlmClient {
         message: 'Firebase AI network request failed.',
         cause: error,
       );
+    } on FirebaseAIException catch (error) {
+      throw LlmRequestException(
+        failure: error is QuotaExceeded
+            ? LlmRequestFailure.quotaExceeded
+            : error is InvalidApiKey
+            ? LlmRequestFailure.unauthorized
+            : _firebaseFailureMessage(error.message),
+        message: error.message,
+        cause: error,
+      );
+    } on FirebaseAISdkException catch (error) {
+      throw LlmRequestException(
+        failure: LlmRequestFailure.unavailable,
+        message: error.message,
+        cause: error,
+      );
     } on FirebaseException catch (error) {
       throw LlmRequestException(
         failure: _firebaseFailure(error),
@@ -61,9 +77,16 @@ class FirebaseAiLlmClient implements LocalLlmClient {
 }
 
 LlmRequestFailure _firebaseFailure(FirebaseException error) {
-  final code = error.code.toLowerCase();
-  final message = error.message?.toLowerCase() ?? '';
-  if (code.contains('resource-exhausted') || code.contains('quota')) {
+  return _firebaseFailureMessage(error.message ?? '', code: error.code);
+}
+
+LlmRequestFailure _firebaseFailureMessage(String text, {String code = ''}) {
+  code = code.toLowerCase();
+  final message = text.toLowerCase();
+  if (code.contains('resource-exhausted') ||
+      code.contains('quota') ||
+      message.contains('resource_exhausted') ||
+      message.contains('quota exceeded')) {
     return LlmRequestFailure.quotaExceeded;
   }
   if (code.contains('permission') ||
@@ -71,7 +94,9 @@ LlmRequestFailure _firebaseFailure(FirebaseException error) {
       code.contains('app-check') ||
       message.contains('app attestation failed') ||
       message.contains('app check') ||
-      message.contains('code: 403')) {
+      message.contains('code: 403') ||
+      message.contains('permission_denied') ||
+      message.contains('unauthenticated')) {
     return LlmRequestFailure.unauthorized;
   }
   if (code.contains('deadline') || code.contains('timeout')) {

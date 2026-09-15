@@ -1388,5 +1388,6 @@
   "dayAiAccept": "Accept and save",
   "dayAiReplace": "Accept and replace saved analysis",
   "dayAiDiscard": "Discard preview",
+  "dayAiErrorDetails": "AI error details",
   "dayAiOriginalPromptUnavailable": "This archive does not contain the original prompt. The saved DML follows."
 }
