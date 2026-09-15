@@ -31,11 +31,14 @@ class IngredientMacroForm extends ConsumerWidget {
               ),
             ),
             SegmentedButton<CarbsLabelMode>(
-              segments: const [
-                ButtonSegment(value: CarbsLabelMode.eu, label: Text('UE')),
+              segments: [
+                ButtonSegment(
+                  value: CarbsLabelMode.eu,
+                  label: Text(context.lang.uiEU),
+                ),
                 ButtonSegment(
                   value: CarbsLabelMode.nonEu,
-                  label: Text('non-UE'),
+                  label: Text(context.lang.uiNonEU),
                 ),
               ],
               selected: {value.carbsLabelMode},

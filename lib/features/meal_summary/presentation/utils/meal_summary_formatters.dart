@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../../data/models/meal_summary_item.dart';
 
 String formatMealSummaryAmount(double amount, String unitLabel) {
@@ -15,7 +16,7 @@ String formatMealSummaryAmount(double amount, String unitLabel) {
 String mealSummaryAmountLabel(MealSummaryItem item) {
   final portion = item.portion;
   if (portion == null) {
-    return item.isReference ? 'porcji referencyjnych' : 'g';
+    return item.isReference ? lang.summaryReferencePortions : 'g';
   }
   return portion.name;
 }

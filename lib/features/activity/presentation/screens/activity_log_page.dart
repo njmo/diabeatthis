@@ -351,7 +351,10 @@ class _ActivityAnalysisSection extends StatelessWidget {
                     color: Colors.teal,
                     label: context.lang.activityLegendActivity,
                   ),
-                  const _LegendItem(color: Colors.blue, label: 'Temp target'),
+                  _LegendItem(
+                    color: Colors.blue,
+                    label: context.lang.historyTemporaryTarget,
+                  ),
                 ],
               ),
             ),

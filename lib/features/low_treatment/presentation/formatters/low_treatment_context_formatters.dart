@@ -27,6 +27,7 @@ String lowTreatmentSourceLabel(
   return switch (source) {
     LowTreatmentContextSource.manual => lang.lowTreatmentReasonManual,
     LowTreatmentContextSource.aapsSuggestion => lang.lowTreatmentReasonCarbsReq,
-    LowTreatmentContextSource.dashboardAction => 'Dashboard',
+    LowTreatmentContextSource.dashboardAction =>
+      lang.lowTreatmentSourceDashboard,
   };
 }

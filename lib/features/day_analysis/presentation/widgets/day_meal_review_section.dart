@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/router/app_router.dart';
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../meals/common/models/meal_wizard_relation_type.dart';
@@ -39,25 +40,23 @@ class DayMealReviewSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Posiłki i wpisy kalkulatora',
+          context.lang.uiMealsAndCalculatorEntries,
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 8),
         entries.when(
           skipLoadingOnRefresh: false,
-          loading: () => const Padding(
+          loading: () => Padding(
             padding: EdgeInsets.all(16),
             child: LinearProgressIndicator(),
           ),
           error: (_, _) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Nie udało się pobrać listy. Nie wiadomo, ile wpisów wymaga sprawdzenia.',
-              ),
+              Text(context.lang.uiCouldNotLoadTheListTheNumberOfEntries),
               TextButton(
                 onPressed: refresh,
-                child: const Text('Spróbuj ponownie'),
+                child: Text(context.lang.commonRetry),
               ),
             ],
           ),
@@ -75,9 +74,7 @@ class DayMealReviewSection extends ConsumerWidget {
                     ),
                   ),
                 if (items.isEmpty)
-                  const Text(
-                    'Brak posiłków i wpisów kalkulatora w historii tego dnia.',
-                  ),
+                  Text(context.lang.uiNoMealsOrCalculatorEntriesInThisDayS),
                 ...items.map(
                   (entry) => DayMealReviewTile(
                     key: ValueKey(entry.meal?.id ?? entry.wizards.first),
@@ -128,10 +125,7 @@ class DayMealReviewSection extends ConsumerWidget {
           .link(wizard, choice.mealId, choice.type, timing: timing);
     } catch (_) {
       if (context.mounted) {
-        _error(
-          context,
-          'Nie udało się zapisać powiązania. Odśwież listę i spróbuj ponownie.',
-        );
+        _error(context, context.lang.uiCouldNotSaveTheLinkRefreshTheListAnd);
       }
     }
   }
@@ -157,7 +151,7 @@ class DayMealReviewSection extends ConsumerWidget {
       if (context.mounted) {
         _error(
           context,
-          'Posiłek został zapisany, ale nie udało się go połączyć. Wybierz „Połącz z posiłkiem”; nie dodawaj go ponownie.',
+          context.lang.uiTheMealWasSavedButLinkingFailedChooseLink,
         );
       }
     }
@@ -168,7 +162,7 @@ class DayMealReviewSection extends ConsumerWidget {
       await ref.read(dayMealReviewControllerProvider(date).notifier).unlink(id);
     } catch (_) {
       if (context.mounted) {
-        _error(context, 'Nie udało się usunąć powiązania. Spróbuj ponownie.');
+        _error(context, context.lang.uiCouldNotRemoveTheLinkTryAgain);
       }
     }
   }

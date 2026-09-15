@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../meals/common/models/meal_wizard_relation_type.dart';
 import '../../../meals/presentation/helpers/meal_wizard_relation_label.dart';
 import '../../data/providers/day_meal_review_provider.dart';
@@ -29,17 +30,15 @@ class DayMealLinkPickerState extends ConsumerState<DayMealLinkPicker> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Połącz z posiłkiem',
+              context.lang.uiLinkToAMeal,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Posiłki z wybranego dnia, także zaplanowane i pominięte. Wybierz, czego dotyczył ten wpis kalkulatora.',
-            ),
+            Text(context.lang.dayMealPickerScopeNote),
             const SizedBox(height: 16),
             DropdownButtonFormField<MealWizardRelationType>(
               initialValue: type,
-              decoration: const InputDecoration(labelText: 'Rodzaj wpisu'),
+              decoration: InputDecoration(labelText: context.lang.uiEntryType),
               items: MealWizardRelationType.values
                   .map(
                     (value) => DropdownMenuItem(
@@ -58,14 +57,10 @@ class DayMealLinkPickerState extends ConsumerState<DayMealLinkPicker> {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (_, _) => TextButton(
                   onPressed: () => ref.invalidate(provider),
-                  child: const Text(
-                    'Nie udało się pobrać posiłków. Spróbuj ponownie',
-                  ),
+                  child: Text(context.lang.uiCouldNotLoadMealsTryAgain),
                 ),
                 data: (items) => items.isEmpty
-                    ? const Text(
-                        'Brak zapisanych posiłków. Możesz dodać posiłek wstecz.',
-                      )
+                    ? Text(context.lang.uiNoRecordedMealsYouCanAddAPastMeal)
                     : ListView(
                         shrinkWrap: true,
                         children: [

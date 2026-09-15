@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class MealSummaryConfidenceSelector extends StatelessWidget {
   const MealSummaryConfidenceSelector({
     super.key,
@@ -18,19 +20,19 @@ class MealSummaryConfidenceSelector extends StatelessWidget {
       children: [
         ChoiceChip(
           selected: _isSelected(0.5),
-          label: const Text('Na oko'),
+          label: Text(context.lang.uiEstimated),
           avatar: const Icon(Icons.visibility_outlined, size: 18),
           onSelected: (_) => onChanged(0.5),
         ),
         ChoiceChip(
           selected: _isSelected(0.75),
-          label: const Text('Prawie pewne'),
+          label: Text(context.lang.uiAlmostCertain),
           avatar: const Icon(Icons.thumbs_up_down_outlined, size: 18),
           onSelected: (_) => onChanged(0.75),
         ),
         ChoiceChip(
           selected: _isSelected(1),
-          label: const Text('Pewne'),
+          label: Text(context.lang.uiCertain),
           avatar: const Icon(Icons.check_circle_outline, size: 18),
           onSelected: (_) => onChanged(1),
         ),

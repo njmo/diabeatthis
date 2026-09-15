@@ -1,14 +1,16 @@
+import '../../../common/l10n/language.dart';
+
 enum CarbsLabelMode { eu, nonEu }
 
 extension CarbsLabelModeX on CarbsLabelMode {
   String get label => switch (this) {
-    CarbsLabelMode.eu => 'UE',
-    CarbsLabelMode.nonEu => 'non-UE',
+    CarbsLabelMode.eu => lang.uiEU,
+    CarbsLabelMode.nonEu => lang.uiNonEU,
   };
 
   String get description => switch (this) {
-    CarbsLabelMode.eu => 'Węglowodany z etykiety są już netto',
-    CarbsLabelMode.nonEu => 'Błonnik odejmujemy od total carbs',
+    CarbsLabelMode.eu => lang.uiLabelCarbohydratesAreAlreadyNet,
+    CarbsLabelMode.nonEu => lang.uiFiberIsSubtractedFromTotalCarbohydrates,
   };
 
   static CarbsLabelMode fromStorage(String? value) {

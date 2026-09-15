@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/quick_low_treatment_item.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/drafts/ingredient_draft_validation.dart';
@@ -70,19 +71,17 @@ class UpsertQuickLowTreatmentItemUseCase {
       throw RangeError.range(slot, 1, maxQuickLowTreatmentItems, 'slot');
     }
     if (!mealIngredient.ingredient.hasEnergyMacros) {
-      throw ArgumentError(
-        'Składnik musi mieć uzupełnione węglowodany, tłuszcz albo białko.',
-      );
+      throw ArgumentError(lang.ingredientEnergyMacrosRequired);
     }
     if (mealIngredient.amount <= 0) {
-      throw ArgumentError('Ilość szybkiego dosłodzenia musi być większa od 0.');
+      throw ArgumentError(lang.uiTheQuickLowTreatmentAmountMustBeGreaterThan);
     }
     final hasPortion = mealIngredient.ingredientPortion.portion.maybeMap(
       empty: (_) => false,
       orElse: () => true,
     );
     if (hasPortion && mealIngredient.ingredientPortion.amount <= 0) {
-      throw ArgumentError('Waga porcji musi być większa od 0 g.');
+      throw ArgumentError(lang.uiPortionWeightMustBeGreaterThan0G);
     }
   }
 }

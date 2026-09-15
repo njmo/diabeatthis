@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../common/history/bolus_wizard_grouping.dart';
 import '../../../../../common/history/treatment_overlaps_window.dart';
+import '../../../../../common/l10n/language.dart';
 import '../../../../../core/data_sources/providers/on_demand_history_repositories_provider.dart';
 import '../../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../../core/domain/model/bg_check.dart';
@@ -322,10 +323,10 @@ class AnalyzeMealUseCase {
     return MealTimelineEventData(
       timestamp: treatment.eatenAt,
       type: MealTimelineEventType.lowTreatment,
-      label: 'Dosłodzenie',
+      label: lang.lowTreatmentMealName,
       value: carbs == null
-          ? 'Ilość nieznana'
-          : '${_formatNumber(carbs)} g netto',
+          ? lang.uiUnknownAmount
+          : lang.mealNetCarbsAmount(_formatNumber(carbs)),
     );
   }
 
@@ -335,7 +336,7 @@ class AnalyzeMealUseCase {
       return MealTimelineEventData(
         timestamp: createdAt,
         type: MealTimelineEventType.bgCheck,
-        label: 'BG Check',
+        label: lang.historyBgCheck,
         value: treatment.getParts(),
       );
     }
@@ -343,7 +344,7 @@ class AnalyzeMealUseCase {
       return MealTimelineEventData(
         timestamp: createdAt,
         type: MealTimelineEventType.stress,
-        label: 'Stress',
+        label: lang.manualEventStress,
         value: treatment.getParts(),
       );
     }
@@ -351,7 +352,7 @@ class AnalyzeMealUseCase {
       return MealTimelineEventData(
         timestamp: createdAt,
         type: MealTimelineEventType.bolusWizard,
-        label: 'Bolus Wizard',
+        label: lang.uiBolusWizard,
         value: treatment.getParts(),
       );
     }
@@ -359,7 +360,7 @@ class AnalyzeMealUseCase {
       return MealTimelineEventData(
         timestamp: createdAt,
         type: MealTimelineEventType.manualCorrection,
-        label: 'Bolus',
+        label: lang.mealReviewManualCorrection,
         value: treatment.getParts(),
       );
     }
@@ -367,7 +368,7 @@ class AnalyzeMealUseCase {
       return MealTimelineEventData(
         timestamp: createdAt,
         type: MealTimelineEventType.correction,
-        label: 'Correction',
+        label: lang.activityTreatmentCorrection,
         value: treatment.getParts(),
       );
     }
@@ -375,7 +376,7 @@ class AnalyzeMealUseCase {
       return MealTimelineEventData(
         timestamp: createdAt,
         type: MealTimelineEventType.nightscoutMeal,
-        label: 'Meal',
+        label: lang.activityTreatmentMeal,
         value: treatment.getParts(),
       );
     }
@@ -383,7 +384,7 @@ class AnalyzeMealUseCase {
       return MealTimelineEventData(
         timestamp: createdAt,
         type: MealTimelineEventType.carbs,
-        label: 'Carbs',
+        label: lang.mealCarbsLabel,
         value: treatment.getParts(),
       );
     }
@@ -391,14 +392,14 @@ class AnalyzeMealUseCase {
       return MealTimelineEventData(
         timestamp: createdAt,
         type: MealTimelineEventType.tempTarget,
-        label: 'Temp target',
+        label: lang.historyTemporaryTarget,
         value: treatment.getParts(),
       );
     }
     return MealTimelineEventData(
       timestamp: createdAt,
       type: MealTimelineEventType.deviceStatus,
-      label: 'Treatment',
+      label: lang.mealTimelineTreatment,
       value: treatment.getParts(),
     );
   }

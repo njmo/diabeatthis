@@ -113,7 +113,7 @@ class DashboardActivitySheet extends HookConsumerWidget {
           Expanded(
             child: OutlinedButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Anuluj'),
+              child: Text(context.lang.settingsCancel),
             ),
           ),
           const SizedBox(width: 12),

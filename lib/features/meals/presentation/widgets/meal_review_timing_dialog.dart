@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../data/models/meal_review_timing.dart';
 import '../../data/models/retrospective_meal_timing.dart';
 import 'add_meal/meal_planned_time_field.dart';
@@ -22,7 +23,7 @@ class MealReviewTimingDialogState extends State<MealReviewTimingDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Jak przebiegał posiłek?'),
+    title: Text(context.lang.uiWhatWasTheMealSequence),
     content: SizedBox(
       width: 420,
       child: SingleChildScrollView(
@@ -31,8 +32,8 @@ class MealReviewTimingDialogState extends State<MealReviewTimingDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Sprawdź godzinę rozpoczęcia jedzenia. Podpowiedź pochodzi z kalkulatora.',
+              Text(
+                context.lang.uiCheckTheEatingStartTimeTheSuggestionComesFrom,
               ),
               MealPlannedTimeField(
                 retrospective: true,
@@ -42,7 +43,7 @@ class MealReviewTimingDialogState extends State<MealReviewTimingDialog> {
               RetrospectiveMealFields(
                 value: timing,
                 subtitle:
-                    'Zapisz kolejność i czasy. Ilości jedzenia uzupełnisz w podsumowaniu.',
+                    context.lang.uiRecordTheSequenceAndTimesYouCanCompleteFood,
                 onChanged: (value) => setState(() => timing = value),
               ),
               if (error != null)
@@ -58,7 +59,7 @@ class MealReviewTimingDialogState extends State<MealReviewTimingDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Anuluj'),
+        child: Text(context.lang.settingsCancel),
       ),
       FilledButton(
         onPressed: () {
@@ -73,7 +74,7 @@ class MealReviewTimingDialogState extends State<MealReviewTimingDialog> {
             setState(() => error = failure.message.toString());
           }
         },
-        child: const Text('Potwierdź i połącz'),
+        child: Text(context.lang.uiConfirmAndLink),
       ),
     ],
   );

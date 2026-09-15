@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/language.dart';
 import '../meal/manual_meal_decision.dart';
 import '../meal/meal_decision.dart';
 import 'manual_meal_decision_picker_sheet.dart';
@@ -34,8 +35,8 @@ class ManualMealDecisionPickerField extends StatelessWidget {
         }
       },
       child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: 'Decyzja ręczna',
+        decoration: InputDecoration(
+          labelText: context.lang.uiManualDecision,
           suffixIcon: Icon(Icons.expand_more),
         ),
         child: Text(mealDecisionLabel(value)),

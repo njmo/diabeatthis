@@ -81,7 +81,8 @@ class MealAdvisorResultSection extends StatelessWidget {
     if (decision.extendedCarbsGrams <= 0) return context.lang.commonNone;
 
     return switch (_scheduleSettings(decision)?.deliveryMode) {
-      ExtendedCarbsDeliveryMode.extendedCarbs => 'Extended carbs',
+      ExtendedCarbsDeliveryMode.extendedCarbs =>
+        context.lang.ingredientExtendedCarbsLabel,
       ExtendedCarbsDeliveryMode.extraBolus =>
         context.lang.mealAdvisorExtraBolus,
       null => context.lang.mealAdvisorNoConfiguration,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/analysis_metric.dart';
@@ -21,7 +22,7 @@ class DaySummaryFacts extends StatelessWidget {
 
   String value(BuildContext context, DaySummaryMetric metric) {
     final number = snapshot.metrics[metric];
-    if (number == null) return 'Brak danych';
+    if (number == null) return context.lang.beforeMealUnavailable;
     if (metric == DaySummaryMetric.sensorAgeMinutes ||
         metric == DaySummaryMetric.podAgeMinutes) {
       final duration = Duration(minutes: number.toInt());
@@ -36,65 +37,90 @@ class DaySummaryFacts extends StatelessWidget {
         metric == DaySummaryMetric.smbCount ||
         metric == DaySummaryMetric.nightSmbCount ||
         metric == DaySummaryMetric.activityMinutes;
-    return number.toStringAsFixed(integral ? 0 : 1);
+    return NumberFormat(
+      integral ? '0' : '0.0',
+      context.lang.localeName,
+    ).format(number);
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      ResponsiveMetricList(
-        maxColumns: 2,
-        children: [
-          for (final metric in primary)
-            AnalysisMetric(
-              label: labels[metric]!,
-              value: value(context, metric),
-            ),
-        ],
-      ),
-      ExpansionTile(
-        title: const Text('Szczegółowe statystyki'),
-        children: [
-          for (final metric in snapshot.metrics.keys.where(
-            (key) => !primary.contains(key),
-          ))
-            DayStatRow(label: labels[metric]!, value: value(context, metric)),
-        ],
-      ),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final metricLabels = labels(context);
+    return Column(
+      children: [
+        ResponsiveMetricList(
+          maxColumns: 2,
+          children: [
+            for (final metric in primary)
+              AnalysisMetric(
+                label: metricLabels[metric]!,
+                value: value(context, metric),
+              ),
+          ],
+        ),
+        ExpansionTile(
+          title: Text(context.lang.dayReviewDetails),
+          children: [
+            for (final metric in snapshot.metrics.keys.where(
+              (key) => !primary.contains(key),
+            ))
+              DayStatRow(
+                label: metricLabels[metric]!,
+                value: value(context, metric),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
 
-  static const labels = <DaySummaryMetric, String>{
-    DaySummaryMetric.totalInsulinUnits: 'Insulina odtworzona · j.',
-    DaySummaryMetric.glucoseMean: 'Średnia · mg/dl',
-    DaySummaryMetric.glucoseLowPercent: 'Poniżej 70 · %',
-    DaySummaryMetric.glucoseInRangePercent: '70–180 · %',
-    DaySummaryMetric.glucoseHighPercent: 'Powyżej 180 · %',
-    DaySummaryMetric.glucoseMax: 'Maksimum · mg/dl',
-    DaySummaryMetric.glucoseCoveragePercent: 'Historia CGM · %',
-    DaySummaryMetric.nightGlucoseMean: 'Średnia w nocy · mg/dl',
-    DaySummaryMetric.nightInRangePercent: 'Noc 70–180 · %',
-    DaySummaryMetric.nightGlucoseCoveragePercent: 'CGM w nocy · %',
-    DaySummaryMetric.basalUnits: 'Baza odtworzona · j.',
-    DaySummaryMetric.basalAddedUnits: 'Ponad profil · j.',
-    DaySummaryMetric.basalReducedUnits: 'Poniżej profilu · j.',
-    DaySummaryMetric.basalCoveragePercent: 'Historia bazy · %',
-    DaySummaryMetric.bolusUnits: 'Bolusy łącznie · j.',
-    DaySummaryMetric.smbUnits: 'SMB · j.',
-    DaySummaryMetric.smbCount: 'Liczba SMB',
-    DaySummaryMetric.nightBasalUnits: 'Baza w nocy · j.',
-    DaySummaryMetric.nightBasalCoveragePercent: 'Baza w nocy · % historii',
-    DaySummaryMetric.nightBolusUnits: 'Bolusy w nocy · j.',
-    DaySummaryMetric.nightSmbUnits: 'SMB w nocy · j.',
-    DaySummaryMetric.nightSmbCount: 'Liczba SMB w nocy',
-    DaySummaryMetric.mealCount: 'Posiłki',
-    DaySummaryMetric.netCarbsGrams: 'Węglowodany netto · g',
-    DaySummaryMetric.proteinGrams: 'Białko · g',
-    DaySummaryMetric.fatGrams: 'Tłuszcz · g',
-    DaySummaryMetric.lowTreatmentCount: 'Dosłodzenia',
-    DaySummaryMetric.lowTreatmentCarbsGrams: 'Dosłodzenia · g WW',
-    DaySummaryMetric.activityMinutes: 'Aktywność · min',
-    DaySummaryMetric.sensorAgeMinutes: 'Wiek sensora',
-    DaySummaryMetric.podAgeMinutes: 'Wiek poda',
+  static Map<DaySummaryMetric, String> labels(BuildContext context) => {
+    DaySummaryMetric.totalInsulinUnits:
+        context.lang.daySummaryMetricTotalInsulinUnits,
+    DaySummaryMetric.glucoseMean: context.lang.daySummaryMetricGlucoseMean,
+    DaySummaryMetric.glucoseLowPercent:
+        context.lang.daySummaryMetricGlucoseLowPercent,
+    DaySummaryMetric.glucoseInRangePercent:
+        context.lang.daySummaryMetricGlucoseInRangePercent,
+    DaySummaryMetric.glucoseHighPercent:
+        context.lang.daySummaryMetricGlucoseHighPercent,
+    DaySummaryMetric.glucoseMax: context.lang.daySummaryMetricGlucoseMax,
+    DaySummaryMetric.glucoseCoveragePercent:
+        context.lang.daySummaryMetricGlucoseCoveragePercent,
+    DaySummaryMetric.nightGlucoseMean:
+        context.lang.daySummaryMetricNightGlucoseMean,
+    DaySummaryMetric.nightInRangePercent:
+        context.lang.daySummaryMetricNightInRangePercent,
+    DaySummaryMetric.nightGlucoseCoveragePercent:
+        context.lang.daySummaryMetricNightGlucoseCoveragePercent,
+    DaySummaryMetric.basalUnits: context.lang.daySummaryMetricBasalUnits,
+    DaySummaryMetric.basalAddedUnits:
+        context.lang.daySummaryMetricBasalAddedUnits,
+    DaySummaryMetric.basalReducedUnits:
+        context.lang.daySummaryMetricBasalReducedUnits,
+    DaySummaryMetric.basalCoveragePercent:
+        context.lang.daySummaryMetricBasalCoveragePercent,
+    DaySummaryMetric.bolusUnits: context.lang.daySummaryMetricBolusUnits,
+    DaySummaryMetric.smbUnits: context.lang.daySummaryMetricSmbUnits,
+    DaySummaryMetric.smbCount: context.lang.daySummaryMetricSmbCount,
+    DaySummaryMetric.nightBasalUnits:
+        context.lang.daySummaryMetricNightBasalUnits,
+    DaySummaryMetric.nightBasalCoveragePercent:
+        context.lang.daySummaryMetricNightBasalCoveragePercent,
+    DaySummaryMetric.nightBolusUnits:
+        context.lang.daySummaryMetricNightBolusUnits,
+    DaySummaryMetric.nightSmbUnits: context.lang.daySummaryMetricNightSmbUnits,
+    DaySummaryMetric.nightSmbCount: context.lang.daySummaryMetricNightSmbCount,
+    DaySummaryMetric.mealCount: context.lang.managementMealsTab,
+    DaySummaryMetric.netCarbsGrams: context.lang.daySummaryMetricNetCarbsGrams,
+    DaySummaryMetric.proteinGrams: context.lang.daySummaryMetricProteinGrams,
+    DaySummaryMetric.fatGrams: context.lang.daySummaryMetricFatGrams,
+    DaySummaryMetric.lowTreatmentCount: context.lang.activityExtraTreatLabel,
+    DaySummaryMetric.lowTreatmentCarbsGrams:
+        context.lang.daySummaryMetricLowTreatmentCarbsGrams,
+    DaySummaryMetric.activityMinutes:
+        context.lang.daySummaryMetricActivityMinutes,
+    DaySummaryMetric.sensorAgeMinutes: context.lang.daySensorAge,
+    DaySummaryMetric.podAgeMinutes: context.lang.daySummaryMetricPodAgeMinutes,
   };
 }

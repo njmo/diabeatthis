@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import 'meal_detail_components.dart';
 import 'meal_detail_formatters.dart';
@@ -12,7 +13,9 @@ class MealWizardHistoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final result = wizard.calculatorResult;
     return MealInfoRow(
-      label: 'Kalkulator ${mealDateTime(wizard.createdAt.toLocal())}',
+      label: context.lang.mealWizardRecordedAt(
+        mealDateTime(wizard.createdAt.toLocal()),
+      ),
       value:
           '${formatGrams(result?.carbs)} · ${formatUnits(result?.totalInsulin)} · '
           '${result?.percentageCorrection == null ? 'procent nieznany' : '${result!.percentageCorrection}%'}',

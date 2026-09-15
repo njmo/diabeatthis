@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 
 import '../../../../../common/events/data/notification/activity_finished_response_event.dart';
+import '../../../../../common/l10n/language.dart';
 import '../../../../../common/monitoring/activity_monitoring_phase.dart';
 import '../../../../../core/drift/entity/activity.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
@@ -137,7 +138,7 @@ class MonitorActiveActivityExecutor extends ActivityMonitorStateExecutor {
     await notificationProvider.show(
       ActivityFinishedNotificationEvent(
         activityLogId: activityLogId,
-        activityName: activityMonitorContext.activityName ?? 'Aktywność',
+        activityName: activityMonitorContext.activityName ?? lang.activityTitle,
       ),
     );
   }

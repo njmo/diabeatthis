@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class IngredientIdentityText extends StatelessWidget {
   const IngredientIdentityText({
     super.key,
@@ -38,7 +40,7 @@ class IngredientIdentityText extends StatelessWidget {
 String ingredientBrandLabel(String? brand) {
   final value = brand?.trim();
   if (value == null || value.isEmpty) {
-    return 'Bez marki';
+    return lang.ingredientNoBrand;
   }
   return value;
 }

@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
@@ -75,22 +76,18 @@ class AddMealUseCase with Logging {
 
   Future<void> _validateMealDraft(MealDraft draft) async {
     if (draft.mealIngredients.isEmpty) {
-      throw ArgumentError('Posiłek musi zawierać co najmniej jeden składnik.');
+      throw ArgumentError(lang.uiAMealMustContainAtLeastOneIngredient);
     }
 
     for (final mealIngredient in draft.mealIngredients) {
       mealIngredient.ingredient.validateMacroRanges();
       if (!mealIngredient.ingredient.hasEnergyMacros) {
-        throw ArgumentError(
-          'Składnik musi mieć uzupełnione węglowodany, tłuszcz albo białko.',
-        );
+        throw ArgumentError(lang.ingredientEnergyMacrosRequired);
       }
     }
 
     if (!await _hasActionableCarbs(draft)) {
-      throw ArgumentError(
-        'Posiłek musi mieć węglowodany netto albo e-carbs z WBT.',
-      );
+      throw ArgumentError(lang.mealActionableCarbsRequired);
     }
   }
 

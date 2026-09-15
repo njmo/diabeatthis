@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
+import '../l10n/language.dart';
 import '../meal/manual_meal_decision.dart';
 import 'manual_meal_decision_fields.dart';
 
@@ -16,7 +17,7 @@ class ManualMealDecisionDialog extends HookWidget {
     final formKey = useMemoized(GlobalKey<FormState>.new);
     final value = useState(initialValue);
     return AlertDialog(
-      title: const Text('Wybierz samodzielnie'),
+      title: Text(context.lang.uiChooseManually),
       content: SingleChildScrollView(
         child: Form(
           key: formKey,
@@ -29,7 +30,7 @@ class ManualMealDecisionDialog extends HookWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Anuluj'),
+          child: Text(context.lang.settingsCancel),
         ),
         FilledButton(
           onPressed: () {
@@ -37,7 +38,7 @@ class ManualMealDecisionDialog extends HookWidget {
               Navigator.of(context).pop(value.value);
             }
           },
-          child: const Text('Dalej'),
+          child: Text(context.lang.addIngredientNext),
         ),
       ],
     );

@@ -46,8 +46,8 @@ class MealList extends ConsumerWidget {
             trailingActions: [
               SearchBarActionButton(
                 icon: const AddMealIcon(),
-                label: 'Dodaj',
-                tooltip: 'Zarejestruj posiłek wstecz',
+                label: context.lang.mealSummaryExtraAdd,
+                tooltip: context.lang.uiRecordAPastMeal,
                 onPressed: () {
                   ref.read(mealDraftProvider.notifier).reset();
                   context.router.push(routes.AddMealRoute(retrospective: true));

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../data/models/meal_details_data.dart';
 import '../../models/meal_page_state.dart';
 import '../../utils/meal_extended_carbs_warning.dart';
@@ -21,7 +22,10 @@ class MealAnalysisProgressSummary extends StatelessWidget {
     final chips = [if (details.isCopied) const HeaderStatusChip.copied()];
     if (details.advisorDecision?.isManual == true) {
       chips.add(
-        HeaderStatusChip(icon: Icons.edit_outlined, label: 'Decyzja ręczna'),
+        HeaderStatusChip(
+          icon: Icons.edit_outlined,
+          label: context.lang.uiManualDecision,
+        ),
       );
     }
     if (details.hasLowTreatments) {
@@ -39,7 +43,7 @@ class MealAnalysisProgressSummary extends StatelessWidget {
     }
     if (analysis == null) {
       chips.add(
-        const HeaderStatusChip(
+        HeaderStatusChip(
           icon: Icons.pending_actions,
           label: '',
           type: HeaderStatusChipType.analysisPending,

@@ -4,13 +4,15 @@ import 'package:diabeatthis/common/widgets/manual_meal_decision_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/localized_material_app.dart';
+
 void main() {
   testWidgets(
     'prefills advice and requires positive wait before returning a choice',
     (tester) async {
       ManualMealDecision? result;
       await tester.pumpWidget(
-        MaterialApp(
+        localizedMaterialApp(
           home: Scaffold(
             body: Builder(
               builder: (context) => TextButton(
@@ -31,6 +33,7 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
       expect(find.text('15'), findsOneWidget);

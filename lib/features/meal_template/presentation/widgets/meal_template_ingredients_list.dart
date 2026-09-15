@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../data/provider/meal_template_draft_provider.dart';
@@ -11,12 +12,14 @@ class MealTemplateIngredientsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mealDraft = ref.watch(mealTemplateDraftProvider.notifier);
-    final mealIngredientDrafts = ref.watch(mealTemplateDraftIngredientsProvider);
+    final mealIngredientDrafts = ref.watch(
+      mealTemplateDraftIngredientsProvider,
+    );
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: mealIngredientDrafts.isEmpty
-          ? const Text('No ingredients added')
+          ? Text(context.lang.uiNoIngredientsAdded)
           : ListView.builder(
               itemBuilder: (context, index) {
                 final draft = mealIngredientDrafts[index];
@@ -38,19 +41,34 @@ class MealTemplateIngredientsList extends ConsumerWidget {
                 }
 
                 final subtitle = draft.ingredientPortion.portion.when(
-                  draft: (name, hint) =>
-                      Text('$amount of $name : ${portionAmount * amount}$hint'),
+                  draft: (name, hint) => Text(
+                    context.lang.templatePortionDescription(
+                      amount.toString(),
+                      name,
+                      (portionAmount * amount).toString(),
+                      hint,
+                    ),
+                  ),
                   existing: (id, name, hint) {
                     if (portionAmount == 0) {
                       return CircularProgressIndicator();
                     } else {
                       return Text(
-                        '$amount of $name : ${amount * portionAmount}$hint',
+                        context.lang.templatePortionDescription(
+                          amount.toString(),
+                          name,
+                          (amount * portionAmount).toString(),
+                          hint,
+                        ),
                       );
                     }
                   },
                   empty: () => draft.ingredient.isReference
-                      ? Text('$amount referencyjne porcje')
+                      ? Text(
+                          context.lang.templateReferencePortions(
+                            amount.toString(),
+                          ),
+                        )
                       : Text('${amount}g'),
                 );
 

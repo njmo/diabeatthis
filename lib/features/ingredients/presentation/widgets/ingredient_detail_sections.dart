@@ -154,9 +154,18 @@ class _HistoryItem extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                _MacroChip(label: 'W', value: entry.carbsPer100g),
-                _MacroChip(label: 'T', value: entry.fatPer100g),
-                _MacroChip(label: 'B', value: entry.proteinPer100g),
+                _MacroChip(
+                  label: context.lang.ingredientCarbsShort,
+                  value: entry.carbsPer100g,
+                ),
+                _MacroChip(
+                  label: context.lang.ingredientFatShort,
+                  value: entry.fatPer100g,
+                ),
+                _MacroChip(
+                  label: context.lang.ingredientProteinShort,
+                  value: entry.proteinPer100g,
+                ),
                 _MacroChip(
                   label: context.lang.ingredientFiberShortLabel,
                   value: entry.fiberPer100g,

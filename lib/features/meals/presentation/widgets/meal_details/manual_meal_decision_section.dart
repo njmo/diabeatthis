@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../common/meal/manual_meal_decision.dart';
 import '../../../../../common/meal/meal_decision.dart';
 import '../../../data/models/meal_details_data.dart';
@@ -21,43 +22,51 @@ class ManualMealDecisionSection extends StatelessWidget {
     );
     final actualWait = details.recordedWait?.inMinutes;
     return MealSectionTile(
-      title: 'Decyzja ręczna',
+      title: context.lang.uiManualDecision,
       children: [
         MealInfoRow(
-          label: 'Wybrany przebieg',
+          label: context.lang.uiSelectedSequence,
           value: mealDecisionLabel(choice),
         ),
         if (details.plannedSnapshot != null &&
             details.consumedSnapshot != null &&
             details.meal.status == 'summarized' &&
             details.hasConsumedPlannedAmounts)
-          const MealInfoRow(
-            label: 'Podsumowanie',
-            value: 'Zjedzono całość · bez dokładki',
+          MealInfoRow(
+            label: context.lang.addIngredientSummaryTitle,
+            value: context.lang.uiAllEatenNoExtraFood,
           ),
         if (start != null)
-          MealInfoRow(label: 'Początek jedzenia', value: mealDateTime(start)),
+          MealInfoRow(
+            label: context.lang.uiEatingStarted,
+            value: mealDateTime(start),
+          ),
         MealInfoRow(
-          label: 'Czas jedzenia',
+          label: context.lang.uiEatingDuration,
           value: start != null && end != null
               ? '${end.difference(start).inMinutes} min'
-              : 'Brak danych',
+              : context.lang.beforeMealUnavailable,
         ),
         if (end != null)
-          MealInfoRow(label: 'Koniec jedzenia', value: mealDateTime(end)),
+          MealInfoRow(
+            label: context.lang.mealEatingEnd,
+            value: mealDateTime(end),
+          ),
         if (choice == MealDecision.bolusWaitThenEat) ...[
           if (actualWait == null)
             MealInfoRow(
-              label: 'Wybrany czas czekania',
+              label: context.lang.uiSelectedWaitingTime,
               value: '${decision.initialWaitTime} min',
             ),
           MealInfoRow(
-            label: 'Czas czekania',
-            value: actualWait == null ? 'Brak danych' : '$actualWait min',
+            label: context.lang.uiWaitingTime,
+            value: actualWait == null
+                ? context.lang.beforeMealUnavailable
+                : '$actualWait min',
           ),
         ],
         MealInfoRow(
-          label: 'Decyzja podjęta',
+          label: context.lang.uiDecisionMade,
           value: mealDateTime(decision.createdAt),
         ),
       ],

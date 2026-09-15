@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
 import '../../data/drafts/template_meal_draft.dart';
 import '../../data/provider/meal_template_draft_provider.dart';
@@ -23,7 +24,8 @@ class MealTemplateIngredientsListEditor extends ConsumerWidget {
           calculatedTemplateMacronutrients.when(
             data: (value) => NutrientSummaryChart(macros: value),
             loading: () => const CircularProgressIndicator(),
-            error: (err, _) => Text('Ingredients (error: $err)'),
+            error: (err, _) =>
+                Text(context.lang.templateIngredientsError(err.toString())),
           ),
           const SizedBox(height: 16),
           Row(
@@ -31,7 +33,10 @@ class MealTemplateIngredientsListEditor extends ConsumerWidget {
               Expanded(
                 child: Row(
                   children: [
-                    Text('Ingredients list:', style: TextStyle(fontSize: 20)),
+                    Text(
+                      context.lang.uiIngredientsList,
+                      style: TextStyle(fontSize: 20),
+                    ),
                     const Spacer(),
                     InkWell(
                       onTap: () async {

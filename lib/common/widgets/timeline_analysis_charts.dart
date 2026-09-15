@@ -565,9 +565,9 @@ class TimelineDeviceMetricChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (deviceStatuses.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 80,
-        child: Center(child: Text('Brak danych COB/IOB w tym okresie')),
+        child: Center(child: Text(context.lang.uiNoCOBIOBDataInThisPeriod)),
       );
     }
 

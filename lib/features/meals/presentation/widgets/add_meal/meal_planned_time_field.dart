@@ -31,7 +31,7 @@ class MealPlannedTimeField extends FormField<DateTime> {
              children: [
                Text(
                  retrospective
-                     ? 'Początek jedzenia'
+                     ? context.lang.uiEatingStarted
                      : context.lang.addMealPlannedDateLabel,
                  style: Theme.of(context).textTheme.labelLarge,
                ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
@@ -161,8 +162,8 @@ class MealSummaryItemRow extends ConsumerWidget {
         value: 1,
         icon: Icons.check_circle_outline,
       ),
-      const FriendlyAmountOption(
-        label: '1,5',
+      FriendlyAmountOption(
+        label: NumberFormat.decimalPattern(lang.localeName).format(1.5),
         value: 1.5,
         icon: Icons.add_circle_outline,
       ),

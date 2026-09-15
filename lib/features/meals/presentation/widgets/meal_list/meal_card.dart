@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../core/domain/model/meal.dart' as domain;
 import '../meal_details/meal_detail_formatters.dart';
 
@@ -154,8 +155,8 @@ String _daysAgo(DateTime? dt) {
   final day = DateTime(dt.year, dt.month, dt.day);
   final days = today.difference(day).inDays;
 
-  if (days == 0) return 'Dzisiaj';
-  if (days == 1) return 'Wczoraj';
-  if (days < 0) return 'Za ${-days} dni';
-  return '$days dni temu';
+  if (days == 0) return lang.mealTodayLabel;
+  if (days == 1) return lang.mealYesterdayLabel;
+  if (days < 0) return lang.mealDaysFromNow(-days);
+  return lang.mealDaysAgo(days);
 }

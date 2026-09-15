@@ -8,7 +8,7 @@ import 'channel/temp_target_notification_channel_definition.dart';
 
 class NotificationChannelDefinitionCatalogImpl
     implements NotificationChannelDefinitionCatalog {
-  static const _definitions = [
+  static List<NotificationChannelDefinition> get _definitions => [
     mealNotificationChannelDefinition,
     activityNotificationChannelDefinition,
     targetNotificationChannelDefinition,

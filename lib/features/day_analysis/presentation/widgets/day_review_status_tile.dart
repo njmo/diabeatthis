@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
+
 class DayReviewStatusTile extends StatelessWidget {
   final String title;
   final AsyncValue<int> pending;
@@ -19,7 +21,7 @@ class DayReviewStatusTile extends StatelessWidget {
     skipLoadingOnReload: false,
     loading: () => ListTile(
       title: Text(title),
-      subtitle: const Text('Sprawdzanie wpisów…'),
+      subtitle: Text(context.lang.dayReviewChecking),
       leading: const SizedBox.square(
         dimension: 20,
         child: CircularProgressIndicator(strokeWidth: 2),
@@ -27,14 +29,18 @@ class DayReviewStatusTile extends StatelessWidget {
     ),
     error: (_, _) => ListTile(
       title: Text(title),
-      subtitle: const Text('Brak danych — sprawdź listę'),
+      subtitle: Text(context.lang.dayReviewUnavailable),
       leading: Icon(Icons.warning_amber, color: Colors.amber.shade800),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
     ),
     data: (count) => ListTile(
       title: Text(title),
-      subtitle: Text(count == 0 ? 'Wpisy sprawdzone' : '$count do sprawdzenia'),
+      subtitle: Text(
+        count == 0
+            ? context.lang.dayReviewReviewed
+            : context.lang.dayReviewPendingCount(count),
+      ),
       leading: Icon(
         count == 0 ? Icons.check_circle_outline : Icons.warning_amber,
         color: count == 0

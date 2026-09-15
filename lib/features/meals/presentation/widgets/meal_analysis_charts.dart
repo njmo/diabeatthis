@@ -79,7 +79,7 @@ TimelineChartRange _temporaryTargetRange(TemporaryTarget target) {
     label: '${target.targetBottom}-${target.targetTop} mg/dL',
     startIcon: Icons.timer,
     endIcon: Icons.timer_off,
-    startLabel: 'Start temp targetu',
-    endLabel: 'Koniec temp targetu',
+    startLabel: lang.tempTargetRangeStartLabel,
+    endLabel: lang.tempTargetRangeEndLabel,
   );
 }

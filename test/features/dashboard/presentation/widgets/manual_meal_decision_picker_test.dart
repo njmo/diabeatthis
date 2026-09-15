@@ -6,6 +6,8 @@ import 'package:diabeatthis/common/widgets/manual_meal_decision_picker_sheet.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../helpers/localized_material_app.dart';
+
 void main() {
   testWidgets('decision picker covers save outside a nested navigator', (
     tester,
@@ -14,7 +16,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     var selected = const ManualMealDecision();
     await tester.pumpWidget(
-      MaterialApp(
+      localizedMaterialApp(
         home: Scaffold(
           body: Navigator(
             onGenerateRoute: (_) => MaterialPageRoute<void>(
@@ -39,6 +41,7 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
     final save = find.widgetWithText(FilledButton, 'Zapisz posiłek');
     final saveCenter = tester.getCenter(save);
     await tester.tap(find.byType(ManualMealDecisionPickerField));

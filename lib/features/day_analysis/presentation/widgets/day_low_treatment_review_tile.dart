@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../low_treatment/domain/models/low_treatment_review_entry.dart';
 
 class DayLowTreatmentReviewTile extends StatelessWidget {
@@ -51,50 +52,54 @@ class DayLowTreatmentReviewTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     entry.dismissed
-                        ? '$time · To nie było dosłodzenie'
+                        ? context.lang.dayReviewNotLowAt(time)
                         : pending
-                        ? '$time · Wpis ${entry.event!.carbs} g do sprawdzenia'
-                        : '$time · Dosłodzenie${carbs == null ? '' : ' · ${carbs.toStringAsFixed(0)} g'}',
+                        ? context.lang.dayReviewCarbsAt(
+                            time,
+                            NumberFormat.decimalPattern(
+                              context.lang.localeName,
+                            ).format(entry.event!.carbs),
+                          )
+                        : context.lang.dayReviewLowAt(
+                            time,
+                            carbs == null
+                                ? ''
+                                : ' · ${NumberFormat.decimalPattern(context.lang.localeName).format(carbs.round())} g',
+                          ),
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
                 if (entry.canReset)
                   IconButton(
-                    tooltip: 'Cofnij decyzję',
+                    tooltip: context.lang.dayReviewUndo,
                     onPressed: busy ? null : onReset,
                     icon: const Icon(Icons.undo),
                   ),
               ],
             ),
             if (entry.staleDecision)
-              const Text(
-                'Zapisana decyzja dotyczy innego wpisu. Cofnij ją, aby ponownie sprawdzić powiązanie.',
-              )
+              Text(context.lang.dayReviewStaleDecision)
             else if (entry.ambiguous)
-              const Text(
-                'Sprzeczne wpisy o tej samej godzinie. Najpierw sprawdź historię źródłową.',
-              )
+              Text(context.lang.dayReviewConflict)
             else if (pending) ...[
               const SizedBox(height: 6),
-              const Text(
-                'Wpis węglowodanów nie potwierdza sam w sobie dosłodzenia.',
-              ),
+              Text(context.lang.dayReviewCarbEntryNote),
               Wrap(
                 spacing: 6,
                 children: [
                   TextButton.icon(
                     onPressed: busy ? null : onLink,
                     icon: const Icon(Icons.link),
-                    label: const Text('Połącz'),
+                    label: Text(context.lang.dayReviewLink),
                   ),
                   TextButton.icon(
                     onPressed: busy ? null : onCreate,
                     icon: const Icon(Icons.add),
-                    label: const Text('Dodaj wstecz'),
+                    label: Text(context.lang.dayReviewAddPast),
                   ),
                   TextButton(
                     onPressed: busy ? null : onDismiss,
-                    child: const Text('To nie dosłodzenie'),
+                    child: Text(context.lang.dayReviewNotLow),
                   ),
                 ],
               ),

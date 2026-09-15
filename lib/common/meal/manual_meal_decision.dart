@@ -1,3 +1,4 @@
+import '../l10n/language.dart';
 import 'meal_decision.dart';
 
 class ManualMealDecision {
@@ -11,10 +12,10 @@ class ManualMealDecision {
 }
 
 String mealDecisionLabel(MealDecision decision) => switch (decision) {
-  MealDecision.eatNowBolusLater => 'Najpierw jedzenie, potem insulina',
-  MealDecision.bolusAndEatNow => 'Insulina i jedzenie bez czekania',
-  MealDecision.bolusWaitThenEat => 'Insulina, czekanie, jedzenie',
-  MealDecision.bolus => 'Insulina',
+  MealDecision.eatNowBolusLater => lang.manualMealEatThenInsulin,
+  MealDecision.bolusAndEatNow => lang.manualMealInsulinAndEat,
+  MealDecision.bolusWaitThenEat => lang.manualMealInsulinWaitEat,
+  MealDecision.bolus => lang.manualMealInsulin,
 };
 
 MealDecision manualMealDecisionFromHistory(

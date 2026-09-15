@@ -1,7 +1,8 @@
+import '../../../../common/l10n/language.dart';
+
 class MealAdviceUnavailableException implements Exception {
   const MealAdviceUnavailableException();
 
   @override
-  String toString() =>
-      'Brak aktualnych odczytów CGM lub kompletnych danych IOB/COB. Wybierz decyzję ręcznie.';
+  String toString() => lang.uiNoCurrentCGMReadingsOrCompleteIOBCOBData;
 }

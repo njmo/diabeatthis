@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/language.dart';
 import '../meal/manual_meal_decision.dart';
 import '../meal/meal_decision.dart';
 
@@ -22,7 +23,7 @@ class ManualMealDecisionPickerSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
             child: Text(
-              'Wybierz przebieg posiłku',
+              context.lang.uiChooseTheMealSequence,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ),

@@ -40,7 +40,7 @@ class AddMealPage extends HookConsumerWidget {
       appBar: AppBar(
         title: Text(
           retrospective
-              ? 'Zarejestruj posiłek wstecz'
+              ? context.lang.uiRecordAPastMeal
               : context.lang.addMealTitle,
         ),
       ),

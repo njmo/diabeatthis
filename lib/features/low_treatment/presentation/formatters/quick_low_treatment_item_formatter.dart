@@ -10,7 +10,7 @@ String formatQuickLowTreatmentItemDetails(QuickLowTreatmentItem item) {
       return lang.quickLowTreatmentReferenceDetails(
         amount,
         carbs,
-        _referencePortionLabel(item.amount),
+        lang.commonPortionUnit(item.amount),
       );
     }
     return lang.quickLowTreatmentGramDetails(amount, carbs);
@@ -43,14 +43,4 @@ String _formatQuickLowTreatmentAmount(double value) {
     return value.round().toString();
   }
   return value.toStringAsFixed(1);
-}
-
-String _referencePortionLabel(double amount) {
-  if (amount == 1) {
-    return 'porcja';
-  }
-  if (amount == amount.roundToDouble() && amount >= 2 && amount <= 4) {
-    return 'porcje';
-  }
-  return 'porcji';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../data/providers/day_low_treatment_review_provider.dart';
 import '../../data/providers/day_meal_review_provider.dart';
 import 'day_review_status_tile.dart';
@@ -43,13 +44,19 @@ class DayReviewSummaryCard extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Text(
-              complete ? 'Wszystkie wpisy sprawdzone' : 'Do uzupełnienia',
+              complete
+                  ? context.lang.dayReviewAllReviewed
+                  : context.lang.dayReviewIncomplete,
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
-          DayReviewStatusTile(title: 'Posiłki', pending: meals, onTap: onMeals),
           DayReviewStatusTile(
-            title: 'Dosłodzenia',
+            title: context.lang.managementMealsTab,
+            pending: meals,
+            onTap: onMeals,
+          ),
+          DayReviewStatusTile(
+            title: context.lang.activityExtraTreatLabel,
             pending: lows,
             onTap: onLowTreatments,
           ),

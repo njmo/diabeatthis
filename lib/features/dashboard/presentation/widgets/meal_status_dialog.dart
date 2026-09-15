@@ -108,15 +108,15 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
               else if (s.advice.decision != null)
                 Text(
                   s.advice.source == 'manual'
-                      ? 'Decyzja ręczna\n${c.mealAdviceString() ?? ''}'
+                      ? context.lang.mealManualDecisionDetail(
+                          c.mealAdviceString() ?? '',
+                        )
                       : context.lang.mealStatusAdviceToApply(
                           c.mealAdviceString() ?? '',
                         ),
                 )
               else
-                const Text(
-                  'Brak aktualnych danych do automatycznej porady. Wymagane są 3 kolejne odczyty CGM, a najnowszy musi być młodszy niż 10 minut. Wymagane są też kompletne dane IOB/COB młodsze niż 6 minut. Możesz wybrać decyzję ręcznie.',
-                ),
+                Text(context.lang.mealAdviceFreshDataRequirements),
             ],
           );
         case MealDialogStep.confirmEaten:
@@ -187,7 +187,9 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Nie udało się zapisać decyzji: $e',
+                                    context.lang.mealDecisionSaveError(
+                                      e.toString(),
+                                    ),
                                   ),
                                 ),
                               );
@@ -307,7 +309,7 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
             Expanded(child: Text(meal.name)),
             if (s.step == MealDialogStep.confirm && !s.skipMeal)
               IconButton(
-                tooltip: 'Wybierz decyzję ręcznie',
+                tooltip: context.lang.uiChooseADecisionManually,
                 icon: const Icon(Icons.edit_outlined),
                 onPressed: saving.value
                     ? null

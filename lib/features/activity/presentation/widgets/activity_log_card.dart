@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
 import 'activity_log_meta_pill.dart';
 import 'activity_log_status_chip.dart';
 
@@ -89,13 +90,13 @@ class ActivityLogCard extends StatelessWidget {
   }
 
   static String _formatTimeRange(DateTime startedAt, DateTime? endedAt) {
-    final end = endedAt == null ? 'teraz' : _formatTime(endedAt);
+    final end = endedAt == null ? lang.relativeTimeNow : _formatTime(endedAt);
     return '${_formatTime(startedAt)} - $end';
   }
 
   static String _formatDuration(DateTime startedAt, DateTime? endedAt) {
     if (endedAt == null) {
-      return 'W trakcie';
+      return lang.activityInProgress;
     }
 
     final duration = endedAt.difference(startedAt);

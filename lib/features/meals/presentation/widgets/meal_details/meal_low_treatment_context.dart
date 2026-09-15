@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../data/models/meal_analysis_data.dart';
 import 'meal_detail_components.dart';
 import 'meal_detail_formatters.dart';
@@ -18,28 +19,24 @@ class MealLowTreatmentContext extends StatelessWidget {
   Widget build(BuildContext context) {
     final history = analysis;
     if (history == null) {
-      return const Text('Historia dosłodzeń nie jest jeszcze dostępna.');
+      return Text(context.lang.uiLowTreatmentHistoryIsNotAvailableYet);
     }
     final entries = history.lowTreatments;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Wszystkie dosłodzenia w oknie analizy'),
+        Text(context.lang.uiAllLowTreatmentsInTheAnalysisWindow),
         MealInfoRow(
-          label: 'Okno zapisów',
+          label: context.lang.uiRecordWindow,
           value:
               '${mealDateTime(history.eventStart.toLocal())} – ${mealDateTime(history.eventEnd.toLocal())}',
         ),
         if (entries.isEmpty)
-          const Text('Brak zapisanych dosłodzeń w tym oknie.'),
+          Text(context.lang.uiNoRecordedLowTreatmentsInThisWindow),
         for (final entry in entries)
           MealRecordedLowTreatmentRow(entry: entry, reference: adviceAt),
-        const Text(
-          'Kontekst odtworzony podczas analizy, nie zapis danych użytych przez Advisor. Historia może zawierać późniejsze uzupełnienia i zmiany.',
-        ),
-        const Text(
-          'Obecność zdarzenia w tym oknie nie oznacza, że dotyczy tego posiłku ani że wynika z porady.',
-        ),
+        Text(context.lang.mealReconstructedContextNote),
+        Text(context.lang.uiAnEventInThisWindowIsNotNecessarilyRelated),
       ],
     );
   }

@@ -24,7 +24,7 @@ extension MealIngredientPortionPresentationX on MealIngredientsDraft {
       );
 
   String get portionCountUnitLabel => ingredientPortion.portion.map(
-    empty: (_) => ingredient.isReference ? 'porcja' : 'g',
+    empty: (_) => ingredient.isReference ? lang.commonPortionUnit(1) : 'g',
     draft: (portion) => portion.name,
     existing: (portion) => portion.name,
   );
@@ -54,7 +54,11 @@ extension MealIngredientPortionPresentationX on MealIngredientsDraft {
         if (amountLabel == null) {
           return lang.amountMissingPortionWeight;
         }
-        return '1 ${unitLabelForAmount(1, unitLabel)} to $amountLabel $weightUnitLabel';
+        return lang.amountPortionWeightDescription(
+          amountLabel,
+          unitLabelForAmount(1, unitLabel),
+          weightUnitLabel,
+        );
       },
       existing: (_) {
         if (isLoading) {
@@ -63,7 +67,11 @@ extension MealIngredientPortionPresentationX on MealIngredientsDraft {
         if (amountLabel == null) {
           return lang.amountMissingPortionWeight;
         }
-        return '1 ${unitLabelForAmount(1, unitLabel)} to $amountLabel $weightUnitLabel';
+        return lang.amountPortionWeightDescription(
+          amountLabel,
+          unitLabelForAmount(1, unitLabel),
+          weightUnitLabel,
+        );
       },
     );
   }
@@ -80,17 +88,12 @@ extension MealIngredientAmountDoublePresentationX on double {
 
 String unitLabelForAmount(double amount, String unitLabel) {
   final normalized = unitLabel.trim().toLowerCase();
-  if (normalized == 'porcja') {
-    if (amount == 1) {
-      return 'porcja';
-    }
-    if (amount == amount.roundToDouble() && amount >= 2 && amount <= 4) {
-      return 'porcje';
-    }
-    return 'porcji';
+  // Recognize persisted unit names independently of the selected UI language.
+  if (normalized == 'porcja' || normalized == 'portion') {
+    return lang.commonPortionUnit(amount);
   }
-  if (normalized == 'sztuka') {
-    return amount == 1 ? 'sztuka' : 'sztuki';
+  if (normalized == 'sztuka' || normalized == 'piece') {
+    return lang.commonPieceUnit(amount);
   }
-  return normalized.isEmpty ? 'porcji' : normalized;
+  return normalized.isEmpty ? lang.commonPortionUnit(amount) : normalized;
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/language.dart';
 import '../meal/manual_meal_decision.dart';
 import '../meal/meal_decision.dart';
 import 'manual_meal_decision_picker_field.dart';
@@ -34,11 +35,11 @@ class ManualMealDecisionFields extends StatelessWidget {
         TextFormField(
           initialValue: value.waitMinutes == 0 ? '' : '${value.waitMinutes}',
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Czas czekania po insulinie (min)',
+          decoration: InputDecoration(
+            labelText: context.lang.uiWaitingTimeAfterInsulinMin,
           ),
           validator: (text) => (int.tryParse(text ?? '') ?? 0) <= 0
-              ? 'Podaj dodatnią liczbę minut.'
+              ? context.lang.uiEnterAPositiveNumberOfMinutes
               : null,
           onChanged: (text) => onChanged(
             ManualMealDecision(

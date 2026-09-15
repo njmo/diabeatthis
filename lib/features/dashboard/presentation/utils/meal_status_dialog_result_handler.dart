@@ -175,7 +175,7 @@ Future<void> handleMealAddOnChoice({
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('OK'),
+          child: Text(context.lang.notificationActionOk),
         ),
       ],
     ),

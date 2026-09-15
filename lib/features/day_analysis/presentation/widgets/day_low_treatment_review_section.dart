@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../low_treatment/domain/models/low_treatment_review_list.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
@@ -28,7 +29,7 @@ class DayLowTreatmentReviewSection extends ConsumerWidget {
       children: [
         const SizedBox(height: 16),
         Text(
-          'Dosłodzenia do sprawdzenia',
+          context.lang.dayReviewLowTitle,
           style: Theme.of(context).textTheme.titleLarge,
         ),
         entries.when(
@@ -40,9 +41,7 @@ class DayLowTreatmentReviewSection extends ConsumerWidget {
               ref.invalidate(dayLowTreatmentReviewProvider(date));
             },
             icon: const Icon(Icons.warning_amber),
-            label: const Text(
-              'Nie udało się pobrać przeglądu. Spróbuj ponownie',
-            ),
+            label: Text(context.lang.dayReviewLoadFailed),
           ),
           data: (items) {
             final review = LowTreatmentReviewList(items);
@@ -52,11 +51,9 @@ class DayLowTreatmentReviewSection extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (pending > 0) Text('$pending do sprawdzenia'),
-                if (items.isEmpty)
-                  const Text(
-                    'Brak zapisanych dosłodzeń i osobnych wpisów węglowodanów.',
-                  ),
+                if (pending > 0)
+                  Text(context.lang.dayReviewPendingCount(pending)),
+                if (items.isEmpty) Text(context.lang.dayReviewEmpty),
                 ...review.visible.map(
                   (entry) => (linked[entry.recorded?.mealId]?.length ?? 0) > 1
                       ? DayLinkedLowTreatmentReviewCard(
@@ -103,7 +100,7 @@ class DayLowTreatmentReviewSection extends ConsumerWidget {
                 ),
                 if (review.dismissed.isNotEmpty)
                   ExpansionTile(
-                    title: const Text('Oznaczone jako inne wpisy'),
+                    title: Text(context.lang.dayReviewDismissed),
                     children: [
                       ...review.dismissed.map(
                         (entry) => ListTile(
@@ -111,7 +108,7 @@ class DayLowTreatmentReviewSection extends ConsumerWidget {
                             '${DateFormat('HH:mm').format(entry.occurredAt)} · ${entry.event!.carbs} g',
                           ),
                           trailing: IconButton(
-                            tooltip: 'Cofnij decyzję',
+                            tooltip: context.lang.dayReviewUndo,
                             onPressed: busy
                                 ? null
                                 : () => _save(
@@ -169,23 +166,22 @@ class DayLowTreatmentReviewSection extends ConsumerWidget {
       () => ref
           .read(dayLowTreatmentReviewControllerProvider(date).notifier)
           .resolve(event, mealId: saved.mealId, created: true),
-      message:
-          'Dosłodzenie zapisano, ale nie udało się połączyć wpisu. Użyj „Połącz”, nie dodawaj ponownie.',
+      message: context.lang.dayReviewLowSavedUnlinked,
     );
   }
 
   Future<void> _save(
     BuildContext context,
     Future<void> Function() action, {
-    String message = 'Nie udało się zapisać decyzji. Spróbuj ponownie.',
+    String? message,
   }) async {
     try {
       await action();
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message ?? context.lang.dayReviewSaveFailed)),
+        );
       }
     }
   }

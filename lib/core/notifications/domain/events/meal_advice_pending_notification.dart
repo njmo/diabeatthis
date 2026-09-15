@@ -24,12 +24,12 @@ class MealAdvicePendingNotificationEvent implements NotificationEvent {
 
   @override
   String get title => unavailable
-      ? 'Brak aktualnych danych do porady'
+      ? lang.mealAdviceUnavailableTitle
       : lang.notificationMealAdvicePendingTitle;
 
   @override
   String get body => unavailable
-      ? 'Brakuje aktualnych odczytów CGM lub kompletnych danych IOB/COB. Otwórz posiłek i wybierz decyzję ręcznie.'
+      ? lang.mealPendingAdviceUnavailable
       : lang.notificationMealAdvicePendingBody;
 
   @override

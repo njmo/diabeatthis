@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
 
 class DayLowTreatmentPicker extends StatelessWidget {
@@ -13,13 +14,9 @@ class DayLowTreatmentPicker extends StatelessWidget {
       height: MediaQuery.sizeOf(context).height * .5,
       child: ListView(
         children: [
-          const ListTile(
-            title: Text('Wybierz zapisane dosłodzenie z tego dnia'),
-          ),
+          ListTile(title: Text(context.lang.dayReviewSelectLow)),
           if (entries.isEmpty)
-            const ListTile(
-              title: Text('Brak zapisanych dosłodzeń. Użyj „Dodaj wstecz”.'),
-            ),
+            ListTile(title: Text(context.lang.dayReviewNoLowToSelect)),
           ...entries.map(
             (low) => ListTile(
               title: Text(

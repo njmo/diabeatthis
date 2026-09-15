@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/manual_meal_decision.dart';
 import '../../../../common/meal/meal_decision.dart';
 
@@ -33,28 +34,22 @@ class RetrospectiveMealTiming {
         bolusAt(start).isAfter(now) ||
         (eatingMinutes != null &&
             start.add(Duration(minutes: eatingMinutes!)).isAfter(now))) {
-      throw ArgumentError(
-        'Godziny posiłku i insuliny nie mogą być w przyszłości.',
-      );
+      throw ArgumentError(lang.uiMealAndInsulinTimesCannotBeInTheFuture);
     }
     if (eatingMinutes == null || eatingMinutes! <= 0) {
-      throw ArgumentError(
-        'Podaj czas jedzenia, aby odtworzyć zakończenie posiłku.',
-      );
+      throw ArgumentError(lang.uiEnterTheEatingDurationToReconstructTheMealEnd);
     }
     if (choice.decision == MealDecision.bolus ||
         (choice.decision == MealDecision.bolusWaitThenEat &&
             choice.waitMinutes <= 0) ||
         (choice.decision != MealDecision.bolusWaitThenEat &&
             choice.waitMinutes != 0)) {
-      throw ArgumentError('Nieprawidłowa decyzja lub czas czekania.');
+      throw ArgumentError(lang.uiInvalidDecisionOrWaitingTime);
     }
     if (choice.decision == MealDecision.eatNowBolusLater &&
         (bolusAfterStartMinutes <= 0 ||
             bolusAfterStartMinutes < (eatingMinutes ?? 0))) {
-      throw ArgumentError(
-        'Insulina po jedzeniu nie może poprzedzać końca posiłku.',
-      );
+      throw ArgumentError(lang.uiInsulinAfterEatingCannotPrecedeTheEndOfThe);
     }
   }
 

@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/carbs_label_mode.dart';
 import '../../domain/utils/ingredient_barcode_validator.dart';
 import 'ingredient_draft.dart';
@@ -60,9 +61,7 @@ extension IngredientDraftValidation on IngredientDraft {
       throw ArgumentError('Ingredient macros cannot exceed 100g per 100g');
     }
     if (!hasPositiveNonEuNetCarbs) {
-      throw ArgumentError(
-        'Dla non-UE węglowodany muszą być większe niż błonnik.',
-      );
+      throw ArgumentError(lang.uiForNonEULabelsCarbohydratesMustBeGreaterThan);
     }
   }
 

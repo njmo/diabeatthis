@@ -1,4 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../../common/l10n/language.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -51,8 +53,8 @@ class FinalizeMealSummaryUseCase with Logging {
         !mealSummaryCanFinish(draft.mealStatus)) {
       throw MealSummaryCannotFinishException(
         mealSummaryRequiresBolusBeforeFinish(draft.mealStatus)
-            ? 'Najpierw podaj bolusa w kalkulatorze. Dopiero potem zakończ posiłek.'
-            : 'Najpierw oznacz posiłek jako zjedzony. Dopiero potem zapisz podsumowanie.',
+            ? lang.uiFirstGiveTheBolusUsingTheCalculatorThenFinish
+            : lang.uiFirstMarkTheMealAsEatenThenSaveThe,
       );
     }
 

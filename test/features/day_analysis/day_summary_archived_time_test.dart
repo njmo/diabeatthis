@@ -8,6 +8,8 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/localized_material_app.dart';
+
 void main() {
   // A day crossing Poland's autumn DST transition. UTC data ensures rendering
   // cannot accidentally pass by relying on the host's local timezone.
@@ -36,7 +38,7 @@ void main() {
     (tester) async {
       final decoded = DaySummarySnapshot.decode(snapshot.encode());
       await tester.pumpWidget(
-        MaterialApp(
+        localizedMaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               child: DaySummaryReviewForm(snapshot: decoded),
@@ -44,6 +46,7 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
       expect(find.text('Dane do 26.10.2026 00:00'), findsOneWidget);
       expect(find.text('Noc: 24.10 22:00–25.10 06:00'), findsOneWidget);
     },

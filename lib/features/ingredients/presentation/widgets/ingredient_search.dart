@@ -315,7 +315,7 @@ class IngredientSearchTile extends StatelessWidget {
 String _brandLabel(String? brand) {
   final normalized = brand?.trim();
   if (normalized == null || normalized.isEmpty) {
-    return 'Bez marki';
+    return lang.ingredientNoBrand;
   }
   return normalized;
 }

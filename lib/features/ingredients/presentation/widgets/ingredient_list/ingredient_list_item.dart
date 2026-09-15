@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../core/domain/model/ingredient.dart';
 import '../ingredient_identity_text.dart';
 
@@ -86,7 +87,10 @@ class _ReferenceBadge extends StatelessWidget {
               color: colors.onSecondaryContainer,
             ),
             const SizedBox(width: 5),
-            Text('Ref.', style: Theme.of(context).textTheme.labelMedium),
+            Text(
+              context.lang.ingredientReferenceShort,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
           ],
         ),
       ),
@@ -111,15 +115,21 @@ class _IngredientMacroChips extends StatelessWidget {
         ),
         _MetricChip(
           icon: Icons.grain,
-          label: 'W ${_formatNumber(ingredient.carbsPer100g)} g',
+          label: context.lang.ingredientCarbsAmountShort(
+            _formatNumber(ingredient.carbsPer100g),
+          ),
         ),
         _MetricChip(
           icon: Icons.opacity,
-          label: 'T ${_formatNumber(ingredient.fatPer100g)} g',
+          label: context.lang.ingredientFatAmountShort(
+            _formatNumber(ingredient.fatPer100g),
+          ),
         ),
         _MetricChip(
           icon: Icons.fitness_center,
-          label: 'B ${_formatNumber(ingredient.proteinPer100g)} g',
+          label: context.lang.ingredientProteinAmountShort(
+            _formatNumber(ingredient.proteinPer100g),
+          ),
         ),
       ],
     );

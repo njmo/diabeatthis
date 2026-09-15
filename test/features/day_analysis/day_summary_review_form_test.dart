@@ -2,6 +2,7 @@ import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_summa
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/localized_material_app.dart';
 import 'accept_day_summary_test.dart' show preview;
 
 void main() {
@@ -10,7 +11,7 @@ void main() {
     (tester) async {
       Set<int>? accepted;
       await tester.pumpWidget(
-        MaterialApp(
+        localizedMaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
               child: DaySummaryReviewForm(
@@ -44,7 +45,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
+      localizedMaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
             child: DaySummaryReviewForm(

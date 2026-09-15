@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
 
@@ -30,10 +31,15 @@ class DayLinkedLowTreatmentReviewCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              '$time · Dosłodzenie${carbs == null ? '' : ' · ${carbs.toStringAsFixed(0)} g'}',
+              context.lang.dayReviewLowAt(
+                time,
+                carbs == null
+                    ? ''
+                    : ' · ${NumberFormat.decimalPattern(context.lang.localeName).format(carbs.round())} g',
+              ),
               style: Theme.of(context).textTheme.titleSmall,
             ),
-            Text('${events.length} powiązane wpisy'),
+            Text(context.lang.dayReviewLinkedCount(events.length)),
             for (final event in events)
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -46,7 +52,7 @@ class DayLinkedLowTreatmentReviewCard extends StatelessWidget {
                   '${DateFormat('HH:mm').format(event.createdAt)} · ${event.carbs} g',
                 ),
                 trailing: IconButton(
-                  tooltip: 'Cofnij powiązanie wpisu',
+                  tooltip: context.lang.dayReviewUnlink,
                   onPressed: busy ? null : () => onReset(event),
                   icon: const Icon(Icons.link_off),
                 ),

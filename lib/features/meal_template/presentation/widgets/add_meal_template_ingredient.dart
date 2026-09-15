@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/forms.dart';
 import '../../../ingredients/presentation/widgets/ingredient_form.dart';
 import '../../../ingredients/presentation/widgets/ingredient_portion_amount_form.dart';
@@ -46,36 +47,40 @@ class AddMealTemplateIngredient extends ConsumerWidget {
             AddMealTemplateIngredientStage.dismiss => const SizedBox.shrink(),
             AddMealTemplateIngredientStage.ingredientSearch =>
               _textWithSearchTransition(
-                'Ingredient search',
+                context.lang.ingredientSearchLabel,
                 Icon(Icons.add_box),
                 addingStateNotifier,
               ),
             AddMealTemplateIngredientStage.ingredientForm =>
               _textWithSearchTransition(
-                'Ingredient form',
+                context.lang.templateIngredientForm,
                 Icon(Icons.search),
                 addingStateNotifier,
               ),
             AddMealTemplateIngredientStage.portionAddNewSearch =>
               _textWithSearchTransition(
-                'Portion add new portion to ingredient',
+                context.lang.templateIngredientPortionAdd,
                 Icon(Icons.add),
                 addingStateNotifier,
               ),
             AddMealTemplateIngredientStage.definedPortionsSearch =>
               _textWithSearchTransition(
-                'Portion search existing portions',
+                context.lang.templatePortionSearch,
                 Icon(Icons.add_box),
                 addingStateNotifier,
               ),
-            AddMealTemplateIngredientStage.amountForm => Text('Amount form'),
-            AddMealTemplateIngredientStage.summary => Text('Summary'),
+            AddMealTemplateIngredientStage.amountForm => Text(
+              context.lang.uiAmountForm,
+            ),
+            AddMealTemplateIngredientStage.summary => Text(
+              context.lang.addIngredientSummaryTitle,
+            ),
             AddMealTemplateIngredientStage.portionSpecifyAmount => Text(
-              'Ingredient amount in portion',
+              context.lang.templatePortionIngredientAmount,
             ),
             AddMealTemplateIngredientStage.portionAddNewForm =>
               _textWithSearchTransition(
-                'Portion add new portion',
+                context.lang.addIngredientNewPortionTitle,
                 Icon(Icons.search),
                 addingStateNotifier,
               ),
@@ -127,8 +132,8 @@ class AddMealTemplateIngredient extends ConsumerWidget {
                     }
                   },
                   child: (addingStage == AddMealTemplateIngredientStage.summary)
-                      ? Text('Add')
-                      : Text('Next'),
+                      ? Text(context.lang.mealSummaryExtraAdd)
+                      : Text(context.lang.addIngredientNext),
                 ),
               ),
               addingStage !=
@@ -142,7 +147,7 @@ class AddMealTemplateIngredient extends ConsumerWidget {
                         onPressed: () {
                           addingStateNotifier.setOverride();
                         },
-                        child: Text('Add by grams'),
+                        child: Text(context.lang.uiAddByGrams),
                       ),
                     ),
               addingStage != AddMealTemplateIngredientStage.summary
@@ -153,22 +158,24 @@ class AddMealTemplateIngredient extends ConsumerWidget {
                           final result = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Discard changes?'),
-                              content: const Text(
-                                'Are you sure you want to discard changes?',
+                              title: Text(
+                                context.lang.addIngredientDiscardChangesTitle,
+                              ),
+                              content: Text(
+                                context.lang.templateConfirmDiscard,
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () {
                                     Navigator.of(context).pop(true);
                                   },
-                                  child: Text('Yes'),
+                                  child: Text(context.lang.uiYes),
                                 ),
                                 TextButton(
                                   onPressed: () {
                                     Navigator.of(context).pop(false);
                                   },
-                                  child: Text('No'),
+                                  child: Text(context.lang.uiNo),
                                 ),
                               ],
                             ),
@@ -179,7 +186,7 @@ class AddMealTemplateIngredient extends ConsumerWidget {
                             }
                           }
                         },
-                        child: Text('Discard'),
+                        child: Text(context.lang.notificationActionReject),
                       ),
                     ),
             ],

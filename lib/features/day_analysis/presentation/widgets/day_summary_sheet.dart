@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../data/providers/day_context_provider.dart';
 import '../../data/providers/day_low_treatment_review_provider.dart';
 import '../../data/providers/day_meal_review_provider.dart';
@@ -27,7 +28,12 @@ class DaySummarySheet extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Podsumowanie ${DateFormat('dd.MM.yyyy').format(date)}',
+                context.lang.daySummaryDated(
+                  DateFormat(
+                    'dd.MM.yyyy',
+                    context.lang.localeName,
+                  ).format(date),
+                ),
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               archive.when(
@@ -35,16 +41,19 @@ class DaySummarySheet extends ConsumerWidget {
                 error: (_, _) => TextButton(
                   onPressed: () =>
                       ref.invalidate(acceptedDaySummaryProvider(date)),
-                  child: const Text(
-                    'Nie udało się odczytać zapisu. Spróbuj ponownie',
-                  ),
+                  child: Text(context.lang.dayReviewArchiveFailed),
                 ),
                 data: (accepted) {
                   if (accepted != null) {
                     return Column(
                       children: [
                         Text(
-                          'Zatwierdzono ${DateFormat('dd.MM.yyyy HH:mm').format(accepted.displayAcceptedAt)}',
+                          context.lang.daySummaryAcceptedAt(
+                            DateFormat(
+                              'dd.MM.yyyy HH:mm',
+                              context.lang.localeName,
+                            ).format(accepted.displayAcceptedAt),
+                          ),
                         ),
                         DaySummaryReviewForm(snapshot: accepted.snapshot),
                       ],
@@ -62,9 +71,7 @@ class DaySummarySheet extends ConsumerWidget {
                             ref.invalidate(dayLowTreatmentReviewProvider(date));
                             ref.invalidate(daySummaryDraftProvider(date));
                           },
-                          child: const Text(
-                            'Nie udało się przygotować podsumowania. Spróbuj ponownie',
-                          ),
+                          child: Text(context.lang.dayReviewBuildFailed),
                         ),
                         data: (snapshot) => DaySummaryReviewForm(
                           key: ValueKey(snapshot.encode()),
@@ -109,8 +116,8 @@ class DaySummarySheet extends ConsumerWidget {
         SnackBar(
           content: Text(
             error is StaleDaySummary
-                ? 'Dane zmieniły się. Przejrzyj aktualne podsumowanie.'
-                : 'Nie udało się zatwierdzić podsumowania. Spróbuj ponownie.',
+                ? context.lang.dayReviewStaleSummary
+                : context.lang.dayReviewAcceptFailed,
           ),
         ),
       );

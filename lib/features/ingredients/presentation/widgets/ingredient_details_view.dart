@@ -79,7 +79,9 @@ class _IngredientHeader extends StatelessWidget {
                 ),
                 _StatusPill(
                   icon: Icons.monitor_heart_outlined,
-                  label: 'IG ${ingredient.ig ?? '-'}',
+                  label: context.lang.ingredientGiValue(
+                    ingredient.ig?.toString() ?? '-',
+                  ),
                 ),
                 _StatusPill(
                   icon: Icons.local_fire_department_outlined,
@@ -216,21 +218,21 @@ class _EnergySummary extends StatelessWidget {
           children: [
             Expanded(
               child: _CompactMetric(
-                label: 'Kalorie',
+                label: context.lang.mealCaloriesLabel,
                 value: '${_formatNumber(ingredient.kcalPer100g)} kcal',
               ),
             ),
             const _MetricDivider(),
             Expanded(
               child: _CompactMetric(
-                label: 'Net',
+                label: context.lang.ingredientNetShort,
                 value: '${_formatNumber(ingredient.netKcalPer100g)} kcal',
               ),
             ),
             const _MetricDivider(),
             Expanded(
               child: _CompactMetric(
-                label: 'WBT',
+                label: context.lang.mealWbtLabel,
                 value: '${_formatNumber(ingredient.wbtKcalPer100g)} kcal',
               ),
             ),

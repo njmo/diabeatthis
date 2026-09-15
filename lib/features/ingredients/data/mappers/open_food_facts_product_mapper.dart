@@ -1,3 +1,5 @@
+import '../../../../common/l10n/language.dart';
+
 import '../clients/open_food_facts_product_client.dart';
 import '../models/ingredient_scan_result.dart';
 
@@ -71,8 +73,8 @@ class OpenFoodFactsProductMapper {
 
     return [
       RecognizedPortion(
-        name: readString(product, 'serving_size') ?? 'Porcja',
-        unitHint: 'porcja',
+        name: readString(product, 'serving_size') ?? lang.mealPortionLabel,
+        unitHint: lang.commonPortionUnit(1),
         grams: grams,
         source: 'open_food_facts',
       ),

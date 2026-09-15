@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../common/meal/stored_meal_decision.dart';
 import '../../../../../common/utils/format_duration_label.dart';
 import '../../../data/models/meal_advice_history_comparison.dart';
@@ -30,75 +31,71 @@ class MealAdviceHistorySection extends StatelessWidget {
         : MealAdviceHistoryComparison(history);
     final stats = history?.glucoseStats;
     return MealSectionTile(
-      title: 'Porada a zapisane zdarzenia',
+      title: context.lang.uiAdviceAndRecordedEvents,
       children: [
         MealInfoRow(
           label: decision?.isManual == true
-              ? 'Decyzja manualna'
-              : 'Zapisana porada',
+              ? context.lang.mealManualDecisionLabel
+              : context.lang.mealRecordedAdvice,
           value: decision == null
-              ? 'Brak zapisu'
+              ? context.lang.mealNoRecord
               : '$label · ${mealDateTime(decision.createdAt.toLocal())}',
         ),
         if (decision != null && !decision.isManual)
           MealInfoRow(
-            label: 'Proponowane oczekiwanie',
+            label: context.lang.uiSuggestedWait,
             value: '${decision.initialWaitTime} min',
           ),
         MealInfoRow(
-          label: 'Zarejestrowany początek jedzenia',
-          value: eating == null ? 'Nieznany' : mealDateTime(eating.toLocal()),
+          label: context.lang.uiRecordedEatingStart,
+          value: eating == null
+              ? context.lang.mealUnknown
+              : mealDateTime(eating.toLocal()),
         ),
-        const Text(
-          'Początek jedzenia pochodzi ze statusu posiłku. Czas wpisania węglowodanów nie zastępuje tej informacji.',
-        ),
+        Text(context.lang.mealEatingStartSourceNote),
         if (decision != null)
           MealLowTreatmentContext(
             adviceAt: decision.createdAt,
             analysis: history,
           ),
         if (history == null)
-          const Text('Historia nie jest jeszcze dostępna.')
+          Text(context.lang.uiHistoryIsNotAvailableYet)
         else ...[
           MealInfoRow(
-            label: 'Okno zdarzeń',
+            label: context.lang.uiEventWindow,
             value:
                 '${mealDateTime(history.eventStart.toLocal())} – ${mealDateTime(history.eventEnd.toLocal())}',
           ),
           if (comparison!.wizards.isEmpty)
-            const Text('Brak wpisu Bolus Wizarda w pobranym oknie.'),
+            Text(context.lang.uiNoBolusWizardEntryInTheLoadedWindow),
           for (final wizard in comparison.wizards)
             MealWizardHistoryRow(wizard: wizard),
-          const Text(
-            'Wynik kalkulatora nie potwierdza podania insuliny. Procent Wizarda nie dowodzi zastosowania się do porady.',
-          ),
+          Text(context.lang.mealWizardDeliveryLimitNote),
           if (comparison.deliveries.isEmpty)
-            const Text('Brak zapisanego bolusa manualnego w pobranym oknie.'),
+            Text(context.lang.uiNoRecordedManualBolusInTheLoadedWindow),
           for (final bolus in comparison.deliveries)
             MealInfoRow(
-              label: 'Zapis podania ${mealDateTime(bolus.createdAt.toLocal())}',
+              label: context.lang.mealDoseRecordedAt(
+                mealDateTime(bolus.createdAt.toLocal()),
+              ),
               value:
-                  '${formatUnits(bolus.insulin)}${eating == null ? '' : ' · ${formatDurationOffset(bolus.createdAt.difference(eating))} względem początku jedzenia'}',
+                  '${formatUnits(bolus.insulin)}${eating == null ? '' : context.lang.mealDoseRelativeTime(formatDurationOffset(bolus.createdAt.difference(eating)))}',
             ),
           MealInfoRow(
-            label: 'Pozostałe podania / korekty w oknie',
+            label: context.lang.uiOtherDosesCorrectionsInTheWindow,
             value:
                 '${comparison.insulin.otherCount} · ${formatUnits(comparison.insulin.otherUnits)}',
           ),
-          const Text(
-            'Zdarzenia w tym oknie nie są automatycznie przypisane do posiłku. Brak wpisu nie dowodzi braku podania.',
-          ),
+          Text(context.lang.mealEventAttributionNote),
           MealInfoRow(
-            label: 'Obserwacja CGM',
+            label: context.lang.uiCGMObservation,
             value:
                 '${mealDateTime(history.mealTime.toLocal())} – ${mealDateTime(history.chartEnd.toLocal())}',
           ),
           if (eating == null)
-            const Text(
-              'Okno CGM korzysta z czasu zastępczego analizy; rzeczywisty początek jedzenia jest nieznany.',
-            ),
+            Text(context.lang.uiTheCGMWindowUsesAFallbackAnalysisTimeThe),
           MealInfoRow(
-            label: 'Minimum / maksimum CGM',
+            label: context.lang.uiMinimumMaximumCGM,
             value:
                 '${formatMgdl(stats?.minGlucose)} / ${formatMgdl(stats?.maxGlucose)}',
           ),
@@ -107,13 +104,11 @@ class MealAdviceHistorySection extends StatelessWidget {
               'Obserwacja jeszcze trwa. Docelowe okno: ${formatDurationLabel(history.postMealWindow)}.',
             ),
           if (history.needsHistoryDownload)
-            const Text(
-              'Pokrycie historii CGM jest niepełne; statystyki opisują tylko dostępne odczyty.',
-            ),
+            Text(context.lang.mealPartialCgmStatisticsNote),
           MealInfoRow(
-            label: 'Aktywności w kontekście analizy',
+            label: context.lang.uiActivitiesInTheAnalysisContext,
             value: history.linkedActivities.isEmpty
-                ? 'Brak zapisanych aktywności'
+                ? context.lang.uiNoRecordedActivities
                 : history.linkedActivities
                       .map(
                         (a) =>
@@ -122,12 +117,10 @@ class MealAdviceHistorySection extends StatelessWidget {
                       .join(', '),
           ),
           MealInfoRow(
-            label: 'Inne posiłki w kontekście',
+            label: context.lang.uiOtherMealsInContext,
             value: '${history.linkedMeals.length}',
           ),
-          const Text(
-            'Przebieg CGM obejmuje również wpływ kolejnych podań, posiłków i aktywności. Nie rozstrzyga skuteczności samej porady.',
-          ),
+          Text(context.lang.uiTheCGMCourseAlsoIncludesTheEffectsOfSubsequent),
         ],
       ],
     );

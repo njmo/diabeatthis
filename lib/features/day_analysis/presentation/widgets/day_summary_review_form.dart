@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../domain/models/day_summary_snapshot.dart';
 import 'day_summary_facts.dart';
 
@@ -39,19 +40,39 @@ class DaySummaryReviewFormState extends State<DaySummaryReviewForm> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Dane do ${DateFormat('dd.MM.yyyy HH:mm').format(snapshot.displayTime(snapshot.asOf))}',
+          context.lang.daySummaryDataUntil(
+            DateFormat(
+              'dd.MM.yyyy HH:mm',
+              context.lang.localeName,
+            ).format(snapshot.displayTime(snapshot.asOf)),
+          ),
         ),
         if (snapshot.nightStart != null && snapshot.nightEnd != null)
           Text(
-            'Noc: ${DateFormat('dd.MM HH:mm').format(snapshot.displayTime(snapshot.nightStart!))}–${DateFormat('dd.MM HH:mm').format(snapshot.displayTime(snapshot.nightEnd!))}',
+            context.lang.daySummaryNightRange(
+              DateFormat(
+                'dd.MM HH:mm',
+                context.lang.localeName,
+              ).format(snapshot.displayTime(snapshot.nightStart!)),
+              DateFormat(
+                'dd.MM HH:mm',
+                context.lang.localeName,
+              ).format(snapshot.displayTime(snapshot.nightEnd!)),
+            ),
           ),
-        const Text(
-          'Zakresy glikemii dotyczą dostępnych odczytów. Baza jest odtworzona z historii pompy.',
-        ),
+        Text(context.lang.dayReviewDataNote),
         if (snapshot.limitations.isNotEmpty) ...[
           const SizedBox(height: 12),
           Text(
-            'Niepełne dane: ${snapshot.limitations.map((key) => limitationLabels[key] ?? key).join(', ')}.',
+            context.lang.daySummaryGaps(
+              snapshot.limitations
+                  .map(
+                    (key) =>
+                        limitationLabels(context)[key] ??
+                        context.lang.daySourceUnavailable,
+                  )
+                  .join(', '),
+            ),
           ),
           if (editable)
             CheckboxListTile(
@@ -60,21 +81,18 @@ class DaySummaryReviewFormState extends State<DaySummaryReviewForm> {
               onChanged: saving
                   ? null
                   : (value) => setState(() => acknowledge = value ?? false),
-              title: const Text('Zapisz podsumowanie ze wskazanymi brakami'),
+              title: Text(context.lang.dayReviewAcceptGaps),
             ),
         ],
         if (unresolved.isNotEmpty) ...[
           const SizedBox(height: 12),
           Text(
             editable
-                ? 'Wpisy do wyjaśnienia'
-                : 'Świadomie pozostawione bez wyjaśnienia',
+                ? context.lang.dayReviewUnresolved
+                : context.lang.dayReviewLeftUnresolved,
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          if (editable)
-            const Text(
-              'Wróć do list dnia, aby uzupełnić wpis, albo zaznacz świadome pominięcie. Pominięcie nie oznacza, że posiłku lub dosłodzenia nie było.',
-            ),
+          if (editable) Text(context.lang.dayReviewSkipNote),
           for (final index in unresolved)
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
@@ -89,46 +107,48 @@ class DaySummaryReviewFormState extends State<DaySummaryReviewForm> {
                       }
                     }),
               title: Text(
-                '${DateFormat('HH:mm').format(snapshot.displayTime(snapshot.review[index].occurredAt))} · ${snapshot.review[index].kind == DaySummaryReviewKind.meal ? 'Wpis posiłkowy' : 'Możliwe dosłodzenie'}',
+                '${DateFormat('HH:mm').format(snapshot.displayTime(snapshot.review[index].occurredAt))} · ${snapshot.review[index].kind == DaySummaryReviewKind.meal ? context.lang.dayReviewMealEntry : context.lang.dayReviewPossibleLow}',
               ),
-              subtitle: const Text('Pozostaw bez wyjaśnienia'),
+              subtitle: Text(context.lang.dayReviewLeaveUnresolved),
             ),
         ],
         const SizedBox(height: 12),
         DaySummaryFacts(snapshot: snapshot),
         if (editable) ...[
           const SizedBox(height: 16),
-          const Text(
-            'Zatwierdzony zapis pozostanie niezmienny, także po synchronizacji. Późniejsze poprawki historii nie zmienią tego podsumowania.',
-          ),
+          Text(context.lang.dayReviewImmutableNote),
           FilledButton(
             onPressed: ready && !saving
                 ? () => widget.onAccept!(Set.of(skipped), acknowledge)
                 : null,
-            child: Text(saving ? 'Zapisywanie…' : 'Zatwierdź podsumowanie'),
+            child: Text(
+              saving
+                  ? context.lang.manualEventSaving
+                  : context.lang.dayReviewAccept,
+            ),
           ),
           TextButton(
             onPressed: saving ? null : () => Navigator.of(context).pop(),
-            child: const Text('Wróć do uzupełniania dnia'),
+            child: Text(context.lang.dayReviewReturn),
           ),
         ],
       ],
     );
   }
 
-  static const limitationLabels = {
-    'glucose': 'glikemia',
-    'nightGlucose': 'glikemia w nocy',
-    'deviceStatus': 'historia pompy',
-    'treatments': 'historia zabiegów',
-    'basal': 'baza',
-    'nightBasal': 'baza w nocy',
-    'meals': 'posiłki',
-    'lowTreatments': 'dosłodzenia',
-    'activities': 'aktywności',
-    'sensorAge': 'wiek sensora',
-    'podAge': 'wiek poda',
-    'mealReview': 'przegląd posiłków',
-    'lowTreatmentReview': 'przegląd dosłodzeń',
+  static Map<String, String> limitationLabels(BuildContext context) => {
+    'glucose': context.lang.daySummarySourceGlucose,
+    'nightGlucose': context.lang.daySummarySourceNightGlucose,
+    'deviceStatus': context.lang.daySummarySourceDeviceStatus,
+    'treatments': context.lang.daySummarySourceTreatments,
+    'basal': context.lang.daySummarySourceBasal,
+    'nightBasal': context.lang.daySummarySourceNightBasal,
+    'meals': context.lang.daySummarySourceMeals,
+    'lowTreatments': context.lang.daySummarySourceLowTreatments,
+    'activities': context.lang.daySummarySourceActivities,
+    'sensorAge': context.lang.daySummarySourceSensorAge,
+    'podAge': context.lang.daySummarySourcePodAge,
+    'mealReview': context.lang.daySummarySourceMealReview,
+    'lowTreatmentReview': context.lang.daySummarySourceLowTreatmentReview,
   };
 }

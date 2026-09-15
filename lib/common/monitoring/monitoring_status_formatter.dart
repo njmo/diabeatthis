@@ -1,3 +1,4 @@
+import '../l10n/language.dart';
 import 'activity_monitoring_phase.dart';
 import 'meal_monitoring_phase.dart';
 import 'monitoring_notification_content.dart';
@@ -14,60 +15,67 @@ class MonitoringStatusFormatter {
     final lines = <String>[];
     final mealDetail = switch (meal.phase) {
       MealMonitoringPhase.initializing || MealMonitoringPhase.idle => null,
-      MealMonitoringPhase.unavailable => 'monitorowanie niedostępne',
-      MealMonitoringPhase.waitingForUser =>
-        'oczekiwanie na działania w aplikacji',
-      MealMonitoringPhase.planned => 'zaplanowany${_at(meal.plannedAt)}',
-      MealMonitoringPhase.preparing => 'przygotowanie do posiłku',
-      MealMonitoringPhase.waitingForBolus => 'oczekiwanie na bolus',
-      MealMonitoringPhase.waitingToEat => 'oczekiwanie na rozpoczęcie jedzenia',
-      MealMonitoringPhase.eating => 'posiłek w trakcie',
+      MealMonitoringPhase.unavailable => lang.uiMonitoringUnavailable,
+      MealMonitoringPhase.waitingForUser => lang.uiWaitingForActionsInTheApp,
+      MealMonitoringPhase.planned => lang.monitoringMealPlanned(
+        _at(meal.plannedAt),
+      ),
+      MealMonitoringPhase.preparing => lang.uiPreparingForAMeal,
+      MealMonitoringPhase.waitingForBolus => lang.uiWaitingForABolus,
+      MealMonitoringPhase.waitingToEat => lang.uiWaitingToStartEating,
+      MealMonitoringPhase.eating => lang.uiMealInProgress,
       MealMonitoringPhase.eatingThenBolus =>
-        'posiłek w trakcie, bolus po jedzeniu',
-      MealMonitoringPhase.eatingExtra => 'dokładka w trakcie',
+        lang.uiMealInProgressBolusAfterEating,
+      MealMonitoringPhase.eatingExtra => lang.uiExtraFoodInProgress,
     };
     final activityDetail = switch (activity.phase) {
       ActivityMonitoringPhase.initializing ||
       ActivityMonitoringPhase.idle => null,
-      ActivityMonitoringPhase.unavailable => 'monitorowanie niedostępne',
-      ActivityMonitoringPhase.planned => 'zaplanowana${_at(activity.startsAt)}',
-      ActivityMonitoringPhase.preparing => 'przygotowanie do aktywności',
+      ActivityMonitoringPhase.unavailable => lang.uiMonitoringUnavailable,
+      ActivityMonitoringPhase.planned => lang.monitoringActivityPlanned(
+        _at(activity.startsAt),
+      ),
+      ActivityMonitoringPhase.preparing => lang.uiPreparingForActivity,
       ActivityMonitoringPhase.active =>
         activity.startsAt == null
-            ? 'aktywność w trakcie'
-            : 'od ${_time(activity.startsAt!)}',
+            ? lang.uiActivityInProgress
+            : lang.monitoringActivitySince(_time(activity.startsAt!)),
       ActivityMonitoringPhase.waitingForFinish =>
-        'oczekiwanie na potwierdzenie zakończenia',
+        lang.uiWaitingForFinishConfirmation,
     };
     if (mealDetail != null &&
         (!hasCurrent || meal.isCurrent || meal.isUnavailable)) {
-      lines.add('${_name(meal.name, 'Posiłek')} · $mealDetail');
+      lines.add(
+        '${_name(meal.name, lang.activityTreatmentMeal)} · $mealDetail',
+      );
     }
     if (activityDetail != null &&
         (!hasCurrent || activity.isCurrent || activity.isUnavailable)) {
-      lines.add('${_name(activity.name, 'Aktywność')} · $activityDetail');
+      lines.add(
+        '${_name(activity.name, lang.activityTitle)} · $activityDetail',
+      );
     }
     final initializing =
         meal.phase == MealMonitoringPhase.initializing ||
         activity.phase == ActivityMonitoringPhase.initializing;
     final title = hasUnavailable
-        ? 'Problem z monitorowaniem'
+        ? lang.uiMonitoringProblem
         : meal.isCurrent && activity.isCurrent
-        ? 'Monitorowanie posiłku i aktywności'
+        ? lang.uiMealAndActivityMonitoring
         : meal.isCurrent
-        ? 'Monitorowanie posiłku'
+        ? lang.uiMealMonitoring
         : activity.isCurrent
-        ? 'Monitorowanie aktywności'
+        ? lang.uiActivityMonitoring
         : initializing
-        ? 'Uruchamianie monitorowania'
-        : 'Monitoring aktywny';
+        ? lang.uiStartingMonitoring
+        : lang.uiMonitoringActive;
     return MonitoringNotificationContent(
       title,
       lines.isNotEmpty
           ? lines.join(' • ')
           : initializing
-          ? 'Odczytywanie posiłków i aktywności…'
-          : 'Brak bieżących zdarzeń',
+          ? lang.uiLoadingMealsAndActivities
+          : lang.uiNoCurrentEvents,
     );
   }
 
@@ -75,7 +83,8 @@ class MonitoringStatusFormatter {
       value == null || value.trim().isEmpty
       ? fallback
       : value.replaceAll(RegExp(r'\s+'), ' ').trim();
-  String _at(DateTime? date) => date == null ? '' : ' na ${_time(date)}';
+  String _at(DateTime? date) =>
+      date == null ? '' : lang.monitoringScheduledAt(_time(date));
   String _time(DateTime date) {
     final local = date.toLocal();
     return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';

@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../common/meal/meal_decision.dart';
 import '../../../../../common/widgets/form_section.dart';
 import '../../../../../common/widgets/manual_meal_decision_fields.dart';
 import '../../../data/models/retrospective_meal_timing.dart';
 
 class RetrospectiveMealFields extends StatelessWidget {
-  final String subtitle;
+  final String? subtitle;
   final RetrospectiveMealTiming value;
   final ValueChanged<RetrospectiveMealTiming> onChanged;
   const RetrospectiveMealFields({
     super.key,
-    this.subtitle =
-        'Zjedzono całość zgodnie z planem, bez dokładki. Decyzja zostanie zapisana jako ręczna.',
+    this.subtitle,
     required this.value,
     required this.onChanged,
   });
@@ -20,17 +20,17 @@ class RetrospectiveMealFields extends StatelessWidget {
   @override
   Widget build(BuildContext context) => FormSection(
     icon: Icons.history,
-    title: 'Przebieg posiłku',
-    subtitle: subtitle,
+    title: context.lang.uiMealSequence,
+    subtitle: subtitle ?? context.lang.mealRetrospectiveFullPortionNote,
     children: [
       TextFormField(
         keyboardType: TextInputType.number,
-        decoration: const InputDecoration(
-          labelText: 'Jak długo trwało jedzenie? (min)',
+        decoration: InputDecoration(
+          labelText: context.lang.uiHowLongDidEatingTakeMin,
         ),
         validator: (text) => (int.tryParse(text ?? '') ?? 0) > 0
             ? null
-            : 'Podaj dodatnią liczbę minut.',
+            : context.lang.uiEnterAPositiveNumberOfMinutes,
         onChanged: (text) =>
             onChanged(value.copyWith(eatingMinutes: int.tryParse(text) ?? 0)),
       ),
@@ -46,11 +46,11 @@ class RetrospectiveMealFields extends StatelessWidget {
               ? ''
               : '${value.bolusAfterStartMinutes}',
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Insulina: ile minut po rozpoczęciu jedzenia?',
+          decoration: InputDecoration(
+            labelText: context.lang.uiInsulinHowManyMinutesAfterEatingStarted,
           ),
           validator: (text) => (int.tryParse(text ?? '') ?? 0) <= 0
-              ? 'Podaj dodatnią liczbę minut.'
+              ? context.lang.uiEnterAPositiveNumberOfMinutes
               : null,
           onChanged: (text) => onChanged(
             value.copyWith(bolusAfterStartMinutes: int.tryParse(text) ?? 0),

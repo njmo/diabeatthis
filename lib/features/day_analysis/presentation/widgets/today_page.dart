@@ -117,7 +117,7 @@ class TodayPageState extends ConsumerState<TodayPage> {
                         ),
                       ),
                       icon: const Icon(Icons.fact_check_outlined),
-                      label: const Text('Podsumowanie dnia'),
+                      label: Text(context.lang.dayReviewSummary),
                     ),
                   DayGlucoseCard(
                     title: lang.dayNightTitle,

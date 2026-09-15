@@ -1,3 +1,4 @@
+import '../l10n/language.dart';
 import 'manual_meal_decision.dart';
 import 'meal_decision.dart';
 
@@ -11,7 +12,7 @@ MealDecision? storedMealDecision(String? value) => switch (value) {
 };
 
 String storedMealDecisionLabel(String? value) {
-  if (value == 'manual') return 'Decyzja ręczna';
+  if (value == 'manual') return lang.uiManualDecision;
   final decision = storedMealDecision(value);
-  return decision == null ? 'Nieznany wynik' : mealDecisionLabel(decision);
+  return decision == null ? lang.uiUnknownResult : mealDecisionLabel(decision);
 }

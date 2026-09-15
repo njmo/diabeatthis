@@ -15,14 +15,6 @@
   "notificationActionSkip": "Pomiń",
   "notificationSnoozeInputTitle": "Na jak długo?",
   "notificationSnoozeInputPlaceholder": "Wpisz tutaj czas",
-  "notificationChannelAapsSuggestionName": "Sugestie AAPS",
-  "notificationChannelAapsSuggestionDescription": "Sugestie widoczne po przejściu do AAPS",
-  "notificationChannelActivityName": "Powiadomienia monitora aktywności",
-  "notificationChannelActivityDescription": "Przypomnienia o monitorowanych aktywnościach",
-  "notificationChannelMealName": "Powiadomienia o posiłkach",
-  "notificationChannelMealDescription": "Przypomnienia związane z posiłkami",
-  "notificationChannelTempTargetName": "Powiadomienia o tymczasowym celu",
-  "notificationChannelTempTargetDescription": "Propozycja ustawienia tymczasowego celu",
   "notificationAapsSuggestionEnterExtended": "Wpisz {extendedCarbsText}",
   "@notificationAapsSuggestionEnterExtended": {
     "placeholders": {
@@ -387,7 +379,6 @@
   "ingredientPortionSaveFailed": "Nie udało się zapisać porcji: {error}",
   "mealLoadError": "Błąd: {error}",
   "mealSnapshotsTitle": "Plan a zjedzona porcja",
-  "mealSnapshotsFieldColumn": "Pole",
   "mealSnapshotsPlanColumn": "Plan",
   "mealSnapshotsConsumedColumn": "Zjedzone",
   "mealSnapshotsDifferenceColumn": "Różnica",
@@ -418,11 +409,9 @@
   "mealStatusHistoryLabel": "Historia statusów",
   "mealCurrentBadge": "aktualny",
   "mealInitialStatus": "Status początkowy: {status}",
-  "mealActivityEventsTitle": "Aktywności i zdarzenia",
   "mealCopyRelationsTitle": "Użyto jako bazę",
   "mealGlucoseAnalysisTitle": "Analiza glikemii",
   "mealNoAnalysisData": "Brak danych do analizy",
-  "mealGlucoseCobIobTitle": "Glikemia / COB / IOB",
   "mealBasicInfoTitle": "Informacje podstawowe",
   "mealNameTypeLabel": "Nazwa / typ",
   "mealStatusLabel": "Status",
@@ -653,8 +642,6 @@
   "copiedMealSearchHint": "Szukaj po nazwie lub składnikach",
   "copiedMealPreview": "Podgląd",
   "copiedMealNoPreview": "Brak posiłku do podglądu",
-  "copiedMealMealBadge": "Posiłek",
-  "copiedMealTemplateBadge": "Szablon",
   "portionNameLabel": "Nazwa porcji",
   "portionNameHelper": "Np. sztuka, kromka, kubek",
   "portionUnitLabel": "Jednostka",
@@ -715,13 +702,7 @@
   "commonOnePortion": "1 porcja",
   "mealSummaryDoublePlan": "2x plan",
   "addIngredientAddedInGrams": "Dodawane w gramach",
-  "mealPeakGlucoseLabel": "Szczyt glikemii",
-  "mealTimeToPeakLabel": "Czas do szczytu",
-  "mealAverageGlucoseLabel": "Średnia glikemia",
-  "mealTotalInsulinLabel": "Insulina łącznie",
   "mealLowTreatmentDelay": "Dosłodzono {delay}",
-  "mealExtendedCarbsLabel": "Węglowodany przedłużone",
-  "mealAddOnLabel": "Dokładka",
   "mealTimeInRangeLabel": "Czas w zakresie",
   "mealHeaderAddOnChip": "Dokładka • uwzględniona w posiłku",
   "mealHeaderLowTreatmentChip": "Dosłodzono",
@@ -755,7 +736,6 @@
   "mealStatusSkipped": "Pominięty",
   "mealEntryPlanned": "Planowany",
   "mealEntryExtra": "Dodatkowy",
-  "mealTimelineInsulin": "Insulina",
   "mealTimelineCorrection": "Korekta",
   "mealTimelineLocalMealEaten": "Posiłek z aplikacji",
   "mealTimelineLocalMeal": "Posiłek w aplikacji",
@@ -884,17 +864,10 @@
   "plannedTimeChoose": "Wybierz termin",
   "ingredientBrandOptionalLabel": "Producent (opcjonalnie)",
   "ingredientBrandTooShort": "Wpisz co najmniej 2 znaki lub pozostaw pole puste.",
-  "mealDownloadHistoryFab": "Pobierz z Nightscout",
-  "mealDownloadHistory": "Pobierz historię z Nightscout",
   "mealDownloadingHistory": "Pobieranie historii…",
   "mealDownloadHistorySuccess": "Historia posiłku została pobrana.",
   "mealDownloadHistoryError": "Nie udało się pobrać historii. Sprawdź połączenie i ustawienia Nightscout.",
   "mealCompleteHistoryFab": "Uzupełnij historię",
-  "mealHistoryIncomplete": "Historia niepełna",
-  "mealHistoryWindowInProgress": "Okno analizy posiłku jeszcze trwa. Dane są sprawdzane tylko do chwili odczytu; późniejsze odczyty będzie można dociągnąć przy kolejnym otwarciu posiłku.",
-  "mealHistoryAvailable": "Dane historii dostępne",
-  "mealHistoryCoverage": "Odczyty glikemii: {available} z około {expected} (jeden co 5 minut). Uzupełnienie jest dostępne poniżej 50%.",
-  "@mealHistoryCoverage": {"placeholders": {"available": {"type": "int"}, "expected": {"type": "int"}}},
   "mealReviewTitle": "Przebieg po posiłku",
   "mealReviewBaseline": "Na początku",
   "mealReviewPeak": "Najwyższa glikemia",
@@ -918,7 +891,6 @@
   "mealReviewDeviceData": "Aktywna insulina i węglowodany",
   "mealReviewIob": "Aktywna insulina (IOB)",
   "mealReviewCob": "Aktywne węglowodany (COB)",
-  "mealReviewSelectTime": "Wybierz moment na osi czasu",
   "mealReviewNoNearbyReading": "Brak odczytu z ostatnich 5 minut",
   "mealReviewRecordedBoluses": "Zarejestrowane bolusy",
   "mealReviewNoBolus": "Brak zarejestrowanych podań",
@@ -930,7 +902,6 @@
   "mealReviewTimeReference": "Punkt odniesienia czasu",
   "mealReviewTimeNote": "Analiza zaczyna się od zapisu rozpoczęcia jedzenia. Jeśli go brak, używa czasu podsumowania, a następnie planowanego.",
   "mealReviewObservation": "Okres obserwacji",
-  "mealReviewDetails": "Skład i szczegóły posiłku",
   "mealReviewOpenRelated": "Otwórz powiązany wpis",
   "mealReviewGlucose": "Glikemia · mg/dl",
   "mealReviewRangeLegend": "Zakres na wykresie: 70–180 mg/dl",
@@ -945,48 +916,12 @@
   "mealReviewAdvancedMode": "Zaawansowany",
   "mealReviewTouchChart": "Dotknij wykresu, aby sprawdzić dane z wybranej chwili.",
   "mealReviewFindings": "Co wynika z zapisanych danych",
-  "mealReviewPeakFinding": "Najwyższa glikemia wyniosła {value}, {time} od punktu odniesienia.",
-  "@mealReviewPeakFinding": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      },
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "mealReviewReturnFinding": "Pierwszy późniejszy odczyt w zakresie zarejestrowano o {time}.",
-  "@mealReviewReturnFinding": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "mealReviewPortionFinding": "Zjedzona porcja różniła się od planu o {value} węglowodanów.",
-  "@mealReviewPortionFinding": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
-  "mealReviewMissingFinding": "Brakuje danych CGM z {duration}. Wnioski obejmują dostępne odczyty.",
-  "@mealReviewMissingFinding": {
-    "placeholders": {
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
   "mealReviewStartingContext": "Z czym zaczynaliśmy",
   "mealReviewRecordedStart": "Zapis rozpoczęcia jedzenia",
   "mealReviewFallbackStart": "Czas odniesienia • brak zapisu startu",
   "mealReviewBolusToStart": "Odstęp od bolusa",
   "mealReviewLastManualBolus": "Ostatni bolus ręczny przed startem",
   "mealReviewUnknownActualWait": "Brak zapisu bolusa lub rozpoczęcia",
-  "mealReviewRecordedWait": "Oczekiwanie zapisane w statusach",
   "mealReviewFallbackContext": "Brak zapisu rozpoczęcia jedzenia. Pokazujemy kontekst czasu podsumowania lub planu; rzeczywisty odstęp od bolusa jest nieznany.",
   "mealReviewRising": "CGM: wzrost",
   "mealReviewFalling": "CGM: spadek",
@@ -1176,22 +1111,7 @@
   "similarMealsEmpty": "Nie znaleziono podobnych posiłków.",
   "similarMealsConsumed": "spożyte",
   "similarMealsPlanned": "planowane",
-  "similarMealsMacros": "Węglowodany netto: {carbs} g · Białko: {protein} g · Tłuszcz: {fat} g",
-  "@similarMealsMacros": {
-    "placeholders": {
-      "carbs": {
-        "type": "String"
-      },
-      "protein": {
-        "type": "String"
-      },
-      "fat": {
-        "type": "String"
-      }
-    }
-  },
   "mealAnalysisRetry": "Spróbuj ponownie",
-  "mealRefreshAnalysis": "Odśwież analizę",
   "similarMealNetCarbs": "WW netto",
   "similarMealProtein": "Białko",
   "similarMealFat": "Tłuszcz",
@@ -1281,6 +1201,598 @@
   "@dayWarningMissingDuration": {
     "placeholders": {
       "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "dayReviewLowTitle": "Dosłodzenia do sprawdzenia",
+  "dayReviewLoadFailed": "Nie udało się pobrać przeglądu. Spróbuj ponownie",
+  "dayReviewEmpty": "Brak zapisanych dosłodzeń i osobnych wpisów węglowodanów.",
+  "dayReviewDismissed": "Oznaczone jako inne wpisy",
+  "dayReviewUndo": "Cofnij decyzję",
+  "dayReviewUnlink": "Cofnij powiązanie wpisu",
+  "dayReviewStaleDecision": "Zapisana decyzja dotyczy innego wpisu. Cofnij ją, aby ponownie sprawdzić powiązanie.",
+  "dayReviewConflict": "Sprzeczne wpisy o tej samej godzinie. Najpierw sprawdź historię źródłową.",
+  "dayReviewCarbEntryNote": "Wpis węglowodanów nie potwierdza sam w sobie dosłodzenia.",
+  "dayReviewLink": "Połącz",
+  "dayReviewAddPast": "Dodaj wstecz",
+  "dayReviewNotLow": "To nie dosłodzenie",
+  "dayReviewSelectLow": "Wybierz zapisane dosłodzenie z tego dnia",
+  "dayReviewNoLowToSelect": "Brak zapisanych dosłodzeń. Użyj „Dodaj wstecz”.",
+  "dayReviewAllReviewed": "Wszystkie wpisy sprawdzone",
+  "dayReviewIncomplete": "Do uzupełnienia",
+  "dayReviewChecking": "Sprawdzanie wpisów…",
+  "dayReviewUnavailable": "Brak danych — sprawdź listę",
+  "dayReviewReviewed": "Wpisy sprawdzone",
+  "dayReviewArchiveFailed": "Nie udało się odczytać zapisu. Spróbuj ponownie",
+  "dayReviewBuildFailed": "Nie udało się przygotować podsumowania. Spróbuj ponownie",
+  "dayReviewStaleSummary": "Dane zmieniły się. Przejrzyj aktualne podsumowanie.",
+  "dayReviewAcceptFailed": "Nie udało się zatwierdzić podsumowania. Spróbuj ponownie.",
+  "dayReviewDetails": "Szczegółowe statystyki",
+  "dayReviewDataNote": "Zakresy glikemii dotyczą dostępnych odczytów. Baza jest odtworzona z historii pompy.",
+  "dayReviewAcceptGaps": "Zapisz podsumowanie ze wskazanymi brakami",
+  "dayReviewUnresolved": "Wpisy do wyjaśnienia",
+  "dayReviewLeftUnresolved": "Świadomie pozostawione bez wyjaśnienia",
+  "dayReviewSkipNote": "Wróć do list dnia, aby uzupełnić wpis, albo zaznacz świadome pominięcie. Pominięcie nie oznacza, że posiłku lub dosłodzenia nie było.",
+  "dayReviewMealEntry": "Wpis posiłkowy",
+  "dayReviewPossibleLow": "Możliwe dosłodzenie",
+  "dayReviewLeaveUnresolved": "Pozostaw bez wyjaśnienia",
+  "dayReviewImmutableNote": "Zatwierdzony zapis pozostanie niezmienny, także po synchronizacji. Późniejsze poprawki historii nie zmienią tego podsumowania.",
+  "dayReviewAccept": "Zatwierdź podsumowanie",
+  "dayReviewReturn": "Wróć do uzupełniania dnia",
+  "dayReviewSummary": "Podsumowanie dnia",
+  "dayReviewPendingCount": "{count} do sprawdzenia",
+  "@dayReviewPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dayReviewLinkedCount": "{count, plural, one{{count} powiązany wpis} few{{count} powiązane wpisy} other{{count} powiązanych wpisów}}",
+  "@dayReviewLinkedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dayReviewLowAt": "{time} · Dosłodzenie{amount}",
+  "@dayReviewLowAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dayReviewNotLowAt": "{time} · To nie było dosłodzenie",
+  "@dayReviewNotLowAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dayReviewCarbsAt": "{time} · Wpis {carbs} g do sprawdzenia",
+  "@dayReviewCarbsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "carbs": {
+        "type": "String"
+      }
+    }
+  },
+  "daySummaryDated": "Podsumowanie {date}",
+  "@daySummaryDated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "daySummaryAcceptedAt": "Zatwierdzono {date}",
+  "@daySummaryAcceptedAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "daySummaryDataUntil": "Dane do {date}",
+  "@daySummaryDataUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "daySummaryNightRange": "Noc: {start}–{end}",
+  "@daySummaryNightRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "daySummaryGaps": "Niepełne dane: {sources}.",
+  "@daySummaryGaps": {
+    "placeholders": {
+      "sources": {
+        "type": "String"
+      }
+    }
+  },
+  "daySummaryMetricTotalInsulinUnits": "Insulina odtworzona · j.",
+  "daySummaryMetricGlucoseMean": "Średnia · mg/dl",
+  "daySummaryMetricGlucoseLowPercent": "Poniżej 70 · %",
+  "daySummaryMetricGlucoseInRangePercent": "70–180 · %",
+  "daySummaryMetricGlucoseHighPercent": "Powyżej 180 · %",
+  "daySummaryMetricGlucoseMax": "Maksimum · mg/dl",
+  "daySummaryMetricGlucoseCoveragePercent": "Historia CGM · %",
+  "daySummaryMetricNightGlucoseMean": "Średnia w nocy · mg/dl",
+  "daySummaryMetricNightInRangePercent": "Noc 70–180 · %",
+  "daySummaryMetricNightGlucoseCoveragePercent": "CGM w nocy · %",
+  "daySummaryMetricBasalUnits": "Baza odtworzona · j.",
+  "daySummaryMetricBasalAddedUnits": "Ponad profil · j.",
+  "daySummaryMetricBasalReducedUnits": "Poniżej profilu · j.",
+  "daySummaryMetricBasalCoveragePercent": "Historia bazy · %",
+  "daySummaryMetricBolusUnits": "Bolusy łącznie · j.",
+  "daySummaryMetricSmbUnits": "SMB · j.",
+  "daySummaryMetricSmbCount": "Liczba SMB",
+  "daySummaryMetricNightBasalUnits": "Baza w nocy · j.",
+  "daySummaryMetricNightBasalCoveragePercent": "Baza w nocy · % historii",
+  "daySummaryMetricNightBolusUnits": "Bolusy w nocy · j.",
+  "daySummaryMetricNightSmbUnits": "SMB w nocy · j.",
+  "daySummaryMetricNightSmbCount": "Liczba SMB w nocy",
+  "daySummaryMetricNetCarbsGrams": "Węglowodany netto · g",
+  "daySummaryMetricProteinGrams": "Białko · g",
+  "daySummaryMetricFatGrams": "Tłuszcz · g",
+  "daySummaryMetricLowTreatmentCarbsGrams": "Dosłodzenia · g WW",
+  "daySummaryMetricActivityMinutes": "Aktywność · min",
+  "daySummaryMetricPodAgeMinutes": "Wiek poda",
+  "daySummarySourceGlucose": "glikemia",
+  "daySummarySourceNightGlucose": "glikemia w nocy",
+  "daySummarySourceDeviceStatus": "historia pompy",
+  "daySummarySourceTreatments": "historia zabiegów",
+  "daySummarySourceBasal": "baza",
+  "daySummarySourceNightBasal": "baza w nocy",
+  "daySummarySourceMeals": "posiłki",
+  "daySummarySourceLowTreatments": "dosłodzenia",
+  "daySummarySourceActivities": "aktywności",
+  "daySummarySourceSensorAge": "wiek sensora",
+  "daySummarySourcePodAge": "wiek poda",
+  "daySummarySourceMealReview": "przegląd posiłków",
+  "daySummarySourceLowTreatmentReview": "przegląd dosłodzeń",
+  "dayReviewLowSavedUnlinked": "Dosłodzenie zapisano, ale nie udało się połączyć wpisu. Użyj „Połącz”, nie dodawaj ponownie.",
+  "dayReviewSaveFailed": "Nie udało się zapisać decyzji. Spróbuj ponownie.",
+  "uiEnterAPositiveNumberOfMinutes": "Podaj dodatnią liczbę minut.",
+  "uiManualDecision": "Decyzja ręczna",
+  "uiChooseTheMealSequence": "Wybierz przebieg posiłku",
+  "uiWaitingTimeAfterInsulinMin": "Czas czekania po insulinie (min)",
+  "uiChooseManually": "Wybierz samodzielnie",
+  "uiEatingStarted": "Początek jedzenia",
+  "mealRetrospectiveFullPortionNote": "Zjedzono całość zgodnie z planem, bez dokładki. Decyzja zostanie zapisana jako ręczna.",
+  "uiMealSequence": "Przebieg posiłku",
+  "uiHowLongDidEatingTakeMin": "Jak długo trwało jedzenie? (min)",
+  "uiInsulinHowManyMinutesAfterEatingStarted": "Insulina: ile minut po rozpoczęciu jedzenia?",
+  "uiLinkedToAMeal": "Powiązany z posiłkiem",
+  "uiMealRecorded": "Posiłek zapisany",
+  "uiLinkToAMeal": "Połącz z posiłkiem",
+  "uiAddAPastMeal": "Dodaj posiłek wstecz",
+  "uiMealRecordedNoLinkedCalculatorEntryInThisDay": "Posiłek zapisany. Brak powiązanego wpisu kalkulatora w historii tego dnia.",
+  "uiRemoveLink": "Usuń powiązanie",
+  "uiThisEntryAloneDoesNotConfirmAMealOccurred": "Ten wpis nie potwierdza sam w sobie, że był posiłek.",
+  "uiTheEntryHasNoIdentifierLinkingWillBeAvailable": "Brak identyfikatora wpisu. Powiązanie będzie możliwe po uzupełnieniu historii.",
+  "dayMealPickerScopeNote": "Posiłki z wybranego dnia, także zaplanowane i pominięte. Wybierz, czego dotyczył ten wpis kalkulatora.",
+  "uiCouldNotLoadMealsTryAgain": "Nie udało się pobrać posiłków. Spróbuj ponownie",
+  "uiNoRecordedMealsYouCanAddAPastMeal": "Brak zapisanych posiłków. Możesz dodać posiłek wstecz.",
+  "uiEntryType": "Rodzaj wpisu",
+  "uiMealsAndCalculatorEntries": "Posiłki i wpisy kalkulatora",
+  "uiCouldNotLoadTheListTheNumberOfEntries": "Nie udało się pobrać listy. Nie wiadomo, ile wpisów wymaga sprawdzenia.",
+  "uiNoMealsOrCalculatorEntriesInThisDayS": "Brak posiłków i wpisów kalkulatora w historii tego dnia.",
+  "uiCouldNotSaveTheLinkRefreshTheListAnd": "Nie udało się zapisać powiązania. Odśwież listę i spróbuj ponownie.",
+  "uiTheMealWasSavedButLinkingFailedChooseLink": "Posiłek został zapisany, ale nie udało się go połączyć. Wybierz „Połącz z posiłkiem”; nie dodawaj go ponownie.",
+  "uiCouldNotRemoveTheLinkTryAgain": "Nie udało się usunąć powiązania. Spróbuj ponownie.",
+  "uiLowTreatmentHistoryIsNotAvailableYet": "Historia dosłodzeń nie jest jeszcze dostępna.",
+  "uiAllLowTreatmentsInTheAnalysisWindow": "Wszystkie dosłodzenia w oknie analizy",
+  "uiRecordWindow": "Okno zapisów",
+  "uiNoRecordedLowTreatmentsInThisWindow": "Brak zapisanych dosłodzeń w tym oknie.",
+  "mealReconstructedContextNote": "Kontekst odtworzony podczas analizy, nie zapis danych użytych przez Advisor. Historia może zawierać późniejsze uzupełnienia i zmiany.",
+  "uiAnEventInThisWindowIsNotNecessarilyRelated": "Obecność zdarzenia w tym oknie nie oznacza, że dotyczy tego posiłku ani że wynika z porady.",
+  "uiNoCurrentCGMReadingsOrCompleteIOBCOBData": "Brak aktualnych odczytów CGM lub kompletnych danych IOB/COB. Wybierz decyzję ręcznie.",
+  "mealAdviceFreshDataRequirements": "Brak aktualnych danych do automatycznej porady. Wymagane są 3 kolejne odczyty CGM, a najnowszy musi być młodszy niż 10 minut. Wymagane są też kompletne dane IOB/COB młodsze niż 6 minut. Możesz wybrać decyzję ręcznie.",
+  "uiChooseADecisionManually": "Wybierz decyzję ręcznie",
+  "uiUnknownReason": "Powód nieznany",
+  "uiPlannedActivity": "Planowana aktywność",
+  "uiUnplannedActivity": "Nieplanowana aktywność",
+  "uiConsumedAmountUnknown": "Ilość spożyta nieznana",
+  "uiLinkedToAMeal2": "Powiązano z posiłkiem",
+  "uiLinkedToAnActivity": "Powiązano z aktywnością",
+  "uiAllEatenNoExtraFood": "Zjedzono całość · bez dokładki",
+  "uiSelectedSequence": "Wybrany przebieg",
+  "uiEatingDuration": "Czas jedzenia",
+  "uiSelectedWaitingTime": "Wybrany czas czekania",
+  "uiWaitingTime": "Czas czekania",
+  "uiDecisionMade": "Decyzja podjęta",
+  "uiWhatWasTheMealSequence": "Jak przebiegał posiłek?",
+  "uiCheckTheEatingStartTimeTheSuggestionComesFrom": "Sprawdź godzinę rozpoczęcia jedzenia. Podpowiedź pochodzi z kalkulatora.",
+  "uiRecordTheSequenceAndTimesYouCanCompleteFood": "Zapisz kolejność i czasy. Ilości jedzenia uzupełnisz w podsumowaniu.",
+  "uiConfirmAndLink": "Potwierdź i połącz",
+  "uiFirstPart": "Pierwsza część",
+  "uiNextPart": "Kolejna część",
+  "uiMealCorrection": "Korekta posiłku",
+  "uiRecordAPastMeal": "Zarejestruj posiłek wstecz",
+  "ingredientEnergyMacrosRequired": "Składnik musi mieć uzupełnione węglowodany, tłuszcz albo białko.",
+  "uiTheQuickLowTreatmentAmountMustBeGreaterThan": "Ilość szybkiego dosłodzenia musi być większa od 0.",
+  "uiPortionWeightMustBeGreaterThan0G": "Waga porcji musi być większa od 0 g.",
+  "uiAMealMustContainAtLeastOneIngredient": "Posiłek musi zawierać co najmniej jeden składnik.",
+  "mealActionableCarbsRequired": "Posiłek musi mieć węglowodany netto albo e-carbs z WBT.",
+  "uiMealAndInsulinTimesCannotBeInTheFuture": "Godziny posiłku i insuliny nie mogą być w przyszłości.",
+  "uiEnterTheEatingDurationToReconstructTheMealEnd": "Podaj czas jedzenia, aby odtworzyć zakończenie posiłku.",
+  "uiInvalidDecisionOrWaitingTime": "Nieprawidłowa decyzja lub czas czekania.",
+  "uiInsulinAfterEatingCannotPrecedeTheEndOfThe": "Insulina po jedzeniu nie może poprzedzać końca posiłku.",
+  "uiFirstGiveTheBolusUsingTheCalculatorThenFinish": "Najpierw podaj bolusa w kalkulatorze. Dopiero potem zakończ posiłek.",
+  "uiFirstMarkTheMealAsEatenThenSaveThe": "Najpierw oznacz posiłek jako zjedzony. Dopiero potem zapisz podsumowanie.",
+  "mealPendingAdviceUnavailable": "Brakuje aktualnych odczytów CGM lub kompletnych danych IOB/COB. Otwórz posiłek i wybierz decyzję ręcznie.",
+  "uiForNonEULabelsCarbohydratesMustBeGreaterThan": "Dla non-UE węglowodany muszą być większe niż błonnik.",
+  "uiLabelCarbohydratesAreAlreadyNet": "Węglowodany z etykiety są już netto",
+  "uiFiberIsSubtractedFromTotalCarbohydrates": "Błonnik odejmujemy od total carbs",
+  "uiEU": "UE",
+  "uiNonEU": "non-UE",
+  "uiUnknownResult": "Nieznany wynik",
+  "uiMealCopy": "Kopia posiłku",
+  "uiUnknownAmount": "Ilość nieznana",
+  "uiRecordedEatingStart": "Zarejestrowany początek jedzenia",
+  "mealEatingStartSourceNote": "Początek jedzenia pochodzi ze statusu posiłku. Czas wpisania węglowodanów nie zastępuje tej informacji.",
+  "uiHistoryIsNotAvailableYet": "Historia nie jest jeszcze dostępna.",
+  "uiEventWindow": "Okno zdarzeń",
+  "mealWizardDeliveryLimitNote": "Wynik kalkulatora nie potwierdza podania insuliny. Procent Wizarda nie dowodzi zastosowania się do porady.",
+  "uiOtherDosesCorrectionsInTheWindow": "Pozostałe podania / korekty w oknie",
+  "mealEventAttributionNote": "Zdarzenia w tym oknie nie są automatycznie przypisane do posiłku. Brak wpisu nie dowodzi braku podania.",
+  "uiTheCGMWindowUsesAFallbackAnalysisTimeThe": "Okno CGM korzysta z czasu zastępczego analizy; rzeczywisty początek jedzenia jest nieznany.",
+  "mealPartialCgmStatisticsNote": "Pokrycie historii CGM jest niepełne; statystyki opisują tylko dostępne odczyty.",
+  "uiActivitiesInTheAnalysisContext": "Aktywności w kontekście analizy",
+  "uiNoRecordedActivities": "Brak zapisanych aktywności",
+  "uiOtherMealsInContext": "Inne posiłki w kontekście",
+  "uiTheCGMCourseAlsoIncludesTheEffectsOfSubsequent": "Przebieg CGM obejmuje również wpływ kolejnych podań, posiłków i aktywności. Nie rozstrzyga skuteczności samej porady.",
+  "uiAdviceAndRecordedEvents": "Porada a zapisane zdarzenia",
+  "uiSuggestedWait": "Proponowane oczekiwanie",
+  "uiNoBolusWizardEntryInTheLoadedWindow": "Brak wpisu Bolus Wizarda w pobranym oknie.",
+  "uiNoRecordedManualBolusInTheLoadedWindow": "Brak zapisanego bolusa manualnego w pobranym oknie.",
+  "uiCGMObservation": "Obserwacja CGM",
+  "uiMinimumMaximumCGM": "Minimum / maksimum CGM",
+  "uiEstimated": "Na oko",
+  "uiAlmostCertain": "Prawie pewne",
+  "uiCertain": "Pewne",
+  "uiNoCOBIOBDataInThisPeriod": "Brak danych COB/IOB w tym okresie",
+  "uiMonitoringUnavailable": "monitorowanie niedostępne",
+  "uiWaitingForActionsInTheApp": "oczekiwanie na działania w aplikacji",
+  "uiPreparingForAMeal": "przygotowanie do posiłku",
+  "uiWaitingForABolus": "oczekiwanie na bolus",
+  "uiWaitingToStartEating": "oczekiwanie na rozpoczęcie jedzenia",
+  "uiMealInProgress": "posiłek w trakcie",
+  "uiMealInProgressBolusAfterEating": "posiłek w trakcie, bolus po jedzeniu",
+  "uiExtraFoodInProgress": "dokładka w trakcie",
+  "uiPreparingForActivity": "przygotowanie do aktywności",
+  "uiActivityInProgress": "aktywność w trakcie",
+  "uiWaitingForFinishConfirmation": "oczekiwanie na potwierdzenie zakończenia",
+  "uiMonitoringProblem": "Problem z monitorowaniem",
+  "uiMealAndActivityMonitoring": "Monitorowanie posiłku i aktywności",
+  "uiMealMonitoring": "Monitorowanie posiłku",
+  "uiActivityMonitoring": "Monitorowanie aktywności",
+  "uiStartingMonitoring": "Uruchamianie monitorowania",
+  "uiMonitoringActive": "Monitoring aktywny",
+  "uiLoadingMealsAndActivities": "Odczytywanie posiłków i aktywności…",
+  "uiNoCurrentEvents": "Brak bieżących zdarzeń",
+  "uiCalculatorEntryToReview": "Wpis kalkulatora do sprawdzenia",
+  "uiBolusWizard": "Bolus Wizard",
+  "uiNoIngredientsAdded": "Brak dodanych składników",
+  "uiAmountForm": "Formularz ilości",
+  "uiIngredientsList": "Lista składników:",
+  "uiAddByGrams": "Dodaj według gramów",
+  "uiYes": "Tak",
+  "uiNo": "Nie",
+  "mealManualWaitInstruction": "Odczekaj {minutes} min przed rozpoczęciem posiłku.",
+  "@mealManualWaitInstruction": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "mealSuggestedWaitInstruction": "Odczekaj około {minutes} min (zakres {min}–{max} min) przed rozpoczęciem posiłku.",
+  "@mealSuggestedWaitInstruction": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "mealEatThenBolusInstruction": "Jedz teraz, insulinę podaj po jedzeniu w kalkulatorze {carbs}g{extended}",
+  "@mealEatThenBolusInstruction": {
+    "placeholders": {
+      "carbs": {
+        "type": "String"
+      },
+      "extended": {
+        "type": "String"
+      }
+    }
+  },
+  "mealBolusAndEatInstruction": "Podaj insulinę w kalkulatorze {carbs}g i jedz{extended}",
+  "@mealBolusAndEatInstruction": {
+    "placeholders": {
+      "carbs": {
+        "type": "String"
+      },
+      "extended": {
+        "type": "String"
+      }
+    }
+  },
+  "mealBolusWaitEatInstruction": "1. Najpierw podaj insulinę w kalkulatorze {carbs}g,\n2. {wait} i jedz{extended}",
+  "@mealBolusWaitEatInstruction": {
+    "placeholders": {
+      "carbs": {
+        "type": "String"
+      },
+      "wait": {
+        "type": "String"
+      },
+      "extended": {
+        "type": "String"
+      }
+    }
+  },
+  "mealManualDecisionDetail": "Decyzja ręczna\n{detail}",
+  "@mealManualDecisionDetail": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "mealDecisionSaveError": "Nie udało się zapisać decyzji: {error}",
+  "@mealDecisionSaveError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "monitoringMealPlanned": "zaplanowany{time}",
+  "@monitoringMealPlanned": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "monitoringActivityPlanned": "zaplanowana{time}",
+  "@monitoringActivityPlanned": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "monitoringActivitySince": "od {time}",
+  "@monitoringActivitySince": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "monitoringScheduledAt": " na {time}",
+  "@monitoringScheduledAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lowReasonSymptomsLabel": "Objawy",
+  "mealLowRelativeTime": "{time} · {offset} względem porady",
+  "@mealLowRelativeTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "offset": {
+        "type": "String"
+      }
+    }
+  },
+  "mealLowRecordedAmount": "Zapisane spożycie: {grams} netto",
+  "@mealLowRecordedAmount": {
+    "placeholders": {
+      "grams": {
+        "type": "String"
+      }
+    }
+  },
+  "mealLowAapsSuggestion": "Propozycja AAPS: {grams}",
+  "@mealLowAapsSuggestion": {
+    "placeholders": {
+      "grams": {
+        "type": "String"
+      }
+    }
+  },
+  "mealDoseRecordedAt": "Zapis podania {time}",
+  "@mealDoseRecordedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealDoseRelativeTime": " · {offset} względem początku jedzenia",
+  "@mealDoseRelativeTime": {
+    "placeholders": {
+      "offset": {
+        "type": "String"
+      }
+    }
+  },
+  "mealWizardRecordedAt": "Kalkulator {time}",
+  "@mealWizardRecordedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "templatePortionDescription": "{amount} × {name}: {total}{hint}",
+  "@templatePortionDescription": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      },
+      "hint": {
+        "type": "String"
+      }
+    }
+  },
+  "templateReferencePortions": "{amount} porcji referencyjnych",
+  "@templateReferencePortions": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "templateIngredientsError": "Składniki (błąd: {error})",
+  "@templateIngredientsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "mealTimelineTreatment": "Zabieg",
+  "ingredientReferenceShort": "Ref.",
+  "ingredientCarbsAmountShort": "W {grams} g",
+  "@ingredientCarbsAmountShort": {
+    "placeholders": {
+      "grams": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientFatAmountShort": "T {grams} g",
+  "@ingredientFatAmountShort": {
+    "placeholders": {
+      "grams": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientProteinAmountShort": "B {grams} g",
+  "@ingredientProteinAmountShort": {
+    "placeholders": {
+      "grams": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientCarbsShort": "W",
+  "ingredientFatShort": "T",
+  "ingredientProteinShort": "B",
+  "ingredientGiValue": "IG {value}",
+  "@ingredientGiValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientNetShort": "Net",
+  "mealManualDecisionLabel": "Decyzja manualna",
+  "mealRecordedAdvice": "Zapisana porada",
+  "mealNoRecord": "Brak zapisu",
+  "mealUnknown": "Nieznany",
+  "mealToReview": "Do sprawdzenia",
+  "mealMissingEntryId": "Brak identyfikatora wpisu",
+  "templateIngredientForm": "Formularz składnika",
+  "templateIngredientPortionAdd": "Dodaj porcję do składnika",
+  "templatePortionSearch": "Szukaj zapisanej porcji",
+  "templatePortionIngredientAmount": "Ilość składnika w porcji",
+  "templateConfirmDiscard": "Czy na pewno odrzucić zmiany?",
+  "summaryReferencePortions": "porcji referencyjnych",
+  "commonPortionUnit": "{count, plural, one{porcja} few{porcje} other{porcji}}",
+  "@commonPortionUnit": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "commonPieceUnit": "{count, plural, one{sztuka} few{sztuki} other{sztuk}}",
+  "@commonPieceUnit": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "mealDaysFromNow": "Za {count} dni",
+  "@mealDaysFromNow": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "mealDaysAgo": "{count} dni temu",
+  "@mealDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "mealTodayLabel": "Dzisiaj",
+  "mealYesterdayLabel": "Wczoraj",
+  "lowTreatmentSourceDashboard": "Ekran główny",
+  "manualMealEatThenInsulin": "Najpierw jedzenie, potem insulina",
+  "manualMealInsulinAndEat": "Insulina i jedzenie bez czekania",
+  "manualMealInsulinWaitEat": "Insulina, czekanie, jedzenie",
+  "manualMealInsulin": "Insulina",
+  "mealAdviceUnavailableTitle": "Brak aktualnych danych do porady",
+  "notificationChannelAapsSuggestionName": "Sugestie AAPS",
+  "notificationChannelAapsSuggestionDescription": "Sugestie widoczne po otwarciu AAPS",
+  "notificationChannelActivityName": "Powiadomienia monitora aktywności",
+  "notificationChannelActivityDescription": "Przypomnienia o monitorowanych aktywnościach",
+  "notificationChannelMealName": "Powiadomienia o posiłkach",
+  "notificationChannelMealDescription": "Przypomnienia o możliwości rozpoczęcia jedzenia",
+  "notificationChannelTempTargetName": "Powiadomienia o tymczasowym celu",
+  "notificationChannelTempTargetDescription": "Propozycja ustawienia tymczasowego celu",
+  "mealNetCarbsAmount": "{amount} g netto",
+  "@mealNetCarbsAmount": {
+    "placeholders": {
+      "amount": {
         "type": "String"
       }
     }

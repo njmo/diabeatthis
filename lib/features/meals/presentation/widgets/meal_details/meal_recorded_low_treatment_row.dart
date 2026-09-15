@@ -19,24 +19,31 @@ class MealRecordedLowTreatmentRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reason = switch (entry.reason) {
-      null => 'Powód nieznany',
-      LowTreatmentReason.plannedActivity => 'Planowana aktywność',
-      LowTreatmentReason.unplannedActivity => 'Nieplanowana aktywność',
-      LowTreatmentReason.symptoms => 'Objawy',
+      null => context.lang.uiUnknownReason,
+      LowTreatmentReason.plannedActivity => context.lang.uiPlannedActivity,
+      LowTreatmentReason.unplannedActivity => context.lang.uiUnplannedActivity,
+      LowTreatmentReason.symptoms => context.lang.lowReasonSymptomsLabel,
       final reason => lowTreatmentReasonLabel(reason, context.lang),
     };
     return MealInfoRow(
-      label:
-          '${mealDateTime(entry.eatenAt.toLocal())} · ${formatDurationOffset(entry.eatenAt.difference(reference))} względem porady',
+      label: context.lang.mealLowRelativeTime(
+        mealDateTime(entry.eatenAt.toLocal()),
+        formatDurationOffset(entry.eatenAt.difference(reference)),
+      ),
       value: [
         entry.netCarbsGrams == null
-            ? 'Ilość spożyta nieznana'
-            : 'Zapisane spożycie: ${formatGrams(entry.netCarbsGrams!)} netto',
+            ? context.lang.uiConsumedAmountUnknown
+            : context.lang.mealLowRecordedAmount(
+                formatGrams(entry.netCarbsGrams!),
+              ),
         reason,
         if (entry.suggestedCarbs != null)
-          'Propozycja AAPS: ${formatGrams(entry.suggestedCarbs!)}',
-        if (entry.relatedMealId != null) 'Powiązano z posiłkiem',
-        if (entry.relatedActivityLogId != null) 'Powiązano z aktywnością',
+          context.lang.mealLowAapsSuggestion(
+            formatGrams(entry.suggestedCarbs!),
+          ),
+        if (entry.relatedMealId != null) context.lang.uiLinkedToAMeal2,
+        if (entry.relatedActivityLogId != null)
+          context.lang.uiLinkedToAnActivity,
       ].join(' · '),
     );
   }

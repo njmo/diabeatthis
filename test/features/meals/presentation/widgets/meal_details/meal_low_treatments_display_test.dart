@@ -35,7 +35,7 @@ void main() {
     expect(find.text('Dosłodzono po 45 min'), findsOneWidget);
     expect(find.text('Dosłodzenia'), findsOneWidget);
     expect(find.text('12:45 • po 45 min'), findsOneWidget);
-    expect(find.text('Niski cukier • Dashboard'), findsOneWidget);
+    expect(find.text('Niski cukier • Ekran główny'), findsOneWidget);
     expect(find.text('Glukoza: 10g'), findsOneWidget);
     expect(
       find.text('Razem 10g netto • sugestia 12g • w 15 min'),

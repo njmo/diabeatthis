@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/l10n/language.dart';
 import '../../../common/meal/manual_meal_decision.dart';
 import '../../../core/domain/model/device_status.dart';
 import '../../../core/domain/model/meal_macro_summary.dart';
@@ -38,10 +39,13 @@ class MealDialogController extends _$MealDialogController with Logging {
 
   String waitTimeMessage(WaitSuggestion w) {
     if (state.advice.source == 'manual') {
-      return 'Odczekaj ${w.recommendedMinutes} min przed rozpoczęciem posiłku.';
+      return lang.mealManualWaitInstruction(w.recommendedMinutes);
     }
-    return "Odczekaj około ${w.recommendedMinutes} min "
-        "(zakres ${w.minMinutes}–${w.maxMinutes} min) przed rozpoczęciem posiłku.";
+    return lang.mealSuggestedWaitInstruction(
+      w.recommendedMinutes,
+      w.minMinutes,
+      w.maxMinutes,
+    );
   }
 
   Future<void> chooseEat({ManualMealDecision? manual}) async {
@@ -150,11 +154,15 @@ class MealDialogController extends _$MealDialogController with Logging {
 
     switch (state.advice.decision) {
       case MealDecision.eatNowBolusLater:
-        return "Jedz teraz, insulinę podaj po jedzeniu w kalkulatorze ${carbsText}g$extendedCarbsText";
+        return lang.mealEatThenBolusInstruction(carbsText, extendedCarbsText);
       case MealDecision.bolusAndEatNow:
-        return "Podaj insulinę w kalkulatorze ${carbsText}g i jedz$extendedCarbsText";
+        return lang.mealBolusAndEatInstruction(carbsText, extendedCarbsText);
       case MealDecision.bolusWaitThenEat:
-        return "1. Najpierw podaj insulinę w kalkulatorze ${carbsText}g,\n2. ${waitTimeMessage(state.advice.wait!)} i jedz$extendedCarbsText";
+        return lang.mealBolusWaitEatInstruction(
+          carbsText,
+          waitTimeMessage(state.advice.wait!),
+          extendedCarbsText,
+        );
       case null:
         throw UnimplementedError();
       case MealDecision.bolus:

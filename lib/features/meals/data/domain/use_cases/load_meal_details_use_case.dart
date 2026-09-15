@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../core/drift/database_impl.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../mappers/meal_details_data_mapper.dart';
@@ -106,7 +107,7 @@ class LoadMealDetailsUseCase {
       if (copy.id == meal.id) {
         continue;
       }
-      usages[copy.id] = _mapCopyUsage(copy, 'Kopia posiłku');
+      usages[copy.id] = _mapCopyUsage(copy, lang.uiMealCopy);
     }
 
     final templates = await (db.select(

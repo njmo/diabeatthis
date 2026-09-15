@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/localized_material_app.dart';
+
 void main() {
   final date = DateTime(2026, 9, 11);
 
@@ -35,7 +37,7 @@ void main() {
               ],
             ),
           ],
-          child: MaterialApp(
+          child: localizedMaterialApp(
             home: Scaffold(
               body: DayReviewSummaryCard(
                 date: date,
@@ -66,7 +68,7 @@ void main() {
             date,
           ).overrideWith((ref) => pending.future),
         ],
-        child: MaterialApp(
+        child: localizedMaterialApp(
           home: Scaffold(
             body: DayReviewSummaryCard(
               date: date,
@@ -93,7 +95,7 @@ void main() {
           dayMealReviewProvider(date).overrideWith((ref) async => []),
           dayLowTreatmentReviewProvider(date).overrideWith((ref) async => []),
         ],
-        child: MaterialApp(
+        child: localizedMaterialApp(
           home: Scaffold(
             body: DayReviewSummaryCard(
               date: date,
@@ -118,7 +120,7 @@ void main() {
           dayMealReviewProvider(date).overrideWith((ref) async => []),
           dayLowTreatmentReviewProvider(date).overrideWith((ref) async => []),
         ],
-        child: MaterialApp(
+        child: localizedMaterialApp(
           home: Scaffold(
             body: ListView(
               children: [

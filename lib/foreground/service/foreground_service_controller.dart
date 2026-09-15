@@ -1,5 +1,6 @@
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
+import '../../common/l10n/language.dart';
 import '../../core/logger/logger.dart';
 import '../bootstrap/foreground_plugin_init.dart';
 import '../bootstrap/foreground_start_callback.dart';
@@ -17,7 +18,7 @@ class ForegroundServiceController with Logging {
     logI("Starting monitor task");
     final result = await FlutterForegroundTask.startService(
       serviceId: 256,
-      notificationTitle: 'Uruchamianie monitorowania',
+      notificationTitle: lang.uiStartingMonitoring,
       notificationText: 'Uruchamianie...',
       callback: startCallback,
     );
