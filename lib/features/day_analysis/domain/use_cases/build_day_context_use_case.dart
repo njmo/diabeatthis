@@ -1,3 +1,4 @@
+import '../../../../common/history/bolus_wizard_grouping.dart';
 import '../../../../common/history/glucose_period_summary.dart';
 import '../../../../common/history/insulin_basal_summary.dart';
 import '../../../../common/history/insulin_bolus_summary.dart';
@@ -144,6 +145,7 @@ class BuildDayContextUseCase with Logging {
     final statuses = (await statusesFuture)
         ?.where((s) => !s.date.isAfter(queryEnd))
         .toList();
+    final wizardGroups = BolusWizardGrouping(treatments ?? const []);
     return DayContext(
       carbEntries: treatments
           ?.whereType<Treat>()
@@ -151,6 +153,7 @@ class BuildDayContextUseCase with Logging {
             (entry) =>
                 entry.isValid &&
                 entry.carbs > 0 &&
+                !wizardGroups.isRelated(entry) &&
                 !entry.createdAt.isBefore(start),
           )
           .toList(),
