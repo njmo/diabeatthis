@@ -60,7 +60,6 @@ class DaySummaryReviewFormState extends State<DaySummaryReviewForm> {
               ).format(snapshot.displayTime(snapshot.nightEnd!)),
             ),
           ),
-        Text(context.lang.dayReviewDataNote),
         if (snapshot.limitations.isNotEmpty) ...[
           const SizedBox(height: 12),
           Text(

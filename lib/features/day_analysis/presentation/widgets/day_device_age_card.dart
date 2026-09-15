@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/analysis_metric.dart';
 import '../../domain/models/day_context.dart';
-import 'day_stat_row.dart';
+import 'day_metric_grid.dart';
 import 'day_summary_card.dart';
 
 class DayDeviceAgeCard extends StatelessWidget {
@@ -20,6 +21,7 @@ class DayDeviceAgeCard extends StatelessWidget {
 
     return DaySummaryCard(
       title: lang.dayDevicesTitle,
+      information: lang.dayDeviceAgeSource,
       warnings: [
         if (day.sensorAge == null ||
             day.failedSources.contains(DayDataSource.sensorAge))
@@ -29,17 +31,17 @@ class DayDeviceAgeCard extends StatelessWidget {
           '${lang.dayPodAge}: ${age(day.podAge, DayDataSource.podAge)}',
       ],
       children: [
-        DayStatRow(
-          label: lang.daySensorAge,
-          value: age(day.sensorAge, DayDataSource.sensorAge),
-        ),
-        DayStatRow(
-          label: lang.dayPodAge,
-          value: age(day.podAge, DayDataSource.podAge),
-        ),
-        Text(
-          lang.dayDeviceAgeSource,
-          style: Theme.of(context).textTheme.bodySmall,
+        DayMetricGrid(
+          children: [
+            AnalysisMetric(
+              label: lang.daySensorAge,
+              value: age(day.sensorAge, DayDataSource.sensorAge),
+            ),
+            AnalysisMetric(
+              label: lang.dayPodAge,
+              value: age(day.podAge, DayDataSource.podAge),
+            ),
+          ],
         ),
       ],
     );

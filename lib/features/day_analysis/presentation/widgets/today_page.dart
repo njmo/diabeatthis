@@ -84,7 +84,6 @@ class TodayPageState extends ConsumerState<TodayPage> {
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  if (day.isComplete) Text(lang.dayFinishedDraftNote),
                   Text(
                     lang.dayAsOf(
                       DateFormat('dd.MM.yyyy HH:mm').format(day.asOf),
@@ -122,8 +121,9 @@ class TodayPageState extends ConsumerState<TodayPage> {
                   DayGlucoseCard(
                     title: lang.dayNightTitle,
                     summary: day.nightGlucose,
+                    information: lang.dayNightNote,
                   ),
-                  Text(lang.dayNightNote),
+
                   DayActivityCard(activities: day.activities),
                   DayDeviceAgeCard(day: day),
                 ],

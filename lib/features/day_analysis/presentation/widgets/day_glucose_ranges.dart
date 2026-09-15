@@ -6,6 +6,7 @@ import '../../../../common/theme/glucose_range_colors.dart';
 import '../../../../common/utils/format_duration_label.dart';
 import '../../../../common/widgets/chart_color_label.dart';
 import '../../../../common/widgets/glucose_range_bar.dart';
+import '../formatters/day_stat_formatter.dart';
 
 class DayGlucoseRanges extends StatelessWidget {
   final GlucoseWindowSummary summary;
@@ -14,10 +15,11 @@ class DayGlucoseRanges extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = context.lang;
+    final format = DayStatFormatter(lang.localeName);
     final palette = GlucoseRangeColors(Theme.of(context).brightness);
     String label(String name, Duration duration) {
       final value = summary.percent(duration);
-      final percent = value == null ? '—' : '${value.toStringAsFixed(0)}%';
+      final percent = format.percent(value);
       return '$name · $percent · ${formatDurationLabel(duration)}';
     }
 
@@ -49,11 +51,6 @@ class DayGlucoseRanges extends StatelessWidget {
                     '${lang.dayMissingGlucose} · ${formatDurationLabel(summary.missing)}',
               ),
           ],
-        ),
-        const SizedBox(height: 12),
-        Text(
-          lang.dayGlucoseBarBasis,
-          style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
     );

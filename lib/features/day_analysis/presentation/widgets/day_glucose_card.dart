@@ -4,21 +4,36 @@ import '../../../../common/history/glucose_period_summary.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/utils/format_duration_label.dart';
 import '../../../../common/widgets/analysis_metric.dart';
-import '../../../../common/widgets/responsive_metric_list.dart';
+import '../../../../common/widgets/timeline_analysis_charts.dart';
+import '../formatters/day_stat_formatter.dart';
 import 'day_glucose_ranges.dart';
+import 'day_metric_grid.dart';
 import 'day_summary_card.dart';
 
 class DayGlucoseCard extends StatelessWidget {
   final String title;
   final GlucosePeriodSummary? summary;
-  const DayGlucoseCard({super.key, required this.title, required this.summary});
+  final String? information;
+  const DayGlucoseCard({
+    super.key,
+    required this.title,
+    required this.summary,
+    this.information,
+  });
 
   @override
   Widget build(BuildContext context) {
     final lang = context.lang;
+    final format = DayStatFormatter(lang.localeName);
     final s = summary;
+    final inRangePercent = s?.window.percent(s.window.inRange);
     return DaySummaryCard(
       title: title,
+      information: [
+        if (information != null) information!,
+        lang.dayGlucoseMethod,
+        lang.dayGlucoseBarBasis,
+      ].join('\n\n'),
       warnings: [
         if (s == null)
           lang.daySourceUnavailable
@@ -31,14 +46,11 @@ class DayGlucoseCard extends StatelessWidget {
         if (s == null)
           Text(lang.daySourceUnavailable)
         else ...[
-          ResponsiveMetricList(
-            maxColumns: 2,
+          DayMetricGrid(
             children: [
               AnalysisMetric(
                 label: lang.dayGlucoseMean,
-                value: s.mean == null
-                    ? '—'
-                    : '${s.mean!.toStringAsFixed(0)} mg/dl',
+                value: format.number(s.mean, decimals: 0, unit: ' mg/dl'),
                 icon: Icons.monitor_heart_outlined,
               ),
               AnalysisMetric(
@@ -49,26 +61,32 @@ class DayGlucoseCard extends StatelessWidget {
                 icon: Icons.swap_vert,
               ),
               AnalysisMetric(
+                label: lang.mealTimeInRangeLabel,
+                value: format.percent(inRangePercent),
+                icon: Icons.track_changes,
+              ),
+              AnalysisMetric(
                 label: lang.dayCoverage,
-                value: s.coveragePercent == null
-                    ? '—'
-                    : '${s.coveragePercent!.toStringAsFixed(0)}%',
+                value: format.percent(s.coveragePercent),
                 icon: Icons.sensors,
               ),
             ],
           ),
           const SizedBox(height: 20),
+          if (s.window.readings.isNotEmpty) ...[
+            TimelineGlucoseChart(
+              chartStart: s.window.start,
+              chartEnd: s.window.end,
+              glucoseReadings: s.window.readings,
+            ),
+            const SizedBox(height: 16),
+          ],
           if (s.window.observed == Duration.zero)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(lang.dayNoGlucoseObservation),
             ),
           DayGlucoseRanges(summary: s.window),
-          const SizedBox(height: 8),
-          Text(
-            lang.dayGlucoseMethod,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
         ],
       ],
     );

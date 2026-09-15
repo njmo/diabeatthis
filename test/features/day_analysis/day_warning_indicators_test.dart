@@ -6,6 +6,7 @@ import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_context.dart';
 import 'package:diabeatthis/features/day_analysis/domain/use_cases/build_day_context_use_case.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_activity_card.dart';
+import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_basal_rows.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_device_age_card.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_glucose_card.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_insulin_card.dart';
@@ -146,14 +147,21 @@ void main() {
             warning.message,
             contains('Brakuje danych z 30 min analizowanego okresu.'),
           );
+          final details = find.byType(ExpansionTile);
+          await tester.ensureVisible(details);
+          await tester.tap(details);
+          await tester.pumpAndSettle();
           expect(
-            find.text('Suma częściowa bazy i zapisanych bolusów'),
+            find.descendant(
+              of: find.byType(DayBasalRows),
+              matching: find.text('Suma częściowa bazy i zapisanych bolusów'),
+            ),
             findsNWidgets(2),
           );
         } else {
           expect(find.byType(DataWarningIndicator), findsNothing);
         }
-        expect(find.text('0.00 U'), findsWidgets);
+        expect(find.text('0,00 U'), findsWidgets);
       }
     },
   );

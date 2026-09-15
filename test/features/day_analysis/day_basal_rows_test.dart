@@ -43,9 +43,9 @@ void main() {
           ),
         ),
       );
-      expect(find.text('100.0%'), findsOneWidget);
-      expect(find.text('0.00 U'), findsNWidgets(2));
-      expect(find.text('1.00 U'), findsOneWidget);
+      expect(find.text('100,0%'), findsOneWidget);
+      expect(find.text('0,00 U'), findsNWidgets(2));
+      expect(find.text('1,00 U'), findsOneWidget);
       expect(find.text('Suma bazy i zapisanych bolusów'), findsOneWidget);
       expect(find.text('Baza w nocy (22:00–06:00)'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -78,8 +78,8 @@ void main() {
         ),
       ),
     );
-    expect(find.text('50.0%'), findsOneWidget);
-    expect(find.text('1.30 U'), findsOneWidget);
+    expect(find.text('50,0%'), findsOneWidget);
+    expect(find.text('1,30 U'), findsOneWidget);
     expect(
       find.text('Suma częściowa bazy i zapisanych bolusów'),
       findsOneWidget,
@@ -91,8 +91,8 @@ void main() {
         ),
       ),
     );
-    expect(find.text('0.00 U'), findsNothing);
-    expect(find.text('1.00 U'), findsNothing);
+    expect(find.text('0,00 U'), findsNothing);
+    expect(find.text('1,00 U'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

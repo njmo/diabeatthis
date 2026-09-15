@@ -1,27 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/analysis_metric.dart';
-import '../../../../common/widgets/responsive_metric_list.dart';
 import '../../domain/models/day_summary_snapshot.dart';
-import 'day_stat_row.dart';
+import '../formatters/day_stat_formatter.dart';
+import 'day_archived_glucose_ranges.dart';
+import 'day_insulin_breakdown.dart';
+import 'day_metric_grid.dart';
+import 'day_summary_card.dart';
 
 class DaySummaryFacts extends StatelessWidget {
   final DaySummarySnapshot snapshot;
   const DaySummaryFacts({super.key, required this.snapshot});
 
-  static const primary = {
-    DaySummaryMetric.glucoseMean,
-    DaySummaryMetric.glucoseInRangePercent,
-    DaySummaryMetric.totalInsulinUnits,
-    DaySummaryMetric.mealCount,
-    DaySummaryMetric.lowTreatmentCount,
-    DaySummaryMetric.activityMinutes,
-  };
+  num? observedValue(DaySummaryMetric metric) {
+    final coverageMetric = switch (metric) {
+      DaySummaryMetric.basalUnits ||
+      DaySummaryMetric.basalAddedUnits ||
+      DaySummaryMetric.basalReducedUnits ||
+      DaySummaryMetric.totalInsulinUnits =>
+        DaySummaryMetric.basalCoveragePercent,
+      DaySummaryMetric.nightBasalUnits =>
+        DaySummaryMetric.nightBasalCoveragePercent,
+      _ => null,
+    };
+    if (coverageMetric != null) {
+      final coverage = snapshot.metrics[coverageMetric];
+      if (coverage == null || !coverage.isFinite || coverage <= 0) return null;
+    }
+    return snapshot.metrics[metric];
+  }
 
   String value(BuildContext context, DaySummaryMetric metric) {
-    final number = snapshot.metrics[metric];
+    final number = observedValue(metric);
     if (number == null) return context.lang.beforeMealUnavailable;
     if (metric == DaySummaryMetric.sensorAgeMinutes ||
         metric == DaySummaryMetric.podAgeMinutes) {
@@ -37,37 +48,125 @@ class DaySummaryFacts extends StatelessWidget {
         metric == DaySummaryMetric.smbCount ||
         metric == DaySummaryMetric.nightSmbCount ||
         metric == DaySummaryMetric.activityMinutes;
-    return NumberFormat(
-      integral ? '0' : '0.0',
+    return DayStatFormatter(
       context.lang.localeName,
-    ).format(number);
+    ).number(number, decimals: integral ? 0 : 1);
   }
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.lang;
     final metricLabels = labels(context);
+    final format = DayStatFormatter(lang.localeName);
+    Widget grid(List<DaySummaryMetric> metrics) => DayMetricGrid(
+      children: [
+        for (final metric in metrics)
+          AnalysisMetric(
+            label: metricLabels[metric]!,
+            value: value(context, metric),
+          ),
+      ],
+    );
+    Widget details(List<DaySummaryMetric> metrics) => ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: Text(lang.dayReviewDetails),
+      children: [grid(metrics)],
+    );
     return Column(
       children: [
-        ResponsiveMetricList(
-          maxColumns: 2,
+        DaySummaryCard(
+          title: lang.dayGlucoseTitle,
+          information: lang.dayReviewDataNote,
           children: [
-            for (final metric in primary)
-              AnalysisMetric(
-                label: metricLabels[metric]!,
-                value: value(context, metric),
-              ),
+            DayArchivedGlucoseRanges(
+              coverage: snapshot
+                  .metrics[DaySummaryMetric.glucoseCoveragePercent]
+                  ?.toDouble(),
+              inRange: snapshot.metrics[DaySummaryMetric.glucoseInRangePercent]
+                  ?.toDouble(),
+              aboveRange: snapshot.metrics[DaySummaryMetric.glucoseHighPercent]
+                  ?.toDouble(),
+              belowRange: snapshot.metrics[DaySummaryMetric.glucoseLowPercent]
+                  ?.toDouble(),
+            ),
+            const SizedBox(height: 16),
+            grid([
+              DaySummaryMetric.glucoseMean,
+              DaySummaryMetric.glucoseMax,
+              DaySummaryMetric.glucoseCoveragePercent,
+            ]),
           ],
         ),
-        ExpansionTile(
-          title: Text(context.lang.dayReviewDetails),
+        DaySummaryCard(
+          title: lang.dayInsulinTitle,
+          information: lang.dayInsulinLimit,
+          warnings: [
+            if (snapshot.metrics[DaySummaryMetric.basalCoveragePercent] != 100)
+              '${lang.dayBasalCoverage}: ${format.percent(snapshot.metrics[DaySummaryMetric.basalCoveragePercent], decimals: 1)}',
+          ],
           children: [
-            for (final metric in snapshot.metrics.keys.where(
-              (key) => !primary.contains(key),
-            ))
-              DayStatRow(
-                label: metricLabels[metric]!,
-                value: value(context, metric),
-              ),
+            grid([DaySummaryMetric.totalInsulinUnits]),
+            const SizedBox(height: 16),
+            DayInsulinBreakdown(
+              basal: observedValue(DaySummaryMetric.basalUnits)?.toDouble(),
+              boluses: snapshot.metrics[DaySummaryMetric.bolusUnits]
+                  ?.toDouble(),
+              smb: snapshot.metrics[DaySummaryMetric.smbUnits]?.toDouble(),
+            ),
+            details([
+              DaySummaryMetric.bolusUnits,
+              DaySummaryMetric.smbCount,
+              DaySummaryMetric.basalAddedUnits,
+              DaySummaryMetric.basalReducedUnits,
+              DaySummaryMetric.basalCoveragePercent,
+            ]),
+          ],
+        ),
+        DaySummaryCard(
+          title: lang.dayNightSectionTitle,
+          children: [
+            grid([
+              DaySummaryMetric.nightGlucoseMean,
+              DaySummaryMetric.nightInRangePercent,
+              DaySummaryMetric.nightBasalUnits,
+              DaySummaryMetric.nightBolusUnits,
+            ]),
+            details([
+              DaySummaryMetric.nightSmbUnits,
+              DaySummaryMetric.nightSmbCount,
+              DaySummaryMetric.nightGlucoseCoveragePercent,
+              DaySummaryMetric.nightBasalCoveragePercent,
+            ]),
+          ],
+        ),
+        DaySummaryCard(
+          title: lang.dayMealsTitle,
+          information: lang.dayLocalMealsNote,
+          children: [
+            grid([
+              DaySummaryMetric.mealCount,
+              DaySummaryMetric.netCarbsGrams,
+              DaySummaryMetric.proteinGrams,
+              DaySummaryMetric.fatGrams,
+              DaySummaryMetric.lowTreatmentCount,
+              DaySummaryMetric.lowTreatmentCarbsGrams,
+            ]),
+          ],
+        ),
+        DaySummaryCard(
+          title: lang.dayActivityTitle,
+          children: [
+            grid([DaySummaryMetric.activityMinutes]),
+          ],
+        ),
+        DaySummaryCard(
+          title: lang.dayDevicesTitle,
+          information: lang.dayDeviceAgeSource,
+          children: [
+            grid([
+              DaySummaryMetric.sensorAgeMinutes,
+              DaySummaryMetric.podAgeMinutes,
+            ]),
           ],
         ),
       ],
@@ -78,12 +177,6 @@ class DaySummaryFacts extends StatelessWidget {
     DaySummaryMetric.totalInsulinUnits:
         context.lang.daySummaryMetricTotalInsulinUnits,
     DaySummaryMetric.glucoseMean: context.lang.daySummaryMetricGlucoseMean,
-    DaySummaryMetric.glucoseLowPercent:
-        context.lang.daySummaryMetricGlucoseLowPercent,
-    DaySummaryMetric.glucoseInRangePercent:
-        context.lang.daySummaryMetricGlucoseInRangePercent,
-    DaySummaryMetric.glucoseHighPercent:
-        context.lang.daySummaryMetricGlucoseHighPercent,
     DaySummaryMetric.glucoseMax: context.lang.daySummaryMetricGlucoseMax,
     DaySummaryMetric.glucoseCoveragePercent:
         context.lang.daySummaryMetricGlucoseCoveragePercent,
@@ -93,7 +186,6 @@ class DaySummaryFacts extends StatelessWidget {
         context.lang.daySummaryMetricNightInRangePercent,
     DaySummaryMetric.nightGlucoseCoveragePercent:
         context.lang.daySummaryMetricNightGlucoseCoveragePercent,
-    DaySummaryMetric.basalUnits: context.lang.daySummaryMetricBasalUnits,
     DaySummaryMetric.basalAddedUnits:
         context.lang.daySummaryMetricBasalAddedUnits,
     DaySummaryMetric.basalReducedUnits:
@@ -101,7 +193,6 @@ class DaySummaryFacts extends StatelessWidget {
     DaySummaryMetric.basalCoveragePercent:
         context.lang.daySummaryMetricBasalCoveragePercent,
     DaySummaryMetric.bolusUnits: context.lang.daySummaryMetricBolusUnits,
-    DaySummaryMetric.smbUnits: context.lang.daySummaryMetricSmbUnits,
     DaySummaryMetric.smbCount: context.lang.daySummaryMetricSmbCount,
     DaySummaryMetric.nightBasalUnits:
         context.lang.daySummaryMetricNightBasalUnits,

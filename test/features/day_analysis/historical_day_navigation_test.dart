@@ -68,12 +68,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('09.09.2026'), findsOneWidget);
         expect(find.text('Dane do 10.09.2026 00:00'), findsOneWidget);
-        expect(
-          find.text(
-            'Dzień zakończony · podsumowanie robocze, niezaakceptowane',
-          ),
-          findsOneWidget,
-        );
+        expect(find.text('Dzień · wersja robocza'), findsOneWidget);
         pending.complete(await builder(date: previous));
         await tester.pumpAndSettle();
         expect(find.text('Dane do 10.09.2026 00:00'), findsOneWidget);

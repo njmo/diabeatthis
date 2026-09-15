@@ -40,7 +40,13 @@ void main() {
       expect(find.text('Mean · mg/dL'), findsOneWidget);
       expect(find.text('123.5'), findsOneWidget);
       expect(find.text('Incomplete data: glucose.'), findsOneWidget);
-      expect(find.text('Detailed statistics'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ExpansionTile),
+          matching: find.text('Detailed statistics'),
+        ),
+        findsNWidgets(2),
+      );
       await show('pl');
       expect(find.text('Średnia · mg/dl'), findsOneWidget);
       expect(find.text('123,5'), findsOneWidget);
