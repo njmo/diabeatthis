@@ -15,6 +15,7 @@ import '../../data/drafts/low_treatment_context_draft.dart';
 import '../../data/mappers/quick_low_treatment_item_mapper.dart';
 import '../../data/models/low_treatment_related_record.dart';
 import '../../data/models/low_treatment_sheet_state.dart';
+import '../../data/providers/low_treatment_handoff_provider.dart';
 import '../../data/providers/low_treatment_related_activity_provider.dart';
 import '../../data/providers/low_treatment_related_meal_provider.dart';
 import '../../domain/use_cases/add_low_treatment_context_entry_use_case.dart';
@@ -116,7 +117,10 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
       source: source,
       suggestedCarbs: activeSuggestion?.carbsReq,
       suggestedWithinMinutes: activeSuggestion?.carbsReqWithin,
-      suggestionAt: activeSuggestion?.date ?? clock.now(),
+      suggestionAt:
+          activeSuggestion?.suggestedAt ??
+          activeSuggestion?.date ??
+          clock.now(),
       deviceStatusDate: activeSuggestion?.date,
       reason: reason,
     );
@@ -286,6 +290,17 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
         mealId: mealId,
       );
 
+      if (historicalAt == null) {
+        await ref
+            .read(lowTreatmentHandoffUseCaseProvider)
+            .registerPending(
+              mealId: mealId,
+              savedAt: mealDraft.plannedAt,
+              suggestionAt: context.deviceStatusDate == null
+                  ? null
+                  : context.suggestionAt,
+            );
+      }
       return (context: context, contextDraft: contextDraft);
     });
 

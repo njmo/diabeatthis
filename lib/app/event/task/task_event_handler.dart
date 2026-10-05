@@ -4,7 +4,9 @@ import '../../../common/events/data/task/task_state_synchronization_payload.dart
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/notification_event_factory.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../../features/low_treatment/presentation/controllers/low_treatment_sheet_launcher.dart';
 import '../../providers/foreground_task_state_provider.dart';
+import '../../router/providers/app_router_provider.dart';
 import '../bridge/data_synchronization_bridge.dart';
 import 'task_event.dart';
 
@@ -14,6 +16,10 @@ class TaskEventHandler with Logging {
 
   TaskEventHandler(this._ref)
     : synchronizationDataBridge = DataSynchronizationBridge(_ref);
+
+  late final _lowTreatmentLauncher = LowTreatmentSheetLauncher(
+    getContext: () => _ref.read(appRouterProvider).navigatorKey.currentContext,
+  );
 
   void handle(Map<String, dynamic> event) {
     logI('Received event: $event');
@@ -40,6 +46,13 @@ class TaskEventHandler with Logging {
           },
         );
         break;
+      case TaskOpenLowTreatmentEvent():
+        _lowTreatmentLauncher.requestOpen();
+        break;
     }
   }
+
+  void retryPendingUiActions() => _lowTreatmentLauncher.retryPending();
+
+  void dispose() => _lowTreatmentLauncher.dispose();
 }

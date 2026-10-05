@@ -20,7 +20,9 @@ import '../event/external/external_event_handler.dart';
 import '../providers/task_event_router_provider.dart';
 import '../synchronization/synchronization_cache_controller.dart';
 import '../task/base/collector_context.dart';
+import '../task/tasks/aaps_carbs_request_monitor_task.dart';
 import '../task/tasks/activity_monitor_task/activity_monitor_task.dart';
+import '../task/tasks/low_treatment_handoff_task.dart';
 import '../task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import '../task/tasks/service_status_updater_task.dart';
 import 'foreground_runtime_disposer.dart';
@@ -70,6 +72,8 @@ class MyTaskHandler extends TaskHandler with Logging {
       ServiceStatusUpdaterTask(),
       MealMonitorTask(),
       ActivityMonitorTask(),
+      const AapsCarbsRequestMonitorTask(),
+      const LowTreatmentHandoffTask(),
     ];
     for (final task in tasks) {
       _taskScheduler!.startTask(task, runtimeContext);

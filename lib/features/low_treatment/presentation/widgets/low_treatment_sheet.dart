@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/platform/aaps_launcher.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
@@ -11,6 +12,7 @@ import '../../data/models/low_treatment_sheet_state.dart';
 import '../controllers/low_treatment_context_controller.dart';
 import 'low_treatment_carbs_summary.dart';
 import 'low_treatment_ingredients_list.dart';
+import 'low_treatment_observation_context.dart';
 import 'low_treatment_reason_selector.dart';
 import 'low_treatment_related_record_field.dart';
 import 'low_treatment_suggestion_summary.dart';
@@ -19,8 +21,12 @@ import 'quick_low_treatment_selector.dart';
 Future<LowTreatmentContext?> showLowTreatmentSheet(
   BuildContext context, {
   DateTime? historicalAt,
-}) {
-  return showModalBottomSheet<LowTreatmentContext>(
+}) async {
+  final launcher = ProviderScope.containerOf(
+    context,
+    listen: false,
+  ).read(aapsLauncherProvider);
+  final saved = await showModalBottomSheet<LowTreatmentContext>(
     context: context,
     useRootNavigator: false,
     isScrollControlled: true,
@@ -35,6 +41,15 @@ Future<LowTreatmentContext?> showLowTreatmentSheet(
             child: const LowTreatmentSheet(),
           ),
   );
+  if (saved != null && historicalAt == null && context.mounted) {
+    final result = await launcher.openAaps();
+    if (result != AapsLaunchResult.opened && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.lang.aapsOpenFailed)));
+    }
+  }
+  return saved;
 }
 
 enum LowTreatmentInputMode { quick, advanced }
@@ -122,6 +137,8 @@ class LowTreatmentSheetContent extends StatelessWidget {
             suggestedCarbs: sheetState.suggestedCarbs,
             suggestedWithinMinutes: sheetState.suggestedWithinMinutes,
           ),
+          if (controller.historicalAt == null)
+            const LowTreatmentObservationContext(),
           const LowTreatmentRelatedRecordField(),
           const SizedBox(height: 12),
           LowTreatmentReasonSelector(

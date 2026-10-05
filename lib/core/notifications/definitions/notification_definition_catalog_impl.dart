@@ -2,6 +2,7 @@ import '../base/notification_definition_catalog.dart';
 import '../domain/models/notification_definition.dart';
 import '../domain/models/notification_event_type.dart';
 import 'event/aaps_bolus_suggestion_notification_definition.dart';
+import 'event/aaps_carbs_request_notification_definition.dart';
 import 'event/activity_finished_notification_definition.dart';
 import 'event/eat_now_notification_definition.dart';
 import 'event/finished_eating_notification_definition.dart';
@@ -21,6 +22,7 @@ class NotificationDefinitionCatalogImpl
     activityFinishedNotificationDefinition,
     mealSummaryReminderNotificationDefinition,
     aapsBolusSuggestionNotificationDefinition,
+    aapsCarbsRequestNotificationDefinition,
   ];
 
   @override

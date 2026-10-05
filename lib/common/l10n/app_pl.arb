@@ -1829,5 +1829,13 @@
   "dayAiReplace": "Zaakceptuj i zastąp zapisaną analizę",
   "dayAiDiscard": "Odrzuć propozycję",
   "dayAiErrorDetails": "Szczegóły błędu AI",
-  "dayAiOriginalPromptUnavailable": "Ten zapis nie zawiera oryginalnego promptu. Poniżej zachowane dane DML."
+  "dayAiOriginalPromptUnavailable": "Ten zapis nie zawiera oryginalnego promptu. Poniżej zachowane dane DML.",
+  "notificationAapsCarbsRequestTitle": "AAPS prosi o {grams} g węglowodanów",
+  "@notificationAapsCarbsRequestTitle": {"placeholders": {"grams": {"type": "String"}}},
+  "notificationAapsCarbsRequestBody": "Dotknij, aby zapisać dosłodzenie. Samo otwarcie nie jest potwierdzeniem.",
+  "lowTreatmentContextActivity": "Aktywność: {name}, {time}",
+  "@lowTreatmentContextActivity": {"placeholders": {"name": {"type": "String"}, "time": {"type": "String"}}},
+  "lowTreatmentContextStress": "Zapisany stres: {level} ({time})",
+  "@lowTreatmentContextStress": {"placeholders": {"level": {"type": "String"}, "time": {"type": "String"}}},
+  "notificationAapsCarbsRequestAcknowledge": "Potwierdzam"
 }

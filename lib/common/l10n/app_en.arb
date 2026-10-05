@@ -1389,5 +1389,13 @@
   "dayAiReplace": "Accept and replace saved analysis",
   "dayAiDiscard": "Discard preview",
   "dayAiErrorDetails": "AI error details",
-  "dayAiOriginalPromptUnavailable": "This archive does not contain the original prompt. The saved DML follows."
+  "dayAiOriginalPromptUnavailable": "This archive does not contain the original prompt. The saved DML follows.",
+  "notificationAapsCarbsRequestTitle": "AAPS asks for {grams} g of carbohydrates",
+  "@notificationAapsCarbsRequestTitle": {"placeholders": {"grams": {"type": "String"}}},
+  "notificationAapsCarbsRequestBody": "Tap to record the low treatment. Opening this reminder does not confirm it.",
+  "lowTreatmentContextActivity": "Activity: {name}, {time}",
+  "@lowTreatmentContextActivity": {"placeholders": {"name": {"type": "String"}, "time": {"type": "String"}}},
+  "lowTreatmentContextStress": "Recorded stress: {level} ({time})",
+  "@lowTreatmentContextStress": {"placeholders": {"level": {"type": "String"}, "time": {"type": "String"}}},
+  "notificationAapsCarbsRequestAcknowledge": "Acknowledge"
 }

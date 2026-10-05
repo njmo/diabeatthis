@@ -38,10 +38,16 @@ extension DeviceStatusMapper on DeviceStatusDto {
               'predBGs': suggested['predBGs'],
             })
           : null,
+      suggestedAt: _date(suggested['timestamp']),
       cob: (suggested['COB'] as num?)?.toDouble() ?? 0,
       tick: (suggested['tick'] as String?) ?? '',
       bg: (suggested['bg'] as num?)?.toInt() ?? 0,
       carbsReq: (suggested['carbsReq'] as num?)?.toDouble() ?? 0,
+      // A complete suggested result can omit carbsReq when the request is zero.
+      // A missing suggested result is not evidence that an active request ended.
+      hasCarbsReq:
+          suggested['hasCarbsReq'] as bool? ??
+          (suggested['bg'] is num || suggested['carbsReq'] is num),
       carbsReqWithin: (suggested['carbsReqWithin'] as num?)?.toInt() ?? 0,
       sensitivityRatio:
           (suggested['sensitivityRatio'] as num?)?.toDouble() ?? 1,
@@ -79,6 +85,17 @@ extension DeviceStatusMapper on DeviceStatusDto {
 
   Map<String, dynamic>? _mapValue(Object? value) {
     if (value case final Map<String, dynamic> map) return map;
+    return null;
+  }
+
+  DateTime? _date(Object? value) {
+    if (value is String) return DateTime.tryParse(value);
+    if (value is num && value.isFinite) {
+      final milliseconds = value.abs() >= 100000000000
+          ? value.toInt()
+          : (value * 1000).toInt();
+      return DateTime.fromMillisecondsSinceEpoch(milliseconds);
+    }
     return null;
   }
 }

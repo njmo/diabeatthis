@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../domain/model/aaps_prediction_snapshot.dart';
 import '../../../domain/model/device_status.dart' as domain;
 import '../../../drift/database_impl.dart';
 
@@ -19,8 +20,9 @@ extension DeviceStatusDriftMapper on domain.DeviceStatus {
       insulinActivity: Value(hasInsulinActivity ? insulinActivity : null),
       insulinActivityAt: Value(insulinActivityAt?.millisecondsSinceEpoch),
       aapsPredictionsJson: Value(aapsPredictionsJson),
+      suggestedAt: Value(suggestedAt?.millisecondsSinceEpoch),
       cob: Value(hasCob ? cob : null),
-      carbsReq: Value(carbsReq),
+      carbsReq: Value(hasCarbsReq ? carbsReq : null),
       carbsReqWithin: Value(carbsReqWithin),
       sensitivityRatio: Value(sensitivityRatio),
       isfMgdlForCarbs: Value(isfMgdlForCarbs),
@@ -41,6 +43,9 @@ extension DeviceStatusDriftMapper on domain.DeviceStatus {
 
 extension DeviceStatusDomainMapper on DeviceStatusData {
   domain.DeviceStatus toDomain() {
+    final restoredSuggestedAt = suggestedAt == null
+        ? AapsPredictionSnapshot.decode(aapsPredictionsJson)?.calculatedAt
+        : DateTime.fromMillisecondsSinceEpoch(suggestedAt!);
     return domain.DeviceStatus(
       externalId: externalId,
       source: domain.DeviceStatusSource.fromStorage(source),
@@ -56,10 +61,12 @@ extension DeviceStatusDomainMapper on DeviceStatusData {
           ? null
           : DateTime.fromMillisecondsSinceEpoch(insulinActivityAt!),
       aapsPredictionsJson: aapsPredictionsJson,
+      suggestedAt: restoredSuggestedAt,
       cob: cob ?? 0,
       tick: tick ?? '',
       bg: bg ?? 0,
       carbsReq: carbsReq ?? 0,
+      hasCarbsReq: carbsReq != null && restoredSuggestedAt != null,
       carbsReqWithin: carbsReqWithin ?? 0,
       sensitivityRatio: sensitivityRatio ?? 0,
       isfMgdlForCarbs: isfMgdlForCarbs ?? 0,

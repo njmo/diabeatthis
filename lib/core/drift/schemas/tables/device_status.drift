@@ -13,6 +13,7 @@ CREATE TABLE device_status (
   insulin_activity REAL,
   insulin_activity_at INTEGER,
   aaps_predictions_json TEXT,
+  suggested_at INTEGER,
   cob REAL,
   carbs_req REAL,
   carbs_req_within INTEGER,

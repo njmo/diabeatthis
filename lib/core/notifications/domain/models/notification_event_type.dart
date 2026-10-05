@@ -7,4 +7,5 @@ enum NotificationEventType {
   mealAdvicePending,
   mealSummaryReminder,
   aapsBolusSuggestion,
+  aapsCarbsRequest,
 }

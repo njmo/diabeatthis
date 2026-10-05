@@ -32,11 +32,14 @@ class LocalDeviceStatusEvent {
         },
         'suggested': {
           ...?AapsPredictionSnapshot.decode(data.aapsPredictionsJson)?.toJson(),
+          if (data.suggestedAt != null)
+            'timestamp': data.suggestedAt!.toIso8601String(),
           if (data.hasIob) 'IOB': data.iob,
           if (data.hasCob) 'COB': data.cob,
           'tick': data.tick,
           'bg': data.bg,
-          'carbsReq': data.carbsReq,
+          'hasCarbsReq': data.hasCarbsReq,
+          if (data.hasCarbsReq) 'carbsReq': data.carbsReq,
           'carbsReqWithin': data.carbsReqWithin,
           'sensitivityRatio': data.sensitivityRatio,
           'isfMgdlForCarbs': data.isfMgdlForCarbs,

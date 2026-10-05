@@ -1,14 +1,18 @@
 import 'dart:async';
 
+import '../../../../common/events/data/notification/aaps_carbs_request_response_event.dart';
 import '../../../../common/events/data/notification/activity_finished_response_event.dart';
 import '../../../../common/events/data/notification/finished_eating_response_event.dart';
 import '../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../common/events/data/notification/meal_summary_reminder_response_event.dart';
 import '../../../../common/events/data/notification/temp_target_response_event.dart';
+import '../../../../common/events/data/task/task_open_low_treatment_payload.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../../features/dashboard/data/providers/meal_snapshot_controller_provider.dart';
 import '../../../../features/meals/data/providers/meal_database_provider.dart';
+import '../../../providers/task_event_router_provider.dart';
 import '../../../task/base/runtime_context.dart';
+import '../../internal/aaps_carbs_request_acknowledged_event.dart';
 import 'notification_response_event.dart';
 
 class NotificationResponseEventHandler with Logging {
@@ -36,6 +40,15 @@ class NotificationResponseEventHandler with Logging {
           context.emitEvent(data),
       activityFinishedResponse: (ActivityFinishedResponseEvent data) =>
           context.emitEvent(data),
+      aapsCarbsRequestResponse: (AapsCarbsRequestResponseEvent data) =>
+          data.when(
+            agree: (episodeId) => context.emitEvent(
+              AapsCarbsRequestAcknowledgedEvent(episodeId: episodeId),
+            ),
+            empty: (_) => context.container
+                .read(taskEventRouterProvider)
+                .send(const TaskOpenLowTreatmentPayload()),
+          ),
     );
   }
 

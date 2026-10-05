@@ -7,7 +7,7 @@ import '../../core/domain/model/treatment_base.dart';
 class BolusWizardGrouping {
   // This matches records from one calculator submission, not the meal window.
   // Keep uncertain carbohydrates visible rather than hiding a separate intake.
-  static const _carbSubmissionWindow = Duration(seconds: 10);
+  static const carbSubmissionWindow = Duration(seconds: 10);
 
   final Set<Treatment> relatedRecords;
 
@@ -47,7 +47,7 @@ class BolusWizardGrouping {
       if (previous is Treat &&
           !ambiguous.contains(previous) &&
           wizard.createdAt.difference(previous.createdAt) <=
-              _carbSubmissionWindow) {
+              carbSubmissionWindow) {
         _match(previous, wizard.carbs, previous.carbs.toDouble());
       }
       if (next is ManualBolus && !ambiguous.contains(next)) {

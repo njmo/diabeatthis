@@ -39,10 +39,12 @@ abstract class DeviceStatus with _$DeviceStatus {
 
     /// Original AAPS prediction timestamp and named series, encoded as JSON.
     String? aapsPredictionsJson,
+    DateTime? suggestedAt,
     required double cob,
     required String tick,
     required int bg,
     required double carbsReq,
+    @Default(true) bool hasCarbsReq,
     required int carbsReqWithin,
     required double sensitivityRatio,
     required double isfMgdlForCarbs,

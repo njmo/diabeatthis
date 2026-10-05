@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../common/events/data/task/task_in_app_notification_payload.dart';
+import '../../../common/events/data/task/task_open_low_treatment_payload.dart';
 import '../../../common/events/data/task/task_state_synchronization_payload.dart';
 import '../../../common/events/task_event_payload.dart';
 
@@ -23,6 +24,10 @@ sealed class TaskEvent with _$TaskEvent {
   const factory TaskEvent.taskStateSynchronization({
     required TaskStateSynchronizationPayload data,
   }) = TaskStateSynchronizationEvent;
+
+  const factory TaskEvent.taskOpenLowTreatment({
+    required TaskOpenLowTreatmentPayload data,
+  }) = TaskOpenLowTreatmentEvent;
 
   factory TaskEvent.fromJson(Map<String, dynamic> json) =>
       _$TaskEventFromJson(json);

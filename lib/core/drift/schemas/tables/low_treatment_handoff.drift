@@ -1,0 +1,10 @@
+import 'meal.drift';
+
+CREATE TABLE low_treatment_handoff (
+  meal_id INTEGER NOT NULL PRIMARY KEY REFERENCES meal(id) ON DELETE CASCADE,
+  saved_at INTEGER NOT NULL,
+  expected_carbs REAL NOT NULL CHECK (expected_carbs > 0),
+  suggestion_at INTEGER,
+  matched_treat_at INTEGER UNIQUE,
+  matched_external_id TEXT
+);

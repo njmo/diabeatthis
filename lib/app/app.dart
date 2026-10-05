@@ -107,6 +107,7 @@ class _MyAppState extends ConsumerState<MyApp>
 
   @override
   void dispose() {
+    _taskEventHandler?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _foregroundBridge.detach(_onReceiveTaskData);
     super.dispose();
@@ -139,6 +140,7 @@ class _MyAppState extends ConsumerState<MyApp>
     ref.read(appLifecycleProvider.notifier).setState(state);
     logI('sending ${state.toString()}');
     if (state == AppLifecycleState.resumed) {
+      _taskEventHandler?.retryPendingUiActions();
       logI("App resumed, requesting data sync");
       sendSyncCommand();
     }
