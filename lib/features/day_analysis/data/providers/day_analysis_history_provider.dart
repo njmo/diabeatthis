@@ -6,7 +6,9 @@ import '../../../../core/drift/providers/database_provider.dart';
 import '../../../low_treatment/data/providers/recorded_low_treatment_repository_provider.dart';
 import '../../../meal_analysis/data/repositories/meal_context_local_history_repository.dart';
 import '../../domain/use_cases/load_day_analysis_history_use_case.dart';
+import '../../domain/use_cases/load_previous_days_context_use_case.dart';
 import '../repositories/day_analysis_meal_repository.dart';
+import 'day_summary_provider.dart';
 
 final loadDayAnalysisHistoryProvider = Provider.autoDispose((ref) {
   final glucose = ref.watch(glucoseHistoryRepositoryProvider.future);
@@ -18,6 +20,9 @@ final loadDayAnalysisHistoryProvider = Provider.autoDispose((ref) {
   final lows = ref.watch(recordedLowTreatmentRepositoryProvider);
   return LoadDayAnalysisHistoryUseCase(
     now: clock.now,
+    loadPreviousDays: LoadPreviousDaysContextUseCase(
+      loadAccepted: ref.watch(daySummaryRepositoryProvider).getBetween,
+    ).call,
     loadGlucose: (start, end) async =>
         (await glucose).fetchGlucoseBetween(start, end),
     loadStatuses: (start, end) async =>

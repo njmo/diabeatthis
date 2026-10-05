@@ -7,6 +7,7 @@ import '../../../meal_analysis/domain/models/meal_activity_context.dart';
 import '../models/accepted_day_summary.dart';
 import '../models/day_analysis_history.dart';
 import '../models/day_analysis_meal_batch.dart';
+import '../models/previous_days_context.dart';
 
 class LoadDayAnalysisHistoryUseCase with Logging {
   final Future<List<Glucose>> Function(DateTime, DateTime) loadGlucose;
@@ -17,6 +18,7 @@ class LoadDayAnalysisHistoryUseCase with Logging {
   loadLows;
   final Future<List<MealActivityContext>> Function(DateTime, DateTime)
   loadActivities;
+  final Future<PreviousDaysContext> Function(String)? loadPreviousDays;
   final DateTime Function() now;
   const LoadDayAnalysisHistoryUseCase({
     required this.loadGlucose,
@@ -26,6 +28,7 @@ class LoadDayAnalysisHistoryUseCase with Logging {
     required this.loadLows,
     required this.loadActivities,
     required this.now,
+    this.loadPreviousDays,
   });
 
   Future<DayAnalysisHistory> call(AcceptedDaySummary accepted) async {
@@ -55,6 +58,9 @@ class LoadDayAnalysisHistoryUseCase with Logging {
       }
     }
 
+    final previousDays = loadPreviousDays == null
+        ? Future<PreviousDaysContext?>.value()
+        : read('previous_days', () => loadPreviousDays!(day.dayKey));
     final glucose = read('cgm', () => loadGlucose(start, end));
     final statuses = read('device_status', () => loadStatuses(start, end));
     final treatments = read('treatments', () => loadTreatments(start, end));
@@ -66,6 +72,7 @@ class LoadDayAnalysisHistoryUseCase with Logging {
       failures.add('meals');
     }
     return DayAnalysisHistory(
+      previousDays: await previousDays,
       start: start,
       end: end,
       builtAt: builtAt,

@@ -11,6 +11,7 @@ class BuildDayDmlUseCase {
   DayDmlDocument call(
     AcceptedDaySummary accepted, {
     bool hasEventHistory = false,
+    bool hasPreviousDaySummary = false,
   }) {
     final day = accepted.snapshot;
     final output = StringBuffer('DML/${DayDmlDocument.version}\n');
@@ -58,7 +59,7 @@ class BuildDayDmlUseCase {
           'iob_cob_series',
           'activity_timeline',
         ],
-        'previous_day',
+        if (!hasPreviousDaySummary) 'previous_day',
         'aaps_profile',
       ],
     });

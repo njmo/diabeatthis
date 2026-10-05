@@ -16,7 +16,12 @@ import 'day_dml_window_facts.dart';
 DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
   final accepted = context.accepted;
   final history = context.history;
-  final base = const BuildDayDmlUseCase()(accepted, hasEventHistory: true);
+  final previous = history.previousDays;
+  final base = const BuildDayDmlUseCase()(
+    accepted,
+    hasEventHistory: true,
+    hasPreviousDaySummary: previous?.hasPreviousDaySummary ?? false,
+  );
   final text = StringBuffer(base.text);
   final ids = {...base.evidenceIds};
   final mealReferences = <String, ({String name, DateTime at})>{};
@@ -63,6 +68,35 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
         .toLocal()
         .timeZoneOffset
         .inMinutes,
+  });
+  add('PREVIOUS_DAYS', 'previous_days', {
+    'source': 'accepted_local_summaries',
+    'start_date': previous?.startDayKey,
+    'end_date_exclusive': previous?.endDayKeyExclusive,
+    'days': previous == null
+        ? null
+        : [
+            for (final summary in previous.summaries)
+              {
+                'date': summary.snapshot.dayKey,
+                'as_of_utc': summary.snapshot.asOf.toUtc().toIso8601String(),
+                'accepted_at_utc': summary.acceptedAt.toUtc().toIso8601String(),
+                'utc_offset_minutes': summary.snapshot.utcOffsetMinutes,
+                'night_start_utc': summary.snapshot.nightStart
+                    ?.toUtc()
+                    .toIso8601String(),
+                'night_end_utc': summary.snapshot.nightEnd
+                    ?.toUtc()
+                    .toIso8601String(),
+                'limitations': summary.snapshot.limitations,
+                'metrics': {
+                  for (final metric in summary.snapshot.metrics.keys)
+                    metric.name: finite(
+                      summary.snapshot.observedMetric(metric),
+                    ),
+                },
+              },
+          ],
   });
   for (final section in dayDmlTreatmentContext(history, seriesStart)) {
     add(section.kind, section.id, section.facts);

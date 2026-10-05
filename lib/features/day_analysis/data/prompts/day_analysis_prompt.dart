@@ -29,6 +29,15 @@ DML semantics:
   Do not infer evening meal effects, dawn phenomenon, absorption or site failure from aggregates.
 
 History extensions:
+- PREVIOUS_DAYS contains up to seven preceding calendar dates from accepted LOCAL summaries.
+  days=null means the archive could not be loaded; days=[] means no accepted summaries in the range.
+  Missing dates are NOT zero-valued days. Never invent or interpolate them.
+  metrics use the DaySummaryMetric names: glucoseMean/Max in mg/dl, *Percent in percent,
+  *Units in insulin units, *Grams in grams, *Minutes in minutes, and *Count in counts.
+  Each day's limitations and coverage apply separately. These are archived facts, not earlier AI claims.
+  Compare only comparable available metrics; different CGM/basal coverage or night windows limit comparisons.
+  Do not sum overlapping night/day insulin. A short history is context, not a validated prediction.
+  If useful, name the compared dates and what differs; do not infer causes from daily averages alone.
 - HISTORY describes current historical reconstruction, separate from immutable accepted aggregates.
   Later corrections can cause differences. Report discrepancies rather than hiding them.
   Missing previous_day means no accepted previous-day summary, not no earlier CGM or meals.

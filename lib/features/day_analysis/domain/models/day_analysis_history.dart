@@ -4,9 +4,11 @@ import '../../../../core/domain/model/treatment_base.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
 import '../../../meal_analysis/domain/models/meal_activity_context.dart';
 import 'day_analysis_meal.dart';
+import 'previous_days_context.dart';
 
 /// On-demand event history. Not part of the immutable accepted aggregate snapshot.
 class DayAnalysisHistory {
+  final PreviousDaysContext? previousDays;
   final DateTime start;
   final DateTime end;
   final DateTime builtAt;
@@ -20,6 +22,7 @@ class DayAnalysisHistory {
   final Set<int> failedMealIds;
 
   DayAnalysisHistory({
+    this.previousDays,
     required this.start,
     required this.end,
     required this.builtAt,

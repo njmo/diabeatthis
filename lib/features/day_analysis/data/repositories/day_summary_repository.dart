@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
+
 import '../../../../core/drift/database_impl.dart';
 import '../../domain/models/accepted_day_summary.dart' as domain;
 import '../../domain/models/day_summary_snapshot.dart';
@@ -14,6 +16,26 @@ class DaySummaryRepository {
       db.acceptedDaySummary,
     )..where((row) => row.dayKey.equals(dayKey))).getSingleOrNull();
     if (row == null) return null;
+    return _decode(row);
+  }
+
+  Future<List<domain.AcceptedDaySummary>> getBetween(
+    String startDayKey,
+    String endDayKeyExclusive,
+  ) async {
+    final rows =
+        await (db.select(db.acceptedDaySummary)
+              ..where(
+                (row) =>
+                    row.dayKey.isBiggerOrEqualValue(startDayKey) &
+                    row.dayKey.isSmallerThanValue(endDayKeyExclusive),
+              )
+              ..orderBy([(row) => OrderingTerm.asc(row.dayKey)]))
+            .get();
+    return rows.map(_decode).toList();
+  }
+
+  domain.AcceptedDaySummary _decode(AcceptedDaySummaryData row) {
     final payload = jsonDecode(row.payload) as Map<String, dynamic>;
     final snapshot = DaySummarySnapshot.fromJson(payload);
     return domain.AcceptedDaySummary(
