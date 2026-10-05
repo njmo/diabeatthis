@@ -73,8 +73,10 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
         }
         break;
       case NextMealEvent():
-        if (mealMonitorContext.activeMeal!.id == event.mealId) {
-          return false;
+        final activeMeal = mealMonitorContext.activeMeal!;
+        if (activeMeal.id == event.mealId) {
+          // Reload the meal and restart waiting when its persisted time changes.
+          return activeMeal.plannedAt != event.when;
         }
         break;
     }
