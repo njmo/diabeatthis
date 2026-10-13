@@ -1,14 +1,5 @@
-/// Uses the same local clock as DML series blocks, with an explicit offset.
-/// Keeps exact precision so consumers can still compare instants and durations.
-String dayDmlTimestamp(DateTime instant, {Duration? utcOffset}) {
-  final offset = utcOffset ?? instant.toLocal().timeZoneOffset;
-  if (offset == Duration.zero) return instant.toUtc().toIso8601String();
-  final wall = instant.toUtc().add(offset).toIso8601String();
-  return '${wall.substring(0, wall.length - 1)}${dayDmlUtcOffset(offset)}';
-}
+import '../../../../common/analysis/dml_timestamp.dart';
 
-String dayDmlUtcOffset(Duration offset) {
-  final minutes = offset.inMinutes;
-  final absolute = minutes.abs();
-  return '${minutes < 0 ? '-' : '+'}${(absolute ~/ 60).toString().padLeft(2, '0')}:${(absolute % 60).toString().padLeft(2, '0')}';
-}
+String dayDmlTimestamp(DateTime instant, {Duration? utcOffset}) =>
+    dmlTimestamp(instant, utcOffset: utcOffset);
+String dayDmlUtcOffset(Duration offset) => dmlUtcOffset(offset);
