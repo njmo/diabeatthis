@@ -34,6 +34,7 @@ class MealAiRepository {
           data['result'] as String,
           language: data['language'] as String,
           evidenceIds: document.evidenceIds,
+          evidenceText: document.text,
         ),
         prompt: data['prompt'] as String,
         rawResponse: data['rawResponse'] as String,

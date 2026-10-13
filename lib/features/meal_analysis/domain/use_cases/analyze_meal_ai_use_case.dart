@@ -27,6 +27,7 @@ class AnalyzeMealAiUseCase {
         response.text,
         language: language,
         evidenceIds: document.evidenceIds,
+        evidenceText: document.text,
       );
     } on FormatException {
       throw MealAiInvalidResponse(response.text);

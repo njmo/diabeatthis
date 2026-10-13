@@ -1,3 +1,4 @@
+import '../../domain/models/meal_ai_result.dart';
 import '../../domain/models/meal_dml_document.dart';
 
 const mealAiPromptVersion = 1;
@@ -24,16 +25,18 @@ eCarbs describe scheduled allocation, not measured absorption of fat or protein.
 Partial windows, CGM observed minutes, source failures and planned macros limit conclusions.
 Compare each meal's preconditions and confounders, not only its maximum glucose.
 If comparison records are unavailable, say so; never invent previous meals or events.
-Cite the exact DML section IDs supporting each finding. Use no other evidence IDs.
+Cite DML section IDs or dot-separated paths to existing object fields, e.g. meal_before.iob_u.
+Every section and field must actually exist in the supplied DML. No array indexes or wildcards.
+Allowed section IDs: ${document.evidenceIds.join(', ')}.
 
 JSON shape: {"schema_version":1,"language":"$language","sections":{
 "overview":SECTION,"before":SECTION,"response":SECTION,"comparison":SECTION}}
 SECTION: {"status":"ok" or "insufficient_data","summary":"max 320 characters",
 "findings":[],"missing_data":[]}
 Each section has at most ONE finding, missing_data has at most 12 strings of max 160 characters.
-A finding: {"title":"max 80 characters","text":"max 600 characters",
+A finding: {"title":"max 80 characters","text":"max ${MealAiResult.findingTextLimit} characters",
 "kind":"observation" or "hypothesis","confidence":"low" or "medium" or "high",
-"evidence_refs":["existing_id"]}. At most 8 evidence_refs, at least one.
+"evidence_refs":["existing_id"]}. At most ${MealAiResult.evidenceRefsLimit} evidence_refs, at least one.
 Use empty summary/findings when there is no useful additional insight. All fields are required.
 
 ${document.text}

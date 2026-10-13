@@ -7,6 +7,8 @@ Map<String, AnalysisSection> parseAnalysisSections(
   required String language,
   required Set<String> evidenceIds,
   required List<String> sectionNames,
+  int findingTextLimit = 600,
+  int evidenceRefsLimit = 8,
 }) {
   if (response.length > 32000) {
     throw const FormatException('Structured analysis is too large');
@@ -45,13 +47,13 @@ Map<String, AnalysisSection> parseAnalysisSections(
           'confidence',
           'evidence_refs',
         ]);
-        final refs = _strings(finding['evidence_refs'], max: 8);
+        final refs = _strings(finding['evidence_refs'], max: evidenceRefsLimit);
         if (refs.isEmpty || refs.any((id) => !evidenceIds.contains(id))) {
           throw const FormatException('Unknown or missing evidence');
         }
         parsed.add((
           title: _text(finding['title'], max: 80),
-          text: _text(finding['text'], max: 600),
+          text: _text(finding['text'], max: findingTextLimit),
           kind: AnalysisFindingKind.values.byName(finding['kind'] as String),
           confidence: AnalysisFindingConfidence.values.byName(
             finding['confidence'] as String,
