@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/analysis_mode_selector.dart';
+import '../../../meal_analysis/presentation/widgets/meal_ai_button.dart';
 import '../../common/widgets/meal_review_chapter.dart';
 import '../../data/models/meal_start_context_data.dart';
 import '../controllers/meal_details_controller.dart';
@@ -39,7 +40,17 @@ class MealPage extends ConsumerWidget {
     final state = ref.watch(mealDetailsControllerProvider(mealId));
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.lang.mealReviewPageTitle)),
+      appBar: AppBar(
+        title: Text(context.lang.mealReviewPageTitle),
+        actions: [
+          if (state.asData?.value.details.meal.isEaten == true &&
+              state.asData?.value.details.meal.isLowTreatment == false)
+            MealAiButton(
+              mealId: mealId,
+              name: state.asData!.value.details.meal.name,
+            ),
+        ],
+      ),
       floatingActionButton: state.maybeWhen(
         data: (value) => value.showHistoryDownload
             ? MealHistoryDownloadButton(state: value)

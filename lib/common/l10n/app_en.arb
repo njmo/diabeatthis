@@ -1397,5 +1397,12 @@
   "@lowTreatmentContextActivity": {"placeholders": {"name": {"type": "String"}, "time": {"type": "String"}}},
   "lowTreatmentContextStress": "Recorded stress: {level} ({time})",
   "@lowTreatmentContextStress": {"placeholders": {"level": {"type": "String"}, "time": {"type": "String"}}},
-  "notificationAapsCarbsRequestAcknowledge": "Acknowledge"
+  "notificationAapsCarbsRequestAcknowledge": "Acknowledge",
+  "mealAiTitle": "Meal AI analysis",
+  "mealAiGenerate": "Analyze meal",
+  "mealAiBefore": "Before the meal",
+  "mealAiResponse": "After the meal",
+  "mealAiComparison": "Similar meals",
+  "mealAiIntro": "AI will examine the meal response and compare it with earlier similar meals. You can accept or discard the result.",
+  "mealAiCurrentInput": "Input for a new analysis"
 }

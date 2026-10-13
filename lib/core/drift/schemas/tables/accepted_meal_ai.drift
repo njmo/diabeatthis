@@ -1,0 +1,7 @@
+import 'meal.drift';
+
+CREATE TABLE accepted_meal_ai (
+ meal_id INTEGER NOT NULL PRIMARY KEY REFERENCES meal(id) ON DELETE CASCADE,
+ accepted_at INTEGER NOT NULL,
+ payload TEXT NOT NULL
+);

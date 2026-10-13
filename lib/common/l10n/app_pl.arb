@@ -1837,5 +1837,12 @@
   "@lowTreatmentContextActivity": {"placeholders": {"name": {"type": "String"}, "time": {"type": "String"}}},
   "lowTreatmentContextStress": "Zapisany stres: {level} ({time})",
   "@lowTreatmentContextStress": {"placeholders": {"level": {"type": "String"}, "time": {"type": "String"}}},
-  "notificationAapsCarbsRequestAcknowledge": "Potwierdzam"
+  "notificationAapsCarbsRequestAcknowledge": "Potwierdzam",
+  "mealAiTitle": "Analiza AI posiłku",
+  "mealAiGenerate": "Analizuj posiłek",
+  "mealAiBefore": "Przed posiłkiem",
+  "mealAiResponse": "Przebieg po posiłku",
+  "mealAiComparison": "Podobne posiłki",
+  "mealAiIntro": "AI przeanalizuje przebieg posiłku i porówna go z wcześniejszymi podobnymi posiłkami. Wynik możesz zaakceptować lub odrzucić.",
+  "mealAiCurrentInput": "Dane do ponownej analizy"
 }
