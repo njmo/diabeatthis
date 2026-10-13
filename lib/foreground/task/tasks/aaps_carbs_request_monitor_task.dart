@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 
+import '../../../core/domain/model/glucose.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/aaps_carbs_request_notification.dart';
 import '../../../core/notifications/domain/models/hash_notification_id_factory.dart';
@@ -36,21 +37,19 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
     final inbox = context.openEventInbox<ForegroundEvent>();
     final store = context.container.read(aapsCarbsRequestEpisodeStoreProvider);
     AapsCarbsRequestEpisode? episode;
+    var firstLoad = true;
     final pendingAcknowledgements = <AapsCarbsRequestAcknowledgedEvent>[];
 
     try {
       while (!context.isCancelled) {
         if (episode == null) {
           try {
-            final cache = context.container.read(
-              synchronizationCacheControllerProvider,
-            );
-            await Future.wait([
-              cache.ensureDeviceStatusReady(context.container),
-              cache.ensureGlucoseReadingsReady(context.container, minCount: 1),
-            ]);
             episode = await store.load();
             episode = await _cancelPending(context, episode, store);
+            if (firstLoad) {
+              episode = await _hideUnavailable(context, episode);
+              firstLoad = false;
+            }
           } on TaskCancelledException {
             rethrow;
           } catch (error) {
@@ -90,7 +89,7 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
           }
           if (failure == null) {
             final deadline = context.durationWait(
-              _waitDuration(episode!, clock.now()),
+              _waitDuration(context, episode!, clock.now()),
             );
             try {
               await Future.any<void>([
@@ -131,7 +130,9 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
     if (signal.type == AapsCarbsRequestSignalType.withdrawn) {
       return _withdraw(context, episode, store);
     }
-    if (signal.type != AapsCarbsRequestSignalType.positive) return episode;
+    if (signal.type != AapsCarbsRequestSignalType.positive) {
+      return _hideUnavailable(context, episode);
+    }
 
     if (episode.id == null) {
       final status = signal.status!;
@@ -157,10 +158,17 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
     if (signal.type == AapsCarbsRequestSignalType.withdrawn) {
       return _withdraw(context, episode, store);
     }
-    if (episode.acknowledged ||
-        signal.type != AapsCarbsRequestSignalType.positive ||
-        !_isDue(episode, checkedAt)) {
+    if (signal.type != AapsCarbsRequestSignalType.positive) {
+      return _hideUnavailable(context, episode);
+    }
+    if (episode.acknowledged || !_isDue(episode, checkedAt)) {
       return episode;
+    }
+
+    final requestAt = signal.status!.suggestedAt ?? signal.status!.date;
+    if (episode.lastReminderAt != null &&
+        !requestAt.isAfter(episode.lastReminderAt!)) {
+      return _hideUnavailable(context, episode);
     }
 
     await context.container
@@ -183,36 +191,27 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
     DateTime now,
   ) async {
     final signal = _signal(context, now);
-    final status = signal.status;
+    // Track newer incomplete results too: an older positive result must not
+    // become current again after a status with missing suggestion data.
+    final status = context.container
+        .read(synchronizationCacheControllerProvider)
+        .cache
+        .deviceStatusCache;
     if (status == null) return (signal: signal, episode: episode);
 
     final statusAt = status.suggestedAt ?? status.date;
+    if (statusAt.isAfter(now)) return (signal: signal, episode: episode);
     final watermark = episode.lastAcceptedStatusAt;
     if (watermark != null && statusAt.isBefore(watermark)) {
-      final activeCarbsReq = episode.activeCarbsReq;
-      if (activeCarbsReq != null && activeCarbsReq > 0) {
-        final retainedStatus = status.copyWith(
-          date: watermark,
-          suggestedAt: watermark,
-          carbsReq: activeCarbsReq,
-          hasCarbsReq: true,
-        );
-        return (
-          signal: const EvaluateAapsCarbsRequestUseCase()(
-            status: retainedStatus,
-            glucose: context.container
-                .read(synchronizationCacheControllerProvider)
-                .cache
-                .glucoseReadingsCache,
-            now: now,
-          ),
-          episode: episode,
-        );
-      }
       return (
         signal: const AapsCarbsRequestSignal.unavailable(),
         episode: episode,
       );
+    }
+    if (signal.type == AapsCarbsRequestSignalType.positive &&
+        episode.activeCarbsReq != null &&
+        status.carbsReq != episode.activeCarbsReq) {
+      await _hideUnavailable(context, episode);
     }
     if (watermark == null || statusAt.isAfter(watermark)) {
       final activeCarbsReq = signal.type == AapsCarbsRequestSignalType.positive
@@ -267,13 +266,52 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
     return last == null || !now.isBefore(last.add(reminderInterval));
   }
 
-  Duration _waitDuration(AapsCarbsRequestEpisode episode, DateTime now) {
+  Duration _waitDuration(
+    RuntimeContext context,
+    AapsCarbsRequestEpisode episode,
+    DateTime now,
+  ) {
+    var wait = reminderInterval;
+    final cache = context.container
+        .read(synchronizationCacheControllerProvider)
+        .cache;
+    final statusAt =
+        cache.deviceStatusCache?.suggestedAt ?? cache.deviceStatusCache?.date;
+    final glucoseTimes = cache.glucoseReadingsCache
+        .where(
+          (g) => g.type == GlucoseType.cgm && g.sgv > 0 && !g.date.isAfter(now),
+        )
+        .map((g) => g.date);
+    DateTime? latestGlucose;
+    for (final at in glucoseTimes) {
+      if (latestGlucose == null || at.isAfter(latestGlucose)) {
+        latestGlucose = at;
+      }
+    }
+    // Expiration must hide the notification even when no new event arrives.
+    for (final at in [statusAt, latestGlucose].whereType<DateTime>()) {
+      final remaining = at
+          .add(EvaluateAapsCarbsRequestUseCase.maximumAge)
+          .difference(now);
+      if (remaining > Duration.zero && remaining < wait) wait = remaining;
+    }
     final last = episode.lastReminderAt;
     if (!episode.acknowledged && last != null) {
       final remaining = last.add(reminderInterval).difference(now);
-      if (remaining > Duration.zero) return remaining;
+      if (remaining > Duration.zero && remaining < wait) wait = remaining;
     }
-    return reminderInterval;
+    return wait;
+  }
+
+  Future<AapsCarbsRequestEpisode> _hideUnavailable(
+    RuntimeContext context,
+    AapsCarbsRequestEpisode episode,
+  ) async {
+    // Keep acknowledgement and matching identity; missing data is not withdrawal.
+    if (!episode.acknowledged && episode.lastReminderAt != null) {
+      await _cancelNotification(context);
+    }
+    return episode;
   }
 
   Future<void> _cancelNotification(RuntimeContext context) {

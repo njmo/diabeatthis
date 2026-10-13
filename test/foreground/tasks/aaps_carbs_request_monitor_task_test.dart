@@ -21,40 +21,44 @@ import '../utils/fake_runtime_harness.dart';
 void main() {
   final start = DateTime(2026, 9, 15, 12);
 
-  test('repeats after five minutes and ignores an older withdrawal', () {
-    fakeAsync((async) {
-      withClock(Clock(() => start.add(async.elapsed)), () {
-        final fixture = _fixture(start);
-        unawaited(
-          const AapsCarbsRequestMonitorTask()
-              .run(fixture.harness.runtimeContext)
-              .catchError((_) {}),
-        );
-        async.flushMicrotasks();
-        expect(fixture.notifications.shownEvents, hasLength(1));
+  test(
+    'hides without replaying the saved request when the cache regresses',
+    () {
+      fakeAsync((async) {
+        withClock(Clock(() => start.add(async.elapsed)), () {
+          final fixture = _fixture(start);
+          unawaited(
+            const AapsCarbsRequestMonitorTask()
+                .run(fixture.harness.runtimeContext)
+                .catchError((_) {}),
+          );
+          async.flushMicrotasks();
+          expect(fixture.notifications.shownEvents, hasLength(1));
 
-        fixture.cache.cacheDeviceStatus(
-          testDeviceStatus(
-            date: start.subtract(const Duration(minutes: 2)),
-            iob: 0,
-            cob: 0,
-            tick: '0',
-            bg: 100,
-          ),
-        );
-        async.elapse(const Duration(minutes: 5, seconds: 1));
-        fixture.harness.dispatchEvent(
-          DataAvailableEvent(fixture.cache.deviceStatusCache),
-        );
-        fixture.harness.dispatchTick(start.add(async.elapsed));
-        async.flushMicrotasks();
+          fixture.cache.cacheDeviceStatus(
+            testDeviceStatus(
+              date: start.subtract(const Duration(minutes: 2)),
+              iob: 0,
+              cob: 0,
+              tick: '0',
+              bg: 100,
+            ),
+          );
+          async.elapse(const Duration(minutes: 5, seconds: 1));
+          fixture.harness.dispatchEvent(
+            DataAvailableEvent(fixture.cache.deviceStatusCache),
+          );
+          fixture.harness.dispatchTick(start.add(async.elapsed));
+          async.flushMicrotasks();
 
-        expect(fixture.notifications.shownEvents, hasLength(2));
-        expect(fixture.store.value.id, isNotNull);
-        fixture.harness.cancel();
+          expect(fixture.notifications.shownEvents, hasLength(1));
+          expect(fixture.notifications.cancelledIds, isNotEmpty);
+          expect(fixture.store.value.id, isNotNull);
+          fixture.harness.cancel();
+        });
       });
-    });
-  });
+    },
+  );
 
   test('fresh withdrawal cancels and a new request starts a new episode', () {
     fakeAsync((async) {
