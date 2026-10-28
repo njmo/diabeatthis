@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../../common/events/data/notification/aaps_carbs_request_response_event.dart';
 import '../../../../common/events/data/notification/activity_finished_response_event.dart';
+import '../../../../common/events/data/notification/activity_schedule_response_event.dart';
 import '../../../../common/events/data/notification/eat_now_response_event.dart';
 import '../../../../common/events/data/notification/finished_eating_response_event.dart';
 import '../../../../common/events/data/notification/meal_suggestion_response_event.dart';
@@ -17,6 +18,9 @@ part 'notification_response_event.g.dart';
 )
 sealed class NotificationResponseEvent with _$NotificationResponseEvent {
   const NotificationResponseEvent._();
+  const factory NotificationResponseEvent.activityScheduleResponse({
+    required ActivityScheduleResponseEvent data,
+  }) = NotificationActivityScheduleResponseEvent;
 
   const factory NotificationResponseEvent.eatNowResponse({
     required EatNowResponseEvent data,

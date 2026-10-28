@@ -179,7 +179,14 @@ Future<domain.ActivityLog> insertActivityLog(
 ) async {
   final db = ref.watch(databaseProvider);
   return db.transaction(() async {
-    final activity = await _saveActivityDraft(db, activityLog.activity);
+    final end = activityLog.endedAt;
+    if (end != null &&
+        (!end.isAfter(activityLog.startedAt) || end.isAfter(clock.now()))) {
+      throw ArgumentError(
+        'Historical activity must end after its start and not in the future',
+      );
+    }
+    final activity = await saveActivityDraft(db, activityLog.activity);
     if (activity == null) {
       throw Exception('Could not insert activity');
     }
@@ -276,7 +283,7 @@ class ActivityDialogController extends _$ActivityDialogController {
   }
 }
 
-Future<domain.Activity?> _saveActivityDraft(
+Future<domain.Activity?> saveActivityDraft(
   db.DatabaseImpl db,
   ActivityDraft activity,
 ) {

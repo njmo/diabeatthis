@@ -1,134 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
-import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/drafts/activity_draft.dart';
+import '../../data/mappers/activity_draft_mapper.dart';
 import '../../data/providers/activity_provider.dart';
-import 'activity_form.dart';
+import 'activity_definition_sheet.dart';
 import 'activity_search.dart';
 
 Future<ActivityDraft?> showActivityPickerSheet(BuildContext context) {
-  return showModalBottomSheet<ActivityDraft?>(
+  ProviderScope.containerOf(
+    context,
+    listen: false,
+  ).read(activityDraftProvider.notifier).reset();
+  return showModalBottomSheet<ActivityDraft>(
     context: context,
-    useRootNavigator: false,
     isScrollControlled: true,
     builder: (_) => const ActivityPickerSheet(),
   );
 }
 
-class ActivityPickerSheet extends HookConsumerWidget {
+class ActivityPickerSheet extends ConsumerWidget {
   const ActivityPickerSheet({super.key});
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final searchAutofocus = useState(false);
-    final state = ref.watch(activityDialogControllerProvider);
-    final controller = ref.read(activityDialogControllerProvider.notifier);
-    final canPick = state == ActivityPickerStep.add
-        ? true
-        : ref.watch(activityDraftProvider) != null;
-    final isInitial = state == ActivityPickerStep.initial;
-    final isAdding = state == ActivityPickerStep.add;
-    final isSearching = state == ActivityPickerStep.search;
-
-    return KeyboardAwareBottomSheet(
-      header: Row(
-        children: [
-          Expanded(
-            child: Text(switch (state) {
-              ActivityPickerStep.initial => context.lang.dashboardAddActivity,
-              ActivityPickerStep.add => context.lang.activityCreateTitle,
-              ActivityPickerStep.search => context.lang.activityPickTitle,
-            }, style: Theme.of(context).textTheme.titleLarge),
-          ),
-          IconButton(
-            tooltip: context.lang.commonCloseTooltip,
+  Widget build(BuildContext context, WidgetRef ref) => KeyboardAwareBottomSheet(
+    header: Text(
+      context.lang.activityPickTitle,
+      style: Theme.of(context).textTheme.titleLarge,
+    ),
+    body: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const ActivitySearch(),
+        TextButton.icon(
+          icon: const Icon(Icons.add),
+          label: Text(context.lang.activityCreateTitle),
+          onPressed: () async {
+            final activity = await showActivityDefinitionSheet(context);
+            if (activity != null && context.mounted) {
+              Navigator.of(context).pop(activity.toDraft());
+            }
+          },
+        ),
+      ],
+    ),
+    actions: Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close),
+            child: Text(context.lang.settingsCancel),
           ),
-        ],
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SegmentedButton<ActivityPickerStep>(
-            emptySelectionAllowed: true,
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(
-                value: ActivityPickerStep.search,
-                icon: const Icon(Icons.search),
-                label: Text(context.lang.commonSearch),
-              ),
-              ButtonSegment(
-                value: ActivityPickerStep.add,
-                icon: const Icon(Icons.add),
-                label: Text(context.lang.commonCreate),
-              ),
-            ],
-            selected: isInitial ? const {} : {state},
-            onSelectionChanged: (selection) {
-              if (selection.isEmpty) {
-                return;
-              }
-              final next = selection.first;
-              if (next == ActivityPickerStep.add) {
-                searchAutofocus.value = false;
-                ref.read(activityDraftProvider.notifier).reset();
-                controller.addState();
-              } else {
-                searchAutofocus.value = true;
-                controller.searchState();
-              }
-            },
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: FilledButton(
+            onPressed: ref.watch(activityDraftProvider) == null
+                ? null
+                : () => Navigator.of(
+                    context,
+                  ).pop(ref.read(activityDraftProvider)),
+            child: Text(context.lang.commonPick),
           ),
-          const SizedBox(height: 16),
-          if (isInitial)
-            const ActivitySearch(showSearchField: false)
-          else if (isAdding)
-            const ActivityForm()
-          else if (isSearching)
-            ActivitySearch(autofocus: searchAutofocus.value),
-        ],
-      ),
-      actions: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(context.lang.settingsCancel),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: FilledButton.icon(
-              onPressed: canPick
-                  ? () {
-                      if (isAdding) {
-                        final formState = ref
-                            .read(mealIngredientFormKeyProvider)
-                            .currentState;
-                        if (!(formState?.validate() ?? false)) {
-                          return;
-                        }
-                        formState?.save();
-                      }
-                      Navigator.of(
-                        context,
-                      ).pop(ref.read(activityDraftProvider));
-                    }
-                  : null,
-              icon: Icon(isAdding ? Icons.add : Icons.check),
-              label: Text(
-                isAdding ? context.lang.commonCreate : context.lang.commonPick,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }

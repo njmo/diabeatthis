@@ -3,6 +3,7 @@ import '../models/notification_event_type.dart';
 import 'aaps_bolus_suggestion_notification.dart';
 import 'aaps_carbs_request_notification.dart';
 import 'activity_finished_notification.dart';
+import 'activity_schedule_notification.dart';
 import 'eat_now_event_notification.dart';
 import 'finished_eating_event_notification.dart';
 import 'meal_advice_pending_notification.dart';
@@ -18,6 +19,8 @@ class NotificationEventFactory {
     Map<String, dynamic> data,
   ) {
     switch (type) {
+      case NotificationEventType.activitySchedule:
+        return ActivityScheduleNotificationEvent.fromPayload(data);
       case NotificationEventType.eatNow:
         return EatNowNotificationEvent.fromPayload(data);
       case NotificationEventType.tempTarget:

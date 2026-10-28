@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 
 import '../../../../../common/monitoring/activity_monitoring_phase.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
+import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/notifications/domain/events/temp_target_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../event/internal/activity_event.dart';
@@ -72,6 +73,28 @@ class MonitorUntilActivityExecutor extends ActivityMonitorStateExecutor {
     );
     final timeToActivity = startsAt.difference(clock.now());
     if (timeToActivity <= Duration.zero) {
+      return const MonitorActiveActivityExecutor();
+    }
+
+    final logId = activityMonitorContext.activityLogId;
+    final scheduledDuration = logId == null
+        ? null
+        : await runtimeContext.container
+              .read(databaseProvider)
+              .activityDao
+              .getScheduledDurationForLog(logId);
+    if (scheduledDuration != null) {
+      // The schedule task owns its target prompt, independently of whichever
+      // session is currently monitored. Avoid a second prompt here.
+      final preparationAt = startsAt.subtract(const Duration(minutes: 90));
+      if (preparationAt.isAfter(clock.now())) {
+        await runtimeContext.waitUntil(preparationAt);
+      }
+      activityMonitorContext.publishStatus(
+        runtimeContext,
+        ActivityMonitoringPhase.preparing,
+      );
+      await runtimeContext.waitUntil(startsAt);
       return const MonitorActiveActivityExecutor();
     }
 

@@ -9,8 +9,8 @@ import '../../../../common/widgets/anchored_fab_menu.dart';
 import '../../../../common/widgets/fab_action_option.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
-import '../../../activity/data/drafts/activity_log_draft.dart';
 import '../../../activity/data/providers/activity_provider.dart';
+import '../../../activity/data/services/save_activity_action.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_sheet.dart';
 import '../../../manual_events/presentation/widgets/manual_event_sheet.dart';
 import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
@@ -162,14 +162,7 @@ class DashboardFAB extends HookConsumerWidget with Logging {
   ) async {
     try {
       logI('Adding activity log');
-      await ref.read(
-        insertActivityLogProvider(
-          ActivityLogDraft(
-            activity: action.activity,
-            startedAt: action.startedAt,
-          ),
-        ).future,
-      );
+      await saveActivityAction(ref, action);
       ref.invalidate(getPendingActivityProvider);
     } catch (e) {
       if (context.mounted) {

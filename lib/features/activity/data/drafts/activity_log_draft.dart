@@ -9,5 +9,6 @@ abstract class ActivityLogDraft with _$ActivityLogDraft {
   const factory ActivityLogDraft({
     required ActivityDraft activity,
     required DateTime startedAt,
+    DateTime? endedAt,
   }) = _ActivityLogDraft;
 }

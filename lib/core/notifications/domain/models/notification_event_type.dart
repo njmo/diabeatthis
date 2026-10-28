@@ -1,4 +1,5 @@
 enum NotificationEventType {
+  activitySchedule,
   eatNow,
   tempTarget,
   finishedEating,

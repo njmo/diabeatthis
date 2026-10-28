@@ -19,6 +19,8 @@ Future<ActivityMonitorContext?> loadActivityMonitorContext(
     activityId: log.activityId,
     activityName: activity.name,
     startsAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),
-    durationMinutes: activity.durationMinutes,
+    durationMinutes:
+        await db.activityDao.getScheduledDurationForLog(log.id) ??
+        activity.durationMinutes,
   );
 }

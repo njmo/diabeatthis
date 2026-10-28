@@ -41,7 +41,9 @@ class NewActivityCheckExecutor extends ActivityMonitorStateExecutor {
         activityId: nextLog.activityId,
         activityName: activity.name,
         startsAt: DateTime.fromMillisecondsSinceEpoch(nextLog.startedAt),
-        durationMinutes: activity.durationMinutes,
+        durationMinutes:
+            await db.activityDao.getScheduledDurationForLog(nextLog.id) ??
+            activity.durationMinutes,
       ),
     );
 

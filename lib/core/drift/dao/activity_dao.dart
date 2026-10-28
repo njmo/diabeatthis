@@ -101,10 +101,21 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     return into(db.activityLog).insertReturning(activityLog);
   }
 
+  Future<int?> getScheduledDurationForLog(int activityLogId) async {
+    final occurrence =
+        await (select(db.activityOccurrence)
+              ..where((row) => row.activityLogId.equals(activityLogId))
+              ..limit(1))
+            .getSingleOrNull();
+    return occurrence?.durationMinutes;
+  }
+
   Future<ActivityLogData?> getActiveActivityLogOrNull() {
-    return (select(
-      db.activityLog,
-    )..where((tbl) => tbl.endedAt.isNull())).getSingleOrNull();
+    return (select(db.activityLog)
+          ..where((tbl) => tbl.endedAt.isNull())
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.startedAt)])
+          ..limit(1))
+        .getSingleOrNull();
   }
 
   Future<ActivityLogViewData?> getActiveActivityLogView() async {

@@ -42,7 +42,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 32;
+  int get schemaVersion => 33;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -60,6 +60,11 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
+      if (from < 33) {
+        await m.createTable(activitySchedule);
+        await m.createTable(activityOccurrence);
+        await customStatement('DROP INDEX IF EXISTS uq_only_one_open_session');
+      }
       if (from < 32) {
         final existing = await customSelect(
           "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'accepted_meal_ai'",

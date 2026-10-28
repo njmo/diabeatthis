@@ -1,0 +1,30 @@
+import 'activity.drift';
+import 'activity_log.drift';
+
+CREATE TABLE activity_schedule (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  activity_id INTEGER NOT NULL REFERENCES activity(id) ON DELETE CASCADE,
+  weekdays TEXT NOT NULL,
+  start_minute INTEGER NOT NULL CHECK(start_minute BETWEEN 0 AND 1439),
+  duration_minutes INTEGER NOT NULL CHECK(duration_minutes > 0),
+  confirmation_mode TEXT NOT NULL CHECK(confirmation_mode IN ('before', 'previous_day', 'automatic')),
+  previous_day_minute INTEGER NOT NULL DEFAULT 1140 CHECK(previous_day_minute BETWEEN 0 AND 1439),
+  valid_from INTEGER NOT NULL,
+  valid_until INTEGER,
+  enabled BOOL NOT NULL DEFAULT 1
+);
+
+CREATE TABLE activity_occurrence (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  schedule_id INTEGER REFERENCES activity_schedule(id) ON DELETE CASCADE,
+  activity_id INTEGER NOT NULL REFERENCES activity(id) ON DELETE CASCADE,
+  started_at INTEGER NOT NULL,
+  duration_minutes INTEGER NOT NULL CHECK(duration_minutes > 0),
+  action_at INTEGER NOT NULL,
+  confirmation_mode TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  asked_at INTEGER,
+  target_requested_at INTEGER,
+  activity_log_id INTEGER REFERENCES activity_log(id) ON DELETE SET NULL,
+  UNIQUE(schedule_id, started_at)
+);

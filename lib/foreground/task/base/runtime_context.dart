@@ -252,7 +252,32 @@ class RuntimeContext with Logging {
       unawaited(finish('cancellation', const TaskCancelledException()));
     });
 
-    return WaitHandle.fromFuture(completer.future);
+    return WaitHandle<void>(
+      future: completer.future,
+      cancel: () => finish(
+        'cancelled',
+        const TaskCancelledException(),
+        StackTrace.current,
+      ),
+    );
+  }
+
+  /// A cancellable deadline that can also wake without incoming data ticks.
+  /// The timer and scheduler waiter share the same lifetime.
+  WaitHandle<void> wallClockWaitUntilHandle(DateTime at) {
+    final deadline = waitUntilHandle(at);
+    final delay = at.difference(clock.now());
+    final timer = Timer(
+      delay.isNegative ? Duration.zero : delay,
+      () => tick(clock.now()),
+    );
+    return WaitHandle<void>(
+      future: deadline.future.whenComplete(timer.cancel),
+      cancel: () async {
+        timer.cancel();
+        await deadline.cancel();
+      },
+    );
   }
 
   WaitHandle<T> futureWait<T>(Future<T> future) {
@@ -334,6 +359,11 @@ class ScopedRuntimeContext extends RuntimeContext {
   @override
   WaitHandle<void> waitUntilHandle(DateTime at) {
     return _scope.track(_base.waitUntilHandle(at));
+  }
+
+  @override
+  WaitHandle<void> wallClockWaitUntilHandle(DateTime at) {
+    return _scope.track(_base.wallClockWaitUntilHandle(at));
   }
 
   @override

@@ -9,6 +9,7 @@ extension ActivityLogDraftToCompanion on ActivityLogDraft {
       id: d.Value<int>.absent(),
       activityId: d.Value(activityId),
       startedAt: d.Value(startedAt.millisecondsSinceEpoch),
+      endedAt: d.Value(endedAt?.millisecondsSinceEpoch),
     );
   }
 }

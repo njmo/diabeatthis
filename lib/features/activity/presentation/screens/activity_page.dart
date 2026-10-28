@@ -9,6 +9,7 @@ import '../../data/providers/activity_provider.dart';
 import '../widgets/activity_details_card.dart';
 import '../widgets/activity_edit_form.dart';
 import '../widgets/activity_log_list.dart';
+import '../widgets/activity_schedules_section.dart';
 
 @RoutePage()
 class ActivityPage extends HookConsumerWidget {
@@ -48,62 +49,68 @@ class ActivityPage extends HookConsumerWidget {
             return Center(child: Text(context.lang.activityNotFound));
           }
 
+          if (isEditing.value) {
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                ActivityEditForm(
+                  name: activity.name,
+                  durationMinutes: activity.durationMinutes,
+                  isSaving: isSaving.value,
+                  onCancel: () {
+                    isEditing.value = false;
+                  },
+                  onSave: (values) async {
+                    isSaving.value = true;
+                    try {
+                      await ref
+                          .read(activityControllerProvider.notifier)
+                          .updateActivity(
+                            ActivityDraft.existing(
+                              id: activity.id,
+                              name: values.name,
+                              percentagePre: activity.percentagePre,
+                              percentagePost: activity.percentagePost,
+                              durationMinutes: values.durationMinutes,
+                            ),
+                          );
+                      isEditing.value = false;
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(context.lang.activitySaved)),
+                        );
+                      }
+                    } catch (error) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              context.lang.activitySaveFailed(error),
+                            ),
+                          ),
+                        );
+                      }
+                    } finally {
+                      isSaving.value = false;
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                ActivitySchedulesSection(activity: activity),
+              ],
+            );
+          }
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: isEditing.value
-                    ? ActivityEditForm(
-                        name: activity.name,
-                        durationMinutes: activity.durationMinutes,
-                        isSaving: isSaving.value,
-                        onCancel: () {
-                          isEditing.value = false;
-                        },
-                        onSave: (values) async {
-                          isSaving.value = true;
-                          try {
-                            await ref
-                                .read(activityControllerProvider.notifier)
-                                .updateActivity(
-                                  ActivityDraft.existing(
-                                    id: activity.id,
-                                    name: values.name,
-                                    percentagePre: activity.percentagePre,
-                                    percentagePost: activity.percentagePost,
-                                    durationMinutes: values.durationMinutes,
-                                  ),
-                                );
-                            isEditing.value = false;
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(context.lang.activitySaved),
-                                ),
-                              );
-                            }
-                          } catch (error) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    context.lang.activitySaveFailed(error),
-                                  ),
-                                ),
-                              );
-                            }
-                          } finally {
-                            isSaving.value = false;
-                          }
-                        },
-                      )
-                    : ActivityDetailsCard(
-                        name: activity.name,
-                        percentagePre: activity.percentagePre,
-                        percentagePost: activity.percentagePost,
-                        durationMinutes: activity.durationMinutes,
-                      ),
+                child: ActivityDetailsCard(
+                  name: activity.name,
+                  percentagePre: activity.percentagePre,
+                  percentagePost: activity.percentagePost,
+                  durationMinutes: activity.durationMinutes,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),

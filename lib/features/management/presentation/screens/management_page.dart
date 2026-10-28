@@ -5,7 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
-import '../../../activity/presentation/widgets/activity_list.dart';
+import '../../../activity/presentation/widgets/activity_management_panel.dart';
 import '../../../ingredients/presentation/widgets/ingredient_list.dart';
 import '../../../meals/presentation/widgets/meal_list.dart';
 
@@ -28,7 +28,7 @@ class ManagementPage extends HookConsumerWidget {
           return <Widget>[
             MealList(),
             IngredientList(),
-            ActivityList(),
+            ActivityManagementPanel(),
           ][destination.value];
         },
       ),
