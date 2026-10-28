@@ -60,17 +60,7 @@ Map<String, Object?> mealRecordEvidenceDml({
             'mg_dl': firstAfter.sgv,
             'delay_min': firstAfter.date.difference(mealTime).inSeconds / 60,
           },
-    'nutrition_confidence': nutrition == null
-        ? null
-        : {
-            'scale': 'saved_estimate_0_to_1_not_measured_accuracy',
-            'carbs_quantity': _confidence(nutrition.carbsQuantity),
-            'carbs_nutrition': _confidence(nutrition.carbsNutrition),
-            'carbs_effective': _confidence(nutrition.carbsEffective),
-            'fat_protein_quantity': _confidence(nutrition.fatProteinQuantity),
-            'fat_protein_nutrition': _confidence(nutrition.fatProteinNutrition),
-            'fat_protein_effective': _confidence(nutrition.fatProteinEffective),
-          },
+    'nutrition_confidence': mealNutritionConfidenceDml(nutrition),
     'linked_calculators': links == null
         ? null
         : [
@@ -119,3 +109,17 @@ Map<String, Object?> mealRecordEvidenceDml({
     ],
   };
 }
+
+Map<String, Object?>? mealNutritionConfidenceDml(
+  MealNutritionConfidence? nutrition,
+) => nutrition == null
+    ? null
+    : {
+        'scale': 'saved_estimate_0_to_1_not_measured_accuracy',
+        'carbs_quantity': _confidence(nutrition.carbsQuantity),
+        'carbs_nutrition': _confidence(nutrition.carbsNutrition),
+        'carbs_effective': _confidence(nutrition.carbsEffective),
+        'fat_protein_quantity': _confidence(nutrition.fatProteinQuantity),
+        'fat_protein_nutrition': _confidence(nutrition.fatProteinNutrition),
+        'fat_protein_effective': _confidence(nutrition.fatProteinEffective),
+      };

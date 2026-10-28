@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/manual_meal_decision.dart';
+import '../../../../common/widgets/ai_text_dialog.dart';
 import '../../../../common/widgets/manual_meal_decision_dialog.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
@@ -123,6 +124,15 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (s.isAiAssisted && s.advisorInput != null)
+                TextButton.icon(
+                  icon: const Icon(Icons.description_outlined),
+                  label: Text(context.lang.dayAiShowInput),
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => AiTextDialog(text: s.advisorInput!.text),
+                  ),
+                ),
               if (s.preparationFailed)
                 Text(context.lang.mealAdvicePreparationFailed),
               if (s.skipMeal) Text(context.lang.mealStatusConfirmSkipTitle),

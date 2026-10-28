@@ -1,9 +1,10 @@
-import '../../../../common/async/async_task_pool.dart';
 import '../models/meal_ai_context.dart';
 import '../models/similar_meal_context.dart';
+import 'load_historical_meal_comparisons_use_case.dart';
 
 class BuildMealAiContextUseCase {
-  static const maximumComparisons = 3;
+  static const maximumComparisons =
+      LoadHistoricalMealComparisonsUseCase.maximumComparisons;
   final Future<MealAiObservation> Function(int, DateTime?) loadObservation;
   final Future<SimilarMealContext?> Function(MealAiObservation) loadSimilar;
   final DateTime Function() now;
@@ -25,37 +26,14 @@ class BuildMealAiContextUseCase {
     } catch (_) {
       failures.add('similar_search');
     }
-    final pool = AsyncTaskPool(2);
-    final matches = similar?.matches.take(maximumComparisons).toList() ?? [];
-    final observations = await Future.wait(
-      matches.indexed.map(
-        (entry) => pool.run(() async {
-          try {
-            final observed = await loadObservation(
-              entry.$2.meal.mealId,
-              current.meal.eatenAt,
-            );
-            // Never compare outcomes that were not complete before the target meal.
-            if (observed.meal.mealId != entry.$2.meal.mealId ||
-                !observed.meal.eatenAt.isBefore(current.meal.eatenAt) ||
-                observed.outcome == null ||
-                !observed.outcome!.isTimeWindowComplete ||
-                observed.outcome!.expectedUntil.isAfter(current.meal.eatenAt)) {
-              failures.add('comparison_${entry.$1 + 1}');
-              return null;
-            }
-            return MealAiComparison(match: entry.$2, observation: observed);
-          } catch (_) {
-            failures.add('comparison_${entry.$1 + 1}');
-            return null;
-          }
-        }),
-      ),
-    );
+    final references = await LoadHistoricalMealComparisonsUseCase(
+      load: (id, cutoff) => loadObservation(id, cutoff),
+    )(similar?.matches ?? [], current.meal.eatenAt);
+    failures.addAll(references.failures);
     return MealAiContext(
       current: current,
       builtAt: now(),
-      comparisons: observations.whereType<MealAiComparison>().toList(),
+      comparisons: references.comparisons,
       failures: failures,
     );
   }

@@ -13,8 +13,10 @@ import '../../meal_advisor/data/providers/check_meal_advice_eligibility_use_case
 import '../../meal_advisor/data/providers/check_meal_advisor_device_status_use_case_provider.dart';
 import '../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
 import '../../meal_advisor/data/providers/get_meal_advice_use_case_provider.dart';
+import '../../meal_advisor/data/providers/meal_advisor_context_provider.dart';
 import '../../meal_advisor/domain/models/meal_advice_eligibility.dart';
 import '../../meal_advisor/domain/models/meal_advice_unavailable_exception.dart';
+import '../../meal_advisor/domain/serialization/meal_advisor_dml.dart';
 import '../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import '../../meal_analysis/data/providers/build_before_meal_context_use_case_provider.dart';
 import '../../meals/data/providers/meal_activation_guard_provider.dart';
@@ -135,7 +137,18 @@ class MealDialogController extends _$MealDialogController with Logging {
         buildBeforeMealContextUseCaseProvider(false),
       )(asOf: clock.now(), mealId: mealId, macros: mealStatus);
       if (!ref.mounted || request != _adviceRequest) return;
-      state = state.copyWith(beforeMealContext: context);
+      final expanded = await ref.read(buildMealAdvisorContextUseCaseProvider)(
+        context,
+        isCancelled: () => !ref.mounted || request != _adviceRequest,
+      );
+      if (!ref.mounted || request != _adviceRequest) return;
+      state = state.copyWith(
+        beforeMealContext: context,
+        advisorInput: serializeMealAdvisorContext(
+          expanded,
+          requestId: 'advisor_${context.asOf.microsecondsSinceEpoch}_$request',
+        ),
+      );
     }
     final deviceStatus = ref.read(deviceStatusUiProvider);
     _adviceDeviceStatus = deviceStatus;

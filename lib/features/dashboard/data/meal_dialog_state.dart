@@ -1,3 +1,4 @@
+import '../../meal_advisor/domain/models/meal_advisor_input.dart';
 import '../../meal_analysis/domain/models/before_meal_context.dart';
 import 'utils/meal_advisor.dart';
 
@@ -15,6 +16,7 @@ class MealDialogState {
   final bool isAiAssisted;
   final bool preparationFailed;
   final BeforeMealContext? beforeMealContext;
+  final MealAdvisorInput? advisorInput;
   final MealDialogStep step;
   final bool skipMeal;
   final double carbsGrams;
@@ -27,6 +29,7 @@ class MealDialogState {
     this.isAiAssisted = false,
     this.preparationFailed = false,
     this.beforeMealContext,
+    this.advisorInput,
     required this.step,
     required this.skipMeal,
     required this.advice,
@@ -40,6 +43,7 @@ class MealDialogState {
     bool? isAiAssisted,
     bool? preparationFailed,
     BeforeMealContext? beforeMealContext,
+    MealAdvisorInput? advisorInput,
     bool clearBeforeMealContext = false,
     MealDialogStep? step,
     bool? skipMeal,
@@ -53,6 +57,9 @@ class MealDialogState {
       isPreparingAdvice: isPreparingAdvice ?? this.isPreparingAdvice,
       isAiAssisted: isAiAssisted ?? this.isAiAssisted,
       preparationFailed: preparationFailed ?? this.preparationFailed,
+      advisorInput: clearBeforeMealContext
+          ? null
+          : advisorInput ?? this.advisorInput,
       beforeMealContext: clearBeforeMealContext
           ? null
           : beforeMealContext ?? this.beforeMealContext,
