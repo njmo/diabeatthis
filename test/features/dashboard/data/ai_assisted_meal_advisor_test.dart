@@ -12,10 +12,14 @@ import 'package:diabeatthis/features/dashboard/data/providers/device_status_ui_p
 import 'package:diabeatthis/features/meal_advisor/data/providers/ai_assisted_meal_advisor_settings_provider.dart';
 import 'package:diabeatthis/features/meal_advisor/data/providers/check_meal_advice_eligibility_use_case_provider.dart';
 import 'package:diabeatthis/features/meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
+import 'package:diabeatthis/features/meal_advisor/data/providers/meal_advisor_context_provider.dart';
 import 'package:diabeatthis/features/meal_advisor/domain/models/meal_advice_eligibility.dart';
+import 'package:diabeatthis/features/meal_advisor/domain/models/meal_advisor_target.dart';
+import 'package:diabeatthis/features/meal_advisor/domain/use_cases/build_meal_advisor_context_use_case.dart';
 import 'package:diabeatthis/features/meal_advisor/domain/use_cases/check_meal_advice_eligibility_use_case.dart';
 import 'package:diabeatthis/features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import 'package:diabeatthis/features/meal_analysis/data/providers/build_before_meal_context_use_case_provider.dart';
+import 'package:diabeatthis/features/meal_analysis/domain/models/similar_meal_context.dart';
 import 'package:diabeatthis/features/meal_analysis/domain/use_cases/build_before_meal_context_use_case.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_activation_guard_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
@@ -81,6 +85,33 @@ class AssistedAdvisorFixture {
             ),
           ),
         ),
+        buildMealAdvisorContextUseCaseProvider.overrideWith((ref) {
+          if (!assisted) {
+            throw StateError(
+              'Regular advisor must not initialize extended advisor context',
+            );
+          }
+          return BuildMealAdvisorContextUseCase(
+            now: clock.now,
+            loadTarget: (before) async => MealAdvisorTarget(
+              mealId: before.mealId!,
+              name: 'Planned meal',
+              plannedAt: before.asOf,
+              macros: before.macros!,
+              composition: null,
+              confidence: null,
+              ingredients: [],
+            ),
+            findSimilar: (target, asOf) async => SimilarMealContext(
+              asOf: asOf,
+              searchStart: asOf.subtract(const Duration(days: 90)),
+              target: target.macros,
+              matches: [],
+            ),
+            loadHistorical: (_, _) =>
+                throw StateError('No historical comparisons in this fixture'),
+          );
+        }),
         buildBeforeMealContextUseCaseProvider(false).overrideWith((ref) {
           if (!assisted) {
             throw StateError(
@@ -154,6 +185,8 @@ void main() {
       await choosing;
       expect(fixture.state.isPreparingAdvice, isFalse);
       expect(fixture.state.beforeMealContext?.mealId, 1);
+      expect(fixture.state.advisorInput?.context.target?.mealId, 1);
+      expect(fixture.state.advisorInput?.context.failures, isEmpty);
       expect(fixture.state.advice.decision, isNotNull);
     },
   );

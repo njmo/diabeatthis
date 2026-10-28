@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/history/local_device_status_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/history/local_glucose_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/history/local_treatments_history_repository.dart';
@@ -164,12 +165,20 @@ void main() {
           .toList();
       expect(lowEvents, hasLength(3));
       expect(
-        lowEvents.where((event) => event.label == 'Late low treatment'),
+        lowEvents.where(
+          (event) =>
+              event.timestamp == outside.meal.analysisTime &&
+              event.label == lang.lowTreatmentMealName,
+        ),
         hasLength(1),
       );
       expect(
         lowEvents
-            .singleWhere((event) => event.label == 'Linked low treatment')
+            .singleWhere(
+              (event) =>
+                  event.timestamp == sameRecord.meal.analysisTime &&
+                  event.label == lang.lowTreatmentMealName,
+            )
             .value,
         contains('Glukoza 10 g'),
       );
