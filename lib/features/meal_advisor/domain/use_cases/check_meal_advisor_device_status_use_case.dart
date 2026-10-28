@@ -9,9 +9,12 @@ class CheckMealAdvisorDeviceStatusUseCase {
   // Preserve the existing foreground expiry, now also enforced in UI.
   static const maximumAge = Duration(minutes: 6);
 
-  MealAdviceEligibility call(DeviceStatus? status) {
+  MealAdviceEligibility call(DeviceStatus? status) =>
+      evaluate(status, clock.now());
+
+  MealAdviceEligibility evaluate(DeviceStatus? status, DateTime now) {
     if (status == null) return MealAdviceEligibility.missingDeviceStatus;
-    final age = clock.now().difference(status.date);
+    final age = now.difference(status.date);
     if (age.isNegative || age >= maximumAge) {
       return MealAdviceEligibility.staleDeviceStatus;
     }
