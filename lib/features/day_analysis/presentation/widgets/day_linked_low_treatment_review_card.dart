@@ -10,6 +10,7 @@ class DayLinkedLowTreatmentReviewCard extends StatelessWidget {
   final RecordedLowTreatment recorded;
   final List<Treat> events;
   final bool busy;
+  final Widget? relationEditor;
   final ValueChanged<Treat> onReset;
 
   const DayLinkedLowTreatmentReviewCard({
@@ -17,6 +18,7 @@ class DayLinkedLowTreatmentReviewCard extends StatelessWidget {
     required this.recorded,
     required this.events,
     required this.busy,
+    this.relationEditor,
     required this.onReset,
   });
 
@@ -57,6 +59,7 @@ class DayLinkedLowTreatmentReviewCard extends StatelessWidget {
                   icon: const Icon(Icons.link_off),
                 ),
               ),
+            if (relationEditor != null) relationEditor!,
           ],
         ),
       ),

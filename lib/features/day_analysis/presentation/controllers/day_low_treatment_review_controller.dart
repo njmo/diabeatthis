@@ -1,7 +1,13 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/models/timeline_relation.dart';
 import '../../../../core/domain/model/treat.dart';
+import '../../../../core/drift/providers/database_provider.dart';
+import '../../../activity/data/domain/use_cases/load_low_treatments_for_activity_log_use_case.dart';
+import '../../../activity/presentation/controllers/activity_log_details_controller.dart';
 import '../../../low_treatment/data/providers/low_treatment_review_repository_provider.dart';
+import '../../../low_treatment/domain/use_cases/update_low_treatment_relation_use_case.dart';
+import '../../../meals/data/domain/use_cases/load_low_treatments_for_meal_use_case.dart';
 import '../../data/providers/day_context_provider.dart';
 import '../../data/providers/day_low_treatment_review_provider.dart';
 
@@ -25,6 +31,14 @@ class DayLowTreatmentReviewController
     created: created,
   );
 
+  Future<void> updateRelation(int mealId, TimelineRelation? relation) =>
+      _save(() async {
+        await UpdateLowTreatmentRelationUseCase(ref.read(databaseProvider))(
+          mealId,
+          relation,
+        );
+      }, created: true);
+
   Future<void> reset(DateTime occurredAt) => _save(
     () => ref.read(lowTreatmentReviewRepositoryProvider).reset(occurredAt),
   );
@@ -46,6 +60,9 @@ class DayLowTreatmentReviewController
       if (ref.mounted) {
         ref.invalidate(dayLowTreatmentReviewProvider(date));
         if (created) {
+          ref.invalidate(activityLogLowTreatmentsUseCaseProvider);
+          ref.invalidate(activityLogDetailsControllerProvider);
+          ref.invalidate(mealLowTreatmentsForMealUseCaseProvider);
           ref.invalidate(dayContextProvider);
           ref.invalidate(dayContextForDateProvider(date));
         }

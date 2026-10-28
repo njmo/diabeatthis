@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/l10n/language.dart';
+import '../../../../common/l10n/meal_entry_label.dart';
 import '../../../../common/nutrition/confidence_level.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/models/ingredient_history_entry_data.dart';
@@ -102,7 +103,11 @@ class IngredientMealsSection extends StatelessWidget {
           ...usages.map((meal) {
             return _ListSurface(
               leading: Icons.restaurant_outlined,
-              title: meal.name,
+              title: mealEntryLabel(
+                purpose: meal.purpose,
+                name: meal.name,
+                lang: context.lang,
+              ),
               subtitle: meal.status,
               trailing: _formatDate(meal.plannedAt),
               onTap: () {

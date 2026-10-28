@@ -24,7 +24,7 @@ extension DomainMealToCompanion on Meal {
   MealCompanion toCompanion() {
     return MealCompanion(
       id: d.Value(id),
-      name: d.Value(name),
+      name: d.Value(purpose == MealPurpose.lowTreatment ? '' : name),
       plannedAt: d.Value(plannedAt!.millisecondsSinceEpoch),
       purpose: d.Value(purpose.storageValue),
       mealTemplateId: d.Value(mealTemplateId),

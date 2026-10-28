@@ -1459,5 +1459,10 @@
   "activityAddOccurrence": "Add an activity session",
   "activityEntryLater": "Later",
   "activitySingleSave": "Add session",
-  "activityStartNow": "Start now"
+  "activityStartNow": "Start now",
+  "lowTreatmentRelationSelect": "Link to an activity or meal",
+  "lowTreatmentRelationEmpty": "No activities or meals on this day. Select another day.",
+  "lowTreatmentRelationRetry": "Could not load. Retry",
+  "lowTreatmentRelationChange": "Change relation",
+  "lowTreatmentRelationDetach": "No relation"
 }

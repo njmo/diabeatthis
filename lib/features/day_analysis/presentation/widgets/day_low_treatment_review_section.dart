@@ -6,6 +6,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../low_treatment/domain/models/low_treatment_review_list.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
+import '../../../low_treatment/presentation/widgets/low_treatment_relation_editor.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_sheet.dart';
 import '../../data/providers/day_context_provider.dart';
 import '../../data/providers/day_low_treatment_review_provider.dart';
@@ -58,6 +59,11 @@ class DayLowTreatmentReviewSection extends ConsumerWidget {
                   (entry) => (linked[entry.recorded?.mealId]?.length ?? 0) > 1
                       ? DayLinkedLowTreatmentReviewCard(
                           recorded: entry.recorded!,
+                          relationEditor: _relationEditor(
+                            ref,
+                            entry.recorded!,
+                            busy,
+                          ),
                           events: linked[entry.recorded!.mealId]!,
                           busy: busy,
                           onReset: (event) => _save(
@@ -73,6 +79,9 @@ class DayLowTreatmentReviewSection extends ConsumerWidget {
                         )
                       : DayLowTreatmentReviewTile(
                           entry: entry,
+                          relationEditor: entry.recorded == null
+                              ? null
+                              : _relationEditor(ref, entry.recorded!, busy),
                           busy: busy,
                           onLink: () => _link(context, ref, entry.event!, lows),
                           onCreate: () => _create(context, ref, entry.event!),
@@ -134,6 +143,18 @@ class DayLowTreatmentReviewSection extends ConsumerWidget {
       ],
     );
   }
+
+  Widget _relationEditor(WidgetRef ref, RecordedLowTreatment low, bool busy) =>
+      LowTreatmentRelationEditor(
+        mealId: low.mealId,
+        occurredAt: low.eatenAt,
+        relatedMealId: low.relatedMealId,
+        relatedActivityLogId: low.relatedActivityLogId,
+        busy: busy,
+        onChanged: (relation) => ref
+            .read(dayLowTreatmentReviewControllerProvider(date).notifier)
+            .updateRelation(low.mealId, relation),
+      );
 
   Future<void> _link(
     BuildContext context,

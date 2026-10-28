@@ -143,7 +143,7 @@ void main() {
     final mealIngredients = await db.mealIngredientsDao
         .getMealIngredientsForMeal(context.mealId);
 
-    expect(lowTreatment?.name, 'Dosłodzenie');
+    expect(lowTreatment?.name, '');
     expect(lowTreatment?.purpose, 'lowTreatment');
     expect(lowTreatment?.status, 'confirmed');
     expect(context.source, LowTreatmentContextSource.dashboardAction);

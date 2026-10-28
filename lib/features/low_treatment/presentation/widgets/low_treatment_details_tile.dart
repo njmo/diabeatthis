@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/l10n/meal_entry_label.dart';
+import '../../../../core/domain/model/meal.dart';
 import '../../../meals/data/models/meal_details_data.dart';
 import '../../../meals/presentation/widgets/meal_details/meal_detail_formatters.dart';
 import '../formatters/low_treatment_context_formatters.dart';
@@ -40,7 +42,7 @@ class LowTreatmentDetailsTile extends StatelessWidget {
               ].join(' • '),
             ),
             const SizedBox(height: 4),
-            Text(_ingredientsLabel()),
+            Text(_ingredientsLabel(lang)),
             const SizedBox(height: 4),
             Text(_amountLabel(lang, suggestedCarbs, suggestedWithinMinutes)),
           ],
@@ -49,9 +51,13 @@ class LowTreatmentDetailsTile extends StatelessWidget {
     );
   }
 
-  String _ingredientsLabel() {
+  String _ingredientsLabel(AppLocalizations lang) {
     if (treatment.ingredients.isEmpty) {
-      return treatment.meal.name;
+      return mealEntryLabel(
+        purpose: MealPurpose.lowTreatment,
+        name: treatment.meal.name,
+        lang: lang,
+      );
     }
     return treatment.ingredients
         .map((ingredient) {

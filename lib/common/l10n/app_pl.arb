@@ -1899,5 +1899,10 @@
   "activityAddOccurrence": "Dodaj wystąpienie aktywności",
   "activityEntryLater": "Na później",
   "activitySingleSave": "Dodaj termin",
-  "activityStartNow": "Rozpocznij teraz"
+  "activityStartNow": "Rozpocznij teraz",
+  "lowTreatmentRelationSelect": "Powiąż z aktywnością lub posiłkiem",
+  "lowTreatmentRelationEmpty": "Brak aktywności i posiłków w tym dniu. Wybierz inny dzień.",
+  "lowTreatmentRelationRetry": "Nie udało się wczytać. Spróbuj ponownie",
+  "lowTreatmentRelationChange": "Zmień powiązanie",
+  "lowTreatmentRelationDetach": "Bez powiązania"
 }

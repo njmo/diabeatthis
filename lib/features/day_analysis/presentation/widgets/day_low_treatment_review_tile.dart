@@ -7,6 +7,7 @@ import '../../../low_treatment/domain/models/low_treatment_review_entry.dart';
 class DayLowTreatmentReviewTile extends StatelessWidget {
   final LowTreatmentReviewEntry entry;
   final bool busy;
+  final Widget? relationEditor;
   final VoidCallback onLink;
   final VoidCallback onCreate;
   final VoidCallback onDismiss;
@@ -15,6 +16,7 @@ class DayLowTreatmentReviewTile extends StatelessWidget {
     super.key,
     required this.entry,
     required this.busy,
+    this.relationEditor,
     required this.onLink,
     required this.onCreate,
     required this.onDismiss,
@@ -104,6 +106,7 @@ class DayLowTreatmentReviewTile extends StatelessWidget {
                 ],
               ),
             ],
+            if (relationEditor != null) relationEditor!,
           ],
         ),
       ),

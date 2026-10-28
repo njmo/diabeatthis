@@ -75,14 +75,15 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
         .go();
   }
 
+  /// The optional name is accepted for legacy callers; only purpose identifies a low treatment.
   Future<MealData> createLowTreatmentEntry({
-    required String name,
+    String? name,
     required DateTime eatenAt,
     String? notes,
-  }) {
+  }) => transaction(() async {
     return into(db.meal).insertReturning(
       MealCompanion.insert(
-        name: name,
+        name: '',
         plannedAt: eatenAt.millisecondsSinceEpoch,
         summarizedAt: Value(eatenAt.millisecondsSinceEpoch),
         purpose: const Value('lowTreatment'),
@@ -90,7 +91,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
         notes: Value(notes),
       ),
     );
-  }
+  });
 
   Stream<List<MealData>> getAllMealForToday() {
     final now = clock.now().toUtc();

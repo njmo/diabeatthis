@@ -14,7 +14,7 @@ import 'low_treatment_carbs_summary.dart';
 import 'low_treatment_ingredients_list.dart';
 import 'low_treatment_observation_context.dart';
 import 'low_treatment_reason_selector.dart';
-import 'low_treatment_related_record_field.dart';
+import 'low_treatment_relation_editor.dart';
 import 'low_treatment_suggestion_summary.dart';
 import 'quick_low_treatment_selector.dart';
 
@@ -139,7 +139,14 @@ class LowTreatmentSheetContent extends StatelessWidget {
           ),
           if (controller.historicalAt == null)
             const LowTreatmentObservationContext(),
-          const LowTreatmentRelatedRecordField(),
+          LowTreatmentRelationEditor(
+            occurredAt: sheetState.contextDraft.meal.plannedAt,
+            relatedMealId: sheetState.contextDraft.relatedMealId,
+            relatedActivityLogId: sheetState.contextDraft.relatedActivityLogId,
+            busy: sheetState.isSaving,
+            onChanged: (relation) async =>
+                controller.setRelatedRecord(relation),
+          ),
           const SizedBox(height: 12),
           LowTreatmentReasonSelector(
             value: sheetState.reason,

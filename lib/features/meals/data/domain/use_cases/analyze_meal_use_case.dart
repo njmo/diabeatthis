@@ -295,7 +295,7 @@ class AnalyzeMealUseCase {
     return MealTimelineEventData(
       timestamp: treatment.meal.analysisTime,
       type: MealTimelineEventType.lowTreatment,
-      label: treatment.meal.name,
+      label: lang.lowTreatmentMealName,
       value: _lowTreatmentValue(treatment),
     );
   }

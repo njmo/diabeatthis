@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../core/domain/model/carbs_label_mode.dart';
+import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../models/ingredient_details_data.dart';
 import '../../models/ingredient_history_entry_data.dart';
@@ -34,6 +35,7 @@ class LoadIngredientDetailsUseCase {
       return IngredientUsageData(
         mealId: meal.id,
         name: meal.name,
+        purpose: MealPurpose.fromStorage(meal.purpose),
         description: '',
         plannedAt: DateTime.fromMillisecondsSinceEpoch(meal.plannedAt),
         status: meal.status,

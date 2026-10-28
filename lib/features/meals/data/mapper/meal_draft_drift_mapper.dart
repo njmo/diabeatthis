@@ -1,12 +1,13 @@
 import 'package:drift/drift.dart' as d;
 
+import '../../../../core/domain/model/meal.dart';
 import '../../../../core/drift/entity/meal.dart';
 import '../drafts/meal_draft.dart';
 
 extension MealDraftToCompanion on MealDraft {
   MealCompanion toCompanion() {
     return MealCompanion(
-      name: d.Value(name),
+      name: d.Value(purpose == MealPurpose.lowTreatment ? '' : name),
       plannedAt: d.Value(plannedAt.millisecondsSinceEpoch),
       purpose: d.Value(purpose.storageValue),
       status: d.Value(status),

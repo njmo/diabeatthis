@@ -1,7 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../common/l10n/language.dart';
+import '../../../../common/models/timeline_relation.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart';
@@ -19,7 +19,6 @@ import '../../data/providers/low_treatment_handoff_provider.dart';
 import '../../data/providers/low_treatment_related_activity_provider.dart';
 import '../../data/providers/low_treatment_related_meal_provider.dart';
 import '../../domain/use_cases/add_low_treatment_context_entry_use_case.dart';
-
 part 'low_treatment_context_controller.g.dart';
 
 @riverpod
@@ -38,7 +37,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
       return LowTreatmentSheetState(
         contextDraft: LowTreatmentContextDraft(
           meal: MealDraft(
-            name: lang.lowTreatmentMealName,
+            name: '',
             mealIngredients: const [],
             plannedAt: historicalAt!,
             purpose: MealPurpose.lowTreatment,
@@ -59,7 +58,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     final initialState = LowTreatmentSheetState(
       contextDraft: composeDraft(
         meal: MealDraft(
-          name: lang.lowTreatmentMealName,
+          name: '',
           mealIngredients: const [],
           plannedAt: clock.now(),
           purpose: MealPurpose.lowTreatment,
@@ -123,6 +122,24 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
           clock.now(),
       deviceStatusDate: activeSuggestion?.date,
       reason: reason,
+    );
+  }
+
+  void setRelatedRecord(TimelineRelation? relation) {
+    final current = state.value;
+    if (current == null || current.isSaving) return;
+    state = AsyncData(
+      current.copyWith(
+        contextDraft: current.contextDraft.copyWith(
+          relatedMealId: relation?.kind == TimelineRelationKind.meal
+              ? relation!.id
+              : null,
+          relatedActivityLogId: relation?.kind == TimelineRelationKind.activity
+              ? relation!.id
+              : null,
+        ),
+        relatedAutoAttachEnabled: false,
+      ),
     );
   }
 
