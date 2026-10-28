@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../../../common/analysis/dml_aaps_context.dart';
 import '../../../../common/analysis/dml_time_blocks.dart';
 import '../../../../common/analysis/dml_timestamp.dart';
 import '../../../../common/analysis/dml_treatment_context.dart';
@@ -7,6 +8,7 @@ import '../../../../common/analysis/dml_window_facts.dart';
 import '../../../../common/history/bolus_wizard_grouping.dart';
 import '../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../core/domain/model/correction_bolus.dart';
+import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/manual_bolus.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../models/before_meal_context.dart';
@@ -71,6 +73,7 @@ MealDmlDocument serializeMealDml(MealAiContext context) {
         basal: before.basal,
         boluses: before.boluses,
       ),
+      'aaps': dmlAapsSnapshot(latest, cutoff: before.asOf),
       'insulin_window_start': dmlTimestamp(
         before.asOf.subtract(before.windows.insulin),
       ),
@@ -165,7 +168,7 @@ MealDmlDocument serializeMealDml(MealAiContext context) {
                   (at: g.date, values: [g.sgv]),
             ]),
     });
-    final statuses = {
+    final statuses = <DateTime, DeviceStatus>{
       if (latest != null) latest.date.toUtc(): latest,
       for (final s in outcome?.deviceStatuses ?? []) s.date.toUtc(): s,
     }.values;
@@ -200,6 +203,22 @@ MealDmlDocument serializeMealDml(MealAiContext context) {
                 ),
             ]),
     });
+    add(
+      '${prefix}_aaps',
+      dmlAapsContext(
+        statuses:
+            before.failedSources.contains(BeforeMealSource.deviceStatus) &&
+                outcome == null
+            ? null
+            : statuses.toList(),
+        treatments: before.treatments == null && outcome == null
+            ? null
+            : treatments,
+        start: before.asOf.subtract(before.windows.insulin),
+        end: end,
+        predictionAnchors: [if (latest != null) latest],
+      ),
+    );
     final grouping = BolusWizardGrouping(treatments);
     add('${prefix}_intake_insulin', {
       'start': dmlTimestamp(before.asOf.subtract(before.windows.insulin)),

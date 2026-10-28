@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import '../../../../common/analysis/dml_aaps_context.dart';
 import '../../../../core/domain/model/correction_bolus.dart';
+import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/extended_carb.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/manual_bolus.dart';
@@ -39,7 +41,7 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
     for (final g in history.glucose ?? [])
       if (g.type == GlucoseType.cgm && g.sgv > 0 && inSeries(g.date)) g.date: g,
   }.values.toList()..sort((a, b) => a.date.compareTo(b.date));
-  final statuses = {
+  final statuses = <DateTime, DeviceStatus>{
     for (final s in history.statuses ?? [])
       if (inSeries(s.date)) s.date: s,
   }.values.toList()..sort((a, b) => a.date.compareTo(b.date));
@@ -144,6 +146,21 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
             ],
     ),
   });
+  add(
+    'AAPS_CONTEXT',
+    'aaps_context',
+    dmlAapsContext(
+      statuses: history.statuses == null ? null : statuses,
+      treatments: history.treatments,
+      start: seriesStart,
+      end: history.end,
+      predictionAnchors: [
+        for (final meal in context.meals)
+          if (meal.before.latestDeviceStatus != null)
+            meal.before.latestDeviceStatus!,
+      ],
+    ),
+  );
   add('BOLUSES', 'boluses', {
     'columns': ['time', 'kind', 'units'],
     'blocks': dayDmlTimeBlocks(
@@ -258,6 +275,7 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
       ],
       'before': {
         'as_of': at(before.asOf),
+        'aaps': dmlAapsSnapshot(before.latestDeviceStatus, cutoff: before.asOf),
         'mean_mg_dl': finite(before.glucoseSummary?.mean),
         'latest_iob_u': before.latestDeviceStatus?.hasIob == true
             ? finite(before.latestDeviceStatus?.iob)

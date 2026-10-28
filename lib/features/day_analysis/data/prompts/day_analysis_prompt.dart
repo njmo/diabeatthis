@@ -157,5 +157,17 @@ Keep the complete response compact. Prioritize concrete observations over length
 Do not reproduce every statistic. Prioritize the useful observations and limitations.
 
 BEGIN_DML_DATA
+
+AAPS_CONTEXT / *_aaps and before.aaps contain recorded AAPS context, not a full therapy profile.
+Predictions are hypothetical future mg/dl at offsets from calculated_at, never observed CGM.
+They keep checkpoints, extrema and the last point; timelines select the latest valid forecast
+per elapsed hour plus meal-boundary snapshots. Other intermediate curves are not included.
+Use the pre-meal snapshot for pre-meal expectations; later forecasts cannot explain what was known earlier.
+Parameter isf_for_carbs_mg_dl_u is mg/dl per unit. stored_sensitivity_ratio may be a legacy default of 1.
+Calculator ISF and targets are raw values in their own recorded_units; if units are missing, do not interpret them.
+IC is grams per unit. Calculator percentages and components describe the recorded calculation,
+not confirmed insulin delivery, a profile history, or a recommendation to change settings.
+Never add calculator calculated_total_u or its components to insulin totals; delivery is counted elsewhere.
+
 ${document.text}END_DML_DATA
 ''';
