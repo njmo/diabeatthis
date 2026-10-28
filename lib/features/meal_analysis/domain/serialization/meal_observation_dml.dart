@@ -13,6 +13,7 @@ import '../models/before_meal_context.dart';
 import '../models/meal_ai_context.dart';
 import '../models/meal_ai_facts.dart';
 import 'meal_record_evidence_dml.dart';
+import 'recorded_low_treatments_dml.dart';
 
 num? _finite(num? value) => value != null && value.isFinite ? value : null;
 Map<String, Object?> _mealFacts(MealAiFacts meal) => {
@@ -196,13 +197,7 @@ void appendMealObservationDml(
                     for (final m in outcome.subsequentMeals!)
                       {'name': m.name, 'at': dmlTimestamp(m.eatenAt)},
                   ],
-            'rescues': [
-              for (final r in outcome.lowTreatments)
-                {
-                  'at': dmlTimestamp(r.eatenAt),
-                  'net_carbs_g': _finite(r.netCarbsGrams),
-                },
-            ],
+            'rescues': recordedLowTreatmentsDml(outcome.lowTreatments),
             'activities': [
               for (final a in outcome.activities)
                 {
@@ -225,19 +220,24 @@ void appendMealObservationDml(
   );
 }
 
-Map<String, Object?> beforeMealFactsDml(BeforeMealContext before) {
+Map<String, Object?> beforeMealFactsDml(
+  BeforeMealContext before, {
+  bool includePrediction = true,
+}) {
   final latest = before.latestDeviceStatus;
   return {
     ...dmlWindowFacts(
       start: before.asOf.subtract(before.windows.glucose),
       end: before.asOf,
       glucose: before.glucoseSummary,
+      insulinStart: before.asOf.subtract(before.windows.insulin),
       basal: before.basal,
       boluses: before.boluses,
     ),
-    'aaps': dmlAapsSnapshot(latest, cutoff: before.asOf),
-    'insulin_window_start': dmlTimestamp(
-      before.asOf.subtract(before.windows.insulin),
+    'aaps': dmlAapsSnapshot(
+      latest,
+      cutoff: before.asOf,
+      includePrediction: includePrediction,
     ),
     'failed_sources': before.failedSources.map((s) => s.name).toList(),
     'latest_cgm_mg_dl': before.latestCgm?.sgv,
@@ -281,15 +281,9 @@ Map<String, Object?> beforeMealFactsDml(BeforeMealContext before) {
                 'scheduled_remaining_g': _finite(p.scheduledAfterCutoffGrams),
               },
           ],
-    'rescues': before.lowTreatments == null
-        ? null
-        : [
-            for (final r in before.lowTreatments!)
-              {
-                'at': dmlTimestamp(r.eatenAt),
-                'net_carbs_g': _finite(r.netCarbsGrams),
-              },
-          ],
+    'rescues': recordedLowTreatmentsDml(before.lowTreatments),
+    'rescue_record_semantics':
+        'Same-time same-amount records are retained and marked, not confirmed separate portions or proven duplicates. Their combined intake is uncertain.',
     'activities': before.activities == null
         ? null
         : [

@@ -1,12 +1,12 @@
-import 'dart:convert';
-
 import '../../../../common/analysis/dml_aaps_context.dart';
+import '../../../../common/analysis/dml_json.dart';
 import '../../../../common/analysis/dml_time_blocks.dart';
 import '../../../../common/analysis/dml_timestamp.dart';
 import '../../../../common/analysis/dml_treatment_context.dart';
 import '../../../../core/domain/model/correction_bolus.dart';
 import '../../../../core/domain/model/manual_bolus.dart';
 import '../../../meal_analysis/domain/models/before_meal_context.dart';
+import '../../../meal_analysis/domain/serialization/meal_carbohydrate_records_dml.dart';
 import '../../../meal_analysis/domain/serialization/meal_observation_dml.dart';
 import '../../../meal_analysis/domain/serialization/meal_record_evidence_dml.dart';
 import '../models/meal_advisor_context.dart';
@@ -22,7 +22,7 @@ MealAdvisorInput serializeMealAdvisorContext(
   final lines = <String>['DML/1'];
   void add(String id, Map<String, Object?> facts) {
     ids.add(id);
-    lines.add('$id ${jsonEncode(facts)}');
+    lines.add('$id ${encodeDmlFacts(facts)}');
   }
 
   add('context', {
@@ -32,6 +32,7 @@ MealAdvisorInput serializeMealAdvisorContext(
     'built_at': dmlTimestamp(context.builtAt),
     'failed_optional_sources': context.failures.toList(),
     'current_meal_is_planned': true,
+    'export_decimal_places': 4,
     'history_semantics':
         'Event-time reconstruction from currently available records; original upload times and revisions are unavailable.',
     'reading_order': [
@@ -40,6 +41,7 @@ MealAdvisorInput serializeMealAdvisorContext(
       'current_cgm',
       'current_aaps',
       'current_insulin',
+      'current_carbohydrate_records',
       'similar_meals',
     ],
     'interpretation_limits': [
@@ -69,7 +71,30 @@ MealAdvisorInput serializeMealAdvisorContext(
             ),
           },
   );
-  add('current_before', beforeMealFactsDml(before));
+  add('current_before', beforeMealFactsDml(before, includePrediction: false));
+  add('similar_meals', {
+    'search_status': context.failures.contains('cancelled')
+        ? 'cancelled'
+        : context.target == null
+        ? 'unavailable'
+        : context.failures.contains('similar_search')
+        ? 'failed'
+        : context.similarMatchCount == null
+        ? 'unknown'
+        : 'complete',
+    'matched_count': context.similarMatchCount,
+    'included_count': context.comparisons.length,
+    'selection':
+        'Up to three highest ranked matches with completed outcomes before as_of; failed or incomplete observations are excluded.',
+  });
+  add(
+    'current_carbohydrate_records',
+    mealCarbohydrateRecordsDml(
+      treatments: before.treatments,
+      start: before.asOf.subtract(before.windows.meals),
+      end: before.asOf,
+    ),
+  );
   add('current_cgm', {
     'columns': ['time', 'mg_dl', 'direction'],
     'blocks': dmlTimeBlocks(
@@ -89,6 +114,8 @@ MealAdvisorInput serializeMealAdvisorContext(
     ),
   );
   add('current_insulin', {
+    'start': dmlTimestamp(insulinStart),
+    'end': dmlTimestamp(before.asOf),
     'columns': ['time', 'kind', 'recorded_units'],
     'blocks': dmlTimeBlocks(
       before.treatments == null

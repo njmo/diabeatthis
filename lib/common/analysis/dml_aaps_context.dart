@@ -53,6 +53,7 @@ List<List<num>> _sample(List<double> values) {
 Map<String, Object?>? dmlAapsSnapshot(
   DeviceStatus? status, {
   required DateTime cutoff,
+  bool includePrediction = true,
 }) {
   if (status == null || status.date.isAfter(cutoff)) return null;
   final prediction = _prediction(status, cutoff);
@@ -63,7 +64,8 @@ Map<String, Object?>? dmlAapsSnapshot(
     'prediction_age_min': prediction == null
         ? null
         : cutoff.difference(prediction.calculatedAt).inSeconds / 60,
-    'prediction': prediction == null ? null : _predictionFacts(prediction),
+    if (includePrediction)
+      'prediction': prediction == null ? null : _predictionFacts(prediction),
   };
 }
 

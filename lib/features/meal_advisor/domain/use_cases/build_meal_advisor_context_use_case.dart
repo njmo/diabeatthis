@@ -71,6 +71,7 @@ class BuildMealAdvisorContextUseCase {
       target: target,
       builtAt: now(),
       comparisons: references.comparisons,
+      similarMatchCount: similar?.matches.length,
       failures: failures,
     );
   }

@@ -20,6 +20,10 @@ Workflow waiting is not a verified bolus-to-ingestion interval. A delivery candi
 Compare current and reference CGM direction, IOB, COB, activity, ecarbs, stress, exercise and recorded timing.
 References may have different portions or starting conditions. Similarity alone cannot prove that waiting caused an outcome.
 Prior extended carbs are scheduled carbohydrate equivalents, not measured absorption.
+The before-meal start/end bound glucose; insulin_window has separate start/end and totals.
+Carbohydrate records and calculator amounts can describe the same submission and overlap local meals/rescues; never sum them as separate intake.
+Same_time_amount_records marks ambiguous repeated rescues, not confirmed independent portions or proven duplicates; their total intake is uncertain.
+Use similar_meals search_status, matched_count and included_count to distinguish no matches from unavailable or failed comparisons.
 Nutrition confidence is a saved estimate, not measured accuracy. Explicitly name missing decision-relevant data.
 Never calculate insulin units, dose percentages or recommend settings changes. This is a timing draft for review.
 If evidence is insufficient or contradictory, abstain. Do not manufacture an action to fill the schema.

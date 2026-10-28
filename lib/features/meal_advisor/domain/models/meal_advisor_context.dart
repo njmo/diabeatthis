@@ -8,10 +8,14 @@ class MealAdvisorContext {
   final DateTime builtAt;
   final List<MealAiComparison> comparisons;
   final Set<String> failures;
+
+  /// Null means search was unavailable or not performed.
+  final int? similarMatchCount;
   MealAdvisorContext({
     required this.before,
     required this.target,
     required this.builtAt,
+    this.similarMatchCount,
     required List<MealAiComparison> comparisons,
     required Set<String> failures,
   }) : comparisons = List.unmodifiable(comparisons),

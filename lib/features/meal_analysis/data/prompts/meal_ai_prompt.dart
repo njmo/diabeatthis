@@ -21,6 +21,8 @@ the first column is HH:mm, preserving chronological row order and date/offset tr
 Times outside series are local ISO with offset. All glucose is mg/dl, insulin units,
 carbs and macros grams. Recorded stages are application actions, not verified delivery or ingestion.
 SMB is included in bolus_total_u; never add it again. Basal is reconstructed with explicit coverage.
+Before-meal start/end bound glucose; the nested insulin_window supplies its own time bounds and totals.
+Same_time_amount_records marks repeated rescue entries with uncertain identity, not confirmed independent portions or proven duplicates; their combined intake is uncertain.
 eCarbs describe scheduled allocation, not measured absorption of fat or protein.
 Partial windows, CGM observed minutes, source failures and planned macros limit conclusions.
 Compare each meal's preconditions and confounders, not only its maximum glucose.
