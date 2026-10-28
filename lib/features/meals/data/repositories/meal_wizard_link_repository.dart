@@ -53,20 +53,25 @@ class MealWizardLinkRepository {
           .toList(),
     );
     return rows
-        .map(
-          (row) => MealWizardAssignment(
-            id: row.id,
-            dismissed: row.dismissed,
-            mealId: row.mealId,
-            localId: row.localWizardId,
-            remoteId: row.remoteWizardId,
-            remoteSource: row.remoteSource,
-            type: MealWizardRelationType.values.byName(row.relationType),
-          ),
-        )
+        .map(_assignment)
         .where((link) => wizards.any(link.matches))
         .toList();
   }
+
+  Future<List<MealWizardAssignment>> assignmentsForMeal(int mealId) async =>
+      (await forMeal(mealId)).map(_assignment).toList();
+
+  MealWizardAssignment _assignment(MealWizardLinkData row) =>
+      MealWizardAssignment(
+        id: row.id,
+        dismissed: row.dismissed,
+        mealId: row.mealId,
+        localId: row.localWizardId,
+        remoteId: row.remoteWizardId,
+        remoteSource: row.remoteSource,
+        type: MealWizardRelationType.values.byName(row.relationType),
+        recordedAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt),
+      );
 
   Future<List<MealWizardLinkData>> forMeal(int mealId) =>
       db.mealWizardLinkDao.forMeal(mealId);

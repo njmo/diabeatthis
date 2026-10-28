@@ -3,6 +3,7 @@ import 'meal_wizard_relation_type.dart';
 
 class MealWizardAssignment {
   final bool dismissed;
+  final DateTime? recordedAt;
   final int id;
   final int mealId;
   final String? localId;
@@ -12,6 +13,7 @@ class MealWizardAssignment {
 
   const MealWizardAssignment({
     this.dismissed = false,
+    this.recordedAt,
     required this.id,
     required this.mealId,
     required this.localId,

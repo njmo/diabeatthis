@@ -1,10 +1,16 @@
 import '../../../meal_analysis/domain/models/meal_ai_facts.dart';
+import '../../../meal_analysis/domain/models/meal_record_evidence.dart';
+import '../../common/models/meal_wizard_assignment.dart';
 import '../models/meal_details_data.dart';
 import 'similar_meal_query_mapper.dart';
 
 class MealAiFactsMapper {
   const MealAiFactsMapper();
-  MealAiFacts map(MealDetailsData details, {DateTime? cutoff}) {
+  MealAiFacts map(
+    MealDetailsData details, {
+    DateTime? cutoff,
+    List<MealWizardAssignment>? wizardAssignments,
+  }) {
     if (!details.meal.isEaten || details.meal.isLowTreatment) {
       throw StateError('An eaten meal is required');
     }
@@ -20,6 +26,24 @@ class MealAiFactsMapper {
     }
     final query = const SimilarMealQueryMapper().map(details);
     return MealAiFacts(
+      evidence: MealRecordEvidence(
+        eatingTimeSource: details.recordedEatingStartedAt != null
+            ? MealEatingTimeSource.recordedStage
+            : details.meal.summarizedAt != null
+            ? MealEatingTimeSource.summaryTimestamp
+            : MealEatingTimeSource.plannedFallback,
+        nutritionConfidence: snapshot == null
+            ? null
+            : MealNutritionConfidence(
+                carbsQuantity: snapshot.carbWeightedQuantityConfidence,
+                carbsNutrition: snapshot.carbWeightedNutritionConfidence,
+                carbsEffective: snapshot.carbWeightedEffectiveConfidence,
+                fatProteinQuantity: snapshot.wbtWeightedQuantityConfidence,
+                fatProteinNutrition: snapshot.wbtWeightedNutritionConfidence,
+                fatProteinEffective: snapshot.wbtWeightedEffectiveConfidence,
+              ),
+        wizardAssignments: wizardAssignments,
+      ),
       mealId: details.meal.id,
       name: details.meal.name,
       eatenAt: details.analysisTime,

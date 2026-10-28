@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/llm/analysis_llm_provider.dart';
+import '../../../meals/common/models/meal_wizard_assignment.dart';
 import '../../../meals/data/domain/use_cases/analyze_meal_use_case.dart';
 import '../../../meals/data/domain/use_cases/load_meal_details_use_case.dart';
 import '../../../meals/data/mappers/meal_ai_facts_mapper.dart';
+import '../../../meals/data/providers/meal_wizard_link_repository_provider.dart';
 import '../../domain/models/meal_ai_context.dart';
 import '../../domain/models/meal_outcome_context.dart';
 import '../../domain/services/meal_ai_client.dart';
@@ -49,12 +51,23 @@ final buildMealAiContextUseCaseProvider = Provider.autoDispose((ref) {
   final analyze = ref.watch(analyzeMealUseCaseProvider);
   final before = ref.watch(buildBeforeMealContextUseCaseProvider(false));
   final similar = ref.watch(findSimilarMealsUseCaseProvider);
+  final links = ref.watch(mealWizardLinkRepositoryProvider);
   return BuildMealAiContextUseCase(
     now: clock.now,
     loadObservation: (mealId, cutoff) async {
       // Both historical UI and AI use the existing analysis use case and history providers.
       final details = await load(mealId);
-      final facts = const MealAiFactsMapper().map(details, cutoff: cutoff);
+      List<MealWizardAssignment>? assignments;
+      try {
+        assignments = await links.assignmentsForMeal(mealId);
+      } catch (_) {
+        /* Missing links must remain unknown, never inferred from time proximity. */
+      }
+      final facts = const MealAiFactsMapper().map(
+        details,
+        cutoff: cutoff,
+        wizardAssignments: assignments,
+      );
       if (facts.eatenAt.isAfter(cutoff ?? clock.now())) {
         throw StateError('Future meal');
       }

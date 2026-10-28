@@ -51,5 +51,16 @@ IC is grams per unit. Calculator percentages and components describe the recorde
 not confirmed insulin delivery, a profile history, or a recommendation to change settings.
 Never add calculator calculated_total_u or its components to insulin totals; delivery is counted elsewhere.
 
+
+Record evidence distinguishes recorded app workflow, calculator submissions and actual bolus records.
+A temporalAmountCandidate is only a unique same-amount neighbouring record, not verified meal/bolus attribution.
+Use confirmed initial/continuation/correction relation roles; never assign doses merely by proximity.
+workflow_wait_min is elapsed app-status time, not verified insulin-to-food time; null does not mean zero.
+Candidate bolus intervals exist only with a recorded eating stage, and remain labelled as heuristic.
+latest_cgm_before_meal and first_cgm_after_meal include their exact time offsets; do not substitute a window mean for either.
+Saved nutrition confidence is a 0..1 estimate-quality signal, not measured accuracy or clinical confidence.
+Compare waiting only together with starting CGM, trend, IOB, COB, food/portion confidence and overlapping events.
+Do not turn a retrospective association into proof that waiting caused a better outcome.
+
 ${document.text}
 """;

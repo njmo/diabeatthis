@@ -15,6 +15,7 @@ import '../models/before_meal_context.dart';
 import '../models/meal_ai_context.dart';
 import '../models/meal_ai_facts.dart';
 import '../models/meal_dml_document.dart';
+import 'meal_record_evidence_dml.dart';
 
 num? _finite(num? value) => value != null && value.isFinite ? value : null;
 Map<String, Object?> _mealFacts(MealAiFacts meal) => {
@@ -64,6 +65,17 @@ MealDmlDocument serializeMealDml(MealAiContext context) {
     final before = observed.before;
     final outcome = observed.outcome;
     add(prefix, _mealFacts(meal));
+    add(
+      '${prefix}_record_evidence',
+      mealRecordEvidenceDml(
+        mealId: meal.mealId,
+        evidence: meal.evidence,
+        mealTime: meal.eatenAt,
+        workflowWait: meal.wait,
+        before: before,
+        outcome: outcome,
+      ),
+    );
     final latest = before.latestDeviceStatus;
     add('${prefix}_before', {
       ...dmlWindowFacts(

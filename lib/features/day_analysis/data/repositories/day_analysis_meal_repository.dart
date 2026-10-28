@@ -4,8 +4,11 @@ import '../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../meal_analysis/domain/models/meal_observation_window.dart';
+import '../../../meal_analysis/domain/models/meal_record_evidence.dart';
+import '../../../meals/common/models/meal_wizard_assignment.dart';
 import '../../../meals/data/mappers/ingredient_nutrition_mapper.dart';
 import '../../../meals/data/repositories/meal_ingredient_amounts_repository.dart';
+import '../../../meals/data/repositories/meal_wizard_link_repository.dart';
 import '../../../meals/domain/models/recorded_meal_timing.dart';
 import '../../domain/models/day_analysis_meal.dart';
 import '../../domain/models/day_analysis_meal_batch.dart';
@@ -86,7 +89,31 @@ class DayAnalysisMealRepository with Logging {
         ),
     ];
     final timing = RecordedMealTiming(recordedStages);
+    List<MealWizardAssignment>? assignments;
+    try {
+      assignments = await MealWizardLinkRepository(db).assignmentsForMeal(id);
+    } catch (error) {
+      logW('Meal relation read failed: ${error.runtimeType}');
+    }
     return DayAnalysisMeal(
+      evidence: MealRecordEvidence(
+        eatingTimeSource: timing.recordedEatingStartedAt != null
+            ? MealEatingTimeSource.recordedStage
+            : meal.summarizedAt != null
+            ? MealEatingTimeSource.summaryTimestamp
+            : MealEatingTimeSource.plannedFallback,
+        nutritionConfidence: snapshot == null
+            ? null
+            : MealNutritionConfidence(
+                carbsQuantity: snapshot.carbWeightedQuantityConfidence,
+                carbsNutrition: snapshot.carbWeightedNutritionConfidence,
+                carbsEffective: snapshot.carbWeightedEffectiveConfidence,
+                fatProteinQuantity: snapshot.wbtWeightedQuantityConfidence,
+                fatProteinNutrition: snapshot.wbtWeightedNutritionConfidence,
+                fatProteinEffective: snapshot.wbtWeightedEffectiveConfidence,
+              ),
+        wizardAssignments: assignments,
+      ),
       id: meal.id,
       name: meal.name,
       eatenAt:

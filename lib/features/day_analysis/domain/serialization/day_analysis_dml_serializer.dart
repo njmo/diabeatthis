@@ -6,6 +6,7 @@ import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/extended_carb.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/manual_bolus.dart';
+import '../../../meal_analysis/domain/serialization/meal_record_evidence_dml.dart';
 import '../models/day_analysis_context.dart';
 import '../models/day_dml_document.dart';
 import '../use_cases/build_day_dml_use_case.dart';
@@ -250,6 +251,14 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
     final macro = meal.macros;
     add('MEAL', id, {
       'analyze': inDay,
+      'record_evidence': mealRecordEvidenceDml(
+        mealId: meal.id,
+        evidence: meal.evidence,
+        mealTime: meal.eatenAt,
+        workflowWait: meal.wait,
+        before: before,
+        outcome: outcome,
+      ),
       'name': meal.name,
       'eaten_at': at(meal.eatenAt),
       'eating_ended_at': meal.eatingEndedAt == null
