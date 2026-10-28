@@ -1470,5 +1470,8 @@
   "settingsAiAssistedMealAdvisorSaveFailed": "Could not save the setting. Please try again.",
   "mealAiAssistedContextLoading": "Preparing meal context…",
   "mealAdviceCheckingData": "Checking current data…",
-  "mealAdvicePreparationFailed": "Could not prepare a suggestion. You can choose a decision manually."
+  "mealAdvicePreparationFailed": "Could not prepare a suggestion. You can choose a decision manually.",
+  "activityLogEditTimes": "Edit activity times",
+  "activityLogTimeInvalid": "The end must be after the start and cannot be in the future.",
+  "activityLogTimeSaveFailed": "Could not save changes. Reopen the entry and try again."
 }

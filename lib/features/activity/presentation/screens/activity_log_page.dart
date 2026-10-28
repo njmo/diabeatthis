@@ -12,6 +12,7 @@ import '../../../../core/domain/model/treatment_base.dart';
 import '../../data/models/activity_log_analysis_data.dart';
 import '../controllers/activity_log_details_controller.dart';
 import '../widgets/activity_glucose_chart.dart';
+import '../widgets/activity_log_edit_time_button.dart';
 import '../widgets/activity_low_treatments_section.dart';
 
 @RoutePage()
@@ -70,6 +71,11 @@ class ActivityLogPage extends ConsumerWidget {
                           _StatusChip(active: log.isActive),
                         ],
                       ),
+                      if (log.endedAt != null)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: ActivityLogEditTimeButton(log: log),
+                        ),
                       const SizedBox(height: 12),
                       Align(
                         alignment: Alignment.centerLeft,

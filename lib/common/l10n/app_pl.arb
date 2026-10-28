@@ -1910,5 +1910,8 @@
   "settingsAiAssistedMealAdvisorSaveFailed": "Nie udało się zapisać ustawienia. Spróbuj ponownie.",
   "mealAiAssistedContextLoading": "Przygotowuję kontekst posiłku…",
   "mealAdviceCheckingData": "Sprawdzam aktualne dane…",
-  "mealAdvicePreparationFailed": "Nie udało się przygotować sugestii. Możesz wybrać decyzję ręcznie."
+  "mealAdvicePreparationFailed": "Nie udało się przygotować sugestii. Możesz wybrać decyzję ręcznie.",
+  "activityLogEditTimes": "Edytuj czas aktywności",
+  "activityLogTimeInvalid": "Koniec musi być później niż początek i nie może być w przyszłości.",
+  "activityLogTimeSaveFailed": "Nie udało się zapisać zmian. Otwórz wpis ponownie i spróbuj jeszcze raz."
 }

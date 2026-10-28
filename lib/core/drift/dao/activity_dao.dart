@@ -122,6 +122,30 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     return count == 1;
   }
 
+  Future<bool> updateCompletedActivityLogTimes({
+    required int id,
+    required DateTime expectedStart,
+    required DateTime expectedEnd,
+    required DateTime startedAt,
+    required DateTime endedAt,
+  }) async {
+    if (!endedAt.isAfter(startedAt)) return false;
+    final count =
+        await (update(db.activityLog)..where(
+              (row) =>
+                  row.id.equals(id) &
+                  row.startedAt.equals(expectedStart.millisecondsSinceEpoch) &
+                  row.endedAt.equals(expectedEnd.millisecondsSinceEpoch),
+            ))
+            .write(
+              ActivityLogCompanion(
+                startedAt: Value(startedAt.millisecondsSinceEpoch),
+                endedAt: Value(endedAt.millisecondsSinceEpoch),
+              ),
+            );
+    return count == 1;
+  }
+
   Future<int?> getScheduledDurationForLog(int activityLogId) async {
     final occurrence =
         await (select(db.activityOccurrence)
