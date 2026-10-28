@@ -12,6 +12,7 @@ import '../../data/meal_dialog_controller.dart';
 import '../../data/meal_dialog_state.dart';
 import '../../data/utils/meal_advisor.dart';
 import 'meal_add_on_mode_dialog.dart';
+import 'meal_advice_loading.dart';
 import 'meal_status_dialog_result.dart';
 
 class MealStatusDialog extends HookConsumerWidget with Logging {
@@ -26,7 +27,27 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
       mealDialogControllerProvider(meal.id, getStep()).notifier,
     );
 
+    Future<void> chooseManual() async {
+      if (s.isPreparingAdvice) c.cancelAdvicePreparation();
+      final manual = await showDialog<ManualMealDecision>(
+        context: context,
+        builder: (_) => ManualMealDecisionDialog(
+          initialValue: ManualMealDecision(
+            decision: s.advice.decision ?? MealDecision.bolusAndEatNow,
+            waitMinutes: s.advice.wait?.recommendedMinutes ?? 0,
+          ),
+        ),
+      );
+      if (manual != null && context.mounted) await c.chooseEat(manual: manual);
+    }
+
     Widget content() {
+      if (s.isPreparingAdvice) {
+        return MealAdviceLoading(
+          aiAssisted: s.isAiAssisted,
+          onManual: chooseManual,
+        );
+      }
       switch (s.step) {
         case MealDialogStep.choose:
           return Padding(
@@ -102,6 +123,8 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (s.preparationFailed)
+                Text(context.lang.mealAdvicePreparationFailed),
               if (s.skipMeal) Text(context.lang.mealStatusConfirmSkipTitle),
               if (s.skipMeal)
                 Text(context.lang.mealStatusConfirmSkipMessage)
@@ -115,7 +138,7 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
                           c.mealAdviceString() ?? '',
                         ),
                 )
-              else
+              else if (!s.preparationFailed)
                 Text(context.lang.mealAdviceFreshDataRequirements),
             ],
           );
@@ -167,7 +190,9 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
             ),
             ElevatedButton(
               onPressed:
-                  saving.value || (!s.skipMeal && s.advice.decision == null)
+                  saving.value ||
+                      s.isPreparingAdvice ||
+                      (!s.skipMeal && s.advice.decision == null)
                   ? null
                   : () async {
                       saving.value = true;
@@ -311,25 +336,7 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
               IconButton(
                 tooltip: context.lang.uiChooseADecisionManually,
                 icon: const Icon(Icons.edit_outlined),
-                onPressed: saving.value
-                    ? null
-                    : () async {
-                        final manual = await showDialog<ManualMealDecision>(
-                          context: context,
-                          builder: (_) => ManualMealDecisionDialog(
-                            initialValue: ManualMealDecision(
-                              decision:
-                                  s.advice.decision ??
-                                  MealDecision.bolusAndEatNow,
-                              waitMinutes:
-                                  s.advice.wait?.recommendedMinutes ?? 0,
-                            ),
-                          ),
-                        );
-                        if (manual != null && context.mounted) {
-                          await c.chooseEat(manual: manual);
-                        }
-                      },
+                onPressed: saving.value ? null : chooseManual,
               ),
           ],
         ),

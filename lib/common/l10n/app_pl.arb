@@ -1904,5 +1904,11 @@
   "lowTreatmentRelationEmpty": "Brak aktywności i posiłków w tym dniu. Wybierz inny dzień.",
   "lowTreatmentRelationRetry": "Nie udało się wczytać. Spróbuj ponownie",
   "lowTreatmentRelationChange": "Zmień powiązanie",
-  "lowTreatmentRelationDetach": "Bez powiązania"
+  "lowTreatmentRelationDetach": "Bez powiązania",
+  "settingsAiAssistedMealAdvisorTitle": "Meal Advisor wspomagany AI",
+  "settingsAiAssistedMealAdvisorSubtitle": "Przygotowuje kontekst przed posiłkiem pod przyszłe sugestie AI. Obecnie rekomendacje nadal wynikają z dotychczasowych reguł.",
+  "settingsAiAssistedMealAdvisorSaveFailed": "Nie udało się zapisać ustawienia. Spróbuj ponownie.",
+  "mealAiAssistedContextLoading": "Przygotowuję kontekst posiłku…",
+  "mealAdviceCheckingData": "Sprawdzam aktualne dane…",
+  "mealAdvicePreparationFailed": "Nie udało się przygotować sugestii. Możesz wybrać decyzję ręcznie."
 }
