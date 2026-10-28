@@ -26,7 +26,6 @@ class ActivityMonitorContext {
     this.activityName,
     this.startsAt,
     this.durationMinutes,
-    this.finishReminderShown = false,
   });
 
   int? activityLogId;
@@ -34,7 +33,6 @@ class ActivityMonitorContext {
   String? activityName;
   DateTime? startsAt;
   int? durationMinutes;
-  bool finishReminderShown;
 
   bool get hasActivity => activityLogId != null && startsAt != null;
 
@@ -44,7 +42,6 @@ class ActivityMonitorContext {
     activityName = next.activityName;
     startsAt = next.startsAt;
     durationMinutes = next.durationMinutes;
-    finishReminderShown = next.finishReminderShown;
   }
 
   void clear() {
@@ -53,6 +50,5 @@ class ActivityMonitorContext {
     activityName = null;
     startsAt = null;
     durationMinutes = null;
-    finishReminderShown = false;
   }
 }

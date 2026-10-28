@@ -101,6 +101,27 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     return into(db.activityLog).insertReturning(activityLog);
   }
 
+  Future<bool> finishActivityLogIfOpen(
+    int id,
+    DateTime expectedStart,
+    DateTime endedAt,
+  ) async {
+    if (!endedAt.isAfter(expectedStart)) return false;
+    final count =
+        await (update(db.activityLog)..where(
+              (row) =>
+                  row.id.equals(id) &
+                  row.startedAt.equals(expectedStart.millisecondsSinceEpoch) &
+                  row.endedAt.isNull(),
+            ))
+            .write(
+              ActivityLogCompanion(
+                endedAt: Value(endedAt.millisecondsSinceEpoch),
+              ),
+            );
+    return count == 1;
+  }
+
   Future<int?> getScheduledDurationForLog(int activityLogId) async {
     final occurrence =
         await (select(db.activityOccurrence)

@@ -284,6 +284,8 @@ Map<String, Object?> beforeMealFactsDml(
     'rescues': recordedLowTreatmentsDml(before.lowTreatments),
     'rescue_record_semantics':
         'Same-time same-amount records are retained and marked, not confirmed separate portions or proven duplicates. Their combined intake is uncertain.',
+    'activity_record_semantics':
+        'Activity start/end are application records. Timed activities may end automatically at the planned time; this is not verified exercise duration.',
     'activities': before.activities == null
         ? null
         : [

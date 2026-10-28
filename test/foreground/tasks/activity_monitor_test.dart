@@ -1,13 +1,11 @@
 import 'dart:async';
 
 import 'package:clock/clock.dart';
-import 'package:diabeatthis/common/events/data/notification/activity_finished_response_event.dart';
 import 'package:diabeatthis/common/monitoring/activity_monitoring_phase.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart' as domain;
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
-import 'package:diabeatthis/core/notifications/domain/events/activity_finished_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/temp_target_notification.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/foreground/event/internal/activity_event.dart';
@@ -30,74 +28,77 @@ void main() {
   LogRuntimeConfig.configure(isUnitTest: true, enableBuffer: false);
 
   group('ActivityMonitorTask', () {
-    test('waits for planned activity and asks at planned end', () async {
-      final db = DatabaseImpl(NativeDatabase.memory());
-      addTearDown(db.close);
+    test(
+      'waits for planned activity and automatically finishes at planned end',
+      () async {
+        final db = DatabaseImpl(NativeDatabase.memory());
+        addTearDown(db.close);
 
-      var now = DateTime(2026, 3, 23, 12);
-      final startsAt = now.add(const Duration(minutes: 10));
-      await _seedActivityLog(db, startsAt: startsAt, durationMinutes: 30);
+        var now = DateTime(2026, 3, 23, 12);
+        final startsAt = now.add(const Duration(minutes: 10));
+        await _seedActivityLog(db, startsAt: startsAt, durationMinutes: 30);
 
-      await withClock(Clock(() => now), () async {
-        final notifications = FakeNotificationsController();
-        final harness = _startHarness(db, notifications);
-        addTearDown(harness.dispose);
+        await withClock(Clock(() => now), () async {
+          final notifications = FakeNotificationsController();
+          final harness = _startHarness(db, notifications);
+          addTearDown(harness.dispose);
 
-        final task = ActivityMonitorTask();
-        _runTask(task, harness);
-        await _settle();
+          final task = ActivityMonitorTask();
+          _runTask(task, harness);
+          await _settle();
 
-        expect(task.state, isA<MonitorUntilActivityExecutor>());
-        expect(notifications.shownEvents, hasLength(1));
-        expect(
-          notifications.shownEvents.single,
-          isA<TempTargetNotificationEvent>(),
-        );
+          expect(task.state, isA<MonitorUntilActivityExecutor>());
+          expect(notifications.shownEvents, hasLength(1));
+          expect(
+            notifications.shownEvents.single,
+            isA<TempTargetNotificationEvent>(),
+          );
 
-        harness.dispatchEvent(
-          TreatmentAvailableEvent<domain.TemporaryTarget>(
-            _temporaryTarget(now),
-          ),
-        );
-        await _settle();
+          harness.dispatchEvent(
+            TreatmentAvailableEvent<domain.TemporaryTarget>(
+              _temporaryTarget(now),
+            ),
+          );
+          await _settle();
 
-        now = startsAt.subtract(const Duration(minutes: 1));
-        await _dispatchTick(harness, now);
+          now = startsAt.subtract(const Duration(minutes: 1));
+          await _dispatchTick(harness, now);
 
-        expect(task.state, isA<MonitorUntilActivityExecutor>());
-        expect(notifications.shownEvents, hasLength(1));
+          expect(task.state, isA<MonitorUntilActivityExecutor>());
+          expect(notifications.shownEvents, hasLength(1));
 
-        now = startsAt;
-        await _dispatchTick(harness, now);
+          now = startsAt;
+          await _dispatchTick(harness, now);
 
-        expect(task.state, isA<MonitorActiveActivityExecutor>());
-        expect(notifications.shownEvents, hasLength(1));
+          expect(task.state, isA<MonitorActiveActivityExecutor>());
+          expect(notifications.shownEvents, hasLength(1));
 
-        now = startsAt.add(const Duration(minutes: 29));
-        await _dispatchTick(harness, now);
+          now = startsAt.add(const Duration(minutes: 29));
+          await _dispatchTick(harness, now);
 
-        expect(notifications.shownEvents, hasLength(1));
+          expect(notifications.shownEvents, hasLength(1));
 
-        now = startsAt.add(const Duration(minutes: 30));
-        await _dispatchTick(harness, now);
+          now = startsAt.add(const Duration(minutes: 30));
+          await _dispatchTick(harness, now);
 
-        expect(notifications.shownEvents, hasLength(2));
-        final event = notifications.shownEvents.last;
-        expect(event, isA<ActivityFinishedNotificationEvent>());
-        expect((event as ActivityFinishedNotificationEvent).activityLogId, 1);
-        expect(
-          harness.emittedEvents
-              .whereType<ActivityMonitoringStatusChanged>()
-              .map((event) => event.status.phase),
-          [
-            ActivityMonitoringPhase.planned,
-            ActivityMonitoringPhase.preparing,
-            ActivityMonitoringPhase.active,
-            ActivityMonitoringPhase.waitingForFinish,
-          ],
-        );
-      });
-    });
+          expect(notifications.shownEvents, hasLength(1));
+          final log = await db.activityDao.getActivityLogById(1);
+          expect(log.endedAt, now.millisecondsSinceEpoch);
+          expect(task.state, isA<ActivityMonitorStateIdle>());
+          expect(
+            harness.emittedEvents
+                .whereType<ActivityMonitoringStatusChanged>()
+                .map((event) => event.status.phase),
+            [
+              ActivityMonitoringPhase.planned,
+              ActivityMonitoringPhase.preparing,
+              ActivityMonitoringPhase.active,
+              ActivityMonitoringPhase.idle,
+            ],
+          );
+        });
+      },
+    );
 
     test(
       'shows activity temp target reminder 45 minutes before activity',
@@ -186,97 +187,166 @@ void main() {
       },
     );
 
-    test('confirmation ends active activity and returns to idle', () async {
-      final db = DatabaseImpl(NativeDatabase.memory());
-      addTearDown(db.close);
+    test(
+      'delayed wakeup finishes at planned end and returns to idle',
+      () async {
+        final db = DatabaseImpl(NativeDatabase.memory());
+        addTearDown(db.close);
 
-      var now = DateTime(2026, 3, 23, 12);
-      final startsAt = now.subtract(const Duration(minutes: 10));
-      await _seedActivityLog(db, startsAt: startsAt, durationMinutes: 15);
+        var now = DateTime(2026, 3, 23, 12);
+        final startsAt = now.subtract(const Duration(minutes: 10));
+        await _seedActivityLog(db, startsAt: startsAt, durationMinutes: 15);
 
-      await withClock(Clock(() => now), () async {
-        final notifications = FakeNotificationsController();
-        final harness = _startHarness(db, notifications);
-        addTearDown(harness.dispose);
+        await withClock(Clock(() => now), () async {
+          final notifications = FakeNotificationsController();
+          final harness = _startHarness(db, notifications);
+          addTearDown(harness.dispose);
 
-        final task = ActivityMonitorTask();
-        _runTask(task, harness);
-        await _settle();
+          final task = ActivityMonitorTask();
+          _runTask(task, harness);
+          await _settle();
 
-        expect(task.state, isA<MonitorActiveActivityExecutor>());
+          expect(task.state, isA<MonitorActiveActivityExecutor>());
 
-        now = startsAt.add(const Duration(minutes: 15));
-        await _dispatchTick(harness, now);
+          now = startsAt.add(const Duration(hours: 4));
+          await _dispatchTick(harness, now);
 
-        expect(notifications.shownEvents, hasLength(1));
+          expect(notifications.shownEvents, isEmpty);
+          final log = await db.activityDao.getActivityLogById(1);
+          expect(
+            log.endedAt,
+            startsAt.add(const Duration(minutes: 15)).millisecondsSinceEpoch,
+          );
+          expect(notifications.cancelAllCalled, isTrue);
+          expect(task.state, isA<ActivityMonitorStateIdle>());
+        });
+      },
+    );
 
-        harness.dispatchEventToTask(
-          task,
-          ActivityFinishedResponseEvent.agree(activityLogId: 1),
-        );
-        await _settle();
+    test(
+      'activity without duration remains active until manual stop event',
+      () async {
+        final db = DatabaseImpl(NativeDatabase.memory());
+        addTearDown(db.close);
 
-        final log = await db.activityDao.getActivityLogById(1);
-        expect(log.endedAt, now.millisecondsSinceEpoch);
-        expect(notifications.cancelAllCalled, isTrue);
-        expect(task.state, isA<ActivityMonitorStateIdle>());
-      });
-    });
+        var now = DateTime(2026, 3, 23, 12);
+        final startsAt = now.subtract(const Duration(minutes: 5));
+        await _seedActivityLog(db, startsAt: startsAt, durationMinutes: null);
 
-    test('dismiss keeps activity active until manual stop event', () async {
-      final db = DatabaseImpl(NativeDatabase.memory());
-      addTearDown(db.close);
+        await withClock(Clock(() => now), () async {
+          final notifications = FakeNotificationsController();
+          final harness = _startHarness(db, notifications);
+          addTearDown(harness.dispose);
 
-      var now = DateTime(2026, 3, 23, 12);
-      final startsAt = now.subtract(const Duration(minutes: 5));
-      await _seedActivityLog(db, startsAt: startsAt, durationMinutes: 5);
+          final task = ActivityMonitorTask();
+          _runTask(task, harness);
+          await _settle();
 
-      await withClock(Clock(() => now), () async {
-        final notifications = FakeNotificationsController();
-        final harness = _startHarness(db, notifications);
-        addTearDown(harness.dispose);
+          await _dispatchTick(harness, now);
+          expect(notifications.shownEvents, isEmpty);
 
-        final task = ActivityMonitorTask();
-        _runTask(task, harness);
-        await _settle();
+          var log = await db.activityDao.getActivityLogById(1);
+          expect(log.endedAt, isNull);
 
-        await _dispatchTick(harness, now);
-        expect(notifications.shownEvents, hasLength(1));
+          now = now.add(const Duration(minutes: 2));
+          await db.activityDao.updateActivityLog(
+            ActivityLogCompanion(
+              id: const Value(1),
+              activityId: const Value(1),
+              startedAt: Value(startsAt.millisecondsSinceEpoch),
+              endedAt: Value(now.millisecondsSinceEpoch),
+            ),
+          );
+          harness.dispatchEventToTask(
+            task,
+            ActivityStoppedEvent(
+              activityLogId: 1,
+              activityId: 1,
+              startsAt: startsAt,
+              stoppedAt: now,
+            ),
+          );
+          await _settle();
 
-        harness.dispatchEventToTask(
-          task,
-          ActivityFinishedResponseEvent.dismiss(activityLogId: 1),
-        );
-        await _settle();
+          log = await db.activityDao.getActivityLogById(1);
+          expect(log.endedAt, now.millisecondsSinceEpoch);
+          expect(task.state, isA<ActivityMonitorStateIdle>());
+        });
+      },
+    );
 
-        var log = await db.activityDao.getActivityLogById(1);
-        expect(log.endedAt, isNull);
+    test(
+      'restart after the deadline closes the activity without waiting for a tick',
+      () async {
+        final db = DatabaseImpl(NativeDatabase.memory());
+        addTearDown(db.close);
+        final startsAt = DateTime(2026, 10, 28, 17);
+        final now = startsAt.add(const Duration(hours: 4));
+        await _seedActivityLog(db, startsAt: startsAt, durationMinutes: 60);
+        await withClock(Clock.fixed(now), () async {
+          final notifications = FakeNotificationsController();
+          final harness = _startHarness(db, notifications);
+          addTearDown(harness.dispose);
+          final task = ActivityMonitorTask();
+          _runTask(task, harness);
+          await _settle();
+          final log = await db.activityDao.getActivityLogById(1);
+          expect(
+            log.endedAt,
+            startsAt.add(const Duration(hours: 1)).millisecondsSinceEpoch,
+          );
+          expect(task.state, isA<ActivityMonitorStateIdle>());
+          expect(notifications.shownEvents, isEmpty);
+        });
+      },
+    );
 
-        now = now.add(const Duration(minutes: 2));
-        await db.activityDao.updateActivityLog(
-          ActivityLogCompanion(
-            id: const Value(1),
-            activityId: const Value(1),
-            startedAt: Value(startsAt.millisecondsSinceEpoch),
-            endedAt: Value(now.millisecondsSinceEpoch),
-          ),
-        );
-        harness.dispatchEventToTask(
-          task,
-          ActivityStoppedEvent(
-            activityLogId: 1,
-            activityId: 1,
-            startsAt: startsAt,
-            stoppedAt: now,
-          ),
-        );
-        await _settle();
-
-        log = await db.activityDao.getActivityLogById(1);
-        expect(log.endedAt, now.millisecondsSinceEpoch);
-        expect(task.state, isA<ActivityMonitorStateIdle>());
-      });
-    });
+    test(
+      'manual stop interrupts a timed activity without later changing its end',
+      () async {
+        final db = DatabaseImpl(NativeDatabase.memory());
+        addTearDown(db.close);
+        var now = DateTime(2026, 10, 28, 17);
+        final startsAt = now;
+        await _seedActivityLog(db, startsAt: startsAt, durationMinutes: 60);
+        await withClock(Clock(() => now), () async {
+          final notifications = FakeNotificationsController();
+          final harness = _startHarness(db, notifications);
+          addTearDown(harness.dispose);
+          final task = ActivityMonitorTask();
+          _runTask(task, harness);
+          await _settle();
+          now = startsAt.add(const Duration(minutes: 35));
+          final stoppedAt = now;
+          await db.activityDao.updateActivityLog(
+            ActivityLogCompanion(
+              id: const Value(1),
+              activityId: const Value(1),
+              startedAt: Value(startsAt.millisecondsSinceEpoch),
+              endedAt: Value(stoppedAt.millisecondsSinceEpoch),
+            ),
+          );
+          harness.dispatchEventToTask(
+            task,
+            ActivityStoppedEvent(
+              activityLogId: 1,
+              activityId: 1,
+              startsAt: startsAt,
+              stoppedAt: stoppedAt,
+            ),
+          );
+          await _settle();
+          now = startsAt.add(const Duration(hours: 2));
+          await _dispatchTick(harness, now);
+          expect(
+            (await db.activityDao.getActivityLogById(1)).endedAt,
+            stoppedAt.millisecondsSinceEpoch,
+          );
+          expect(task.state, isA<ActivityMonitorStateIdle>());
+          expect(notifications.shownEvents, isEmpty);
+        });
+      },
+    );
 
     test('cancelled planned activity returns to idle', () async {
       final db = DatabaseImpl(NativeDatabase.memory());
@@ -346,7 +416,7 @@ FakeRuntimeHarness _startHarness(
 Future<void> _seedActivityLog(
   DatabaseImpl db, {
   required DateTime startsAt,
-  required int durationMinutes,
+  required int? durationMinutes,
 }) async {
   await db.customInsert(
     '''

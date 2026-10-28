@@ -3,7 +3,8 @@ class MealActivityContext {
   final String name;
   final DateTime startedAt;
 
-  /// Actual end only when it occurred before the context cutoff.
+  /// Stored end only when it precedes the cutoff. Timed activities may be
+  /// closed automatically at their planned end; this is not verified duration.
   final DateTime? endedAt;
   final DateTime recordedAt;
   final int? plannedDurationMinutes;
