@@ -275,7 +275,7 @@ class ActivityScheduleService {
               durationMinutes: durationMinutes,
               confirmationMode: 'automatic',
               actionAt: start
-                  .subtract(const Duration(minutes: 90))
+                  .subtract(activityPreparationLeadTime)
                   .millisecondsSinceEpoch,
             ),
           );

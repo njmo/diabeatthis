@@ -8,6 +8,7 @@ import '../../../../core/logger/logger.dart';
 import '../../../activity/data/drafts/activity_log_draft.dart';
 import '../../../activity/data/models/activity_log_summary_data.dart';
 import '../../../activity/data/providers/activity_provider.dart';
+import '../../../activity/domain/activity_schedule_time.dart';
 import '../../../activity/presentation/widgets/activity_picker_sheet.dart';
 import '../../data/providers/temporary_target_ui_provider.dart';
 import '../../data/providers/time_now_provider.dart';
@@ -140,7 +141,12 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
 
     final cards = <Widget>[];
 
-    if (pendingActivity != null) {
+    final activityVisible =
+        pendingActivity != null &&
+        !pendingActivity.startedAt.isAfter(
+          now.add(activityPreparationLeadTime),
+        );
+    if (pendingActivity != null && activityVisible) {
       final linkedTarget =
           target != null &&
               _isActivityTarget(target) &&
@@ -176,6 +182,7 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
     }
 
     final targetShownWithActivity =
+        activityVisible &&
         target != null &&
         _isActivityTarget(target) &&
         _isActivityLinkedToTarget(pendingActivity, target);

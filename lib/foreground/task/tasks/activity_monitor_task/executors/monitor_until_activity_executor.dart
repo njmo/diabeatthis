@@ -5,6 +5,7 @@ import '../../../../../core/domain/model/temporary_target.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/notifications/domain/events/temp_target_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../../../../features/activity/domain/activity_schedule_time.dart';
 import '../../../../event/internal/activity_event.dart';
 import '../../../../event/internal/treatment_available_event.dart';
 import '../../../../event/model/foreground_event.dart';
@@ -86,7 +87,7 @@ class MonitorUntilActivityExecutor extends ActivityMonitorStateExecutor {
     if (scheduledDuration != null) {
       // The schedule task owns its target prompt, independently of whichever
       // session is currently monitored. Avoid a second prompt here.
-      final preparationAt = startsAt.subtract(const Duration(minutes: 90));
+      final preparationAt = startsAt.subtract(activityPreparationLeadTime);
       if (preparationAt.isAfter(clock.now())) {
         await runtimeContext.waitUntil(preparationAt);
       }
