@@ -6,6 +6,7 @@ import '../../../../core/drift/providers/database_provider.dart';
 import '../../../activity/data/domain/use_cases/load_low_treatments_for_activity_log_use_case.dart';
 import '../../../activity/presentation/controllers/activity_log_details_controller.dart';
 import '../../../low_treatment/data/providers/low_treatment_review_repository_provider.dart';
+import '../../../low_treatment/domain/use_cases/delete_recorded_low_treatment_use_case.dart';
 import '../../../low_treatment/domain/use_cases/update_low_treatment_relation_use_case.dart';
 import '../../../meals/data/domain/use_cases/load_low_treatments_for_meal_use_case.dart';
 import '../../data/providers/day_context_provider.dart';
@@ -38,6 +39,11 @@ class DayLowTreatmentReviewController
           relation,
         );
       }, created: true);
+
+  Future<void> deleteRecorded(int mealId) => _save(
+    () => DeleteRecordedLowTreatmentUseCase(ref.read(databaseProvider))(mealId),
+    created: true,
+  );
 
   Future<void> reset(DateTime occurredAt) => _save(
     () => ref.read(lowTreatmentReviewRepositoryProvider).reset(occurredAt),

@@ -1940,5 +1940,7 @@
   "dashboardActivityOngoingTarget": "Temp target aktywności: {target} mg/dl",
   "@dashboardActivityOngoingTarget": {"placeholders": {"target": {"type": "int"}}},
   "dashboardActivityTargetRemaining": "Pozostało {minutes} min · do {time}",
-  "@dashboardActivityTargetRemaining": {"placeholders": {"minutes": {"type": "int"}, "time": {"type": "String"}}}
+  "@dashboardActivityTargetRemaining": {"placeholders": {"minutes": {"type": "int"}, "time": {"type": "String"}}},
+  "lowTreatmentDeleteTitle": "Usunąć dosłodzenie?",
+  "lowTreatmentDeleteMessage": "Dosłodzenie i jego powiązania zostaną usunięte. Źródłowy wpis węglowodanów pozostanie bez zmian."
 }

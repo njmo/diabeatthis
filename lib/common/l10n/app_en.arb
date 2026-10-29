@@ -1500,5 +1500,7 @@
   "dashboardActivityOngoingTarget": "Activity temp target: {target} mg/dl",
   "@dashboardActivityOngoingTarget": {"placeholders": {"target": {"type": "int"}}},
   "dashboardActivityTargetRemaining": "{minutes} min remaining · until {time}",
-  "@dashboardActivityTargetRemaining": {"placeholders": {"minutes": {"type": "int"}, "time": {"type": "String"}}}
+  "@dashboardActivityTargetRemaining": {"placeholders": {"minutes": {"type": "int"}, "time": {"type": "String"}}},
+  "lowTreatmentDeleteTitle": "Delete low treatment?",
+  "lowTreatmentDeleteMessage": "The low treatment and its links will be deleted. The source carbohydrate entry will remain unchanged."
 }

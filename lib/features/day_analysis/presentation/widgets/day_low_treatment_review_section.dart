@@ -6,6 +6,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../low_treatment/domain/models/low_treatment_review_list.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
+import '../../../low_treatment/presentation/widgets/delete_recorded_low_treatment_button.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_relation_editor.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_sheet.dart';
 import '../../data/providers/day_context_provider.dart';
@@ -145,15 +146,29 @@ class DayLowTreatmentReviewSection extends ConsumerWidget {
   }
 
   Widget _relationEditor(WidgetRef ref, RecordedLowTreatment low, bool busy) =>
-      LowTreatmentRelationEditor(
-        mealId: low.mealId,
-        occurredAt: low.eatenAt,
-        relatedMealId: low.relatedMealId,
-        relatedActivityLogId: low.relatedActivityLogId,
-        busy: busy,
-        onChanged: (relation) => ref
-            .read(dayLowTreatmentReviewControllerProvider(date).notifier)
-            .updateRelation(low.mealId, relation),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LowTreatmentRelationEditor(
+            mealId: low.mealId,
+            occurredAt: low.eatenAt,
+            relatedMealId: low.relatedMealId,
+            relatedActivityLogId: low.relatedActivityLogId,
+            busy: busy,
+            onChanged: (relation) => ref
+                .read(dayLowTreatmentReviewControllerProvider(date).notifier)
+                .updateRelation(low.mealId, relation),
+          ),
+          DeleteRecordedLowTreatmentButton(
+            busy: busy,
+            onDelete: () => _save(
+              ref.context,
+              () => ref
+                  .read(dayLowTreatmentReviewControllerProvider(date).notifier)
+                  .deleteRecorded(low.mealId),
+            ),
+          ),
+        ],
       );
 
   Future<void> _link(
