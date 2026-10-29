@@ -266,15 +266,32 @@ class RuntimeContext with Logging {
   /// The timer and scheduler waiter share the same lifetime.
   WaitHandle<void> wallClockWaitUntilHandle(DateTime at) {
     final deadline = waitUntilHandle(at);
-    final delay = at.difference(clock.now());
-    final timer = Timer(
-      delay.isNegative ? Duration.zero : delay,
-      () => tick(clock.now()),
-    );
+    Timer? timer;
+    void cancelTimer() => timer?.cancel();
+    void scheduleWake() {
+      final remaining = at.difference(clock.now()).inMicroseconds;
+      // Timers have millisecond precision. Round up so a fractional remainder
+      // never becomes a zero-delay retry loop.
+      final milliseconds = remaining <= 0
+          ? 0
+          : (remaining + Duration.microsecondsPerMillisecond - 1) ~/
+                Duration.microsecondsPerMillisecond;
+      timer = Timer(Duration(milliseconds: milliseconds), () {
+        final now = clock.now();
+        if (now.isBefore(at)) {
+          // An early callback or a backwards clock change must not lose the wake.
+          scheduleWake();
+        } else {
+          tick(now);
+        }
+      });
+    }
+
+    scheduleWake();
     return WaitHandle<void>(
-      future: deadline.future.whenComplete(timer.cancel),
+      future: deadline.future.whenComplete(cancelTimer),
       cancel: () async {
-        timer.cancel();
+        cancelTimer();
         await deadline.cancel();
       },
     );
