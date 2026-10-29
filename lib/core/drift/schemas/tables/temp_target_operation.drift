@@ -1,0 +1,43 @@
+import 'activity_log.drift';
+
+CREATE TABLE temp_target_operation (
+  request_id TEXT NOT NULL PRIMARY KEY,
+  kind TEXT NOT NULL CHECK (kind IN ('start', 'stop')),
+  entity_id INTEGER NOT NULL,
+  target_type TEXT NOT NULL,
+  source TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN (
+    'pendingDelivery', 'awaitingConsent', 'declined', 'sending', 'sent',
+    'rejected', 'unknownResult', 'completed', 'superseded'
+  )),
+  payload_json TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  delivered_at INTEGER,
+  closed_at INTEGER
+);
+
+CREATE INDEX idx_temp_target_operation_entity
+ON temp_target_operation(kind, entity_id, source, created_at);
+
+CREATE INDEX idx_temp_target_operation_status
+ON temp_target_operation(status, kind, created_at);
+
+CREATE TRIGGER temp_target_operation_activity_ended
+AFTER UPDATE OF ended_at ON activity_log
+WHEN NEW.ended_at IS NOT NULL
+BEGIN
+  UPDATE temp_target_operation
+  SET closed_at = NEW.ended_at
+  WHERE kind = 'start' AND target_type = 'activity'
+    AND entity_id = NEW.id AND closed_at IS NULL;
+END;
+
+CREATE TRIGGER temp_target_operation_activity_deleted
+BEFORE DELETE ON activity_log
+BEGIN
+  UPDATE temp_target_operation
+  SET closed_at = COALESCE(OLD.ended_at, CAST(strftime('%s','now') AS INTEGER) * 1000)
+  WHERE kind = 'start' AND target_type = 'activity'
+    AND entity_id = OLD.id AND closed_at IS NULL;
+END;

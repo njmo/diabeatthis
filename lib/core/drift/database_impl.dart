@@ -17,6 +17,7 @@ import 'dao/quick_low_treatment_item_dao.dart';
 import 'database.dart';
 import 'migrations/migrate_optional_activity_duration.dart';
 import 'migrations/migrate_stress_events.dart';
+import 'migrations/migrate_temp_target_operations.dart';
 import 'migrations/migrate_typed_low_treatments.dart';
 import 'migrations/migrate_wizard_identity.dart';
 
@@ -44,7 +45,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 35;
+  int get schemaVersion => 36;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -189,6 +190,9 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       }
       if (from < 35) {
         await migrateOptionalActivityDuration(this, m);
+      }
+      if (from < 36) {
+        await migrateTempTargetOperations(this, m);
       }
     },
     beforeOpen: (details) async {

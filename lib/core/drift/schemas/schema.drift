@@ -29,3 +29,4 @@ import 'tables/accepted_day_ai.drift';
 import 'tables/accepted_meal_ai.drift';
 
 import 'tables/activity_schedule.drift';
+import 'tables/temp_target_operation.drift';
