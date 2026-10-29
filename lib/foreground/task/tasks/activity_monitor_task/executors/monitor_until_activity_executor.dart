@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 
 import '../../../../../common/monitoring/activity_monitoring_phase.dart';
+import '../../../../../common/temporary_targets/temp_target_policy.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/notifications/domain/events/temp_target_notification.dart';
@@ -11,6 +12,7 @@ import '../../../../event/internal/treatment_available_event.dart';
 import '../../../../event/model/foreground_event.dart';
 import '../../../base/runtime_context.dart';
 import '../activity_monitor_context.dart';
+import '../helpers/activity_temp_target_monitor.dart';
 import 'activity_monitor_state_executor.dart';
 import 'monitor_active_activity_executor.dart';
 
@@ -77,14 +79,38 @@ class MonitorUntilActivityExecutor extends ActivityMonitorStateExecutor {
       return const MonitorActiveActivityExecutor();
     }
 
+    final targets = runtimeContext.container.read(
+      activityTempTargetMonitorProvider,
+    );
+    if (await targets.isEnabled(runtimeContext)) {
+      final preparationAt = startsAt.subtract(
+        TempTargetPolicy.activityLeadTime,
+      );
+      await targets.waitUntil(
+        runtimeContext,
+        preparationAt,
+        activityLogId: activityMonitorContext.activityLogId,
+      );
+      activityMonitorContext.publishStatus(
+        runtimeContext,
+        ActivityMonitoringPhase.preparing,
+      );
+      await targets.waitUntil(
+        runtimeContext,
+        startsAt,
+        activityLogId: activityMonitorContext.activityLogId,
+      );
+      return const MonitorActiveActivityExecutor();
+    }
+
     final logId = activityMonitorContext.activityLogId;
-    final scheduledDuration = logId == null
+    final scheduledOccurrence = logId == null
         ? null
         : await runtimeContext.container
               .read(databaseProvider)
               .activityDao
-              .getScheduledDurationForLog(logId);
-    if (scheduledDuration != null) {
+              .getOccurrenceForLog(logId);
+    if (scheduledOccurrence != null) {
       // The schedule task owns its target prompt, independently of whichever
       // session is currently monitored. Avoid a second prompt here.
       final preparationAt = startsAt.subtract(activityPreparationLeadTime);

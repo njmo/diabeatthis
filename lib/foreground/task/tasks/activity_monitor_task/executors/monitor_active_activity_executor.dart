@@ -7,6 +7,7 @@ import '../../../../event/internal/activity_event.dart';
 import '../../../../event/model/foreground_event.dart';
 import '../../../base/runtime_context.dart';
 import '../activity_monitor_context.dart';
+import '../helpers/activity_temp_target_monitor.dart';
 import 'activity_monitor_state_executor.dart';
 import 'finish_activity_executor.dart';
 
@@ -62,12 +63,24 @@ class MonitorActiveActivityExecutor extends ActivityMonitorStateExecutor {
       return const FinishActivityExecutor();
     }
 
+    final targets = runtimeContext.container.read(
+      activityTempTargetMonitorProvider,
+    );
+    final superviseTargets = await targets.isEnabled(runtimeContext);
     final durationMinutes = activityMonitorContext.durationMinutes;
     if (durationMinutes == null || durationMinutes <= 0) {
       logI("Activity has manual duration, waiting for stop event");
-      await runtimeContext.waitForEvent<ForegroundEvent>(
-        predicate: (event) => _isActivityClosedEvent(event, activityLogId),
-      );
+      if (superviseTargets) {
+        await targets.waitUntil(
+          runtimeContext,
+          null,
+          activityLogId: activityLogId,
+        );
+      } else {
+        await runtimeContext.waitForEvent<ForegroundEvent>(
+          predicate: (event) => _isActivityClosedEvent(event, activityLogId),
+        );
+      }
       return const FinishActivityExecutor();
     }
 
@@ -75,7 +88,15 @@ class MonitorActiveActivityExecutor extends ActivityMonitorStateExecutor {
     if (startsAt == null) return const FinishActivityExecutor();
     final endsAt = startsAt.add(Duration(minutes: durationMinutes));
     if (endsAt.isAfter(clock.now())) {
-      await runtimeContext.waitUntil(endsAt);
+      if (superviseTargets) {
+        await targets.waitUntil(
+          runtimeContext,
+          endsAt,
+          activityLogId: activityLogId,
+        );
+      } else {
+        await runtimeContext.waitUntil(endsAt);
+      }
     }
     runtimeContext.throwIfCancelled();
     final db = runtimeContext.container.read(databaseProvider);

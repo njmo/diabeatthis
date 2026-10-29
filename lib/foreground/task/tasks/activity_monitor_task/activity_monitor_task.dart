@@ -4,6 +4,7 @@ import '../../../../common/monitoring/activity_monitoring_phase.dart';
 import '../../../../common/monitoring/activity_monitoring_status.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../event/internal/activity_event.dart';
+import '../../../event/internal/activity_temp_target_settings_changed.dart';
 import '../../../event/internal/monitoring_status_changed.dart';
 import '../../../event/model/foreground_event.dart';
 import '../../base/runtime_context.dart';
@@ -17,6 +18,7 @@ import 'executors/monitor_active_activity_executor.dart';
 import 'executors/monitor_until_activity_executor.dart';
 import 'executors/new_activity_check_executor.dart';
 import 'helpers/activity_monitor_context_loader.dart';
+import 'helpers/activity_temp_target_monitor.dart';
 
 class ActivityMonitorTask extends InterruptableWorkflowTask with Logging {
   @override
@@ -31,6 +33,7 @@ class ActivityMonitorTask extends InterruptableWorkflowTask with Logging {
     (e) => e is ActivityStartedEvent,
     (e) => e is ActivityStoppedEvent,
     (e) => e is ActivityCancelledEvent,
+    (e) => e is ActivityTempTargetSettingsChanged,
   ];
 
   @visibleForTesting
@@ -41,6 +44,7 @@ class ActivityMonitorTask extends InterruptableWorkflowTask with Logging {
 
   @override
   bool shouldInterrupt(ForegroundEvent event) {
+    if (event is ActivityTempTargetSettingsChanged) return true;
     logI("ActivityMonitorTask shouldInterrupt ${event.runtimeType}");
     if (_state.interruptableEvents.contains(event.runtimeType)) {
       return _state.shouldInterrupt(event, _activityMonitorContext);
@@ -82,9 +86,16 @@ class ActivityMonitorTask extends InterruptableWorkflowTask with Logging {
   }) async {
     logI("ActivityMonitorTask runLoop ${interruptedEvent.runtimeType}");
 
+    await context.container
+        .read(activityTempTargetMonitorProvider)
+        .reconcile(context);
+
     ActivityMonitorTransition? transition;
 
     switch (interruptedEvent) {
+      case ActivityTempTargetSettingsChanged():
+        // Re-enter the current state with the updated opt-in, retaining its session.
+        break;
       case NextActivityEvent():
         final nextContext = await buildActivityMonitorContext(
           context,

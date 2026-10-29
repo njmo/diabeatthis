@@ -12,6 +12,7 @@ import '../../../../common/l10n/application_language.dart';
 import '../../../../common/l10n/application_language_storage_keys.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
+import '../../../../core/data_sources/nightscout/nightscout_storage_keys.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../core/domain/model/glucose.dart';
@@ -24,6 +25,7 @@ import '../../../power_monitor/collect_tick_wake_lock.dart';
 import '../../../providers/task_event_router_provider.dart';
 import '../../../synchronization/synchronization_cache_controller.dart';
 import '../../../task/base/runtime_context.dart';
+import '../../internal/activity_temp_target_settings_changed.dart';
 import 'app_event.dart';
 
 class AppEventHandler with Logging {
@@ -56,6 +58,16 @@ class AppEventHandler with Logging {
               sharedPrefsProvider.future,
             );
             await sharedPrefs.reload();
+            if (data.containsKey(nightscoutTempTargetsEnabledKey)) {
+              runtimeContext.emitEvent(
+                const ActivityTempTargetSettingsChanged(),
+              );
+              if (data.keys.every(
+                (key) => key == nightscoutTempTargetsEnabledKey,
+              )) {
+                return;
+              }
+            }
             if (data.containsKey(applicationLanguageCodeKey)) {
               setLanguageStringsFromCode(data[applicationLanguageCodeKey]);
               await local_notifications_bootstrap.init(

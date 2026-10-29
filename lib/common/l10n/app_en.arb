@@ -1481,6 +1481,8 @@
   "notificationTempTargetSent": "Sent to Nightscout. This does not confirm that AAPS has applied the target.",
   "notificationTempTargetFailed": "Could not confirm delivery to Nightscout. Check the target in AAPS and your token permissions. The request will not be retried automatically.",
   "notificationTempTargetExpired": "This request is no longer valid. No target was sent.",
+  "notificationTempTargetStopSent": "Sent the activity target cancellation to Nightscout. This does not confirm that AAPS has applied the change.",
+  "notificationTempTargetStopFailed": "Could not confirm cancellation of the activity target in Nightscout. Check the current target in AAPS.",
   "notificationTempTargetManualTitle": "Manual target reminder",
   "notificationTempTargetManualActivity": "Set the pre-activity target manually in AAPS.",
   "notificationTempTargetManualMeal": "Set the pre-meal target manually in AAPS.",

@@ -7,6 +7,9 @@ import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
 import 'package:diabeatthis/core/notifications/domain/events/temp_target_notification.dart';
+import 'package:diabeatthis/core/notifications/domain/models/hash_notification_id_factory.dart';
+import 'package:diabeatthis/core/notifications/domain/models/notification_event_type.dart';
+import 'package:diabeatthis/core/notifications/domain/models/notification_key.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/foreground/event/internal/activity_event.dart';
 import 'package:diabeatthis/foreground/event/internal/monitoring_status_changed.dart';
@@ -217,7 +220,21 @@ void main() {
             log.endedAt,
             startsAt.add(const Duration(minutes: 15)).millisecondsSinceEpoch,
           );
-          expect(notifications.cancelAllCalled, isTrue);
+          expect(notifications.cancelAllCalled, isFalse);
+          expect(
+            notifications.cancelledIds,
+            unorderedEquals([
+              const HashNotificationIdFactory().create(
+                TempTargetNotificationEvent.activity(entityId: 1).key,
+              ),
+              const HashNotificationIdFactory().create(
+                const NotificationKey(
+                  type: NotificationEventType.activityFinished,
+                  entityId: 1,
+                ),
+              ),
+            ]),
+          );
           expect(task.state, isA<ActivityMonitorStateIdle>());
         });
       },
