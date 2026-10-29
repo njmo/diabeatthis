@@ -9,6 +9,7 @@ import 'finished_eating_event_notification.dart';
 import 'meal_advice_pending_notification.dart';
 import 'meal_suggestion_notification.dart';
 import 'meal_summary_reminder_notification.dart';
+import 'temp_target_delivery_notification.dart';
 import 'temp_target_notification.dart';
 
 class NotificationEventFactory {
@@ -23,6 +24,10 @@ class NotificationEventFactory {
         return ActivityScheduleNotificationEvent.fromPayload(data);
       case NotificationEventType.eatNow:
         return EatNowNotificationEvent.fromPayload(data);
+      case NotificationEventType.tempTargetDelivery:
+        return TempTargetDeliveryNotification(
+          message: data['message'] as String,
+        );
       case NotificationEventType.tempTarget:
         return TempTargetNotificationEvent.fromPayload(data);
       case NotificationEventType.mealSuggestion:

@@ -1474,5 +1474,16 @@
   "activityLogEditTimes": "Edit activity times",
   "activityLogTimeInvalid": "The end must be after the start and cannot be in the future.",
   "activityLogTimeSaveFailed": "Could not save changes. Reopen the entry and try again.",
+  "notificationTempTargetConsent": "Send a temporary target of {target} mg/dl for {minutes} min to Nightscout?",
+  "@notificationTempTargetConsent": {"placeholders": {"target": {"type": "int"}, "minutes": {"type": "int"}}},
+  "notificationTempTargetRenewal": "Is the activity still ongoing? Confirm to send a new target of {target} mg/dl for {minutes} min.",
+  "@notificationTempTargetRenewal": {"placeholders": {"target": {"type": "int"}, "minutes": {"type": "int"}}},
+  "notificationTempTargetSent": "Sent to Nightscout. This does not confirm that AAPS has applied the target.",
+  "notificationTempTargetFailed": "Could not confirm delivery to Nightscout. Check the target in AAPS and your token permissions. The request will not be retried automatically.",
+  "notificationTempTargetExpired": "This request is no longer valid. No target was sent.",
+  "notificationTempTargetManualTitle": "Manual target reminder",
+  "notificationTempTargetManualActivity": "Set the pre-activity target manually in AAPS.",
+  "notificationTempTargetManualMeal": "Set the pre-meal target manually in AAPS.",
+  "notificationTempTargetManualConfirmed": "Manual target reminder acknowledged. Nothing was sent to Nightscout. Uploading after confirmation requires enabling and saving the option in Nightscout settings.",
   "activityOptionalDurationHint": "Leave empty to end the activity manually."
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
+import '../../../../../common/notifications/meal_notification_cancellation.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/domain/model/meal_macro_summary.dart';
@@ -125,7 +126,7 @@ class BolusReminderHelper with Logging {
   }) async {
     while (true) {
       logI("Cancelling previous notifications before showing bolus reminder");
-      await notificationProvider.cancelAll();
+      await notificationProvider.cancelMealNotifications(mealId);
 
       logI("User should bolus after eating, showing notification");
       await notificationProvider.show(
@@ -155,7 +156,7 @@ class BolusReminderHelper with Logging {
         logI(
           "Calculator response available, cancelling notifications and marking meal as bolused",
         );
-        await notificationProvider.cancelAll();
+        await notificationProvider.cancelMealNotifications(mealId);
         return true;
       }
 
@@ -185,7 +186,7 @@ class BolusReminderHelper with Logging {
       );
 
       if (!shouldContinue) {
-        await notificationProvider.cancelAll();
+        await notificationProvider.cancelMealNotifications(mealId);
         return false;
       }
 
@@ -198,7 +199,7 @@ class BolusReminderHelper with Logging {
         logI(
           "Calculator response available, cancelling notifications and marking meal as bolused",
         );
-        await notificationProvider.cancelAll();
+        await notificationProvider.cancelMealNotifications(mealId);
         return true;
       }
 

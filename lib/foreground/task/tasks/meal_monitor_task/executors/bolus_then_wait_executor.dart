@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/eat_now_response_event.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
+import '../../../../../common/notifications/meal_notification_cancellation.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/base/notifications_controller.dart';
 import '../../../../../core/notifications/domain/events/eat_now_event_notification.dart';
@@ -127,7 +128,9 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
           logI("Can eat earlier, sugar drops faster than usual");
           if (triggeredByUser) {
             logI("Cancelling scheduled notifications");
-            notificationProvider.cancelAll();
+            await notificationProvider.cancelMealNotifications(
+              mealMonitorContext.activeMeal!.id,
+            );
           }
 
           final finalWaitTime = _elapsedWaitMinutes(waitStartedAt);
@@ -209,7 +212,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       final shouldShowNotification = attempt > 0 || showInitialNotification;
       if (shouldShowNotification) {
         logI("Showing eat now notification attempt ${attempt + 1}");
-        await notificationProvider.cancelAll();
+        await notificationProvider.cancelMealNotifications(mealId);
         await notificationProvider.show(
           EatNowNotificationEvent(
             mealId: mealId,
@@ -226,7 +229,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
         return response;
       }
     }
-    await notificationProvider.cancelAll();
+    await notificationProvider.cancelMealNotifications(mealId);
     return null;
   }
 

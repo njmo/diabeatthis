@@ -1,4 +1,5 @@
 import '../base/notification_definition_catalog.dart';
+import '../domain/models/notification_channel_type.dart';
 import '../domain/models/notification_definition.dart';
 import '../domain/models/notification_event_type.dart';
 import 'event/aaps_bolus_suggestion_notification_definition.dart';
@@ -18,6 +19,12 @@ class NotificationDefinitionCatalogImpl
     activityScheduleNotificationDefinition,
     mealReadyNotificationDefinition,
     tempTargetNotificationDefinition,
+    const NotificationDefinition(
+      type: NotificationEventType.tempTargetDelivery,
+      categoryId: 'temp_target_delivery',
+      actions: [],
+      channelType: NotificationChannelType.target,
+    ),
     mealSuggestionNotificationDefinition,
     mealAdvicePendingNotificationDefinition,
     finishedEatingNotificationDefinition,

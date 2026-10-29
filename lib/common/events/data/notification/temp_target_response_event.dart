@@ -15,24 +15,28 @@ sealed class TempTargetResponseEvent
 
   const factory TempTargetResponseEvent.agree({
     required int entityId,
+    String? requestId,
     @Default(TempTargetType.meal) String targetType,
     required String tempTargetString,
   }) = _TempTargetResponseAgreeEvent;
 
   const factory TempTargetResponseEvent.dismiss({
     required int entityId,
+    String? requestId,
     @Default(TempTargetType.meal) String targetType,
     required String tempTargetString,
   }) = _TempTargetResponseDismissEvent;
 
   const factory TempTargetResponseEvent.skip({
     required int entityId,
+    String? requestId,
     @Default(TempTargetType.meal) String targetType,
     required String tempTargetString,
   }) = _TempTargetResponseSkipEvent;
 
   const factory TempTargetResponseEvent.empty({
     required int entityId,
+    String? requestId,
     @Default(TempTargetType.meal) String targetType,
     required String tempTargetString,
   }) = _TempTargetResponseEmptyEvent;

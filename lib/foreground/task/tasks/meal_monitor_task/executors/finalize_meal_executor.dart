@@ -1,4 +1,5 @@
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
+import '../../../../../common/notifications/meal_notification_cancellation.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/domain/events/meal_summary_reminder_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -36,9 +37,11 @@ class FinalizeMealExecutor extends MealMonitorStateExecutor with Logging {
     final notificationProvider = runtimeContext.container.read(
       notificationsControllerForegroundProvider,
     );
-    await notificationProvider.cancelAll();
-
     if (mealId != null) {
+      await notificationProvider.cancelMealNotifications(
+        mealId,
+        includeTargetConsent: true,
+      );
       await notificationProvider.schedule(
         MealSummaryReminderNotificationEvent(mealId: mealId),
         summaryReminderDelay,

@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/finished_eating_response_event.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
+import '../../../../../common/notifications/meal_notification_cancellation.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/domain/events/finished_eating_event_notification.dart';
@@ -201,7 +202,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       logI("Add-on calculator response available, cancelling notifications");
       await runtimeContext.container
           .read(notificationsControllerForegroundProvider)
-          .cancelAll();
+          .cancelMealNotifications(mealMonitorContext.activeMeal!.id);
       await const RecordMealWizardLink()(
         runtimeContext,
         calculatorResponse.data,

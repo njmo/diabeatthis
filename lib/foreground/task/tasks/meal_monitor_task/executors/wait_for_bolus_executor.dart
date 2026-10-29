@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 
 import '../../../../../common/meal/meal_bolus_timing.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
+import '../../../../../common/notifications/meal_notification_cancellation.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -142,11 +143,15 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
         await runtimeContext.container.read(
           updateMealProvider(meal, 'skipped').future,
         );
+        await notificationProvider.cancelMealNotifications(
+          meal.id,
+          includeTargetConsent: true,
+        );
         return NewMealCheckExecutor();
       }
     } else {
       logI("Calculator response available, cancelling meal notifications");
-      await notificationProvider.cancelAll();
+      await notificationProvider.cancelMealNotifications(meal.id);
     }
 
     final nextStatus = decision == MealDecision.eatNowBolusLater

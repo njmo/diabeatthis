@@ -3,7 +3,9 @@ import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers/app_lifecycle_state_provider.dart';
+import '../../data_sources/nightscout/temporary_targets/temp_target_service.dart';
 import '../base/notifications_controller.dart';
+import '../domain/events/temp_target_notification.dart';
 import '../domain/models/notification_event.dart';
 import '../providers/local_notifications_plugin_provider.dart';
 import 'local_notifications_controller.dart';
@@ -14,7 +16,7 @@ class NotificationsControllerImpl implements NotificationsController {
   final NotificationsController _inAppController;
 
   NotificationsControllerImpl(this._ref, this._inAppController)
-    :  _localController = LocalNotificationsController(
+    : _localController = LocalNotificationsController(
         _ref.read(localNotificationsPluginProvider),
       );
 
@@ -26,12 +28,31 @@ class NotificationsControllerImpl implements NotificationsController {
 
   @override
   Future<void> show(NotificationEvent event, {bool temporary = false}) async {
+    if (event is TempTargetNotificationEvent) {
+      final prepared = await _ref
+          .read(tempTargetServiceProvider)
+          .prepare(event);
+      if (prepared == null) return;
+      event = prepared;
+    }
     final appLifecycleState = _ref.read(appLifecycleProvider);
 
-    if (temporary && appLifecycleState == AppLifecycleState.resumed) {
-      await _inAppController.show(event);
-    } else {
-      await _localController.show(event);
+    try {
+      if (temporary && appLifecycleState == AppLifecycleState.resumed) {
+        await _inAppController.show(event);
+      } else {
+        await _localController.show(event);
+      }
+      if (event is TempTargetNotificationEvent && event.requestId != null) {
+        await _ref
+            .read(tempTargetServiceProvider)
+            .markDelivered(event.requestId!);
+      }
+    } catch (_) {
+      if (event is TempTargetNotificationEvent && event.requestId != null) {
+        _ref.read(tempTargetServiceProvider).deliveryFailed(event.requestId!);
+      }
+      rethrow;
     }
   }
 

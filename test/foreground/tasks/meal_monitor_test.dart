@@ -24,7 +24,10 @@ import 'package:diabeatthis/core/notifications/domain/events/meal_advice_pending
 import 'package:diabeatthis/core/notifications/domain/events/meal_suggestion_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_summary_reminder_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/temp_target_notification.dart';
+import 'package:diabeatthis/core/notifications/domain/models/hash_notification_id_factory.dart';
 import 'package:diabeatthis/core/notifications/domain/models/notification_action_type.dart';
+import 'package:diabeatthis/core/notifications/domain/models/notification_event_type.dart';
+import 'package:diabeatthis/core/notifications/domain/models/notification_key.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/utils/meal_advisor.dart';
@@ -1241,7 +1244,18 @@ void main() {
           expect(calls, hasLength(1));
           expect(calls.single.$1.id, 1);
           expect(calls.single.$2, 'skipped');
-          expect(notifications.cancelAllCalled, isTrue);
+          expect(notifications.cancelAllCalled, isFalse);
+          expect(
+            notifications.cancelledIds,
+            contains(
+              const HashNotificationIdFactory().create(
+                NotificationKey(
+                  type: NotificationEventType.mealSuggestion,
+                  entityId: meal.id,
+                ),
+              ),
+            ),
+          );
         });
       });
     });
@@ -1299,7 +1313,13 @@ void main() {
           _advanceMinutes(harness, async, 5);
 
           expect(completed, isFalse);
-          expect(notifications.cancelAllCalled, isTrue);
+          expect(notifications.cancelAllCalled, isFalse);
+          expect(
+            notifications.cancelledIds,
+            contains(
+              const HashNotificationIdFactory().create(firstReminder.key),
+            ),
+          );
           expect(notifications.shownEvents, hasLength(1));
           expect(
             notifications.shownEvents.single,
@@ -1582,7 +1602,13 @@ void main() {
 
             _advanceMinutes(harness, async, 5);
 
-            expect(fakeNotifications.cancelAllCalled, isTrue);
+            expect(fakeNotifications.cancelAllCalled, isFalse);
+            expect(
+              fakeNotifications.cancelledIds,
+              contains(
+                const HashNotificationIdFactory().create(reminderTyped.key),
+              ),
+            );
             expect(fakeNotifications.shownEvents, hasLength(1));
             final secondReminder = fakeNotifications.lastShownEvent;
             expect(secondReminder, isA<MealSuggestionNotificationEvent>());

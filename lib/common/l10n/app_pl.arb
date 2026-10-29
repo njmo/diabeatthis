@@ -1914,5 +1914,16 @@
   "activityLogEditTimes": "Edytuj czas aktywności",
   "activityLogTimeInvalid": "Koniec musi być później niż początek i nie może być w przyszłości.",
   "activityLogTimeSaveFailed": "Nie udało się zapisać zmian. Otwórz wpis ponownie i spróbuj jeszcze raz.",
+  "notificationTempTargetConsent": "Czy wysłać do Nightscout temp target {target} mg/dl na {minutes} min?",
+  "@notificationTempTargetConsent": {"placeholders": {"target": {"type": "int"}, "minutes": {"type": "int"}}},
+  "notificationTempTargetRenewal": "Czy aktywność nadal trwa? Potwierdź wysłanie nowego celu {target} mg/dl na {minutes} min.",
+  "@notificationTempTargetRenewal": {"placeholders": {"target": {"type": "int"}, "minutes": {"type": "int"}}},
+  "notificationTempTargetSent": "Wysłano do Nightscout. To nie jest potwierdzenie zastosowania celu w AAPS.",
+  "notificationTempTargetFailed": "Nie udało się potwierdzić wysłania do Nightscout. Sprawdź cel w AAPS i uprawnienia tokenu. Wysyłka nie zostanie automatycznie ponowiona.",
+  "notificationTempTargetExpired": "Ta prośba jest już nieaktualna. Nie wysłano celu.",
+  "notificationTempTargetManualTitle": "Przypomnienie o ręcznym ustawieniu celu",
+  "notificationTempTargetManualActivity": "Ustaw ręcznie w AAPS cel przed aktywnością.",
+  "notificationTempTargetManualMeal": "Ustaw ręcznie w AAPS cel przed posiłkiem.",
+  "notificationTempTargetManualConfirmed": "Potwierdzono przypomnienie o ręcznym ustawieniu celu. Nic nie wysłano do Nightscout. Wysyłanie po zgodzie wymaga włączenia i zapisania opcji w ustawieniach Nightscout.",
   "activityOptionalDurationHint": "Pozostaw puste, aby zakończyć aktywność ręcznie."
 }
