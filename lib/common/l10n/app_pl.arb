@@ -1914,6 +1914,9 @@
   "activityLogEditTimes": "Edytuj czas aktywności",
   "activityLogTimeInvalid": "Koniec musi być później niż początek i nie może być w przyszłości.",
   "activityLogTimeSaveFailed": "Nie udało się zapisać zmian. Otwórz wpis ponownie i spróbuj jeszcze raz.",
+  "settingsTempTargetsTitle": "Wysyłaj temp targety po potwierdzeniu",
+  "settingsTempTargetsDescription": "Posiłek: 90 mg/dl na 45 min. Aktywność: 140 mg/dl od 60 min przed startem do planowanego końca. Bez czasu końca: cel do 30 min po rozpoczęciu, potem pytanie o dalszą aktywność. Potwierdzenie ustawia nowy cel na 90 min; kolejne pytanie 10 min przed jego końcem. Wymaga tokenu Nightscout z prawem odczytu i zapisu treatments oraz włączonego odbierania temp targetów w AAPS.",
+  "settingsTempTargetsTokenRequired": "Przed włączeniem opcji uzupełnij token Nightscout z prawem odczytu i zapisu treatments.",
   "notificationTempTargetConsent": "Czy wysłać do Nightscout temp target {target} mg/dl na {minutes} min?",
   "@notificationTempTargetConsent": {"placeholders": {"target": {"type": "int"}, "minutes": {"type": "int"}}},
   "notificationTempTargetRenewal": "Czy aktywność nadal trwa? Potwierdź wysłanie nowego celu {target} mg/dl na {minutes} min.",
@@ -1923,9 +1926,13 @@
   "notificationTempTargetExpired": "Ta prośba jest już nieaktualna. Nie wysłano celu.",
   "notificationTempTargetStopSent": "Wysłano do Nightscout zakończenie celu aktywności. To nie jest potwierdzenie zastosowania zmiany w AAPS.",
   "notificationTempTargetStopFailed": "Nie udało się potwierdzić zakończenia celu aktywności w Nightscout. Sprawdź aktualny cel w AAPS.",
+  "settingsNightscoutTokenInvalid": "Nightscout odrzucił token. Sprawdź, czy został poprawnie skopiowany i nadal jest aktywny.",
+  "settingsNightscoutTokenTreatmentAccess": "Token nie ma prawa odczytu i tworzenia wpisów treatments. Wybierz token z odpowiednimi uprawnieniami, aby włączyć wysyłanie temp targetów.",
+  "settingsNightscoutTokenVerificationUnavailable": "Nie udało się sprawdzić tokenu i jego uprawnień. Sprawdź połączenie i adres Nightscout, a następnie spróbuj ponownie. Zmiany nie zostały zapisane.",
   "notificationTempTargetManualTitle": "Przypomnienie o ręcznym ustawieniu celu",
   "notificationTempTargetManualActivity": "Ustaw ręcznie w AAPS cel przed aktywnością.",
   "notificationTempTargetManualMeal": "Ustaw ręcznie w AAPS cel przed posiłkiem.",
   "notificationTempTargetManualConfirmed": "Potwierdzono przypomnienie o ręcznym ustawieniu celu. Nic nie wysłano do Nightscout. Wysyłanie po zgodzie wymaga włączenia i zapisania opcji w ustawieniach Nightscout.",
-  "activityOptionalDurationHint": "Pozostaw puste, aby zakończyć aktywność ręcznie."
+  "activityOptionalDurationHint": "Pozostaw puste, aby zakończyć aktywność ręcznie.",
+  "commonInformationTooltip": "Więcej informacji"
 }

@@ -1474,6 +1474,9 @@
   "activityLogEditTimes": "Edit activity times",
   "activityLogTimeInvalid": "The end must be after the start and cannot be in the future.",
   "activityLogTimeSaveFailed": "Could not save changes. Reopen the entry and try again.",
+  "settingsTempTargetsTitle": "Send temporary targets after confirmation",
+  "settingsTempTargetsDescription": "Meal: 90 mg/dl for 45 min. Activity: 140 mg/dl from 60 min before the start until the planned end. Without an end time: target until 30 min after the start, then ask whether activity continues. Confirmation sets a new target for 90 min; the next question is 10 min before it ends. Requires a Nightscout token with treatment read and write access and Receive temporary targets enabled in AAPS.",
+  "settingsTempTargetsTokenRequired": "Enter a Nightscout token with treatment read and write access before enabling this option.",
   "notificationTempTargetConsent": "Send a temporary target of {target} mg/dl for {minutes} min to Nightscout?",
   "@notificationTempTargetConsent": {"placeholders": {"target": {"type": "int"}, "minutes": {"type": "int"}}},
   "notificationTempTargetRenewal": "Is the activity still ongoing? Confirm to send a new target of {target} mg/dl for {minutes} min.",
@@ -1483,9 +1486,13 @@
   "notificationTempTargetExpired": "This request is no longer valid. No target was sent.",
   "notificationTempTargetStopSent": "Sent the activity target cancellation to Nightscout. This does not confirm that AAPS has applied the change.",
   "notificationTempTargetStopFailed": "Could not confirm cancellation of the activity target in Nightscout. Check the current target in AAPS.",
+  "settingsNightscoutTokenInvalid": "Nightscout rejected the token. Check that it was copied correctly and is still active.",
+  "settingsNightscoutTokenTreatmentAccess": "The token cannot read and create treatments. Use a token with these permissions to enable temporary target uploads.",
+  "settingsNightscoutTokenVerificationUnavailable": "Could not verify the token and its permissions. Check your connection and Nightscout URL, then try again. Changes have not been saved.",
   "notificationTempTargetManualTitle": "Manual target reminder",
   "notificationTempTargetManualActivity": "Set the pre-activity target manually in AAPS.",
   "notificationTempTargetManualMeal": "Set the pre-meal target manually in AAPS.",
   "notificationTempTargetManualConfirmed": "Manual target reminder acknowledged. Nothing was sent to Nightscout. Uploading after confirmation requires enabling and saving the option in Nightscout settings.",
-  "activityOptionalDurationHint": "Leave empty to end the activity manually."
+  "activityOptionalDurationHint": "Leave empty to end the activity manually.",
+  "commonInformationTooltip": "More information"
 }

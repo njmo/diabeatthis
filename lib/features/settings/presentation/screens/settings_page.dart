@@ -6,30 +6,25 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/providers/app_event_router_provider.dart';
-import '../../../../app/providers/app_foreground_bridge_provider.dart';
-import '../../../../app/providers/foreground_task_state_provider.dart';
 import '../../../../common/events/data/app/dump_logs_event.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
-import '../../../../common/events/data/app/sync_data_key.dart';
 import '../../../../common/l10n/application_language.dart';
 import '../../../../common/l10n/application_language_storage_keys.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
-import '../../../../core/data_sources/nightscout/nightscout_cloud_connection_tester.dart';
 import '../../../../core/data_sources/nightscout/nightscout_storage_keys.dart';
-import '../../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
-import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
-import '../../../../core/data_sources/nightscout/repository/nightscout_repository_impl.dart';
 import '../../../../core/logger/logger.dart';
+import '../../data/models/nightscout_settings_draft.dart';
 import '../../data/settings_storage_keys.dart';
+import '../controllers/nightscout_settings_controller.dart';
 import '../widgets/application_language_selector.dart';
 import '../widgets/application_theme_settings_section.dart';
 import '../widgets/data_source_settings_section.dart';
 import '../widgets/database_settings_section.dart';
 import '../widgets/meal_advisor_settings_section.dart';
-import '../widgets/nightscout_connection_fields.dart';
+import '../widgets/nightscout_settings_section.dart';
 import '../widgets/settings_section_card.dart';
 
 @RoutePage()
@@ -45,9 +40,10 @@ class SettingsPage extends HookConsumerWidget with Logging {
     final tokenController = useTextEditingController();
     final childNameController = useTextEditingController();
 
+    final tempTargetsEnabled = useState(false);
+    useListenable(tokenController);
     final initialized = useState(false);
-    final isSaving = useState(false);
-    final submitError = useState<String?>(null);
+    final saveState = ref.watch(nightscoutSettingsControllerProvider);
     final selectedDataSourceConfig = useState<DataSourceConfig?>(null);
 
     return prefsAsync.when(
@@ -67,110 +63,39 @@ class SettingsPage extends HookConsumerWidget with Logging {
             );
 
         if (!initialized.value) {
-          urlController.text = prefs.getString(nightscoutUrlKey) ?? '';
-          tokenController.text = prefs.getString(nightscoutTokenKey) ?? '';
-          childNameController.text = prefs.getString(childNameKey) ?? '';
+          final pendingDraft = saveState.pendingDraft;
+          urlController.text =
+              pendingDraft?.url ?? prefs.getString(nightscoutUrlKey) ?? '';
+          tokenController.text =
+              pendingDraft?.token ?? prefs.getString(nightscoutTokenKey) ?? '';
+          tempTargetsEnabled.value =
+              (pendingDraft?.tempTargetsEnabled ??
+                  prefs.getBool(nightscoutTempTargetsEnabledKey) == true) &&
+              tokenController.text.trim().isNotEmpty;
+          childNameController.text =
+              pendingDraft?.childName ?? prefs.getString(childNameKey) ?? '';
           initialized.value = true;
         }
 
         Future<void> handleSave() async {
           FocusScope.of(context).unfocus();
-          submitError.value = null;
+          final controller = ref.read(
+            nightscoutSettingsControllerProvider.notifier,
+          );
+          controller.clearFailure();
+          if (!(formKey.currentState?.validate() ?? false)) return;
 
-          final isValid = formKey.currentState?.validate() ?? false;
-          if (!isValid) return;
-
-          final newUrl = urlController.text.trim();
-          logI('newUrl: $newUrl');
-          final newToken = tokenController.text.trim();
-          final newChildName = childNameController.text.trim();
-
-          final oldUrl = prefs.getString(nightscoutUrlKey)?.trim() ?? '';
-          logI('oldUrl: $oldUrl');
-          final oldToken = prefs.getString(nightscoutTokenKey)?.trim() ?? '';
-          final oldChildName = prefs.getString(childNameKey)?.trim() ?? '';
-
-          final urlChanged = newUrl != oldUrl;
-          final tokenChanged = newToken != oldToken;
-          final childNameChanged = newChildName != oldChildName;
-          final nightscoutConnectionChanged = urlChanged || tokenChanged;
-          final connectionErrorMessage = context.lang.settingsConnectionError;
-
-          isSaving.value = true;
-
-          try {
-            if (nightscoutConnectionChanged) {
-              final repo = NightscoutRepositoryImpl(
-                nightscoutUrl: newUrl,
-                nightscoutToken: newToken,
-              );
-              final selectedConfig = selectedDataSourceConfig.value;
-              final DataSourceConfig config;
-              if (selectedConfig != null) {
-                config = selectedConfig;
-              } else {
-                config = await ref.read(dataSourceConfigProvider.future);
-              }
-              await _validateNightscoutConnection(repo, config);
-            }
-
-            if (urlChanged) {
-              await prefs.setString(nightscoutUrlKey, newUrl);
-            }
-
-            if (tokenChanged) {
-              await prefs.setString(nightscoutTokenKey, newToken);
-            }
-
-            if (childNameChanged) {
-              await prefs.setString(childNameKey, newChildName);
-            }
-
-            if (nightscoutConnectionChanged || childNameChanged) {
-              ref.invalidate(sharedPrefsProvider);
-              ref.invalidate(nightscoutRepositoryProvider);
-              ref.invalidate(nightscoutUrlProvider);
-              ref.invalidate(nightscoutTokenProvider);
-            }
-
-            if (nightscoutConnectionChanged) {
-              final foregroundBridge = ref.read(appForegroundBridgeProvider);
-              final taskState = ref.read(foregroundTaskStateProvider.notifier);
-
-              Future<void> startOrRestartForeground() async {
-                if (oldUrl.isEmpty) {
-                  logI("starting service");
-                  await foregroundBridge.startMonitoring();
-                } else {
-                  logI("restarting service");
-                  await foregroundBridge.restartService();
-                }
-              }
-
-              try {
-                await startOrRestartForeground();
-                await taskState.waitForStartupMessage();
-              } catch (e, st) {
-                logW('Foreground alive wait timed out: $e\n$st');
-              }
-
-              ref
-                  .read(appEventRouterProvider)
-                  .send(
-                    const ExecuteCommandEvent.syncData(
-                      data: SyncDataKey.dashboardStartup,
-                    ),
-                  );
-            }
-
-            if (context.mounted) {
-              context.router.replace(NamedRoute('DashboardRoute'));
-            }
-          } catch (e, st) {
-            logE('Nightscout settings save failed $e, $st');
-            submitError.value = connectionErrorMessage;
-          } finally {
-            isSaving.value = false;
+          final saved = await controller.save(
+            NightscoutSettingsDraft(
+              url: urlController.text,
+              token: tokenController.text,
+              tempTargetsEnabled: tempTargetsEnabled.value,
+              childName: childNameController.text,
+              dataSourceConfig: visibleDataSourceConfig,
+            ),
+          );
+          if (context.mounted && saved) {
+            context.router.replace(NamedRoute('DashboardRoute'));
           }
         }
 
@@ -242,58 +167,28 @@ class SettingsPage extends HookConsumerWidget with Logging {
                         ),
                       ],
                     ),
-                    if (visibleDataSourceConfig != null &&
-                        _usesNightscout(visibleDataSourceConfig)) ...[
-                      const SizedBox(height: 16),
-                      SettingsSectionCard(
-                        icon: Icons.cloud_outlined,
-                        title: 'Nightscout',
-                        subtitle: context.lang.settingsNightscoutSubtitle,
-                        children: [
-                          NightscoutConnectionFields(
-                            urlController: urlController,
-                            tokenController: tokenController,
-                            onChanged: (_) {
-                              if (submitError.value != null) {
-                                submitError.value = null;
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: childNameController,
-                            decoration: InputDecoration(
-                              labelText: context.lang.settingsChildNameLabel,
-                              hintText: context.lang.settingsNameHint,
-                            ),
-                            textCapitalization: TextCapitalization.words,
-                          ),
-                          if (submitError.value != null) ...[
-                            const SizedBox(height: 12),
-                            Text(
-                              submitError.value!,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 16),
-                          FilledButton.icon(
-                            onPressed: isSaving.value ? null : handleSave,
-                            icon: isSaving.value
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.save_outlined),
-                            label: Text(context.lang.settingsSaveAndContinue),
-                          ),
-                        ],
-                      ),
-                    ],
+                    const SizedBox(height: 16),
+                    NightscoutSettingsSection(
+                      urlController: urlController,
+                      tokenController: tokenController,
+                      childNameController: childNameController,
+                      tempTargetsEnabled: tempTargetsEnabled.value,
+                      urlRequired:
+                          (visibleDataSourceConfig?.usesCloud ?? true) ||
+                          tempTargetsEnabled.value ||
+                          tokenController.text.trim().isNotEmpty,
+                      saveState: saveState,
+                      onChanged: () => ref
+                          .read(nightscoutSettingsControllerProvider.notifier)
+                          .clearFailure(),
+                      onTempTargetsChanged: (value) {
+                        tempTargetsEnabled.value = value;
+                        ref
+                            .read(nightscoutSettingsControllerProvider.notifier)
+                            .clearFailure();
+                      },
+                      onSave: handleSave,
+                    ),
                     const SizedBox(height: 16),
                     SettingsSectionCard(
                       icon: Icons.receipt_long_outlined,
@@ -348,20 +243,5 @@ class SettingsPage extends HookConsumerWidget with Logging {
         );
       },
     );
-  }
-
-  bool _usesNightscout(DataSourceConfig config) {
-    return config.bgSource == BgSource.cloud ||
-        config.treatmentsSource == TreatmentsSource.cloud ||
-        config.pumpStatusSource == PumpStatusSource.cloud ||
-        config.historySource != HistorySource.local;
-  }
-
-  Future<void> _validateNightscoutConnection(
-    NightscoutRepositoryImpl repository,
-    DataSourceConfig config,
-  ) async {
-    if (!_usesNightscout(config)) return;
-    await NightscoutCloudConnectionTester(repository).testConnection();
   }
 }

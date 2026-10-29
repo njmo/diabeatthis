@@ -12,8 +12,14 @@ class NightscoutConnectionFields extends StatelessWidget {
     this.onUrlSaved,
     this.onTokenSaved,
     this.onChanged,
+    this.urlRequired = true,
+    this.tokenRequired = false,
+    this.enabled = true,
   });
 
+  final bool urlRequired;
+  final bool tokenRequired;
+  final bool enabled;
   final String? initialUrl;
   final String? initialToken;
   final TextEditingController? urlController;
@@ -27,6 +33,7 @@ class NightscoutConnectionFields extends StatelessWidget {
     return Column(
       children: [
         TextFormField(
+          enabled: enabled,
           initialValue: urlController == null ? initialUrl : null,
           controller: urlController,
           decoration: InputDecoration(
@@ -41,6 +48,7 @@ class NightscoutConnectionFields extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         TextFormField(
+          enabled: enabled,
           initialValue: tokenController == null ? initialToken : null,
           controller: tokenController,
           decoration: InputDecoration(
@@ -50,6 +58,9 @@ class NightscoutConnectionFields extends StatelessWidget {
           autocorrect: false,
           enableSuggestions: false,
           obscureText: true,
+          validator: (value) => tokenRequired && (value?.trim().isEmpty ?? true)
+              ? context.lang.settingsTempTargetsTokenRequired
+              : null,
           onSaved: onTokenSaved,
           onChanged: onChanged,
         ),
@@ -61,7 +72,7 @@ class NightscoutConnectionFields extends StatelessWidget {
     final text = value?.trim() ?? '';
 
     if (text.isEmpty) {
-      return context.lang.settingsNightscoutUrlRequired;
+      return urlRequired ? context.lang.settingsNightscoutUrlRequired : null;
     }
 
     final uri = Uri.tryParse(text);
