@@ -1494,5 +1494,11 @@
   "notificationTempTargetManualMeal": "Set the pre-meal target manually in AAPS.",
   "notificationTempTargetManualConfirmed": "Manual target reminder acknowledged. Nothing was sent to Nightscout. Uploading after confirmation requires enabling and saving the option in Nightscout settings.",
   "activityOptionalDurationHint": "Leave empty to end the activity manually.",
-  "commonInformationTooltip": "More information"
+  "commonInformationTooltip": "More information",
+  "dashboardActivityPreparationTarget": "Preparation: temp target {target} mg/dl",
+  "@dashboardActivityPreparationTarget": {"placeholders": {"target": {"type": "int"}}},
+  "dashboardActivityOngoingTarget": "Activity temp target: {target} mg/dl",
+  "@dashboardActivityOngoingTarget": {"placeholders": {"target": {"type": "int"}}},
+  "dashboardActivityTargetRemaining": "{minutes} min remaining · until {time}",
+  "@dashboardActivityTargetRemaining": {"placeholders": {"minutes": {"type": "int"}, "time": {"type": "String"}}}
 }

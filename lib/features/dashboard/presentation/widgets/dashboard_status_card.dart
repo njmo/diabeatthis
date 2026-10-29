@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/monitoring/is_temporary_target_active.dart';
+import '../../../../common/temporary_targets/is_activity_temp_target_linked.dart';
+import '../../../../common/temporary_targets/temp_target_policy.dart';
+import '../../../../common/widgets/status_info_card.dart';
 import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../activity/data/drafts/activity_log_draft.dart';
@@ -12,29 +16,18 @@ import '../../../activity/domain/activity_schedule_time.dart';
 import '../../../activity/presentation/widgets/activity_picker_sheet.dart';
 import '../../data/providers/temporary_target_ui_provider.dart';
 import '../../data/providers/time_now_provider.dart';
+import 'activity_target_preparation_details.dart';
 
 class DashboardStatusCard extends ConsumerWidget with Logging {
   const DashboardStatusCard({super.key});
 
-  static const int activityTargetValue = 140;
-  static const int mealTargetValue = 90;
+  static const int mealTargetValue = TempTargetPolicy.mealTarget;
 
   bool _isActivityTarget(TemporaryTarget target) =>
-      target.targetTop == activityTargetValue;
+      isActivityTempTarget(target);
 
   bool _isMealTarget(TemporaryTarget target) =>
       target.targetTop == mealTargetValue;
-
-  bool _isTargetExpired(TemporaryTarget? target, DateTime now) {
-    if (target == null) return true;
-
-    final elapsed = now.difference(target.createdAt).inMinutes;
-    return elapsed >= target.duration;
-  }
-
-  TemporaryTarget? _activeTarget(TemporaryTarget? target, DateTime now) {
-    return _isTargetExpired(target, now) ? null : target;
-  }
 
   int _elapsedMinutes(TemporaryTarget target, DateTime now) {
     final elapsed = now.difference(target.createdAt).inMinutes;
@@ -56,14 +49,6 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
     return activity.startedAt.isAfter(now);
   }
 
-  bool _isActivityLinkedToTarget(
-    ActivityLogSummaryData? pendingActivity,
-    TemporaryTarget target,
-  ) {
-    if (pendingActivity == null) return false;
-    return pendingActivity.startedAt == target.createdAt;
-  }
-
   String _activityName(ActivityLogSummaryData activity) {
     return activity.activityName;
   }
@@ -80,7 +65,6 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
   String _activitySubtitle(
     ActivityLogSummaryData activity,
     DateTime now, {
-    TemporaryTarget? linkedTarget,
     required AppLocalizations lang,
   }) {
     final isPlanned = _isActivityPlanned(activity, now);
@@ -111,12 +95,6 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
       }
     }
 
-    if (linkedTarget != null) {
-      parts.add(
-        lang.dashboardTargetSubtitle(_targetSubtitle(linkedTarget, now)),
-      );
-    }
-
     return parts.join(' • ');
   }
 
@@ -136,28 +114,30 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
       return const SizedBox.shrink();
     }
 
-    final target = _activeTarget(targetUi, now);
+    final target = isTemporaryTargetActive(targetUi, at: now) ? targetUi : null;
     final pendingActivity = pendingActivityAsync.whenOrNull(data: (d) => d);
-
-    final cards = <Widget>[];
 
     final activityVisible =
         pendingActivity != null &&
         !pendingActivity.startedAt.isAfter(
           now.add(activityPreparationLeadTime),
         );
+    final linkedToActivity =
+        target != null &&
+        isActivityTempTargetLinked(
+          activityVisible: activityVisible,
+          target: target,
+          now: now,
+        );
+    final cards = <Widget>[];
+
     if (pendingActivity != null && activityVisible) {
-      final linkedTarget =
-          target != null &&
-              _isActivityTarget(target) &&
-              _isActivityLinkedToTarget(pendingActivity, target)
-          ? target
-          : null;
+      final linkedTarget = linkedToActivity ? target : null;
 
       cards.add(
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: _StatusInfoCard(
+          child: StatusInfoCard(
             icon: Icons.directions_run_rounded,
             title: _isActivityPlanned(pendingActivity, now)
                 ? context.lang.dashboardPlannedActivityTitle
@@ -165,9 +145,15 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
             subtitle: _activitySubtitle(
               pendingActivity,
               now,
-              linkedTarget: linkedTarget,
               lang: context.lang,
             ),
+            details: linkedTarget == null
+                ? null
+                : ActivityTargetPreparationDetails(
+                    target: linkedTarget,
+                    now: now,
+                    preparing: _isActivityPlanned(pendingActivity, now),
+                  ),
             trailing: IconButton(
               tooltip: context.lang.dashboardFinishActivityTooltip,
               icon: const Icon(Icons.stop_circle_outlined),
@@ -181,18 +167,14 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
       );
     }
 
-    final targetShownWithActivity =
-        activityVisible &&
-        target != null &&
-        _isActivityTarget(target) &&
-        _isActivityLinkedToTarget(pendingActivity, target);
+    final targetShownWithActivity = activityVisible && linkedToActivity;
 
     if (target != null && !targetShownWithActivity) {
       if (_isActivityTarget(target)) {
         cards.add(
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _StatusInfoCard(
+            child: StatusInfoCard(
               icon: Icons.track_changes_rounded,
               title: context.lang.dashboardActivityTempTargetTitle,
               subtitle: _targetSubtitle(target, now),
@@ -235,7 +217,7 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
         cards.add(
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: _StatusInfoCard(
+            child: StatusInfoCard(
               icon: Icons.restaurant_rounded,
               title: context.lang.dashboardMealTempTargetTitle,
               subtitle: _targetSubtitle(target, now),
@@ -280,68 +262,6 @@ class DashboardStatusCard extends ConsumerWidget with Logging {
           content: Text(context.lang.dashboardActivityAddFailedMessage),
         );
       },
-    );
-  }
-}
-
-class _StatusInfoCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final Widget? trailing;
-
-  const _StatusInfoCard({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    this.trailing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: theme.colorScheme.onPrimaryContainer),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: theme.textTheme.titleMedium),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            if (trailing != null) ...[const SizedBox(width: 12), trailing!],
-          ],
-        ),
-      ),
     );
   }
 }

@@ -1934,5 +1934,11 @@
   "notificationTempTargetManualMeal": "Ustaw ręcznie w AAPS cel przed posiłkiem.",
   "notificationTempTargetManualConfirmed": "Potwierdzono przypomnienie o ręcznym ustawieniu celu. Nic nie wysłano do Nightscout. Wysyłanie po zgodzie wymaga włączenia i zapisania opcji w ustawieniach Nightscout.",
   "activityOptionalDurationHint": "Pozostaw puste, aby zakończyć aktywność ręcznie.",
-  "commonInformationTooltip": "Więcej informacji"
+  "commonInformationTooltip": "Więcej informacji",
+  "dashboardActivityPreparationTarget": "Przygotowanie: temp target {target} mg/dl",
+  "@dashboardActivityPreparationTarget": {"placeholders": {"target": {"type": "int"}}},
+  "dashboardActivityOngoingTarget": "Temp target aktywności: {target} mg/dl",
+  "@dashboardActivityOngoingTarget": {"placeholders": {"target": {"type": "int"}}},
+  "dashboardActivityTargetRemaining": "Pozostało {minutes} min · do {time}",
+  "@dashboardActivityTargetRemaining": {"placeholders": {"minutes": {"type": "int"}, "time": {"type": "String"}}}
 }
