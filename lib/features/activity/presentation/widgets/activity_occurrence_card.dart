@@ -55,7 +55,7 @@ class ActivityOccurrenceCard extends StatelessWidget {
               ],
             ),
             Text(
-              '${DateFormat.yMd(context.lang.localeName).add_Hm().format(DateTime.fromMillisecondsSinceEpoch(row.startedAt))} · ${row.durationMinutes} ${context.lang.activityMinutesUnit}',
+              '${DateFormat.yMd(context.lang.localeName).add_Hm().format(DateTime.fromMillisecondsSinceEpoch(row.startedAt))} · ${row.durationMinutes == null ? context.lang.activityManualEnd : '${row.durationMinutes} ${context.lang.activityMinutesUnit}'}',
             ),
             Text(
               row.scheduleId == null

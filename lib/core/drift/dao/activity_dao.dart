@@ -1,9 +1,15 @@
 import 'package:drift/drift.dart';
+
+import '../../../common/monitoring/effective_activity_duration.dart';
 import '../database_impl.dart';
 
 part 'activity_dao.g.dart';
 
-typedef ActivityLogViewData = ({ActivityLogData log, ActivityData activity});
+typedef ActivityLogViewData = ({
+  ActivityLogData log,
+  ActivityData activity,
+  ActivityOccurrenceData? occurrence,
+});
 
 @DriftAccessor(
   include: {
@@ -43,6 +49,10 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
             db.activity,
             db.activity.id.equalsExp(db.activityLog.activityId),
           ),
+          leftOuterJoin(
+            db.activityOccurrence,
+            db.activityOccurrence.activityLogId.equalsExp(db.activityLog.id),
+          ),
         ])..orderBy([
           OrderingTerm(
             expression: db.activityLog.startedAt,
@@ -71,6 +81,10 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
             innerJoin(
               db.activity,
               db.activity.id.equalsExp(db.activityLog.activityId),
+            ),
+            leftOuterJoin(
+              db.activityOccurrence,
+              db.activityOccurrence.activityLogId.equalsExp(db.activityLog.id),
             ),
           ])
           ..where(db.activityLog.startedAt.isSmallerThanValue(endMs))
@@ -147,12 +161,26 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
   }
 
   Future<int?> getScheduledDurationForLog(int activityLogId) async {
-    final occurrence =
-        await (select(db.activityOccurrence)
-              ..where((row) => row.activityLogId.equals(activityLogId))
-              ..limit(1))
-            .getSingleOrNull();
-    return occurrence?.durationMinutes;
+    return (await getOccurrenceForLog(activityLogId))?.durationMinutes;
+  }
+
+  Future<ActivityOccurrenceData?> getOccurrenceForLog(int activityLogId) {
+    return (select(db.activityOccurrence)
+          ..where((row) => row.activityLogId.equals(activityLogId))
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<int?> getEffectiveDurationForLog(
+    int activityLogId,
+    int? defaultDuration,
+  ) async {
+    final occurrence = await getOccurrenceForLog(activityLogId);
+    return effectiveActivityDuration(
+      activityDuration: defaultDuration,
+      hasScheduledOccurrence: occurrence != null,
+      occurrenceDuration: occurrence?.durationMinutes,
+    );
   }
 
   Future<ActivityLogData?> getActiveActivityLogOrNull() {
@@ -170,6 +198,10 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
               db.activity,
               db.activity.id.equalsExp(db.activityLog.activityId),
             ),
+            leftOuterJoin(
+              db.activityOccurrence,
+              db.activityOccurrence.activityLogId.equalsExp(db.activityLog.id),
+            ),
           ])
           ..where(db.activityLog.endedAt.isNull())
           ..orderBy([OrderingTerm.asc(db.activityLog.startedAt)])
@@ -185,6 +217,10 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
             innerJoin(
               db.activity,
               db.activity.id.equalsExp(db.activityLog.activityId),
+            ),
+            leftOuterJoin(
+              db.activityOccurrence,
+              db.activityOccurrence.activityLogId.equalsExp(db.activityLog.id),
             ),
           ])
           ..where(db.activityLog.endedAt.isNull())
@@ -217,6 +253,7 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     return (
       log: row.readTable(db.activityLog),
       activity: row.readTable(db.activity),
+      occurrence: row.readTableOrNull(db.activityOccurrence),
     );
   }
 

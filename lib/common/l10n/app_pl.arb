@@ -1913,5 +1913,6 @@
   "mealAdvicePreparationFailed": "Nie udało się przygotować sugestii. Możesz wybrać decyzję ręcznie.",
   "activityLogEditTimes": "Edytuj czas aktywności",
   "activityLogTimeInvalid": "Koniec musi być później niż początek i nie może być w przyszłości.",
-  "activityLogTimeSaveFailed": "Nie udało się zapisać zmian. Otwórz wpis ponownie i spróbuj jeszcze raz."
+  "activityLogTimeSaveFailed": "Nie udało się zapisać zmian. Otwórz wpis ponownie i spróbuj jeszcze raz.",
+  "activityOptionalDurationHint": "Pozostaw puste, aby zakończyć aktywność ręcznie."
 }

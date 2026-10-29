@@ -33,7 +33,7 @@ class ActivityScheduleService {
     required int activityId,
     required Set<int> weekdays,
     required int startMinute,
-    required int durationMinutes,
+    required int? durationMinutes,
     required String mode,
     required DateTime validFrom,
     DateTime? validUntil,
@@ -41,7 +41,7 @@ class ActivityScheduleService {
   }) async {
     if (weekdays.isEmpty ||
         weekdays.any((day) => day < 1 || day > 7) ||
-        durationMinutes <= 0 ||
+        (durationMinutes != null && durationMinutes <= 0) ||
         startMinute < 0 ||
         startMinute >= 1440 ||
         previousDayMinute < 0 ||
@@ -57,7 +57,7 @@ class ActivityScheduleService {
         activityId: activityId,
         weekdays: days.join(','),
         startMinute: startMinute,
-        durationMinutes: durationMinutes,
+        durationMinutes: Value(durationMinutes),
         confirmationMode: mode,
         previousDayMinute: Value(previousDayMinute),
         validFrom: validFrom.millisecondsSinceEpoch,
@@ -142,7 +142,7 @@ class ActivityScheduleService {
                 scheduleId: Value(rule.id),
                 activityId: rule.activityId,
                 startedAt: start.millisecondsSinceEpoch,
-                durationMinutes: rule.durationMinutes,
+                durationMinutes: Value(rule.durationMinutes),
                 actionAt: activityScheduleActionAt(
                   start,
                   rule.confirmationMode,
@@ -253,6 +253,32 @@ class ActivityScheduleService {
   });
 
   Future<void> removeSchedule(int id) => db.transaction(() async {
+    final sessions =
+        await (db.select(db.activityOccurrence).join([
+                innerJoin(
+                  db.activityLog,
+                  db.activityLog.id.equalsExp(
+                    db.activityOccurrence.activityLogId,
+                  ),
+                ),
+              ])
+              ..where(db.activityOccurrence.scheduleId.equals(id))
+              ..where(
+                db.activityLog.startedAt.isSmallerOrEqualValue(
+                      clock.now().millisecondsSinceEpoch,
+                    ) |
+                    db.activityLog.endedAt.isNotNull(),
+              ))
+            .get();
+    final retainedIds = sessions
+        .map((row) => row.readTable(db.activityOccurrence).id)
+        .toList();
+    if (retainedIds.isNotEmpty) {
+      // Session duration is historical data even after its recurrence is removed.
+      await (db.update(db.activityOccurrence)
+            ..where((row) => row.id.isIn(retainedIds)))
+          .write(const ActivityOccurrenceCompanion(scheduleId: Value(null)));
+    }
     await clearFuture(id);
     await (db.delete(db.activitySchedule)..where((r) => r.id.equals(id))).go();
   });
@@ -260,9 +286,10 @@ class ActivityScheduleService {
   Future<void> planOnce({
     required int activityId,
     required DateTime start,
-    required int durationMinutes,
+    required int? durationMinutes,
   }) async {
-    if (!start.isAfter(clock.now()) || durationMinutes <= 0) {
+    if (!start.isAfter(clock.now()) ||
+        (durationMinutes != null && durationMinutes <= 0)) {
       throw ArgumentError('Invalid planned activity');
     }
     await db.transaction(() async {
@@ -272,7 +299,7 @@ class ActivityScheduleService {
             ActivityOccurrenceCompanion.insert(
               activityId: activityId,
               startedAt: start.millisecondsSinceEpoch,
-              durationMinutes: durationMinutes,
+              durationMinutes: Value(durationMinutes),
               confirmationMode: 'automatic',
               actionAt: start
                   .subtract(activityPreparationLeadTime)
@@ -310,7 +337,7 @@ class ActivityScheduleService {
             scheduleId: Value(row.scheduleId),
             activityId: row.activityId,
             startedAt: start.millisecondsSinceEpoch,
-            durationMinutes: row.durationMinutes,
+            durationMinutes: Value(row.durationMinutes),
             confirmationMode: row.confirmationMode,
             actionAt: activityScheduleActionAt(
               start,

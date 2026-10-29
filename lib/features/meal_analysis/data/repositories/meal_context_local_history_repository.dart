@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../../common/monitoring/effective_activity_duration.dart';
 import '../../../../core/domain/model/meal_snapshot.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../../../core/drift/mappers/meal_snapshot_drift_mapper.dart';
@@ -161,7 +162,11 @@ class MealContextLocalHistoryRepository {
                 ? null
                 : DateTime.fromMillisecondsSinceEpoch(ended),
             recordedAt: DateTime.fromMillisecondsSinceEpoch(row.log.createdAt),
-            plannedDurationMinutes: row.activity.durationMinutes,
+            plannedDurationMinutes: effectiveActivityDuration(
+              activityDuration: row.activity.durationMinutes,
+              hasScheduledOccurrence: row.occurrence != null,
+              occurrenceDuration: row.occurrence?.durationMinutes,
+            ),
             percentagePre: row.activity.percentagePre,
             percentagePost: row.activity.percentagePost,
           );

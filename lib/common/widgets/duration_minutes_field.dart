@@ -6,7 +6,9 @@ class DurationMinutesField extends StatelessWidget {
     super.key,
     required this.controller,
     this.onChanged,
+    this.isRequired = true,
   });
+  final bool isRequired;
   final TextEditingController controller;
   final ValueChanged<String>? onChanged;
   @override
@@ -15,12 +17,17 @@ class DurationMinutesField extends StatelessWidget {
     keyboardType: TextInputType.number,
     decoration: InputDecoration(
       labelText: context.lang.activityDurationLabel,
+      helperText: isRequired ? null : context.lang.activityOptionalDurationHint,
       suffixText: context.lang.activityMinutesUnit,
       border: const OutlineInputBorder(),
     ),
     onChanged: onChanged,
-    validator: (value) => (int.tryParse(value ?? '') ?? 0) <= 0
-        ? context.lang.activityDurationRequired
-        : null,
+    validator: (value) {
+      final text = value?.trim() ?? '';
+      if (!isRequired && text.isEmpty) return null;
+      return (int.tryParse(text) ?? 0) <= 0
+          ? context.lang.activityDurationRequired
+          : null;
+    },
   );
 }

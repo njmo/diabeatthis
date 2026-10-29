@@ -55,11 +55,6 @@ class ActivityDefinitionSheet extends HookConsumerWidget {
                 value: schedule.value,
                 onChanged: (value) {
                   schedule.value = value;
-                  if (value != null) {
-                    ref
-                        .read(activityDraftProvider.notifier)
-                        .setHasPlannedDuration(true);
-                  }
                 },
               ),
             ],
@@ -94,7 +89,6 @@ class ActivityDefinitionSheet extends HookConsumerWidget {
                       if (draft == null) return;
                       if (plan != null &&
                           (plan.weekdays.isEmpty ||
-                              draft.durationMinutes == null ||
                               (plan.validUntil != null &&
                                   plan.validUntil!.isBefore(plan.validFrom)))) {
                         error.value = context.lang.activityScheduleInvalid;
@@ -115,7 +109,7 @@ class ActivityDefinitionSheet extends HookConsumerWidget {
                                   activityId: activity.id,
                                   weekdays: plan.weekdays,
                                   startMinute: plan.startMinute,
-                                  durationMinutes: activity.durationMinutes!,
+                                  durationMinutes: activity.durationMinutes,
                                   mode: plan.confirmationMode,
                                   previousDayMinute: plan.previousDayMinute,
                                   validFrom: plan.validFrom,

@@ -167,7 +167,7 @@ class DashboardActivitySheet extends HookConsumerWidget {
                       .toList(),
                 ),
               const SizedBox(height: 12),
-              DurationMinutesField(controller: duration),
+              DurationMinutesField(controller: duration, isRequired: history),
               if (history && end != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),

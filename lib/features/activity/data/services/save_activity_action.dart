@@ -19,7 +19,7 @@ Future<int?> saveActivityAction(
           .planOnce(
             activityId: activity.id,
             start: action.startedAt,
-            durationMinutes: action.durationMinutes!,
+            durationMinutes: action.durationMinutes,
           );
     });
   } else {

@@ -33,7 +33,9 @@ class ActivityScheduleSheet extends HookConsumerWidget {
     );
     final duration = useTextEditingController(
       text:
-          (rule?.durationMinutes ?? activity.durationMinutes)?.toString() ?? '',
+          (rule == null ? activity.durationMinutes : rule!.durationMinutes)
+              ?.toString() ??
+          '',
     );
     final formKey = useMemoized(GlobalKey<FormState>.new);
     final saving = useState(false);
@@ -50,7 +52,7 @@ class ActivityScheduleSheet extends HookConsumerWidget {
           children: [
             Text(context.lang.activityScheduleDefinitionHint),
             const SizedBox(height: 12),
-            DurationMinutesField(controller: duration),
+            DurationMinutesField(controller: duration, isRequired: false),
             const SizedBox(height: 12),
             ActivityScheduleEditor(
               value: draft.value,
@@ -97,7 +99,9 @@ class ActivityScheduleSheet extends HookConsumerWidget {
                               activityId: activity.id,
                               weekdays: value.weekdays,
                               startMinute: value.startMinute,
-                              durationMinutes: int.parse(duration.text),
+                              durationMinutes: int.tryParse(
+                                duration.text.trim(),
+                              ),
                               mode: value.confirmationMode,
                               previousDayMinute: value.previousDayMinute,
                               validFrom: value.validFrom,
