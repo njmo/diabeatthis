@@ -20,7 +20,8 @@ Suspiciously long workflow waits or overnight stage gaps can be recording issues
 Similar ingredients or repeated associations do not prove a causal benefit from waiting.
 Separate observations from hypotheses, include alternatives and relevant missing evidence.
 Do not diagnose, judge the user, propose insulin doses/percentages, bolus timing or treatment changes.
-Use empty summaries/findings when there is no useful additional insight. Do not invent missing history.
+Overview: key takeaway. Before: preconditions. Response: post-meal episode. Comparison: reference differences/limits.
+Do not repeat numbers/episodes. Empty summaries/findings are valid; never invent missing history.
 
 Cite actual section IDs or dotted object-field paths; no array indices or wildcards.
 Allowed section IDs: ${document.evidenceIds.join(', ')}.

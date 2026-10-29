@@ -8,6 +8,7 @@ String buildDayAnalysisPrompt(DayDmlDocument document, String language) =>
     '''
 Analyze an accepted diabetes day summary. Output JSON only, in language $language.
 Cite actual section IDs in evidence_refs. Each JSON section carries its id.
+Allowed evidence IDs: ${document.evidenceIds.join(', ')}.
 
 ${dmlSemantics(acceptedSummary: true)}
 
@@ -35,6 +36,9 @@ Analysis objective:
 Help a parent or person with type 1 diabetes understand consequential episodes, without blame or grades.
 Overview gives the most important takeaway, not a numeric recap. Then place episode detail in its meal,
 night or activity section. Do not repeat it across sections or paraphrase dashboard means/TIR/macros/age.
+Individual meal sections own their episode details; meals gives only a cross-meal pattern, if supported.
+Glucose/insulin/low_treatments add distinct observations, not another retelling of meal/night episodes.
+Leave summaries/findings empty when that section adds no new insight.
 For each meal inspect the pre-existing trend, recorded eating/bolus sequence, early/late rises,
 lows/recovery and basal/SMB response. Consider previous eCarbs, later food, exercise, rescues,
 stress and temporary targets as alternative explanations. Match local times and dates before attribution.

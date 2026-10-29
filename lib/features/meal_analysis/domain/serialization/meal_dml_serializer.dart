@@ -4,6 +4,7 @@ import '../../../../common/analysis/dml_prediction_registry.dart';
 import '../../../../common/analysis/dml_timestamp.dart';
 import '../models/meal_ai_context.dart';
 import '../models/meal_dml_document.dart';
+import 'meal_comparison_evidence_dml.dart';
 import 'meal_observation_dml.dart';
 
 num? _finite(num? value) => value != null && value.isFinite ? value : null;
@@ -38,6 +39,10 @@ MealDmlDocument serializeMealDml(MealAiContext context) {
       'same_ingredients': entry.$2.match.matchesIngredients,
       'portion_ratio': _finite(entry.$2.match.portionRatio),
       'macro_distance': _finite(entry.$2.match.distance),
+      ...mealComparisonEvidenceDml(
+        current: context.current.before,
+        reference: entry.$2.observation,
+      ),
     });
     appendMealObservationDml(
       add,

@@ -9,6 +9,7 @@ import '../../../../core/domain/model/glucose.dart';
 import '../../../meal_analysis/domain/serialization/before_meal_dml.dart';
 import '../../../meal_analysis/domain/serialization/meal_carbohydrate_records_dml.dart';
 import '../../../meal_analysis/domain/serialization/meal_record_evidence_dml.dart';
+import '../../../meal_analysis/domain/serialization/recorded_meal_timing_dml.dart';
 import '../models/day_analysis_context.dart';
 import '../models/day_dml_document.dart';
 import '../use_cases/build_day_dml_use_case.dart';
@@ -265,6 +266,7 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
         includeLimitations: false,
       ),
       'name': meal.name,
+      'recorded_timing': recordedMealTimingDml(meal.stages),
       'eaten_at': at(meal.eatenAt),
       'eating_ended_at': meal.eatingEndedAt == null
           ? null

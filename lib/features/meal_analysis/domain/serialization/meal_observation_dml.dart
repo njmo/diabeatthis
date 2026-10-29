@@ -13,12 +13,14 @@ import 'before_meal_dml.dart';
 import 'meal_carbohydrate_records_dml.dart';
 import 'meal_record_evidence_dml.dart';
 import 'recorded_low_treatments_dml.dart';
+import 'recorded_meal_timing_dml.dart';
 
 export 'before_meal_dml.dart' show beforeMealFactsDml;
 
 num? _finite(num? value) => value != null && value.isFinite ? value : null;
 Map<String, Object?> _mealFacts(MealAiFacts meal) => {
   'name': meal.name,
+  'recorded_timing': recordedMealTimingDml(meal.stages),
   'eaten_at': dmlTimestamp(meal.eatenAt),
   'ended_at': meal.endedAt == null ? null : dmlTimestamp(meal.endedAt!),
   'wait_min': meal.wait == null ? null : meal.wait!.inSeconds / 60,

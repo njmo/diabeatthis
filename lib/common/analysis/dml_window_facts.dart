@@ -56,6 +56,12 @@ Map<String, Object?> dmlWindowFacts({
               },
           ],
     'cgm_observed_min': glucose?.window.observed.inMinutes,
+    'cgm_samples_in_window': glucose?.window.readings.length,
+    'cgm_coverage_pct': finite(glucose?.coveragePercent),
+    'cgm_sampling_complete': glucose?.hasContinuousReadings,
+    'has_cgm_observations': glucose == null
+        ? null
+        : glucose.window.observed > Duration.zero,
     'below70_min': glucose?.window.belowRange.inMinutes,
     'in70_180_min': glucose?.window.inRange.inMinutes,
     'above180_min': glucose?.window.aboveRange.inMinutes,

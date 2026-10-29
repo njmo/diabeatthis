@@ -7,6 +7,7 @@ import '../../../../common/analysis/dml_timestamp.dart';
 import '../../../../common/analysis/dml_treatment_context.dart';
 import '../../../meal_analysis/domain/models/before_meal_context.dart';
 import '../../../meal_analysis/domain/serialization/meal_carbohydrate_records_dml.dart';
+import '../../../meal_analysis/domain/serialization/meal_comparison_evidence_dml.dart';
 import '../../../meal_analysis/domain/serialization/meal_observation_dml.dart';
 import '../../../meal_analysis/domain/serialization/meal_record_evidence_dml.dart';
 import '../models/meal_advisor_context.dart';
@@ -138,6 +139,10 @@ MealAdvisorInput serializeMealAdvisorContext(
       'portion_ratio_reference_to_current': entry.$2.match.portionRatio,
       'macro_or_composition_distance': entry.$2.match.distance,
       'starting_conditions_must_be_compared_separately': true,
+      ...mealComparisonEvidenceDml(
+        current: before,
+        reference: entry.$2.observation,
+      ),
     });
     appendMealObservationDml(
       add,

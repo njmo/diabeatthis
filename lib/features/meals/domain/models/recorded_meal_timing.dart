@@ -30,8 +30,8 @@ class RecordedMealTiming {
     return null;
   }
 
-  /// Elapsed status time, distinct from a recorded insulin dose.
-  Duration? get recordedWait {
+  /// The last waiting stage preceding recorded eating, never an inferred dose time.
+  DateTime? get recordedWaitStartedAt {
     final start = recordedEatingStartedAt;
     if (start == null) return null;
     final waiting =
@@ -42,6 +42,13 @@ class RecordedMealTiming {
             )
             .toList()
           ..sort((a, b) => a.at.compareTo(b.at));
-    return waiting.isEmpty ? null : start.difference(waiting.last.at);
+    return waiting.lastOrNull?.at;
+  }
+
+  /// Elapsed status time, distinct from a recorded insulin dose.
+  Duration? get recordedWait {
+    final start = recordedEatingStartedAt;
+    final waiting = recordedWaitStartedAt;
+    return start == null || waiting == null ? null : start.difference(waiting);
   }
 }
