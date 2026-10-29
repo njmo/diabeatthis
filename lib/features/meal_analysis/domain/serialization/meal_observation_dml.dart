@@ -58,6 +58,7 @@ void appendMealObservationDml(
       workflowWait: meal.wait,
       before: before,
       outcome: outcome,
+      includeLimitations: false,
     ),
   );
   final latest = before.latestDeviceStatus;
@@ -196,6 +197,7 @@ void appendMealObservationDml(
       end: end,
       predictionAnchors: [if (latest != null) latest],
       registerPrediction: predictions.register,
+      includeNotes: false,
     ),
   );
   add(
@@ -218,6 +220,7 @@ void appendMealObservationDml(
           outcome?.treatmentHistoryStart ??
           before.asOf.subtract(before.windows.meals),
       end: end,
+      includeNotes: false,
     ),
   );
 }

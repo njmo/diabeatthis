@@ -82,6 +82,7 @@ Map<String, Object?> dmlAapsContext({
   required DateTime start,
   required DateTime end,
   Iterable<DeviceStatus> predictionAnchors = const [],
+  bool includeNotes = true,
   String Function(Map<String, Object?>)? registerPrediction,
 }) {
   bool within(DateTime at) => !at.isBefore(start) && !at.isAfter(end);
@@ -111,12 +112,13 @@ Map<String, Object?> dmlAapsContext({
   return {
     'start': dmlTimestamp(start),
     'end': dmlTimestamp(end),
-    'notes': [
-      'AAPS forecasts are model predictions, not observed CGM or measured absorption.',
-      'Sensitivity ratio can be a legacy default of 1; it is not proof of an observed sensitivity change.',
-      'Calculator IC, ISF, targets and percentages describe that calculation, not a full profile or confirmed insulin delivery.',
-      'Calculator glucose-related values keep recorded_units. Missing units prohibit interpreting or comparing those raw values.',
-    ],
+    if (includeNotes)
+      'notes': [
+        'AAPS forecasts are model predictions, not observed CGM or measured absorption.',
+        'Sensitivity ratio can be a legacy default of 1; it is not proof of an observed sensitivity change.',
+        'Calculator IC, ISF, targets and percentages describe that calculation, not a full profile or confirmed insulin delivery.',
+        'Calculator glucose-related values keep recorded_units. Missing units prohibit interpreting or comparing those raw values.',
+      ],
     'parameter_columns': [
       'time',
       'stored_sensitivity_ratio',

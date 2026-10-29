@@ -11,6 +11,7 @@ Map<String, Object?> mealCarbohydrateRecordsDml({
   required List<Treatment>? treatments,
   required DateTime start,
   required DateTime end,
+  bool includeNotes = true,
 }) {
   bool calculatedByCutoff(BolusWizard wizard) {
     final at =
@@ -60,11 +61,12 @@ Map<String, Object?> mealCarbohydrateRecordsDml({
                   ),
             ],
     ),
-    'notes': [
-      'Raw history records, not confirmed ingestion or a complete food diary.',
-      'Calculator carbs describe a calculation. Matching carb records can describe the same submission; do not sum both.',
-      'Local meals and rescues can describe these same events. No automatic cross-source identity or additional intake is implied.',
-      'Unassigned means no submission match, not a diagnosed rescue or missing meal.',
-    ],
+    if (includeNotes)
+      'notes': [
+        'Raw history records, not confirmed ingestion or a complete food diary.',
+        'Calculator carbs describe a calculation. Matching carb records can describe the same submission; do not sum both.',
+        'Local meals and rescues can describe these same events. No automatic cross-source identity or additional intake is implied.',
+        'Unassigned means no submission match, not a diagnosed rescue or missing meal.',
+      ],
   };
 }

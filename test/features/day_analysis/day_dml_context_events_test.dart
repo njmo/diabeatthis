@@ -145,7 +145,7 @@ void main() {
       expect(document.text, isNot(contains('private-check')));
       final prompt = buildDayAnalysisPrompt(document, 'pl');
       expect(prompt, contains('Duration 0 cancels'));
-      expect(prompt, contains('NOT that stress continued indefinitely'));
+      expect(prompt, contains('Stress without an end has unknown duration'));
     },
   );
 

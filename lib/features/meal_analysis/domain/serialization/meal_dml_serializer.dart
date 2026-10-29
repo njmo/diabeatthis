@@ -1,8 +1,9 @@
+import 'dart:convert';
+
 import '../../../../common/analysis/dml_prediction_registry.dart';
 import '../../../../common/analysis/dml_timestamp.dart';
 import '../models/meal_ai_context.dart';
 import '../models/meal_dml_document.dart';
-import 'dart:convert';
 import 'meal_observation_dml.dart';
 
 num? _finite(num? value) => value != null && value.isFinite ? value : null;
@@ -22,11 +23,7 @@ MealDmlDocument serializeMealDml(MealAiContext context) {
     'built_at': dmlTimestamp(context.builtAt),
     'clock': 'device_timezone_at_generation',
     'failed_optional_sources': context.failures.toList(),
-    'notes': [
-      'History may contain later edits; it is not an audit of information available at meal time.',
-      'eCarbs quantities describe scheduled release, not measured absorption.',
-      'SMB is included in bolus totals. CGM gaps do not imply stable glucose.',
-    ],
+    'history_source': 'current_history_reconstruction',
   });
 
   appendMealObservationDml(

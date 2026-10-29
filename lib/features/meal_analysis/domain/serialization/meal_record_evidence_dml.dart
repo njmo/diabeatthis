@@ -14,6 +14,7 @@ Map<String, Object?> mealRecordEvidenceDml({
   required Duration? workflowWait,
   required BeforeMealContext before,
   required MealOutcomeContext? outcome,
+  bool includeLimitations = true,
 }) {
   final nutrition = evidence.nutritionConfidence;
   final treatments = outcome?.treatments ?? before.treatments;
@@ -99,14 +100,15 @@ Map<String, Object?> mealRecordEvidenceDml({
                           60,
               },
           ],
-    'limitations': [
-      'Meal start and workflow wait are user/app records, not measured ingestion or confirmed delivery.',
-      'Positive candidate_bolus_to_recorded_eating_min means candidate bolus before eating; negative means after.',
-      'A confirmed meal/calculator link does not prove a calculator-adjacent bolus belongs to that meal.',
-      'Delivery candidates require a unique same-amount record within 10 seconds after the calculator; this remains a heuristic, not verified attribution.',
-      'No candidate or missing workflow wait does not mean no bolus or zero waiting.',
-      'Relations describe current confirmed assignments and may have been reviewed after the meal.',
-    ],
+    if (includeLimitations)
+      'limitations': [
+        'Meal start and workflow wait are user/app records, not measured ingestion or confirmed delivery.',
+        'Positive candidate_bolus_to_recorded_eating_min means candidate bolus before eating; negative means after.',
+        'A confirmed meal/calculator link does not prove a calculator-adjacent bolus belongs to that meal.',
+        'Delivery candidates require a unique same-amount record within 10 seconds after the calculator; this remains a heuristic, not verified attribution.',
+        'No candidate or missing workflow wait does not mean no bolus or zero waiting.',
+        'Relations describe current confirmed assignments and may have been reviewed after the meal.',
+      ],
   };
 }
 

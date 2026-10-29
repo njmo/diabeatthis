@@ -225,7 +225,10 @@ void main() {
         language: 'pl',
         policy: policy,
       );
-      expect(prompt, endsWith(document.text));
+      expect(
+        prompt,
+        contains('BEGIN_DML_DATA\n${document.text}\nEND_DML_DATA'),
+      );
       expect(prompt, contains('Respond in pl'));
       expect(prompt, contains('request-1'));
       expect(prompt, contains('Never calculate insulin units'));

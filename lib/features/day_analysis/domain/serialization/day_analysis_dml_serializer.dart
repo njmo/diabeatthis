@@ -159,6 +159,7 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
       start: seriesStart,
       end: history.end,
       registerPrediction: predictions.register,
+      includeNotes: false,
       predictionAnchors: [
         for (final meal in context.meals)
           if (meal.before.latestDeviceStatus != null)
@@ -173,6 +174,7 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
       treatments: history.treatments,
       start: history.start,
       end: history.end,
+      includeNotes: false,
     ),
   );
   add(
@@ -260,13 +262,14 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
         workflowWait: meal.wait,
         before: before,
         outcome: outcome,
+        includeLimitations: false,
       ),
       'name': meal.name,
       'eaten_at': at(meal.eatenAt),
       'eating_ended_at': meal.eatingEndedAt == null
           ? null
           : at(meal.eatingEndedAt!),
-      'recorded_wait_min': meal.wait?.inMinutes,
+      'recorded_wait_min': meal.wait == null ? null : meal.wait!.inSeconds / 60,
       'timing_source': 'app_workflow_not_verified_delivery_or_consumption',
       'macro_source': meal.macroSource,
       'macros': macro == null

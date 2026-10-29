@@ -34,8 +34,7 @@ MealAdvisorInput serializeMealAdvisorContext(
     'failed_optional_sources': context.failures.toList(),
     'current_meal_is_planned': true,
     'export_decimal_places': 4,
-    'history_semantics':
-        'Event-time reconstruction from currently available records; original upload times and revisions are unavailable.',
+    'history_source': 'current_history_reconstruction',
     'reading_order': [
       'planned_meal',
       'current_before',
@@ -44,11 +43,6 @@ MealAdvisorInput serializeMealAdvisorContext(
       'current_insulin',
       'current_carbohydrate_records',
       'similar_meals',
-    ],
-    'interpretation_limits': [
-      'Current meal has no observed outcome. Historical references must end before as_of.',
-      'Ingredient similarity does not establish equal preconditions or causal benefit from waiting.',
-      'Missing waiting, delivery or confidence is unknown, never zero or high confidence.',
     ],
   });
   add(
@@ -88,8 +82,8 @@ MealAdvisorInput serializeMealAdvisorContext(
         : 'complete',
     'matched_count': context.similarMatchCount,
     'included_count': context.comparisons.length,
-    'selection':
-        'Up to three highest ranked matches with completed outcomes before as_of; failed or incomplete observations are excluded.',
+    'maximum_included': 3,
+    'selection_cutoff': dmlTimestamp(before.asOf),
   });
   add(
     'current_carbohydrate_records',
@@ -97,6 +91,7 @@ MealAdvisorInput serializeMealAdvisorContext(
       treatments: before.treatments,
       start: before.asOf.subtract(before.windows.meals),
       end: before.asOf,
+      includeNotes: false,
     ),
   );
   add('current_cgm', {
@@ -116,6 +111,7 @@ MealAdvisorInput serializeMealAdvisorContext(
       start: insulinStart,
       end: before.asOf,
       registerPrediction: predictions.register,
+      includeNotes: false,
     ),
   );
   add(
