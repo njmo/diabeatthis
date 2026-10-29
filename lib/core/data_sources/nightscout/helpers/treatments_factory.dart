@@ -40,8 +40,8 @@ class TreatmentFactory {
         continue;
       }
       if (t is Map<String, dynamic> &&
-          t.containsKey('duration') &&
-          t.containsKey('carbs')) {
+          t['duration'] is num &&
+          t['carbs'] is num) {
         list.add(ExtendedCarbDto.fromJson(t).toDomain());
         continue;
       }
