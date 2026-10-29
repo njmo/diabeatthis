@@ -1,10 +1,10 @@
 import '../../../../common/analysis/dml_aaps_context.dart';
+import '../../../../common/analysis/dml_insulin_records.dart';
 import '../../../../common/analysis/dml_json.dart';
+import '../../../../common/analysis/dml_prediction_registry.dart';
 import '../../../../common/analysis/dml_time_blocks.dart';
 import '../../../../common/analysis/dml_timestamp.dart';
 import '../../../../common/analysis/dml_treatment_context.dart';
-import '../../../../core/domain/model/correction_bolus.dart';
-import '../../../../core/domain/model/manual_bolus.dart';
 import '../../../meal_analysis/domain/models/before_meal_context.dart';
 import '../../../meal_analysis/domain/serialization/meal_carbohydrate_records_dml.dart';
 import '../../../meal_analysis/domain/serialization/meal_observation_dml.dart';
@@ -16,6 +16,7 @@ MealAdvisorInput serializeMealAdvisorContext(
   MealAdvisorContext context, {
   required String requestId,
 }) {
+  final predictions = DmlPredictionRegistry();
   final before = context.before;
   final target = context.target;
   final ids = <String>{};
@@ -71,7 +72,10 @@ MealAdvisorInput serializeMealAdvisorContext(
             ),
           },
   );
-  add('current_before', beforeMealFactsDml(before, includePrediction: false));
+  add(
+    'current_before',
+    beforeMealFactsDml(before, registerPrediction: predictions.register),
+  );
   add('similar_meals', {
     'search_status': context.failures.contains('cancelled')
         ? 'cancelled'
@@ -111,30 +115,17 @@ MealAdvisorInput serializeMealAdvisorContext(
       treatments: before.treatments,
       start: insulinStart,
       end: before.asOf,
+      registerPrediction: predictions.register,
     ),
   );
-  add('current_insulin', {
-    'start': dmlTimestamp(insulinStart),
-    'end': dmlTimestamp(before.asOf),
-    'columns': ['time', 'kind', 'recorded_units'],
-    'blocks': dmlTimeBlocks(
-      before.treatments == null
-          ? null
-          : [
-              for (final t in before.treatments!)
-                if (t.isValid &&
-                    t.createdAt != null &&
-                    !t.createdAt!.isBefore(insulinStart) &&
-                    !t.createdAt!.isAfter(before.asOf))
-                  if (t is ManualBolus && t.insulin.isFinite && t.insulin > 0)
-                    (at: t.createdAt, values: ['manual', t.insulin])
-                  else if (t is CorrectionBolus &&
-                      t.insulin.isFinite &&
-                      t.insulin > 0)
-                    (at: t.createdAt, values: ['smb', t.insulin]),
-            ],
+  add(
+    'current_insulin',
+    dmlInsulinRecords(
+      treatments: before.treatments,
+      start: insulinStart,
+      end: before.asOf,
     ),
-  });
+  );
   for (final section in dmlTreatmentContext(
     treatments: before.treatments,
     glucose: before.glucose,
@@ -152,7 +143,15 @@ MealAdvisorInput serializeMealAdvisorContext(
       'macro_or_composition_distance': entry.$2.match.distance,
       'starting_conditions_must_be_compared_separately': true,
     });
-    appendMealObservationDml(add, prefix, entry.$2.observation);
+    appendMealObservationDml(
+      add,
+      prefix,
+      entry.$2.observation,
+      predictions: predictions,
+    );
+  }
+  for (final prediction in predictions.entries) {
+    add(prediction.id, prediction.facts);
   }
   return MealAdvisorInput(
     context: context,

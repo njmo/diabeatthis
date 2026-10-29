@@ -62,7 +62,7 @@ void main() {
       final facts = section(text, 'current_before');
       final insulin = facts['insulin_window'] as Map;
       expect(
-        facts['start'],
+        facts['glucose_window']['start'],
         dmlTimestamp(cutoff.subtract(before.windows.glucose)),
       );
       expect(facts.containsKey('bolus_total_u'), false);
@@ -249,7 +249,10 @@ void main() {
           fail ? null : 0,
         );
         expect(section(text, 'similar_meals')['included_count'], 0);
-        expect(section(text, 'current_before')['rescues'], hasLength(1));
+        expect(
+          section(text, 'current_before')['events']['rescues'],
+          hasLength(1),
+        );
       }
     },
   );

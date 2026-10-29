@@ -1,13 +1,15 @@
-import 'dart:convert';
+import '../../../../common/analysis/dml_prediction_registry.dart';
 import '../../../../common/analysis/dml_timestamp.dart';
 import '../models/meal_ai_context.dart';
 import '../models/meal_dml_document.dart';
+import 'dart:convert';
 import 'meal_observation_dml.dart';
 
 num? _finite(num? value) => value != null && value.isFinite ? value : null;
 
 /// Event-time evidence, not a reconstruction of what had reached the phone then.
 MealDmlDocument serializeMealDml(MealAiContext context) {
+  final predictions = DmlPredictionRegistry();
   final ids = <String>{};
   final lines = <String>['DML/1'];
   void add(String id, Map<String, Object?> facts) {
@@ -27,7 +29,12 @@ MealDmlDocument serializeMealDml(MealAiContext context) {
     ],
   });
 
-  appendMealObservationDml(add, 'meal', context.current);
+  appendMealObservationDml(
+    add,
+    'meal',
+    context.current,
+    predictions: predictions,
+  );
   for (final entry in context.comparisons.indexed) {
     final prefix = 'similar_${entry.$1 + 1}';
     add('${prefix}_match', {
@@ -35,7 +42,15 @@ MealDmlDocument serializeMealDml(MealAiContext context) {
       'portion_ratio': _finite(entry.$2.match.portionRatio),
       'macro_distance': _finite(entry.$2.match.distance),
     });
-    appendMealObservationDml(add, prefix, entry.$2.observation);
+    appendMealObservationDml(
+      add,
+      prefix,
+      entry.$2.observation,
+      predictions: predictions,
+    );
+  }
+  for (final prediction in predictions.entries) {
+    add(prediction.id, prediction.facts);
   }
   return MealDmlDocument(
     mealId: context.current.meal.mealId,

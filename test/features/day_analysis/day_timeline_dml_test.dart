@@ -136,7 +136,8 @@ void main() {
         contains(DateTime.utc(2026, 10, 25, 23, 30)),
       );
       expect(
-        rows[1]['before']['active_ecarbs'].first['scheduled_remaining_g'],
+        rows[1]['before']['events']['ecarbs_schedules']
+            .first['scheduled_remaining_g'],
         30,
       );
       expect(rows[1]['outcome']['ecarbs_overlap'].first['scheduled_g'], 30);

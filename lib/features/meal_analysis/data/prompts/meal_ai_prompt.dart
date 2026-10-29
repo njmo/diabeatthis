@@ -64,5 +64,10 @@ Saved nutrition confidence is a 0..1 estimate-quality signal, not measured accur
 Compare waiting only together with starting CGM, trend, IOB, COB, food/portion confidence and overlapping events.
 Do not turn a retrospective association into proof that waiting caused a better outcome.
 
+Before-meal snapshots separate glucose_window, insulin_window, events and quality.
+Resolve prediction_ref and event *_ref values to the corresponding document section IDs.
+Shared event references do not create extra events; apply the snapshot cutoff and event-window bounds.
+Later rows and forecasts must not be treated as pre-meal conditions.
+
 ${document.text}
 """;

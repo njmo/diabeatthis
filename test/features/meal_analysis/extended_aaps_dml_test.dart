@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../common/analysis/dml_aaps_context_test.dart'
     show calculatorRecords, predicted;
+import '../../helpers/dml_sections.dart';
 import '../day_analysis/day_dml_test.dart' show dmlFixture, dmlSection;
 import '../day_analysis/day_timeline_dml_test.dart'
     show buildTimeline, timelineFixture;
@@ -49,7 +50,10 @@ void main() {
           .where((l) => l.startsWith('MEAL '))
           .map((l) => jsonDecode(l.substring(5)) as Map)
           .singleWhere((m) => m['id'] == 'meal:2');
-      final prediction = meal['before']['aaps']['prediction'];
+      final prediction = dmlFactsById(
+        document.text,
+        meal['before']['aaps']['prediction_ref'] as String,
+      );
       expect(
         DateTime.parse(prediction['calculated_at'] as String),
         before.date,
@@ -114,7 +118,10 @@ void main() {
       expect(document.evidenceIds, contains('meal_aaps'));
       expect(
         DateTime.parse(
-          section('meal_before')['aaps']['prediction']['calculated_at']
+          dmlFactsById(
+                document.text,
+                section('meal_before')['aaps']['prediction_ref'] as String,
+              )['calculated_at']
               as String,
         ),
         before.date.toUtc(),

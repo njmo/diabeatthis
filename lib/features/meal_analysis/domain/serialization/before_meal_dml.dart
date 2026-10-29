@@ -9,23 +9,27 @@ num? _finite(num? value) => value != null && value.isFinite ? value : null;
 Map<String, Object?> beforeMealFactsDml(
   BeforeMealContext before, {
   bool includePrediction = true,
+  String Function(Map<String, Object?>)? registerPrediction,
+  Map<String, Object?>? sharedEvents,
 }) {
   final latest = before.latestDeviceStatus;
+  final glucoseWindow = dmlWindowFacts(
+    start: before.asOf.subtract(before.windows.glucose),
+    end: before.asOf,
+    glucose: before.glucoseSummary,
+    insulinStart: before.asOf.subtract(before.windows.insulin),
+    basal: before.basal,
+    boluses: before.boluses,
+  );
+  final insulinWindow = glucoseWindow.remove('insulin_window');
   return {
-    ...dmlWindowFacts(
-      start: before.asOf.subtract(before.windows.glucose),
-      end: before.asOf,
-      glucose: before.glucoseSummary,
-      insulinStart: before.asOf.subtract(before.windows.insulin),
-      basal: before.basal,
-      boluses: before.boluses,
-    ),
+    'as_of': dmlTimestamp(before.asOf),
     'aaps': dmlAapsSnapshot(
       latest,
       cutoff: before.asOf,
       includePrediction: includePrediction,
+      registerPrediction: registerPrediction,
     ),
-    'failed_sources': before.failedSources.map((s) => s.name).toList(),
     'latest_cgm_mg_dl': before.latestCgm?.sgv,
     'latest_cgm_direction': before.latestCgm?.direction,
     'latest_cgm_age_min': before.latestCgm == null
@@ -45,51 +49,75 @@ Map<String, Object?> beforeMealFactsDml(
         ? _finite(latest!.insulinActivity)
         : null,
     'pod_age_h': before.podAge == null ? null : before.podAge!.inMinutes / 60,
-    'prior_meals': before.priorMeals == null
-        ? null
-        : [
-            for (final m in before.priorMeals!)
-              {
-                'name': m.name,
-                'at': dmlTimestamp(m.eatenAt),
-                'net_carbs_g': _finite(m.snapshot?.totalNetCarbsG),
-                'protein_g': _finite(m.snapshot?.totalProteinG),
-                'fat_g': _finite(m.snapshot?.totalFatG),
-              },
-          ],
-    'ecarbs_schedules': before.extendedCarbPlans == null
-        ? null
-        : [
-            for (final p in before.extendedCarbPlans!)
-              {
-                'start': dmlTimestamp(p.treatment.createdAt),
-                'end': dmlTimestamp(p.endsAt),
-                'scheduled_remaining_g': _finite(p.scheduledAfterCutoffGrams),
-              },
-          ],
-    'rescues': recordedLowTreatmentsDml(before.lowTreatments),
-    'rescue_record_semantics':
-        'Same-time same-amount records are retained and marked, not confirmed separate portions or proven duplicates. Their combined intake is uncertain.',
-    'activity_record_semantics':
-        'Activity start/end are application records. Timed activities may end automatically at the planned time; this is not verified exercise duration.',
-    'activities': before.activities == null
-        ? null
-        : [
-            for (final a in before.activities!)
-              {
-                'name': a.name,
-                'start': dmlTimestamp(a.startedAt),
-                'end': a.endedAt == null ? null : dmlTimestamp(a.endedAt!),
-                'phase_at_cutoff': a.startedAt.isAfter(before.asOf)
-                    ? 'upcoming'
-                    : a.endedAt == null
-                    ? 'started_end_unknown'
-                    : 'ended',
-                'planned_duration_min': a.plannedDurationMinutes,
-                'configured_pre_percent': a.percentagePre,
-                'configured_post_percent': a.percentagePost,
-                'settings_are_current_not_historical': true,
-              },
-          ],
+    'glucose_window': glucoseWindow,
+    'insulin_window': insulinWindow,
+    'events': {
+      'meal_window_start': dmlTimestamp(
+        before.asOf.subtract(before.windows.meals),
+      ),
+      'meal_window_end': dmlTimestamp(before.asOf),
+      'activity_window_start': dmlTimestamp(
+        before.asOf.subtract(before.windows.activities),
+      ),
+      'activity_window_end': dmlTimestamp(
+        before.asOf.add(before.windows.upcomingActivities),
+      ),
+      'ecarbs_schedules': before.extendedCarbPlans == null
+          ? null
+          : [
+              for (final p in before.extendedCarbPlans!)
+                {
+                  'start': dmlTimestamp(p.treatment.createdAt),
+                  'end': dmlTimestamp(p.endsAt),
+                  'scheduled_remaining_g': _finite(p.scheduledAfterCutoffGrams),
+                },
+            ],
+      'activities': before.activities == null
+          ? null
+          : [
+              for (final a in before.activities!)
+                {
+                  'name': a.name,
+                  'start': dmlTimestamp(a.startedAt),
+                  'end': a.endedAt == null ? null : dmlTimestamp(a.endedAt!),
+                  'phase_at_cutoff': a.startedAt.isAfter(before.asOf)
+                      ? 'upcoming'
+                      : a.endedAt == null
+                      ? 'started_end_unknown'
+                      : 'ended',
+                  'planned_duration_min': a.plannedDurationMinutes,
+                  'configured_pre_percent': a.percentagePre,
+                  'configured_post_percent': a.percentagePost,
+                  'settings_are_current_not_historical': true,
+                },
+            ],
+      if (sharedEvents != null)
+        ...sharedEvents
+      else ...{
+        'prior_meals': before.priorMeals == null
+            ? null
+            : [
+                for (final m in before.priorMeals!)
+                  {
+                    'name': m.name,
+                    'at': dmlTimestamp(m.eatenAt),
+                    'net_carbs_g': _finite(m.snapshot?.totalNetCarbsG),
+                    'protein_g': _finite(m.snapshot?.totalProteinG),
+                    'fat_g': _finite(m.snapshot?.totalFatG),
+                  },
+              ],
+        'rescues': recordedLowTreatmentsDml(before.lowTreatments),
+        'rescue_record_semantics':
+            'Same-time same-amount records are retained and marked, not confirmed separate portions or proven duplicates. Their combined intake is uncertain.',
+        'activity_record_semantics':
+            'Activity start/end are application records. Timed activities may end automatically at the planned time; this is not verified exercise duration.',
+      },
+    },
+    'quality': {
+      'failed_sources': before.failedSources.map((s) => s.name).toList()
+        ..sort(),
+      'food_diary_completeness': 'unknown',
+      'treatment_history_completeness': 'unknown',
+    },
   };
 }

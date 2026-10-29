@@ -105,11 +105,16 @@ void main() {
                     .substring(id.length + 1),
               )
               as Map<String, dynamic>;
-      final rows = (section('meal_intake_insulin')['blocks'] as List)
+      final rows = (section('meal_insulin')['blocks'] as List)
           .expand((b) => b['rows'] as List)
           .toList();
       expect(rows, hasLength(1));
-      expect(rows.single, ['23:50', 'wizard', 30.0, 1.5]);
+      expect(rows.single, ['23:50', 'manual', 1.5]);
+      final carbs = (section('meal_carbohydrate_records')['blocks'] as List)
+          .expand((b) => b['rows'] as List)
+          .toList();
+      expect(carbs.map((r) => r[2]), [30, 30]);
+      expect(carbs.map((r) => r[1]), ['recorded_carbs', 'calculator_carbs']);
       expect(
         (section('meal_stress_events')['blocks'] as List).expand(
           (b) => b['rows'] as List,

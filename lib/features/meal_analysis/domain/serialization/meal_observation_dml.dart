@@ -1,18 +1,16 @@
 import '../../../../common/analysis/dml_aaps_context.dart';
+import '../../../../common/analysis/dml_insulin_records.dart';
+import '../../../../common/analysis/dml_prediction_registry.dart';
 import '../../../../common/analysis/dml_time_blocks.dart';
 import '../../../../common/analysis/dml_timestamp.dart';
 import '../../../../common/analysis/dml_treatment_context.dart';
 import '../../../../common/analysis/dml_window_facts.dart';
-import '../../../../common/history/bolus_wizard_grouping.dart';
-import '../../../../core/domain/model/bolus_wizard.dart';
-import '../../../../core/domain/model/correction_bolus.dart';
 import '../../../../core/domain/model/device_status.dart';
-import '../../../../core/domain/model/manual_bolus.dart';
-import '../../../../core/domain/model/treat.dart';
 import '../models/before_meal_context.dart';
 import '../models/meal_ai_context.dart';
 import '../models/meal_ai_facts.dart';
 import 'before_meal_dml.dart';
+import 'meal_carbohydrate_records_dml.dart';
 import 'meal_record_evidence_dml.dart';
 import 'recorded_low_treatments_dml.dart';
 
@@ -44,8 +42,9 @@ Map<String, Object?> _mealFacts(MealAiFacts meal) => {
 void appendMealObservationDml(
   void Function(String, Map<String, Object?>) add,
   String prefix,
-  MealAiObservation observed,
-) {
+  MealAiObservation observed, {
+  required DmlPredictionRegistry predictions,
+}) {
   final meal = observed.meal;
   final before = observed.before;
   final outcome = observed.outcome;
@@ -62,15 +61,62 @@ void appendMealObservationDml(
     ),
   );
   final latest = before.latestDeviceStatus;
-  add('${prefix}_before', beforeMealFactsDml(before));
+  add(
+    '${prefix}_before',
+    beforeMealFactsDml(before, registerPrediction: predictions.register),
+  );
+  add(
+    '${prefix}_outcome',
+    outcome == null
+        ? {'available': false}
+        : {
+            ...dmlWindowFacts(
+              start: outcome.mealTime,
+              end: outcome.observedUntil,
+              glucose: outcome.glucoseSummary,
+              basal: outcome.basal,
+              boluses: outcome.boluses,
+            ),
+            'available': true,
+            'expected_until': dmlTimestamp(outcome.expectedUntil),
+            'window_complete': outcome.isTimeWindowComplete,
+            'subsequent_meals': outcome.subsequentMeals == null
+                ? null
+                : [
+                    for (final m in outcome.subsequentMeals!)
+                      {'name': m.name, 'at': dmlTimestamp(m.eatenAt)},
+                  ],
+            'rescues': recordedLowTreatmentsDml(outcome.lowTreatments),
+            'activities': [
+              for (final a in outcome.activities)
+                {
+                  'name': a.name,
+                  'start': dmlTimestamp(a.startedAt),
+                  'end': a.endedAt == null ? null : dmlTimestamp(a.endedAt!),
+                  'intensity': a.intensity,
+                },
+            ],
+            'ecarbs_overlap': [
+              for (final e in outcome.extendedCarbs)
+                {
+                  'start': dmlTimestamp(e.overlapStart),
+                  'end': dmlTimestamp(e.overlapEnd),
+                  'scheduled_g': _finite(e.scheduledGrams),
+                  'started_before_meal': e.startedBeforeMeal,
+                },
+            ],
+          },
+  );
   final start = before.asOf.subtract(before.windows.glucose);
   final end = outcome?.observedUntil ?? before.asOf;
   final glucose = [...?before.glucose, ...?outcome?.glucose];
-  // The outcome already includes a full treatment lead-in; prefer that single fetch.
-  final treatments = (outcome?.treatments ?? before.treatments ?? [])
+  // Outcomes contain overlapping events, not the complete pre-meal history.
+  // Merge exact records without conflating distinct events at the same timestamp.
+  final treatments = [...?before.treatments, ...?outcome?.treatments]
       .where(
         (t) => t.isValid && t.createdAt != null && !t.createdAt!.isAfter(end),
       )
+      .toSet()
       .toList();
   for (final section in dmlTreatmentContext(
     treatments: before.treatments == null && outcome == null
@@ -149,76 +195,29 @@ void appendMealObservationDml(
       start: before.asOf.subtract(before.windows.insulin),
       end: end,
       predictionAnchors: [if (latest != null) latest],
+      registerPrediction: predictions.register,
     ),
   );
-  final grouping = BolusWizardGrouping(treatments);
-  add('${prefix}_intake_insulin', {
-    'start': dmlTimestamp(before.asOf.subtract(before.windows.insulin)),
-    'columns': ['time', 'kind', 'carbs_g', 'insulin_u'],
-    'blocks': before.treatments == null && outcome == null
-        ? null
-        : dmlTimeBlocks([
-            for (final t in treatments)
-              if (!t.createdAt!.isBefore(
-                    before.asOf.subtract(before.windows.insulin),
-                  ) &&
-                  !grouping.isRelated(t))
-                if (t is BolusWizard)
-                  (
-                    at: t.createdAt,
-                    values: ['wizard', _finite(t.carbs), _finite(t.insulin)],
-                  )
-                else if (t is Treat)
-                  (at: t.createdAt, values: ['carbs', t.carbs, null])
-                else if (t is ManualBolus)
-                  (
-                    at: t.createdAt,
-                    values: ['manual', null, _finite(t.insulin)],
-                  )
-                else if (t is CorrectionBolus)
-                  (at: t.createdAt, values: ['smb', null, _finite(t.insulin)]),
-          ]),
-  });
   add(
-    '${prefix}_outcome',
-    outcome == null
-        ? {'available': false}
-        : {
-            ...dmlWindowFacts(
-              start: outcome.mealTime,
-              end: outcome.observedUntil,
-              glucose: outcome.glucoseSummary,
-              basal: outcome.basal,
-              boluses: outcome.boluses,
-            ),
-            'available': true,
-            'expected_until': dmlTimestamp(outcome.expectedUntil),
-            'window_complete': outcome.isTimeWindowComplete,
-            'subsequent_meals': outcome.subsequentMeals == null
-                ? null
-                : [
-                    for (final m in outcome.subsequentMeals!)
-                      {'name': m.name, 'at': dmlTimestamp(m.eatenAt)},
-                  ],
-            'rescues': recordedLowTreatmentsDml(outcome.lowTreatments),
-            'activities': [
-              for (final a in outcome.activities)
-                {
-                  'name': a.name,
-                  'start': dmlTimestamp(a.startedAt),
-                  'end': a.endedAt == null ? null : dmlTimestamp(a.endedAt!),
-                  'intensity': a.intensity,
-                },
-            ],
-            'ecarbs_overlap': [
-              for (final e in outcome.extendedCarbs)
-                {
-                  'start': dmlTimestamp(e.overlapStart),
-                  'end': dmlTimestamp(e.overlapEnd),
-                  'scheduled_g': _finite(e.scheduledGrams),
-                  'started_before_meal': e.startedBeforeMeal,
-                },
-            ],
-          },
+    '${prefix}_insulin',
+    dmlInsulinRecords(
+      treatments: before.treatments == null && outcome == null
+          ? null
+          : treatments,
+      start: before.asOf.subtract(before.windows.insulin),
+      end: end,
+    ),
+  );
+  add(
+    '${prefix}_carbohydrate_records',
+    mealCarbohydrateRecordsDml(
+      treatments: before.treatments == null && outcome == null
+          ? null
+          : treatments,
+      start:
+          outcome?.treatmentHistoryStart ??
+          before.asOf.subtract(before.windows.meals),
+      end: end,
+    ),
   );
 }

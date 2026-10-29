@@ -1,11 +1,13 @@
 import 'dart:convert';
 
 import '../../../../common/analysis/dml_aaps_context.dart';
-import '../../../../core/domain/model/correction_bolus.dart';
+import '../../../../common/analysis/dml_insulin_records.dart';
+import '../../../../common/analysis/dml_prediction_registry.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/extended_carb.dart';
 import '../../../../core/domain/model/glucose.dart';
-import '../../../../core/domain/model/manual_bolus.dart';
+import '../../../meal_analysis/domain/serialization/before_meal_dml.dart';
+import '../../../meal_analysis/domain/serialization/meal_carbohydrate_records_dml.dart';
 import '../../../meal_analysis/domain/serialization/meal_record_evidence_dml.dart';
 import '../models/day_analysis_context.dart';
 import '../models/day_dml_document.dart';
@@ -17,6 +19,7 @@ import 'day_dml_window_facts.dart';
 
 /// Formats prepared facts only. No history reads, calculations or UI labels.
 DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
+  final predictions = DmlPredictionRegistry();
   final accepted = context.accepted;
   final history = context.history;
   final previous = history.previousDays;
@@ -155,6 +158,7 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
       treatments: history.treatments,
       start: seriesStart,
       end: history.end,
+      registerPrediction: predictions.register,
       predictionAnchors: [
         for (final meal in context.meals)
           if (meal.before.latestDeviceStatus != null)
@@ -162,26 +166,24 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
       ],
     ),
   );
-  add('BOLUSES', 'boluses', {
-    'columns': ['time', 'kind', 'units'],
-    'blocks': dayDmlTimeBlocks(
-      history.treatments == null
-          ? null
-          : [
-              for (final t in treatments)
-                if (inSeries(t.createdAt!) &&
-                    t is ManualBolus &&
-                    t.insulin > 0 &&
-                    t.insulin.isFinite)
-                  (at: t.createdAt, values: ['manual', t.insulin])
-                else if (inSeries(t.createdAt!) &&
-                    t is CorrectionBolus &&
-                    t.insulin > 0 &&
-                    t.insulin.isFinite)
-                  (at: t.createdAt, values: ['smb', t.insulin]),
-            ],
+  add(
+    'CARBOHYDRATE_RECORDS',
+    'carbohydrate_records',
+    mealCarbohydrateRecordsDml(
+      treatments: history.treatments,
+      start: history.start,
+      end: history.end,
     ),
-  });
+  );
+  add(
+    'BOLUSES',
+    'boluses',
+    dmlInsulinRecords(
+      treatments: history.treatments,
+      start: seriesStart,
+      end: history.end,
+    ),
+  );
   add('ECARBS', 'ecarbs', {
     'columns': ['start', 'carbs_g', 'duration_min'],
     'blocks': dayDmlTimeBlocks(
@@ -282,34 +284,31 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
         for (final stage in meal.stages)
           {'at': at(stage.at), 'status': stage.status},
       ],
-      'before': {
-        'as_of': at(before.asOf),
-        'aaps': dmlAapsSnapshot(before.latestDeviceStatus, cutoff: before.asOf),
-        'mean_mg_dl': finite(before.glucoseSummary?.mean),
-        'latest_iob_u': before.latestDeviceStatus?.hasIob == true
-            ? finite(before.latestDeviceStatus?.iob)
-            : null,
-        'latest_cob_g': before.latestDeviceStatus?.hasCob == true
-            ? finite(before.latestDeviceStatus?.cob)
-            : null,
-        'device_status_at': before.latestDeviceStatus == null
-            ? null
-            : at(before.latestDeviceStatus!.date),
-        'active_ecarbs': before.extendedCarbPlans == null
-            ? null
-            : [
-                for (final plan in before.extendedCarbPlans!)
-                  {
-                    'start': at(plan.treatment.createdAt),
-                    'end': at(plan.endsAt),
-                    'scheduled_remaining_g': finite(
-                      plan.scheduledAfterCutoffGrams,
-                    ),
-                  },
-              ],
-        'failed_sources': before.failedSources.map((s) => s.name).toList()
-          ..sort(),
-      },
+      'before': beforeMealFactsDml(
+        before,
+        registerPrediction: predictions.register,
+        sharedEvents: {
+          'activities_ref': 'activity_events',
+          'rescues_ref': 'rescues',
+          'ecarbs_ref': 'ecarbs',
+          'carbohydrates_ref': 'carbohydrate_records',
+          'stress_ref': 'stress_events',
+          'temp_targets_ref': 'temp_targets',
+          'prior_meals': before.priorMeals == null
+              ? null
+              : [
+                  for (final prior in before.priorMeals!)
+                    if (context.meals.any((m) => m.meal.id == prior.mealId))
+                      {
+                        'ref': context.meals
+                            .firstWhere((m) => m.meal.id == prior.mealId)
+                            .reference,
+                      }
+                    else
+                      {'name': prior.name, 'at': at(prior.eatenAt)},
+                ],
+        },
+      ),
       'outcome': {
         ...dayDmlWindowFacts(
           start: meal.eatenAt,
@@ -344,6 +343,9 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
             : [for (final m in outcome.subsequentMeals ?? []) at(m.eatenAt)],
       },
     });
+  }
+  for (final prediction in predictions.entries) {
+    add('PREDICTION', prediction.id, prediction.facts);
   }
   return DayDmlDocument(
     text: text.toString(),

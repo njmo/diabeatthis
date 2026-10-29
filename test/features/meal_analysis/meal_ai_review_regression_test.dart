@@ -69,7 +69,7 @@ void main() {
               )
               as Map<String, dynamic>;
       for (final id in [
-        'meal_intake_insulin',
+        'meal_insulin',
         'meal_stress_events',
         'meal_cgm',
         'meal_pump',
@@ -77,7 +77,7 @@ void main() {
         expect(section(id)['blocks'], isNull, reason: id);
       }
       expect(
-        section('meal_before')['failed_sources'],
+        section('meal_before')['quality']['failed_sources'],
         containsAll(['glucose', 'deviceStatus', 'treatments']),
       );
       expect(section('meal_outcome')['available'], false);
