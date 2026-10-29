@@ -54,6 +54,7 @@ Map<String, Object?>? dmlAapsSnapshot(
   DeviceStatus? status, {
   required DateTime cutoff,
   bool includePrediction = true,
+  String Function(Map<String, Object?>)? registerPrediction,
 }) {
   if (status == null || status.date.isAfter(cutoff)) return null;
   final prediction = _prediction(status, cutoff);
@@ -65,7 +66,12 @@ Map<String, Object?>? dmlAapsSnapshot(
         ? null
         : cutoff.difference(prediction.calculatedAt).inSeconds / 60,
     if (includePrediction)
-      'prediction': prediction == null ? null : _predictionFacts(prediction),
+      if (registerPrediction == null)
+        'prediction': prediction == null ? null : _predictionFacts(prediction)
+      else
+        'prediction_ref': prediction == null
+            ? null
+            : registerPrediction(_predictionFacts(prediction)),
   };
 }
 
@@ -76,6 +82,7 @@ Map<String, Object?> dmlAapsContext({
   required DateTime start,
   required DateTime end,
   Iterable<DeviceStatus> predictionAnchors = const [],
+  String Function(Map<String, Object?>)? registerPrediction,
 }) {
   bool within(DateTime at) => !at.isBefore(start) && !at.isAfter(end);
   final ordered = statuses?.where((s) => within(s.date)).toList()
@@ -133,7 +140,7 @@ Map<String, Object?> dmlAapsContext({
     'prediction_columns': [
       'calculated_at',
       'status_observed_at',
-      'sampled_prediction',
+      registerPrediction == null ? 'sampled_prediction' : 'prediction_ref',
     ],
     'prediction_blocks': dmlTimeBlocks(
       statuses == null && forecasts.isEmpty
@@ -144,7 +151,11 @@ Map<String, Object?> dmlAapsContext({
                   at: entry.prediction.calculatedAt,
                   values: [
                     entry.status.date,
-                    _predictionFacts(entry.prediction),
+                    registerPrediction == null
+                        ? _predictionFacts(entry.prediction)
+                        : registerPrediction(
+                            _predictionFacts(entry.prediction),
+                          ),
                   ],
                 ),
             ],
