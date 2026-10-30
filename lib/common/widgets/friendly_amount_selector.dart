@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/language.dart';
+import 'amount_entry_dialog.dart';
 
 class FriendlyAmountOption {
   const FriendlyAmountOption({
@@ -37,7 +38,6 @@ class FriendlyAmountSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
     final normalizedValue = _normalize(value);
 
     return Column(
@@ -68,10 +68,44 @@ class FriendlyAmountSelector extends StatelessWidget {
                   icon: Text(_stepLabel(-1)),
                 ),
                 Expanded(
-                  child: Text(
-                    valueLabel(normalizedValue),
-                    textAlign: TextAlign.center,
-                    style: textTheme.titleLarge,
+                  child: Tooltip(
+                    message: context.lang.amountEntryTitle,
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 12,
+                        ),
+                        foregroundColor: colorScheme.onSurface,
+                        textStyle: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      onPressed: () async {
+                        final entered = await showDialog<double>(
+                          context: context,
+                          builder: (_) => AmountEntryDialog(
+                            value: normalizedValue,
+                            min: min,
+                            max: max,
+                          ),
+                        );
+                        if (context.mounted && entered != null) {
+                          onChanged(_normalize(entered));
+                        }
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              valueLabel(normalizedValue),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.edit_outlined, size: 14),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 IconButton.filledTonal(

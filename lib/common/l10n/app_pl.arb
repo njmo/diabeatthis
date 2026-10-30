@@ -1951,5 +1951,9 @@
   "framedCameraFrontInstructions": "Umieść nazwę i markę w ramce. Zdjęcie zostanie automatycznie przycięte.",
   "framedCameraNutritionInstructions": "Umieść w ramce tabelę lub tekst z wartościami oraz informacją „na 100 g” lub „na 100 ml”.",
   "framedCameraFrontTitle": "Zdjęcie nazwy produktu",
-  "framedCameraNutritionTitle": "Zdjęcie wartości odżywczych"
+  "framedCameraNutritionTitle": "Zdjęcie wartości odżywczych",
+  "amountEntryTitle": "Wpisz ilość",
+  "amountEntryInvalid": "Podaj poprawną liczbę.",
+  "amountEntryMinimum": "Podaj wartość nie mniejszą niż {min}.",
+  "amountEntryMaximum": "Podaj wartość nie większą niż {max}."
 }

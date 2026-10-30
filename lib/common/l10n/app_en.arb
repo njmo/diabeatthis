@@ -1511,5 +1511,9 @@
   "framedCameraFrontInstructions": "Place the product name and brand inside the frame. The photo will be cropped automatically.",
   "framedCameraNutritionInstructions": "Place the nutrition table or text inside the frame, including “per 100 g” or “per 100 ml”.",
   "framedCameraFrontTitle": "Product name photo",
-  "framedCameraNutritionTitle": "Nutrition information photo"
+  "framedCameraNutritionTitle": "Nutrition information photo",
+  "amountEntryTitle": "Enter amount",
+  "amountEntryInvalid": "Enter a valid number.",
+  "amountEntryMinimum": "Enter a value of at least {min}.",
+  "amountEntryMaximum": "Enter a value no greater than {max}."
 }
