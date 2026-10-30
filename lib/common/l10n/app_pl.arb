@@ -1955,5 +1955,7 @@
   "amountEntryTitle": "Wpisz ilość",
   "amountEntryInvalid": "Podaj poprawną liczbę.",
   "amountEntryMinimum": "Podaj wartość nie mniejszą niż {min}.",
-  "amountEntryMaximum": "Podaj wartość nie większą niż {max}."
+  "amountEntryMaximum": "Podaj wartość nie większą niż {max}.",
+  "dayWarningMissingReadings": "Brakujące odczyty CGM: {count} z {expected} ({percent}%).",
+  "@dayWarningMissingReadings": {"placeholders": {"count": {"type": "int"}, "expected": {"type": "int"}, "percent": {"type": "String"}}}
 }

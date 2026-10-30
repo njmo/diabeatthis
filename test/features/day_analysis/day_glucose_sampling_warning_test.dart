@@ -48,9 +48,9 @@ void main() {
   );
 
   testWidgets(
-    'enough records cannot hide a missing sample, duplicates or stale trailing history',
+    'small gaps stay below warning threshold while clustered history still warns',
     (tester) async {
-      for (final seconds in [
+      for (final (index, seconds) in [
         [
           ...List.generate(
             72,
@@ -60,12 +60,16 @@ void main() {
         ],
         [...List.generate(71, (index) => index * 300), 21000],
         List.generate(72, (index) => index),
-      ]) {
+      ].indexed) {
         final data = summary(seconds);
         expect(seconds, hasLength(72));
         expect(data.hasContinuousReadings, isFalse);
+        expect(data.missingReadingCount, [1, 1, 71][index]);
         await show(tester, data);
-        expect(find.byType(DataWarningIndicator), findsOneWidget);
+        expect(
+          find.byType(DataWarningIndicator),
+          index == 2 ? findsOneWidget : findsNothing,
+        );
       }
     },
   );

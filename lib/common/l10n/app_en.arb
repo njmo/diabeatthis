@@ -1515,5 +1515,7 @@
   "amountEntryTitle": "Enter amount",
   "amountEntryInvalid": "Enter a valid number.",
   "amountEntryMinimum": "Enter a value of at least {min}.",
-  "amountEntryMaximum": "Enter a value no greater than {max}."
+  "amountEntryMaximum": "Enter a value no greater than {max}.",
+  "dayWarningMissingReadings": "Missing CGM readings: {count} of {expected} ({percent}%).",
+  "@dayWarningMissingReadings": {"placeholders": {"count": {"type": "int"}, "expected": {"type": "int"}, "percent": {"type": "String"}}}
 }

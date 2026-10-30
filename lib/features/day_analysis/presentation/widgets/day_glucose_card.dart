@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../common/history/glucose_period_summary.dart';
 import '../../../../common/l10n/language.dart';
-import '../../../../common/utils/format_duration_label.dart';
 import '../../../../common/widgets/analysis_metric.dart';
 import '../../../../common/widgets/timeline_analysis_charts.dart';
 import '../formatters/day_stat_formatter.dart';
@@ -39,8 +38,16 @@ class DayGlucoseCard extends StatelessWidget {
           lang.daySourceUnavailable
         else if (s.window.observed == Duration.zero)
           lang.dayNoGlucoseObservation
-        else if (s.window.missing > Duration.zero && !s.hasContinuousReadings)
-          lang.dayWarningMissingDuration(formatDurationLabel(s.window.missing)),
+        else if (s.expectedReadingCount > 0 &&
+            s.missingReadingCount * 10 >= s.expectedReadingCount)
+          lang.dayWarningMissingReadings(
+            s.missingReadingCount,
+            s.expectedReadingCount,
+            format.number(
+              s.missingReadingCount * 100 / s.expectedReadingCount,
+              decimals: 1,
+            ),
+          ),
       ],
       children: [
         if (s == null)

@@ -24,7 +24,7 @@ void main() {
     ),
   );
   testWidgets(
-    'CGM gaps explain their duration on tap; complete history has no warning',
+    'CGM gaps explain missing reading counts on tap; complete history has no warning',
     (tester) async {
       final start = DateTime(2026, 9, 11);
       final reading = Glucose(
@@ -48,13 +48,13 @@ void main() {
         );
         if (minutes == 50) {
           expect(
-            find.text('Brakuje danych z 45 min analizowanego okresu.'),
+            find.text('Brakujące odczyty CGM: 9 z 10 (90,0%).'),
             findsNothing,
           );
           await tester.tap(find.byType(DataWarningIndicator));
           await tester.pump(const Duration(milliseconds: 300));
           expect(
-            find.text('Brakuje danych z 45 min analizowanego okresu.'),
+            find.text('Brakujące odczyty CGM: 9 z 10 (90,0%).'),
             findsOneWidget,
           );
           await tester.pump(const Duration(seconds: 9));

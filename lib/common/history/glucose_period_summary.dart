@@ -73,6 +73,44 @@ class GlucosePeriodSummary {
             (interval + const Duration(seconds: 1)).inMilliseconds;
   }
 
+  int get expectedReadingCount {
+    final elapsed = window.end.difference(window.start).inMilliseconds;
+    return elapsed <= 0
+        ? 0
+        : (elapsed / GlucoseWindowSummary.readingInterval.inMilliseconds)
+              .ceil();
+  }
+
+  /// Count expected CGM samples, allowing timestamp jitter and window phase.
+  /// Extra clustered readings cannot compensate for gaps elsewhere.
+  int get missingReadingCount {
+    final expected = expectedReadingCount;
+    if (expected == 0 ||
+        window.missing == Duration.zero ||
+        hasContinuousReadings) {
+      return 0;
+    }
+    final readings = window.readings;
+    if (readings.isEmpty) return expected;
+    final interval = GlucoseWindowSummary.readingInterval.inMilliseconds;
+    const edgeTolerance = Duration(minutes: 5, seconds: 30);
+    final leading = readings.first.date.difference(window.start);
+    var gaps = leading > edgeTolerance
+        ? (leading.inMilliseconds / interval).round()
+        : 0;
+    for (var i = 1; i < readings.length; i++) {
+      final gap = readings[i].date.difference(readings[i - 1].date);
+      final missing = (gap.inMilliseconds / interval).round() - 1;
+      if (missing > 0) gaps += missing;
+    }
+    final trailing = window.end.difference(readings.last.date);
+    if (trailing > edgeTolerance) {
+      gaps += (trailing.inMilliseconds / interval).round() - 1;
+    }
+    final deficit = expected - readings.length;
+    return (gaps > deficit ? gaps : deficit).clamp(0, expected);
+  }
+
   double? get coveragePercent {
     final elapsed = window.end.difference(window.start).inMilliseconds;
     return elapsed <= 0 ? null : window.observed.inMilliseconds / elapsed * 100;
