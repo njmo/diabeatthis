@@ -13,6 +13,7 @@ class IngredientIconButton extends StatelessWidget {
     this.assetPath,
     this.editablePreview = false,
     required this.onSelected,
+    this.onAbandonedSelection,
   });
 
   final String name;
@@ -20,6 +21,7 @@ class IngredientIconButton extends StatelessWidget {
   final String? assetPath;
   final bool editablePreview;
   final ValueChanged<String> onSelected;
+  final ValueChanged<String>? onAbandonedSelection;
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +40,17 @@ class IngredientIconButton extends StatelessWidget {
               name: name,
               brand: brand,
               selectedAssetPath: assetPath,
+              onAbandonedSelection: onAbandonedSelection,
             ),
           ),
         ),
       );
-      if (path != null && context.mounted) onSelected(path);
+      if (path == null) return;
+      if (context.mounted) {
+        onSelected(path);
+      } else {
+        onAbandonedSelection?.call(path);
+      }
     }
 
     final icon = IngredientIcon(assetPath: assetPath, size: 48);

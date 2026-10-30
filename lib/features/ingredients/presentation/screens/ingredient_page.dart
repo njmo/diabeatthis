@@ -119,7 +119,9 @@ class IngredientPageViewState extends ConsumerState<IngredientPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const IngredientEditMode(),
+                      IngredientEditMode(
+                        onIconSelected: controller.onIconSelected,
+                      ),
                       const SizedBox(height: 16),
                       IngredientPortionsSection(
                         portions: s.data.portions,

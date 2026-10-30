@@ -19,11 +19,13 @@ class IngredientIconPicker extends ConsumerStatefulWidget {
     required this.name,
     this.brand,
     this.selectedAssetPath,
+    this.onAbandonedSelection,
   });
 
   final String name;
   final String? brand;
   final String? selectedAssetPath;
+  final ValueChanged<String>? onAbandonedSelection;
 
   @override
   ConsumerState<IngredientIconPicker> createState() =>
@@ -71,7 +73,12 @@ class IngredientIconPickerState extends ConsumerState<IngredientIconPicker> {
       barrierDismissible: false,
       builder: (_) => FoodIconGenerationDialog(name: widget.name),
     );
-    if (mounted && path != null) Navigator.of(context).pop(path);
+    if (path == null) return;
+    if (mounted) {
+      Navigator.of(context).pop(path);
+    } else {
+      widget.onAbandonedSelection?.call(path);
+    }
   }
 
   @override

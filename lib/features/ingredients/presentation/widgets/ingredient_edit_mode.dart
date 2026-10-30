@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'ingredient_form.dart';
 
 class IngredientEditMode extends StatelessWidget {
-  const IngredientEditMode({super.key});
+  const IngredientEditMode({super.key, this.onIconSelected});
+
+  final ValueChanged<String>? onIconSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +37,11 @@ class IngredientEditMode extends StatelessWidget {
           ),
         ),
       ),
-      child: const IngredientForm(showReferenceToggle: false, sectioned: true),
+      child: IngredientForm(
+        showReferenceToggle: false,
+        sectioned: true,
+        onIconSelected: onIconSelected,
+      ),
     );
   }
 }

@@ -19,11 +19,13 @@ const int _ingredientNameMaxLength = 120;
 class IngredientForm extends ConsumerWidget {
   final bool showReferenceToggle;
   final bool sectioned;
+  final ValueChanged<String>? onIconSelected;
 
   const IngredientForm({
     super.key,
     this.showReferenceToggle = true,
     this.sectioned = false,
+    this.onIconSelected,
   });
 
   @override
@@ -37,8 +39,10 @@ class IngredientForm extends ConsumerWidget {
       name: state.name,
       brand: state.brand,
       assetPath: state.iconAssetPath,
-      onSelected: (path) =>
-          draft.overrideDraft(state.copyWith(iconAssetPath: path)),
+      onAbandonedSelection: onIconSelected,
+      onSelected:
+          onIconSelected ??
+          (path) => draft.overrideDraft(state.copyWith(iconAssetPath: path)),
     );
     final nameField = TextFormField(
       initialValue: draft.getName(),

@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/storage/local_image_edit_session.dart';
+import '../../../../common/storage/local_image_store_provider.dart';
+import '../../../../core/drift/providers/database_provider.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/domain/use_cases/load_ingredient_details_use_case.dart';
 import '../../data/domain/use_cases/update_ingredient_details_use_case.dart';
@@ -13,8 +18,15 @@ part 'ingredient_details_controller.g.dart';
 @riverpod
 class IngredientDetailsControllerNotifier
     extends _$IngredientDetailsControllerNotifier {
+  LocalImageEditSession? _imageSession;
+  void Function(String)? onIconSelected;
+
   @override
   Future<IngredientPageState> build(int ingredientId) async {
+    ref.onDispose(() {
+      final images = _imageSession;
+      if (images != null) unawaited(images.discard());
+    });
     final useCase = ref.read(loadIngredientDetailsUseCaseProvider);
     final data = await useCase.call(ingredientId);
 
@@ -23,24 +35,54 @@ class IngredientDetailsControllerNotifier
 
   void startEditing() {
     final current = state.asData?.value;
-    if (current == null || current.isSaving) {
+    if (current == null || current.isSaving || current.isEditing) {
       return;
     }
 
+    final db = ref.read(databaseProvider);
+    final images = LocalImageEditSession(
+      store: ref.read(localImageStoreProvider),
+      isInUse: (path) async =>
+          await (db.select(db.ingredient)
+                ..where((row) => row.iconAssetPath.equals(path))
+                ..limit(1))
+              .getSingleOrNull() !=
+          null,
+    );
+    _imageSession = images;
     ref
         .read(ingredientDraftProvider.notifier)
         .overrideDraft(current.data.ingredient.toDraft());
+    onIconSelected = (path) {
+      images.track(path);
+      if (!ref.mounted ||
+          !identical(images, _imageSession) ||
+          state.asData?.value.isEditing != true) {
+        unawaited(images.discard());
+        return;
+      }
+      final draft = ref.read(ingredientDraftProvider);
+      ref
+          .read(ingredientDraftProvider.notifier)
+          .overrideDraft(draft.copyWith(iconAssetPath: path));
+    };
     ref.invalidate(ingredientFormKeyProvider);
     state = AsyncData(current.copyWith(isEditing: true));
   }
 
-  void cancelEditing() {
+  Future<void> cancelEditing() async {
     final current = state.asData?.value;
     if (current == null || current.isSaving) {
       return;
     }
 
+    if (current.isEditing) {
+      ref
+          .read(ingredientDraftProvider.notifier)
+          .overrideDraft(current.data.ingredient.toDraft());
+    }
     state = AsyncData(current.copyWith(isEditing: false));
+    await _imageSession?.discard();
   }
 
   Future<void> save() async {
@@ -50,16 +92,24 @@ class IngredientDetailsControllerNotifier
     try {
       final ingredient = ref.read(ingredientDraftProvider);
       final updateUseCase = ref.read(updateIngredientDetailsUseCaseProvider);
-      await updateUseCase.call(ingredient);
+      final images = _imageSession;
+      if (images == null) {
+        await updateUseCase.call(ingredient);
+      } else {
+        await images.save(() => updateUseCase.call(ingredient));
+        await images.cleanup();
+      }
+      if (!ref.mounted) return;
 
       final loadUseCase = ref.read(loadIngredientDetailsUseCaseProvider);
       final data = await loadUseCase.call(ingredientId);
+      if (!ref.mounted) return;
       ref.invalidate(ingredientsByQueryProvider);
       ref.invalidate(latestIngredientsProvider);
       ref.invalidate(ingredientByIdProvider(ingredientId));
       state = AsyncData(IngredientPageState(data: data));
     } catch (_) {
-      state = AsyncData(current.copyWith(isSaving: false));
+      if (ref.mounted) state = AsyncData(current.copyWith(isSaving: false));
       rethrow;
     }
   }
