@@ -2361,5 +2361,33 @@
   "ingredientUseGeneratedIcon": "Use image",
   "ingredientIconWithoutBackground": "Without background",
   "ingredientIconBackgroundKept": "Could not remove the background. The original image was kept.",
-  "ingredientIconsEmpty": "No matching icons"
+  "ingredientIconsEmpty": "No matching icons",
+  "ingredientDetailsTitle": "Ingredient",
+  "ingredientDataConfidence": "Data confidence",
+  "ingredientNutritionValues": "Nutrition values",
+  "ingredientReferenceValues": "Reference values",
+  "ingredientPer100g": "per 100 g",
+  "ingredientExtendedSplitTitle": "Extended carbohydrate split",
+  "ingredientChangeHistoryTitle": "Change history",
+  "ingredientPortionsTitle": "Portions",
+  "ingredientDataTab": "Data",
+  "ingredientMealsTab": "Meals",
+  "ingredientHistoryTab": "History",
+  "ingredientReferenceEditTitle": "Edit reference meal",
+  "ingredientReferenceBrandOptional": "Place or brand (optional)",
+  "ingredientNutritionUnchanged": "Nutrition values unchanged",
+  "ingredientConfidenceScore": "{level} ({percent}%)",
+  "@ingredientConfidenceScore": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "ingredientEditAction": "Edit",
+  "commonSave": "Save",
+  "ingredientGiLabel": "Glycemic index"
 }

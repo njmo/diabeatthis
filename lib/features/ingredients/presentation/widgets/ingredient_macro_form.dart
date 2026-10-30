@@ -9,7 +9,9 @@ import '../../data/providers/ingredient_provider.dart';
 import 'nutrition_value_text_form_field.dart';
 
 class IngredientMacroForm extends ConsumerWidget {
-  const IngredientMacroForm({super.key});
+  const IngredientMacroForm({super.key, this.compact = false});
+
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,31 +32,40 @@ class IngredientMacroForm extends ConsumerWidget {
                 style: Theme.of(context).textTheme.labelLarge,
               ),
             ),
-            SegmentedButton<CarbsLabelMode>(
-              segments: [
-                ButtonSegment(
-                  value: CarbsLabelMode.eu,
-                  label: Text(context.lang.uiEU),
-                ),
-                ButtonSegment(
-                  value: CarbsLabelMode.nonEu,
-                  label: Text(context.lang.uiNonEU),
-                ),
-              ],
-              selected: {value.carbsLabelMode},
-              onSelectionChanged: canChangeLabelMode
-                  ? (selected) {
-                      draft.setCarbsLabelMode(selected.single);
-                    }
-                  : null,
-            ),
+            if (compact && !canChangeLabelMode)
+              Text(
+                value.carbsLabelMode == CarbsLabelMode.eu
+                    ? context.lang.uiEU
+                    : context.lang.uiNonEU,
+                style: Theme.of(context).textTheme.labelMedium,
+              )
+            else
+              SegmentedButton<CarbsLabelMode>(
+                segments: [
+                  ButtonSegment(
+                    value: CarbsLabelMode.eu,
+                    label: Text(context.lang.uiEU),
+                  ),
+                  ButtonSegment(
+                    value: CarbsLabelMode.nonEu,
+                    label: Text(context.lang.uiNonEU),
+                  ),
+                ],
+                selected: {value.carbsLabelMode},
+                onSelectionChanged: canChangeLabelMode
+                    ? (selected) {
+                        draft.setCarbsLabelMode(selected.single);
+                      }
+                    : null,
+              ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         Row(
           children: [
             Expanded(
               child: NutritionValueTextFormField(
+                compact: compact,
                 label: context.lang.mealCarbsLabel,
                 initialValue: _formatInput(value.carbsPer100g),
                 onChanged: draft.setCarbsPer100g,
@@ -66,6 +77,7 @@ class IngredientMacroForm extends ConsumerWidget {
             const SizedBox(width: 10),
             Expanded(
               child: NutritionValueTextFormField(
+                compact: compact,
                 label: context.lang.mealFatLabel,
                 initialValue: _formatInput(value.fatPer100g),
                 onChanged: draft.setFatPer100g,
@@ -74,10 +86,12 @@ class IngredientMacroForm extends ConsumerWidget {
             ),
           ],
         ),
+        if (compact) const SizedBox(height: 14),
         Row(
           children: [
             Expanded(
               child: NutritionValueTextFormField(
+                compact: compact,
                 label: context.lang.mealProteinLabel,
                 initialValue: _formatInput(value.proteinPer100g),
                 onChanged: draft.setProteinPer100g,
@@ -87,6 +101,7 @@ class IngredientMacroForm extends ConsumerWidget {
             const SizedBox(width: 10),
             Expanded(
               child: NutritionValueTextFormField(
+                compact: compact,
                 label: context.lang.mealFiberLabel,
                 initialValue: _formatInput(value.fiberPer100g),
                 onChanged: draft.setFiberPer100g,

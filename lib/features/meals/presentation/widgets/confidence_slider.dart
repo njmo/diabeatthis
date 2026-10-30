@@ -36,13 +36,21 @@ class ConfidenceSlider extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
-              title.isEmpty ? context.lang.confidenceTitle : title,
-              style: Theme.of(context).textTheme.titleMedium,
+            Expanded(
+              child: Text(
+                title.isEmpty ? context.lang.confidenceTitle : title,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
-            const Spacer(),
+            const SizedBox(width: 8),
             if (showValueLabel)
-              Text(value.label, style: Theme.of(context).textTheme.labelLarge),
+              Flexible(
+                child: Text(
+                  value.label,
+                  textAlign: TextAlign.end,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 8),
@@ -59,9 +67,12 @@ class ConfidenceSlider extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: ConfidenceLevel.values
               .map(
-                (c) => Text(
-                  c.label,
-                  style: Theme.of(context).textTheme.labelSmall,
+                (c) => Expanded(
+                  child: Text(
+                    c.label,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
                 ),
               )
               .toList(),

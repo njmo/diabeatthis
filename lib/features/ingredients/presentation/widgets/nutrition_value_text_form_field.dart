@@ -11,6 +11,7 @@ class NutritionValueTextFormField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final FormFieldValidator<String>? validator;
   final int? maxLength;
+  final bool compact;
 
   const NutritionValueTextFormField({
     super.key,
@@ -21,6 +22,7 @@ class NutritionValueTextFormField extends StatelessWidget {
     this.onChanged,
     this.validator,
     this.maxLength = 30,
+    this.compact = false,
   }) : assert(
          controller == null || initialValue == null,
          'controller and initialValue cannot be used together.',
@@ -38,6 +40,7 @@ class NutritionValueTextFormField extends StatelessWidget {
       validator: validator ?? _validateNutritionValue,
       decoration: InputDecoration(
         labelText: label,
+        counterText: compact ? '' : null,
         border: const OutlineInputBorder(),
         prefixIcon: icon == null ? null : Icon(icon),
       ),

@@ -11,7 +11,9 @@ const int _ingredientBarcodeMaxLength = 14;
 const _ingredientBarcodeValidator = IngredientBarcodeValidator();
 
 class IngredientBarcodeFormField extends ConsumerStatefulWidget {
-  const IngredientBarcodeFormField({super.key});
+  const IngredientBarcodeFormField({super.key, this.compact = false});
+
+  final bool compact;
 
   @override
   ConsumerState<IngredientBarcodeFormField> createState() =>
@@ -72,7 +74,10 @@ class IngredientBarcodeFormFieldState
           icon: const Icon(Icons.qr_code_scanner_outlined),
         ),
         labelText: lang.ingredientBarcodeFieldLabel,
-        helperText: _barcodeHelperText(barcode),
+        counterText: widget.compact ? '' : null,
+        helperText: widget.compact && barcode?.trim().isNotEmpty == true
+            ? null
+            : _barcodeHelperText(barcode),
         border: const OutlineInputBorder(),
       ),
     );

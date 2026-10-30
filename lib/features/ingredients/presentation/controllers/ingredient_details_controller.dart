@@ -54,6 +54,9 @@ class IngredientDetailsControllerNotifier
 
       final loadUseCase = ref.read(loadIngredientDetailsUseCaseProvider);
       final data = await loadUseCase.call(ingredientId);
+      ref.invalidate(ingredientsByQueryProvider);
+      ref.invalidate(latestIngredientsProvider);
+      ref.invalidate(ingredientByIdProvider(ingredientId));
       state = AsyncData(IngredientPageState(data: data));
     } catch (_) {
       state = AsyncData(current.copyWith(isSaving: false));

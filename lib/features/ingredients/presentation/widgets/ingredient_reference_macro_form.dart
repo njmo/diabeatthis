@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/responsive_metric_list.dart';
 import '../../data/drafts/ingredient_draft.dart';
 import '../../data/drafts/ingredient_draft_validation.dart';
 import '../../data/providers/ingredient_provider.dart';
@@ -10,7 +11,9 @@ import '../utils/reference_ingredient_macro_calculator.dart';
 import 'nutrition_value_text_form_field.dart';
 
 class IngredientReferenceMacroForm extends HookConsumerWidget {
-  const IngredientReferenceMacroForm({super.key});
+  const IngredientReferenceMacroForm({super.key, this.responsive = false});
+
+  final bool responsive;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,53 +34,59 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
     final fatPercent = (safeFatShare * 100).round();
     final proteinPercent = 100 - fatPercent;
 
+    final fields = <Widget>[
+      NutritionValueTextFormField(
+        compact: responsive,
+        label: context.lang.ingredientSimpleCarbsLabel,
+        initialValue: formatReferenceMacroInput(ingredient.carbsPer100g),
+        icon: Icons.grain,
+        onChanged: draft.setCarbsPer100g,
+        validator: (value) => _validateRequiredEnergyMacro(value, ingredient),
+      ),
+      NutritionValueTextFormField(
+        compact: responsive,
+        label: context.lang.ingredientExtendedCarbsLabel,
+        controller: extendedCarbsController,
+        icon: Icons.schedule,
+        onChanged: (value) {
+          final ecarbs = parseReferenceMacroInput(value);
+          draft.setFatPer100g(
+            formatReferenceMacroInput(
+              referenceFatPer100g(
+                extendedCarbsPer100g: ecarbs,
+                fatShare: fatShare,
+              ),
+            ),
+          );
+          draft.setProteinPer100g(
+            formatReferenceMacroInput(
+              referenceProteinPer100g(
+                extendedCarbsPer100g: ecarbs,
+                fatShare: fatShare,
+              ),
+            ),
+          );
+        },
+        validator: _validateRequiredMacro,
+      ),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: NutritionValueTextFormField(
-                label: context.lang.ingredientSimpleCarbsLabel,
-                initialValue: formatReferenceMacroInput(
-                  ingredient.carbsPer100g,
-                ),
-                icon: Icons.grain,
-                onChanged: draft.setCarbsPer100g,
-                validator: (value) =>
-                    _validateRequiredEnergyMacro(value, ingredient),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: NutritionValueTextFormField(
-                label: context.lang.ingredientExtendedCarbsLabel,
-                controller: extendedCarbsController,
-                icon: Icons.schedule,
-                onChanged: (value) {
-                  final ecarbs = parseReferenceMacroInput(value);
-                  draft.setFatPer100g(
-                    formatReferenceMacroInput(
-                      referenceFatPer100g(
-                        extendedCarbsPer100g: ecarbs,
-                        fatShare: fatShare,
-                      ),
-                    ),
-                  );
-                  draft.setProteinPer100g(
-                    formatReferenceMacroInput(
-                      referenceProteinPer100g(
-                        extendedCarbsPer100g: ecarbs,
-                        fatShare: fatShare,
-                      ),
-                    ),
-                  );
-                },
-                validator: _validateRequiredMacro,
-              ),
-            ),
-          ],
-        ),
+        if (responsive)
+          ResponsiveMetricList(
+            maxColumns: 2,
+            minimumWidth: 230,
+            children: fields,
+          )
+        else
+          Row(
+            children: [
+              Expanded(child: fields[0]),
+              const SizedBox(width: 10),
+              Expanded(child: fields[1]),
+            ],
+          ),
         const SizedBox(height: 12),
         Text(
           context.lang.ingredientEcarbsSplit(proteinPercent, fatPercent),
@@ -114,13 +123,19 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              context.lang.mealProteinLabel,
-              style: Theme.of(context).textTheme.bodySmall,
+            Expanded(
+              child: Text(
+                context.lang.mealProteinLabel,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ),
-            Text(
-              context.lang.mealFatLabel,
-              style: Theme.of(context).textTheme.bodySmall,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                context.lang.mealFatLabel,
+                textAlign: TextAlign.end,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ),
           ],
         ),

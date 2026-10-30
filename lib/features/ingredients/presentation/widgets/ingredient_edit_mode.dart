@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../common/l10n/language.dart';
 import 'ingredient_form.dart';
 
 class IngredientEditMode extends StatelessWidget {
@@ -8,32 +7,35 @@ class IngredientEditMode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.edit,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  context.lang.ingredientEditTitle,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const IngredientForm(showReferenceToggle: false),
-          ],
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide.none,
+    );
+    return Theme(
+      data: theme.copyWith(
+        inputDecorationTheme: theme.inputDecorationTheme.copyWith(
+          filled: true,
+          fillColor: colors.surfaceContainer,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          enabledBorder: border,
+          disabledBorder: border,
+          focusedBorder: border.copyWith(
+            borderSide: BorderSide(color: colors.primary, width: 1.5),
+          ),
+          errorBorder: border.copyWith(
+            borderSide: BorderSide(color: colors.error),
+          ),
+          focusedErrorBorder: border.copyWith(
+            borderSide: BorderSide(color: colors.error, width: 1.5),
+          ),
         ),
       ),
+      child: const IngredientForm(showReferenceToggle: false, sectioned: true),
     );
   }
 }

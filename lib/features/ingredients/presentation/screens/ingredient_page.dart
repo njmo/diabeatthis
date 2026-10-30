@@ -7,118 +7,196 @@ import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/models/ingredient_portion_data.dart';
 import '../../data/providers/ingredient_provider.dart';
 import '../controllers/ingredient_details_controller.dart';
-import '../models/ingredient_page_state.dart';
-import '../widgets/ingredient_detail_sections.dart';
-import '../widgets/ingredient_details_view.dart';
+import '../widgets/ingredient_details_header.dart';
+import '../widgets/ingredient_edit_actions.dart';
 import '../widgets/ingredient_edit_mode.dart';
-import '../widgets/ingredient_identity_text.dart';
+import '../widgets/ingredient_history_section.dart';
+import '../widgets/ingredient_meals_section.dart';
+import '../widgets/ingredient_nutrition_card.dart';
 import '../widgets/ingredient_portion_amount_form.dart';
+import '../widgets/ingredient_portions_section.dart';
 
 @RoutePage()
-class IngredientPage extends ConsumerWidget {
-  final int ingredientId;
-
+class IngredientPage extends ConsumerStatefulWidget {
   const IngredientPage({super.key, required this.ingredientId});
 
+  final int ingredientId;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(ingredientDraftProvider.notifier);
-    final state = ref.watch(ingredientDetailsControllerProvider(ingredientId));
-    final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
+  ConsumerState<IngredientPage> createState() => IngredientPageViewState();
+}
 
-    return Scaffold(
-      appBar: AppBar(
-        title: state.maybeWhen(
-          data: (s) => IngredientIdentityText(
-            name: s.data.ingredient.name,
-            brand: s.data.ingredient.brand,
-            nameStyle: Theme.of(context).textTheme.titleLarge,
-            brandStyle: Theme.of(context).textTheme.bodySmall,
-            spacing: 0,
-          ),
-          orElse: () =>
-              Text(context.lang.ingredientFallbackTitle(ingredientId)),
-        ),
-        actions: state.maybeWhen(
-          data: (s) => _appBarActions(context, ref, s),
-          orElse: () => const [],
-        ),
-      ),
-      body: state.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text(context.lang.activityError(e))),
-        data: (s) {
-          if (s.isEditing) {
-            ref.listen(ingredientPortionAmountDraftProvider, (_, _) {});
-          }
-          final canEditPortions =
-              s.isEditing && !s.isSaving && !s.data.ingredient.isReference;
+class IngredientPageViewState extends ConsumerState<IngredientPage>
+    with SingleTickerProviderStateMixin {
+  late final TabController tabs;
+  int get ingredientId => widget.ingredientId;
 
-          return SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, bottomPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (s.isEditing)
-                  const IngredientEditMode()
-                else
-                  IngredientDetailsView(data: s.data),
-                const SizedBox(height: 24),
-                IngredientHistorySection(history: s.data.history),
-                const SizedBox(height: 24),
-                IngredientPortionsSection(
-                  portions: s.data.portions,
-                  onEdit: canEditPortions
-                      ? (portion) => _editPortionAmount(context, ref, portion)
-                      : null,
-                ),
-                const SizedBox(height: 24),
-                IngredientMealsSection(usages: s.data.usages),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    tabs = TabController(length: 3, vsync: this);
   }
 
-  List<Widget> _appBarActions(
-    BuildContext context,
-    WidgetRef ref,
-    IngredientPageState state,
-  ) {
+  @override
+  void dispose() {
+    tabs.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(ingredientDraftProvider.notifier);
+    final state = ref.watch(ingredientDetailsControllerProvider(ingredientId));
+    final current = state.asData?.value;
     final controller = ref.read(
       ingredientDetailsControllerProvider(ingredientId).notifier,
     );
-
-    if (!state.isEditing) {
-      return [
-        IconButton(
-          tooltip: context.lang.ingredientEditTooltip,
-          icon: const Icon(Icons.edit),
-          onPressed: state.isSaving ? null : controller.startEditing,
+    final colors = Theme.of(context).colorScheme;
+    Widget scroll(Widget child) => SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        16 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
+      child: child,
+    );
+    return PopScope(
+      canPop: current?.isEditing != true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && current?.isEditing == true) controller.cancelEditing();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: current?.isEditing == true
+              ? IconButton(
+                  tooltip: context.lang.ingredientCancelEditTooltip,
+                  onPressed: current!.isSaving
+                      ? null
+                      : controller.cancelEditing,
+                  icon: const Icon(Icons.arrow_back),
+                )
+              : null,
+          title: Text(
+            current?.isEditing == true
+                ? current!.data.ingredient.isReference
+                      ? context.lang.ingredientReferenceEditTitle
+                      : context.lang.ingredientEditTitle
+                : current?.data.ingredient.isReference == true
+                ? context.lang.ingredientReferenceBadge
+                : context.lang.ingredientDetailsTitle,
+          ),
+          actions: [
+            if (current != null && !current.isEditing)
+              TextButton.icon(
+                onPressed: current.isSaving
+                    ? null
+                    : () {
+                        tabs.index = 0;
+                        controller.startEditing();
+                      },
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: Text(context.lang.ingredientEditAction),
+              ),
+          ],
         ),
-      ];
-    }
-
-    return [
-      IconButton(
-        tooltip: context.lang.ingredientCancelEditTooltip,
-        icon: const Icon(Icons.close),
-        onPressed: state.isSaving ? null : controller.cancelEditing,
-      ),
-      IconButton(
-        tooltip: context.lang.ingredientSaveTooltip,
-        onPressed: state.isSaving ? null : () => _saveIngredient(context, ref),
-        icon: state.isSaving
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+        bottomNavigationBar: current?.isEditing == true
+            ? IngredientEditActions(
+                isSaving: current!.isSaving,
+                onCancel: controller.cancelEditing,
+                onSave: () => _saveIngredient(context, ref),
               )
-            : const Icon(Icons.check),
+            : null,
+        body: state.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, st) => Center(child: Text(context.lang.activityError(e))),
+          data: (s) {
+            if (s.isEditing) {
+              ref.listen(ingredientPortionAmountDraftProvider, (_, _) {});
+              return scroll(
+                AbsorbPointer(
+                  absorbing: s.isSaving,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const IngredientEditMode(),
+                      const SizedBox(height: 16),
+                      IngredientPortionsSection(
+                        portions: s.data.portions,
+                        onEdit: !s.data.ingredient.isReference && !s.isSaving
+                            ? (portion) =>
+                                  _editPortionAmount(context, ref, portion)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                    child: IngredientDetailsHeader(
+                      ingredient: s.data.ingredient,
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: TabBar(
+                      controller: tabs,
+                      labelColor: colors.primary,
+                      labelStyle: Theme.of(context).textTheme.labelLarge
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                      unselectedLabelColor: colors.onSurfaceVariant,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      splashBorderRadius: BorderRadius.circular(18),
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      indicator: BoxDecoration(
+                        color: colors.primary.withValues(alpha: 0.13),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      indicatorPadding: const EdgeInsets.symmetric(vertical: 4),
+                      dividerColor: Colors.transparent,
+                      tabs: [
+                        Tab(text: context.lang.ingredientDataTab),
+                        Tab(text: context.lang.ingredientMealsTab),
+                        Tab(text: context.lang.ingredientHistoryTab),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              body: TabBarView(
+                controller: tabs,
+                children: [
+                  scroll(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        IngredientNutritionCard(ingredient: s.data.ingredient),
+                        const SizedBox(height: 16),
+                        IngredientPortionsSection(portions: s.data.portions),
+                      ],
+                    ),
+                  ),
+                  scroll(IngredientMealsSection(usages: s.data.usages)),
+                  scroll(
+                    IngredientHistorySection(
+                      history: s.data.history,
+                      ingredient: s.data.ingredient,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
-    ];
+    );
   }
 
   Future<void> _saveIngredient(BuildContext context, WidgetRef ref) async {
@@ -134,6 +212,7 @@ class IngredientPage extends ConsumerWidget {
       if (!context.mounted) {
         return;
       }
+      tabs.index = 0;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(context.lang.ingredientSaved)));

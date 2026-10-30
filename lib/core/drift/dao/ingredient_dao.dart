@@ -123,7 +123,10 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
   ) {
     final query = select(ingredientStatusHistory)
       ..where((tbl) => tbl.ingredientId.equals(ingredientId))
-      ..orderBy([(tbl) => OrderingTerm.desc(tbl.createdAt)]);
+      ..orderBy([
+        (tbl) => OrderingTerm.desc(tbl.createdAt),
+        (tbl) => OrderingTerm.desc(tbl.id),
+      ]);
 
     return query.get();
   }

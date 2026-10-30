@@ -2801,5 +2801,33 @@
   "ingredientUseGeneratedIcon": "Użyj obrazka",
   "ingredientIconWithoutBackground": "Bez tła",
   "ingredientIconBackgroundKept": "Nie udało się usunąć tła. Zachowano oryginalny obrazek.",
-  "ingredientIconsEmpty": "Brak pasujących ikon"
+  "ingredientIconsEmpty": "Brak pasujących ikon",
+  "ingredientDetailsTitle": "Składnik",
+  "ingredientDataConfidence": "Pewność danych",
+  "ingredientNutritionValues": "Wartości odżywcze",
+  "ingredientReferenceValues": "Wartości referencyjne",
+  "ingredientPer100g": "na 100 g",
+  "ingredientExtendedSplitTitle": "Podział węglowodanów przedłużonych",
+  "ingredientChangeHistoryTitle": "Historia zmian",
+  "ingredientPortionsTitle": "Porcje",
+  "ingredientDataTab": "Dane",
+  "ingredientMealsTab": "Posiłki",
+  "ingredientHistoryTab": "Historia",
+  "ingredientReferenceEditTitle": "Edycja referencyjnego",
+  "ingredientReferenceBrandOptional": "Miejsce lub producent (opcjonalnie)",
+  "ingredientNutritionUnchanged": "Wartości odżywcze bez zmian",
+  "ingredientConfidenceScore": "{level} ({percent}%)",
+  "@ingredientConfidenceScore": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "ingredientEditAction": "Edytuj",
+  "commonSave": "Zapisz",
+  "ingredientGiLabel": "Indeks glikemiczny"
 }
