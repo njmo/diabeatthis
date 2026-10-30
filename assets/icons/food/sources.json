@@ -1,0 +1,662 @@
+{
+  "repository": "https://github.com/microsoft/fluentui-emoji",
+  "commit": "1ffb34c752ecf5d402f04cfb4b392c77f57c54bc",
+  "license": "MIT",
+  "icons": [
+    {
+      "id": "hamburger",
+      "assetPath": "assets/icons/food/hamburger.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Hamburger/3D/hamburger_3d.png"
+    },
+    {
+      "id": "soup",
+      "assetPath": "assets/icons/food/soup.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Steaming%20bowl/3D/steaming_bowl_3d.png"
+    },
+    {
+      "id": "prepared_meal",
+      "assetPath": "assets/icons/food/prepared_meal.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Pot%20of%20food/3D/pot_of_food_3d.png"
+    },
+    {
+      "id": "chicken",
+      "assetPath": "assets/icons/food/chicken.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Poultry%20leg/3D/poultry_leg_3d.png"
+    },
+    {
+      "id": "potato",
+      "assetPath": "assets/icons/food/potato.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Potato/3D/potato_3d.png"
+    },
+    {
+      "id": "salad",
+      "assetPath": "assets/icons/food/salad.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Green%20salad/3D/green_salad_3d.png"
+    },
+    {
+      "id": "milk",
+      "assetPath": "assets/icons/food/milk.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Glass%20of%20milk/3D/glass_of_milk_3d.png"
+    },
+    {
+      "id": "cheese",
+      "assetPath": "assets/icons/food/cheese.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cheese%20wedge/3D/cheese_wedge_3d.png"
+    },
+    {
+      "id": "bread",
+      "assetPath": "assets/icons/food/bread.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Bread/3D/bread_3d.png"
+    },
+    {
+      "id": "croissant",
+      "assetPath": "assets/icons/food/croissant.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Croissant/3D/croissant_3d.png"
+    },
+    {
+      "id": "rice",
+      "assetPath": "assets/icons/food/rice.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cooked%20rice/3D/cooked_rice_3d.png"
+    },
+    {
+      "id": "pasta",
+      "assetPath": "assets/icons/food/pasta.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Spaghetti/3D/spaghetti_3d.png"
+    },
+    {
+      "id": "pizza",
+      "assetPath": "assets/icons/food/pizza.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Pizza/3D/pizza_3d.png"
+    },
+    {
+      "id": "fish",
+      "assetPath": "assets/icons/food/fish.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Fish/3D/fish_3d.png"
+    },
+    {
+      "id": "egg",
+      "assetPath": "assets/icons/food/egg.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Egg/3D/egg_3d.png"
+    },
+    {
+      "id": "banana",
+      "assetPath": "assets/icons/food/banana.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Banana/3D/banana_3d.png"
+    },
+    {
+      "id": "apple",
+      "assetPath": "assets/icons/food/apple.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Red%20apple/3D/red_apple_3d.png"
+    },
+    {
+      "id": "carrot",
+      "assetPath": "assets/icons/food/carrot.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Carrot/3D/carrot_3d.png"
+    },
+    {
+      "id": "broccoli",
+      "assetPath": "assets/icons/food/broccoli.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Broccoli/3D/broccoli_3d.png"
+    },
+    {
+      "id": "cookie",
+      "assetPath": "assets/icons/food/cookie.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cookie/3D/cookie_3d.png"
+    },
+    {
+      "id": "chocolate",
+      "assetPath": "assets/icons/food/chocolate.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Chocolate%20bar/3D/chocolate_bar_3d.png"
+    },
+    {
+      "id": "cake",
+      "assetPath": "assets/icons/food/cake.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Birthday%20cake/3D/birthday_cake_3d.png"
+    },
+    {
+      "id": "sandwich",
+      "assetPath": "assets/icons/food/sandwich.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Sandwich/3D/sandwich_3d.png"
+    },
+    {
+      "id": "wrap",
+      "assetPath": "assets/icons/food/wrap.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Burrito/3D/burrito_3d.png"
+    },
+    {
+      "id": "coffee",
+      "assetPath": "assets/icons/food/coffee.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Hot%20beverage/3D/hot_beverage_3d.png"
+    },
+    {
+      "id": "drink",
+      "assetPath": "assets/icons/food/drink.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Beverage%20box/3D/beverage_box_3d.png"
+    },
+    {
+      "id": "cereal",
+      "assetPath": "assets/icons/food/cereal.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Bowl%20with%20spoon/3D/bowl_with_spoon_3d.png"
+    },
+    {
+      "id": "generic",
+      "assetPath": "assets/icons/food/generic.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Fork%20and%20knife%20with%20plate/3D/fork_and_knife_with_plate_3d.png"
+    },
+    {
+      "id": "amphora",
+      "assetPath": "assets/icons/food/amphora.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Amphora/3D/amphora_3d.png"
+    },
+    {
+      "id": "avocado",
+      "assetPath": "assets/icons/food/avocado.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Avocado/3D/avocado_3d.png"
+    },
+    {
+      "id": "baby_bottle",
+      "assetPath": "assets/icons/food/baby_bottle.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Baby%20bottle/3D/baby_bottle_3d.png"
+    },
+    {
+      "id": "bacon",
+      "assetPath": "assets/icons/food/bacon.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Bacon/3D/bacon_3d.png"
+    },
+    {
+      "id": "bagel",
+      "assetPath": "assets/icons/food/bagel.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Bagel/3D/bagel_3d.png"
+    },
+    {
+      "id": "baguette_bread",
+      "assetPath": "assets/icons/food/baguette_bread.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Baguette%20bread/3D/baguette_bread_3d.png"
+    },
+    {
+      "id": "beans",
+      "assetPath": "assets/icons/food/beans.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Beans/3D/beans_3d.png"
+    },
+    {
+      "id": "beer_mug",
+      "assetPath": "assets/icons/food/beer_mug.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Beer%20mug/3D/beer_mug_3d.png"
+    },
+    {
+      "id": "bell_pepper",
+      "assetPath": "assets/icons/food/bell_pepper.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Bell%20pepper/3D/bell_pepper_3d.png"
+    },
+    {
+      "id": "bento_box",
+      "assetPath": "assets/icons/food/bento_box.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Bento%20box/3D/bento_box_3d.png"
+    },
+    {
+      "id": "blueberries",
+      "assetPath": "assets/icons/food/blueberries.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Blueberries/3D/blueberries_3d.png"
+    },
+    {
+      "id": "bottle_with_popping_cork",
+      "assetPath": "assets/icons/food/bottle_with_popping_cork.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Bottle%20with%20popping%20cork/3D/bottle_with_popping_cork_3d.png"
+    },
+    {
+      "id": "brown_mushroom",
+      "assetPath": "assets/icons/food/brown_mushroom.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Brown%20mushroom/3D/brown_mushroom_3d.png"
+    },
+    {
+      "id": "bubble_tea",
+      "assetPath": "assets/icons/food/bubble_tea.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Bubble%20tea/3D/bubble_tea_3d.png"
+    },
+    {
+      "id": "butter",
+      "assetPath": "assets/icons/food/butter.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Butter/3D/butter_3d.png"
+    },
+    {
+      "id": "candy",
+      "assetPath": "assets/icons/food/candy.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Candy/3D/candy_3d.png"
+    },
+    {
+      "id": "canned_food",
+      "assetPath": "assets/icons/food/canned_food.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Canned%20food/3D/canned_food_3d.png"
+    },
+    {
+      "id": "cherries",
+      "assetPath": "assets/icons/food/cherries.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cherries/3D/cherries_3d.png"
+    },
+    {
+      "id": "chestnut",
+      "assetPath": "assets/icons/food/chestnut.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Chestnut/3D/chestnut_3d.png"
+    },
+    {
+      "id": "chopsticks",
+      "assetPath": "assets/icons/food/chopsticks.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Chopsticks/3D/chopsticks_3d.png"
+    },
+    {
+      "id": "clinking_beer_mugs",
+      "assetPath": "assets/icons/food/clinking_beer_mugs.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Clinking%20beer%20mugs/3D/clinking_beer_mugs_3d.png"
+    },
+    {
+      "id": "clinking_glasses",
+      "assetPath": "assets/icons/food/clinking_glasses.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Clinking%20glasses/3D/clinking_glasses_3d.png"
+    },
+    {
+      "id": "cocktail_glass",
+      "assetPath": "assets/icons/food/cocktail_glass.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cocktail%20glass/3D/cocktail_glass_3d.png"
+    },
+    {
+      "id": "coconut",
+      "assetPath": "assets/icons/food/coconut.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Coconut/3D/coconut_3d.png"
+    },
+    {
+      "id": "cooking",
+      "assetPath": "assets/icons/food/cooking.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cooking/3D/cooking_3d.png"
+    },
+    {
+      "id": "cucumber",
+      "assetPath": "assets/icons/food/cucumber.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cucumber/3D/cucumber_3d.png"
+    },
+    {
+      "id": "cup_with_straw",
+      "assetPath": "assets/icons/food/cup_with_straw.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cup%20with%20straw/3D/cup_with_straw_3d.png"
+    },
+    {
+      "id": "cupcake",
+      "assetPath": "assets/icons/food/cupcake.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cupcake/3D/cupcake_3d.png"
+    },
+    {
+      "id": "curry_rice",
+      "assetPath": "assets/icons/food/curry_rice.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Curry%20rice/3D/curry_rice_3d.png"
+    },
+    {
+      "id": "custard",
+      "assetPath": "assets/icons/food/custard.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Custard/3D/custard_3d.png"
+    },
+    {
+      "id": "cut_of_meat",
+      "assetPath": "assets/icons/food/cut_of_meat.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Cut%20of%20meat/3D/cut_of_meat_3d.png"
+    },
+    {
+      "id": "dango",
+      "assetPath": "assets/icons/food/dango.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Dango/3D/dango_3d.png"
+    },
+    {
+      "id": "doughnut",
+      "assetPath": "assets/icons/food/doughnut.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Doughnut/3D/doughnut_3d.png"
+    },
+    {
+      "id": "dumpling",
+      "assetPath": "assets/icons/food/dumpling.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Dumpling/3D/dumpling_3d.png"
+    },
+    {
+      "id": "ear_of_corn",
+      "assetPath": "assets/icons/food/ear_of_corn.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Ear%20of%20corn/3D/ear_of_corn_3d.png"
+    },
+    {
+      "id": "eggplant",
+      "assetPath": "assets/icons/food/eggplant.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Eggplant/3D/eggplant_3d.png"
+    },
+    {
+      "id": "falafel",
+      "assetPath": "assets/icons/food/falafel.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Falafel/3D/falafel_3d.png"
+    },
+    {
+      "id": "fish_cake_with_swirl",
+      "assetPath": "assets/icons/food/fish_cake_with_swirl.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Fish%20cake%20with%20swirl/3D/fish_cake_with_swirl_3d.png"
+    },
+    {
+      "id": "flatbread",
+      "assetPath": "assets/icons/food/flatbread.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Flatbread/3D/flatbread_3d.png"
+    },
+    {
+      "id": "fondue",
+      "assetPath": "assets/icons/food/fondue.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Fondue/3D/fondue_3d.png"
+    },
+    {
+      "id": "fork_and_knife",
+      "assetPath": "assets/icons/food/fork_and_knife.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Fork%20and%20knife/3D/fork_and_knife_3d.png"
+    },
+    {
+      "id": "fortune_cookie",
+      "assetPath": "assets/icons/food/fortune_cookie.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Fortune%20cookie/3D/fortune_cookie_3d.png"
+    },
+    {
+      "id": "french_fries",
+      "assetPath": "assets/icons/food/french_fries.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/French%20fries/3D/french_fries_3d.png"
+    },
+    {
+      "id": "fried_shrimp",
+      "assetPath": "assets/icons/food/fried_shrimp.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Fried%20shrimp/3D/fried_shrimp_3d.png"
+    },
+    {
+      "id": "garlic",
+      "assetPath": "assets/icons/food/garlic.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Garlic/3D/garlic_3d.png"
+    },
+    {
+      "id": "ginger_root",
+      "assetPath": "assets/icons/food/ginger_root.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Ginger%20root/3D/ginger_root_3d.png"
+    },
+    {
+      "id": "grapes",
+      "assetPath": "assets/icons/food/grapes.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Grapes/3D/grapes_3d.png"
+    },
+    {
+      "id": "green_apple",
+      "assetPath": "assets/icons/food/green_apple.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Green%20apple/3D/green_apple_3d.png"
+    },
+    {
+      "id": "honey_pot",
+      "assetPath": "assets/icons/food/honey_pot.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Honey%20pot/3D/honey_pot_3d.png"
+    },
+    {
+      "id": "hot_dog",
+      "assetPath": "assets/icons/food/hot_dog.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Hot%20dog/3D/hot_dog_3d.png"
+    },
+    {
+      "id": "hot_pepper",
+      "assetPath": "assets/icons/food/hot_pepper.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Hot%20pepper/3D/hot_pepper_3d.png"
+    },
+    {
+      "id": "ice_cream",
+      "assetPath": "assets/icons/food/ice_cream.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Ice%20cream/3D/ice_cream_3d.png"
+    },
+    {
+      "id": "ice",
+      "assetPath": "assets/icons/food/ice.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Ice/3D/ice_3d.png"
+    },
+    {
+      "id": "jar",
+      "assetPath": "assets/icons/food/jar.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Jar/3D/jar_3d.png"
+    },
+    {
+      "id": "kitchen_knife",
+      "assetPath": "assets/icons/food/kitchen_knife.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Kitchen%20knife/3D/kitchen_knife_3d.png"
+    },
+    {
+      "id": "kiwi_fruit",
+      "assetPath": "assets/icons/food/kiwi_fruit.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Kiwi%20fruit/3D/kiwi_fruit_3d.png"
+    },
+    {
+      "id": "leafy_green",
+      "assetPath": "assets/icons/food/leafy_green.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Leafy%20green/3D/leafy_green_3d.png"
+    },
+    {
+      "id": "lemon",
+      "assetPath": "assets/icons/food/lemon.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Lemon/3D/lemon_3d.png"
+    },
+    {
+      "id": "lime",
+      "assetPath": "assets/icons/food/lime.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Lime/3D/lime_3d.png"
+    },
+    {
+      "id": "lollipop",
+      "assetPath": "assets/icons/food/lollipop.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Lollipop/3D/lollipop_3d.png"
+    },
+    {
+      "id": "mango",
+      "assetPath": "assets/icons/food/mango.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Mango/3D/mango_3d.png"
+    },
+    {
+      "id": "mate",
+      "assetPath": "assets/icons/food/mate.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Mate/3D/mate_3d.png"
+    },
+    {
+      "id": "meat_on_bone",
+      "assetPath": "assets/icons/food/meat_on_bone.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Meat%20on%20bone/3D/meat_on_bone_3d.png"
+    },
+    {
+      "id": "melon",
+      "assetPath": "assets/icons/food/melon.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Melon/3D/melon_3d.png"
+    },
+    {
+      "id": "moon_cake",
+      "assetPath": "assets/icons/food/moon_cake.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Moon%20cake/3D/moon_cake_3d.png"
+    },
+    {
+      "id": "oden",
+      "assetPath": "assets/icons/food/oden.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Oden/3D/oden_3d.png"
+    },
+    {
+      "id": "olive",
+      "assetPath": "assets/icons/food/olive.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Olive/3D/olive_3d.png"
+    },
+    {
+      "id": "onion",
+      "assetPath": "assets/icons/food/onion.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Onion/3D/onion_3d.png"
+    },
+    {
+      "id": "pancakes",
+      "assetPath": "assets/icons/food/pancakes.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Pancakes/3D/pancakes_3d.png"
+    },
+    {
+      "id": "pea_pod",
+      "assetPath": "assets/icons/food/pea_pod.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Pea%20pod/3D/pea_pod_3d.png"
+    },
+    {
+      "id": "peach",
+      "assetPath": "assets/icons/food/peach.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Peach/3D/peach_3d.png"
+    },
+    {
+      "id": "peanuts",
+      "assetPath": "assets/icons/food/peanuts.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Peanuts/3D/peanuts_3d.png"
+    },
+    {
+      "id": "pear",
+      "assetPath": "assets/icons/food/pear.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Pear/3D/pear_3d.png"
+    },
+    {
+      "id": "pie",
+      "assetPath": "assets/icons/food/pie.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Pie/3D/pie_3d.png"
+    },
+    {
+      "id": "pineapple",
+      "assetPath": "assets/icons/food/pineapple.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Pineapple/3D/pineapple_3d.png"
+    },
+    {
+      "id": "popcorn",
+      "assetPath": "assets/icons/food/popcorn.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Popcorn/3D/popcorn_3d.png"
+    },
+    {
+      "id": "pouring_liquid",
+      "assetPath": "assets/icons/food/pouring_liquid.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Pouring%20liquid/3D/pouring_liquid_3d.png"
+    },
+    {
+      "id": "pretzel",
+      "assetPath": "assets/icons/food/pretzel.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Pretzel/3D/pretzel_3d.png"
+    },
+    {
+      "id": "rice_ball",
+      "assetPath": "assets/icons/food/rice_ball.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Rice%20ball/3D/rice_ball_3d.png"
+    },
+    {
+      "id": "rice_cracker",
+      "assetPath": "assets/icons/food/rice_cracker.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Rice%20cracker/3D/rice_cracker_3d.png"
+    },
+    {
+      "id": "roasted_sweet_potato",
+      "assetPath": "assets/icons/food/roasted_sweet_potato.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Roasted%20sweet%20potato/3D/roasted_sweet_potato_3d.png"
+    },
+    {
+      "id": "sake",
+      "assetPath": "assets/icons/food/sake.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Sake/3D/sake_3d.png"
+    },
+    {
+      "id": "salt",
+      "assetPath": "assets/icons/food/salt.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Salt/3D/salt_3d.png"
+    },
+    {
+      "id": "shallow_pan_of_food",
+      "assetPath": "assets/icons/food/shallow_pan_of_food.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Shallow%20pan%20of%20food/3D/shallow_pan_of_food_3d.png"
+    },
+    {
+      "id": "shaved_ice",
+      "assetPath": "assets/icons/food/shaved_ice.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Shaved%20ice/3D/shaved_ice_3d.png"
+    },
+    {
+      "id": "shortcake",
+      "assetPath": "assets/icons/food/shortcake.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Shortcake/3D/shortcake_3d.png"
+    },
+    {
+      "id": "soft_ice_cream",
+      "assetPath": "assets/icons/food/soft_ice_cream.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Soft%20ice%20cream/3D/soft_ice_cream_3d.png"
+    },
+    {
+      "id": "spoon",
+      "assetPath": "assets/icons/food/spoon.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Spoon/3D/spoon_3d.png"
+    },
+    {
+      "id": "strawberry",
+      "assetPath": "assets/icons/food/strawberry.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Strawberry/3D/strawberry_3d.png"
+    },
+    {
+      "id": "stuffed_flatbread",
+      "assetPath": "assets/icons/food/stuffed_flatbread.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Stuffed%20flatbread/3D/stuffed_flatbread_3d.png"
+    },
+    {
+      "id": "sushi",
+      "assetPath": "assets/icons/food/sushi.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Sushi/3D/sushi_3d.png"
+    },
+    {
+      "id": "taco",
+      "assetPath": "assets/icons/food/taco.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Taco/3D/taco_3d.png"
+    },
+    {
+      "id": "takeout_box",
+      "assetPath": "assets/icons/food/takeout_box.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Takeout%20box/3D/takeout_box_3d.png"
+    },
+    {
+      "id": "tamale",
+      "assetPath": "assets/icons/food/tamale.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Tamale/3D/tamale_3d.png"
+    },
+    {
+      "id": "tangerine",
+      "assetPath": "assets/icons/food/tangerine.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Tangerine/3D/tangerine_3d.png"
+    },
+    {
+      "id": "teacup_without_handle",
+      "assetPath": "assets/icons/food/teacup_without_handle.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Teacup%20without%20handle/3D/teacup_without_handle_3d.png"
+    },
+    {
+      "id": "teapot",
+      "assetPath": "assets/icons/food/teapot.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Teapot/3D/teapot_3d.png"
+    },
+    {
+      "id": "tomato",
+      "assetPath": "assets/icons/food/tomato.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Tomato/3D/tomato_3d.png"
+    },
+    {
+      "id": "tropical_drink",
+      "assetPath": "assets/icons/food/tropical_drink.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Tropical%20drink/3D/tropical_drink_3d.png"
+    },
+    {
+      "id": "tumbler_glass",
+      "assetPath": "assets/icons/food/tumbler_glass.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Tumbler%20glass/3D/tumbler_glass_3d.png"
+    },
+    {
+      "id": "waffle",
+      "assetPath": "assets/icons/food/waffle.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Waffle/3D/waffle_3d.png"
+    },
+    {
+      "id": "watermelon",
+      "assetPath": "assets/icons/food/watermelon.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Watermelon/3D/watermelon_3d.png"
+    },
+    {
+      "id": "wine_glass",
+      "assetPath": "assets/icons/food/wine_glass.png",
+      "source": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/1ffb34c752ecf5d402f04cfb4b392c77f57c54bc/assets/Wine%20glass/3D/wine_glass_3d.png"
+    }
+  ]
+}

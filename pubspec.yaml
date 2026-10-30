@@ -110,6 +110,8 @@ flutter:
 
   assets:
     - assets/images/meals/
+    - assets/icons/food/
+    - assets/icons/wicked_food/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

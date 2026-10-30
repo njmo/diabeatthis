@@ -1,0 +1,15 @@
+Wicked Food Collection
+Author: Shreyansh Kotak
+Collection: https://food.getwicked.app/
+Retrieved: 2026-10-30
+
+The author describes the collection as free to use in personal and commercial projects:
+https://www.reddit.com/r/SideProject/comments/1lx8ejq/
+"Yes, these are meant to be used for free for personal or commercial use."
+
+No standard SPDX license identifier was published with the collection.
+This notice records the author's public permission; it does not relicense the images.
+
+Images are downloaded using the author's public download service as 256px WebP
+variants (quality 85). Individual source URLs and hashes are in sources.json.
+Original collection images are AI-generated, as stated by the author.
