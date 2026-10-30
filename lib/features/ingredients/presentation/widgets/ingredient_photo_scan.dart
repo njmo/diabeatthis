@@ -4,11 +4,13 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../core/llm/local_llm_client.dart';
+import '../../../../core/media/camera_photo_capture_service.dart';
 import '../../../../core/media/providers/camera_permission_service_provider.dart';
-import '../../../meal_advisor/data/models/ingredient_photo_scan_input.dart';
-import '../../../meal_advisor/data/providers/ingredient_photo_scan_capture_provider.dart';
-import '../../../meal_advisor/presentation/controllers/ingredient_photo_scan_controller.dart';
+import '../../data/models/ingredient_photo_scan_input.dart';
 import '../../data/models/ingredient_scan_result.dart';
+import '../../data/providers/ingredient_photo_scan_capture_provider.dart';
+import '../controllers/ingredient_photo_scan_controller.dart';
+import '../screens/ingredient_photo_camera_screen.dart';
 
 class IngredientPhotoScan extends HookConsumerWidget {
   const IngredientPhotoScan({super.key});
@@ -23,6 +25,17 @@ class IngredientPhotoScan extends HookConsumerWidget {
     final scanInput = ref.watch(ingredientPhotoScanCaptureControllerProvider);
     final retakeRequest = scanResult?.retakeRequest;
     final isScanning = scanState.isLoading;
+    final isCapturing = useState(false);
+
+    Future<void> capture(IngredientPhotoScanPhoto photo) async {
+      if (isCapturing.value || isScanning) return;
+      isCapturing.value = true;
+      try {
+        await _capturePhoto(context, ref, captureResult, photo);
+      } finally {
+        if (context.mounted) isCapturing.value = false;
+      }
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -35,12 +48,9 @@ class IngredientPhotoScan extends HookConsumerWidget {
             title: lang.ingredientPhotoFrontTitle,
             subtitle: lang.ingredientPhotoFrontSubtitle,
             photoPath: scanInput.frontPhotoPath,
-            onCapture: () => _capturePhoto(
-              context,
-              ref,
-              captureResult,
-              IngredientPhotoScanPhoto.front,
-            ),
+            onCapture: isScanning || isCapturing.value
+                ? null
+                : () => capture(IngredientPhotoScanPhoto.front),
           ),
           const SizedBox(height: 8),
           IngredientPhotoStepTile(
@@ -48,12 +58,9 @@ class IngredientPhotoScan extends HookConsumerWidget {
             title: lang.ingredientPhotoNutritionTitle,
             subtitle: lang.ingredientPhotoNutritionSubtitle,
             photoPath: scanInput.nutritionLabelPhotoPath,
-            onCapture: () => _capturePhoto(
-              context,
-              ref,
-              captureResult,
-              IngredientPhotoScanPhoto.nutritionLabel,
-            ),
+            onCapture: isScanning || isCapturing.value
+                ? null
+                : () => capture(IngredientPhotoScanPhoto.nutritionLabel),
           ),
           const SizedBox(height: 12),
           if (captureResult.value != null) ...[
@@ -95,7 +102,32 @@ class IngredientPhotoScan extends HookConsumerWidget {
     captureResult.value = null;
     final result = await ref
         .read(ingredientPhotoScanCaptureControllerProvider.notifier)
-        .capture(photo);
+        .capture(
+          photo,
+          capturePhoto: () async {
+            if (!context.mounted) {
+              return const CameraPhotoCaptureResult.cancelled();
+            }
+            final isFront = photo == IngredientPhotoScanPhoto.front;
+            final lang = context.lang;
+            final path = await Navigator.of(context).push<String>(
+              MaterialPageRoute(
+                builder: (_) => IngredientPhotoCameraScreen(
+                  title: isFront
+                      ? lang.framedCameraFrontTitle
+                      : lang.framedCameraNutritionTitle,
+                  instructions: isFront
+                      ? lang.framedCameraFrontInstructions
+                      : lang.framedCameraNutritionInstructions,
+                  maxDimension: isFront ? 1024 : 1600,
+                ),
+              ),
+            );
+            return path == null
+                ? const CameraPhotoCaptureResult.cancelled()
+                : CameraPhotoCaptureResult.captured(path);
+          },
+        );
     if (!context.mounted) {
       return;
     }
@@ -310,7 +342,7 @@ class IngredientPhotoStepTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final String? photoPath;
-  final VoidCallback onCapture;
+  final VoidCallback? onCapture;
 
   const IngredientPhotoStepTile({
     required this.icon,

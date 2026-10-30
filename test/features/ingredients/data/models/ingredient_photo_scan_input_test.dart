@@ -1,4 +1,4 @@
-import 'package:diabeatthis/features/meal_advisor/data/models/ingredient_photo_scan_input.dart';
+import 'package:diabeatthis/features/ingredients/data/models/ingredient_photo_scan_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

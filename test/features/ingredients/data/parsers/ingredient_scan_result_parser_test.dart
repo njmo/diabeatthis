@@ -1,5 +1,5 @@
 import 'package:diabeatthis/features/ingredients/data/models/ingredient_scan_result.dart';
-import 'package:diabeatthis/features/meal_advisor/data/parsers/ingredient_scan_result_parser.dart';
+import 'package:diabeatthis/features/ingredients/data/parsers/ingredient_scan_result_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

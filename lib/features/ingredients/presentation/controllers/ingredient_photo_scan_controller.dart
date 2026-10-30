@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../ingredients/data/drafts/ingredient_draft.dart';
-import '../../../ingredients/data/mappers/ingredient_scan_result_mapper.dart';
-import '../../../ingredients/data/models/ingredient_scan_result.dart';
+import '../../data/drafts/ingredient_draft.dart';
+import '../../data/mappers/ingredient_scan_result_mapper.dart';
+import '../../data/models/ingredient_scan_result.dart';
 import '../../data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../domain/use_cases/scan_ingredient_from_photos_use_case.dart';
 

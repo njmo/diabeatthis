@@ -1502,5 +1502,14 @@
   "dashboardActivityTargetRemaining": "{minutes} min remaining · until {time}",
   "@dashboardActivityTargetRemaining": {"placeholders": {"minutes": {"type": "int"}, "time": {"type": "String"}}},
   "lowTreatmentDeleteTitle": "Delete low treatment?",
-  "lowTreatmentDeleteMessage": "The low treatment and its links will be deleted. The source carbohydrate entry will remain unchanged."
+  "lowTreatmentDeleteMessage": "The low treatment and its links will be deleted. The source carbohydrate entry will remain unchanged.",
+  "photoCropUseWhole": "Use whole photo",
+  "photoCropFailed": "Could not prepare the photo. Try again or go back and take another photo.",
+  "framedCameraCapture": "Take photo",
+  "framedCameraRetry": "Try again",
+  "framedCameraWideText": "Wide frame for text",
+  "framedCameraFrontInstructions": "Place the product name and brand inside the frame. The photo will be cropped automatically.",
+  "framedCameraNutritionInstructions": "Place the nutrition table or text inside the frame, including “per 100 g” or “per 100 ml”.",
+  "framedCameraFrontTitle": "Product name photo",
+  "framedCameraNutritionTitle": "Nutrition information photo"
 }

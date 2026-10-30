@@ -7,8 +7,8 @@ import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
-import '../../../meal_advisor/data/models/ingredient_photo_search_result.dart';
 import '../drafts/ingredient_draft.dart';
+import '../models/ingredient_photo_search_result.dart';
 import '../persistence/insert_ingredient_draft.dart';
 
 part 'ingredient_provider.g.dart';

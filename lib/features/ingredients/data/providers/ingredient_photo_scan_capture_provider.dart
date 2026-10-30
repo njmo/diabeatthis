@@ -36,8 +36,9 @@ class IngredientPhotoScanCaptureController
   }
 
   Future<IngredientPhotoCaptureResult> capture(
-    IngredientPhotoScanPhoto photo,
-  ) async {
+    IngredientPhotoScanPhoto photo, {
+    Future<CameraPhotoCaptureResult> Function()? capturePhoto,
+  }) async {
     final permission = await ref
         .read(cameraPermissionServiceProvider)
         .requestCamera();
@@ -47,9 +48,14 @@ class IngredientPhotoScanCaptureController
       );
     }
 
-    final capturedPhoto = await ref
-        .read(cameraPhotoCaptureServiceProvider)
-        .capturePhoto();
+    if (!ref.mounted) {
+      return const IngredientPhotoCaptureResult(
+        IngredientPhotoCaptureState.cancelled,
+      );
+    }
+    final capturedPhoto = capturePhoto == null
+        ? await ref.read(cameraPhotoCaptureServiceProvider).capturePhoto()
+        : await capturePhoto();
     if (capturedPhoto.state == CameraPhotoCaptureState.cancelled) {
       return const IngredientPhotoCaptureResult(
         IngredientPhotoCaptureState.cancelled,
@@ -58,6 +64,12 @@ class IngredientPhotoScanCaptureController
     if (!capturedPhoto.hasPhoto) {
       return const IngredientPhotoCaptureResult(
         IngredientPhotoCaptureState.cameraUnavailable,
+      );
+    }
+
+    if (!ref.mounted) {
+      return const IngredientPhotoCaptureResult(
+        IngredientPhotoCaptureState.cancelled,
       );
     }
 

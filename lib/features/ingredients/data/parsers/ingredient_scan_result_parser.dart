@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import '../../../ingredients/data/models/ingredient_scan_result.dart';
-import '../../../ingredients/domain/utils/ingredient_barcode_validator.dart';
+import '../../domain/utils/ingredient_barcode_validator.dart';
+import '../models/ingredient_scan_result.dart';
 
 class IngredientScanResultParser {
   static const _barcodeValidator = IngredientBarcodeValidator();

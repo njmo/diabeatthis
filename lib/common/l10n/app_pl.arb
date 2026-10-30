@@ -1942,5 +1942,14 @@
   "dashboardActivityTargetRemaining": "Pozostało {minutes} min · do {time}",
   "@dashboardActivityTargetRemaining": {"placeholders": {"minutes": {"type": "int"}, "time": {"type": "String"}}},
   "lowTreatmentDeleteTitle": "Usunąć dosłodzenie?",
-  "lowTreatmentDeleteMessage": "Dosłodzenie i jego powiązania zostaną usunięte. Źródłowy wpis węglowodanów pozostanie bez zmian."
+  "lowTreatmentDeleteMessage": "Dosłodzenie i jego powiązania zostaną usunięte. Źródłowy wpis węglowodanów pozostanie bez zmian.",
+  "photoCropUseWhole": "Użyj całego zdjęcia",
+  "photoCropFailed": "Nie udało się przygotować zdjęcia. Spróbuj ponownie lub wróć i zrób nowe zdjęcie.",
+  "framedCameraCapture": "Zrób zdjęcie",
+  "framedCameraRetry": "Spróbuj ponownie",
+  "framedCameraWideText": "Szeroka ramka na tekst",
+  "framedCameraFrontInstructions": "Umieść nazwę i markę w ramce. Zdjęcie zostanie automatycznie przycięte.",
+  "framedCameraNutritionInstructions": "Umieść w ramce tabelę lub tekst z wartościami oraz informacją „na 100 g” lub „na 100 ml”.",
+  "framedCameraFrontTitle": "Zdjęcie nazwy produktu",
+  "framedCameraNutritionTitle": "Zdjęcie wartości odżywczych"
 }
