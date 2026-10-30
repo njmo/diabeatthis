@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/media/camera_photo_capture_result.dart';
 import '../../data/models/ingredient_photo_scan_input.dart';
 import '../../data/models/ingredient_photo_search_result.dart';
 import '../../data/providers/ingredient_photo_scan_capture_provider.dart';
@@ -29,35 +30,41 @@ class IngredientPhotoSearchController
     return const IngredientPhotoSearchState.empty();
   }
 
-  Future<void> captureAndSearch() async {
+  Future<void> captureAndSearch({
+    required Future<CameraPhotoCaptureResult> Function() capturePhoto,
+  }) async {
+    if (state.isLoading) return;
     state = const AsyncLoading();
     ref.invalidate(ingredientPhotoScanCaptureControllerProvider);
 
-    final captureResult = await ref
-        .read(ingredientPhotoScanCaptureControllerProvider.notifier)
-        .capture(IngredientPhotoScanPhoto.front);
-    if (captureResult.state != IngredientPhotoCaptureState.captured) {
-      state = AsyncData(
-        IngredientPhotoSearchState(
-          result: null,
-          captureError:
-              captureResult.state == IngredientPhotoCaptureState.cancelled
-              ? null
-              : captureResult,
-        ),
-      );
-      return;
-    }
-
     try {
+      final captureResult = await ref
+          .read(ingredientPhotoScanCaptureControllerProvider.notifier)
+          .capture(IngredientPhotoScanPhoto.front, capturePhoto: capturePhoto);
+      if (!ref.mounted) return;
+      if (captureResult.state != IngredientPhotoCaptureState.captured) {
+        state = AsyncData(
+          IngredientPhotoSearchState(
+            result: null,
+            captureError:
+                captureResult.state == IngredientPhotoCaptureState.cancelled
+                ? null
+                : captureResult,
+          ),
+        );
+        return;
+      }
+
       final input = ref.read(ingredientPhotoScanCaptureControllerProvider);
       final result = await ref
           .read(searchIngredientFromPhotoUseCaseProvider)
           .call(input);
+      if (!ref.mounted) return;
       state = AsyncData(
         IngredientPhotoSearchState(result: result, captureError: null),
       );
     } catch (error, stackTrace) {
+      if (!ref.mounted) return;
       state = AsyncError(error, stackTrace);
     }
   }

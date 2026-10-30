@@ -4,13 +4,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../core/llm/local_llm_client.dart';
-import '../../../../core/media/camera_photo_capture_service.dart';
 import '../../../../core/media/providers/camera_permission_service_provider.dart';
 import '../../data/models/ingredient_photo_scan_input.dart';
 import '../../data/models/ingredient_scan_result.dart';
 import '../../data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../controllers/ingredient_photo_scan_controller.dart';
-import '../screens/ingredient_photo_camera_screen.dart';
+import '../services/ingredient_photo_camera.dart';
 
 class IngredientPhotoScan extends HookConsumerWidget {
   const IngredientPhotoScan({super.key});
@@ -104,29 +103,7 @@ class IngredientPhotoScan extends HookConsumerWidget {
         .read(ingredientPhotoScanCaptureControllerProvider.notifier)
         .capture(
           photo,
-          capturePhoto: () async {
-            if (!context.mounted) {
-              return const CameraPhotoCaptureResult.cancelled();
-            }
-            final isFront = photo == IngredientPhotoScanPhoto.front;
-            final lang = context.lang;
-            final path = await Navigator.of(context).push<String>(
-              MaterialPageRoute(
-                builder: (_) => IngredientPhotoCameraScreen(
-                  title: isFront
-                      ? lang.framedCameraFrontTitle
-                      : lang.framedCameraNutritionTitle,
-                  instructions: isFront
-                      ? lang.framedCameraFrontInstructions
-                      : lang.framedCameraNutritionInstructions,
-                  maxDimension: isFront ? 1024 : 1600,
-                ),
-              ),
-            );
-            return path == null
-                ? const CameraPhotoCaptureResult.cancelled()
-                : CameraPhotoCaptureResult.captured(path);
-          },
+          capturePhoto: () => captureIngredientPhoto(context, photo),
         );
     if (!context.mounted) {
       return;

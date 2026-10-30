@@ -1,7 +1,6 @@
 import 'package:diabeatthis/core/media/camera_permission_service.dart';
-import 'package:diabeatthis/core/media/camera_photo_capture_service.dart';
+import 'package:diabeatthis/core/media/camera_photo_capture_result.dart';
 import 'package:diabeatthis/core/media/providers/camera_permission_service_provider.dart';
-import 'package:diabeatthis/core/media/providers/camera_photo_capture_service_provider.dart';
 import 'package:diabeatthis/features/ingredients/data/models/ingredient_photo_scan_input.dart';
 import 'package:diabeatthis/features/ingredients/data/providers/ingredient_photo_scan_capture_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,12 +16,6 @@ void main() {
             getStatus: () async => granted
                 ? PermissionStatus.granted
                 : PermissionStatus.permanentlyDenied,
-          ),
-        ),
-        cameraPhotoCaptureServiceProvider.overrideWithValue(
-          CameraPhotoCaptureService(
-            pickFromCamera: () async =>
-                throw StateError('Must not open the system camera'),
           ),
         ),
       ],

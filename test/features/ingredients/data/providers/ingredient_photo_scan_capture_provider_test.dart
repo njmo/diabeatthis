@@ -1,12 +1,10 @@
 import 'package:diabeatthis/core/media/camera_permission_service.dart';
-import 'package:diabeatthis/core/media/camera_photo_capture_service.dart';
+import 'package:diabeatthis/core/media/camera_photo_capture_result.dart';
 import 'package:diabeatthis/core/media/providers/camera_permission_service_provider.dart';
-import 'package:diabeatthis/core/media/providers/camera_photo_capture_service_provider.dart';
 import 'package:diabeatthis/features/ingredients/data/models/ingredient_photo_scan_input.dart';
 import 'package:diabeatthis/features/ingredients/data/providers/ingredient_photo_scan_capture_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() {
@@ -19,18 +17,17 @@ void main() {
               getStatus: () async => PermissionStatus.granted,
             ),
           ),
-          cameraPhotoCaptureServiceProvider.overrideWithValue(
-            CameraPhotoCaptureService(
-              pickFromCamera: () async => XFile('/tmp/nutrition.jpg'),
-            ),
-          ),
         ],
       );
       addTearDown(container.dispose);
 
       final result = await container
           .read(ingredientPhotoScanCaptureControllerProvider.notifier)
-          .capture(IngredientPhotoScanPhoto.nutritionLabel);
+          .capture(
+            IngredientPhotoScanPhoto.nutritionLabel,
+            capturePhoto: () async =>
+                const CameraPhotoCaptureResult.captured('/tmp/nutrition.jpg'),
+          );
 
       expect(result.state, IngredientPhotoCaptureState.captured);
       final input = container.read(
@@ -49,21 +46,19 @@ void main() {
               getStatus: () async => PermissionStatus.permanentlyDenied,
             ),
           ),
-          cameraPhotoCaptureServiceProvider.overrideWithValue(
-            CameraPhotoCaptureService(
-              pickFromCamera: () async {
-                pickerCalled = true;
-                return XFile('/tmp/front.jpg');
-              },
-            ),
-          ),
         ],
       );
       addTearDown(container.dispose);
 
       final result = await container
           .read(ingredientPhotoScanCaptureControllerProvider.notifier)
-          .capture(IngredientPhotoScanPhoto.front);
+          .capture(
+            IngredientPhotoScanPhoto.front,
+            capturePhoto: () async {
+              pickerCalled = true;
+              return const CameraPhotoCaptureResult.captured('/tmp/front.jpg');
+            },
+          );
 
       expect(
         result.state,
@@ -86,16 +81,17 @@ void main() {
               getStatus: () async => PermissionStatus.granted,
             ),
           ),
-          cameraPhotoCaptureServiceProvider.overrideWithValue(
-            CameraPhotoCaptureService(pickFromCamera: () async => null),
-          ),
         ],
       );
       addTearDown(container.dispose);
 
       final result = await container
           .read(ingredientPhotoScanCaptureControllerProvider.notifier)
-          .capture(IngredientPhotoScanPhoto.front);
+          .capture(
+            IngredientPhotoScanPhoto.front,
+            capturePhoto: () async =>
+                const CameraPhotoCaptureResult.cancelled(),
+          );
 
       expect(result.state, IngredientPhotoCaptureState.cancelled);
       final input = container.read(

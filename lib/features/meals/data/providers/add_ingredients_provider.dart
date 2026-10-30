@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../common/navigation/step_history.dart';
 import '../../../../common/nutrition/confidence_level.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
+import '../../../../core/media/camera_photo_capture_result.dart';
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_photo_scan_capture_provider.dart';
@@ -121,7 +122,9 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     _moveTo(AddMealIngredientStage.ingredientPhotoScan);
   }
 
-  Future<void> startIngredientPhotoSearch() async {
+  Future<void> startIngredientPhotoSearch({
+    required Future<CameraPhotoCaptureResult> Function() capturePhoto,
+  }) async {
     ref.invalidate(ingredientBarcodeScanFeedbackProvider);
     ref.invalidate(ingredientDraftProvider);
     ref.invalidate(ingredientPhotoScanCaptureControllerProvider);
@@ -130,7 +133,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
     ref.invalidate(ingredientPhotoSearchControllerProvider);
     await ref
         .read(ingredientPhotoSearchControllerProvider.notifier)
-        .captureAndSearch();
+        .captureAndSearch(capturePhoto: capturePhoto);
   }
 
   Future<IngredientBarcodeScanOutcome> scanIngredientBarcode(

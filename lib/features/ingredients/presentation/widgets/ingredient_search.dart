@@ -11,6 +11,7 @@ import '../../../../core/media/providers/camera_permission_service_provider.dart
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/drafts/ingredient_draft.dart';
 import '../../data/mappers/ingredient_draft_mapper.dart';
+import '../../data/models/ingredient_photo_scan_input.dart';
 import '../../data/models/ingredient_photo_search_result.dart';
 import '../../data/providers/ingredient_provider.dart';
 import '../controllers/ingredient_barcode_lookup_controller.dart';
@@ -18,6 +19,7 @@ import '../controllers/ingredient_barcode_scan_feedback_controller.dart';
 import '../controllers/ingredient_photo_search_controller.dart';
 import '../models/ingredient_barcode_scan_outcome.dart';
 import '../services/ingredient_barcode_scanner.dart';
+import '../services/ingredient_photo_camera.dart';
 import 'ingredient_barcode_scan_outcome_dialog.dart';
 import 'ingredient_photo_scan.dart';
 
@@ -134,7 +136,13 @@ class IngredientSearch extends HookConsumerWidget {
                   break;
               }
             },
-            onSearchPhoto: addIngredientController.startIngredientPhotoSearch,
+            onSearchPhoto: () =>
+                addIngredientController.startIngredientPhotoSearch(
+                  capturePhoto: () => captureIngredientPhoto(
+                    context,
+                    IngredientPhotoScanPhoto.front,
+                  ),
+                ),
           ),
           const SizedBox(height: 8),
           Form(

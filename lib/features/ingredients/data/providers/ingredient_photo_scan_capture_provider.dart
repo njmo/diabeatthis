@@ -1,9 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/media/camera_permission_service.dart';
-import '../../../../core/media/camera_photo_capture_service.dart';
+import '../../../../core/media/camera_photo_capture_result.dart';
 import '../../../../core/media/providers/camera_permission_service_provider.dart';
-import '../../../../core/media/providers/camera_photo_capture_service_provider.dart';
 import '../models/ingredient_photo_scan_input.dart';
 
 part 'ingredient_photo_scan_capture_provider.g.dart';
@@ -37,7 +36,7 @@ class IngredientPhotoScanCaptureController
 
   Future<IngredientPhotoCaptureResult> capture(
     IngredientPhotoScanPhoto photo, {
-    Future<CameraPhotoCaptureResult> Function()? capturePhoto,
+    required Future<CameraPhotoCaptureResult> Function() capturePhoto,
   }) async {
     final permission = await ref
         .read(cameraPermissionServiceProvider)
@@ -53,9 +52,7 @@ class IngredientPhotoScanCaptureController
         IngredientPhotoCaptureState.cancelled,
       );
     }
-    final capturedPhoto = capturePhoto == null
-        ? await ref.read(cameraPhotoCaptureServiceProvider).capturePhoto()
-        : await capturePhoto();
+    final capturedPhoto = await capturePhoto();
     if (capturedPhoto.state == CameraPhotoCaptureState.cancelled) {
       return const IngredientPhotoCaptureResult(
         IngredientPhotoCaptureState.cancelled,

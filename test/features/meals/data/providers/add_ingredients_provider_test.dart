@@ -1,8 +1,7 @@
 import 'package:diabeatthis/common/nutrition/confidence_level.dart';
 import 'package:diabeatthis/core/media/camera_permission_service.dart';
-import 'package:diabeatthis/core/media/camera_photo_capture_service.dart';
+import 'package:diabeatthis/core/media/camera_photo_capture_result.dart';
 import 'package:diabeatthis/core/media/providers/camera_permission_service_provider.dart';
-import 'package:diabeatthis/core/media/providers/camera_photo_capture_service_provider.dart';
 import 'package:diabeatthis/features/ingredients/data/clients/debug_ingredient_photo_scan_client.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_portion_draft.dart';
@@ -21,7 +20,6 @@ import 'package:diabeatthis/features/portions/data/drafts/portion_filter.dart';
 import 'package:diabeatthis/features/portions/data/providers/portion_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() {
@@ -268,14 +266,6 @@ void main() {
                 getStatus: () async => PermissionStatus.granted,
               ),
             ),
-            cameraPhotoCaptureServiceProvider.overrideWithValue(
-              CameraPhotoCaptureService(
-                pickFromCamera: () async {
-                  photoNumber += 1;
-                  return XFile('/tmp/photo-$photoNumber.jpg');
-                },
-              ),
-            ),
             ingredientPhotoScanClientProvider.overrideWithValue(
               const DebugIngredientPhotoScanClient(delay: Duration.zero),
             ),
@@ -305,10 +295,26 @@ void main() {
 
         await container
             .read(ingredientPhotoScanCaptureControllerProvider.notifier)
-            .capture(IngredientPhotoScanPhoto.front);
+            .capture(
+              IngredientPhotoScanPhoto.front,
+              capturePhoto: () async {
+                photoNumber += 1;
+                return CameraPhotoCaptureResult.captured(
+                  '/tmp/photo-$photoNumber.jpg',
+                );
+              },
+            );
         await container
             .read(ingredientPhotoScanCaptureControllerProvider.notifier)
-            .capture(IngredientPhotoScanPhoto.nutritionLabel);
+            .capture(
+              IngredientPhotoScanPhoto.nutritionLabel,
+              capturePhoto: () async {
+                photoNumber += 1;
+                return CameraPhotoCaptureResult.captured(
+                  '/tmp/photo-$photoNumber.jpg',
+                );
+              },
+            );
         await notifier.nextStage();
 
         expect(
