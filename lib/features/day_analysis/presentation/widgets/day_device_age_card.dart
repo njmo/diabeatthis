@@ -35,10 +35,12 @@ class DayDeviceAgeCard extends StatelessWidget {
           children: [
             AnalysisMetric(
               label: lang.daySensorAge,
+              icon: Icons.sensors,
               value: age(day.sensorAge, DayDataSource.sensorAge),
             ),
             AnalysisMetric(
               label: lang.dayPodAge,
+              icon: Icons.medical_services_outlined,
               value: age(day.podAge, DayDataSource.podAge),
             ),
           ],

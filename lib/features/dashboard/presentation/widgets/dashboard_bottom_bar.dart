@@ -22,13 +22,12 @@ class DashboardBottomBar extends StatelessWidget {
       children: [
         Expanded(
           child: DashboardDestination(
-            label: context.lang.managementMealsTab,
-            icon: Icons.restaurant_outlined,
+            label: context.lang.dashboardHomeTab,
+            icon: Icons.home_outlined,
             selected: selectedIndex == 0,
             onTap: () => onSelected(0),
           ),
         ),
-        const SizedBox(width: 72),
         Expanded(
           child: DashboardDestination(
             label: context.lang.dashboardDayTab,
@@ -37,6 +36,15 @@ class DashboardBottomBar extends StatelessWidget {
             onTap: () => onSelected(1),
           ),
         ),
+        Expanded(
+          child: DashboardDestination(
+            label: context.lang.dashboardLibraryTab,
+            icon: Icons.collections_bookmark_outlined,
+            selected: selectedIndex == 2,
+            onTap: () => onSelected(2),
+          ),
+        ),
+        const SizedBox(width: 72),
       ],
     ),
   );

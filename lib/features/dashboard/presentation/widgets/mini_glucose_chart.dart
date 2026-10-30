@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../data/providers/blood_sugar_readings_list_provider.dart';
+import 'glucose_chart_scale.dart';
 
 class MiniGlucoseChart extends ConsumerWidget {
   const MiniGlucoseChart({super.key});
@@ -26,10 +27,59 @@ class MiniGlucoseChart extends ConsumerWidget {
           );
         }
 
+        final painter = MiniGlucoseChartPainter(
+          glucose.reversed.toList(),
+          gridColor: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.45),
+        );
+        final visible = painter._normalizedValues(painter.values);
+        final scale = GlucoseChartScale.fromValues(
+          visible.map((value) => value.sgv),
+        );
+        final labelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        );
         return RepaintBoundary(
-          child: CustomPaint(
-            painter: MiniGlucoseChartPainter(glucose.reversed.toList()),
-            size: Size.infinite,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.lang.dashboardGlucoseUnit, style: labelStyle),
+              const SizedBox(height: 2),
+              Expanded(
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 30,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) => Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            for (final tick in [
+                              (scale.maximum, 0.18),
+                              (scale.middle, 0.5),
+                              (scale.minimum, 0.82),
+                            ])
+                              Positioned(
+                                top: constraints.maxHeight * tick.$2,
+                                right: 0,
+                                child: FractionalTranslation(
+                                  translation: const Offset(0, -0.5),
+                                  child: Text('${tick.$1}', style: labelStyle),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: CustomPaint(painter: painter, size: Size.infinite),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -49,8 +99,9 @@ class MiniGlucoseChartPainter extends CustomPainter {
   static const highColor = Color(0xFFFBC02D);
 
   final List<Glucose> values;
+  final Color? gridColor;
 
-  MiniGlucoseChartPainter(this.values);
+  MiniGlucoseChartPainter(this.values, {this.gridColor});
 
   Color _colorFor(double value) {
     if (value < lowThreshold || value >= veryHighThreshold) return lowColor;
@@ -63,28 +114,24 @@ class MiniGlucoseChartPainter extends CustomPainter {
     final data = _normalizedValues(values);
     if (data.length < 3) return;
 
-    final minVal = data.map((e) => e.sgv).reduce((a, b) => a < b ? a : b);
-    final maxVal = data.map((e) => e.sgv).reduce((a, b) => a > b ? a : b);
-
-    var minY = (minVal).toDouble();
-    var maxY = (maxVal).toDouble();
-
-    const minRange = 16.0;
-    final range = maxY - minY;
-    if (range < minRange) {
-      final mid = (minY + maxY) / 2;
-      minY = mid - minRange / 2;
-      maxY = mid + minRange / 2;
-    } else {
-      final padding = range * 0.12;
-      minY -= padding;
-      maxY += padding;
-    }
+    final scale = GlucoseChartScale.fromValues(data.map((value) => value.sgv));
+    final minY = scale.minimum.toDouble();
+    final maxY = scale.maximum.toDouble();
 
     final topPad = size.height * 0.18;
     final bottomPad = size.height * 0.18;
     final h = size.height - topPad - bottomPad;
     final w = size.width;
+
+    if (gridColor != null) {
+      final gridPaint = Paint()
+        ..color = gridColor!
+        ..strokeWidth = 0.6;
+      for (final fraction in [0.0, 0.5, 1.0]) {
+        final y = topPad + h * fraction;
+        canvas.drawLine(Offset(0, y), Offset(w, y), gridPaint);
+      }
+    }
 
     final dx = data.length <= 1 ? 0.0 : w / (data.length - 1);
 
@@ -143,6 +190,7 @@ class MiniGlucoseChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant MiniGlucoseChartPainter oldDelegate) {
+    if (oldDelegate.gridColor != gridColor) return true;
     if (oldDelegate.values.length != values.length) return true;
     for (var i = 0; i < values.length; i++) {
       if (oldDelegate.values[i] != values[i]) return true;

@@ -13,15 +13,13 @@ import 'day_summary_card.dart';
 
 class DayInsulinCard extends StatelessWidget {
   final InsulinBolusSummary? summary;
-  final InsulinBolusSummary? night;
   final InsulinBasalSummary? basal;
-  final InsulinBasalSummary? nightBasal;
+  final bool isNight;
   const DayInsulinCard({
     super.key,
     required this.summary,
-    required this.night,
     this.basal,
-    this.nightBasal,
+    this.isNight = false,
   });
 
   @override
@@ -29,21 +27,18 @@ class DayInsulinCard extends StatelessWidget {
     final lang = context.lang;
     final format = DayStatFormatter(lang.localeName);
     final units = format.insulin;
+    final basalTitle = isNight ? lang.dayNightBasalTitle : lang.dayBasalTitle;
     final covered = basal != null && basal!.coveredDuration > Duration.zero;
     return DaySummaryCard(
-      title: lang.dayInsulinTitle,
+      title: isNight ? lang.dayNightInsulinTitle : lang.dayInsulinTitle,
       information: lang.dayInsulinLimit,
       warnings: [
-        if (summary == null || night == null)
+        if (summary == null)
           '${lang.dayRecordedBoluses}: ${lang.daySourceUnavailable}',
-        for (final entry in [
-          (lang.dayBasalTitle, basal),
-          (lang.dayNightBasalTitle, nightBasal),
-        ])
-          if (entry.$2 == null)
-            '${entry.$1}: ${lang.daySourceUnavailable}'
-          else if (entry.$2!.coveredDuration < entry.$2!.duration)
-            '${entry.$1}: ${lang.dayWarningMissingDuration(formatDurationLabel(entry.$2!.duration - entry.$2!.coveredDuration))}',
+        if (basal == null)
+          '$basalTitle: ${lang.daySourceUnavailable}'
+        else if (basal!.coveredDuration < basal!.duration)
+          '$basalTitle: ${lang.dayWarningMissingDuration(formatDurationLabel(basal!.duration - basal!.coveredDuration))}',
       ],
       children: [
         DayMetricGrid(
@@ -60,7 +55,7 @@ class DayInsulinCard extends StatelessWidget {
               icon: Icons.water_drop_outlined,
             ),
             AnalysisMetric(
-              label: lang.dayRecordedBoluses,
+              label: isNight ? lang.dayNightBoluses : lang.dayRecordedBoluses,
               value: units(summary?.units),
             ),
           ],
@@ -75,12 +70,7 @@ class DayInsulinCard extends StatelessWidget {
           tilePadding: EdgeInsets.zero,
           title: Text(lang.dayReviewDetails),
           children: [
-            AnalysisMetric(
-              label: lang.dayNightBoluses,
-              value: units(night?.units),
-            ),
-            DayBasalRows(summary: basal, boluses: summary),
-            DayBasalRows(summary: nightBasal, boluses: night, isNight: true),
+            DayBasalRows(summary: basal, boluses: summary, isNight: isNight),
           ],
         ),
       ],

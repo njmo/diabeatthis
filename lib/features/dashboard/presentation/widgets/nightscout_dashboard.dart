@@ -30,16 +30,13 @@ class NightscoutPanel extends ConsumerWidget {
     final textTheme = theme.textTheme;
 
     return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-        ),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Card(
+        margin: EdgeInsets.zero,
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

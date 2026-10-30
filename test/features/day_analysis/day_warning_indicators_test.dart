@@ -120,7 +120,12 @@ void main() {
         otherCount: 0,
         otherUnits: 0,
       );
-      for (final covered in [30, 60]) {
+      for (final (covered, isNight) in [
+        (30, false),
+        (60, false),
+        (30, true),
+        (60, true),
+      ]) {
         final basal = InsulinBasalSummary(
           units: 0,
           profileUnits: 0,
@@ -132,12 +137,7 @@ void main() {
         );
         await show(
           tester,
-          DayInsulinCard(
-            summary: boluses,
-            night: boluses,
-            basal: basal,
-            nightBasal: basal,
-          ),
+          DayInsulinCard(summary: boluses, basal: basal, isNight: isNight),
         );
         if (covered == 30) {
           final warning = tester.widget<DataWarningIndicator>(
@@ -156,7 +156,7 @@ void main() {
               of: find.byType(DayBasalRows),
               matching: find.text('Suma częściowa bazy i zapisanych bolusów'),
             ),
-            findsNWidgets(2),
+            findsOneWidget,
           );
         } else {
           expect(find.byType(DataWarningIndicator), findsNothing);

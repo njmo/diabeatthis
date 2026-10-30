@@ -1517,5 +1517,13 @@
   "amountEntryMinimum": "Enter a value of at least {min}.",
   "amountEntryMaximum": "Enter a value no greater than {max}.",
   "dayWarningMissingReadings": "Missing CGM readings: {count} of {expected} ({percent}%).",
-  "@dayWarningMissingReadings": {"placeholders": {"count": {"type": "int"}, "expected": {"type": "int"}, "percent": {"type": "String"}}}
+  "@dayWarningMissingReadings": {"placeholders": {"count": {"type": "int"}, "expected": {"type": "int"}, "percent": {"type": "String"}}},
+  "dashboardHomeTab": "Home",
+  "dashboardLibraryTab": "Library",
+  "dashboardGlucoseChange": "Glucose change",
+  "dashboardUserMenu": "User menu",
+  "dayNightInsulinTitle": "Night insulin",
+  "dashboardGlucoseUnit": "mg/dl",
+  "dashboardIobLabel": "IOB",
+  "dashboardCobLabel": "COB"
 }

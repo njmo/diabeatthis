@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 
 class NutritionMetricTile extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final Widget? leading;
+  final Color? iconColor;
   final String label;
   final String value;
   final bool emphasized;
+  final double iconSize;
+  final double iconSpacing;
 
   const NutritionMetricTile({
-    required this.icon,
+    this.icon,
+    this.leading,
+    this.iconColor,
     required this.label,
     required this.value,
     this.emphasized = false,
+    this.iconSize = 24,
+    this.iconSpacing = 10,
     super.key,
-  });
+  }) : assert(icon != null || leading != null);
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +38,18 @@ class NutritionMetricTile extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            Icon(
-              icon,
-              color: emphasized
-                  ? colorScheme.onPrimaryContainer
-                  : colorScheme.onSurfaceVariant,
+            IconTheme.merge(
+              data: IconThemeData(
+                size: iconSize,
+                color:
+                    iconColor ??
+                    (emphasized
+                        ? colorScheme.onPrimaryContainer
+                        : colorScheme.onSurfaceVariant),
+              ),
+              child: leading ?? Icon(icon),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: iconSpacing),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -26,7 +26,7 @@ class IngredientForm extends ConsumerWidget {
 
     return Form(
       key: formKey,
-      autovalidateMode: AutovalidateMode.always,
+      autovalidateMode: AutovalidateMode.onUnfocus,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

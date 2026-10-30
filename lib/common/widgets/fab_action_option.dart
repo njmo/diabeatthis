@@ -25,8 +25,8 @@ class FabActionOption extends StatelessWidget {
         : theme.colorScheme.onSurface.withValues(alpha: 0.38);
 
     return Material(
-      color: theme.colorScheme.surface,
-      elevation: 4,
+      color: Colors.transparent,
+      elevation: 0,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: enabled ? onTap : null,

@@ -48,20 +48,26 @@ class AnchoredFabMenu extends HookWidget {
             CompositedTransformFollower(
               link: link,
               showWhenUnlinked: false,
-              targetAnchor: Alignment.topCenter,
-              followerAnchor: Alignment.bottomCenter,
+              targetAnchor: Alignment.topRight,
+              followerAnchor: Alignment.bottomRight,
               offset: const Offset(0, -16),
               child: Material(
-                type: MaterialType.transparency,
+                color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                elevation: 8,
+                borderRadius: BorderRadius.circular(16),
+                clipBehavior: Clip.antiAlias,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
                     maxWidth: 250,
                     maxHeight: MediaQuery.sizeOf(context).height * 0.65,
                   ),
                   child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: actions,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: actions,
+                      ),
                     ),
                   ),
                 ),

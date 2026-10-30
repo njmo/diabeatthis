@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/domain/model/glucose.dart';
 import '../../data/providers/time_now_provider.dart';
 import '../../data/utils/nightscout_utils.dart';
-import 'mini_glucose_chart.dart';
+import 'dashboard_glucose_reading.dart';
 
 class GlucoseDashboard extends ConsumerWidget {
   const GlucoseDashboard({super.key, required this.glucose});
@@ -23,28 +22,10 @@ class GlucoseDashboard extends ConsumerWidget {
     final trendIcon = iconForDirection(glucose.direction);
 
     return RepaintBoundary(
-      child: Column(
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                '${glucose.sgv}',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.nunito(
-                  fontSize: 86,
-                  fontWeight: FontWeight.w700,
-                  color: bgColor,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Icon(trendIcon, size: 66, color: bgColor),
-            ],
-          ),
-          const SizedBox(width: 160, height: 50, child: MiniGlucoseChart()),
-        ],
+      child: DashboardGlucoseReading(
+        value: glucose.sgv,
+        color: bgColor,
+        trendIcon: trendIcon,
       ),
     );
   }

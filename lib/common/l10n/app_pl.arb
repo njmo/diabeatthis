@@ -1957,5 +1957,13 @@
   "amountEntryMinimum": "Podaj wartość nie mniejszą niż {min}.",
   "amountEntryMaximum": "Podaj wartość nie większą niż {max}.",
   "dayWarningMissingReadings": "Brakujące odczyty CGM: {count} z {expected} ({percent}%).",
-  "@dayWarningMissingReadings": {"placeholders": {"count": {"type": "int"}, "expected": {"type": "int"}, "percent": {"type": "String"}}}
+  "@dayWarningMissingReadings": {"placeholders": {"count": {"type": "int"}, "expected": {"type": "int"}, "percent": {"type": "String"}}},
+  "dashboardHomeTab": "Start",
+  "dashboardLibraryTab": "Biblioteka",
+  "dashboardGlucoseChange": "Zmiana glukozy",
+  "dashboardUserMenu": "Menu użytkownika",
+  "dayNightInsulinTitle": "Insulina w nocy",
+  "dashboardGlucoseUnit": "mg/dl",
+  "dashboardIobLabel": "IOB",
+  "dashboardCobLabel": "COB"
 }
