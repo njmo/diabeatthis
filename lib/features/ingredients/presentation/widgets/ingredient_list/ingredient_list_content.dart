@@ -33,7 +33,7 @@ class IngredientListContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
+    final bottomPadding = 16 + MediaQuery.paddingOf(context).bottom;
 
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {

@@ -24,10 +24,12 @@ class ActivityLogList extends HookConsumerWidget {
 
     return activityLogsState.when(
       loading: () => const SafeArea(
+        bottom: false,
         top: false,
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (error, _) => SafeArea(
+        bottom: false,
         top: false,
         child: Center(
           child: TextButton.icon(
@@ -54,14 +56,16 @@ class ActivityLogList extends HookConsumerWidget {
 
         if (activityLogs.isEmpty) {
           return SafeArea(
+            bottom: false,
             top: false,
             child: Center(child: Text(context.lang.activityLogsEmptyList)),
           );
         }
 
-        final bottomPadding = 16 + MediaQuery.viewPaddingOf(context).bottom;
+        final bottomPadding = 16 + MediaQuery.paddingOf(context).bottom;
 
         return SafeArea(
+          bottom: false,
           top: false,
           child: Padding(
             padding: const EdgeInsets.all(12),

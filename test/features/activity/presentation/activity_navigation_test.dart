@@ -4,7 +4,7 @@ import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/activity/data/drafts/activity_draft.dart';
 import 'package:diabeatthis/features/activity/presentation/widgets/activity_definition_sheet.dart';
-import 'package:diabeatthis/features/activity/presentation/widgets/activity_management_panel.dart';
+import 'package:diabeatthis/features/activity/presentation/widgets/activity_upcoming_button.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/dashboard_activity_sheet.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -71,14 +71,14 @@ void main() {
     });
   });
 
-  testWidgets('activity management contains upcoming sessions as a tab', (
+  testWidgets('activity history opens upcoming sessions from its button', (
     tester,
   ) async {
-    await tester.pumpWidget(app(db, const ActivityManagementPanel()));
+    await tester.pumpWidget(app(db, const ActivityUpcomingButton()));
     await tester.pumpAndSettle();
-    expect(find.text('Upcoming'), findsOneWidget);
+    expect(find.text('Upcoming activities'), findsOneWidget);
     expect(find.byIcon(Icons.calendar_month), findsNothing);
-    await tester.tap(find.text('Upcoming'));
+    await tester.tap(find.text('Upcoming activities'));
     await tester.pumpAndSettle();
     expect(find.textContaining('No upcoming sessions.'), findsOneWidget);
     expect(tester.takeException(), isNull);

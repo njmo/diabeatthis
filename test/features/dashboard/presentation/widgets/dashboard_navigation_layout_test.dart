@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets(
-    'home, day and library remain reachable beside the docked add button',
+    'home, day, history and catalog remain reachable beside the center add button',
     (tester) async {
       var selected = 0;
       await tester.pumpWidget(
@@ -21,7 +21,7 @@ void main() {
               onSelected: (index) => selected = index,
             ),
             floatingActionButtonLocation:
-                FloatingActionButtonLocation.endDocked,
+                FloatingActionButtonLocation.centerDocked,
             floatingActionButton: FloatingActionButton(
               onPressed: () {},
               child: const Icon(Icons.add),
@@ -32,9 +32,10 @@ void main() {
       for (final (label, index) in [
         ('Start', 0),
         ('Dzień', 1),
-        ('Biblioteka', 2),
+        ('Historia', 2),
+        ('Katalog', 3),
       ]) {
-        await tester.tap(find.text(label));
+        await tester.tap(find.byTooltip(label));
         expect(selected, index);
       }
       expect(tester.takeException(), isNull);

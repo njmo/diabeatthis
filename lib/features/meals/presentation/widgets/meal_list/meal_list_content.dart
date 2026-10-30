@@ -49,7 +49,7 @@ class MealListContent extends StatelessWidget {
       return Center(child: Text(context.lang.mealEmptyList));
     }
 
-    final bottomPadding = 24 + MediaQuery.viewPaddingOf(context).bottom;
+    final bottomPadding = 24 + MediaQuery.paddingOf(context).bottom;
 
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {

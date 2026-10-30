@@ -89,7 +89,12 @@ class TodayPageState extends ConsumerState<TodayPage> {
               onRefresh: refresh,
               child: ListView(
                 key: ValueKey(day.start),
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+                padding: EdgeInsets.fromLTRB(
+                  12,
+                  0,
+                  12,
+                  24 + MediaQuery.paddingOf(context).bottom,
+                ),
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
                   Text(

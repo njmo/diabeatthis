@@ -37,6 +37,7 @@ class MealList extends ConsumerWidget {
     }
 
     return SafeArea(
+      bottom: false,
       top: false,
       child: Column(
         children: [

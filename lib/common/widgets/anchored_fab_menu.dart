@@ -18,6 +18,8 @@ class AnchoredFabMenu extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dark = theme.brightness == Brightness.dark;
     final controller = useMemoized(OverlayPortalController.new);
     final link = useMemoized(LayerLink.new);
     useEffect(() {
@@ -48,8 +50,8 @@ class AnchoredFabMenu extends HookWidget {
             CompositedTransformFollower(
               link: link,
               showWhenUnlinked: false,
-              targetAnchor: Alignment.topRight,
-              followerAnchor: Alignment.bottomRight,
+              targetAnchor: Alignment.topCenter,
+              followerAnchor: Alignment.bottomCenter,
               offset: const Offset(0, -16),
               child: Material(
                 color: Theme.of(context).colorScheme.surfaceContainerLowest,
@@ -79,6 +81,14 @@ class AnchoredFabMenu extends HookWidget {
           width: 56,
           height: 56,
           child: FloatingActionButton(
+            backgroundColor: dark
+                ? const Color(0xFF343D44)
+                : theme.colorScheme.primary,
+            foregroundColor: dark ? Colors.white : theme.colorScheme.onPrimary,
+            elevation: 0,
+            highlightElevation: 0,
+            focusElevation: 0,
+            hoverElevation: 0,
             shape: const CircleBorder(),
             onPressed: onToggle,
             child: Icon(open ? Icons.close : Icons.add),

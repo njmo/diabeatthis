@@ -24,6 +24,7 @@ class IngredientList extends HookConsumerWidget {
     final ingredientsState = ref.watch(ingredientListStreamProvider);
 
     return SafeArea(
+      bottom: false,
       child: searchResults == null
           ? ingredientsState.when(
               loading: () => IngredientListContent(
