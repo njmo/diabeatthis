@@ -1,48 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'application_theme.dart';
-
-ThemeData applicationThemeData(
-  ApplicationTheme appearance, {
-  Brightness brightness = Brightness.light,
-}) {
+ThemeData applicationThemeData({Brightness brightness = Brightness.light}) {
   final defaults = ThemeData(brightness: brightness, useMaterial3: true);
   final base = defaults.copyWith(
     textTheme: GoogleFonts.nunitoSansTextTheme(defaults.textTheme),
   );
-  final classic = appearance == ApplicationTheme.classic;
 
   final isDark = brightness == Brightness.dark;
   final seeded = ColorScheme.fromSeed(
-    seedColor: classic ? const Color(0xFF096785) : const Color(0xFF8B7455),
+    seedColor: const Color(0xFF096785),
     brightness: brightness,
   );
-  final colors = classic
-      ? seeded.copyWith(
-          surface: isDark ? const Color(0xFF111B21) : const Color(0xFFF3F6F8),
-          surfaceContainerLow: isDark
-              ? const Color(0xFF111B21)
-              : const Color(0xFFF3F6F8),
-          surfaceContainerLowest: isDark
-              ? const Color(0xFF1A272E)
-              : Colors.white,
-        )
-      : seeded.copyWith(
-          surface: isDark ? const Color(0xFF191713) : const Color(0xFFF7F5EF),
-          surfaceContainerLow: isDark
-              ? const Color(0xFF191713)
-              : const Color(0xFFF7F5EF),
-          surfaceContainerLowest: isDark
-              ? const Color(0xFF211E19)
-              : const Color(0xFFFFFDF8),
-          primaryContainer: isDark
-              ? const Color(0xFF443A2C)
-              : const Color(0xFFEEE4D2),
-          onPrimaryContainer: isDark
-              ? const Color(0xFFF1E5D0)
-              : const Color(0xFF3E3528),
-        );
+  final colors = seeded.copyWith(
+    surface: isDark ? const Color(0xFF111B21) : const Color(0xFFF3F6F8),
+    surfaceContainerLow: isDark
+        ? const Color(0xFF111B21)
+        : const Color(0xFFF3F6F8),
+    surfaceContainerLowest: isDark ? const Color(0xFF1A272E) : Colors.white,
+  );
   return base.copyWith(
     colorScheme: colors,
     primaryColor: colors.primary,

@@ -931,8 +931,6 @@
   "mealReviewFirstReturn": "Powrót do 70–180",
   "settingsAppearanceTitle": "Wygląd aplikacji",
   "settingsAppearanceSubtitle": "Motyw obejmuje całą aplikację. Zmiana zapisuje się od razu.",
-  "applicationThemeClassic": "Klasyczny",
-  "applicationThemeCream": "Kremowy",
   "settingsAppearanceReadError": "Nie udało się odczytać motywu.",
   "settingsAppearanceSaveError": "Nie udało się zapisać motywu. Spróbuj ponownie.",
   "settingsThemeModeLabel": "Tryb wyświetlania",

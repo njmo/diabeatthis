@@ -803,8 +803,6 @@
   "mealReviewFirstReturn": "Return to 70–180",
   "settingsAppearanceTitle": "App appearance",
   "settingsAppearanceSubtitle": "The theme applies throughout the app. Changes are saved immediately.",
-  "applicationThemeClassic": "Classic",
-  "applicationThemeCream": "Cream",
   "settingsAppearanceReadError": "Could not load the theme.",
   "settingsAppearanceSaveError": "Could not save the theme. Please try again.",
   "settingsThemeModeLabel": "Display mode",

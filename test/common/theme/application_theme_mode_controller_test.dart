@@ -1,4 +1,3 @@
-import 'package:diabeatthis/common/theme/application_theme_controller.dart';
 import 'package:diabeatthis/common/theme/application_theme_mode_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,7 +24,7 @@ void main() {
   test(
     'each mode survives restart without changing the selected palette',
     () async {
-      SharedPreferences.setMockInitialValues({applicationThemeKey: 'cream'});
+      SharedPreferences.setMockInitialValues({'application-theme': 'cream'});
       for (final mode in [ThemeMode.dark, ThemeMode.light, ThemeMode.system]) {
         final container = ProviderContainer();
         await container.read(applicationThemeModeControllerProvider.future);
@@ -40,7 +39,7 @@ void main() {
         );
         expect(
           (await SharedPreferences.getInstance()).getString(
-            applicationThemeKey,
+            'application-theme',
           ),
           'cream',
         );
