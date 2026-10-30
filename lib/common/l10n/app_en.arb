@@ -2349,5 +2349,17 @@
   "foodIconWaffle": "Waffle",
   "foodIconWatermelon": "Watermelon",
   "foodIconWineGlass": "Wine glass",
-  "foodIconBottleWithPoppingCork": "Bottle with popping cork"
+  "foodIconBottleWithPoppingCork": "Bottle with popping cork",
+  "ingredientChooseIcon": "Choose icon",
+  "ingredientSuggestIcon": "Suggest with AI",
+  "ingredientIconSuggestionFailed": "Could not suggest an icon. You can choose one below.",
+  "ingredientSearchIcons": "Search icons",
+  "ingredientIconOutputLimit": "AI stopped responding because of the output length limit. Try again.",
+  "ingredientIconInvalidResponse": "AI returned an invalid icon selection response. Try again.",
+  "ingredientGenerateIcon": "Generate with AI",
+  "ingredientGeneratingIcon": "Generating image…",
+  "ingredientUseGeneratedIcon": "Use image",
+  "ingredientIconWithoutBackground": "Without background",
+  "ingredientIconBackgroundKept": "Could not remove the background. The original image was kept.",
+  "ingredientIconsEmpty": "No matching icons"
 }

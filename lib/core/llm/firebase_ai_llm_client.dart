@@ -41,15 +41,7 @@ class FirebaseAiLlmClient implements LocalLlmClient {
         cause: error,
       );
     } on FirebaseAIException catch (error) {
-      throw LlmRequestException(
-        failure: error is QuotaExceeded
-            ? LlmRequestFailure.quotaExceeded
-            : error is InvalidApiKey
-            ? LlmRequestFailure.unauthorized
-            : _firebaseFailureMessage(error.message),
-        message: error.message,
-        cause: error,
-      );
+      throw firebaseAiRequestException(error);
     } on FirebaseAISdkException catch (error) {
       throw LlmRequestException(
         failure: LlmRequestFailure.unavailable,
@@ -75,6 +67,17 @@ class FirebaseAiLlmClient implements LocalLlmClient {
     return LocalLlmResponse(text: text);
   }
 }
+
+LlmRequestException firebaseAiRequestException(FirebaseAIException error) =>
+    LlmRequestException(
+      failure: error is QuotaExceeded
+          ? LlmRequestFailure.quotaExceeded
+          : error is InvalidApiKey
+          ? LlmRequestFailure.unauthorized
+          : _firebaseFailureMessage(error.message),
+      message: error.message,
+      cause: error,
+    );
 
 LlmRequestFailure _firebaseFailure(FirebaseException error) {
   return _firebaseFailureMessage(error.message ?? '', code: error.code);

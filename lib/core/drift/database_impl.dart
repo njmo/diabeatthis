@@ -45,7 +45,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 36;
+  int get schemaVersion => 37;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -63,6 +63,16 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
+      if (from < 37) {
+        final columns = await customSelect(
+          'PRAGMA table_info(ingredient)',
+        ).get();
+        if (!columns.any(
+          (row) => row.read<String>('name') == 'icon_asset_path',
+        )) {
+          await m.addColumn(ingredient, ingredient.iconAssetPath);
+        }
+      }
       if (from < 33) {
         await m.createTable(activitySchedule);
         await m.createTable(activityOccurrence);

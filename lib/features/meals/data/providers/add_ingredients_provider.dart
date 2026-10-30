@@ -6,6 +6,7 @@ import '../../../../common/nutrition/confidence_level.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/media/camera_photo_capture_result.dart';
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
+import '../../../ingredients/data/icons/ingredient_icon_provider.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
@@ -204,6 +205,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
           mealIngredientsDraftProvider.notifier,
         );
         mealIngredientsDraft.setIngredient(ingredientDraft);
+        prefetchIngredientIcon(ref, ingredientDraft);
         if (ingredientDraft.isReference) {
           mealIngredientsDraft.setIngredientPortion(PortionSelection.empty());
           _openAmountForm();
@@ -339,6 +341,7 @@ class AddMealIngredientStageNotifier extends _$AddMealIngredientStageNotifier {
       mealIngredientsDraftProvider.notifier,
     );
     mealIngredientsDraft.setIngredient(ingredientDraft);
+    prefetchIngredientIcon(ref, ingredientDraft);
     if (ingredientDraft.isReference) {
       mealIngredientsDraft.setIngredientPortion(PortionSelection.empty());
       _openAmountForm();

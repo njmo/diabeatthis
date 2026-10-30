@@ -4,6 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/nutrition/ingredient_amount_calculator.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
+import '../../../ingredients/data/icons/ingredient_icon_provider.dart';
+import '../../../ingredients/presentation/widgets/ingredient_icon.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../data/drafts/meal_draft.dart';
 import '../../data/providers/add_ingredients_provider.dart';
@@ -55,6 +57,17 @@ class AmountForm extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AmountFormInfo(
+                iconAssetPath:
+                    draft.ingredient.iconAssetPath ??
+                    ref
+                        .watch(
+                          ingredientIconSuggestionProvider((
+                            draft.ingredient.name,
+                            draft.ingredient.brand,
+                          )),
+                        )
+                        .asData
+                        ?.value,
                 draft: draft,
                 gramsPerPortion: gramsPerPortion,
                 isLoadingPortionAmount: isLoadingPortionAmount,
@@ -124,6 +137,7 @@ class AmountForm extends ConsumerWidget {
 }
 
 class AmountFormInfo extends StatelessWidget {
+  final String? iconAssetPath;
   final MealIngredientsDraft draft;
   final double? gramsPerPortion;
   final bool isLoadingPortionAmount;
@@ -135,6 +149,7 @@ class AmountFormInfo extends StatelessWidget {
     required this.isLoadingPortionAmount,
     this.onChangeMeasure,
     super.key,
+    this.iconAssetPath,
   });
 
   @override
@@ -152,7 +167,20 @@ class AmountFormInfo extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(draft.ingredient.name, style: textTheme.titleMedium),
+            Row(
+              children: [
+                IngredientIcon(
+                  assetPath: iconAssetPath ?? draft.ingredient.iconAssetPath,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    draft.ingredient.name,
+                    style: textTheme.titleMedium,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 4),
             Text(
               _description(context),

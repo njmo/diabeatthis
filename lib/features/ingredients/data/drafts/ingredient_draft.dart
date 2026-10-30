@@ -22,6 +22,7 @@ abstract class IngredientDraft with _$IngredientDraft {
     String? preparation,
     String? brand,
     String? barcode,
+    String? iconAssetPath,
   }) = _IngredientDraftNew;
 
   const factory IngredientDraft.existing({
@@ -41,6 +42,7 @@ abstract class IngredientDraft with _$IngredientDraft {
     String? preparation,
     String? brand,
     String? barcode,
+    String? iconAssetPath,
   }) = _IngredientDraftExisting;
 }
 

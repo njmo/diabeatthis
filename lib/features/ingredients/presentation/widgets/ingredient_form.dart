@@ -7,6 +7,7 @@ import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../../meals/presentation/widgets/confidence_slider.dart';
 import '../../data/providers/ingredient_provider.dart';
 import 'ingredient_barcode_form_field.dart';
+import 'ingredient_icon_button.dart';
 import 'ingredient_macro_form.dart';
 import 'ingredient_reference_macro_form.dart';
 import 'reference_ingredient_checkbox.dart';
@@ -35,6 +36,17 @@ class IngredientForm extends ConsumerWidget {
             const ReferenceIngredientCheckbox(),
             const SizedBox(height: 16),
           ],
+          Align(
+            alignment: Alignment.centerLeft,
+            child: IngredientIconButton(
+              name: state.name,
+              brand: state.brand,
+              assetPath: state.iconAssetPath,
+              onSelected: (path) =>
+                  draft.overrideDraft(state.copyWith(iconAssetPath: path)),
+            ),
+          ),
+          const SizedBox(height: 8),
           TextFormField(
             initialValue: draft.getName(),
             maxLength: _ingredientNameMaxLength,

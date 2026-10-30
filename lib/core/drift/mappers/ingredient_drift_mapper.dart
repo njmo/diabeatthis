@@ -18,6 +18,7 @@ extension IngredientDataToDomain on IngredientData {
       netKcalPer100g: netKcalPer100g,
       brand: brand,
       barcode: barcode,
+      iconAssetPath: iconAssetPath,
       nutritionConfidence: nutritionConfidence,
       isReference: isReference == 1,
     );

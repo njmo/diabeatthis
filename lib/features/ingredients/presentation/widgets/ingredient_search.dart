@@ -21,6 +21,7 @@ import '../models/ingredient_barcode_scan_outcome.dart';
 import '../services/ingredient_barcode_scanner.dart';
 import '../services/ingredient_photo_camera.dart';
 import 'ingredient_barcode_scan_outcome_dialog.dart';
+import 'ingredient_icon.dart';
 import 'ingredient_photo_scan.dart';
 
 const int _ingredientSearchMaxLength = 120;
@@ -235,6 +236,7 @@ class IngredientSearch extends HookConsumerWidget {
                   name: ingredient.name,
                   brand: ingredient.brand,
                   kcalPer100g: ingredient.kcalPer100g,
+                  iconAssetPath: ingredient.iconAssetPath,
                   isReference: ingredient.isReference,
                   selected: selected,
                   onTap: () {
@@ -258,10 +260,12 @@ class IngredientSearchTile extends StatelessWidget {
   final String? brand;
   final double? kcalPer100g;
   final bool isReference;
+  final String? iconAssetPath;
   final bool selected;
   final VoidCallback onTap;
 
   const IngredientSearchTile({
+    this.iconAssetPath,
     required this.name,
     required this.brand,
     required this.kcalPer100g,
@@ -289,25 +293,27 @@ class IngredientSearchTile extends StatelessWidget {
         dense: true,
         contentPadding: const EdgeInsets.only(left: 12, right: 8),
         onTap: onTap,
-        leading: CircleAvatar(
-          backgroundColor: selected
-              ? colorScheme.secondary
-              : colorScheme.surfaceContainerHighest,
-          foregroundColor: selected
-              ? colorScheme.onSecondary
-              : colorScheme.onSurfaceVariant,
-          child: Icon(
-            isReference ? Icons.dinner_dining : Icons.restaurant,
-            size: 20,
-          ),
-        ),
-        title: Text(
-          name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-          ),
+        leading: IngredientIcon(assetPath: iconAssetPath),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
+            if (isReference) ...[
+              const SizedBox(width: 4),
+              Tooltip(
+                message: context.lang.ingredientReferenceBadge,
+                child: const Icon(Icons.restaurant_menu, size: 16),
+              ),
+            ],
+          ],
         ),
         subtitle: Text(
           '$brandLabel • $kcalLabel kcal / 100 g',

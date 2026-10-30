@@ -1,6 +1,8 @@
+import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../core/domain/model/carbs_label_mode.dart';
+import '../../../../../core/drift/database_impl.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../drafts/ingredient_draft.dart';
 import '../../drafts/ingredient_draft_validation.dart';
@@ -45,18 +47,28 @@ class UpdateIngredientDetailsUseCase {
       throw ArgumentError('Nutrition confidence must be between 0 and 1');
     }
 
-    await db.ingredientDao.updateIngredientDetails(
-      ingredientId: existing.id,
-      name: name,
-      carbsPer100g: existing.carbsPer100g,
-      fatPer100g: existing.fatPer100g,
-      fiberPer100g: fiberPer100g,
-      proteinPer100g: existing.proteinPer100g,
-      nutritionConfidence: existing.nutritionConfidence,
-      isReference: existing.isReference,
-      brand: existing.brand,
-      barcode: barcode,
-    );
+    await db.transaction(() async {
+      await db.ingredientDao.updateIngredientDetails(
+        ingredientId: existing.id,
+        name: name,
+        carbsPer100g: existing.carbsPer100g,
+        fatPer100g: existing.fatPer100g,
+        fiberPer100g: fiberPer100g,
+        proteinPer100g: existing.proteinPer100g,
+        nutritionConfidence: existing.nutritionConfidence,
+        isReference: existing.isReference,
+        brand: existing.brand,
+        barcode: barcode,
+      );
+      if (existing.iconAssetPath != null &&
+          existing.iconAssetPath != saved.iconAssetPath) {
+        await (db.update(
+          db.ingredient,
+        )..where((row) => row.id.equals(existing.id))).write(
+          IngredientCompanion(iconAssetPath: Value(existing.iconAssetPath)),
+        );
+      }
+    });
   }
 
   Future<void> updatePortionAmount({

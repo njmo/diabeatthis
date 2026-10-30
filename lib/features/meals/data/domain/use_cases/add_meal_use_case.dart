@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../common/l10n/language.dart';
@@ -7,6 +9,7 @@ import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../../ingredients/data/drafts/ingredient_draft_validation.dart';
+import '../../../../ingredients/data/icons/ingredient_icon_provider.dart';
 import '../../../../ingredients/data/persistence/insert_ingredient_draft.dart';
 import '../../../../portions/data/persistence/resolve_portion_selection.dart';
 import '../../drafts/meal_draft.dart';
@@ -30,17 +33,25 @@ class AddMealUseCase with Logging {
 
     final db = ref.read(databaseProvider);
 
-    return db.transaction(() async {
+    final icons = ref.read(ingredientIconServiceProvider);
+    final savedIngredients = <IngredientDraft, domain.Ingredient>{};
+    final result = await db.transaction(() async {
       logI('Adding ${draft.name}');
       final meal = await insertMealDraft(db, draft);
-      final savedIngredients = <IngredientDraft, domain.Ingredient>{};
       logI('Added ${meal.name}');
 
       for (final mealIngredient in draft.mealIngredients) {
         final ingredientDraft = mealIngredient.ingredient;
         final ingredient =
             savedIngredients[ingredientDraft] ??
-            await insertIngredientDraft(db, ingredientDraft);
+            await insertIngredientDraft(
+              db,
+              ingredientDraft.copyWith(
+                iconAssetPath:
+                    ingredientDraft.iconAssetPath ??
+                    icons.cached(ingredientDraft.name, ingredientDraft.brand),
+              ),
+            );
         savedIngredients[ingredientDraft] = ingredient;
         logI('Added ${ingredient.name}');
 
@@ -72,6 +83,20 @@ class AddMealUseCase with Logging {
 
       return meal;
     });
+    for (final ingredient in savedIngredients.values) {
+      if (ingredient.iconAssetPath == null) {
+        unawaited(
+          persistIngredientIcon(
+            db,
+            icons,
+            ingredient.id,
+            ingredient.name,
+            ingredient.brand,
+          ),
+        );
+      }
+    }
+    return result;
   }
 
   Future<void> _validateMealDraft(MealDraft draft) async {

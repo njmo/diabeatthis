@@ -2789,5 +2789,17 @@
   "foodIconWaffle": "Gofr",
   "foodIconWatermelon": "Arbuz",
   "foodIconWineGlass": "Kieliszek wina",
-  "foodIconBottleWithPoppingCork": "Butelka szampana"
+  "foodIconBottleWithPoppingCork": "Butelka szampana",
+  "ingredientChooseIcon": "Wybierz ikonę",
+  "ingredientSuggestIcon": "Dobierz przez AI",
+  "ingredientIconSuggestionFailed": "Nie udało się dobrać ikony. Możesz wybrać ją poniżej.",
+  "ingredientSearchIcons": "Szukaj ikon",
+  "ingredientIconOutputLimit": "AI przerwało odpowiedź z powodu limitu długości. Spróbuj ponownie.",
+  "ingredientIconInvalidResponse": "AI zwróciło nieprawidłową odpowiedź przy wyborze ikony. Spróbuj ponownie.",
+  "ingredientGenerateIcon": "Generuj przez AI",
+  "ingredientGeneratingIcon": "Generowanie obrazka…",
+  "ingredientUseGeneratedIcon": "Użyj obrazka",
+  "ingredientIconWithoutBackground": "Bez tła",
+  "ingredientIconBackgroundKept": "Nie udało się usunąć tła. Zachowano oryginalny obrazek.",
+  "ingredientIconsEmpty": "Brak pasujących ikon"
 }

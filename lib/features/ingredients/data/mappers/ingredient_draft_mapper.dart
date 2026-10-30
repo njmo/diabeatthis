@@ -24,6 +24,7 @@ extension DomainIngredientDraftMapper on domain.Ingredient {
       preparation: preparation,
       brand: brand,
       barcode: barcode,
+      iconAssetPath: iconAssetPath,
     );
   }
 }
@@ -49,6 +50,7 @@ extension IngredientDraftDomainMapper on IngredientDraft {
         preparation: ingredient.preparation,
         brand: ingredient.brand,
         barcode: ingredient.barcode,
+        iconAssetPath: ingredient.iconAssetPath,
       ),
     );
   }
@@ -66,6 +68,7 @@ extension IngredientDraftToCompanion on IngredientDraft {
         carbsLabelMode: d.Value(ingredient.carbsLabelMode.storageValue),
         brand: d.Value(ingredient.brand),
         barcode: d.Value(ingredient.barcode),
+        iconAssetPath: d.Value(ingredient.iconAssetPath),
         nutritionConfidence: d.Value(ingredient.nutritionConfidence),
         isReference: d.Value(ingredient.isReference ? 1 : 0),
       ),

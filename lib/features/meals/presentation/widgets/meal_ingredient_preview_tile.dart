@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../ingredients/data/icons/ingredient_icon_provider.dart';
+import '../../../ingredients/presentation/widgets/ingredient_icon.dart';
 import '../../../ingredients/presentation/widgets/ingredient_identity_text.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -23,6 +25,17 @@ class MealIngredientPreviewTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
     final portionInfo = _portionInfo(context, ref, draft);
+    final iconPath =
+        draft.ingredient.iconAssetPath ??
+        ref
+            .watch(
+              ingredientIconSuggestionProvider((
+                draft.ingredient.name,
+                draft.ingredient.brand,
+              )),
+            )
+            .asData
+            ?.value;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -33,11 +46,7 @@ class MealIngredientPreviewTile extends ConsumerWidget {
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.only(left: 12, right: 4),
-          leading: CircleAvatar(
-            backgroundColor: colorScheme.secondaryContainer,
-            foregroundColor: colorScheme.onSecondaryContainer,
-            child: const Icon(Icons.restaurant, size: 20),
-          ),
+          leading: IngredientIcon(assetPath: iconPath),
           title: IngredientIdentityText(
             name: draft.ingredient.name,
             brand: draft.ingredient.brand,

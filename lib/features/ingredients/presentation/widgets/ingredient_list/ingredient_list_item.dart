@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../common/l10n/language.dart';
 import '../../../../../core/domain/model/ingredient.dart';
+import '../ingredient_icon.dart';
 import '../ingredient_identity_text.dart';
 
 class IngredientListItem extends StatelessWidget {
@@ -48,6 +49,8 @@ class _IngredientListItemHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        IngredientIcon(assetPath: ingredient.iconAssetPath),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

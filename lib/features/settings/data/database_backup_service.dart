@@ -6,12 +6,16 @@ import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../common/storage/local_image_backup.dart';
+import '../../../common/storage/local_image_store.dart';
 import '../../../core/drift/database_impl.dart';
 import 'database_backup_result.dart';
 import 'database_backup_scope.dart';
 
 class DatabaseBackupService {
-  DatabaseBackupService(this._db);
+  DatabaseBackupService(this._db, {this.imageStore = const LocalImageStore()});
+
+  final LocalImageStore imageStore;
 
   static const int formatVersion = 1;
 
@@ -57,7 +61,14 @@ class DatabaseBackupService {
       rowCount += rows.length;
     }
 
+    final images = await LocalImageBackup(imageStore).exportImages(
+      (tables['ingredient'] ?? const [])
+          .map((row) => row['icon_asset_path'])
+          .whereType<String>(),
+    );
+
     return {
+      if (images.isNotEmpty) 'ingredientImages': images,
       'formatVersion': formatVersion,
       'schemaVersion': _db.schemaVersion,
       'scope': scope.fileToken,
@@ -117,18 +128,32 @@ class DatabaseBackupService {
       );
     }
 
+    final imageBackup = LocalImageBackup(imageStore);
+    final restoredImages = await imageBackup.restoreImages(
+      payload['ingredientImages'],
+    );
+    for (final row
+        in tableRows['ingredient'] ?? const <Map<String, Object?>>[]) {
+      final restored = restoredImages[row['icon_asset_path']];
+      if (restored != null) row['icon_asset_path'] = restored;
+    }
     var rowCount = 0;
-    await _withForeignKeysDisabled(() async {
-      await _clearForImport();
+    try {
+      await _withForeignKeysDisabled(() async {
+        await _clearForImport();
 
-      for (final tableName in _tableNamesForScope(scope)) {
-        final rows = tableRows[tableName] ?? const [];
-        for (final row in rows) {
-          await _insertRow(tableName, row);
+        for (final tableName in _tableNamesForScope(scope)) {
+          final rows = tableRows[tableName] ?? const [];
+          for (final row in rows) {
+            await _insertRow(tableName, row);
+          }
+          rowCount += rows.length;
         }
-        rowCount += rows.length;
-      }
-    });
+      });
+    } catch (_) {
+      await imageBackup.removeImages(restoredImages.values);
+      rethrow;
+    }
 
     return DatabaseBackupResult(
       scope: scope,

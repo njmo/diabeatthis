@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../common/nutrition/confidence_level.dart';
@@ -8,6 +10,7 @@ import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../drafts/ingredient_draft.dart';
+import '../icons/ingredient_icon_provider.dart';
 import '../models/ingredient_photo_search_result.dart';
 import '../persistence/insert_ingredient_draft.dart';
 
@@ -108,7 +111,22 @@ Future<domain.Ingredient> insertIngredient(
   Ref ref,
   IngredientDraft ingredient,
 ) async {
-  return insertIngredientDraft(ref.watch(databaseProvider), ingredient);
+  final db = ref.watch(databaseProvider);
+  final icons = ref.read(ingredientIconServiceProvider);
+  final saved = await insertIngredientDraft(
+    db,
+    ingredient.copyWith(
+      iconAssetPath:
+          ingredient.iconAssetPath ??
+          icons.cached(ingredient.name, ingredient.brand),
+    ),
+  );
+  if (saved.iconAssetPath == null) {
+    unawaited(
+      persistIngredientIcon(db, icons, saved.id, saved.name, saved.brand),
+    );
+  }
+  return saved;
 }
 
 @riverpod

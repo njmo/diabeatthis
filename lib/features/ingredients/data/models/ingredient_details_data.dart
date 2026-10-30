@@ -20,6 +20,7 @@ class Ingredient {
   String? preparation;
   String? brand;
   String? barcode;
+  String? iconAssetPath;
 
   Ingredient({
     required this.id,
@@ -38,6 +39,7 @@ class Ingredient {
     this.preparation,
     this.brand,
     this.barcode,
+    this.iconAssetPath,
   });
 }
 
