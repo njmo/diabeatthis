@@ -5,12 +5,16 @@ class ResponsiveMetricList extends StatelessWidget {
   final List<Widget> children;
   final int maxColumns;
   final double minimumWidth;
+  final double spacing;
+  final double runSpacing;
 
   const ResponsiveMetricList({
     super.key,
     required this.children,
     this.maxColumns = 3,
     this.minimumWidth = 125,
+    this.spacing = 16,
+    this.runSpacing = 20,
   });
 
   @override
@@ -19,13 +23,15 @@ class ResponsiveMetricList extends StatelessWidget {
       builder: (context, constraints) {
         final minWidth =
             minimumWidth * MediaQuery.textScalerOf(context).scale(14) / 14;
-        final columns = ((constraints.maxWidth + 16) / (minWidth + 16))
-            .floor()
-            .clamp(1, maxColumns);
-        final width = (constraints.maxWidth - 16 * (columns - 1)) / columns;
+        final columns =
+            ((constraints.maxWidth + spacing) / (minWidth + spacing))
+                .floor()
+                .clamp(1, maxColumns);
+        final width =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
         return Wrap(
-          spacing: 16,
-          runSpacing: 20,
+          spacing: spacing,
+          runSpacing: runSpacing,
           children: [
             for (final child in children) SizedBox(width: width, child: child),
           ],

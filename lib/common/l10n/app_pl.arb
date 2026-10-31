@@ -2829,5 +2829,8 @@
   },
   "ingredientEditAction": "Edytuj",
   "commonSave": "Zapisz",
-  "ingredientGiLabel": "Indeks glikemiczny"
+  "ingredientGiLabel": "Indeks glikemiczny",
+  "dashboardRegisterStress": "Zarejestruj stres",
+  "dashboardStartActivity": "Rozpocznij aktywność",
+  "dashboardRecordLowTreatment": "Zapisz dosłodzenie"
 }

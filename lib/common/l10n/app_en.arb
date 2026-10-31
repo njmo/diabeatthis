@@ -2389,5 +2389,8 @@
   },
   "ingredientEditAction": "Edit",
   "commonSave": "Save",
-  "ingredientGiLabel": "Glycemic index"
+  "ingredientGiLabel": "Glycemic index",
+  "dashboardRegisterStress": "Record stress",
+  "dashboardStartActivity": "Start activity",
+  "dashboardRecordLowTreatment": "Record low treatment"
 }

@@ -7,6 +7,7 @@ class AnchoredFabMenu extends HookWidget {
   final VoidCallback onToggle;
   final VoidCallback onDismiss;
   final List<Widget> actions;
+  final double menuWidth;
 
   const AnchoredFabMenu({
     super.key,
@@ -14,6 +15,7 @@ class AnchoredFabMenu extends HookWidget {
     required this.onToggle,
     required this.onDismiss,
     required this.actions,
+    this.menuWidth = 250,
   });
 
   @override
@@ -60,7 +62,9 @@ class AnchoredFabMenu extends HookWidget {
                 clipBehavior: Clip.antiAlias,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: 250,
+                    maxWidth: menuWidth
+                        .clamp(0, MediaQuery.sizeOf(context).width - 32)
+                        .toDouble(),
                     maxHeight: MediaQuery.sizeOf(context).height * 0.65,
                   ),
                   child: SingleChildScrollView(

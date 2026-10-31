@@ -8,6 +8,9 @@ class FabActionOption extends StatelessWidget {
     required this.onTap,
     this.enabled = true,
     this.width = 210,
+    this.tile = false,
+    this.horizontal = false,
+    this.accent,
   });
 
   final IconData icon;
@@ -15,6 +18,9 @@ class FabActionOption extends StatelessWidget {
   final VoidCallback onTap;
   final bool enabled;
   final double width;
+  final bool tile;
+  final bool horizontal;
+  final Color? accent;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +29,63 @@ class FabActionOption extends StatelessWidget {
     final foregroundColor = enabled
         ? theme.colorScheme.onSurface
         : theme.colorScheme.onSurface.withValues(alpha: 0.38);
+
+    if (tile) {
+      final color = enabled
+          ? accent ?? theme.colorScheme.primary
+          : foregroundColor;
+      return Semantics(
+        button: true,
+        enabled: enabled,
+        child: Material(
+          color: color.withValues(alpha: enabled ? 0.07 : 0.03),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(color: color.withValues(alpha: 0.18)),
+          ),
+          child: InkWell(
+            onTap: enabled ? onTap : null,
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              width: double.infinity,
+              constraints: BoxConstraints(minHeight: horizontal ? 56 : 80),
+              padding: const EdgeInsets.all(10),
+              child: horizontal
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(icon, size: 26, color: color),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            label,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: foregroundColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(icon, size: 26, color: color),
+                        const SizedBox(height: 6),
+                        Text(
+                          label,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: foregroundColor,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Material(
       color: Colors.transparent,
