@@ -7,8 +7,7 @@ import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../dashboard/presentation/utils/meal_status_dialog_result_handler.dart';
-import '../../../dashboard/presentation/widgets/meal_status_dialog.dart';
-import '../../../dashboard/presentation/widgets/meal_status_dialog_result.dart';
+import '../../../dashboard/presentation/utils/show_meal_status_dialog.dart';
 import '../../../dashboard/presentation/widgets/trailing_wait_after_bolus_status.dart';
 import '../../data/providers/meal_activation_guard_provider.dart';
 import '../../data/providers/meal_database_provider.dart';
@@ -45,10 +44,9 @@ class MealListToday extends ConsumerWidget {
                       );
                       return;
                     }
-                    final result = await showDialog<MealStatusDialogResult?>(
-                      barrierDismissible: true,
+                    final result = await showMealStatusDialog(
                       context: context,
-                      builder: (context) => MealStatusDialog(meal: meal),
+                      meal: meal,
                     );
                     if (result != null && context.mounted) {
                       await handleMealStatusDialogResult(

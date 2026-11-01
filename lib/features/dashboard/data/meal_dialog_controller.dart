@@ -1,5 +1,3 @@
-import '../../../common/l10n/language.dart';
-import '../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -44,17 +42,6 @@ class MealDialogController extends _$MealDialogController with Logging {
   MealDialogState build(int mId, MealDialogStep initialStep) {
     mealId = mId;
     return MealDialogState.initial(initialStep);
-  }
-
-  String waitTimeMessage(WaitSuggestion w) {
-    if (state.advice.source == 'manual') {
-      return lang.mealManualWaitInstruction(w.recommendedMinutes);
-    }
-    return lang.mealSuggestedWaitInstruction(
-      w.recommendedMinutes,
-      w.minMinutes,
-      w.maxMinutes,
-    );
   }
 
   Future<void> chooseEat({ManualMealDecision? manual}) async {
@@ -237,31 +224,6 @@ class MealDialogController extends _$MealDialogController with Logging {
       clearUnavailableReason: unavailableReason == null,
       clearActivationBlock: true,
     );
-  }
-
-  String? mealAdviceString() {
-    final carbsText = state.carbsGrams.ceil().toString();
-    final extendedCarbs = state.extendedCarbsGrams.ceil();
-    final extendedCarbsText = extendedCarbs > 0
-        ? '\n${formatExtendedCarbsInstruction(extendedCarbs, settings: state.advice.extendedCarbs.scheduleSettings)}'
-        : '';
-
-    switch (state.advice.decision) {
-      case MealDecision.eatNowBolusLater:
-        return lang.mealEatThenBolusInstruction(carbsText, extendedCarbsText);
-      case MealDecision.bolusAndEatNow:
-        return lang.mealBolusAndEatInstruction(carbsText, extendedCarbsText);
-      case MealDecision.bolusWaitThenEat:
-        return lang.mealBolusWaitEatInstruction(
-          carbsText,
-          waitTimeMessage(state.advice.wait!),
-          extendedCarbsText,
-        );
-      case null:
-        throw UnimplementedError();
-      case MealDecision.bolus:
-        throw UnimplementedError();
-    }
   }
 
   /// Returns false if the choice changed while its inputs were being checked.

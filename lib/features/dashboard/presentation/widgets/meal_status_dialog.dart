@@ -6,12 +6,18 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/manual_meal_decision.dart';
 import '../../../../common/widgets/ai_text_dialog.dart';
 import '../../../../common/widgets/manual_meal_decision_dialog.dart';
+import '../../../../common/widgets/meal_start/meal_advice_unavailable.dart';
+import '../../../../common/widgets/meal_start/meal_start_actions.dart';
+import '../../../../common/widgets/meal_start/meal_start_choice.dart';
+import '../../../../common/widgets/meal_start/meal_start_sheet.dart';
+import '../../../../common/widgets/meal_start/meal_start_summary.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../meal_summary/domain/utils/meal_add_on_status.dart';
 import '../../data/meal_dialog_controller.dart';
 import '../../data/meal_dialog_state.dart';
 import '../../data/utils/meal_advisor.dart';
+import '../utils/meal_status_dialog_result_handler.dart';
 import 'meal_add_on_mode_dialog.dart';
 import 'meal_advice_loading.dart';
 import 'meal_status_dialog_result.dart';
@@ -33,6 +39,8 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
       final manual = await showDialog<ManualMealDecision>(
         context: context,
         builder: (_) => ManualMealDecisionDialog(
+          showAllDecisions: true,
+          preservesMealValues: s.advice.decision != null,
           initialValue: ManualMealDecision(
             decision: s.advice.decision ?? MealDecision.bolusAndEatNow,
             waitMinutes: s.advice.wait?.recommendedMinutes ?? 0,
@@ -51,73 +59,26 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
       }
       switch (s.step) {
         case MealDialogStep.choose:
-          return Padding(
-            padding: EdgeInsetsGeometry.directional(top: 10),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: EdgeInsetsGeometry.all(10),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.rectangle,
-                          borderRadius: BorderRadius.all(Radius.circular(15)),
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
-                        ),
-                        child: InkWell(
-                          onTap: c.chooseEat,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.restaurant_outlined, size: 60),
-                              Text(context.lang.mealStatusEatChoice),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 20),
-                    Expanded(
-                      child: Container(
-                        padding: EdgeInsetsGeometry.all(10),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.rectangle,
-                          borderRadius: BorderRadius.all(Radius.circular(15)),
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
-                        ),
-                        child: InkWell(
-                          onTap: c.chooseSkip,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.no_meals, size: 60),
-                              Text(context.lang.mealStatusSkipChoice),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (s.activationBlockedByMealName != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    context.lang.mealStatusActivationBlocked(
-                      s.activationBlockedByMealName!,
-                    ),
-                    style: const TextStyle(color: Colors.red),
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                context.lang.mealStartChoicePrompt,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              MealStartChoice(onEat: c.chooseEat, onSkip: c.chooseSkip),
+              if (s.activationBlockedByMealName != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  context.lang.mealStatusActivationBlocked(
+                    s.activationBlockedByMealName!,
                   ),
-                ],
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ],
-            ),
+            ],
           );
         case MealDialogStep.confirm:
           return Column(
@@ -139,17 +100,16 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
               if (s.skipMeal)
                 Text(context.lang.mealStatusConfirmSkipMessage)
               else if (s.advice.decision != null)
-                Text(
-                  s.advice.source == 'manual'
-                      ? context.lang.mealManualDecisionDetail(
-                          c.mealAdviceString() ?? '',
-                        )
-                      : context.lang.mealStatusAdviceToApply(
-                          c.mealAdviceString() ?? '',
-                        ),
+                MealStartSummary(
+                  advice: s.advice,
+                  carbsGrams: s.carbsGrams,
+                  extendedCarbsGrams: s.extendedCarbsGrams,
                 )
               else if (!s.preparationFailed)
-                Text(context.lang.mealAdviceFreshDataRequirements),
+                MealAdviceUnavailable(
+                  reason: s.unavailableReason,
+                  onRetry: saving.value ? null : c.chooseEat,
+                ),
             ],
           );
         case MealDialogStep.confirmEaten:
@@ -244,7 +204,22 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
                         }
                       }
                     },
-              child: Text(_buttonText(s.advice.decision)),
+              style: getStep() == MealDialogStep.choose
+                  ? ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      minimumSize: const Size.fromHeight(48),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                    )
+                  : null,
+              child: Text(
+                s.skipMeal
+                    ? context.lang.mealStatusConfirm
+                    : _buttonText(s.advice.decision),
+              ),
             ),
           ];
         case MealDialogStep.confirmEaten:
@@ -334,6 +309,59 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
             ),
           ];
       }
+    }
+
+    if (getStep() == MealDialogStep.choose) {
+      final confirming =
+          s.step == MealDialogStep.confirm && !s.isPreparingAdvice;
+      final canEdit = confirming && !s.skipMeal;
+      final opensAaps =
+          canEdit &&
+          s.advice.decision != null &&
+          shouldCreateAapsSuggestionForMealStatus(
+            s.advice.decision!.acceptedStatus,
+            extendedCarbsGrams: s.extendedCarbsGrams.ceil(),
+          );
+      Future<void> close() async {
+        saving.value = true;
+        if (confirming && !s.skipMeal) await c.cancelAllMealNotifications();
+        if (context.mounted) Navigator.of(context).pop();
+      }
+
+      Future<void> backToChoice() async {
+        saving.value = true;
+        if (!s.skipMeal) await c.cancelPendingAdviceReminder();
+        if (!context.mounted) return;
+        c.back();
+        saving.value = false;
+      }
+
+      return PopScope(
+        canPop: !saving.value,
+        child: MealStartSheet(
+          title: s.step == MealDialogStep.choose
+              ? context.lang.mealStartChoiceTitle
+              : meal.name,
+          subtitle: s.step == MealDialogStep.choose || s.skipMeal
+              ? meal.name
+              : s.advice.source == 'manual'
+              ? context.lang.uiManualDecision
+              : context.lang.mealStartAdvisorProposal,
+          onBack: confirming && !saving.value ? backToChoice : null,
+          onClose: saving.value ? null : close,
+          body: AbsorbPointer(absorbing: saving.value, child: content()),
+          actions: confirming
+              ? MealStartActions(
+                  confirmAction: actions().last,
+                  cancelAction: actions().first,
+                  showDecisionChange: canEdit,
+                  hasAdvice: s.advice.decision != null,
+                  opensAaps: opensAaps,
+                  onChangeDecision: saving.value ? null : chooseManual,
+                )
+              : const SizedBox.shrink(),
+        ),
+      );
     }
 
     return PopScope(

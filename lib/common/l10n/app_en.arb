@@ -2466,5 +2466,54 @@
   "settingsAiImageProviderInherit": "Same as analyses",
   "settingsAiImagesDisabled": "Image generation disabled",
   "settingsAiImagesUnavailable": "Same as analyses — unavailable",
-  "settingsAiImagesAlternative": "This provider cannot generate images. Choose another to enable them."
+  "settingsAiImagesAlternative": "This provider cannot generate images. Choose another to enable them.",
+  "mealStartChoiceTitle": "This meal?",
+  "mealStartChoicePrompt": "Choose what you want to do",
+  "mealStartAdvisorProposal": "Meal Advisor suggestion",
+  "mealStartPlanLabel": "Your plan",
+  "mealStartValuesLabel": "Meal values",
+  "mealStartEcarbsLabel": "eCarbs",
+  "mealStartScheduleLabel": "eCarbs schedule",
+  "mealStartNoWaiting": "No waiting",
+  "mealStartWaitAfterBolus": "{minutes} min after the bolus is recorded",
+  "mealStartEatThenBolus": "Eat first, then bolus",
+  "mealStartBolusAndEat": "Bolus and eat right away",
+  "mealStartBolusWaitEat": "Bolus first, then eat",
+  "mealStartBolusOnly": "Bolus after eating",
+  "mealStartGrams": "{grams} g",
+  "mealStartChangeDecision": "Change decision",
+  "mealStartApplyChange": "Apply change",
+  "mealStartValuesUnchanged": "Carbs and the eCarbs schedule stay unchanged.",
+  "mealStartAapsHandoff": "Accepting opens AAPS. The calculated values will be in a notification.",
+  "@mealStartWaitAfterBolus": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@mealStartGrams": {
+    "placeholders": {
+      "grams": {
+        "type": "int"
+      }
+    }
+  },
+  "mealAdviceUnavailableDetail": "Current data for automatic advice is unavailable.\n\n{reason}",
+  "mealAdviceInsufficientReadings": "The history does not contain three consecutive CGM readings.",
+  "mealAdviceStaleReadings": "The latest available CGM reading is at least 10 minutes old.",
+  "mealAdviceDiscontinuousReadings": "The latest three CGM readings do not form a continuous sequence.",
+  "mealAdviceHistoryUnavailable": "The data history could not be loaded. Please try again.",
+  "mealAdviceMissingDeviceStatus": "No IOB/COB data was found in the current readings or history.",
+  "mealAdviceStaleDeviceStatus": "The IOB/COB data is not current. A reading less than 6 minutes old is required.",
+  "mealAdviceIncompleteDeviceStatus": "The latest device status is missing IOB or COB.",
+  "mealAdviceInvalidDeviceStatus": "The latest device status contains invalid data required for advice.",
+  "mealAdviceRetry": "Check again",
+  "@mealAdviceUnavailableDetail": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  }
 }

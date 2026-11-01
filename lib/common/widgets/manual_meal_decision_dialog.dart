@@ -7,8 +7,12 @@ import 'manual_meal_decision_fields.dart';
 
 class ManualMealDecisionDialog extends HookWidget {
   final ManualMealDecision initialValue;
+  final bool preservesMealValues;
+  final bool showAllDecisions;
   const ManualMealDecisionDialog({
     super.key,
+    this.preservesMealValues = false,
+    this.showAllDecisions = false,
     this.initialValue = const ManualMealDecision(),
   });
 
@@ -17,13 +21,30 @@ class ManualMealDecisionDialog extends HookWidget {
     final formKey = useMemoized(GlobalKey<FormState>.new);
     final value = useState(initialValue);
     return AlertDialog(
-      title: Text(context.lang.uiChooseManually),
+      title: Text(
+        preservesMealValues
+            ? context.lang.mealStartChangeDecision
+            : context.lang.uiChooseManually,
+      ),
       content: SingleChildScrollView(
         child: Form(
           key: formKey,
-          child: ManualMealDecisionFields(
-            value: value.value,
-            onChanged: (next) => value.value = next,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ManualMealDecisionFields(
+                value: value.value,
+                onChanged: (next) => value.value = next,
+                showAllDecisions: showAllDecisions,
+              ),
+              if (preservesMealValues) ...[
+                const SizedBox(height: 12),
+                Text(
+                  context.lang.mealStartValuesUnchanged,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ],
           ),
         ),
       ),
@@ -38,7 +59,11 @@ class ManualMealDecisionDialog extends HookWidget {
               Navigator.of(context).pop(value.value);
             }
           },
-          child: Text(context.lang.addIngredientNext),
+          child: Text(
+            preservesMealValues
+                ? context.lang.mealStartApplyChange
+                : context.lang.addIngredientNext,
+          ),
         ),
       ],
     );

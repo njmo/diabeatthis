@@ -20,9 +20,8 @@ import '../../../meals/data/providers/meal_activation_guard_provider.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../utils/meal_status_dialog_result_handler.dart';
+import '../utils/show_meal_status_dialog.dart';
 import 'dashboard_activity_sheet.dart';
-import 'meal_status_dialog.dart';
-import 'meal_status_dialog_result.dart';
 
 class DashboardFAB extends HookConsumerWidget with Logging {
   const DashboardFAB({super.key});
@@ -96,10 +95,9 @@ class DashboardFAB extends HookConsumerWidget with Logging {
                       return;
                     }
 
-                    final result = await showDialog<MealStatusDialogResult?>(
-                      barrierDismissible: true,
+                    final result = await showMealStatusDialog(
                       context: context,
-                      builder: (context) => MealStatusDialog(meal: addedMeal),
+                      meal: addedMeal,
                     );
                     if (result != null && context.mounted) {
                       await handleMealStatusDialogResult(
