@@ -19,6 +19,7 @@ import '../../../../core/logger/logger.dart';
 import '../../data/models/nightscout_settings_draft.dart';
 import '../../data/settings_storage_keys.dart';
 import '../controllers/nightscout_settings_controller.dart';
+import '../widgets/ai_settings_section.dart';
 import '../widgets/application_language_selector.dart';
 import '../widgets/application_theme_settings_section.dart';
 import '../widgets/data_source_settings_section.dart';
@@ -233,6 +234,8 @@ class SettingsPage extends HookConsumerWidget with Logging {
                     ),
                     const SizedBox(height: 16),
                     const MealAdvisorSettingsSection(),
+                    const SizedBox(height: 16),
+                    const AiSettingsSection(),
                     const SizedBox(height: 16),
                     const DatabaseSettingsSection(),
                   ],

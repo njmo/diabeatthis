@@ -84,16 +84,21 @@ class AddMealUseCase with Logging {
       return meal;
     });
     for (final ingredient in savedIngredients.values) {
-      if (ingredient.iconAssetPath == null) {
-        unawaited(
-          persistIngredientIcon(
-            db,
-            icons,
-            ingredient.id,
-            ingredient.name,
-            ingredient.brand,
-          ),
-        );
+      if (ingredient.iconAssetPath == null && ref.mounted) {
+        try {
+          final currentIcons = ref.read(ingredientIconServiceProvider);
+          unawaited(
+            persistIngredientIcon(
+              db,
+              currentIcons,
+              ingredient.id,
+              ingredient.name,
+              ingredient.brand,
+            ),
+          );
+        } catch (_) {
+          // Optional classification cannot fail a completed meal save.
+        }
       }
     }
     return result;

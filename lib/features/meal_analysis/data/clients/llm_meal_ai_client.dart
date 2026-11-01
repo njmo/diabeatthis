@@ -1,5 +1,6 @@
 import '../../../../core/llm/llm_output_limit_exception.dart';
 import '../../../../core/llm/local_llm_client.dart';
+import '../../../../core/llm/model_identified_llm_client.dart';
 import '../../domain/models/meal_ai_invalid_response.dart';
 import '../../domain/models/meal_dml_document.dart';
 import '../../domain/services/meal_ai_client.dart';
@@ -7,12 +8,15 @@ import '../prompts/meal_ai_prompt.dart';
 
 class LlmMealAiClient implements MealAiClient {
   final LocalLlmClient transport;
+  final String _modelId;
   @override
-  final String modelId;
+  String get modelId => transport is ModelIdentifiedLlmClient
+      ? (transport as ModelIdentifiedLlmClient).modelId
+      : _modelId;
   final Duration timeout;
   const LlmMealAiClient({
     required this.transport,
-    required this.modelId,
+    required this._modelId,
     this.timeout = const Duration(seconds: 60),
   });
   @override

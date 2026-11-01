@@ -284,6 +284,18 @@ The project is focused on building a practical MVP for the parent + child use ca
 
 ---
 
+## AI architecture
+
+AI features keep their existing flow: widget/controller → feature use case → domain client interface → data adapter → shared `AiService` interface. Meal/day use cases still build and validate analysis results; provider selection does not move that logic into the UI or the shared service.
+
+`ConfiguredAiService` implements `AiService` by composing the configured text and image clients. Small adapters connect existing `LocalLlmClient` and `AiImageClient` ports to this service. `AiClientFactory` is the only production composition point for Firebase/OpenAI transports. The settings connection test also uses the shared service, with a short synthetic request and the unsaved draft configuration.
+
+`AiSettingsController` owns loaded settings, validation and state publication. `SaveAiSettingsUseCase` handles persistence and restores the previous API key if settings cannot be saved; `TestAiConnectionUseCase` performs and validates the connection test. Widgets keep only draft fields and transient presentation state. Credentials remain in the secure device store, separately from ordinary preferences.
+
+Analyses and image generation have explicit routes. Images can inherit a capable analysis provider, use an explicitly selected alternative, or remain disabled. The capability catalog controls available choices; the transport factory enforces the same capability and enabled-state checks. No request falls back to another provider after an error. Each running request retains its settings snapshot; subsequent actions resolve the current providers.
+
+---
+
 ## Contributing
 
 DiaBeatThis is an open, mission-driven project. Contributions are welcome from:

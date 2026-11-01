@@ -121,10 +121,21 @@ Future<domain.Ingredient> insertIngredient(
           icons.cached(ingredient.name, ingredient.brand),
     ),
   );
-  if (saved.iconAssetPath == null) {
-    unawaited(
-      persistIngredientIcon(db, icons, saved.id, saved.name, saved.brand),
-    );
+  if (saved.iconAssetPath == null && ref.mounted) {
+    try {
+      final currentIcons = ref.read(ingredientIconServiceProvider);
+      unawaited(
+        persistIngredientIcon(
+          db,
+          currentIcons,
+          saved.id,
+          saved.name,
+          saved.brand,
+        ),
+      );
+    } catch (_) {
+      // Optional classification cannot fail a completed ingredient save.
+    }
   }
   return saved;
 }

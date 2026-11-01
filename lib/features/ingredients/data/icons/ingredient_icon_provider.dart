@@ -3,22 +3,15 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/ai/ai_client_providers.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../../../core/drift/providers/database_provider.dart';
-import '../../../../core/llm/analysis_llm_provider.dart';
-import '../../../../core/llm/firebase_ai_llm_client.dart';
 import '../../../../core/llm/local_llm_client.dart';
 import '../drafts/ingredient_draft.dart';
 import 'ingredient_icon_service.dart';
 
 final ingredientIconClientProvider = Provider<LocalLlmClient>(
-  (ref) => const FirebaseAiLlmClient(
-    modelName: analysisFirebaseModel,
-    gateway: FirebaseAiGenerateContentGateway(
-      maxOutputTokens: 64,
-      thinkingBudget: 0,
-    ),
-  ),
+  (ref) => ref.watch(aiIconSuggestionClientProvider),
 );
 
 final ingredientIconServiceProvider = Provider<IngredientIconService>(
@@ -44,9 +37,9 @@ void prefetchIngredientIcon(Ref ref, IngredientDraft draft) {
       try {
         final path = await service.suggest(draft.name, draft.brand);
         if (path == null || !ref.mounted) return;
-        await persistIngredientIcon(
+        await persistIngredientIconPath(
           ref.read(databaseProvider),
-          service,
+          path,
           id,
           draft.name,
           draft.brand,
@@ -68,15 +61,25 @@ Future<void> persistIngredientIcon(
   try {
     final path = await service.suggest(name, brand);
     if (path == null) return;
-    await (db.update(db.ingredient)..where(
-          (row) =>
-              row.id.equals(id) &
-              row.name.equals(name) &
-              row.iconAssetPath.isNull() &
-              (brand == null ? row.brand.isNull() : row.brand.equals(brand)),
-        ))
-        .write(IngredientCompanion(iconAssetPath: Value(path)));
+    await persistIngredientIconPath(db, path, id, name, brand);
   } catch (_) {
     // A late result cannot break saving or overwrite a changed ingredient.
   }
+}
+
+Future<void> persistIngredientIconPath(
+  DatabaseImpl db,
+  String path,
+  int id,
+  String name,
+  String? brand,
+) async {
+  await (db.update(db.ingredient)..where(
+        (row) =>
+            row.id.equals(id) &
+            row.name.equals(name) &
+            row.iconAssetPath.isNull() &
+            (brand == null ? row.brand.isNull() : row.brand.equals(brand)),
+      ))
+      .write(IngredientCompanion(iconAssetPath: Value(path)));
 }

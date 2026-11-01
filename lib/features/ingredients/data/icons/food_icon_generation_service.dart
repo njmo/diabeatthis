@@ -2,19 +2,16 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:firebase_ai/firebase_ai.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../common/ai/unavailable_ai_image_client.dart';
 import '../../../../common/images/image_background_remover.dart';
 import '../../../../common/storage/local_image_store.dart';
-import '../../../../core/llm/firebase_ai_llm_client.dart';
 import 'food_icon_generation_result.dart';
-
-const foodIconGenerationModel = 'gemini-3.1-flash-image';
 
 class FoodIconGenerationService {
   const FoodIconGenerationService({
-    this.generate = generateFoodIconImage,
+    this.generate = unavailableAiImageGeneration,
     this.directory = getApplicationSupportDirectory,
     this.backgroundRemover = const ImageBackgroundRemover(),
   });
@@ -70,27 +67,6 @@ class FoodIconGenerationService {
       originalFile: original?.file,
       originalPath: original?.path,
     );
-  }
-}
-
-Future<Uint8List> generateFoodIconImage(String prompt) async {
-  final model = FirebaseAI.googleAI().generativeModel(
-    model: foodIconGenerationModel,
-    generationConfig: GenerationConfig(
-      responseModalities: [ResponseModalities.image],
-      imageConfig: const ImageConfig(
-        aspectRatio: ImageAspectRatio.square1x1,
-        imageSize: ImageSize.size512,
-      ),
-    ),
-  );
-  try {
-    final response = await model.generateContent([Content.text(prompt)]);
-    final image = response.inlineDataParts.firstOrNull;
-    if (image == null) throw const FormatException('AI returned no image');
-    return image.bytes;
-  } on FirebaseAIException catch (error) {
-    throw firebaseAiRequestException(error);
   }
 }
 

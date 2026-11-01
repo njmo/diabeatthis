@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/ai/ai_settings_controller.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/utils/normalize_search_text.dart';
 import '../../../../common/widgets/action_choice_card.dart';
@@ -91,6 +92,8 @@ class IngredientIconPickerState extends ConsumerState<IngredientIconPicker> {
       return query.split(RegExp(r'\s+')).every(searchText.contains);
     }).toList();
     final theme = Theme.of(context);
+    final aiSettings = ref.watch(aiSettingsControllerProvider);
+    final canGenerate = aiSettings.asData?.value.canGenerateImages ?? true;
     return SafeArea(
       child: CustomScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -146,13 +149,17 @@ class IngredientIconPickerState extends ConsumerState<IngredientIconPicker> {
                         loading: isLoading,
                         onPressed: isLoading ? null : suggest,
                       ),
-                      ActionChoiceCard(
-                        label: context.lang.ingredientGenerateIcon,
-                        icon: Icons.add_photo_alternate_outlined,
-                        onPressed: isLoading || widget.name.trim().isEmpty
-                            ? null
-                            : generate,
-                      ),
+                      if (canGenerate)
+                        ActionChoiceCard(
+                          label: context.lang.ingredientGenerateIcon,
+                          icon: Icons.add_photo_alternate_outlined,
+                          onPressed:
+                              !canGenerate ||
+                                  isLoading ||
+                                  widget.name.trim().isEmpty
+                              ? null
+                              : generate,
+                        ),
                     ],
                   ),
                   if (failed)

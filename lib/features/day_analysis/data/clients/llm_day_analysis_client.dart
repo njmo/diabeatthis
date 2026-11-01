@@ -1,5 +1,6 @@
 import '../../../../core/llm/llm_output_limit_exception.dart';
 import '../../../../core/llm/local_llm_client.dart';
+import '../../../../core/llm/model_identified_llm_client.dart';
 import '../../domain/models/day_analysis_invalid_response.dart';
 import '../../domain/models/day_analysis_response.dart';
 import '../../domain/models/day_dml_document.dart';
@@ -9,13 +10,16 @@ import '../prompts/day_analysis_prompt.dart';
 /// Reuses the existing text transport; no Firebase or local-engine API leaks out.
 class LlmDayAnalysisClient implements DayAnalysisClient {
   final LocalLlmClient transport;
+  final String _modelId;
   @override
-  final String modelId;
+  String get modelId => transport is ModelIdentifiedLlmClient
+      ? (transport as ModelIdentifiedLlmClient).modelId
+      : _modelId;
   final Duration timeout;
 
   const LlmDayAnalysisClient({
     required this.transport,
-    required this.modelId,
+    required this._modelId,
     this.timeout = const Duration(seconds: 60),
   });
 
