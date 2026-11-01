@@ -25,6 +25,7 @@ part 'low_treatment_context_controller.g.dart';
 class LowTreatmentContextController extends _$LowTreatmentContextController {
   LowTreatmentContextController({this.historicalAt});
   final DateTime? historicalAt;
+  MealIngredientsDraft? quickIngredient;
   late AddMealUseCase _addMealUseCase;
   late AddLowTreatmentContextEntryUseCase _addContextUseCase;
 
@@ -35,6 +36,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
 
     if (historicalAt != null) {
       return LowTreatmentSheetState(
+        reasonAutoSelected: false,
         contextDraft: LowTreatmentContextDraft(
           meal: MealDraft(
             name: '',
@@ -150,7 +152,9 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
     }
     final contextDraft = current.contextDraft.copyWith(reason: reason);
 
-    state = AsyncData(current.copyWith(contextDraft: contextDraft));
+    state = AsyncData(
+      current.copyWith(contextDraft: contextDraft, reasonAutoSelected: false),
+    );
   }
 
   void switchRelatedContext() {
@@ -218,6 +222,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
   }
 
   void clearMealIngredients() {
+    quickIngredient = null;
     final current = state.value;
     if (current == null) {
       return;
@@ -231,19 +236,32 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
 
   void setQuickLowTreatmentItem(
     QuickLowTreatmentItem item, [
-    int quantity = 1,
+    double quantity = 1,
   ]) {
     final current = state.value;
     if (current == null) {
       return;
     }
+    final replacement = item.toMealIngredientDraft(quantity: quantity);
+    final previous = quickIngredient;
+    quickIngredient = replacement;
     final contextDraft = _updateDraftMeal((meal) {
-      return meal.copyWith(
-        mealIngredients: [item.toMealIngredientDraft(quantity: quantity)],
-      );
+      final entries = [...meal.mealIngredients];
+      final index = entries.indexWhere((entry) => identical(entry, previous));
+      if (index < 0) {
+        entries.insert(0, replacement);
+      } else {
+        entries[index] = replacement;
+      }
+      return meal.copyWith(mealIngredients: entries);
     });
-
     state = AsyncData(current.copyWith(contextDraft: contextDraft));
+  }
+
+  void clearQuickIngredient() {
+    final previous = quickIngredient;
+    if (previous != null) removeMealIngredient(previous);
+    quickIngredient = null;
   }
 
   void updateMealIngredient(

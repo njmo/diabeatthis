@@ -17,24 +17,18 @@ class LowTreatmentSuggestionSummary extends StatelessWidget {
     final lang = context.lang;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final hasSuggestion = suggestedCarbs > 0;
-
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: hasSuggestion
-            ? colorScheme.tertiaryContainer
-            : colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
+        color: colorScheme.tertiaryContainer,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           children: [
             Icon(
-              Icons.local_drink_outlined,
-              color: hasSuggestion
-                  ? colorScheme.onTertiaryContainer
-                  : colorScheme.onSurfaceVariant,
+              Icons.local_drink_rounded,
+              color: colorScheme.onTertiaryContainer,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -42,19 +36,15 @@ class LowTreatmentSuggestionSummary extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    hasSuggestion
-                        ? lang.lowTreatmentAapsSuggestion(
-                            _formatCarbs(suggestedCarbs),
-                          )
-                        : lang.lowTreatmentNoAapsSuggestion,
+                    lang.lowTreatmentAapsSuggestion(
+                      _formatCarbs(suggestedCarbs),
+                    ),
                     style: theme.textTheme.titleSmall?.copyWith(
-                      color: hasSuggestion
-                          ? colorScheme.onTertiaryContainer
-                          : colorScheme.onSurfaceVariant,
+                      color: colorScheme.onTertiaryContainer,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  if (hasSuggestion && suggestedWithinMinutes > 0) ...[
+                  if (suggestedWithinMinutes > 0) ...[
                     const SizedBox(height: 2),
                     Text(
                       lang.lowTreatmentSuggestedWithin(suggestedWithinMinutes),

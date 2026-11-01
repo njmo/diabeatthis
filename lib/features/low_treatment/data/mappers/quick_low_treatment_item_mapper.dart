@@ -6,7 +6,7 @@ import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/mappers/portion_draft_mapper.dart';
 
 extension QuickLowTreatmentItemMealDraftMapper on QuickLowTreatmentItem {
-  MealIngredientsDraft toMealIngredientDraft({int quantity = 1}) {
+  MealIngredientsDraft toMealIngredientDraft({double quantity = 1}) {
     return MealIngredientsDraft(
       ingredient: ingredient.toDraft(),
       ingredientPortion: IngredientPortionDraft(

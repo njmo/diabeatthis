@@ -665,9 +665,7 @@
   "lowTreatmentReasonManual": "Ręcznie",
   "lowTreatmentReasonOther": "Inny",
   "lowTreatmentAapsSuggestion": "Sugestia AAPS: {carbs} g",
-  "lowTreatmentNoAapsSuggestion": "Brak aktywnej sugestii AAPS",
   "lowTreatmentSuggestedWithin": "W ciągu {minutes} min",
-  "lowTreatmentNoIngredients": "Nie dodano jeszcze składników.",
   "quickLowTreatmentItemsTitle": "Szybkie dosłodzenia",
   "quickLowTreatmentSaveError": "Nie udało się zapisać szybkiego dosłodzenia.",
   "quickLowTreatmentAdd": "Dodaj szybkie dosłodzenie",
@@ -2832,5 +2830,40 @@
   "ingredientGiLabel": "Indeks glikemiczny",
   "dashboardRegisterStress": "Zarejestruj stres",
   "dashboardStartActivity": "Rozpocznij aktywność",
-  "dashboardRecordLowTreatment": "Zapisz dosłodzenie"
+  "dashboardRecordLowTreatment": "Zapisz dosłodzenie",
+  "lowTreatmentRecordTitle": "Zapisz dosłodzenie",
+  "lowTreatmentQuickChoice": "Szybki wybór",
+  "lowTreatmentAddShortcut": "Dodaj skrót",
+  "lowTreatmentAddIngredient": "Dodaj składnik",
+  "lowTreatmentRelationTitle": "Powiązanie",
+  "lowTreatmentActivity": "Aktywność",
+  "lowTreatmentMeal": "Posiłek",
+  "lowTreatmentAutomatic": "Automatycznie",
+  "lowTreatmentManual": "Wybrane ręcznie",
+  "quickLowTreatmentDecrease": "Zmniejsz ilość",
+  "quickLowTreatmentIncrease": "Zwiększ ilość",
+  "lowTreatmentRemoveQuickChoice": "Usuń szybki wybór z wpisu",
+  "lowTreatmentLinkAction": "Powiąż",
+  "lowTreatmentContextSection": "Kontekst",
+  "lowTreatmentReasonShort": "Powód",
+  "lowTreatmentCoverageMet": "Sugestia pokryta",
+  "lowTreatmentCoverageBelow": "Poniżej sugestii o {carbs} g",
+  "@lowTreatmentCoverageBelow": {
+    "placeholders": {
+      "carbs": {
+        "type": "String"
+      }
+    }
+  },
+  "lowTreatmentCoverageAbove": "Ponad sugestię o {carbs} g",
+  "@lowTreatmentCoverageAbove": {
+    "placeholders": {
+      "carbs": {
+        "type": "String"
+      }
+    }
+  },
+  "lowTreatmentCheckBolus": "Sprawdź w AAPS, czy potrzebny jest bolus.",
+  "lowTreatmentAmountSection": "Ilość",
+  "lowTreatmentAddAnotherIngredient": "Dodaj kolejny składnik"
 }

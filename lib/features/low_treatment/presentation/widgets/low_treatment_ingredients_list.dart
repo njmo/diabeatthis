@@ -1,46 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../../common/l10n/language.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../../meals/presentation/widgets/meal_ingredient_preview_tile.dart';
 import '../controllers/low_treatment_context_controller.dart';
 
 class LowTreatmentIngredientsList extends ConsumerWidget {
-  const LowTreatmentIngredientsList({super.key});
+  const LowTreatmentIngredientsList({super.key, required this.ingredients});
+
+  final List<MealIngredientsDraft> ingredients;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ingredients = ref.watch(
-      lowTreatmentContextControllerProvider.select(
-        (state) =>
-            state.whenOrNull(data: (value) => value.mealIngredients) ??
-            const <MealIngredientsDraft>[],
-      ),
-    );
     final controller = ref.read(lowTreatmentContextControllerProvider.notifier);
-
-    if (ingredients.isEmpty) {
-      final theme = Theme.of(context);
-
-      return DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.outlineVariant),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
-            context.lang.lowTreatmentNoIngredients,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      );
-    }
 
     return Column(
       children: [

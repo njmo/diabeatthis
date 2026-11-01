@@ -9,7 +9,9 @@ class TimelineRelationPicker extends HookWidget {
     super.key,
     required this.occurredAt,
     required this.load,
+    this.initialKind,
   });
+  final TimelineRelationKind? initialKind;
   final DateTime occurredAt;
   final Future<List<TimelineRelation>> Function(DateTime) load;
 
@@ -17,6 +19,7 @@ class TimelineRelationPicker extends HookWidget {
   Widget build(BuildContext context) {
     final day = useState(DateUtils.dateOnly(occurredAt));
     final retry = useState(0);
+    final kind = useState(initialKind);
     final future = useMemoized(() => load(day.value), [day.value, retry.value]);
     final entries = useFuture(future);
     return SafeArea(
@@ -32,6 +35,24 @@ class TimelineRelationPicker extends HookWidget {
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
+            if (initialKind != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SegmentedButton<TimelineRelationKind>(
+                  segments: [
+                    ButtonSegment(
+                      value: TimelineRelationKind.activity,
+                      label: Text(context.lang.lowTreatmentActivity),
+                    ),
+                    ButtonSegment(
+                      value: TimelineRelationKind.meal,
+                      label: Text(context.lang.lowTreatmentMeal),
+                    ),
+                  ],
+                  selected: {kind.value!},
+                  onSelectionChanged: (values) => kind.value = values.single,
+                ),
+              ),
             TextButton.icon(
               icon: const Icon(Icons.calendar_today),
               label: Text(
@@ -58,11 +79,18 @@ class TimelineRelationPicker extends HookWidget {
               Expanded(
                 child: ListView(
                   children: [
-                    if (entries.data!.isEmpty)
+                    if (entries.data!
+                        .where(
+                          (entry) =>
+                              kind.value == null || entry.kind == kind.value,
+                        )
+                        .isEmpty)
                       ListTile(
                         title: Text(context.lang.lowTreatmentRelationEmpty),
                       ),
-                    for (final entry in entries.data!)
+                    for (final entry in entries.data!.where(
+                      (entry) => kind.value == null || entry.kind == kind.value,
+                    ))
                       ListTile(
                         leading: Icon(
                           entry.kind == TimelineRelationKind.activity

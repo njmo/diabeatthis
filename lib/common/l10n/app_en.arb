@@ -537,9 +537,7 @@
   "lowTreatmentReasonManual": "Manual",
   "lowTreatmentReasonOther": "Other",
   "lowTreatmentAapsSuggestion": "AAPS suggestion: {carbs} g",
-  "lowTreatmentNoAapsSuggestion": "No active AAPS suggestion",
   "lowTreatmentSuggestedWithin": "Within {minutes} min",
-  "lowTreatmentNoIngredients": "No ingredients added yet.",
   "quickLowTreatmentItemsTitle": "Quick low treatments",
   "quickLowTreatmentSaveError": "Could not save quick low treatment.",
   "quickLowTreatmentAdd": "Add quick low treatment",
@@ -2392,5 +2390,40 @@
   "ingredientGiLabel": "Glycemic index",
   "dashboardRegisterStress": "Record stress",
   "dashboardStartActivity": "Start activity",
-  "dashboardRecordLowTreatment": "Record low treatment"
+  "dashboardRecordLowTreatment": "Record low treatment",
+  "lowTreatmentRecordTitle": "Record low treatment",
+  "lowTreatmentQuickChoice": "Quick selection",
+  "lowTreatmentAddShortcut": "Add shortcut",
+  "lowTreatmentAddIngredient": "Add ingredient",
+  "lowTreatmentRelationTitle": "Linked record",
+  "lowTreatmentActivity": "Activity",
+  "lowTreatmentMeal": "Meal",
+  "lowTreatmentAutomatic": "Automatic",
+  "lowTreatmentManual": "Selected manually",
+  "quickLowTreatmentDecrease": "Decrease quantity",
+  "quickLowTreatmentIncrease": "Increase quantity",
+  "lowTreatmentRemoveQuickChoice": "Remove quick selection from entry",
+  "lowTreatmentLinkAction": "Link",
+  "lowTreatmentContextSection": "Context",
+  "lowTreatmentReasonShort": "Reason",
+  "lowTreatmentCoverageMet": "Suggestion covered",
+  "lowTreatmentCoverageBelow": "{carbs} g below suggestion",
+  "@lowTreatmentCoverageBelow": {
+    "placeholders": {
+      "carbs": {
+        "type": "String"
+      }
+    }
+  },
+  "lowTreatmentCoverageAbove": "{carbs} g above suggestion",
+  "@lowTreatmentCoverageAbove": {
+    "placeholders": {
+      "carbs": {
+        "type": "String"
+      }
+    }
+  },
+  "lowTreatmentCheckBolus": "Check in AAPS whether a bolus is needed.",
+  "lowTreatmentAmountSection": "Amount",
+  "lowTreatmentAddAnotherIngredient": "Add another ingredient"
 }

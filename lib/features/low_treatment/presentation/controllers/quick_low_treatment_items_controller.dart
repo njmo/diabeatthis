@@ -7,6 +7,7 @@ import '../../data/models/quick_low_treatment_slot.dart';
 import '../../domain/use_cases/delete_quick_low_treatment_item_use_case.dart';
 import '../../domain/use_cases/load_quick_low_treatment_items_use_case.dart';
 import '../../domain/use_cases/swap_quick_low_treatment_item_slots_use_case.dart';
+import '../../domain/use_cases/update_quick_low_treatment_icon_use_case.dart';
 import '../../domain/use_cases/upsert_quick_low_treatment_item_use_case.dart';
 
 part 'quick_low_treatment_items_controller.g.dart';
@@ -39,17 +40,38 @@ class QuickLowTreatmentItemsController
     required MealIngredientsDraft mealIngredient,
     QuickLowTreatmentItem? existingItem,
   }) async {
+    final keepAlive = ref.keepAlive();
+    try {
+      final current = state.asData?.value ?? await future;
+      if (current.isSaving) return;
+      state = AsyncData(current.copyWith(isSaving: true));
+      try {
+        await _upsertItemUseCase.call(
+          slot: slot,
+          mealIngredient: mealIngredient,
+          existingItem: existingItem,
+        );
+        await _refreshSlots();
+      } catch (_) {
+        state = AsyncData(current.copyWith(isSaving: false));
+        rethrow;
+      }
+    } finally {
+      keepAlive.close();
+    }
+  }
+
+  Future<void> updateIcon(QuickLowTreatmentItem item, String path) async {
     final current = state.requireValue;
+    if (current.isSaving) return;
     state = AsyncData(current.copyWith(isSaving: true));
     try {
-      await _upsertItemUseCase.call(
-        slot: slot,
-        mealIngredient: mealIngredient,
-        existingItem: existingItem,
-      );
-      await _refreshSlots();
+      await ref
+          .read(updateQuickLowTreatmentIconUseCaseProvider)
+          .call(ingredientId: item.ingredient.id, path: path);
+      if (ref.mounted) await _refreshSlots();
     } catch (_) {
-      state = AsyncData(current.copyWith(isSaving: false));
+      if (ref.mounted) state = AsyncData(current.copyWith(isSaving: false));
       rethrow;
     }
   }

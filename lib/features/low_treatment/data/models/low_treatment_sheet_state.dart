@@ -11,6 +11,7 @@ class LowTreatmentSheetState {
     this.relatedMeal,
     this.relatedActivityLog,
     this.relatedAutoAttachEnabled = true,
+    this.reasonAutoSelected = true,
     this.isSaving = false,
   });
 
@@ -18,6 +19,7 @@ class LowTreatmentSheetState {
   final Meal? relatedMeal;
   final ActivityLogSummaryData? relatedActivityLog;
   final bool relatedAutoAttachEnabled;
+  final bool reasonAutoSelected;
   final bool isSaving;
 
   LowTreatmentRelatedRecord? get selectedRelatedRecord {
@@ -89,6 +91,7 @@ class LowTreatmentSheetState {
     bool clearRelatedMeal = false,
     bool clearRelatedActivityLog = false,
     bool? relatedAutoAttachEnabled,
+    bool? reasonAutoSelected,
     bool? isSaving,
   }) {
     return LowTreatmentSheetState(
@@ -99,6 +102,7 @@ class LowTreatmentSheetState {
           : relatedActivityLog ?? this.relatedActivityLog,
       relatedAutoAttachEnabled:
           relatedAutoAttachEnabled ?? this.relatedAutoAttachEnabled,
+      reasonAutoSelected: reasonAutoSelected ?? this.reasonAutoSelected,
       isSaving: isSaving ?? this.isSaving,
     );
   }

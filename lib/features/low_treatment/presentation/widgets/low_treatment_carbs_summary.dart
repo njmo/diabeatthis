@@ -1,101 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../domain/models/low_treatment_suggestion_comparison.dart';
+import '../controllers/low_treatment_context_controller.dart';
 import '../providers/low_treatment_context_providers.dart';
+import 'low_treatment_suggestion_status.dart';
+import 'low_treatment_summary_row.dart';
 
 class LowTreatmentCarbsSummary extends ConsumerWidget {
   const LowTreatmentCarbsSummary({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lang = context.lang;
     final theme = Theme.of(context);
     final summary = ref.watch(lowTreatmentCarbsSummaryProvider);
-    final labels = summary.when(
-      data: (summary) {
-        return (
-          carbs: '${_formatCarbs(summary.carbsTotal)} g',
-          eCarbs: '${_formatCarbs(summary.extendedCarbsTotal)} g',
-        );
-      },
-      loading: () => (carbs: '...', eCarbs: '...'),
-      error: (_, _) => (carbs: '-', eCarbs: '-'),
+    final suggestedCarbs =
+        ref
+            .watch(lowTreatmentContextControllerProvider)
+            .asData
+            ?.value
+            .suggestedCarbs ??
+        0;
+    final data = summary.asData?.value;
+    final comparison = LowTreatmentSuggestionComparison(
+      carbs: data?.carbsTotal ?? 0,
+      suggestedCarbs: suggestedCarbs,
     );
-
-    return Row(
+    final color =
+        data == null || comparison.status == LowTreatmentSuggestionStatus.none
+        ? null
+        : comparison.status == LowTreatmentSuggestionStatus.covered
+        ? (theme.brightness == Brightness.dark
+              ? Colors.green.shade300
+              : Colors.green.shade700)
+        : theme.colorScheme.error;
+    final format = NumberFormat('0.#', context.lang.localeName);
+    final placeholder = summary.isLoading ? '…' : '—';
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Expanded(
-          child: LowTreatmentSummaryTile(
-            label: lang.mealCarbsLabel,
-            value: labels.carbs,
+        const Divider(height: 12),
+        if (color != null)
+          LowTreatmentSuggestionStatusBanner(
+            comparison: comparison,
+            color: color,
           ),
+        LowTreatmentSummaryRow(
+          label: context.lang.mealCarbsLabel,
+          value: data == null
+              ? placeholder
+              : '${format.format(data.carbsTotal)} g',
+          color: color,
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: LowTreatmentSummaryTile(label: 'eCarbs', value: labels.eCarbs),
-        ),
-        const SizedBox(width: 8),
-        Icon(
-          Icons.info_outline,
-          size: 18,
-          color: theme.colorScheme.onSurfaceVariant,
+        LowTreatmentSummaryRow(
+          label: 'eCarbs',
+          value: data == null
+              ? placeholder
+              : '${format.format(data.extendedCarbsTotal)} g',
         ),
       ],
-    );
-  }
-
-  String _formatCarbs(num value) {
-    final asDouble = value.toDouble();
-    if (asDouble == asDouble.roundToDouble()) {
-      return asDouble.toStringAsFixed(0);
-    }
-
-    return asDouble.toStringAsFixed(1);
-  }
-}
-
-class LowTreatmentSummaryTile extends StatelessWidget {
-  const LowTreatmentSummaryTile({
-    super.key,
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

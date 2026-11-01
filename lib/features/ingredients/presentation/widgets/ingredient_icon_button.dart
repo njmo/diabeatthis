@@ -12,6 +12,7 @@ class IngredientIconButton extends StatelessWidget {
     this.brand,
     this.assetPath,
     this.editablePreview = false,
+    this.previewSize = 76,
     required this.onSelected,
     this.onAbandonedSelection,
   });
@@ -20,6 +21,7 @@ class IngredientIconButton extends StatelessWidget {
   final String? brand;
   final String? assetPath;
   final bool editablePreview;
+  final double previewSize;
   final ValueChanged<String> onSelected;
   final ValueChanged<String>? onAbandonedSelection;
 
@@ -53,9 +55,13 @@ class IngredientIconButton extends StatelessWidget {
       }
     }
 
-    final icon = IngredientIcon(assetPath: assetPath, size: 48);
+    final icon = IngredientIcon(
+      assetPath: assetPath,
+      size: editablePreview ? (previewSize - 16).clamp(24, 48).toDouble() : 48,
+    );
     if (editablePreview) {
       return EditableThumbnail(
+        size: previewSize,
         tooltip: context.lang.ingredientChooseIcon,
         onPressed: choose,
         child: icon,

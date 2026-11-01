@@ -4,11 +4,14 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../ingredients/presentation/widgets/ingredient_icon_button.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../data/mappers/quick_low_treatment_item_mapper.dart';
 import '../../data/models/quick_low_treatment_items_state.dart';
 import '../../data/models/quick_low_treatment_slot.dart';
+import '../../data/providers/quick_low_treatment_item_provider.dart';
+import '../../domain/use_cases/update_quick_low_treatment_icon_use_case.dart';
 import '../controllers/quick_low_treatment_items_controller.dart';
 import '../formatters/quick_low_treatment_item_formatter.dart';
 
@@ -18,6 +21,29 @@ Future<void> showQuickLowTreatmentItemsSheet({required BuildContext context}) {
     useRootNavigator: false,
     isScrollControlled: true,
     builder: (_) => const QuickLowTreatmentItemsSheet(),
+  );
+}
+
+Future<void> addQuickLowTreatmentShortcut({
+  required BuildContext context,
+  required WidgetRef ref,
+}) async {
+  final items = ref.read(quickLowTreatmentItemsProvider).asData?.value;
+  if (items == null) {
+    await showQuickLowTreatmentItemsSheet(context: context);
+    return;
+  }
+  final empty = buildQuickLowTreatmentSlots(
+    items,
+  ).where((slot) => slot.item == null).firstOrNull;
+  if (empty == null) {
+    await showQuickLowTreatmentItemsSheet(context: context);
+    return;
+  }
+  await _addOrEditQuickLowTreatmentItem(
+    context: context,
+    ref: ref,
+    slot: empty,
   );
 }
 
@@ -36,6 +62,7 @@ class QuickLowTreatmentItemsSheet extends ConsumerWidget {
       quickLowTreatmentItemsControllerProvider.notifier,
     );
 
+    final iconUpdater = ref.watch(updateQuickLowTreatmentIconUseCaseProvider);
     return KeyboardAwareBottomSheet(
       header: BottomSheetStepHeader(
         title: lang.quickLowTreatmentItemsTitle,
@@ -76,8 +103,6 @@ class QuickLowTreatmentItemsSheet extends ConsumerWidget {
               );
             }
 
-            final colorScheme = Theme.of(context).colorScheme;
-
             return ReorderableDelayedDragStartListener(
               key: key,
               index: index,
@@ -86,12 +111,34 @@ class QuickLowTreatmentItemsSheet extends ConsumerWidget {
                 child: Card(
                   margin: EdgeInsets.zero,
                   child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: colorScheme.primaryContainer,
-                      foregroundColor: colorScheme.onPrimaryContainer,
-                      child: Text('${slot.slot}'),
+                    leading: IgnorePointer(
+                      ignoring: isBusy,
+                      child: IngredientIconButton(
+                        name: item.ingredient.name,
+                        brand: item.ingredient.brand,
+                        assetPath: item.ingredient.iconAssetPath,
+                        editablePreview: true,
+                        previewSize: 52,
+                        onAbandonedSelection: (path) =>
+                            iconUpdater.discard(path),
+                        onSelected: (path) async {
+                          try {
+                            await controller.updateIcon(item, path);
+                          } catch (_) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    lang.quickLowTreatmentSaveError,
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      ),
                     ),
-                    title: Text(item.name),
+                    title: Text('${slot.slot}. ${item.name}'),
                     subtitle: Text(formatQuickLowTreatmentItemDetails(item)),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,

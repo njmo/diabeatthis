@@ -19,43 +19,38 @@ class LowTreatmentReasonSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = context.lang;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colors = Theme.of(context).colorScheme;
     final reasons = _availableReasons();
-    final selectedValue = reasons.contains(value) ? value : _defaultValue();
+    if (!reasons.contains(value)) reasons.insert(0, value);
+    final selectedValue = value;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              lang.lowTreatmentReasonTitle,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final reason in reasons)
-                  LowTreatmentReasonChoiceChip(
-                    reason: reason,
-                    selected: selectedValue == reason,
-                    onSelected: () => onChanged(reason),
-                  ),
-              ],
-            ),
-          ],
+    return DropdownButtonFormField<LowTreatmentReason>(
+      key: ValueKey(selectedValue),
+      initialValue: selectedValue,
+      isExpanded: true,
+      isDense: true,
+      itemHeight: null,
+      menuMaxHeight: 400,
+      decoration: InputDecoration(
+        labelText: lang.lowTreatmentReasonTitle,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
         ),
+        filled: true,
+        fillColor: colors.surfaceContainerLowest,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
       ),
+      items: [
+        for (final reason in reasons)
+          DropdownMenuItem(
+            value: reason,
+            child: LowTreatmentReasonLabel(reason: reason),
+          ),
+      ],
+      onChanged: (reason) {
+        if (reason != null) onChanged(reason);
+      },
     );
   }
 
@@ -69,69 +64,40 @@ class LowTreatmentReasonSelector extends StatelessWidget {
       LowTreatmentReason.other,
     ];
   }
-
-  LowTreatmentReason _defaultValue() {
-    return hasAapsSuggestion
-        ? LowTreatmentReason.carbsReq
-        : LowTreatmentReason.lowGlucose;
-  }
 }
 
-class LowTreatmentReasonChoiceChip extends StatelessWidget {
-  const LowTreatmentReasonChoiceChip({
-    super.key,
-    required this.reason,
-    required this.selected,
-    required this.onSelected,
-  });
+class LowTreatmentReasonLabel extends StatelessWidget {
+  const LowTreatmentReasonLabel({super.key, required this.reason});
 
   final LowTreatmentReason reason;
-  final bool selected;
-  final VoidCallback onSelected;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return ChoiceChip(
-      avatar: Icon(
-        _icon(reason),
-        size: 16,
-        color: selected
-            ? colorScheme.onSecondaryContainer
-            : colorScheme.onSurfaceVariant,
-      ),
-      label: Text(lowTreatmentReasonLabel(reason, context.lang)),
-      selected: selected,
-      onSelected: (_) => onSelected(),
-      showCheckmark: false,
-      visualDensity: VisualDensity.compact,
-      labelPadding: const EdgeInsets.only(right: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      selectedColor: colorScheme.secondaryContainer,
-      backgroundColor: colorScheme.surface,
-      side: BorderSide(
-        color: selected ? colorScheme.secondary : colorScheme.outlineVariant,
-      ),
-      labelStyle: TextStyle(
-        color: selected
-            ? colorScheme.onSecondaryContainer
-            : colorScheme.onSurface,
-        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(
+            _icon(reason),
+            size: 18,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(lowTreatmentReasonLabel(reason, context.lang))),
+        ],
       ),
     );
   }
 
   IconData _icon(LowTreatmentReason reason) {
     return switch (reason) {
-      LowTreatmentReason.carbsReq => Icons.auto_awesome,
-      LowTreatmentReason.lowGlucose => Icons.arrow_downward,
+      LowTreatmentReason.carbsReq => Icons.auto_awesome_rounded,
+      LowTreatmentReason.lowGlucose => Icons.south_rounded,
       LowTreatmentReason.fallingTrend => Icons.trending_down,
       LowTreatmentReason.bgMismatch => Icons.sensors_off_outlined,
-      LowTreatmentReason.unplannedActivity => Icons.directions_run,
-      LowTreatmentReason.plannedActivity => Icons.directions_run,
-      LowTreatmentReason.symptoms => Icons.arrow_downward,
+      LowTreatmentReason.unplannedActivity => Icons.directions_run_rounded,
+      LowTreatmentReason.plannedActivity => Icons.directions_run_rounded,
+      LowTreatmentReason.symptoms => Icons.south_rounded,
       LowTreatmentReason.manual => Icons.edit_outlined,
       LowTreatmentReason.other => Icons.more_horiz,
     };
