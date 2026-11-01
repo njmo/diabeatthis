@@ -1,3 +1,4 @@
+import '../../../../common/nutrition/meal_nutrition_totals.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../meal_analysis/domain/models/meal_observation_window.dart';
@@ -12,6 +13,7 @@ class MealDetailsData {
   final List<MealIngredientDetailsData> ingredients;
   final MealSnapshotDetailsData? plannedSnapshot;
   final MealSnapshotDetailsData? consumedSnapshot;
+  final MealNutritionTotals? plannedPreviewNutrition;
   final List<MealStatusHistoryEntryData> statusHistory;
   final MealCopySourceData? copySource;
   final List<MealCopyUsageData> copyUsages;
@@ -24,6 +26,7 @@ class MealDetailsData {
     required this.plannedSnapshot,
     required this.consumedSnapshot,
     required this.statusHistory,
+    this.plannedPreviewNutrition,
     this.copySource,
     this.copyUsages = const [],
     this.lowTreatments = const [],
@@ -35,6 +38,7 @@ class MealDetailsData {
     List<MealIngredientDetailsData>? ingredients,
     MealSnapshotDetailsData? plannedSnapshot,
     MealSnapshotDetailsData? consumedSnapshot,
+    MealNutritionTotals? plannedPreviewNutrition,
     List<MealStatusHistoryEntryData>? statusHistory,
     MealCopySourceData? copySource,
     List<MealCopyUsageData>? copyUsages,
@@ -46,6 +50,8 @@ class MealDetailsData {
       ingredients: ingredients ?? this.ingredients,
       plannedSnapshot: plannedSnapshot ?? this.plannedSnapshot,
       consumedSnapshot: consumedSnapshot ?? this.consumedSnapshot,
+      plannedPreviewNutrition:
+          plannedPreviewNutrition ?? this.plannedPreviewNutrition,
       statusHistory: statusHistory ?? this.statusHistory,
       copySource: copySource ?? this.copySource,
       copyUsages: copyUsages ?? this.copyUsages,
@@ -81,6 +87,20 @@ class MealDetailsData {
   MealSnapshotDetailsData? get preferredSummarySnapshot {
     return consumedSnapshot ?? plannedSnapshot;
   }
+
+  MealNutritionTotals? get plannedNutritionTotals {
+    final snapshot = plannedSnapshot;
+    if (snapshot != null) return snapshot.nutritionTotals;
+    if (meal.status != 'planned' ||
+        consumedSnapshot != null ||
+        statusHistory.any((entry) => entry.status != 'planned')) {
+      return null;
+    }
+    return plannedPreviewNutrition;
+  }
+
+  MealNutritionTotals? get preferredNutritionTotals =>
+      consumedSnapshot?.nutritionTotals ?? plannedNutritionTotals;
 
   double get totalInsulinUnits {
     return advisorDecision?.recommendedInsulinUnits ?? 0;
@@ -533,6 +553,16 @@ class MealSnapshotDetailsData {
   double get wbtKcal {
     return totalProteinG * 4 + totalFatG * 9;
   }
+
+  MealNutritionTotals get nutritionTotals => MealNutritionTotals(
+    totalGrams: totalGrams,
+    totalCarbsG: totalCarbsG,
+    totalFiberG: totalFiberG,
+    totalNetCarbsG: totalNetCarbsG,
+    totalFatG: totalFatG,
+    totalProteinG: totalProteinG,
+    totalCaloriesKcal: totalCaloriesKcal,
+  );
 }
 
 class MealStatusHistoryEntryData {

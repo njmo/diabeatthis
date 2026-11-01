@@ -36,7 +36,7 @@ List<MealSnapshotComparisonRowData> _snapshotRows(
   BuildContext context,
   MealDetailsData details,
 ) {
-  final planned = details.plannedSnapshot;
+  final planned = details.plannedNutritionTotals;
   final consumed = details.consumedSnapshot;
   return [
     MealSnapshotComparisonRowData(

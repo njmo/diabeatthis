@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../app/router/app_router.dart';
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/nutrition/meal_nutrition_totals.dart';
 import '../../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
 import '../../../data/models/meal_details_data.dart';
 import '../../../data/providers/meal_ingredients_list_provider.dart';
@@ -18,13 +19,13 @@ class MealNutritionAnalysisSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final snapshot = details.preferredSummarySnapshot;
+    final nutrition = details.preferredNutritionTotals;
     final macros = Macronutrients(
-      carbsTotal: (snapshot?.totalCarbsG ?? 0).ceil(),
-      fatTotal: (snapshot?.totalFatG ?? 0).ceil(),
-      fiberTotal: (snapshot?.totalFiberG ?? 0).ceil(),
-      proteinTotal: (snapshot?.totalProteinG ?? 0).ceil(),
-      netCarbsTotal: (snapshot?.totalNetCarbsG ?? 0).ceil(),
+      carbsTotal: (nutrition?.totalCarbsG ?? 0).ceil(),
+      fatTotal: (nutrition?.totalFatG ?? 0).ceil(),
+      fiberTotal: (nutrition?.totalFiberG ?? 0).ceil(),
+      proteinTotal: (nutrition?.totalProteinG ?? 0).ceil(),
+      netCarbsTotal: (nutrition?.totalNetCarbsG ?? 0).ceil(),
     );
 
     return MealSectionTile(
@@ -32,7 +33,7 @@ class MealNutritionAnalysisSection extends StatelessWidget {
       initiallyExpanded: !details.meal.isEaten,
       children: [
         MealNutritionMacroSummary(
-          snapshot: snapshot,
+          nutrition: nutrition,
           hasAddOn: details.hasAddOn,
           addOnNetCarbsG: details.addOnNetCarbsG,
         ),
@@ -49,20 +50,20 @@ class MealNutritionAnalysisSection extends StatelessWidget {
 }
 
 class MealNutritionMacroSummary extends StatelessWidget {
-  final MealSnapshotDetailsData? snapshot;
+  final MealNutritionTotals? nutrition;
   final bool hasAddOn;
   final double addOnNetCarbsG;
 
   const MealNutritionMacroSummary({
     super.key,
-    required this.snapshot,
+    required this.nutrition,
     required this.hasAddOn,
     required this.addOnNetCarbsG,
   });
 
   @override
   Widget build(BuildContext context) {
-    final snapshot = this.snapshot;
+    final nutrition = this.nutrition;
 
     return Column(
       children: [
@@ -71,22 +72,22 @@ class MealNutritionMacroSummary extends StatelessWidget {
             MealMetricTileData(
               icon: Icons.grain,
               label: context.lang.mealCarbsLabel,
-              value: formatGrams(snapshot?.totalCarbsG),
+              value: formatGrams(nutrition?.totalCarbsG),
             ),
             MealMetricTileData(
               icon: Icons.opacity,
               label: context.lang.mealFatLabel,
-              value: formatGrams(snapshot?.totalFatG),
+              value: formatGrams(nutrition?.totalFatG),
             ),
             MealMetricTileData(
               icon: Icons.fitness_center,
               label: context.lang.mealProteinLabel,
-              value: formatGrams(snapshot?.totalProteinG),
+              value: formatGrams(nutrition?.totalProteinG),
             ),
             MealMetricTileData(
               icon: Icons.eco_outlined,
               label: context.lang.mealFiberLabel,
-              value: formatGrams(snapshot?.totalFiberG),
+              value: formatGrams(nutrition?.totalFiberG),
             ),
             if (hasAddOn)
               MealMetricTileData(
@@ -101,19 +102,19 @@ class MealNutritionMacroSummary extends StatelessWidget {
           metrics: [
             MealCompactMetricData(
               label: context.lang.mealCaloriesLabel,
-              value: formatSnapshotValue(snapshot?.totalCaloriesKcal, 'kcal'),
+              value: formatSnapshotValue(nutrition?.totalCaloriesKcal, 'kcal'),
             ),
             MealCompactMetricData(
               label: context.lang.mealNetLabel,
-              value: formatGrams(snapshot?.totalNetCarbsG),
+              value: formatGrams(nutrition?.totalNetCarbsG),
             ),
             MealCompactMetricData(
               label: context.lang.mealWbtLabel,
-              value: formatSnapshotValue(snapshot?.wbtKcal, 'kcal'),
+              value: formatSnapshotValue(nutrition?.wbtKcal, 'kcal'),
             ),
             MealCompactMetricData(
               label: context.lang.mealMassLabel,
-              value: formatGrams(snapshot?.totalGrams),
+              value: formatGrams(nutrition?.totalGrams),
             ),
           ],
         ),

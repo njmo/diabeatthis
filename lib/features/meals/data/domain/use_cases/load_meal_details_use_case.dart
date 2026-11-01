@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/nutrition/meal_nutrition_totals.dart';
 import '../../../../../core/drift/database_impl.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../mappers/meal_details_data_mapper.dart';
@@ -59,6 +60,14 @@ class LoadMealDetailsUseCase {
               ..where((tbl) => tbl.mealId.equals(mealId))
               ..orderBy([(tbl) => OrderingTerm.asc(tbl.createdAt)]))
             .get();
+    final canPreviewPlannedNutrition =
+        meal.status == 'planned' &&
+        plannedSnapshot == null &&
+        consumedSnapshot == null &&
+        statusHistory.every((entry) => entry.status == 'planned');
+    final plannedPreview = canPreviewPlannedNutrition
+        ? await db.ingredientDao.totalsForMeal(mealId)
+        : null;
     final copySource = await _loadCopySource(db, meal);
     final copyUsages = await _loadCopyUsages(db, meal);
 
@@ -74,6 +83,9 @@ class LoadMealDetailsUseCase {
       consumedSnapshot: consumedSnapshot == null
           ? null
           : mapper.mapSnapshot(consumedSnapshot),
+      plannedPreviewNutrition: plannedPreview == null
+          ? null
+          : MealNutritionTotals.fromMacroSummary(plannedPreview),
       statusHistory: statusHistory.map(mapper.mapStatusHistory).toList(),
       copySource: copySource,
       copyUsages: copyUsages,

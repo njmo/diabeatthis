@@ -11,8 +11,8 @@ class CurrentMealMacroComparison extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final snapshot = details.preferredSummarySnapshot;
-    if (snapshot == null) return const SizedBox.shrink();
+    final nutrition = details.preferredNutritionTotals;
+    if (nutrition == null) return const SizedBox.shrink();
     final lang = context.lang;
     return DetailSectionCard(
       title:
@@ -21,9 +21,9 @@ class CurrentMealMacroComparison extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
           child: MealMacroComparison(
-            netCarbs: snapshot.totalNetCarbsG,
-            protein: snapshot.totalProteinG,
-            fat: snapshot.totalFatG,
+            netCarbs: nutrition.totalNetCarbsG,
+            protein: nutrition.totalProteinG,
+            fat: nutrition.totalFatG,
             showRatio: true,
           ),
         ),

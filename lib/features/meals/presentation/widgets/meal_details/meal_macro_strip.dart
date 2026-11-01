@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/nutrition/meal_nutrition_totals.dart';
 import '../../../../../common/widgets/responsive_metric_list.dart';
-import '../../../data/models/meal_details_data.dart';
 import 'meal_detail_formatters.dart';
 
 class MealMacroStrip extends StatelessWidget {
-  final MealSnapshotDetailsData snapshot;
+  final MealNutritionTotals nutrition;
 
-  const MealMacroStrip({super.key, required this.snapshot});
+  const MealMacroStrip({super.key, required this.nutrition});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final values = {
-      context.lang.mealCarbsLabel: snapshot.totalCarbsG,
-      context.lang.mealProteinLabel: snapshot.totalProteinG,
-      context.lang.mealFatLabel: snapshot.totalFatG,
+      context.lang.mealCarbsLabel: nutrition.totalCarbsG,
+      context.lang.mealProteinLabel: nutrition.totalProteinG,
+      context.lang.mealFatLabel: nutrition.totalFatG,
     };
     return ResponsiveMetricList(
       minimumWidth: 80,

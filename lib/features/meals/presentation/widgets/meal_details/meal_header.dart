@@ -14,7 +14,7 @@ class MealHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final details = state.details;
-    final snapshot = details.preferredSummarySnapshot;
+    final nutrition = details.preferredNutritionTotals;
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
@@ -30,16 +30,16 @@ class MealHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          if (snapshot != null)
+          if (nutrition != null)
             Text(
               details.hasConsumedData
                   ? context.lang.mealReviewConsumed
                   : context.lang.mealReviewPlanned,
               style: theme.textTheme.labelMedium,
             ),
-          if (snapshot != null) ...[
+          if (nutrition != null) ...[
             const SizedBox(height: 10),
-            MealMacroStrip(snapshot: snapshot),
+            MealMacroStrip(nutrition: nutrition),
           ],
           const SizedBox(height: 12),
           MealAnalysisProgressSummary(state: state),
