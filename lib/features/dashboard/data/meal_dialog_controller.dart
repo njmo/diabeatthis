@@ -1,12 +1,14 @@
+import '../../../common/l10n/language.dart';
+import '../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../common/l10n/language.dart';
 import '../../../common/meal/manual_meal_decision.dart';
 import '../../../core/domain/model/device_status.dart';
 import '../../../core/domain/model/meal_macro_summary.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/meal_advice_pending_notification.dart';
+import '../../../core/notifications/domain/models/hash_notification_id_factory.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../meal_advisor/data/providers/ai_assisted_meal_advisor_settings_provider.dart';
 import '../../meal_advisor/data/providers/check_meal_advice_eligibility_use_case_provider.dart';
@@ -14,16 +16,17 @@ import '../../meal_advisor/data/providers/check_meal_advisor_device_status_use_c
 import '../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
 import '../../meal_advisor/data/providers/get_meal_advice_use_case_provider.dart';
 import '../../meal_advisor/data/providers/meal_advisor_context_provider.dart';
+import '../../meal_advisor/data/providers/resolve_meal_advisor_device_status_use_case_provider.dart';
 import '../../meal_advisor/domain/models/meal_advice_eligibility.dart';
 import '../../meal_advisor/domain/models/meal_advice_unavailable_exception.dart';
 import '../../meal_advisor/domain/serialization/meal_advisor_dml.dart';
-import '../../meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
+import '../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
+import '../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../meal_analysis/data/providers/build_before_meal_context_use_case_provider.dart';
 import '../../meals/data/providers/meal_activation_guard_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
 import 'meal_dialog_state.dart';
 import 'providers/blood_sugar_readings_list_provider.dart';
-import 'providers/device_status_ui_provider.dart';
 import 'use_cases/accept_meal_decision_use_case.dart';
 import 'utils/meal_advisor.dart';
 
@@ -62,6 +65,7 @@ class MealDialogController extends _$MealDialogController with Logging {
       preparationFailed: false,
       isAiAssisted: false,
       clearBeforeMealContext: true,
+      clearUnavailableReason: true,
     );
     try {
       await _prepareChoice(request, manual);
@@ -99,18 +103,44 @@ class MealDialogController extends _$MealDialogController with Logging {
       return;
     }
 
-    final mealStatus = await ref.read(
-      mealMacronutrientsSummaryProvider(mealId).future,
-    );
+    // Editing the start order keeps the quantities that were already reviewed.
+    final preservePreparedAdvice =
+        manual != null && state.advice.decision != null;
+    final mealStatus = preservePreparedAdvice
+        ? null
+        : await ref.read(mealMacronutrientsSummaryProvider(mealId).future);
 
     if (!ref.mounted || request != _adviceRequest) return;
-    final carbs = mealStatus?.netCarbsGrams ?? 0;
+    if (!preservePreparedAdvice && mealStatus == null) {
+      throw StateError('Meal nutrition is unavailable');
+    }
+    final carbs = preservePreparedAdvice
+        ? state.carbsGrams
+        : mealStatus?.netCarbsGrams ?? 0;
     if (manual != null) {
+      var extendedCarbs = state.advice.extendedCarbs;
+      if (!preservePreparedAdvice) {
+        final settings = await ref.read(
+          extendedCarbsScheduleSettingsProvider.future,
+        );
+        if (!ref.mounted || request != _adviceRequest) return;
+        // Nutrition does not depend on CGM availability or the chosen start order.
+        extendedCarbs = const WbtExtendedCarbsCalculator()
+            .calculateFromMacros(
+              fatGrams: mealStatus?.fatGrams ?? 0,
+              proteinGrams: mealStatus?.proteinGrams ?? 0,
+            )
+            .withSchedule(
+              settings.copyWith(
+                deliveryMode: ExtendedCarbsDeliveryMode.extendedCarbs,
+              ),
+            );
+      }
       state = state.copyWith(
         skipMeal: false,
         step: MealDialogStep.confirm,
         carbsGrams: carbs,
-        extendedCarbsGrams: 0,
+        extendedCarbsGrams: extendedCarbs.grams.toDouble(),
         advice: MealAdvice(
           manual.decision,
           manual.waitMinutes > 0
@@ -121,6 +151,7 @@ class MealDialogController extends _$MealDialogController with Logging {
                 )
               : null,
           source: 'manual',
+          extendedCarbs: extendedCarbs,
         ),
         clearActivationBlock: true,
       );
@@ -150,14 +181,17 @@ class MealDialogController extends _$MealDialogController with Logging {
         ),
       );
     }
-    final deviceStatus = ref.read(deviceStatusUiProvider);
+    final resolvedStatus = await ref.read(
+      resolveMealAdvisorDeviceStatusUseCaseProvider,
+    )();
+    if (!ref.mounted || request != _adviceRequest) return;
+    final deviceStatus = resolvedStatus.status;
     _adviceDeviceStatus = deviceStatus;
-    var advice =
-        ref
-                    .read(checkMealAdvisorDeviceStatusUseCaseProvider)
-                    .call(deviceStatus) !=
-                MealAdviceEligibility.available ||
-            deviceStatus == null
+    var unavailableReason =
+        resolvedStatus.eligibility == MealAdviceEligibility.available
+        ? null
+        : resolvedStatus.eligibility;
+    var advice = deviceStatus == null || unavailableReason != null
         ? MealAdvice.empty()
         : ref
               .read(getMealAdviceUseCaseProvider)
@@ -177,11 +211,14 @@ class MealDialogController extends _$MealDialogController with Logging {
     if (advice.decision != null) {
       final eligibility = await _checkAdviceEligibility();
       if (!ref.mounted || request != _adviceRequest) return;
+      final statusEligibility = ref
+          .read(checkMealAdvisorDeviceStatusUseCaseProvider)
+          .call(deviceStatus);
       if (eligibility != MealAdviceEligibility.available ||
-          ref
-                  .read(checkMealAdvisorDeviceStatusUseCaseProvider)
-                  .call(deviceStatus) !=
-              MealAdviceEligibility.available) {
+          statusEligibility != MealAdviceEligibility.available) {
+        unavailableReason = eligibility != MealAdviceEligibility.available
+            ? eligibility
+            : statusEligibility;
         advice = MealAdvice.empty();
       }
     }
@@ -196,6 +233,8 @@ class MealDialogController extends _$MealDialogController with Logging {
       carbsGrams: carbs,
       extendedCarbsGrams: advice.extendedCarbs.grams.toDouble(),
       advice: advice,
+      unavailableReason: unavailableReason,
+      clearUnavailableReason: unavailableReason == null,
       clearActivationBlock: true,
     );
   }
@@ -232,24 +271,40 @@ class MealDialogController extends _$MealDialogController with Logging {
     final advice = state.advice;
     final adviceDeviceStatus = _adviceDeviceStatus;
     if (advice.source != 'manual') {
-      final eligibility = await _checkAdviceEligibility();
-      if (!ref.mounted ||
-          request != _adviceRequest ||
-          !identical(state.advice, advice)) {
-        return false;
+      final checkStatus = ref.read(checkMealAdvisorDeviceStatusUseCaseProvider);
+      var unavailableReason = checkStatus(adviceDeviceStatus);
+      // A fresh history response must not revive a suggestion calculated on expired inputs.
+      if (unavailableReason == MealAdviceEligibility.available) {
+        final resolvedStatus = await ref.read(
+          resolveMealAdvisorDeviceStatusUseCaseProvider,
+        )();
+        if (!ref.mounted ||
+            request != _adviceRequest ||
+            !identical(state.advice, advice)) {
+          return false;
+        }
+        final eligibility = await _checkAdviceEligibility();
+        if (!ref.mounted ||
+            request != _adviceRequest ||
+            !identical(state.advice, advice)) {
+          return false;
+        }
+        final originalStatusEligibility = checkStatus(adviceDeviceStatus);
+        final currentStatusEligibility =
+            resolvedStatus.eligibility == MealAdviceEligibility.available
+            ? checkStatus(resolvedStatus.status)
+            : resolvedStatus.eligibility;
+        unavailableReason = eligibility != MealAdviceEligibility.available
+            ? eligibility
+            : originalStatusEligibility != MealAdviceEligibility.available
+            ? originalStatusEligibility
+            : currentStatusEligibility;
       }
-      final statusEligibility = ref
-          .read(checkMealAdvisorDeviceStatusUseCaseProvider)
-          .call(ref.read(deviceStatusUiProvider));
-      if (eligibility != MealAdviceEligibility.available ||
-          statusEligibility != MealAdviceEligibility.available ||
-          ref
-                  .read(checkMealAdvisorDeviceStatusUseCaseProvider)
-                  .call(adviceDeviceStatus) !=
-              MealAdviceEligibility.available) {
+      if (unavailableReason != MealAdviceEligibility.available) {
         state = state.copyWith(
           advice: MealAdvice.empty(),
           extendedCarbsGrams: 0,
+          unavailableReason: unavailableReason,
         );
         await cancelAllMealNotifications();
         throw const MealAdviceUnavailableException();
@@ -270,6 +325,7 @@ class MealDialogController extends _$MealDialogController with Logging {
       advice: MealAdvice.empty(),
       extendedCarbsGrams: 0,
       clearBeforeMealContext: true,
+      clearUnavailableReason: true,
       preparationFailed: false,
     );
   }
@@ -293,6 +349,7 @@ class MealDialogController extends _$MealDialogController with Logging {
       preparationFailed: false,
       isPreparingAdvice: false,
       clearBeforeMealContext: true,
+      clearUnavailableReason: true,
       step: MealDialogStep.confirm,
       clearActivationBlock: true,
     );
@@ -308,6 +365,7 @@ class MealDialogController extends _$MealDialogController with Logging {
       isPreparingAdvice: false,
       preparationFailed: false,
       clearBeforeMealContext: true,
+      clearUnavailableReason: true,
     );
   }
 
@@ -324,6 +382,20 @@ class MealDialogController extends _$MealDialogController with Logging {
       );
     } catch (e) {
       logE('Error scheduling pending meal advice reminder: $e');
+    }
+  }
+
+  Future<void> cancelPendingAdviceReminder() async {
+    final notificationsPluginController = ref.read(
+      notificationsControllerUiProvider,
+    );
+    final event = MealAdvicePendingNotificationEvent(mealId: mealId);
+    final id = const HashNotificationIdFactory().create(event.key);
+
+    try {
+      await notificationsPluginController.cancel(id);
+    } catch (e) {
+      logE('Error cancelling pending meal advice reminder: $e');
     }
   }
 

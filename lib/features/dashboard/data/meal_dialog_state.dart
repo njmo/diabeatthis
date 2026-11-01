@@ -1,3 +1,4 @@
+import '../../meal_advisor/domain/models/meal_advice_eligibility.dart';
 import '../../meal_advisor/domain/models/meal_advisor_input.dart';
 import '../../meal_analysis/domain/models/before_meal_context.dart';
 import 'utils/meal_advisor.dart';
@@ -15,6 +16,7 @@ class MealDialogState {
   final bool isPreparingAdvice;
   final bool isAiAssisted;
   final bool preparationFailed;
+  final MealAdviceEligibility? unavailableReason;
   final BeforeMealContext? beforeMealContext;
   final MealAdvisorInput? advisorInput;
   final MealDialogStep step;
@@ -28,6 +30,7 @@ class MealDialogState {
     this.isPreparingAdvice = false,
     this.isAiAssisted = false,
     this.preparationFailed = false,
+    this.unavailableReason,
     this.beforeMealContext,
     this.advisorInput,
     required this.step,
@@ -42,6 +45,8 @@ class MealDialogState {
     bool? isPreparingAdvice,
     bool? isAiAssisted,
     bool? preparationFailed,
+    MealAdviceEligibility? unavailableReason,
+    bool clearUnavailableReason = false,
     BeforeMealContext? beforeMealContext,
     MealAdvisorInput? advisorInput,
     bool clearBeforeMealContext = false,
@@ -57,6 +62,9 @@ class MealDialogState {
       isPreparingAdvice: isPreparingAdvice ?? this.isPreparingAdvice,
       isAiAssisted: isAiAssisted ?? this.isAiAssisted,
       preparationFailed: preparationFailed ?? this.preparationFailed,
+      unavailableReason: clearUnavailableReason
+          ? null
+          : unavailableReason ?? this.unavailableReason,
       advisorInput: clearBeforeMealContext
           ? null
           : advisorInput ?? this.advisorInput,
