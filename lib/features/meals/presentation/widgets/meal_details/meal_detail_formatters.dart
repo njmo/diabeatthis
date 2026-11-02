@@ -109,6 +109,7 @@ String mealStatusLabel(String status) {
     'eaten-bolused' => lang.mealStatusEatenBolused,
     'summarized' => lang.mealStatusSummarized,
     'skipped' => lang.mealStatusSkipped,
+    'interrupted' => lang.mealStatusInterrupted,
     _ => status,
   };
 }

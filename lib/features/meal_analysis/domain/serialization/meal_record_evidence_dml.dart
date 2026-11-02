@@ -14,11 +14,14 @@ Map<String, Object?> mealRecordEvidenceDml({
   required Duration? workflowWait,
   required BeforeMealContext before,
   required MealOutcomeContext? outcome,
+  DateTime? asOf,
   bool includeLimitations = true,
 }) {
   final nutrition = evidence.nutritionConfidence;
   final treatments = outcome?.treatments ?? before.treatments;
   final end = outcome?.observedUntil ?? before.asOf;
+  final decision = evidence.completionDecision;
+  final decisionCutoff = asOf ?? end;
   final links = const BuildMealInsulinEvidenceUseCase()(
     mealId: mealId,
     assignments: evidence.wizardAssignments,
@@ -62,6 +65,22 @@ Map<String, Object?> mealRecordEvidenceDml({
             'delay_min': firstAfter.date.difference(mealTime).inSeconds / 60,
           },
     'nutrition_confidence': mealNutritionConfidenceDml(nutrition),
+    if (decision != null && !decision.recordedAt.isAfter(decisionCutoff))
+      'completion_decision': {
+        'source': 'recorded_app_choice_not_verified_aaps_action',
+        'choice': decision.choice.name,
+        'recorded_at': dmlTimestamp(decision.recordedAt),
+        'eating_ended_at': dmlTimestamp(decision.eatingEndedAt),
+        'previously_reported_carbs_g': decision.reportedCarbs,
+        'consumed_carbs_g': decision.consumedCarbs,
+        'consumed_minus_reported_carbs_g':
+            decision.consumedCarbs - decision.reportedCarbs,
+        'proposed_correction_carbs_g': decision.proposedCorrectionCarbs,
+        'later_manual_aaps_correction': 'unknown_from_this_choice',
+        'causal_link_to_later_hypoglycemia': 'not_established',
+        'interpretation':
+            'Possible context only. withoutCorrection does not prove that no later manual AAPS correction occurred; correctionRequested does not prove it was applied. The recorded carbohydrate difference and choice do not establish a cause of later hypoglycemia or other glucose changes.',
+      },
     'linked_calculators': links == null
         ? null
         : [

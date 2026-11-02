@@ -3,12 +3,14 @@ import 'package:clock/clock.dart';
 import '../../../../../common/events/data/notification/eat_now_response_event.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../common/notifications/meal_notification_cancellation.dart';
+import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/base/notifications_controller.dart';
 import '../../../../../core/notifications/domain/events/eat_now_event_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../../features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import '../../../../../features/meals/data/providers/meal_database_provider.dart';
+import '../../../../../features/meals/data/providers/meal_status_history_provider.dart';
 import '../../../../event/internal/meal_status_changed_event.dart';
 import '../../../../event/model/foreground_event.dart';
 import '../../../../providers/device_status_value_provider.dart';
@@ -77,6 +79,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       final mealAdvice = await runtimeContext.container.read(
         getMealAdviceProvider(mealMonitorContext.activeMeal!).future,
       );
+      mealMonitorContext.throwIfStopped(runtimeContext);
       isManual = mealAdvice?.source == 'manual';
       final recommendedWait = mealAdvice?.wait?.recommendedMinutes;
 
@@ -101,8 +104,25 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       );
     }
 
+    mealMonitorContext.throwIfStopped(runtimeContext);
     logI("Bolus already recorded, starting wait after bolus");
-    final waitStartedAt = clock.now();
+    var waitStartedAt = clock.now();
+    if (triggeredByUser) {
+      waitStartedAt = mealMonitorContext.activeMeal!.updatedAt ?? waitStartedAt;
+      if (runtimeContext.container.exists(databaseProvider) &&
+          runtimeContext.container.read(databaseProvider).hasOpened) {
+        final recordedStart = await runtimeContext.container.refresh(
+          mealStatusStartedAtProvider(
+            MealStatusStartedAtRequest(
+              mealId: mealMonitorContext.activeMeal!.id,
+              status: 'bolused-waiting',
+            ),
+          ).future,
+        );
+        if (recordedStart != null) waitStartedAt = recordedStart;
+      }
+      mealMonitorContext.throwIfStopped(runtimeContext);
+    }
     logI("Waiting for $recommendedMinutes minutes before showing eat now");
     while (_elapsedWaitMinutes(waitStartedAt) < recommendedMinutes!) {
       if (isManual) {
@@ -131,6 +151,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
             await notificationProvider.cancelMealNotifications(
               mealMonitorContext.activeMeal!.id,
             );
+            mealMonitorContext.throwIfStopped(runtimeContext);
           }
 
           final finalWaitTime = _elapsedWaitMinutes(waitStartedAt);
@@ -169,6 +190,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       mealId: mealMonitorContext.activeMeal!.id,
       showInitialNotification: true,
       waitStartedAt: waitStartedAt,
+      mealMonitorContext: mealMonitorContext,
     );
     if (response == null) {
       logI("No response from user, checking next meal");
@@ -185,6 +207,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
             'waited-eating',
           ).future,
         );
+        mealMonitorContext.throwIfStopped(runtimeContext);
         return DetectFinishedEatingExecutor(shouldBolus: false);
       },
       dismiss: (_) async {
@@ -206,6 +229,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
     required int mealId,
     required bool showInitialNotification,
     required DateTime waitStartedAt,
+    required MealMonitorContext mealMonitorContext,
   }) async {
     const maxAttempts = 3;
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
@@ -213,17 +237,20 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
       if (shouldShowNotification) {
         logI("Showing eat now notification attempt ${attempt + 1}");
         await notificationProvider.cancelMealNotifications(mealId);
+        mealMonitorContext.throwIfStopped(runtimeContext);
         await notificationProvider.show(
           EatNowNotificationEvent(
             mealId: mealId,
             minutes: _elapsedWaitMinutes(waitStartedAt),
           ),
         );
+        mealMonitorContext.throwIfStopped(runtimeContext);
       }
 
       final response = await runtimeContext
           .waitForEventWithTimeoutOrNull<EatNowResponseEvent>(
             Duration(minutes: 10),
+            predicate: (event) => event.mealId == mealId,
           );
       if (response != null) {
         return response;

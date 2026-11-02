@@ -20,6 +20,7 @@ IconData mealStatusIcon(String status) {
     'eaten-bolused' ||
     'summarized' => Icons.check_circle,
     'skipped' => Icons.cancel,
+    'interrupted' => Icons.stop_circle_outlined,
     _ => Icons.flag,
   };
 }

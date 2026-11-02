@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../../common/meal/meal_completion_decision.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../domain/models/day_activity_summary.dart';
 import '../../domain/models/day_meal_summary.dart';
@@ -60,6 +61,9 @@ class DayLocalHistoryRepository {
               eatenAt: DateTime.fromMillisecondsSinceEpoch(
                 row.read<int>('eaten_at'),
               ),
+              completionDecision: MealCompletionDecision.decode(
+                row.readNullable<String>('completion_decision'),
+              ),
             ),
           )
           .toList()
@@ -90,7 +94,7 @@ class DayLocalHistoryRepository {
     return db
         .customSelect(
           '''
-      SELECT m.id, m.name, m.status, $eatingTime AS eaten_at, COALESCE(c.total_net_carbs_g, p.total_net_carbs_g) AS carbs,
+      SELECT m.id, m.name, m.status, m.completion_decision, $eatingTime AS eaten_at, COALESCE(c.total_net_carbs_g, p.total_net_carbs_g) AS carbs,
         COALESCE(c.total_protein_g, p.total_protein_g) AS protein,
         COALESCE(c.total_fat_g, p.total_fat_g) AS fat,
         c.id AS consumed_id, p.id AS planned_id
@@ -98,6 +102,7 @@ class DayLocalHistoryRepository {
       LEFT JOIN meal_snapshot c ON c.meal_id = m.id AND c.snapshot_type = 'consumed'
       LEFT JOIN meal_snapshot p ON p.meal_id = m.id AND p.snapshot_type = 'planned'
       WHERE m.purpose = 'meal'
+        AND m.status != 'interrupted'
         AND ((m.status IN ('eating', 'eating-extra', 'eating-then-bolus',
           'waiting-for-bolus', 'waited-eating', 'bolused-eating',
           'eaten', 'eaten-extra', 'eaten-bolused', 'summarized'

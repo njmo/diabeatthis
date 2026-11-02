@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
+import '../../../../../common/meal/meal_extended_carbs.dart';
 import '../../../../../common/notifications/meal_notification_cancellation.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/domain/model/meal_macro_summary.dart';
+import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/base/notifications_controller.dart';
 import '../../../../../core/notifications/domain/events/meal_suggestion_notification.dart';
@@ -41,11 +43,22 @@ class BolusReminderHelper with Logging {
     bool consumed = false,
     MealAdvice? advice,
   }) async {
-    final carbs = await resolveMealNetCarbs(
-      runtimeContext,
-      meal,
-      consumed: consumed,
-    );
+    final consumedProvider = mealMacronutrientsConsumedSummaryProvider(meal.id);
+    // Standalone in-memory meals can supply accepted carbs without owning a DB.
+    // Persisted workflows always resolve both nutrients from the latest rows.
+    final resolveConsumed =
+        consumed &&
+        (meal.carbs == null ||
+            runtimeContext.container.exists(databaseProvider) ||
+            runtimeContext.container.exists(consumedProvider));
+    final consumedMacros = resolveConsumed
+        ? await runtimeContext.container.refresh(consumedProvider.future)
+        : null;
+    final carbs = resolveConsumed
+        ? _netCarbs(consumedMacros).ceil()
+        : consumed && meal.carbs != null
+        ? meal.carbs!
+        : await resolveMealNetCarbs(runtimeContext, meal);
     if (advice == null) {
       try {
         advice = await runtimeContext.container.read(
@@ -66,7 +79,9 @@ class BolusReminderHelper with Logging {
 
     return BolusReminderSuggestion(
       carbs: carbs,
-      extendedCarbs: extendedCarbs?.grams ?? 0,
+      extendedCarbs: consumed
+          ? mealExtendedCarbsFromMacros(consumedMacros)
+          : extendedCarbs?.grams ?? 0,
       extendedCarbsDeliveryMode: scheduleSettings.deliveryMode,
       extendedCarbsDelayMinutes: scheduleSettings.delayMinutes,
       extendedCarbsDurationMinutes: scheduleSettings.durationMinutes,
@@ -79,12 +94,14 @@ class BolusReminderHelper with Logging {
     bool consumed = false,
   }) async {
     final mealCarbs = meal.carbs;
-    if (!consumed && mealCarbs != null && mealCarbs > 0) {
+    // In-memory callers may already supply an explicitly accepted amount.
+    // Persisted meals omit it and resolve their latest consumed rows below.
+    if (mealCarbs != null && mealCarbs > 0) {
       return mealCarbs.ceil();
     }
 
     final summary = consumed
-        ? await runtimeContext.container.read(
+        ? await runtimeContext.container.refresh(
             mealMacronutrientsConsumedSummaryProvider(meal.id).future,
           )
         : await runtimeContext.container.read(
@@ -117,16 +134,21 @@ class BolusReminderHelper with Logging {
     int mealId, {
     required int carbs,
     int extendedCarbs = 0,
+    bool extendedCarbsAreAdditional = false,
     ExtendedCarbsDeliveryMode extendedCarbsDeliveryMode =
         ExtendedCarbsDeliveryMode.extendedCarbs,
     int extendedCarbsDelayMinutes = 45,
     int extendedCarbsDurationMinutes = 120,
     bool isAddOn = false,
     FutureOr<void> Function(BolusWizard)? onBolusRecorded,
+    void Function()? ensureActive,
+    bool Function(BolusWizard)? acceptsBolus,
   }) async {
     while (true) {
+      ensureActive?.call();
       logI("Cancelling previous notifications before showing bolus reminder");
       await notificationProvider.cancelMealNotifications(mealId);
+      ensureActive?.call();
 
       logI("User should bolus after eating, showing notification");
       await notificationProvider.show(
@@ -135,6 +157,7 @@ class BolusReminderHelper with Logging {
           decision: MealDecision.bolus,
           carbs: carbs,
           extendedCarbs: extendedCarbs,
+          extendedCarbsAreAdditional: extendedCarbsAreAdditional,
           extendedCarbsDeliveryMode: extendedCarbsDeliveryMode,
           extendedCarbsDelayMinutes: extendedCarbsDelayMinutes,
           extendedCarbsDurationMinutes: extendedCarbsDurationMinutes,
@@ -142,9 +165,14 @@ class BolusReminderHelper with Logging {
           isAddOn: isAddOn,
         ),
       );
+      ensureActive?.call();
 
       logI("Notification shown, waiting for user response or calculator");
-      final result = await _waitForBolusReminderResult(runtimeContext, mealId);
+      final result = await _waitForBolusReminderResult(
+        runtimeContext,
+        mealId,
+        acceptsBolus,
+      );
 
       if (result == null) {
         logI("Bolus reminder timed out, showing it again");
@@ -152,7 +180,9 @@ class BolusReminderHelper with Logging {
       }
 
       if (result is TreatmentAvailableEvent<BolusWizard>) {
+        ensureActive?.call();
         await onBolusRecorded?.call(result.data);
+        ensureActive?.call();
         logI(
           "Calculator response available, cancelling notifications and marking meal as bolused",
         );
@@ -193,9 +223,14 @@ class BolusReminderHelper with Logging {
       final bolusResponse = await runtimeContext
           .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<BolusWizard>>(
             delay,
+            predicate: acceptsBolus == null
+                ? null
+                : (event) => acceptsBolus(event.data),
           );
       if (bolusResponse != null) {
-        onBolusRecorded?.call(bolusResponse.data);
+        ensureActive?.call();
+        await onBolusRecorded?.call(bolusResponse.data);
+        ensureActive?.call();
         logI(
           "Calculator response available, cancelling notifications and marking meal as bolused",
         );
@@ -210,13 +245,18 @@ class BolusReminderHelper with Logging {
   Future<ForegroundEvent?> _waitForBolusReminderResult(
     RuntimeContext runtimeContext,
     int mealId,
+    bool Function(BolusWizard)? acceptsBolus,
   ) async {
     final responseHandle = runtimeContext
         .eventWait<MealSuggestionResponseEvent>(
           predicate: (event) => event.mealId == mealId,
         );
     final bolusHandle = runtimeContext
-        .eventWait<TreatmentAvailableEvent<BolusWizard>>();
+        .eventWait<TreatmentAvailableEvent<BolusWizard>>(
+          predicate: acceptsBolus == null
+              ? null
+              : (event) => acceptsBolus(event.data),
+        );
     final timeoutHandle = runtimeContext.durationWait(reminderInterval);
 
     return runtimeContext.any<ForegroundEvent?>([

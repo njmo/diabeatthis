@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../features/meal_advisor/domain/models/meal_advice.dart';
 import '../../l10n/language.dart';
+import '../../meal/meal_decision.dart';
 import 'meal_start_nutrition.dart';
 import 'meal_start_plan.dart';
 
@@ -47,6 +48,7 @@ class MealStartSummary extends StatelessWidget {
           carbsGrams: carbsGrams,
           extendedCarbsGrams: extendedCarbsGrams,
           scheduleSettings: advice.extendedCarbs.scheduleSettings,
+          deferExtendedCarbs: advice.decision == MealDecision.eatNowBolusLater,
         ),
       ],
     );

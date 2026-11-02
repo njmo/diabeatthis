@@ -9,6 +9,12 @@ class MealSummaryItemDraft {
 
   final double consumedAmount;
   final double consumedConfidence;
+  final double? gramsPerAmount;
+  final bool isExtra;
+  final double? carbsPerAmount;
+  final double fatPerAmount;
+  final double proteinPerAmount;
+  final double fiberPerAmount;
 
   const MealSummaryItemDraft({
     required this.name,
@@ -19,6 +25,12 @@ class MealSummaryItemDraft {
     required this.netCarbsPerAmount,
     required this.consumedAmount,
     required this.consumedConfidence,
+    this.gramsPerAmount,
+    this.isExtra = false,
+    this.carbsPerAmount,
+    this.fatPerAmount = 0,
+    this.proteinPerAmount = 0,
+    this.fiberPerAmount = 0,
   });
 
   MealSummaryItemDraft copyWith({
@@ -34,6 +46,12 @@ class MealSummaryItemDraft {
       netCarbsPerAmount: netCarbsPerAmount,
       consumedAmount: consumedAmount ?? this.consumedAmount,
       consumedConfidence: consumedConfidence ?? this.consumedConfidence,
+      gramsPerAmount: gramsPerAmount,
+      isExtra: isExtra,
+      carbsPerAmount: carbsPerAmount,
+      fatPerAmount: fatPerAmount,
+      proteinPerAmount: proteinPerAmount,
+      fiberPerAmount: fiberPerAmount,
     );
   }
 }

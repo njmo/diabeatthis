@@ -178,10 +178,12 @@ class MealSummaryItemRow extends ConsumerWidget {
   }
 
   double _maxAmount(MealSummaryItemDraft item) {
-    if (item.amountLabel == 'g') {
-      return item.plannedAmount * 2;
-    }
-    return item.plannedAmount > 2 ? item.plannedAmount * 2 : 2;
+    final suggested = item.amountLabel == 'g'
+        ? item.plannedAmount * 2
+        : item.plannedAmount > 2
+        ? item.plannedAmount * 2
+        : 2.0;
+    return item.consumedAmount > suggested ? item.consumedAmount : suggested;
   }
 
   double _amountStep(MealSummaryItemDraft item) {

@@ -28,7 +28,7 @@ class MealContextLocalHistoryRepository {
             ('eaten', 'eaten-extra', 'eaten-bolused', 'summarized')
           THEN COALESCE(m.summarized_at, m.planned_at) END
         ) AS eaten_at
-        FROM meal m WHERE m.purpose = 'meal'
+        FROM meal m WHERE m.purpose = 'meal' AND m.status != 'interrupted'
       ) WHERE eaten_at >= ? AND eaten_at < ?
     ''',
           variables: [

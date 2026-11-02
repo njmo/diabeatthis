@@ -14,6 +14,7 @@ import '../models/meal_summary_draft.dart';
 import '../providers/meal_summary_item_ids_provider.dart';
 import '../utils/meal_summary_aaps_suggestion.dart';
 import '../utils/meal_summary_carbs_delta.dart';
+import '../widgets/meal_completion_entry.dart';
 import '../widgets/meal_summary_carbs_hint_card.dart';
 import '../widgets/meal_summary_extra_items_section.dart';
 import '../widgets/meal_summary_item_row.dart';
@@ -21,11 +22,27 @@ import '../widgets/meal_summary_item_row.dart';
 @RoutePage()
 class MealSummaryPage extends ConsumerWidget {
   final int mealId;
+  final bool finishEating;
+  final DateTime? confirmedEatingEndedAt;
+  final bool chooseEarlier;
 
-  const MealSummaryPage({super.key, required this.mealId});
+  const MealSummaryPage({
+    super.key,
+    required this.mealId,
+    this.finishEating = false,
+    this.confirmedEatingEndedAt,
+    this.chooseEarlier = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (finishEating) {
+      return MealCompletionEntry(
+        mealId: mealId,
+        confirmedEatingEndedAt: confirmedEatingEndedAt,
+        chooseEarlier: chooseEarlier,
+      );
+    }
     final asyncDraft = ref.watch(mealSummaryControllerProvider(mealId));
     final itemIds = ref.watch(mealSummaryItemIdsProvider(mealId));
     final notifier = ref.read(mealSummaryControllerProvider(mealId).notifier);
@@ -211,6 +228,7 @@ class MealSummaryPage extends ConsumerWidget {
           ).getPostMealExtendedCarbsScheduleSettings()
         : null;
     final event = buildMealSummaryAapsSuggestionEvent(
+      mealId: draft.mealId,
       aapsCarbs: aapsCarbs,
       extendedCarbsScheduleSettings: extendedCarbsScheduleSettings,
     );

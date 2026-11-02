@@ -1,9 +1,11 @@
 import 'package:clock/clock.dart';
 
+import '../../../../../common/meal/meal_bolus_coverage.dart';
 import '../../../../../common/meal/meal_bolus_timing.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../common/notifications/meal_notification_cancellation.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
+import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../../features/dashboard/data/providers/meal_advisor_result_provider.dart';
@@ -15,6 +17,7 @@ import '../../../../event/model/foreground_event.dart';
 import '../../../../providers/latest_bolus_wizard_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../helpers/bolus_reminder_helper.dart';
+import '../helpers/meal_add_on_bolus_waiter.dart';
 import '../helpers/record_meal_wizard_link.dart';
 import '../meal_monitor_context.dart';
 import 'bolus_then_wait_executor.dart';
@@ -28,11 +31,13 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
   final bool remindImmediately;
   final DateTime waitingSince;
   final MealAdvice? initialAdvice;
+  final int? confirmedCarbs;
 
   WaitForBolusExecutor({
     this.remindImmediately = true,
     DateTime? waitingSince,
     this.initialAdvice,
+    this.confirmedCarbs,
   }) : waitingSince = waitingSince ?? clock.now();
 
   @override
@@ -69,9 +74,33 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
     );
     final meal = mealMonitorContext.activeMeal!;
     final status = meal.status;
-    if (status == 'skipped' || status == 'summarized') {
+    if (status == 'skipped' ||
+        status == 'summarized' ||
+        status == 'interrupted') {
       logI("Meal no longer waits for bolus, checking next meal");
       return NewMealCheckExecutor();
+    }
+    final persisted = await const MealAddOnBolusWaiter()(
+      runtimeContext,
+      mealMonitorContext,
+      remindImmediately: remindImmediately,
+    );
+    mealMonitorContext.throwIfStopped(runtimeContext);
+    if (persisted != null) {
+      if (!persisted) {
+        await runtimeContext.container.read(
+          updateMealProvider(meal, 'skipped').future,
+        );
+        await runtimeContext.container
+            .read(notificationsControllerForegroundProvider)
+            .cancelMealNotifications(meal.id, includeTargetConsent: true);
+        return NewMealCheckExecutor();
+      }
+      await runtimeContext.container.read(
+        updateMealProvider(meal, 'eaten-bolused').future,
+      );
+      mealMonitorContext.throwIfStopped(runtimeContext);
+      return FinalizeMealExecutor();
     }
     final notificationProvider = runtimeContext.container.read(
       notificationsControllerForegroundProvider,
@@ -90,6 +119,7 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
         );
       }
     }
+    mealMonitorContext.throwIfStopped(runtimeContext);
     final decision = advice?.decision ?? MealDecision.eatNowBolusLater;
 
     if (decision != MealDecision.eatNowBolusLater &&
@@ -100,9 +130,16 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
     }
 
     TreatmentAvailableEvent<BolusWizard>? calculatorResponse;
-    final latestBolus = runtimeContext.container.read(
-      latestBolusWizardProvider,
-    );
+    var latestBolus = runtimeContext.container.read(latestBolusWizardProvider);
+    if (latestBolus != null &&
+        runtimeContext.container.exists(databaseProvider)) {
+      final db = runtimeContext.container.read(databaseProvider);
+      if (db.hasOpened &&
+          await mealBolusWizardAlreadyAssigned(db, latestBolus)) {
+        consumeBolusWizard(runtimeContext.container, latestBolus);
+        latestBolus = null;
+      }
+    }
     if (latestBolus != null &&
         isMealBolusRecent(
           bolusAt: latestBolus.createdAt,
@@ -123,9 +160,11 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
       logI("Calculator response missing, showing bolus reminder");
       final suggestion = await _bolusReminderHelper.resolveMealBolusSuggestion(
         runtimeContext,
-        meal,
+        confirmedCarbs == null ? meal : meal.copyWith(carbs: confirmedCarbs),
+        consumed: decision == MealDecision.eatNowBolusLater,
         advice: advice,
       );
+      mealMonitorContext.throwIfStopped(runtimeContext);
       final bolusRecorded = await _bolusReminderHelper.remindUntilBolusRecorded(
         runtimeContext,
         notificationProvider,
@@ -138,7 +177,9 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
         extendedCarbsDeliveryMode: suggestion.extendedCarbsDeliveryMode,
         extendedCarbsDelayMinutes: suggestion.extendedCarbsDelayMinutes,
         extendedCarbsDurationMinutes: suggestion.extendedCarbsDurationMinutes,
+        ensureActive: () => mealMonitorContext.throwIfStopped(runtimeContext),
       );
+      mealMonitorContext.throwIfStopped(runtimeContext);
       if (!bolusRecorded) {
         await runtimeContext.container.read(
           updateMealProvider(meal, 'skipped').future,
@@ -154,12 +195,14 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
       await notificationProvider.cancelMealNotifications(meal.id);
     }
 
+    mealMonitorContext.throwIfStopped(runtimeContext);
     final nextStatus = decision == MealDecision.eatNowBolusLater
         ? 'eaten-bolused'
         : decision.status;
     await runtimeContext.container.read(
       updateMealProvider(meal, nextStatus).future,
     );
+    mealMonitorContext.throwIfStopped(runtimeContext);
     final recordedBolus = calculatorResponse;
     if (recordedBolus != null) {
       await const RecordMealWizardLink()(
@@ -167,6 +210,7 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
         recordedBolus.data,
         meal.id,
       );
+      mealMonitorContext.throwIfStopped(runtimeContext);
       consumeBolusWizard(runtimeContext.container, recordedBolus.data);
     }
 

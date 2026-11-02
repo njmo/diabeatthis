@@ -115,11 +115,11 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     return event.data;
   }
 
-  void showTempTargetNotification(RuntimeContext context, int mealId) {
+  Future<void> showTempTargetNotification(RuntimeContext context, int mealId) {
     final notificationProvider = context.container.read(
       notificationsControllerForegroundProvider,
     );
-    notificationProvider.show(
+    return notificationProvider.show(
       TempTargetNotificationEvent.meal(entityId: mealId),
     );
   }
@@ -127,11 +127,13 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
   Future<bool> showTempTargetUntilDetected(
     RuntimeContext context,
     int mealId,
-    Duration maxWait,
-  ) async {
+    Duration maxWait, {
+    void Function()? ensureActive,
+  }) async {
     final deadline = clock.now().add(maxWait);
 
     while (clock.now().isBefore(deadline)) {
+      ensureActive?.call();
       final target = context.container
           .read(synchronizationCacheControllerProvider)
           .cache
@@ -142,7 +144,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       }
 
       logI("showing temp target suggestion notification");
-      showTempTargetNotification(context, mealId);
+      await showTempTargetNotification(context, mealId);
+      ensureActive?.call();
 
       final remaining = deadline.difference(clock.now());
       final waitTime = remaining < tempTargetSuggestionRetryInterval
@@ -236,10 +239,12 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     RuntimeContext context,
     int mealId, {
     DeviceStatus? adviceStatus,
+    void Function()? ensureActive,
   }) async {
     final eligibility = await context.container
         .read(checkMealAdviceEligibilityUseCaseProvider)
         .call();
+    ensureActive?.call();
     final statusEligibility = context.container
         .read(checkMealAdvisorDeviceStatusUseCaseProvider)
         .call(context.container.read(deviceStatusValueProvider));
@@ -257,6 +262,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
         .show(
           MealAdvicePendingNotificationEvent(mealId: mealId, unavailable: true),
         );
+    ensureActive?.call();
     return false;
   }
 
@@ -293,6 +299,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       logI("Problem normalizing meal time");
       return NewMealCheckExecutor();
     }
+    mealMonitorContext.throwIfStopped(runtimeContext);
 
     final timeToMealNormalized = normalizedMealTime.difference(clock.now());
     logI("Normalized meal planned at ${normalizedMealTime.toIso8601String()}");
@@ -308,6 +315,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     var mealTempTargetDetected = false;
 
     while (true) {
+      mealMonitorContext.throwIfStopped(runtimeContext);
       final now = clock.now();
       final timeToMeal = normalizedMealTime.difference(now);
       final pathDecision = detectPathDecision(timeToMeal);
@@ -345,12 +353,15 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               runtimeContext,
               maxWaitMinutes,
             );
+            mealMonitorContext.throwIfStopped(runtimeContext);
             logI("Blood sugar value: ${deviceStatus.bg}");
             if (deviceStatus.bg > 100 && !mealTempTargetDetected) {
               mealTempTargetDetected = await showTempTargetUntilDetected(
                 runtimeContext,
                 mealMonitorContext.activeMeal!.id,
                 Duration(minutes: maxWaitMinutes),
+                ensureActive: () =>
+                    mealMonitorContext.throwIfStopped(runtimeContext),
               );
               continue;
             }
@@ -373,6 +384,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               runtimeContext,
               mealMonitorContext.activeMeal!.id,
             );
+            mealMonitorContext.throwIfStopped(runtimeContext);
 
             logI("after macro status await");
 
@@ -408,6 +420,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                   await checkAdviceEligibility(
                     runtimeContext,
                     mealMonitorContext.activeMeal!.id,
+                    ensureActive: () =>
+                        mealMonitorContext.throwIfStopped(runtimeContext),
                   );
                   return MealMonitorStateIdle();
                 }
@@ -486,6 +500,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               runtimeContext,
               mealMonitorContext.activeMeal!.id,
               adviceStatus: deviceStatus,
+              ensureActive: () =>
+                  mealMonitorContext.throwIfStopped(runtimeContext),
             )) {
               return MealMonitorStateIdle();
             }
@@ -496,13 +512,16 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             final notificationProvider = runtimeContext.container.read(
               notificationsControllerForegroundProvider,
             );
-            notificationProvider.show(
+            await notificationProvider.show(
               MealSuggestionNotificationEvent(
                 mealId: mealMonitorContext.activeMeal!.id,
                 minutes: mealAdvice.wait?.recommendedMinutes ?? 0,
                 decision: mealAdvice.decision!,
                 carbs: mealStatus.netCarbsGrams.ceil(),
-                extendedCarbs: mealAdvice.extendedCarbs.grams,
+                extendedCarbs:
+                    mealAdvice.decision == MealDecision.eatNowBolusLater
+                    ? 0
+                    : mealAdvice.extendedCarbs.grams,
                 extendedCarbsDeliveryMode:
                     mealAdvice.extendedCarbs.scheduleSettings.deliveryMode,
                 extendedCarbsDelayMinutes:
@@ -511,10 +530,14 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     mealAdvice.extendedCarbs.scheduleSettings.durationMinutes,
               ),
             );
+            mealMonitorContext.throwIfStopped(runtimeContext);
 
             logI("Waiting for user response");
             final response = await runtimeContext
-                .waitForEvent<MealSuggestionResponseEvent>();
+                .waitForEvent<MealSuggestionResponseEvent>(
+                  predicate: (event) =>
+                      event.mealId == mealMonitorContext.activeMeal!.id,
+                );
             // if no response but device status came, recalculate
             var retry = false;
             logI("Received response from user");
@@ -524,6 +547,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                   runtimeContext,
                   mealMonitorContext.activeMeal!.id,
                   adviceStatus: adviceDeviceStatus,
+                  ensureActive: () =>
+                      mealMonitorContext.throwIfStopped(runtimeContext),
                 )) {
                   nextExecutor = MealMonitorStateIdle();
                   return;
@@ -536,6 +561,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     decisionStatus,
                   ).future,
                 );
+                mealMonitorContext.throwIfStopped(runtimeContext);
                 mealMonitorContext.activeMeal = mealMonitorContext.activeMeal!
                     .copyWith(status: decisionStatus, updatedAt: clock.now());
                 await runtimeContext.container.read(
@@ -544,6 +570,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     mealAdvice,
                   ).future,
                 );
+                mealMonitorContext.throwIfStopped(runtimeContext);
               },
               skip: (_) async {
                 logI("User dismissed meal, clicked on notification");
@@ -553,6 +580,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     'skipped',
                   ).future,
                 );
+                mealMonitorContext.throwIfStopped(runtimeContext);
                 nextExecutor = MealMonitorStateIdle();
               },
               snooze: (_, input) {

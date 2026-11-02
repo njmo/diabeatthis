@@ -17,6 +17,7 @@ import '../../../../event/model/foreground_event.dart';
 import '../../../../providers/latest_bolus_wizard_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../helpers/bolus_reminder_helper.dart';
+import '../helpers/meal_add_on_bolus_waiter.dart';
 import '../helpers/record_meal_wizard_link.dart';
 import '../meal_monitor_context.dart';
 import 'finalize_meal_executor.dart';
@@ -108,6 +109,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
             mealMonitorContext.activeMeal!.id,
           ).future,
         );
+        mealMonitorContext.throwIfStopped(runtimeContext);
         if (mealSummary == null) {
           logI(
             "Problem gathering consumed meal summary, continuing finished meal detection",
@@ -131,16 +133,21 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
 
     var shouldContinue = true;
     while (shouldContinue) {
+      mealMonitorContext.throwIfStopped(runtimeContext);
       logI("Showing user notification if he finished eating");
-      notificationProvider.show(
+      await notificationProvider.show(
         FinishedEatingNotificationEvent(
           mealId: mealMonitorContext.activeMeal!.id,
           isAddOn: isAddOn,
         ),
       );
+      mealMonitorContext.throwIfStopped(runtimeContext);
       logI("Notification shown, waiting for user response");
       final response = await runtimeContext
-          .waitForEvent<FinishedEatingResponseEvent>();
+          .waitForEvent<FinishedEatingResponseEvent>(
+            predicate: (event) =>
+                event.mealId == mealMonitorContext.activeMeal!.id,
+          );
       logI("Got response from user");
 
       await response.when<Future<void>>(
@@ -167,9 +174,11 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           'waiting-for-bolus',
         ).future,
       );
+      mealMonitorContext.throwIfStopped(runtimeContext);
       logI("Meal waiting for bolus after eating");
       return WaitForBolusExecutor(
         remindImmediately: true,
+        confirmedCarbs: grams,
         initialAdvice: MealAdvice.full(
           MealDecision.eatNowBolusLater,
           null,
@@ -183,6 +192,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     await runtimeContext.container.read(
       updateMealProvider(mealMonitorContext.activeMeal!, mealStatus).future,
     );
+    mealMonitorContext.throwIfStopped(runtimeContext);
     logI("Meal marked as $mealStatus");
 
     return FinalizeMealExecutor();
@@ -193,6 +203,12 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     MealMonitorContext mealMonitorContext,
   ) async {
     logI("Waiting for add-on calculator response");
+    final persisted = await const MealAddOnBolusWaiter()(
+      runtimeContext,
+      mealMonitorContext,
+      remindImmediately: false,
+    );
+    if (persisted != null) return persisted;
     final calculatorResponse = await runtimeContext
         .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<BolusWizard>>(
           Duration(minutes: 10),
@@ -203,12 +219,14 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       await runtimeContext.container
           .read(notificationsControllerForegroundProvider)
           .cancelMealNotifications(mealMonitorContext.activeMeal!.id);
+      mealMonitorContext.throwIfStopped(runtimeContext);
       await const RecordMealWizardLink()(
         runtimeContext,
         calculatorResponse.data,
         mealMonitorContext.activeMeal!.id,
         type: MealWizardRelationType.continuation,
       );
+      mealMonitorContext.throwIfStopped(runtimeContext);
       consumeBolusWizard(runtimeContext.container, calculatorResponse.data);
       return true;
     }
@@ -217,6 +235,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       runtimeContext,
       mealMonitorContext.activeMeal!.id,
     );
+    mealMonitorContext.throwIfStopped(runtimeContext);
     logI("Add-on calculator response missing, showing reminder");
 
     return _bolusReminderHelper.remindUntilBolusRecorded(
@@ -225,6 +244,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       mealMonitorContext.activeMeal!.id,
       carbs: grams,
       isAddOn: true,
+      ensureActive: () => mealMonitorContext.throwIfStopped(runtimeContext),
       onBolusRecorded: (wizard) async {
         await const RecordMealWizardLink()(
           runtimeContext,
@@ -232,6 +252,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           mealMonitorContext.activeMeal!.id,
           type: MealWizardRelationType.continuation,
         );
+        mealMonitorContext.throwIfStopped(runtimeContext);
         consumeBolusWizard(runtimeContext.container, wizard);
       },
     );

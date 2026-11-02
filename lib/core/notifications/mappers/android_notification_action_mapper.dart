@@ -10,11 +10,14 @@ class AndroidNotificationActionMapper {
 
   const AndroidNotificationActionMapper();
 
-  AndroidNotificationAction _mapPlain(PlainNotificationActionDef action) {
+  AndroidNotificationAction _mapPlain(
+    PlainNotificationActionDef action,
+    bool showUserInterface,
+  ) {
     return AndroidNotificationAction(
       action.type.toDarwinString(),
       action.label,
-      showsUserInterface: false,
+      showsUserInterface: showUserInterface,
       cancelNotification: true,
     );
   }
@@ -29,7 +32,13 @@ class AndroidNotificationActionMapper {
     );
   }
 
-  AndroidNotificationAction map(NotificationActionDef action) {
-    return action.map(plain: _mapPlain, text: _mapText);
+  AndroidNotificationAction map(
+    NotificationActionDef action, {
+    bool showUserInterface = false,
+  }) {
+    return action.map(
+      plain: (value) => _mapPlain(value, showUserInterface),
+      text: _mapText,
+    );
   }
 }

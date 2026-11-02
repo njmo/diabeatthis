@@ -25,6 +25,8 @@ class FriendlyAmountSelector extends StatelessWidget {
     this.min = 0,
     this.max,
     this.step = 0.5,
+    this.compact = false,
+    this.onEditingChanged,
   });
 
   final double value;
@@ -34,6 +36,8 @@ class FriendlyAmountSelector extends StatelessWidget {
   final double min;
   final double? max;
   final double step;
+  final bool compact;
+  final ValueChanged<bool>? onEditingChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -58,15 +62,18 @@ class FriendlyAmountSelector extends StatelessWidget {
                   onPressed: normalizedValue <= min
                       ? null
                       : () => onChanged(_normalize(normalizedValue - step)),
-                  icon: Text(_stepLabel(-step), style: TextStyle(fontSize: 20)),
+                  icon: compact
+                      ? const Icon(Icons.remove)
+                      : Text(_stepLabel(-step), style: TextStyle(fontSize: 20)),
                 ),
-                IconButton.filledTonal(
-                  tooltip: context.lang.commonLessTooltip,
-                  onPressed: normalizedValue <= min
-                      ? null
-                      : () => onChanged(_normalize(normalizedValue - 1)),
-                  icon: Text(_stepLabel(-1)),
-                ),
+                if (!compact)
+                  IconButton.filledTonal(
+                    tooltip: context.lang.commonLessTooltip,
+                    onPressed: normalizedValue <= min
+                        ? null
+                        : () => onChanged(_normalize(normalizedValue - 1)),
+                    icon: Text(_stepLabel(-1)),
+                  ),
                 Expanded(
                   child: Tooltip(
                     message: context.lang.amountEntryTitle,
@@ -80,6 +87,7 @@ class FriendlyAmountSelector extends StatelessWidget {
                         textStyle: Theme.of(context).textTheme.titleLarge,
                       ),
                       onPressed: () async {
+                        onEditingChanged?.call(true);
                         final entered = await showDialog<double>(
                           context: context,
                           builder: (_) => AmountEntryDialog(
@@ -88,8 +96,9 @@ class FriendlyAmountSelector extends StatelessWidget {
                             max: max,
                           ),
                         );
-                        if (context.mounted && entered != null) {
-                          onChanged(_normalize(entered));
+                        if (context.mounted) {
+                          onEditingChanged?.call(false);
+                          if (entered != null) onChanged(_normalize(entered));
                         }
                       },
                       child: Row(
@@ -108,20 +117,23 @@ class FriendlyAmountSelector extends StatelessWidget {
                     ),
                   ),
                 ),
-                IconButton.filledTonal(
-                  tooltip: context.lang.commonMoreTooltip,
-                  onPressed: max != null && normalizedValue >= max!
-                      ? null
-                      : () => onChanged(_normalize(normalizedValue + 1)),
-                  icon: Text(_stepLabel(1)),
-                ),
+                if (!compact)
+                  IconButton.filledTonal(
+                    tooltip: context.lang.commonMoreTooltip,
+                    onPressed: max != null && normalizedValue >= max!
+                        ? null
+                        : () => onChanged(_normalize(normalizedValue + 1)),
+                    icon: Text(_stepLabel(1)),
+                  ),
                 IconButton.filledTonal(
                   padding: const EdgeInsets.all(15),
                   tooltip: context.lang.commonMoreTooltip,
                   onPressed: max != null && normalizedValue >= max!
                       ? null
                       : () => onChanged(_normalize(normalizedValue + step)),
-                  icon: Text(_stepLabel(step), style: TextStyle(fontSize: 20)),
+                  icon: compact
+                      ? const Icon(Icons.add)
+                      : Text(_stepLabel(step), style: TextStyle(fontSize: 20)),
                 ),
               ],
             ),

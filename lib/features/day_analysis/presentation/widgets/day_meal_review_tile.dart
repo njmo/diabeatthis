@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/meal/meal_completion_decision_fact.dart';
 import '../../../../core/domain/model/bolus_wizard.dart';
 import '../../../meals/presentation/helpers/meal_wizard_relation_label.dart';
 import '../../domain/models/day_meal_review_entry.dart';
@@ -91,6 +92,8 @@ class DayMealReviewTile extends StatelessWidget {
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (meal?.completionDecision != null)
+            MealCompletionDecisionFact(decision: meal!.completionDecision!),
           if (entry.wizards.isEmpty)
             Text(context.lang.uiMealRecordedNoLinkedCalculatorEntryInThisDay),
           ...entry.wizards.map((wizard) {

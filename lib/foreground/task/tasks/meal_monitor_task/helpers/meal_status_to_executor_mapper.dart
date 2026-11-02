@@ -5,6 +5,7 @@ import '../executors/finalize_meal_executor.dart';
 import '../executors/idle_executor.dart';
 import '../executors/meal_monitor_state_executor.dart';
 import '../executors/monitor_until_meal.dart';
+import '../executors/stop_meal_monitoring_executor.dart';
 import '../executors/wait_for_bolus_executor.dart';
 
 MealMonitorStateExecutor? mealStatusChangedEventToExecutor(
@@ -12,6 +13,12 @@ MealMonitorStateExecutor? mealStatusChangedEventToExecutor(
   bool eventForActiveMeal,
 ) {
   return event.map(
+    interrupted: (value) => eventForActiveMeal
+        ? StopMealMonitoringExecutor(mealId: value.mealId, interrupted: true)
+        : null,
+    summarized: (value) => eventForActiveMeal
+        ? StopMealMonitoringExecutor(mealId: value.mealId)
+        : null,
     eating: (MealStartedEatingEvent value) =>
         DetectFinishedEatingExecutor(shouldBolus: false),
     eatingExtra: (MealEatingExtraEvent value) =>

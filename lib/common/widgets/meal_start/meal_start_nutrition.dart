@@ -12,11 +12,13 @@ class MealStartNutrition extends StatelessWidget {
     required this.carbsGrams,
     required this.extendedCarbsGrams,
     required this.scheduleSettings,
+    this.deferExtendedCarbs = false,
   });
 
   final double carbsGrams;
   final double extendedCarbsGrams;
   final ExtendedCarbsScheduleSettings scheduleSettings;
+  final bool deferExtendedCarbs;
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +46,10 @@ class MealStartNutrition extends StatelessWidget {
             ),
           ],
         ),
-        if (extendedCarbsGrams > 0) ...[
+        if (deferExtendedCarbs) ...[
+          const SizedBox(height: 10),
+          Text(context.lang.mealStartDeferredEcarbs),
+        ] else if (extendedCarbsGrams > 0) ...[
           const SizedBox(height: 10),
           MealStartSchedule(
             grams: extendedCarbsGrams.ceil(),

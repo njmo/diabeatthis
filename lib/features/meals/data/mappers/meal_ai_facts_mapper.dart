@@ -43,6 +43,12 @@ class MealAiFactsMapper {
                 fatProteinEffective: snapshot.wbtWeightedEffectiveConfidence,
               ),
         wizardAssignments: wizardAssignments,
+        completionDecision:
+            cutoff == null ||
+                details.meal.completionDecision?.recordedAt.isAfter(cutoff) !=
+                    true
+            ? details.meal.completionDecision
+            : null,
       ),
       mealId: details.meal.id,
       name: details.meal.name,

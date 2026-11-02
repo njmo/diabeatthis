@@ -60,7 +60,7 @@ void main() {
           currentStatus,
           alreadySaved ? 'bolused-eating' : 'eating-then-bolus',
         );
-        expect(adviceReads, 1);
+        expect(adviceReads, 0);
         expect(tester.takeException(), isNull);
       },
     );
@@ -79,7 +79,6 @@ void main() {
 
   group('shouldOpenAapsAfterMealStatusUpdate', () {
     test('opens AAPS for statuses that require AAPS entry', () {
-      expect(shouldOpenAapsAfterMealStatusUpdate('eating-then-bolus'), isTrue);
       expect(shouldOpenAapsAfterMealStatusUpdate('waiting-for-bolus'), isTrue);
       expect(shouldOpenAapsAfterMealStatusUpdate('bolused-eating'), isTrue);
       expect(shouldOpenAapsAfterMealStatusUpdate('bolused-waiting'), isTrue);
@@ -87,6 +86,7 @@ void main() {
     });
 
     test('does not open AAPS for non-bolus status confirmations', () {
+      expect(shouldOpenAapsAfterMealStatusUpdate('eating-then-bolus'), isFalse);
       expect(shouldOpenAapsAfterMealStatusUpdate('eating'), isFalse);
       expect(shouldOpenAapsAfterMealStatusUpdate('eaten'), isFalse);
       expect(shouldOpenAapsAfterMealStatusUpdate('waited-eating'), isFalse);
@@ -94,7 +94,7 @@ void main() {
   });
 
   group('shouldCreateAapsSuggestionForMealStatus', () {
-    test('opens eat now bolus later only when extended carbs are present', () {
+    test('defers eat-first eCarbs until consumption is confirmed', () {
       expect(
         shouldCreateAapsSuggestionForMealStatus(
           'eating-then-bolus',
@@ -107,7 +107,7 @@ void main() {
           'eating-then-bolus',
           extendedCarbsGrams: 20,
         ),
-        isTrue,
+        isFalse,
       );
     });
 

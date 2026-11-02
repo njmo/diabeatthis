@@ -9,27 +9,30 @@ class MealAddOnModeDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      scrollable: true,
       title: Text(context.lang.mealSummaryExtraTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
             leading: const Icon(Icons.looks_one_outlined),
-            title: Text(context.lang.mealAddOnOneAndHalf),
+            title: Text(context.lang.mealAddOnOneAndHalfTotal),
+            subtitle: Text(context.lang.mealAddOnTotalHint),
             onTap: () =>
                 Navigator.of(context).pop(MealAddOnChoice.oneAndHalfPortion),
           ),
           ListTile(
             leading: const Icon(Icons.looks_two_outlined),
-            title: Text(context.lang.mealAddOnDouble),
+            title: Text(context.lang.mealAddOnDoubleTotal),
+            subtitle: Text(context.lang.mealAddOnTotalHint),
             onTap: () =>
                 Navigator.of(context).pop(MealAddOnChoice.doublePortion),
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.tune),
-            title: Text(context.lang.mealAddOnAdvanced),
-            subtitle: Text(context.lang.mealAddOnAdvancedSubtitle),
+            title: Text(context.lang.mealAddOnManual),
+            subtitle: Text(context.lang.mealAddOnManualHint),
             onTap: () => Navigator.of(context).pop(MealAddOnChoice.advanced),
           ),
         ],

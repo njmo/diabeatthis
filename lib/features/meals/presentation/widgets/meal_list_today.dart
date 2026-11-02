@@ -1,155 +1,174 @@
-import 'package:auto_route/auto_route.dart';
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/l10n/language.dart';
+import '../../../../common/meal/meal_display_name.dart';
+import '../../../../common/meal/open_meal_add_on.dart';
+import '../../../../common/meal/open_meal_completion.dart';
+import '../../../../common/widgets/meal_progress/active_meal_progress_card.dart';
+import '../../../../common/widgets/meal_progress/meal_progress_section_heading.dart';
+import '../../../../common/widgets/meal_progress/show_meal_interruption_dialog.dart';
 import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../../core/domain/model/meal_status_flow.dart';
+import '../../../dashboard/data/providers/time_now_provider.dart';
 import '../../../dashboard/presentation/utils/meal_status_dialog_result_handler.dart';
 import '../../../dashboard/presentation/utils/show_meal_status_dialog.dart';
-import '../../../dashboard/presentation/widgets/trailing_wait_after_bolus_status.dart';
 import '../../data/providers/meal_activation_guard_provider.dart';
 import '../../data/providers/meal_database_provider.dart';
 import 'meal_details/meal_detail_formatters.dart';
+import 'meal_progress/active_meal_add_on_bolus_action.dart';
+import 'meal_progress/active_meal_steps.dart';
+import 'meal_progress/active_meal_wait_footer.dart';
+import 'meal_progress/delete_dashboard_meal.dart';
+import 'meal_progress/meal_schedule_group.dart';
+import 'meal_progress/meal_schedule_labels.dart';
+import 'meal_progress/meal_schedule_tile.dart';
 
 class MealListToday extends ConsumerWidget {
   const MealListToday({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final meals = ref.watch(plannedMealsForTodayStreamProvider);
+    final meals =
+        ref.watch(plannedMealsForTodayStreamProvider).asData?.value ??
+        const <domain.Meal>[];
     final parentModeEnabled = ref.watch(parentModeProvider);
-    final mealsValue = meals.asData?.value ?? const [];
     final blockingMeal =
         ref.watch(anyMealBlockingActivationProvider).asData?.value ??
-        _mealBlockingActivation(mealsValue);
+        firstMealBlockingActivation(meals);
+    final now = ref.watch(timeNowProvider).asData?.value ?? clock.now();
+    // Keep a previous day's active meal reachable even while the list reloads.
+    final visibleMeals = [
+      if (blockingMeal != null &&
+          !meals.any((meal) => meal.id == blockingMeal.id))
+        blockingMeal,
+      ...meals,
+    ];
+    final activeMeals = visibleMeals.where(
+      (meal) => mealStatusBlocksAnotherMealActivation(meal.status),
+    );
+    final summaryMeals = visibleMeals.where(
+      (meal) => mealStatusReadyToSummarize(meal.status),
+    );
+    final groups = mealScheduleGroups(visibleMeals);
+
+    Future<void> openExistingActions(domain.Meal meal) async {
+      final result = await showMealStatusDialog(context: context, meal: meal);
+      if (result != null && context.mounted) {
+        await handleMealStatusDialogResult(
+          context: context,
+          ref: ref,
+          meal: meal,
+          result: result,
+        );
+      }
+    }
+
+    VoidCallback? deleteAction(domain.Meal meal) => parentModeEnabled
+        ? () => deleteDashboardMeal(context: context, ref: ref, meal: meal)
+        : null;
 
     return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: ListView.builder(
-        itemBuilder: (context, index) {
-          final meal = mealsValue[index];
-          final blockedByAnotherMeal =
-              blockingMeal != null && blockingMeal.id != meal.id;
-          final readyToSummarize = mealStatusReadyToSummarize(meal.status);
-          final canOpenMeal = !blockedByAnotherMeal || readyToSummarize;
-
-          return InkWell(
-            onTap: canOpenMeal
-                ? () async {
-                    if (readyToSummarize) {
-                      context.router.push(
-                        routes.MealSummaryRoute(mealId: meal.id),
-                      );
-                      return;
-                    }
-                    final result = await showMealStatusDialog(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (activeMeals.isNotEmpty)
+            MealProgressSectionHeading(title: lang.mealProgressCurrent),
+          for (final meal in activeMeals)
+            ActiveMealProgressCard(
+              key: ValueKey('active-meal-${meal.id}'),
+              name: mealDisplayName(meal.name),
+              quickMeal: isQuickMealName(meal.name),
+              status: mealStatusLabel(meal.status ?? 'planned'),
+              schedule: mealScheduleLabel(context, meal.plannedAt, now),
+              steps: ActiveMealSteps(meal: meal),
+              progressAction: meal.status == 'eating-extra'
+                  ? ActiveMealAddOnBolusAction(mealId: meal.id)
+                  : null,
+              actionLabel: meal.status == 'bolused-waiting'
+                  ? lang.mealStatusStartEating
+                  : meal.status == 'waiting-for-bolus'
+                  ? lang.mealProgressOpenCalculator
+                  : lang.mealStatusAte,
+              onAction: () async {
+                if (mealStatusesStartingEating.contains(meal.status) ||
+                    meal.status == 'eating-extra') {
+                  openMealCompletion(context, mealId: meal.id);
+                } else if (meal.status == 'waiting-for-bolus') {
+                  try {
+                    await openAapsAfterBolusStatusUpdateIfNeeded(
                       context: context,
+                      ref: ref,
                       meal: meal,
+                      status: 'waiting-for-bolus',
                     );
-                    if (result != null && context.mounted) {
-                      await handleMealStatusDialogResult(
-                        context: context,
-                        ref: ref,
-                        meal: meal,
-                        result: result,
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(lang.aapsOpenFailed)),
                       );
                     }
                   }
-                : null,
-            child: Card(
-              elevation: 2,
-              shadowColor: Colors.black12,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+                } else {
+                  openExistingActions(meal);
+                }
+              },
+              addFoodLabel: lang.mealAddOnAction,
+              onAddFood: mealStatusesStartingEating.contains(meal.status)
+                  ? () => openMealAddOn(context: context, ref: ref, meal: meal)
+                  : null,
+              onInterrupt: () => showMealInterruptionDialog(
+                context: context,
+                ref: ref,
+                meal: meal,
               ),
-              child: ListTile(
-                enabled: canOpenMeal,
-                title: Text(
-                  meal.name,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
-                ),
-                subtitle: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    children: [
-                      _buildListTile(
-                        _shortTime(meal.plannedAt!),
-                        Icons.access_time,
-                        Theme.of(context).colorScheme,
-                      ),
-                      const SizedBox(width: 10),
-                      _buildListTile(
-                        _toMealStatus(meal.status),
-                        Icons.note_rounded,
-                        Theme.of(context).colorScheme,
-                      ),
-                    ],
-                  ),
-                ),
-                trailing: (parentModeEnabled)
-                    ? IconButton(
-                        onPressed: () {
-                          ref.read(removeMealByIdProvider(meal.id));
-                        },
-                        icon: Icon(Icons.remove_circle),
-                        iconSize: 20,
-                      )
-                    : (meal.status == 'bolused-waiting')
-                    ? TrailingWaitAfterBolusStatus(meal: meal)
-                    : const SizedBox.shrink(),
+              onDelete: deleteAction(meal),
+              footer: meal.status == 'bolused-waiting'
+                  ? ActiveMealWaitFooter(meal: meal)
+                  : null,
+            ),
+          if (summaryMeals.isNotEmpty)
+            MealProgressSectionHeading(title: lang.mealProgressToSummarize),
+          for (final meal in summaryMeals)
+            MealScheduleTile(
+              meal: meal,
+              enabled: true,
+              showDate: true,
+              onOpen: () => openMealCompletion(context, mealId: meal.id),
+              onDelete: deleteAction(meal),
+            ),
+          if (groups.isNotEmpty)
+            MealProgressSectionHeading(title: lang.dashboardPlannedMealsTitle),
+          for (final group in groups) ...[
+            MealProgressSectionHeading(
+              title: mealScheduleDateLabel(context, group.date, now),
+              date:
+                  group.date == null ||
+                      mealScheduleDateLabel(context, group.date, now) ==
+                          mealScheduleFullDate(context, group.date!)
+                  ? null
+                  : mealScheduleFullDate(context, group.date!),
+            ),
+            for (final meal in group.meals)
+              MealScheduleTile(
+                meal: meal,
+                enabled: blockingMeal == null || blockingMeal.id == meal.id,
+                onOpen: () => openExistingActions(meal),
+                onDelete: deleteAction(meal),
               ),
-            ),
-          );
-        },
-        itemCount: mealsValue.length,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-      ),
-    );
-  }
-
-  Widget _buildListTile(String text, IconData icon, ColorScheme scheme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: scheme.onSecondaryContainer),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: scheme.onSecondaryContainer,
-            ),
-          ),
+          ],
         ],
       ),
     );
   }
-
-  String _toMealStatus(String? status) {
-    return mealStatusLabel(status ?? 'planned');
-  }
-
-  String _shortTime(DateTime? dt) {
-    if (dt == null) return "—";
-    final t = TimeOfDay.fromDateTime(dt);
-    return "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
-  }
 }
 
-domain.Meal? _mealBlockingActivation(List<domain.Meal> meals) {
+domain.Meal? firstMealBlockingActivation(Iterable<domain.Meal> meals) {
   for (final meal in meals) {
-    if (mealStatusBlocksAnotherMealActivation(meal.status)) {
-      return meal;
-    }
+    if (mealStatusBlocksAnotherMealActivation(meal.status)) return meal;
   }
   return null;
 }

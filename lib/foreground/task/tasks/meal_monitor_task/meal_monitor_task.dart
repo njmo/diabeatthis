@@ -38,6 +38,23 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
   @override
   bool shouldInterrupt(ForegroundEvent event) {
     logI("MealMonitorTask shouldInterrupt ${event.runtimeType}");
+    if (event is MealEatingExtraEvent &&
+        _stoppedMeals[event.mealId] is MealSummarizedEvent) {
+      // A new, persisted add-on may intentionally reopen a completed summary.
+      _stoppedMeals.remove(event.mealId);
+    }
+    if (event is MealInterruptedEvent || event is MealSummarizedEvent) {
+      final terminalEvent = event as MealStatusChangedEvent;
+      _stoppedMeals[terminalEvent.mealId] = terminalEvent;
+      if (_activeMealExecutorContext.activeMeal?.id == terminalEvent.mealId) {
+        _activeMealExecutorContext.stop(terminalEvent);
+        return true;
+      }
+      if (_loadingMealId == terminalEvent.mealId) {
+        return true;
+      }
+      return false;
+    }
     if (_state.interruptableEvents.contains(event.runtimeType)) {
       return _state.shouldInterrupt(event, _activeMealExecutorContext);
     }
@@ -46,6 +63,14 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
 
   MealMonitorStateExecutor _state = MealMonitorStateIdle();
   MealMonitorContext _activeMealExecutorContext = MealMonitorContext();
+  int? _loadingMealId;
+  final Map<int, MealStatusChangedEvent> _stoppedMeals = {};
+
+  void _throwIfMealStopped(RuntimeContext context) {
+    final event = _stoppedMeals[_activeMealExecutorContext.activeMeal?.id];
+    if (event != null) _activeMealExecutorContext.stop(event);
+    _activeMealExecutorContext.throwIfStopped(context);
+  }
 
   void _transitionTo({
     MealMonitorContext? nextMealExecutorContext,
@@ -72,11 +97,19 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
     RuntimeContext context,
     int mealId,
   ) async {
-    context.container.invalidate(getMealByIdProvider(mealId));
-    final meal = await context.container.read(
-      getMealByIdProvider(mealId).future,
-    );
-    return MealMonitorContext(activeMeal: meal);
+    _loadingMealId = mealId;
+    try {
+      context.container.invalidate(getMealByIdProvider(mealId));
+      final meal = await context.container.read(
+        getMealByIdProvider(mealId).future,
+      );
+      final nextContext = MealMonitorContext(activeMeal: meal);
+      final stopEvent = _stoppedMeals[mealId];
+      if (stopEvent != null) nextContext.stop(stopEvent);
+      return nextContext;
+    } finally {
+      _loadingMealId = null;
+    }
   }
 
   @override
@@ -117,6 +150,23 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
         final eventForActiveMeal =
             _activeMealExecutorContext.activeMeal?.id ==
             interruptedEvent.mealId;
+
+        final terminal =
+            interruptedEvent is MealInterruptedEvent ||
+            interruptedEvent is MealSummarizedEvent;
+        if (terminal) {
+          final nextExecutor = mealStatusChangedEventToExecutor(
+            interruptedEvent,
+            eventForActiveMeal,
+          );
+          if (nextExecutor != null) {
+            mealMonitorTransition = MealMonitorTransition(
+              MealMonitorContext(),
+              nextExecutor,
+            );
+          }
+          break;
+        }
 
         MealMonitorContext? nextMealExecutorContext;
         // if event is not for active meal and this is not meal skipped event
@@ -175,10 +225,12 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
 
     // execute main state machine loop till interrupt.
     while (true) {
+      _throwIfMealStopped(context);
       final nextState = await _state.execute(
         context,
         _activeMealExecutorContext,
       );
+      _throwIfMealStopped(context);
       _transitionTo(nextExecutor: nextState, context: context);
     }
   }

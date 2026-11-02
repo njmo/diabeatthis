@@ -8,14 +8,18 @@ import '../models/notification_key.dart';
 class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   const AapsBolusSuggestionNotificationEvent({
     required this.carbs,
+    this.mealId,
     this.extendedCarbs = 0,
+    this.extendedCarbsAreAdditional = false,
     this.extendedCarbsDeliveryMode,
     this.extendedCarbsDelayMinutes,
     this.extendedCarbsDurationMinutes,
   });
 
   final int carbs;
+  final int? mealId;
   final int extendedCarbs;
+  final bool extendedCarbsAreAdditional;
   // TODO: Use delivery mode when rendering e-carbs text once MealAdvisor
   // supports shifted bolus recommendations for extended carbs. Today the
   // notification text only renders delay/duration.
@@ -30,7 +34,7 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   String get notificationResponseEvent => 'aaps_bolus_suggestion';
 
   @override
-  NotificationKey get key => NotificationKey(type: type, entityId: 0);
+  NotificationKey get key => NotificationKey(type: type, entityId: mealId ?? 0);
 
   @override
   String get title => _calculatorInstruction;
@@ -78,7 +82,10 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
       throw StateError('AAPS extended carbs suggestion requires schedule.');
     }
 
-    return lang.notificationExtendedCarbsSchedule(
+    final format = extendedCarbsAreAdditional
+        ? lang.notificationAdditionalExtendedCarbsSchedule
+        : lang.notificationExtendedCarbsSchedule;
+    return format(
       extendedCarbs,
       formatExtendedCarbsScheduleMinutes(delayMinutes),
       formatExtendedCarbsScheduleMinutes(durationMinutes),
@@ -91,7 +98,9 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   @override
   Map<String, Object?> toJson() => {
     'carbs': carbs,
+    if (mealId != null) 'mealId': mealId,
     'extendedCarbs': extendedCarbs,
+    if (extendedCarbsAreAdditional) 'extendedCarbsAreAdditional': true,
     'extendedCarbsDeliveryMode': extendedCarbsDeliveryMode?.name,
     'extendedCarbsDelayMinutes': extendedCarbsDelayMinutes,
     'extendedCarbsDurationMinutes': extendedCarbsDurationMinutes,
@@ -102,7 +111,10 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   ) {
     return AapsBolusSuggestionNotificationEvent(
       carbs: json['carbs'] as int,
+      mealId: json['mealId'] as int?,
       extendedCarbs: json['extendedCarbs'] as int? ?? 0,
+      extendedCarbsAreAdditional:
+          json['extendedCarbsAreAdditional'] as bool? ?? false,
       extendedCarbsDeliveryMode: _deliveryModeFromJson(
         json['extendedCarbsDeliveryMode'] as String?,
       ),

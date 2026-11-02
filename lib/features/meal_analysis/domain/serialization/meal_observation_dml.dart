@@ -46,6 +46,7 @@ void appendMealObservationDml(
   String prefix,
   MealAiObservation observed, {
   required DmlPredictionRegistry predictions,
+  required DateTime asOf,
 }) {
   final meal = observed.meal;
   final before = observed.before;
@@ -60,6 +61,7 @@ void appendMealObservationDml(
       workflowWait: meal.wait,
       before: before,
       outcome: outcome,
+      asOf: asOf,
       includeLimitations: false,
     ),
   );

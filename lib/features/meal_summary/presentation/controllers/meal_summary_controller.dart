@@ -5,6 +5,7 @@ import '../../domain/use_cases/finalize_meal_summary_use_case.dart';
 import '../../domain/use_cases/load_meal_summary_data_use_case.dart';
 import '../models/meal_summary_draft.dart';
 import '../models/meal_summary_item_draft.dart';
+import '../utils/meal_add_on_draft.dart';
 import '../utils/meal_summary_formatters.dart';
 
 part 'meal_summary_controller.g.dart';
@@ -30,6 +31,12 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
         netCarbsPerAmount: item.netCarbsPerAmount,
         consumedAmount: item.consumedAmount,
         consumedConfidence: item.consumedConfidence,
+        gramsPerAmount: item.gramsPerAmount,
+        isExtra: item.isExtra,
+        carbsPerAmount: item.carbsPerAmount,
+        fatPerAmount: item.fatPerAmount,
+        proteinPerAmount: item.proteinPerAmount,
+        fiberPerAmount: item.fiberPerAmount,
       );
     }
 
@@ -39,6 +46,14 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
       itemIds: itemIds,
       itemsById: itemsById,
       extraItems: [],
+    );
+  }
+
+  void prepareAddOn({double? totalMultiplier}) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData(
+      prepareMealAddOnDraft(current, totalMultiplier: totalMultiplier),
     );
   }
 
@@ -56,6 +71,22 @@ class MealSummaryControllerNotifier extends _$MealSummaryControllerNotifier {
           mealIngredientId: item.copyWith(
             consumedAmount: value < 0 ? 0 : value,
           ),
+        },
+      ),
+    );
+  }
+
+  void setReportedPortionFactor(double factor, {bool clearExtras = false}) {
+    final current = state.value;
+    if (current == null || !factor.isFinite || factor < 0) return;
+    state = AsyncData(
+      current.copyWith(
+        extraItems: clearExtras ? [] : current.extraItems,
+        itemsById: {
+          for (final entry in current.itemsById.entries)
+            entry.key: entry.value.copyWith(
+              consumedAmount: entry.value.reportedAmount * factor,
+            ),
         },
       ),
     );

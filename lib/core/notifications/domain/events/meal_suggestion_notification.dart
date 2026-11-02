@@ -13,6 +13,7 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
     required this.decision,
     required this.carbs,
     this.extendedCarbs = 0,
+    this.extendedCarbsAreAdditional = false,
     this.extendedCarbsDeliveryMode = ExtendedCarbsDeliveryMode.extendedCarbs,
     this.extendedCarbsDelayMinutes = 45,
     this.extendedCarbsDurationMinutes = 120,
@@ -24,6 +25,7 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
   final int minutes;
   final int carbs;
   final int extendedCarbs;
+  final bool extendedCarbsAreAdditional;
   final ExtendedCarbsDeliveryMode extendedCarbsDeliveryMode;
   final int extendedCarbsDelayMinutes;
   final int extendedCarbsDurationMinutes;
@@ -45,6 +47,16 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
 
   @override
   String get body {
+    if (extendedCarbsAreAdditional && extendedCarbs > 0) {
+      return lang.notificationMealSuggestionBolus(
+        carbs,
+        lang.notificationAdditionalExtendedCarbsSchedule(
+          extendedCarbs,
+          formatExtendedCarbsScheduleMinutes(extendedCarbsDelayMinutes),
+          formatExtendedCarbsScheduleMinutes(extendedCarbsDurationMinutes),
+        ),
+      );
+    }
     if (isAddOn) {
       if (carbs > 0) {
         return lang.notificationMealSuggestionAddOnWithCarbs(carbs);
@@ -96,6 +108,7 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
     'minutes': minutes,
     'carbs': carbs,
     'extendedCarbs': extendedCarbs,
+    if (extendedCarbsAreAdditional) 'extendedCarbsAreAdditional': true,
     'extendedCarbsDeliveryMode': extendedCarbsDeliveryMode.name,
     'extendedCarbsDelayMinutes': extendedCarbsDelayMinutes,
     'extendedCarbsDurationMinutes': extendedCarbsDurationMinutes,
@@ -111,6 +124,8 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
       minutes: json['minutes'] as int,
       carbs: json['carbs'] as int,
       extendedCarbs: json['extendedCarbs'] as int? ?? 0,
+      extendedCarbsAreAdditional:
+          json['extendedCarbsAreAdditional'] as bool? ?? false,
       extendedCarbsDeliveryMode: _deliveryModeFromJson(
         json['extendedCarbsDeliveryMode'] as String?,
       ),

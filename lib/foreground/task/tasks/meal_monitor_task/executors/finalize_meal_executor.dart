@@ -1,8 +1,10 @@
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../common/notifications/meal_notification_cancellation.dart';
+import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../../core/notifications/domain/events/meal_summary_reminder_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
 import 'meal_monitor_state_executor.dart';
@@ -32,7 +34,6 @@ class FinalizeMealExecutor extends MealMonitorStateExecutor with Logging {
     mealMonitorContext.publishStatus(runtimeContext, MealMonitoringPhase.idle);
     logI("FinalizeMealExecutor");
     final mealId = mealMonitorContext.activeMeal?.id;
-    mealMonitorContext.activeMeal = null;
 
     final notificationProvider = runtimeContext.container.read(
       notificationsControllerForegroundProvider,
@@ -42,11 +43,39 @@ class FinalizeMealExecutor extends MealMonitorStateExecutor with Logging {
         mealId,
         includeTargetConsent: true,
       );
-      await notificationProvider.schedule(
-        MealSummaryReminderNotificationEvent(mealId: mealId),
-        summaryReminderDelay,
-      );
+      mealMonitorContext.throwIfStopped(runtimeContext);
+      var summaryAlreadyConfirmed = false;
+      // In-memory legacy workflows have no persisted confirmation to inspect.
+      if (runtimeContext.container.exists(databaseProvider)) {
+        try {
+          final db = runtimeContext.container.read(databaseProvider);
+          if (db.hasOpened) {
+            summaryAlreadyConfirmed = await db.mealDao
+                .summarizeConfirmedMealAfterBolus(mealId);
+            final persisted = await db.mealDao.getMealById(mealId);
+            summaryAlreadyConfirmed =
+                summaryAlreadyConfirmed ||
+                persisted?.status == 'summarized' ||
+                persisted?.status == 'interrupted';
+          }
+        } catch (error, stackTrace) {
+          logW(
+            'Could not verify persisted consumption confirmation; retaining the summary reminder: $error\n$stackTrace',
+          );
+        }
+      }
+      mealMonitorContext.throwIfStopped(runtimeContext);
+      if (summaryAlreadyConfirmed) {
+        runtimeContext.container.invalidate(getNearestMealProvider);
+      } else {
+        await notificationProvider.schedule(
+          MealSummaryReminderNotificationEvent(mealId: mealId),
+          summaryReminderDelay,
+        );
+        mealMonitorContext.throwIfStopped(runtimeContext);
+      }
     }
+    mealMonitorContext.activeMeal = null;
 
     return NewMealCheckExecutor();
   }

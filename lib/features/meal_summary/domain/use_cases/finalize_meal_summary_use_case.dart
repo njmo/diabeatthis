@@ -1,13 +1,17 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/meal/meal_activation_guard.dart';
+import '../../../../common/notifications/meal_notification_cancellation.dart';
+import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../dashboard/data/providers/meal_snapshot_controller_provider.dart';
-import '../../../meals/data/providers/meal_database_provider.dart';
+import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../presentation/models/meal_summary_draft.dart';
-import 'add_meal_extra_item_use_case.dart';
+import '../utils/meal_add_on_status.dart';
+import 'persist_meal_summary_amounts.dart';
 
 part 'finalize_meal_summary_use_case.g.dart';
 
@@ -58,26 +62,42 @@ class FinalizeMealSummaryUseCase with Logging {
       );
     }
 
-    await notificationsController.cancelAll();
-
     await db.transaction(() async {
-      for (final item in draft.itemsById.values) {
-        await db.mealIngredientsDao.updateMealIngredientConsumed(
-          item.mealIngredientId,
-          item.consumedAmount,
-          item.consumedConfidence,
-        );
+      final meal = await db.mealDao.getMealById(draft.mealId);
+      if (meal == null ||
+          meal.status != draft.mealStatus ||
+          !(mealSummaryCanFinish(meal.status) ||
+              mealStatusesStartingEating.contains(meal.status) ||
+              meal.status == 'eating-extra' ||
+              meal.status == 'summarized')) {
+        throw MealSummaryCannotFinishException(lang.mealCompletionStale);
       }
-
-      for (final mealIngredient in draft.extraItems) {
-        await ref
-            .read(addMealExtraItemUseCaseProvider)
-            .call(
-              mealId: draft.mealId,
-              mealIngredient: mealIngredient,
-              statusAfterAdd: null,
-            );
+      if (mode == MealSummarySaveMode.continueEating) {
+        try {
+          await ensureMealActivationAllowed(
+            db,
+            draft.mealId,
+            allowedStatuses: {meal.status},
+          );
+        } on MealActivationException catch (error) {
+          throw MealSummaryCannotFinishException(error.userMessage);
+        }
       }
+      final currentItems = await db.mealIngredientsDao
+          .getMealIngredientsForMeal(draft.mealId);
+      if (currentItems.length != draft.itemsById.length ||
+          currentItems.any((item) {
+            final original = draft.itemsById[item.id];
+            return original == null ||
+                ((item.consumedAmount ?? item.amount) - original.reportedAmount)
+                        .abs() >
+                    0.001;
+          })) {
+        throw MealSummaryCannotFinishException(lang.mealCompletionStale);
+      }
+      await persistMealSummaryAmounts(ref, draft);
+      ref.invalidate(getMealIngredientsDraftForMealProvider(draft.mealId));
+      ref.invalidate(mealMacronutrientsConsumedSummaryProvider(draft.mealId));
 
       if (mode == MealSummarySaveMode.finishMeal) {
         await snapshotController.saveConsumedSnapshot(draft.mealId);
@@ -85,8 +105,27 @@ class FinalizeMealSummaryUseCase with Logging {
 
       final status = mode == MealSummarySaveMode.finishMeal
           ? 'summarized'
-          : 'eating-extra';
-      await ref.read(updateMealByIdProvider(draft.mealId, status).future);
+          : mealStatusAfterAddOn(meal.status);
+      if (!await db.mealDao.tryUpdateMealStatus(draft.mealId, status)) {
+        throw MealSummaryCannotFinishException(lang.mealCompletionStale);
+      }
     });
+    // A committed summary must not be retried because notification cleanup failed.
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        await notificationsController.cancelMealNotifications(
+          draft.mealId,
+          includeTargetConsent: mode == MealSummarySaveMode.finishMeal,
+          includeBolusInstructions: mode == MealSummarySaveMode.finishMeal,
+        );
+        break;
+      } catch (error, stackTrace) {
+        logE(
+          'Meal summary notification cleanup failed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
+    }
   }
 }

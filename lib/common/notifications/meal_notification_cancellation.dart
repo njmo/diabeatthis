@@ -10,6 +10,8 @@ extension MealNotificationCancellation on NotificationsController {
   Future<void> cancelMealNotifications(
     int mealId, {
     bool includeTargetConsent = false,
+    bool includeBolusInstructions = false,
+    bool includeBolusReminder = true,
   }) async {
     if (includeTargetConsent) {
       await cancelNotification(
@@ -19,9 +21,10 @@ extension MealNotificationCancellation on NotificationsController {
     for (final type in [
       NotificationEventType.eatNow,
       NotificationEventType.finishedEating,
-      NotificationEventType.mealSuggestion,
+      if (includeBolusReminder) NotificationEventType.mealSuggestion,
       NotificationEventType.mealAdvicePending,
       NotificationEventType.mealSummaryReminder,
+      if (includeBolusInstructions) NotificationEventType.aapsBolusSuggestion,
     ]) {
       await cancelNotification(NotificationKey(type: type, entityId: mealId));
     }

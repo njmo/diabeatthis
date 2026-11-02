@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../common/history/glucose_window_summary.dart';
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/meal/meal_completion_decision_fact.dart';
 import '../../../../../common/utils/format_duration_label.dart';
 import '../../../../../common/widgets/detail_section_card.dart';
 import '../../../../../common/widgets/responsive_metric_list.dart';
@@ -86,6 +87,10 @@ class MealReviewFindings extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ResponsiveMetricList(maxColumns: 2, children: findings),
+              if (details.meal.completionDecision != null)
+                MealCompletionDecisionFact(
+                  decision: details.meal.completionDecision!,
+                ),
               const SizedBox(height: 8),
               Text(
                 messages.mealReviewContext,

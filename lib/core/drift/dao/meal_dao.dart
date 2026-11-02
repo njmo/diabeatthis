@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
+
+import '../../../common/meal/meal_add_on_bolus_progress.dart';
 import '../../domain/model/meal_status_flow.dart';
 import '../database_impl.dart';
 
@@ -16,7 +18,45 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     String status, {
     DateTime? occurredAt,
   }) async {
-    await transaction(() async {
+    // History maintenance retains its existing completed-status rewrite API.
+    // Workflow callers use tryUpdateMealStatus to reject delayed transitions.
+    await _writeMealStatus(
+      id,
+      status,
+      occurredAt: occurredAt,
+      allowCompletedStatusChange: true,
+    );
+  }
+
+  /// Delayed workflow writes must not reactivate a deliberately stopped meal.
+  Future<bool> tryUpdateMealStatus(
+    int id,
+    String status, {
+    DateTime? occurredAt,
+  }) => _writeMealStatus(
+    id,
+    status,
+    occurredAt: occurredAt,
+    allowCompletedStatusChange: false,
+  );
+
+  Future<bool> _writeMealStatus(
+    int id,
+    String status, {
+    DateTime? occurredAt,
+    required bool allowCompletedStatusChange,
+  }) async {
+    return transaction(() async {
+      final current = await getMealById(id);
+      if (current == null ||
+          (current.status == 'interrupted' && status != 'interrupted') ||
+          (!allowCompletedStatusChange &&
+              current.purpose == 'meal' &&
+              current.status == 'summarized' &&
+              status != 'summarized' &&
+              status != 'eating-extra')) {
+        return false;
+      }
       if (occurredAt != null) {
         // Historical confirmation replaces this status's time. Remove the old
         // slot before the status trigger inserts it again (unique meal/status).
@@ -25,7 +65,22 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
         )..where((t) => t.mealId.equals(id) & t.status.equals(status))).go();
       }
       await (update(db.meal)..where((t) => t.id.equals(id))).write(
-        MealCompanion(status: Value(status)),
+        MealCompanion(
+          status: Value(status),
+          addOnBolusContext:
+              const {
+                'planned',
+                'skipped',
+                'interrupted',
+                'summarized',
+              }.contains(status)
+              ? const Value(null)
+              : const Value.absent(),
+          consumptionConfirmedEndedAt:
+              status == 'waiting-for-bolus' || status == 'eaten-bolused'
+              ? const Value.absent()
+              : const Value(null),
+        ),
       );
       if (occurredAt != null) {
         final timestamp = occurredAt.millisecondsSinceEpoch;
@@ -41,6 +96,19 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
             target: [db.mealStatusHistory.mealId, db.mealStatusHistory.status],
           ),
         );
+      }
+      if (current.status == 'planned' && status == 'eating-then-bolus') {
+        // A new food-first meal has not reported any eCarbs yet. Initialize
+        // after the eating history time is final; legacy recovery keeps its
+        // previous planned baseline and repeated status writes retain theirs.
+        await reconcileMealAddOnBolusProgress(
+          db,
+          id,
+          initialReportedExtendedCarbs: 0,
+        );
+      }
+      if (occurredAt != null) {
+        final timestamp = occurredAt.millisecondsSinceEpoch;
         await (update(db.meal)..where((t) => t.id.equals(id))).write(
           MealCompanion(
             updatedAt: Value(timestamp),
@@ -50,6 +118,109 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
           ),
         );
       }
+      return true;
+    });
+  }
+
+  /// Only an explicit quantity confirmation for this waiting round can finish
+  /// automatically once the bolus has been recorded.
+  Future<bool> summarizeConfirmedMealAfterBolus(int mealId) => transaction(
+    () async {
+      final current = await getMealById(mealId);
+      final confirmedEnd = current?.consumptionConfirmedEndedAt;
+      if (current?.status != 'eaten-bolused' || confirmedEnd == null) {
+        return false;
+      }
+      final waiting =
+          await (select(db.mealStatusHistory)..where(
+                (row) =>
+                    row.mealId.equals(mealId) &
+                    row.status.equals('waiting-for-bolus'),
+              ))
+              .getSingleOrNull();
+      if (waiting?.createdAt != confirmedEnd) return false;
+      final snapshot =
+          await (select(db.mealSnapshot)..where(
+                (row) =>
+                    row.mealId.equals(mealId) &
+                    row.snapshotType.equals('consumed'),
+              ))
+              .getSingleOrNull();
+      if (snapshot == null) return false;
+      final consumed = await db.ingredientDao.totalsForMealConsumed(mealId);
+      if (consumed == null) return false;
+      final quantities = [
+        (current: consumed.totalGrams, confirmed: snapshot.totalGrams),
+        (current: consumed.carbsGrams, confirmed: snapshot.totalCarbsG),
+        (current: consumed.netCarbsGrams, confirmed: snapshot.totalNetCarbsG),
+        (current: consumed.fiberGrams, confirmed: snapshot.totalFiberG),
+        (current: consumed.proteinGrams, confirmed: snapshot.totalProteinG),
+        (current: consumed.fatGrams, confirmed: snapshot.totalFatG),
+        (current: consumed.totalKcal, confirmed: snapshot.totalCaloriesKcal),
+      ];
+      if (quantities.any(
+        (value) =>
+            !value.current.isFinite ||
+            (value.current - value.confirmed).abs() > 0.001,
+      )) {
+        return false;
+      }
+      return tryUpdateMealStatus(mealId, 'summarized', occurredAt: clock.now());
+    },
+  );
+
+  /// Corrects an observed eating event without replaying a workflow transition.
+  Future<void> updateMealStatusHistoryTime(
+    int mealId,
+    String status,
+    DateTime occurredAt,
+  ) async {
+    await transaction(() async {
+      final current = await getMealById(mealId);
+      if (current == null || current.status == 'interrupted') {
+        throw StateError('The meal can no longer be completed.');
+      }
+      final history =
+          await (select(db.mealStatusHistory)..where(
+                (row) => row.mealId.equals(mealId) & row.status.equals(status),
+              ))
+              .getSingleOrNull();
+      final confirmsEatingBeforeRecordedBolus =
+          current.status == 'eaten-bolused' && status == 'eaten';
+      if (history == null &&
+          current.status != status &&
+          !confirmsEatingBeforeRecordedBolus) {
+        throw StateError('The recorded meal stage does not exist.');
+      }
+      await into(db.mealStatusHistory).insert(
+        MealStatusHistoryCompanion.insert(
+          mealId: mealId,
+          status: status,
+          createdAt: Value(occurredAt.millisecondsSinceEpoch),
+        ),
+        onConflict: DoUpdate(
+          (_) => MealStatusHistoryCompanion(
+            createdAt: Value(occurredAt.millisecondsSinceEpoch),
+          ),
+          target: [db.mealStatusHistory.mealId, db.mealStatusHistory.status],
+        ),
+      );
+    });
+  }
+
+  Future<bool> interruptMeal(int id, {String? expectedStatus}) async {
+    return transaction(() async {
+      final current = await getMealById(id);
+      if (current == null) return false;
+      if (current.status == 'interrupted') return true;
+      if (expectedStatus != null && current.status != expectedStatus) {
+        return false;
+      }
+      if (current.status != 'planned' &&
+          !mealStatusBlocksAnotherMealActivation(current.status)) {
+        return false;
+      }
+      return tryUpdateMealStatus(id, 'interrupted');
     });
   }
 
@@ -260,8 +431,8 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     }
   }
 
-  Stream<List<MealData>> getAllPlannedMealForToday() {
-    final now = clock.now().toUtc();
+  Stream<List<MealData>> getAllPlannedMealForToday({DateTime? asOf}) {
+    final now = (asOf ?? clock.now()).toLocal();
     final todayMillisecondsSinceEpoch = DateTime(
       now.year,
       now.month,
@@ -273,14 +444,16 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     final query = select(db.meal)
       ..where(
         (tbl) =>
-            tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch) |
+            tbl.plannedAt.isBiggerOrEqualValue(todayMillisecondsSinceEpoch) |
             tbl.status.isIn(
               mealStatusesBlockingAnotherMealActivation.toList(growable: false),
-            ),
+            ) |
+            tbl.status.isIn(['eaten', 'eaten-extra', 'eaten-bolused']),
       )
       ..where((tbl) => tbl.purpose.equals('meal'))
       ..where((tbl) => tbl.status.equals('skipped').not())
       ..where((tbl) => tbl.status.equals('summarized').not())
+      ..where((tbl) => tbl.status.equals('interrupted').not())
       ..orderBy([(m) => OrderingTerm(expression: m.plannedAt)]);
     return query.watch();
   }

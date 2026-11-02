@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show DoUpdate;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/domain/model/meal_snapshot.dart';
@@ -113,10 +114,7 @@ class MealSnapshotController with Logging {
           : null,
     );
 
-    final db = ref.read(databaseProvider);
-    await db
-        .into(db.mealSnapshot)
-        .insertOnConflictUpdate(snapshot.toCompanion());
+    await saveSnapshot(snapshot);
   }
 
   Future<void> saveConsumedSnapshot(int mealId) async {
@@ -229,10 +227,21 @@ class MealSnapshotController with Logging {
           : null,
     );
 
+    await saveSnapshot(snapshot);
+  }
+
+  Future<void> saveSnapshot(MealSnapshot snapshot) async {
     final db = ref.read(databaseProvider);
+    final values = snapshot.toCompanion();
     await db
         .into(db.mealSnapshot)
-        .insertOnConflictUpdate(snapshot.toCompanion());
+        .insert(
+          values,
+          onConflict: DoUpdate(
+            (_) => values,
+            target: [db.mealSnapshot.mealId, db.mealSnapshot.snapshotType],
+          ),
+        );
   }
 
   Future<void> finalizeMealSummary(int mealId) async {}

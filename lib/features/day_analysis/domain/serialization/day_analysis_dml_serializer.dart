@@ -263,6 +263,7 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
         workflowWait: meal.wait,
         before: before,
         outcome: outcome,
+        asOf: history.end,
         includeLimitations: false,
       ),
       'name': meal.name,

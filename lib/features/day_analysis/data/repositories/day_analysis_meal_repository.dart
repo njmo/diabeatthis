@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../../common/meal/meal_completion_decision.dart';
 import '../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../../../core/logger/logger.dart';
@@ -39,6 +40,9 @@ class DayAnalysisMealRepository with Logging {
   Future<DayAnalysisMeal> loadMeal(int id) => db.transaction(() async {
     final meal = await db.mealDao.getMealById(id);
     if (meal == null) throw StateError('Recorded meal missing');
+    if (meal.status == 'interrupted') {
+      throw StateError('Interrupted meals cannot be analyzed as eaten');
+    }
     final amountsRepository = MealIngredientAmountsRepository(db);
     const nutritionMapper = IngredientNutritionMapper();
     final snapshots = await (db.select(
@@ -113,6 +117,9 @@ class DayAnalysisMealRepository with Logging {
                 fatProteinEffective: snapshot.wbtWeightedEffectiveConfidence,
               ),
         wizardAssignments: assignments,
+        completionDecision: MealCompletionDecision.decode(
+          meal.completionDecision,
+        ),
       ),
       id: meal.id,
       name: meal.name,

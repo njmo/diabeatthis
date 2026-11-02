@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../common/drift/database_open_tracker.dart';
 import 'dao/activity_dao.dart';
 import 'dao/ingredient_dao.dart';
 import 'dao/local_mirror_dao.dart';
@@ -15,6 +16,9 @@ import 'dao/meal_wizard_link_dao.dart';
 import 'dao/portion_dao.dart';
 import 'dao/quick_low_treatment_item_dao.dart';
 import 'database.dart';
+import 'migrations/migrate_meal_add_on_bolus_context.dart';
+import 'migrations/migrate_meal_completion_decision.dart';
+import 'migrations/migrate_meal_consumption_confirmation.dart';
 import 'migrations/migrate_optional_activity_duration.dart';
 import 'migrations/migrate_stress_events.dart';
 import 'migrations/migrate_temp_target_operations.dart';
@@ -42,10 +46,24 @@ part 'database_impl.g.dart';
 )
 class DatabaseImpl extends _$DatabaseImpl implements Database {
   DatabaseImpl([QueryExecutor? executor])
-    : super(executor ?? _openConnection());
+    : this._tracked(executor ?? _openConnection(), DatabaseOpenTracker());
+
+  DatabaseImpl._tracked(QueryExecutor executor, DatabaseOpenTracker tracker)
+    : _openTracker = tracker,
+      super(
+        // The connection overload also retains shared stream invalidations.
+        executor is DatabaseConnection
+            ? executor.interceptWith(tracker)
+            : executor.interceptWith(tracker),
+      );
 
   @override
-  int get schemaVersion => 37;
+  int get schemaVersion => 40;
+
+  final DatabaseOpenTracker _openTracker;
+
+  /// Optional workflow persistence must not initialize an unavailable lazy DB.
+  bool get hasOpened => _openTracker.hasOpened;
 
   static QueryExecutor _openConnection() {
     return driftDatabase(
@@ -63,6 +81,15 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
+      if (from < 40) {
+        await migrateMealCompletionDecision(this, m);
+      }
+      if (from < 39) {
+        await migrateMealAddOnBolusContext(this, m);
+      }
+      if (from < 38) {
+        await migrateMealConsumptionConfirmation(this, m);
+      }
       if (from < 37) {
         final columns = await customSelect(
           'PRAGMA table_info(ingredient)',

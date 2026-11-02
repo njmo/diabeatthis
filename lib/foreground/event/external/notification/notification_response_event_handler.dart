@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
+
 import '../../../../common/events/data/notification/aaps_carbs_request_response_event.dart';
 import '../../../../common/events/data/notification/activity_finished_response_event.dart';
 import '../../../../common/events/data/notification/activity_schedule_response_event.dart';
@@ -8,8 +10,13 @@ import '../../../../common/events/data/notification/meal_suggestion_response_eve
 import '../../../../common/events/data/notification/meal_summary_reminder_response_event.dart';
 import '../../../../common/events/data/notification/temp_target_response_event.dart';
 import '../../../../common/events/data/task/task_open_low_treatment_payload.dart';
+import '../../../../common/events/data/task/task_open_meal_completion_payload.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/meal/meal_completion_timing.dart';
+import '../../../../common/meal/pending_meal_completion_requests.dart';
 import '../../../../core/data_sources/nightscout/temporary_targets/temp_target_service.dart';
+import '../../../../core/domain/model/meal_status_flow.dart';
+import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../../core/notifications/domain/events/temp_target_delivery_notification.dart';
 import '../../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -45,7 +52,7 @@ class NotificationResponseEventHandler with Logging {
                 logI('Meal summary reminder opened for meal $mealId'),
           ),
       finishedEatingResponse: (FinishedEatingResponseEvent data) =>
-          context.emitEvent(data),
+          unawaited(handleFinishedEatingResponse(data, context)),
       activityFinishedResponse: (ActivityFinishedResponseEvent data) =>
           context.emitEvent(data),
       aapsCarbsRequestResponse: (AapsCarbsRequestResponseEvent data) =>
@@ -58,6 +65,90 @@ class NotificationResponseEventHandler with Logging {
                 .send(const TaskOpenLowTreatmentPayload()),
           ),
     );
+  }
+
+  Future<void> handleFinishedEatingResponse(
+    FinishedEatingResponseEvent data,
+    RuntimeContext context,
+  ) async {
+    final agreed = data.maybeWhen(agree: (_) => true, orElse: () => false);
+    if (!agreed) {
+      context.emitEvent(data);
+      return;
+    }
+    try {
+      final db = context.container.read(databaseProvider);
+      final meal = await db.mealDao.getMealById(data.mealId);
+      if (meal == null ||
+          (!mealStatusesStartingEating.contains(meal.status) &&
+              meal.status != 'eating-extra')) {
+        await _acknowledgeMealCompletion(data.mealId, context);
+        return;
+      }
+      final history = await (db.select(
+        db.mealStatusHistory,
+      )..where((row) => row.mealId.equals(data.mealId))).get();
+      final timing = MealCompletionTiming.fromHistory(
+        history.map(
+          (entry) => (
+            status: entry.status,
+            at: DateTime.fromMillisecondsSinceEpoch(entry.createdAt),
+          ),
+        ),
+        currentStatus: meal.status,
+      );
+      if (timing.needsTimeConfirmation(clock.now())) {
+        await _requestMealCompletion(data.mealId, context);
+        return;
+      }
+      // A live service may still be restoring this meal's event waiter.
+      // Keep the intent until recovery observes a persisted completion.
+      context.emitEvent(data);
+    } catch (error, stackTrace) {
+      logE(
+        'Could not confirm eating time',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      await _requestMealCompletion(data.mealId, context);
+    }
+  }
+
+  Future<void> _requestMealCompletion(
+    int mealId,
+    RuntimeContext context,
+  ) async {
+    try {
+      await context.container
+          .read(pendingMealCompletionRequestsProvider)
+          .request(mealId);
+    } catch (error, stackTrace) {
+      logE(
+        'Could not persist meal completion request',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+    context.container
+        .read(taskEventRouterProvider)
+        .send(TaskOpenMealCompletionPayload(mealId: mealId));
+  }
+
+  Future<void> _acknowledgeMealCompletion(
+    int mealId,
+    RuntimeContext context,
+  ) async {
+    try {
+      await context.container
+          .read(pendingMealCompletionRequestsProvider)
+          .acknowledge(mealId);
+    } catch (error, stackTrace) {
+      logE(
+        'Could not acknowledge meal completion request',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   Future<void> _handleTempTarget(

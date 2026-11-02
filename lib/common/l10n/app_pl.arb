@@ -608,6 +608,9 @@
   "copiedMealMealLabel": "Posiłek - {name}",
   "copiedMealFieldLabel": "Znajdź podobny",
   "aapsOpenFailed": "Nie udało się otworzyć AAPS. Otwórz aplikację ręcznie.",
+  "aapsSuggestionUnavailableTitle": "Instrukcja do AAPS",
+  "mealAddOnExtendedCarbsInstruction": "Instrukcja dla dodatkowych eCarbs",
+  "aapsSuggestionUnavailableMessage": "Nie udało się wyświetlić powiadomienia. Instrukcję znajdziesz poniżej, zanim przejdziesz do AAPS.",
   "mealStatusEatChoice": "Zjem",
   "mealStatusSkipChoice": "Pomijam",
   "mealStatusActivationBlocked": "Najpierw zakończ aktywny posiłek: {mealName}.",
@@ -1728,7 +1731,7 @@
   "templatePortionSearch": "Szukaj zapisanej porcji",
   "templatePortionIngredientAmount": "Ilość składnika w porcji",
   "templateConfirmDiscard": "Czy na pewno odrzucić zmiany?",
-  "summaryReferencePortions": "porcji referencyjnych",
+  "summaryReferencePortions": "porcji",
   "commonPortionUnit": "{count, plural, one{porcja} few{porcje} other{porcji}}",
   "@commonPortionUnit": {
     "placeholders": {
@@ -2913,6 +2916,7 @@
   "mealStartPlanLabel": "Twój plan",
   "mealStartValuesLabel": "Wartości posiłku",
   "mealStartEcarbsLabel": "eCarbs",
+  "mealStartDeferredEcarbs": "Propozycja eCarbs pojawi się po zakończeniu jedzenia i potwierdzeniu zjedzonej ilości.",
   "mealStartScheduleLabel": "Harmonogram eCarbs",
   "mealStartNoWaiting": "Bez oczekiwania",
   "mealStartWaitAfterBolus": "{minutes} min po zapisie bolusa",
@@ -2955,5 +2959,203 @@
         "type": "String"
       }
     }
-  }
+  },
+  "mealProgressCurrent": "Aktualny posiłek",
+  "mealProgressOpenCalculator": "Otwórz kalkulator",
+  "mealProgressAddFood": "Dodaj jedzenie",
+  "mealProgressToSummarize": "Do podsumowania",
+  "mealProgressToday": "Dzisiaj",
+  "mealProgressTomorrow": "Jutro",
+  "mealProgressNoDate": "Bez daty",
+  "mealProgressQuickMeal": "Szybki posiłek",
+  "mealProgressFinishEating": "Skończyłem jeść",
+  "mealProgressOpenActions": "Szczegóły i działania",
+  "mealProgressBolus": "Bolus",
+  "mealProgressWaiting": "Oczekiwanie",
+  "mealProgressEating": "Jedzenie",
+  "mealProgressWaitRemaining": "Do końca oczekiwania",
+  "mealProgressWaitElapsed": "Czas oczekiwania minął",
+  "mealProgressInterrupt": "Przerwij obsługę posiłku",
+  "mealProgressBlocked": "Rozpoczęcie dostępne po zakończeniu aktywnego posiłku.",
+  "mealCompletionQuestion": "Ile zjadłeś?",
+  "mealCompletionAll": "Całą porcję",
+  "mealCompletionAllHint": "Zgodnie z zapisaną porcją, z uwzględnieniem wcześniejszych dokładek",
+  "mealCompletionLess": "Mniej",
+  "mealCompletionLessHint": "Część posiłku została",
+  "mealCompletionMore": "Więcej",
+  "mealCompletionMoreHint": "Większa porcja lub dodatkowy produkt",
+  "mealCompletionConsumedGrams": "Zjedzono łącznie (g)",
+  "mealCompletionSameProportions": "Ta sama proporcja składników",
+  "mealCompletionHalf": "Zjedzono połowę porcji",
+  "mealCompletionEditIngredients": "Ilości składników i dokładność",
+  "mealCompletionLateTitle": "Potwierdzasz posiłek później",
+  "mealCompletionDuration": "Ile trwało jedzenie? (min)",
+  "mealCompletionEndTime": "Faktyczne zakończenie",
+  "mealCompletionNow": "Skończyłem teraz",
+  "mealCompletionEarlier": "Skończyłem wcześniej — zmień godzinę",
+  "mealCompletionStartedAt": "Rozpoczęcie: {time}",
+  "@mealCompletionStartedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionMissingStart": "Brak zapisanej godziny rozpoczęcia. Podaj godzinę zakończenia.",
+  "mealCompletionSave": "Zapisz podsumowanie",
+  "mealCompletionSaveBeforeBolus": "Zapisz i przejdź do bolusa",
+  "mealCompletionInvalidTime": "Zakończenie musi być między rozpoczęciem jedzenia a chwilą obecną.",
+  "mealCompletionInvalidAmount": "Sprawdź wpisane ilości. Jeśli nic nie zostało zjedzone, przerwij posiłek.",
+  "mealCompletionStale": "Stan posiłku zmienił się. Wróć do listy i otwórz go ponownie.",
+  "mealCompletionStarted": "Rozpoczęcie jedzenia",
+  "mealCompletionSaved": "Zapisano zjedzoną ilość. Posiłek zakończony.",
+  "mealCompletionBeforeBolusSaved": "Zapisano faktycznie zjedzoną ilość. Posiłek oczekuje na bolus.",
+  "mealCompletionSaveError": "Nie udało się zapisać podsumowania. Spróbuj ponownie.",
+  "mealCompletionReportedNote": "Wcześniej zgłoszone dokładki są już uwzględnione. Zapisujemy tylko zmianę względem zgłoszonej ilości.",
+  "mealCompletionAdditionalItems": "Dodatkowy produkt",
+  "mealCompletionNothingEaten": "Jeśli nic nie zjedzono, wróć do posiłku i wybierz przerwanie.",
+  "mealInterruptionTitle": "Przerwać obsługę posiłku?",
+  "mealInterruptionMessage": "Posiłek zniknie z aktywnych. Historia i zapis bolusa pozostaną zachowane. Jeśli skończyłeś jeść, także tylko część porcji, wybierz podsumowanie.",
+  "mealInterruptionNoEatingMessage": "Posiłek zniknie z aktywnych. Historia i zapis bolusa pozostaną zachowane.",
+  "mealInterruptionConfirm": "Przerwij",
+  "mealInterruptionChanged": "Stan posiłku zmienił się. Otwórz go ponownie.",
+  "mealInterruptionFailed": "Nie udało się zakończyć obsługi posiłku. Spróbuj ponownie.",
+  "mealStatusInterrupted": "Przerwany",
+  "mealCompletionAddOnStartedAt": "Rozpoczęcie dokładki: {time}",
+  "@mealCompletionAddOnStartedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionTitle": "Podsumowanie posiłku",
+  "mealCompletionCalculatedEnd": "Zakończenie z podanego czasu",
+  "mealCompletionFutureTime": "Ta godzina jeszcze nie nadeszła. Skróć czas jedzenia albo wybierz „Skończyłem teraz”.",
+  "mealCompletionAsPlanned": "Zjedzone zgodnie z planem",
+  "mealCompletionAdjusted": "Zmień zjedzone ilości",
+  "mealCompletionAdjustedHint": "Zmień zjedzone ilości lub dodaj produkt.",
+  "mealCompletionActualCarbs": "Faktycznie zjedzone: {carbs} g węglowodanów",
+  "@mealCompletionActualCarbs": {
+    "placeholders": {
+      "carbs": {
+        "type": "int"
+      }
+    }
+  },
+  "mealCompletionNone": "Nic",
+  "mealCompletionWhole": "Całość",
+  "mealCompletionReportedAmount": "Zapisano: {amount}",
+  "mealEatingFinishTitle": "Kiedy skończyłeś jeść?",
+  "mealEatingFinishedNow": "Zjadłem teraz",
+  "mealEatingFinishedEarlier": "Zjadłem wcześniej",
+  "mealEatingContinue": "Dalej do podsumowania",
+  "mealProgressFinishBeforeBolus": "Zjadłem teraz — przejdź do bolusa",
+  "@mealCompletionReportedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionSaveImmediately": "Zapisz podsumowanie od razu",
+  "mealCompletionCarbsBelowPlan": "O {carbs} g mniej niż w planie",
+  "mealCompletionCarbsAbovePlan": "O {carbs} g więcej niż w planie",
+  "@mealCompletionCarbsBelowPlan": {
+    "placeholders": {
+      "carbs": {
+        "type": "int"
+      }
+    }
+  },
+  "@mealCompletionCarbsAbovePlan": {
+    "placeholders": {
+      "carbs": {
+        "type": "int"
+      }
+    }
+  },
+  "mealCompletionAsPlannedAction": "Wszystko",
+  "mealCompletionAdjustedAction": "Inaczej",
+  "mealCompletionShortfallTitle": "Zjedzono mniej po bolusie",
+  "mealCompletionShortfallNotice": "Bolus jest zapisany. Przed zakończeniem sprawdź brakującą porcję.",
+  "mealCompletionRefill": "Uzupełnij posiłek",
+  "mealCompletionCheckGlucose": "Sprawdź glikemię",
+  "mealCompletionSaveActual": "Zapisz bez korekty",
+  "mealCompletionEditOrAdd": "Popraw",
+  "mealCompletionSaveAndCorrect": "Zapisz i skoryguj w AAPS",
+  "mealCompletionCorrectionProposal": "Proponowana korekta w AAPS: {carbs} g",
+  "mealCompletionCorrectionExplanation": "Różnica względem zgłoszonej porcji z dokładką. Zapiszemy zjedzoną ilość, a korektę wpiszesz w AAPS. Podana insulina nadal działa.",
+  "@mealCompletionCorrectionProposal": {"placeholders": {"carbs": {"type": "int"}}},
+  "mealCompletionEditAmounts": "Popraw ilości",
+  "mealCompletionRefillFinished": "Zjadłem uzupełnienie",
+  "mealCompletionRefillPending": "Uzupełnienie jest w roboczym podsumowaniu. Gdy skończysz jeść, potwierdź poniżej — wtedy zapiszemy godzinę zakończenia.",
+  "mealCompletionSaveImmediatelyBeforeBolus": "Zapisz zjedzoną porcję i przejdź do bolusa.",
+  "mealCompletionReportedShortfall": "Brakuje około {carbs} g względem zapisanej porcji. Jeśli bolus obejmował tę porcję, rozważ dojedzenie tej ilości węglowodanów.",
+  "@mealCompletionReportedShortfall": {
+    "placeholders": {
+      "carbs": {
+        "type": "int"
+      }
+    }
+  },
+  "mealCompletionPlanned": "Zaplanowane",
+  "mealAddOnManual": "Ręcznie",
+  "mealAddOnManualHint": "Wybierz, którego składnika chcesz więcej",
+  "mealAddOnTotalHint": "Łączna porcja, razem z pierwszą",
+  "mealAddOnEditHint": "Ustaw łączną ilość: pierwsza porcja i dokładka. Posiłek pozostanie w trakcie.",
+  "mealAddOnEatingAction": "Jem dokładkę",
+  "mealAddOnNoIncrease": "Zwiększ ilość wybranego składnika lub dodaj produkt.",
+  "mealAddOnSavedContinueEating": "Dokładka zapisana. Gdy skończysz, naciśnij „Zjadłem”.",
+  "mealAddOnOneAndHalfTotal": "1,5× całości",
+  "mealAddOnDoubleTotal": "2× całości",
+  "mealAddOnTotalAmount": "Łącznie z dokładką",
+  "mealAddOnAction": "Dokładka",
+  "notificationAdditionalExtendedCarbsSchedule": "dodatkowe eCarbs: {grams} g za {delayText} przez {durationText}",
+  "@notificationAdditionalExtendedCarbsSchedule": {
+    "placeholders": {
+      "grams": {
+        "type": "int"
+      },
+      "delayText": {
+        "type": "String"
+      },
+      "durationText": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionCoveredShortfall": "Brakuje około {carbs} g węglowodanów względem porcji powiązanej z zapisanym bolusem. Jeśli bolus obejmował tę porcję, rozważ dojedzenie tej ilości.",
+  "@mealCompletionCoveredShortfall": {
+    "placeholders": {
+      "carbs": {
+        "type": "int"
+      }
+    }
+  },
+  "mealCompletionDecisionWithoutCorrection": "Wybrano zapis bez korekty w aplikacji",
+  "mealCompletionDecisionCorrectionRequested": "Wybrano korektę w AAPS",
+  "mealCompletionDecisionRecordedAt": "Zapisano wybór: {time}",
+  "@mealCompletionDecisionRecordedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionDecisionCarbs": "Wcześniej zgłoszono: {reported} g · Zjedzono: {consumed} g · Różnica: {difference} g",
+  "@mealCompletionDecisionCarbs": {
+    "placeholders": {
+      "reported": {
+        "type": "String"
+      },
+      "consumed": {
+        "type": "String"
+      },
+      "difference": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionDecisionContext": "Późniejsza korekta w AAPS nie jest tu potwierdzona. To możliwy kontekst do analizy przebiegu glikemii."
 }

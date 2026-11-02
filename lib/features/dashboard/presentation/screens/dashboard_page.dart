@@ -95,11 +95,6 @@ class DashboardPage extends HookConsumerWidget {
                       NightscoutPanel(),
                       const DashboardStatusCard(),
                       const SizedBox(height: 8),
-                      Text(
-                        context.lang.dashboardPlannedMealsTitle,
-                        textAlign: TextAlign.left,
-                        style: TextStyle(fontSize: 20),
-                      ),
                       MealListToday(),
                     ],
                   ),

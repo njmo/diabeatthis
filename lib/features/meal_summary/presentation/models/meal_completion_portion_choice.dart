@@ -1,0 +1,1 @@
+enum MealCompletionPortionChoice { asReported, adjusted }

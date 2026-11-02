@@ -1,3 +1,4 @@
+import '../../../../common/meal/meal_completion_decision.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../models/meal_details_data.dart';
 import '../repositories/meal_ingredient_amounts_repository.dart';
@@ -22,6 +23,9 @@ class MealDetailsDataMapper {
       createdAt: date(meal.createdAt),
       updatedAt: date(meal.updatedAt),
       isSynced: meal.isSynced,
+      completionDecision: MealCompletionDecision.decode(
+        meal.completionDecision,
+      ),
     );
   }
 

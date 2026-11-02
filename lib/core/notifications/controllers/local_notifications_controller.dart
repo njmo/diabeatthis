@@ -4,11 +4,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../../common/l10n/application_language.dart';
+import '../../../common/notifications/android_notification_delivery.dart';
 import '../base/notifications_controller.dart';
 import '../bootstrap/local_notifications_bootstrap.dart' as bootstrap;
 
 import '../domain/models/hash_notification_id_factory.dart';
 import '../domain/models/notification_event.dart';
+import '../domain/models/notification_event_type.dart';
 import '../handlers/notification_response_handler.dart';
 import '../mappers/android_notification_details_mapper.dart';
 import '../mappers/darwin_notification_details_mapper.dart';
@@ -34,13 +36,19 @@ class LocalNotificationsController implements NotificationsController {
     final response = launch?.notificationResponse;
 
     if (response != null) {
-      onDidReceiveNotificationResponse(response);
+      await onDidReceiveNotificationResponse(response);
     }
   }
 
   @override
   Future<void> show(NotificationEvent event) async {
     final androidDetails = event.toAndroidNotificationDetails();
+    if (event.type == NotificationEventType.aapsBolusSuggestion) {
+      await ensureAndroidNotificationDeliveryEnabled(
+        _plugin,
+        channelId: androidDetails.channelId,
+      );
+    }
     final iosDetails = event.toDarwinNotificationDetails();
     final id = _idFactory.create(event.key);
     return _plugin.show(

@@ -1,3 +1,5 @@
+import 'package:clock/clock.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/domain/model/ingredient.dart' as domain;
@@ -5,6 +7,7 @@ import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../../core/domain/model/portion.dart' as domain;
 import '../../../../core/drift/mappers/meal_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
+import '../../../dashboard/data/providers/time_now_provider.dart';
 import '../drafts/meal_draft.dart';
 import '../persistence/insert_meal_draft.dart';
 
@@ -13,13 +16,13 @@ part 'meal_database_provider.g.dart';
 @Riverpod(keepAlive: true)
 Future<void> updateMeal(Ref ref, domain.Meal meal, String status) async {
   final db = ref.read(databaseProvider);
-  await db.mealDao.updateMealStatus(meal.id, status);
+  await db.mealDao.tryUpdateMealStatus(meal.id, status);
 }
 
 @Riverpod(keepAlive: true)
 Future<void> updateMealById(Ref ref, int mealId, String status) async {
   final db = ref.read(databaseProvider);
-  await db.mealDao.updateMealStatus(mealId, status);
+  await db.mealDao.tryUpdateMealStatus(mealId, status);
 }
 
 @riverpod
@@ -43,8 +46,16 @@ Stream<List<domain.Meal>> mealsForTodayStream(Ref ref) {
 @riverpod
 Stream<List<domain.Meal>> plannedMealsForTodayStream(Ref ref) {
   final db = ref.watch(databaseProvider);
+  final today = ref.watch(
+    timeNowProvider.select((time) {
+      final now = (time.asData?.value ?? clock.now()).toLocal();
+      return DateTime(now.year, now.month, now.day);
+    }),
+  );
   // Also includes unfinished active meals from previous days.
-  return db.mealDao.getAllPlannedMealForToday().map((e) => e.toDomainList());
+  return db.mealDao
+      .getAllPlannedMealForToday(asOf: today)
+      .map((e) => e.toDomainList());
 }
 
 @riverpod

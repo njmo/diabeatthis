@@ -1,3 +1,4 @@
+import '../../../../common/meal/meal_completion_decision.dart';
 import '../../../meals/common/models/meal_wizard_assignment.dart';
 
 enum MealEatingTimeSource {
@@ -28,16 +29,19 @@ class MealNutritionConfidence {
 class MealRecordEvidence {
   final MealEatingTimeSource eatingTimeSource;
   final MealNutritionConfidence? nutritionConfidence;
+  final MealCompletionDecision? completionDecision;
 
   /// Null: relation source unavailable/not loaded; empty: read successfully, no links.
   final List<MealWizardAssignment>? wizardAssignments;
   const MealRecordEvidence.unknown()
     : eatingTimeSource = MealEatingTimeSource.unknown,
       nutritionConfidence = null,
+      completionDecision = null,
       wizardAssignments = null;
   MealRecordEvidence({
     required this.eatingTimeSource,
     required this.nutritionConfidence,
+    this.completionDecision,
     required List<MealWizardAssignment>? wizardAssignments,
   }) : wizardAssignments = wizardAssignments == null
            ? null

@@ -11,6 +11,12 @@ class MealSummaryItem {
   final double consumedAmount;
   final double consumedConfidence;
   final double netCarbsPerAmount;
+  final double? gramsPerAmount;
+  final bool isExtra;
+  final double? carbsPerAmount;
+  final double fatPerAmount;
+  final double proteinPerAmount;
+  final double fiberPerAmount;
 
   MealSummaryItem({
     required this.id,
@@ -22,5 +28,11 @@ class MealSummaryItem {
     required this.consumedAmount,
     required this.consumedConfidence,
     required this.netCarbsPerAmount,
+    this.gramsPerAmount,
+    this.isExtra = false,
+    this.carbsPerAmount,
+    this.fatPerAmount = 0,
+    this.proteinPerAmount = 0,
+    this.fiberPerAmount = 0,
   });
 }

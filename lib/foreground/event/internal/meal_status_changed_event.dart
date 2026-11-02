@@ -27,6 +27,12 @@ sealed class MealStatusChangedEvent
   const factory MealStatusChangedEvent.skipped({required int mealId}) =
       MealSkippedEvent;
 
+  const factory MealStatusChangedEvent.interrupted({required int mealId}) =
+      MealInterruptedEvent;
+
+  const factory MealStatusChangedEvent.summarized({required int mealId}) =
+      MealSummarizedEvent;
+
   const factory MealStatusChangedEvent.eatingThenBolus({required int mealId}) =
       MealEatingThenBolus;
 

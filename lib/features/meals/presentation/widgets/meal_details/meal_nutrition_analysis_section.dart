@@ -39,7 +39,10 @@ class MealNutritionAnalysisSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         for (final ingredient in details.ingredients)
-          MealIngredientTile(ingredient: ingredient),
+          MealIngredientTile(
+            ingredient: ingredient,
+            usePlannedConsumptionFallback: details.meal.status != 'interrupted',
+          ),
         const SizedBox(height: 12),
         NutrientSummaryChart(macros: macros),
         const SizedBox(height: 8),
@@ -125,13 +128,26 @@ class MealNutritionMacroSummary extends StatelessWidget {
 
 class MealIngredientTile extends StatelessWidget {
   final MealIngredientDetailsData ingredient;
+  final bool usePlannedConsumptionFallback;
 
-  const MealIngredientTile({super.key, required this.ingredient});
+  const MealIngredientTile({
+    super.key,
+    required this.ingredient,
+    this.usePlannedConsumptionFallback = true,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final canOpenIngredient = !ingredient.usesHistoricalNutrition;
+    final hasConsumedAmount =
+        usePlannedConsumptionFallback || ingredient.consumedAmount != null;
+    final consumedAmount = hasConsumedAmount
+        ? formatNumber(ingredient.effectiveConsumedAmount)
+        : '-';
+    final consumedGrams = hasConsumedAmount
+        ? ingredient.consumedTotalGrams
+        : null;
 
     return ExpansionTile(
       leading: Icon(
@@ -161,10 +177,8 @@ class MealIngredientTile extends StatelessWidget {
               : context.lang.mealPlannedEntry,
           context.lang.mealPortionInline(ingredient.portionLabel),
           context.lang.mealPlanInline(formatNumber(ingredient.plannedAmount)),
-          context.lang.mealConsumedInline(
-            formatNumber(ingredient.effectiveConsumedAmount),
-          ),
-          formatGrams(ingredient.consumedTotalGrams),
+          context.lang.mealConsumedInline(consumedAmount),
+          formatGrams(consumedGrams),
         ].join(' • '),
       ),
       trailing: canOpenIngredient
@@ -195,7 +209,7 @@ class MealIngredientTile extends StatelessWidget {
         ),
         MealInfoRow(
           label: context.lang.mealConsumedAmountLabel,
-          value: formatNumber(ingredient.effectiveConsumedAmount),
+          value: consumedAmount,
         ),
         MealInfoRow(
           label: context.lang.mealQuantityConfidenceLabel,
@@ -211,7 +225,7 @@ class MealIngredientTile extends StatelessWidget {
         ),
         MealInfoRow(
           label: context.lang.mealConsumedMassLabel,
-          value: formatGrams(ingredient.consumedTotalGrams),
+          value: formatGrams(consumedGrams),
         ),
         MealInfoRow(
           label: context.lang.mealPrepMethodLabel,
@@ -222,7 +236,10 @@ class MealIngredientTile extends StatelessWidget {
           value: fallbackText(ingredient.notes),
         ),
         const SizedBox(height: 8),
-        NutritionComparisonTable(ingredient: ingredient),
+        NutritionComparisonTable(
+          ingredient: ingredient,
+          hasConsumedData: hasConsumedAmount,
+        ),
       ],
     );
   }
@@ -230,8 +247,13 @@ class MealIngredientTile extends StatelessWidget {
 
 class NutritionComparisonTable extends StatelessWidget {
   final MealIngredientDetailsData ingredient;
+  final bool hasConsumedData;
 
-  const NutritionComparisonTable({super.key, required this.ingredient});
+  const NutritionComparisonTable({
+    super.key,
+    required this.ingredient,
+    this.hasConsumedData = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -299,7 +321,9 @@ class NutritionComparisonTable extends StatelessWidget {
       cells: [
         DataCell(Text(label)),
         DataCell(Text(formatNutritionValue(planned, unit))),
-        DataCell(Text(formatNutritionValue(consumed, unit))),
+        DataCell(
+          Text(hasConsumedData ? formatNutritionValue(consumed, unit) : '-'),
+        ),
         DataCell(Text(formatNutritionValue(current, unit))),
       ],
     );
@@ -313,22 +337,27 @@ class MealContributionBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalCarbs = details.ingredients.fold<double>(
+    final ingredients = details.ingredients.where(
+      (ingredient) =>
+          details.meal.status != 'interrupted' ||
+          ingredient.consumedAmount != null,
+    );
+    final totalCarbs = ingredients.fold<double>(
       0,
       (sum, ingredient) => sum + ingredient.consumedCarbsContribution,
     );
-    final totalFat = details.ingredients.fold<double>(
+    final totalFat = ingredients.fold<double>(
       0,
       (sum, ingredient) => sum + ingredient.consumedFatContribution,
     );
-    final totalCalories = details.ingredients.fold<double>(
+    final totalCalories = ingredients.fold<double>(
       0,
       (sum, ingredient) => sum + ingredient.consumedCaloriesContribution,
     );
 
     return Column(
       children: [
-        for (final ingredient in details.ingredients)
+        for (final ingredient in ingredients)
           MealInfoRow(
             label: ingredient.ingredientName,
             value: context.lang.mealNutritionContribution(

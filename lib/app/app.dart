@@ -100,6 +100,7 @@ class _MyAppState extends ConsumerState<MyApp>
           sendSyncCommand();
         }
       }
+      if (mounted) await _taskEventHandler?.recoverPendingMealCompletions();
     });
   }
 

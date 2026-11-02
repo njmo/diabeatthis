@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/nutrition/confidence_level.dart';
+import '../../../../common/widgets/confidence_slider.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../../meals/presentation/widgets/meal_ingredient_preview_tile.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../controllers/meal_summary_controller.dart';
+import '../utils/add_meal_summary_extra_item.dart';
 import '../utils/meal_summary_extra_item_portion_resolver.dart';
 
 class MealSummaryExtraItemsSection extends ConsumerWidget {
@@ -15,10 +18,14 @@ class MealSummaryExtraItemsSection extends ConsumerWidget {
     super.key,
     required this.mealId,
     required this.items,
+    this.showConfidence = false,
+    this.onAddFood,
   });
 
   final int mealId;
   final List<MealIngredientsDraft> items;
+  final bool showConfidence;
+  final VoidCallback? onAddFood;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,7 +59,13 @@ class MealSummaryExtraItemsSection extends ConsumerWidget {
             ),
             const SizedBox(width: 12),
             FilledButton.icon(
-              onPressed: () => _addExtraItem(context, ref),
+              onPressed:
+                  onAddFood ??
+                  () => addMealSummaryExtraItem(
+                    context: context,
+                    ref: ref,
+                    mealId: mealId,
+                  ),
               icon: const Icon(Icons.add),
               label: Text(context.lang.mealSummaryExtraAdd),
             ),
@@ -76,40 +89,32 @@ class MealSummaryExtraItemsSection extends ConsumerWidget {
             ),
           )
         else
-          for (final item in items)
+          for (final item in items) ...[
             MealIngredientPreviewTile(
               draft: item,
               onEdit: () => _editExtraItem(context, ref, item),
               onRemove: () => notifier.removeExtraItem(item),
             ),
+            if (showConfidence)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                child: ConfidenceSlider(
+                  title: context.lang.mealSummaryConfidenceQuestion,
+                  value: ConfidenceLevelX.fromDouble01(
+                    item.consumedConfidence ?? item.quantityConfidence,
+                  ),
+                  onChanged: (value) => notifier.replaceExtraItem(
+                    item,
+                    item.copyWith(
+                      consumedConfidence: value.toDouble01(),
+                      quantityConfidence: value.toDouble01(),
+                    ),
+                  ),
+                ),
+              ),
+          ],
       ],
     );
-  }
-
-  Future<void> _addExtraItem(BuildContext context, WidgetRef ref) async {
-    final mealIngredient = await showModalBottomSheet<MealIngredientsDraft>(
-      context: context,
-      useRootNavigator: false,
-      isScrollControlled: true,
-      builder: (_) => const AddMealIngredient(),
-    );
-
-    if (mealIngredient != null) {
-      final resolvedMealIngredient =
-          await resolveMealSummaryExtraItemPortionAmount(
-            item: mealIngredient,
-            loadPortionAmount: () => ref.read(
-              gramsPerPortionProvider(
-                mealIngredient.ingredient,
-                mealIngredient.ingredientPortion.portion,
-              ).future,
-            ),
-          );
-
-      ref
-          .read(mealSummaryControllerProvider(mealId).notifier)
-          .addExtraItem(resolvedMealIngredient);
-    }
   }
 
   Future<void> _editExtraItem(

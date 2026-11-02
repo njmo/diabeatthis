@@ -1,14 +1,16 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../app/router/app_router.dart' as routes;
-import '../../../../common/l10n/language.dart';
+import '../../../../common/meal/meal_add_on_bolus_context.dart';
+import '../../../../common/meal/meal_extended_carbs.dart';
+import '../../../../common/meal/open_meal_add_on_editor.dart';
+import '../../../../common/meal/open_meal_completion.dart';
 import '../../../../common/platform/aaps_suggestion_prompt.dart';
 import '../../../../core/domain/model/meal.dart';
+import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
-import '../../../meal_summary/domain/use_cases/apply_meal_add_on_multiplier_use_case.dart';
+import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../meals/data/domain/use_cases/complete_bolus_wait_use_case.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
 import '../../data/providers/meal_advisor_result_provider.dart';
@@ -23,6 +25,16 @@ Future<void> handleMealStatusDialogResult({
 }) async {
   switch (result) {
     case MealStatusUpdateResult(:final status, :final alreadySaved):
+      final finishingEating =
+          (mealStatusesStartingEating.contains(meal.status) ||
+              meal.status == 'eating-extra') &&
+          (mealStatusReadyToSummarize(status) ||
+              (meal.status == 'eating-then-bolus' &&
+                  status == 'waiting-for-bolus'));
+      if (finishingEating && !alreadySaved) {
+        await openMealCompletion(context, mealId: meal.id);
+        return;
+      }
       if (!alreadySaved &&
           meal.status == 'bolused-waiting' &&
           status == 'waited-eating') {
@@ -47,7 +59,7 @@ Future<void> handleMealStatusDialogResult({
       if (context.mounted &&
           openSummaryAfterEaten &&
           shouldOpenSummaryAfterMealStatusUpdate(status)) {
-        context.router.push(routes.MealSummaryRoute(mealId: meal.id));
+        await openMealCompletion(context, mealId: meal.id);
       }
     case MealStatusAddOnResult(:final choice):
       await handleMealAddOnChoice(
@@ -64,12 +76,20 @@ Future<void> openAapsAfterBolusStatusUpdateIfNeeded({
   required WidgetRef ref,
   required Meal meal,
   required String status,
+  int? consumedCarbs,
+  int? consumedExtendedCarbs,
 }) async {
   if (!shouldOpenAapsAfterMealStatusUpdate(status)) {
     return;
   }
 
-  final event = await _aapsSuggestionNotificationEvent(ref, meal, status);
+  final event = await _aapsSuggestionNotificationEvent(
+    ref,
+    meal,
+    status,
+    consumedCarbs: consumedCarbs,
+    consumedExtendedCarbs: consumedExtendedCarbs,
+  );
   if (event == null) {
     return;
   }
@@ -88,11 +108,32 @@ Future<void> openAapsAfterBolusStatusUpdateIfNeeded({
 Future<AapsBolusSuggestionNotificationEvent?> _aapsSuggestionNotificationEvent(
   WidgetRef ref,
   Meal meal,
-  String status,
-) async {
+  String status, {
+  int? consumedCarbs,
+  int? consumedExtendedCarbs,
+}) async {
   final advice = await ref.read(getMealAdviceProvider(meal).future);
+  if (status == 'waiting-for-bolus' &&
+      consumedCarbs == null &&
+      consumedExtendedCarbs == null) {
+    final db = ref.read(databaseProvider);
+    final persisted = await db.mealDao.getMealById(meal.id);
+    final pending = MealAddOnBolusContext.decode(persisted?.addOnBolusContext);
+    if (pending != null) {
+      if (!pending.awaitingBolus) return null;
+      consumedCarbs = pending.requestedCarbs;
+      consumedExtendedCarbs = pending.requestedExtendedCarbs;
+    } else if (persisted?.consumptionConfirmedEndedAt != null) {
+      final totals = await db.ingredientDao.totalsForMealConsumed(meal.id);
+      consumedCarbs = (totals?.netCarbsGrams ?? 0).ceil();
+      consumedExtendedCarbs = mealExtendedCarbsFromMacros(totals);
+    }
+  }
   final extendedCarbs = advice?.extendedCarbs;
-  final extendedCarbsGrams = extendedCarbs?.grams ?? 0;
+  final extendedCarbsGrams = consumedExtendedCarbs ?? extendedCarbs?.grams ?? 0;
+  final schedule =
+      extendedCarbs?.scheduleSettings ??
+      const ExtendedCarbsScheduleSettings.defaults();
 
   if (!shouldCreateAapsSuggestionForMealStatus(
     status,
@@ -103,18 +144,22 @@ Future<AapsBolusSuggestionNotificationEvent?> _aapsSuggestionNotificationEvent(
 
   final carbs = status == 'eating-then-bolus'
       ? 0
-      : await _carbsForAaps(ref, meal, status);
+      : consumedCarbs ?? await _carbsForAaps(ref, meal, status);
+  if (carbs == 0 && extendedCarbsGrams == 0) return null;
   return AapsBolusSuggestionNotificationEvent(
+    mealId: meal.id,
     carbs: carbs,
     extendedCarbs: extendedCarbsGrams,
+    extendedCarbsAreAdditional:
+        status == 'waiting-for-bolus' && consumedExtendedCarbs != null,
     extendedCarbsDeliveryMode: extendedCarbsGrams > 0
-        ? extendedCarbs?.scheduleSettings.deliveryMode
+        ? schedule.deliveryMode
         : null,
     extendedCarbsDelayMinutes: extendedCarbsGrams > 0
-        ? extendedCarbs?.scheduleSettings.delayMinutes
+        ? schedule.delayMinutes
         : null,
     extendedCarbsDurationMinutes: extendedCarbsGrams > 0
-        ? extendedCarbs?.scheduleSettings.durationMinutes
+        ? schedule.durationMinutes
         : null,
   );
 }
@@ -146,64 +191,13 @@ Future<void> handleMealAddOnChoice({
   required Meal meal,
   required MealAddOnChoice choice,
 }) async {
-  final multiplier = choice.multiplier;
-
-  if (multiplier == null) {
-    if (context.mounted) {
-      context.router.push(routes.MealSummaryRoute(mealId: meal.id));
-    }
-    return;
-  }
-
-  final result = await ref
-      .read(applyMealAddOnMultiplierUseCaseProvider)
-      .call(
-        mealId: meal.id,
-        currentMealStatus: meal.status,
-        multiplier: multiplier,
-      );
-
-  if (!context.mounted) {
-    return;
-  }
-
-  await showDialog<void>(
+  if (!context.mounted) return;
+  await openMealAddOnEditor(
     context: context,
-    builder: (context) => AlertDialog(
-      title: Text(_addOnTitle(meal.status, result)),
-      content: Text(_addOnMessage(meal.status, result)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(context.lang.notificationActionOk),
-        ),
-      ],
-    ),
+    ref: ref,
+    meal: meal,
+    totalMultiplier: choice.multiplier,
   );
-}
-
-String _addOnTitle(String? mealStatus, MealAddOnMultiplierResult result) {
-  if (mealStatus == 'eating-then-bolus') {
-    return lang.mealAddOnResultTotalTitle(result.roundedTotalNetCarbs);
-  }
-
-  if (result.roundedAddedNetCarbs <= 0) {
-    return lang.mealAddOnResultSavedTitle;
-  }
-
-  return lang.mealAddOnResultAddedTitle(result.roundedAddedNetCarbs);
-}
-
-String _addOnMessage(String? mealStatus, MealAddOnMultiplierResult result) {
-  if (mealStatus == 'eating-then-bolus') {
-    return lang.mealAddOnResultTotalMessage(result.roundedTotalNetCarbs);
-  }
-
-  if (result.roundedAddedNetCarbs <= 0) {
-    return lang.mealAddOnResultSavedMessage;
-  }
-
-  return lang.mealAddOnResultAddedMessage(result.roundedAddedNetCarbs);
 }
 
 bool shouldOpenSummaryAfterMealStatusUpdate(String status) {
@@ -211,8 +205,7 @@ bool shouldOpenSummaryAfterMealStatusUpdate(String status) {
 }
 
 bool shouldOpenAapsAfterMealStatusUpdate(String status) {
-  return status == 'eating-then-bolus' ||
-      status == 'waiting-for-bolus' ||
+  return status == 'waiting-for-bolus' ||
       status == 'bolused-eating' ||
       status == 'bolused-waiting' ||
       status == 'eaten-bolused';
@@ -224,10 +217,6 @@ bool shouldCreateAapsSuggestionForMealStatus(
 }) {
   if (!shouldOpenAapsAfterMealStatusUpdate(status)) {
     return false;
-  }
-
-  if (status == 'eating-then-bolus') {
-    return extendedCarbsGrams > 0;
   }
 
   return true;

@@ -149,6 +149,7 @@ MealAdvisorInput serializeMealAdvisorContext(
       prefix,
       entry.$2.observation,
       predictions: predictions,
+      asOf: before.asOf,
     );
   }
   for (final prediction in predictions.entries) {

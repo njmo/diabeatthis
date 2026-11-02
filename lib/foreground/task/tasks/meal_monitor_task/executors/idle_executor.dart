@@ -18,6 +18,7 @@ class MealMonitorStateIdle extends MealMonitorStateExecutor with Logging {
     MealWaitingForBolusEvent,
     MealBolusedEatingEvent,
     MealBolusedWaitingEvent,
+    MealWaitedEatingEvent,
     MealEatingThenBolus,
     NextMealEvent,
   ];

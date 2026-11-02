@@ -4,12 +4,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-void onDidReceiveNotificationResponse(NotificationResponse response) {
+import '../../../common/meal/pending_meal_completion_requests.dart';
+
+Future<void> onDidReceiveNotificationResponse(
+  NotificationResponse response,
+) async {
   debugPrint(
     'BG RESPONSE: actionId=${response.actionId} data=${response.payload}',
   );
-
-  FlutterForegroundTask.initCommunicationPort();
 
   Map<String, Object> json;
   try {
@@ -26,6 +28,17 @@ void onDidReceiveNotificationResponse(NotificationResponse response) {
     final actionData = dataJson['action_data'] as Map<String, dynamic>;
     if (input != null) {
       actionData['input'] = input;
+    }
+
+    if (responseEventType == 'finished_eating_response' && action == 'agree') {
+      final mealId = actionData['mealId'];
+      if (mealId is int) {
+        try {
+          await const PendingMealCompletionRequests().request(mealId);
+        } catch (error) {
+          debugPrint('Could not persist meal completion intent: $error');
+        }
+      }
     }
 
     json = {
@@ -45,11 +58,26 @@ void onDidReceiveNotificationResponse(NotificationResponse response) {
   FlutterForegroundTask.sendDataToTask(jsonEncode(json));
 }
 
+/// Replays a durable fresh confirmation after the service has finished starting.
+void replayFinishedEatingConfirmation(int mealId) {
+  FlutterForegroundTask.sendDataToTask(
+    jsonEncode({
+      'external_event': 'notification_event',
+      'data': {
+        'notification_response_event': 'finished_eating_response',
+        'data': {'action': 'agree', 'mealId': mealId},
+      },
+    }),
+  );
+}
+
 @pragma('vm:entry-point')
-void onDidReceiveBackgroundNotificationResponse(NotificationResponse response) {
+Future<void> onDidReceiveBackgroundNotificationResponse(
+  NotificationResponse response,
+) async {
   debugPrint(
     'BG BACKGROUND RESPONSE: actionId=${response.actionId} data=${response.payload}',
   );
 
-  onDidReceiveNotificationResponse(response);
+  await onDidReceiveNotificationResponse(response);
 }

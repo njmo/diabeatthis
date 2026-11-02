@@ -6,6 +6,9 @@ CREATE TABLE meal (
 
   planned_at INTEGER NOT NULL,
   summarized_at INTEGER,
+  consumption_confirmed_ended_at INTEGER,
+  add_on_bolus_context TEXT,
+  completion_decision TEXT,
 
   purpose TEXT NOT NULL DEFAULT 'meal' CHECK (purpose IN ('meal', 'lowTreatment')),
   status TEXT NOT NULL DEFAULT 'planned',

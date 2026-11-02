@@ -9,14 +9,18 @@ bool shouldOpenAapsForMealSummaryAapsCarbs(MealSummaryAapsCarbs aapsCarbs) {
 AapsBolusSuggestionNotificationEvent? buildMealSummaryAapsSuggestionEvent({
   required MealSummaryAapsCarbs aapsCarbs,
   required ExtendedCarbsScheduleSettings? extendedCarbsScheduleSettings,
+  int? mealId,
+  bool extendedCarbsAreAdditional = false,
 }) {
   if (!shouldOpenAapsForMealSummaryAapsCarbs(aapsCarbs)) {
     return null;
   }
 
   return AapsBolusSuggestionNotificationEvent(
+    mealId: mealId,
     carbs: aapsCarbs.carbs,
     extendedCarbs: aapsCarbs.extendedCarbs,
+    extendedCarbsAreAdditional: extendedCarbsAreAdditional,
     extendedCarbsDeliveryMode: extendedCarbsScheduleSettings?.deliveryMode,
     extendedCarbsDelayMinutes: extendedCarbsScheduleSettings?.delayMinutes,
     extendedCarbsDurationMinutes:

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/meal/meal_activation_guard.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../providers/meal_snapshot_controller_provider.dart';
 import '../repositories/meal_advisor_result_store.dart';
@@ -17,13 +18,18 @@ class AcceptMealDecisionUseCase {
     }
     final db = ref.read(databaseProvider);
     await db.transaction(() async {
+      await ensureMealActivationAllowed(
+        db,
+        mealId,
+        allowedStatuses: const {'planned'},
+      );
       await MealAdvisorResultUseCase(
         DriftMealAdvisorResultStore(dao: db.mealAdvisorResultDao),
       ).saveMealAdvice(mealId, advice);
       await ref
           .read(mealSnapshotControllerProvider)
           .createPlannedSnapshot(mealId);
-      await db.mealDao.updateMealStatus(mealId, decision.acceptedStatus);
+      await db.mealDao.tryUpdateMealStatus(mealId, decision.acceptedStatus);
     });
   }
 }

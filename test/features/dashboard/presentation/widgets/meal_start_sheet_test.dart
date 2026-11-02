@@ -143,26 +143,35 @@ void main() {
     },
   );
 
-  testWidgets(
-    'eat-first with zero eCarbs does not promise an immediate AAPS launch',
-    (tester) async {
-      await openMealSheet(
-        tester,
-        controller: MealSheetTestController(
-          initialState: mealSheetAdviceState(
-            decision: MealDecision.eatNowBolusLater,
-            extendedCarbs: 0,
+  for (final extendedCarbs in [0, 12]) {
+    testWidgets(
+      'eat-first shows $extendedCarbs planned eCarbs and defers the suggestion and AAPS launch',
+      (tester) async {
+        await openMealSheet(
+          tester,
+          controller: MealSheetTestController(
+            initialState: mealSheetAdviceState(
+              decision: MealDecision.eatNowBolusLater,
+              extendedCarbs: extendedCarbs,
+            ),
           ),
-        ),
-      );
-      expect(find.text('Najpierw jedzenie, potem bolus'), findsOneWidget);
-      expect(find.text('0 g'), findsOneWidget);
-      expect(find.text('Zaczynam jeść'), findsOneWidget);
-      expect(find.textContaining('Akceptacja otworzy AAPS.'), findsNothing);
-      expect(find.text('Harmonogram eCarbs'), findsNothing);
-      expect(tester.takeException(), isNull);
-    },
-  );
+        );
+        expect(find.text('Najpierw jedzenie, potem bolus'), findsOneWidget);
+        expect(find.text('eCarbs'), findsOneWidget);
+        expect(find.text('$extendedCarbs g'), findsOneWidget);
+        expect(
+          find.textContaining(
+            'Propozycja eCarbs pojawi się po zakończeniu jedzenia',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Zaczynam jeść'), findsOneWidget);
+        expect(find.textContaining('Akceptacja otworzy AAPS.'), findsNothing);
+        expect(find.text('Harmonogram eCarbs'), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 
   testWidgets(
     'additional-bolus schedule keeps its delivery mode in the summary',

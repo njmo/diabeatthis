@@ -34,6 +34,8 @@ class LoadMealSummaryDataUseCase {
     final items = mealIngredients.map((mealIngredient) {
       final plannedAmount = _plannedAmount(mealIngredient);
       final reportedAmount = mealIngredient.consumedAmount ?? plannedAmount;
+      final gramsPerAmount = _gramsPerAmount(mealIngredient);
+      final ingredient = mealIngredient.ingredient;
 
       return MealSummaryItem(
         name: mealIngredient.ingredient.name,
@@ -45,6 +47,12 @@ class LoadMealSummaryDataUseCase {
         consumedAmount: reportedAmount,
         consumedConfidence: mealIngredient.consumedConfidence ?? 1.0,
         netCarbsPerAmount: _netCarbsPerAmount(mealIngredient),
+        gramsPerAmount: gramsPerAmount,
+        isExtra: mealIngredient.entryType == 'extra',
+        carbsPerAmount: gramsPerAmount * ingredient.carbsPer100g / 100,
+        fatPerAmount: gramsPerAmount * ingredient.fatPer100g / 100,
+        proteinPerAmount: gramsPerAmount * ingredient.proteinPer100g / 100,
+        fiberPerAmount: gramsPerAmount * ingredient.fiberPer100g / 100,
       );
     }).toList();
     return MealSummaryData(
@@ -71,16 +79,21 @@ class LoadMealSummaryDataUseCase {
       );
     }
 
-    final gramsPerAmount = mealIngredient.ingredientPortion.portion.map(
-      empty: (_) => 1.0,
-      existing: (_) => mealIngredient.ingredientPortion.amount.toDouble(),
-      draft: (_) => mealIngredient.ingredientPortion.amount.toDouble(),
-    );
+    final gramsPerAmount = _gramsPerAmount(mealIngredient);
 
     return calculateNetCarbs(
       carbs: gramsPerAmount * mealIngredient.ingredient.carbsPer100g / 100,
       fiber: gramsPerAmount * mealIngredient.ingredient.fiberPer100g / 100,
       labelMode: mealIngredient.ingredient.carbsLabelMode,
+    );
+  }
+
+  double _gramsPerAmount(MealIngredientsDraft mealIngredient) {
+    if (mealIngredient.ingredient.isReference) return 100;
+    return mealIngredient.ingredientPortion.portion.map(
+      empty: (_) => 1.0,
+      existing: (_) => mealIngredient.ingredientPortion.amount.toDouble(),
+      draft: (_) => mealIngredient.ingredientPortion.amount.toDouble(),
     );
   }
 

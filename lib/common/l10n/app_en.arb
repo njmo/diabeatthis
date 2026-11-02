@@ -480,6 +480,9 @@
   "copiedMealMealLabel": "Meal - {name}",
   "copiedMealFieldLabel": "Find similar",
   "aapsOpenFailed": "Could not open AAPS. Open the app manually.",
+  "aapsSuggestionUnavailableTitle": "AAPS instructions",
+  "mealAddOnExtendedCarbsInstruction": "Instructions for additional eCarbs",
+  "aapsSuggestionUnavailableMessage": "The notification could not be displayed. Review the instructions below before opening AAPS.",
   "mealStatusEatChoice": "I will eat",
   "mealStatusSkipChoice": "Skip",
   "mealStatusActivationBlocked": "Finish active meal first: {mealName}.",
@@ -1323,7 +1326,7 @@
   "templatePortionSearch": "Portion search existing portions",
   "templatePortionIngredientAmount": "Ingredient amount in portion",
   "templateConfirmDiscard": "Are you sure you want to discard changes?",
-  "summaryReferencePortions": "reference portions",
+  "summaryReferencePortions": "portions",
   "commonPortionUnit": "{count, plural, one{portion} other{portions}}",
   "commonPieceUnit": "{count, plural, one{piece} other{pieces}}",
   "mealDaysFromNow": "In {count} days",
@@ -2473,6 +2476,7 @@
   "mealStartPlanLabel": "Your plan",
   "mealStartValuesLabel": "Meal values",
   "mealStartEcarbsLabel": "eCarbs",
+  "mealStartDeferredEcarbs": "The eCarbs suggestion will appear after you finish eating and confirm the amount eaten.",
   "mealStartScheduleLabel": "eCarbs schedule",
   "mealStartNoWaiting": "No waiting",
   "mealStartWaitAfterBolus": "{minutes} min after the bolus is recorded",
@@ -2515,5 +2519,203 @@
         "type": "String"
       }
     }
-  }
+  },
+  "mealProgressCurrent": "Current meal",
+  "mealProgressOpenCalculator": "Open calculator",
+  "mealProgressAddFood": "Add food",
+  "mealProgressToSummarize": "Ready to summarize",
+  "mealProgressToday": "Today",
+  "mealProgressTomorrow": "Tomorrow",
+  "mealProgressNoDate": "No date",
+  "mealProgressQuickMeal": "Quick meal",
+  "mealProgressFinishEating": "Finished eating",
+  "mealProgressOpenActions": "Details and actions",
+  "mealProgressBolus": "Bolus",
+  "mealProgressWaiting": "Waiting",
+  "mealProgressEating": "Eating",
+  "mealProgressWaitRemaining": "Waiting time remaining",
+  "mealProgressWaitElapsed": "Waiting time has elapsed",
+  "mealProgressInterrupt": "Interrupt meal tracking",
+  "mealProgressBlocked": "Available to start after the active meal has ended.",
+  "mealCompletionQuestion": "How much did you eat?",
+  "mealCompletionAll": "The whole portion",
+  "mealCompletionAllHint": "The recorded portion, including previously reported extras",
+  "mealCompletionLess": "Less",
+  "mealCompletionLessHint": "Some food was left",
+  "mealCompletionMore": "More",
+  "mealCompletionMoreHint": "A larger portion or an additional item",
+  "mealCompletionConsumedGrams": "Total eaten (g)",
+  "mealCompletionSameProportions": "The same ingredient proportions",
+  "mealCompletionHalf": "I ate half of the portion",
+  "mealCompletionEditIngredients": "Ingredient quantities and confidence",
+  "mealCompletionLateTitle": "You are confirming the meal later",
+  "mealCompletionDuration": "How long did eating take? (min)",
+  "mealCompletionEndTime": "Actual finish time",
+  "mealCompletionNow": "I finished just now",
+  "mealCompletionEarlier": "I finished earlier — change the time",
+  "mealCompletionStartedAt": "Started: {time}",
+  "@mealCompletionStartedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionMissingStart": "The start time was not recorded. Enter the finish time.",
+  "mealCompletionSave": "Save summary",
+  "mealCompletionSaveBeforeBolus": "Save and continue to bolus",
+  "mealCompletionInvalidTime": "The finish time must be between the start of eating and now.",
+  "mealCompletionInvalidAmount": "Check the entered amounts. If nothing was eaten, stop tracking the meal.",
+  "mealCompletionStale": "The meal status has changed. Return to the list and open it again.",
+  "mealCompletionStarted": "Eating started",
+  "mealCompletionSaved": "Amount eaten saved. Meal completed.",
+  "mealCompletionBeforeBolusSaved": "The actual amount eaten was saved. The meal is waiting for a bolus.",
+  "mealCompletionSaveError": "Could not save the summary. Please try again.",
+  "mealCompletionReportedNote": "Previously reported extras are already included. Only the change from the reported amount is saved.",
+  "mealCompletionAdditionalItems": "Additional food item",
+  "mealCompletionNothingEaten": "If nothing was eaten, return to the meal and choose to stop it.",
+  "mealInterruptionTitle": "Stop tracking this meal?",
+  "mealInterruptionMessage": "The meal will leave the active list. Its history and recorded bolus will remain. If you finished eating, even only part of the portion, choose the summary.",
+  "mealInterruptionNoEatingMessage": "The meal will leave the active list. Its history and recorded bolus will remain.",
+  "mealInterruptionConfirm": "Stop tracking",
+  "mealInterruptionChanged": "The meal status has changed. Open it again.",
+  "mealInterruptionFailed": "Could not finish stopping meal tracking. Please try again.",
+  "mealStatusInterrupted": "Interrupted",
+  "mealCompletionAddOnStartedAt": "Extra portion started: {time}",
+  "@mealCompletionAddOnStartedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionTitle": "Meal summary",
+  "mealCompletionCalculatedEnd": "Finish time from the duration",
+  "mealCompletionFutureTime": "This time is still in the future. Shorten the eating duration or choose “I finished just now”.",
+  "mealCompletionAsPlanned": "Eaten as planned",
+  "mealCompletionAdjusted": "Change the amounts eaten",
+  "mealCompletionAdjustedHint": "Change the amounts eaten or add a food item.",
+  "mealCompletionActualCarbs": "Actually eaten: {carbs} g of carbs",
+  "@mealCompletionActualCarbs": {
+    "placeholders": {
+      "carbs": {
+        "type": "int"
+      }
+    }
+  },
+  "mealCompletionNone": "None",
+  "mealCompletionWhole": "Whole portion",
+  "mealCompletionReportedAmount": "Recorded: {amount}",
+  "mealEatingFinishTitle": "When did you finish eating?",
+  "mealEatingFinishedNow": "I finished just now",
+  "mealEatingFinishedEarlier": "I finished earlier",
+  "mealEatingContinue": "Continue to summary",
+  "mealProgressFinishBeforeBolus": "I finished just now — continue to bolus",
+  "@mealCompletionReportedAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionSaveImmediately": "Save the summary immediately",
+  "mealCompletionCarbsBelowPlan": "{carbs} g less than planned",
+  "mealCompletionCarbsAbovePlan": "{carbs} g more than planned",
+  "@mealCompletionCarbsBelowPlan": {
+    "placeholders": {
+      "carbs": {
+        "type": "int"
+      }
+    }
+  },
+  "@mealCompletionCarbsAbovePlan": {
+    "placeholders": {
+      "carbs": {
+        "type": "int"
+      }
+    }
+  },
+  "mealCompletionAsPlannedAction": "Everything",
+  "mealCompletionAdjustedAction": "Different",
+  "mealCompletionShortfallTitle": "Less eaten after a bolus",
+  "mealCompletionShortfallNotice": "A bolus is recorded. Review the missing portion before finishing.",
+  "mealCompletionRefill": "Complete the meal",
+  "mealCompletionCheckGlucose": "Check glucose",
+  "mealCompletionSaveActual": "Save without correction",
+  "mealCompletionEditOrAdd": "Edit",
+  "mealCompletionSaveAndCorrect": "Save and correct in AAPS",
+  "mealCompletionCorrectionProposal": "Suggested AAPS correction: {carbs} g",
+  "mealCompletionCorrectionExplanation": "Difference against the reported portion including the add-on. We will save the amount eaten; enter the correction in AAPS. Delivered insulin remains active.",
+  "@mealCompletionCorrectionProposal": {"placeholders": {"carbs": {"type": "int"}}},
+  "mealCompletionEditAmounts": "Edit amounts",
+  "mealCompletionRefillFinished": "I finished the additional food",
+  "mealCompletionRefillPending": "The additional food is in the draft. Confirm below once you finish eating to record the finish time.",
+  "mealCompletionSaveImmediatelyBeforeBolus": "Save the eaten portion and continue to the bolus.",
+  "mealCompletionReportedShortfall": "About {carbs} g are missing from the recorded portion. If the bolus covered that portion, consider eating that amount of carbohydrate.",
+  "@mealCompletionReportedShortfall": {
+    "placeholders": {
+      "carbs": {
+        "type": "int"
+      }
+    }
+  },
+  "mealCompletionPlanned": "Planned",
+  "mealAddOnManual": "Manually",
+  "mealAddOnManualHint": "Choose which ingredients you want more of",
+  "mealAddOnTotalHint": "Total portion, including the first serving",
+  "mealAddOnEditHint": "Set the total amount: the first serving and the extra food. The meal will remain in progress.",
+  "mealAddOnEatingAction": "I’m eating the extra food",
+  "mealAddOnNoIncrease": "Increase an ingredient amount or add a product.",
+  "mealAddOnSavedContinueEating": "Extra food saved. When you finish, tap “I’ve eaten”.",
+  "mealAddOnOneAndHalfTotal": "1.5× the whole meal",
+  "mealAddOnDoubleTotal": "2× the whole meal",
+  "mealAddOnTotalAmount": "Total including extra food",
+  "mealAddOnAction": "Extra food",
+  "notificationAdditionalExtendedCarbsSchedule": "additional eCarbs: {grams} g in {delayText} over {durationText}",
+  "@notificationAdditionalExtendedCarbsSchedule": {
+    "placeholders": {
+      "grams": {
+        "type": "int"
+      },
+      "delayText": {
+        "type": "String"
+      },
+      "durationText": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionCoveredShortfall": "About {carbs} g of carbohydrate are missing from the portion associated with the recorded bolus. If the bolus covered that portion, consider eating that amount.",
+  "@mealCompletionCoveredShortfall": {
+    "placeholders": {
+      "carbs": {
+        "type": "int"
+      }
+    }
+  },
+  "mealCompletionDecisionWithoutCorrection": "Save without correction selected in the app",
+  "mealCompletionDecisionCorrectionRequested": "Correction in AAPS selected",
+  "mealCompletionDecisionRecordedAt": "Choice recorded: {time}",
+  "@mealCompletionDecisionRecordedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionDecisionCarbs": "Previously reported: {reported} g · Consumed: {consumed} g · Difference: {difference} g",
+  "@mealCompletionDecisionCarbs": {
+    "placeholders": {
+      "reported": {
+        "type": "String"
+      },
+      "consumed": {
+        "type": "String"
+      },
+      "difference": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCompletionDecisionContext": "A later AAPS correction is not confirmed here. This is possible context for reviewing the glucose pattern."
 }

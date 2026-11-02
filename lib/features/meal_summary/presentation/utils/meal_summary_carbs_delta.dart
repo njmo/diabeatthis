@@ -57,6 +57,17 @@ MealSummaryCarbsDelta calculateMealSummaryCarbsDelta(MealSummaryDraft draft) {
   );
 }
 
+double calculateMealSummaryConsumedCarbs(MealSummaryDraft draft) {
+  final items = draft.itemsById.values.fold(
+    0.0,
+    (sum, item) => sum + item.consumedAmount * item.netCarbsPerAmount,
+  );
+  return draft.extraItems.fold(
+    items,
+    (sum, item) => sum + calculateExtraItemNetCarbs(item),
+  );
+}
+
 MealSummaryAapsCarbs calculateMealSummaryAapsCarbs(MealSummaryDraft draft) {
   final delta = calculateMealSummaryCarbsDelta(draft);
 

@@ -1,3 +1,4 @@
+import '../../../../common/meal/meal_completion_decision.dart';
 import '../../../../common/nutrition/meal_nutrition_totals.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
@@ -278,6 +279,7 @@ class MealRecordData {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isSynced;
+  final MealCompletionDecision? completionDecision;
 
   const MealRecordData({
     required this.id,
@@ -292,6 +294,7 @@ class MealRecordData {
     required this.createdAt,
     required this.updatedAt,
     required this.isSynced,
+    this.completionDecision,
   });
 
   DateTime get eatenOrPlannedAt => summarizedAt ?? plannedAt;

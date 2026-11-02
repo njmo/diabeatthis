@@ -32,6 +32,7 @@ MealDmlDocument serializeMealDml(MealAiContext context) {
     'meal',
     context.current,
     predictions: predictions,
+    asOf: context.builtAt,
   );
   for (final entry in context.comparisons.indexed) {
     final prefix = 'similar_${entry.$1 + 1}';
@@ -49,6 +50,9 @@ MealDmlDocument serializeMealDml(MealAiContext context) {
       prefix,
       entry.$2.observation,
       predictions: predictions,
+      asOf: context.current.meal.eatenAt.isBefore(context.builtAt)
+          ? context.current.meal.eatenAt
+          : context.builtAt,
     );
   }
   for (final prediction in predictions.entries) {

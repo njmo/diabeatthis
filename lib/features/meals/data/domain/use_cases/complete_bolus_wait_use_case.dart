@@ -24,6 +24,8 @@ class CompleteBolusWaitUseCase {
     final finalWaitMinutes = await _finalWaitMinutes(meal);
 
     await db.transaction(() async {
+      final current = await db.mealDao.getMealById(meal.id);
+      if (current?.status != 'bolused-waiting') return;
       if (finalWaitMinutes != null) {
         final decision = await db.mealAdvisorResultDao.getMealAdvisorResult(
           meal.id,
@@ -40,7 +42,7 @@ class CompleteBolusWaitUseCase {
         );
       }
 
-      await db.mealDao.updateMealStatus(meal.id, 'waited-eating');
+      await db.mealDao.tryUpdateMealStatus(meal.id, 'waited-eating');
     });
   }
 
