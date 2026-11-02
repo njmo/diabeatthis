@@ -3,22 +3,49 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
-import '../../../../common/widgets/forms.dart';
-import '../../../../core/logger/logger.dart';
+import '../../../../common/widgets/search_text_field.dart';
+import '../../../../common/widgets/status_info_card.dart';
+import '../../../ingredients/data/drafts/ingredient_draft.dart';
+import '../../../ingredients/data/models/ingredient_scan_result.dart';
+import '../../../ingredients/presentation/widgets/ingredient_portion_suggestions.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
+import '../../data/drafts/portion_draft.dart';
 import '../../data/drafts/portion_filter.dart';
 import '../../data/mappers/portion_draft_mapper.dart';
 import '../../data/providers/portion_provider.dart';
+import 'portion_search_tile.dart';
 
-class PortionSearch extends HookConsumerWidget with Logging {
-  const PortionSearch({super.key});
+class PortionSearch extends HookConsumerWidget {
+  final IngredientDraft? ingredient;
+  final VoidCallback? onCreatePortion;
+  final String? createPortionLabel;
+  final GlobalKey<FormState>? formKey;
+  final List<RecognizedPortion> suggestions;
+  final ValueChanged<RecognizedPortion>? onSuggestionSelected;
+
+  const PortionSearch({
+    this.ingredient,
+    this.onCreatePortion,
+    this.createPortionLabel,
+    this.formKey,
+    this.suggestions = const [],
+    this.onSuggestionSelected,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = context.lang;
     final query = useState('');
-    final valuePicked = useState(-1);
+    final queryController = useTextEditingController();
     final filter = ref.watch(portionFilterProvider);
+    final selectedId = ref
+        .watch(portionDraftProvider)
+        .maybeMap(existing: (portion) => portion.id, orElse: () => null);
+    final assigned = filter.maybeMap(
+      byQueryForIngredient: (_) => true,
+      orElse: () => false,
+    );
     final portions = filter.map(
       all: (_) => ref.watch(portionsProvider),
       byQuery: (_) => ref.watch(portionsByQueryProvider(query.value)),
@@ -32,214 +59,91 @@ class PortionSearch extends HookConsumerWidget with Logging {
         ),
       ),
     );
-    logI("Filter : $filter");
-    final draft = ref.watch(portionDraftProvider.notifier);
-    final formKey = ref.watch(mealIngredientFormKeyProvider);
-    final stage = ref.watch(addMealIngredientStageProvider);
-    final mode = PortionSearchMode.fromStage(stage);
+    final selectionIsVisible =
+        portions.asData?.value.any((portion) => portion.id == selectedId) ??
+        false;
+    final effectiveFormKey =
+        formKey ?? ref.watch(mealIngredientFormKeyProvider);
+    final chooseSuggestion = onSuggestionSelected;
 
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Form(
-            key: formKey,
-            autovalidateMode: AutovalidateMode.always,
-            child: StringFormField(
-              label: lang.portionNameLabel,
-              value: '',
-              onChanged: (value) {
-                query.value = value;
-              },
-              builder: (context, controller) {
-                return TextFormField(
-                  autofocus: true,
-                  controller: controller,
-                  maxLength: 30,
-                  validator: (value) {
-                    if (valuePicked.value < 0) {
-                      return '';
-                    }
-                    return null;
-                  },
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.search),
-                    labelText: lang.portionSearchLabel,
-                    counterText: '',
-                    border: const OutlineInputBorder(),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
-          portions.when(
-            data: (data) {
-              if (data.isEmpty) {
-                return PortionSearchEmptyState(mode: mode);
-              }
-
-              return SizedBox(
-                height: 240,
-                child: ListView.separated(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  itemBuilder: (context, index) {
-                    final portion = data[index];
-                    final selected = valuePicked.value == index;
-                    return PortionSearchTile(
-                      name: portion.name,
-                      unitHint: portion.unitHint,
-                      selected: selected,
-                      onTap: () {
-                        draft.overrideDraft(portion.toSelection());
-                        valuePicked.value = index;
-                      },
-                    );
-                  },
-                  separatorBuilder: (_, _) => const SizedBox(height: 8),
-                  itemCount: data.length,
-                ),
-              );
-            },
-            error: (error, _) => PortionSearchErrorMessage(error: error),
-            loading: () => const PortionSearchLoadingMessage(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum PortionSearchMode {
-  existing,
-  newAssignment;
-
-  static PortionSearchMode fromStage(AddMealIngredientStage stage) {
-    return switch (stage) {
-      AddMealIngredientStage.definedPortionsSearch =>
-        PortionSearchMode.existing,
-      _ => PortionSearchMode.newAssignment,
-    };
-  }
-}
-
-class PortionSearchTile extends StatelessWidget {
-  final String name;
-  final String unitHint;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const PortionSearchTile({
-    required this.name,
-    required this.unitHint,
-    required this.selected,
-    required this.onTap,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Material(
-      color: selected ? colorScheme.secondaryContainer : colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        side: BorderSide(
-          color: selected ? colorScheme.secondary : colorScheme.outlineVariant,
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ListTile(
-        dense: true,
-        onTap: onTap,
-        leading: CircleAvatar(
-          backgroundColor: selected
-              ? colorScheme.secondary
-              : colorScheme.surfaceContainerHighest,
-          foregroundColor: selected
-              ? colorScheme.onSecondary
-              : colorScheme.onSurfaceVariant,
-          child: const Icon(Icons.local_dining, size: 20),
-        ),
-        title: Text(
-          name,
-          style: TextStyle(
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-          ),
-        ),
-        subtitle: Text(
-          unitHint.isEmpty ? context.lang.portionNoUnit : unitHint,
-        ),
-        trailing: selected ? const Icon(Icons.check_circle) : null,
-      ),
-    );
-  }
-}
-
-class PortionSearchEmptyState extends StatelessWidget {
-  final PortionSearchMode mode;
-
-  const PortionSearchEmptyState({required this.mode, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final message = mode == PortionSearchMode.existing
-        ? context.lang.portionNoMatchingForIngredient
-        : context.lang.portionNoMatching;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
+      child: Form(
+        key: effectiveFormKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(Icons.search_off, color: colorScheme.onSurfaceVariant),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            if (!assigned && chooseSuggestion != null)
+              IngredientPortionSuggestions(
+                suggestions: suggestions,
+                onSelected: chooseSuggestion,
+              ),
+            if (query.value.isNotEmpty ||
+                portions.asData?.value.isNotEmpty == true)
+              SearchTextField(
+                controller: queryController,
+                hintText: lang.portionSearchLabel,
+                onChanged: (value) => query.value = value,
+              ),
+            const SizedBox(height: 12),
+            FormField<int>(
+              validator: (_) => selectionIsVisible ? null : '',
+              builder: (_) => portions.when(
+                data: (data) {
+                  if (data.isEmpty) {
+                    return StatusInfoCard(
+                      icon: Icons.search_off,
+                      title: assigned
+                          ? lang.portionNoMatchingForIngredient
+                          : lang.portionNoMatching,
+                    );
+                  }
+                  return ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: data.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final portion = data[index];
+                      return PortionSearchTile(
+                        portion: portion.toSelection(),
+                        ingredient: assigned ? ingredient : null,
+                        selected: selectedId == portion.id,
+                        onTap: () => ref
+                            .read(portionDraftProvider.notifier)
+                            .overrideDraft(portion.toSelection()),
+                      );
+                    },
+                  );
+                },
+                error: (error, _) => StatusInfoCard(
+                  icon: Icons.error_outline,
+                  title: lang.portionLoadError(error.toString()),
+                ),
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ),
+            ),
+            if (onCreatePortion != null) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  onCreatePortion!();
+                  if (!assigned && query.value.trim().isNotEmpty) {
+                    ref
+                        .read(portionDraftProvider.notifier)
+                        .setName(query.value.trim());
+                  }
+                },
+                icon: const Icon(Icons.add),
+                label: Text(
+                  createPortionLabel ?? lang.addIngredientNewPortionTitle,
+                ),
+              ),
+            ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class PortionSearchLoadingMessage extends StatelessWidget {
-  const PortionSearchLoadingMessage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
-      child: Center(child: CircularProgressIndicator()),
-    );
-  }
-}
-
-class PortionSearchErrorMessage extends StatelessWidget {
-  final Object error;
-
-  const PortionSearchErrorMessage({required this.error, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Text(
-          context.lang.portionLoadError(error.toString()),
-          style: TextStyle(color: colorScheme.onErrorContainer),
         ),
       ),
     );

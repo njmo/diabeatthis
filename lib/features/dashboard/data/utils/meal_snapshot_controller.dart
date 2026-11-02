@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' show DoUpdate;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/nutrition/ingredient_confidence.dart';
 import '../../../../core/domain/model/meal_snapshot.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../../core/drift/mappers/meal_snapshot_drift_mapper.dart';
@@ -39,7 +40,10 @@ class MealSnapshotController with Logging {
     for (final mealIngredient in mealIngredients) {
       final itemQuantityConfidence = mealIngredient.quantityConfidence;
       final nutritionConfidence = mealIngredient.ingredient.nutritionConfidence;
-      final effectiveConfidence = itemQuantityConfidence * nutritionConfidence;
+      final effectiveConfidence = combineIngredientConfidence(
+        nutritionConfidence: nutritionConfidence,
+        quantityConfidence: itemQuantityConfidence,
+      );
       final double grams;
       if (mealIngredient.ingredient.isReference) {
         grams = mealIngredient.amount * 100.0;
@@ -152,7 +156,10 @@ class MealSnapshotController with Logging {
           : mealIngredient.quantityConfidence * consumedConfidence;
       consumedIngredientsCount++;
       final nutritionConfidence = mealIngredient.ingredient.nutritionConfidence;
-      final effectiveConfidence = itemQuantityConfidence * nutritionConfidence;
+      final effectiveConfidence = combineIngredientConfidence(
+        nutritionConfidence: nutritionConfidence,
+        quantityConfidence: itemQuantityConfidence,
+      );
       final double grams;
       if (mealIngredient.ingredient.isReference) {
         grams = amount * 100.0;

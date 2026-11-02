@@ -88,9 +88,9 @@ class IngredientBarcodeScanOutcomeViewData {
         ),
       IngredientBarcodeScanOutcomeType.newDraft =>
         IngredientBarcodeScanOutcomeViewData(
-          title: lang.ingredientBarcodeNewDraftTitle,
-          message: lang.ingredientBarcodeNewDraftMessage,
-          actionLabel: lang.ingredientBarcodeReviewDraft,
+          title: lang.ingredientCodeCreateTitle,
+          message: lang.ingredientCodeCreateMessage,
+          actionLabel: lang.ingredientCreateNew,
         ),
       IngredientBarcodeScanOutcomeType.needsReview =>
         IngredientBarcodeScanOutcomeViewData(
@@ -102,7 +102,7 @@ class IngredientBarcodeScanOutcomeViewData {
         IngredientBarcodeScanOutcomeViewData(
           title: lang.ingredientBarcodeFailedTitle,
           message: errorMessage ?? lang.ingredientBarcodeNoSupplementData,
-          actionLabel: lang.ingredientBarcodeBackToSearch,
+          actionLabel: lang.commonCloseTooltip,
         ),
     };
   }

@@ -92,20 +92,22 @@ class IngredientForm extends ConsumerWidget {
         const SizedBox(height: 16),
       ],
     ];
+    final confidence = ConfidenceSlider(
+      title: sectioned ? context.lang.ingredientDataConfidence : null,
+      value: ConfidenceLevelX.fromDouble01(state.nutritionConfidence),
+      onChanged: draft.setNutritionConfidence,
+    );
+    final macros = state.isReference
+        ? IngredientReferenceMacroForm(responsive: sectioned)
+        : IngredientMacroForm(compact: sectioned);
     final nutritionFields = <Widget>[
-      ConfidenceSlider(
-        value: ConfidenceLevelX.fromDouble01(state.nutritionConfidence),
-        onChanged: draft.setNutritionConfidence,
-      ),
+      sectioned ? macros : confidence,
       const SizedBox(height: 16),
-      if (state.isReference)
-        IngredientReferenceMacroForm(responsive: sectioned)
-      else
-        IngredientMacroForm(compact: sectioned),
+      sectioned ? confidence : macros,
     ];
     return Form(
       key: formKey,
-      autovalidateMode: AutovalidateMode.onUnfocus,
+      autovalidateMode: AutovalidateMode.disabled,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

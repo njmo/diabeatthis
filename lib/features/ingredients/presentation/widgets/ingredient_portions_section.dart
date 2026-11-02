@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/portions/standard_portion_names.dart';
 import '../../../../common/widgets/form_section.dart';
 import '../../../../common/widgets/section_surface.dart';
 import '../../data/models/ingredient_portion_data.dart';
@@ -36,7 +37,12 @@ class IngredientPortionsSection extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(portions[index].name),
+                      Text(
+                        localizedPortionName(
+                          portions[index].name,
+                          context.lang,
+                        ),
+                      ),
                       if (portions[index].unitHint.isNotEmpty)
                         Text(
                           portions[index].unitHint,

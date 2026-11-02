@@ -4,7 +4,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/camera_search_icon.dart';
-import '../../../../common/widgets/forms.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/llm/local_llm_client.dart';
 import '../../../../core/media/providers/camera_permission_service_provider.dart';
@@ -14,11 +13,11 @@ import '../../data/mappers/ingredient_draft_mapper.dart';
 import '../../data/models/ingredient_photo_scan_input.dart';
 import '../../data/models/ingredient_photo_search_result.dart';
 import '../../data/providers/ingredient_provider.dart';
+import '../../data/providers/ingredient_search_query_provider.dart';
 import '../controllers/ingredient_barcode_lookup_controller.dart';
 import '../controllers/ingredient_barcode_scan_feedback_controller.dart';
+import '../controllers/ingredient_lookup_actions_controller.dart';
 import '../controllers/ingredient_photo_search_controller.dart';
-import '../models/ingredient_barcode_scan_outcome.dart';
-import '../services/ingredient_barcode_scanner.dart';
 import '../services/ingredient_photo_camera.dart';
 import 'ingredient_barcode_scan_outcome_dialog.dart';
 import 'ingredient_icon.dart';
@@ -32,9 +31,9 @@ class IngredientSearch extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = context.lang;
-    final query = useState('');
-    final valuePicked = useState(-1);
-    final normalizedQuery = query.value.trim();
+    final query = ref.watch(ingredientSearchQueryProvider);
+    final queryController = useTextEditingController(text: query);
+    final normalizedQuery = query.trim();
     final photoSearchState = ref.watch(ingredientPhotoSearchControllerProvider);
     final barcodeScanState = ref.watch(
       ingredientBarcodeLookupControllerProvider,
@@ -51,7 +50,7 @@ class IngredientSearch extends HookConsumerWidget {
               photoSearchCandidatesKey,
             ),
           )
-        : ref.watch(ingredientsByQueryProvider(query.value));
+        : ref.watch(ingredientsByQueryProvider(query));
     final hasNoPhotoSearchMatches =
         isPhotoSearchActive &&
         ingredients.hasValue &&
@@ -62,7 +61,6 @@ class IngredientSearch extends HookConsumerWidget {
     final addIngredientController = ref.read(
       addMealIngredientStageProvider.notifier,
     );
-    final barcodeScanner = ref.read(ingredientBarcodeScannerProvider);
 
     return SafeArea(
       child: Column(
@@ -72,109 +70,41 @@ class IngredientSearch extends HookConsumerWidget {
           IngredientSearchActions(
             isBarcodeScanLoading: barcodeScanState.isLoading,
             isPhotoSearchLoading: photoSearchState.isLoading,
-            onAddManual: addIngredientController.startManualIngredient,
-            onScanLabel: addIngredientController.startIngredientPhotoScan,
-            onScanBarcode: () async {
-              final barcode = await barcodeScanner.scan(context);
-              if (barcode == null) {
-                return;
-              }
-
-              final outcome = await addIngredientController
-                  .scanIngredientBarcode(barcode);
-              if (!context.mounted) {
-                return;
-              }
-
-              final shouldContinue =
-                  await showIngredientBarcodeScanOutcomeDialog(
-                    context: context,
-                    outcome: outcome,
-                    errorMessage: outcome.error == null
-                        ? null
-                        : ingredientBarcodeScanErrorMessage(outcome.error!),
-                  );
-              if (shouldContinue != true) {
-                if (outcome.type == IngredientBarcodeScanOutcomeType.failed) {
-                  ref
-                      .read(ingredientBarcodeScanFeedbackProvider.notifier)
-                      .show(
-                        ingredientBarcodeScanNoUsableDataMessageForError(
-                          outcome.error,
-                        ),
-                      );
-                }
-                return;
-              }
-
-              switch (outcome.type) {
-                case IngredientBarcodeScanOutcomeType.existingIngredient:
-                  ref.invalidate(ingredientBarcodeScanFeedbackProvider);
-                  addIngredientController.continueWithExistingBarcodeIngredient(
-                    outcome.existingIngredient!,
-                  );
-                  break;
-                case IngredientBarcodeScanOutcomeType.newDraft:
-                  ref.invalidate(ingredientBarcodeScanFeedbackProvider);
-                  addIngredientController.continueWithBarcodeIngredientDraft(
-                    outcome.draft!,
-                  );
-                  break;
-                case IngredientBarcodeScanOutcomeType.needsReview:
-                  ref.invalidate(ingredientBarcodeScanFeedbackProvider);
-                  addIngredientController.continueWithBarcodeIngredientDraft(
-                    outcome.draft!,
-                  );
-                  break;
-                case IngredientBarcodeScanOutcomeType.failed:
-                  ref
-                      .read(ingredientBarcodeScanFeedbackProvider.notifier)
-                      .show(
-                        ingredientBarcodeScanNoUsableDataMessageForError(
-                          outcome.error,
-                        ),
-                      );
-                  break;
-              }
-            },
-            onSearchPhoto: () =>
-                addIngredientController.startIngredientPhotoSearch(
-                  capturePhoto: () => captureIngredientPhoto(
-                    context,
-                    IngredientPhotoScanPhoto.front,
-                  ),
+            onScanBarcode: () =>
+                IngredientLookupActionsController(ref).searchByCode(context),
+            onSearchPhoto: () async {
+              queryController.clear();
+              ref.read(ingredientSearchQueryProvider.notifier).setQuery('');
+              await addIngredientController.startIngredientPhotoSearch(
+                capturePhoto: () => captureIngredientPhoto(
+                  context,
+                  IngredientPhotoScanPhoto.front,
                 ),
+              );
+            },
           ),
           const SizedBox(height: 8),
           Form(
             key: formKey,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            child: StringFormField(
-              label: lang.ingredientNameLabel,
-              value: '',
+            autovalidateMode: AutovalidateMode.disabled,
+            child: TextFormField(
+              controller: queryController,
+              maxLength: _ingredientSearchMaxLength,
               onChanged: (value) {
-                query.value = value;
+                ref
+                    .read(ingredientSearchQueryProvider.notifier)
+                    .setQuery(value);
+                ref.invalidate(ingredientDraftProvider);
               },
-              builder: (context, controller) {
-                return TextFormField(
-                  autofocus: true,
-                  controller: controller,
-                  maxLength: _ingredientSearchMaxLength,
-                  validator: (value) {
-                    if (valuePicked.value < 0 &&
-                        !selectedIngredient.hasSearchSelection) {
-                      return lang.ingredientPickOrAddNew;
-                    }
-                    return null;
-                  },
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.search),
-                    labelText: lang.ingredientSearchLabel,
-                    counterText: '',
-                    border: const OutlineInputBorder(),
-                  ),
-                );
-              },
+              validator: (_) => selectedIngredient.hasSearchSelection
+                  ? null
+                  : lang.ingredientPickOrAddNew,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                labelText: lang.ingredientSearchLabel,
+                counterText: '',
+                border: const OutlineInputBorder(),
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -220,8 +150,19 @@ class IngredientSearch extends HookConsumerWidget {
             ),
             const SizedBox(height: 8),
           ],
+          if (ingredients.isLoading) const LinearProgressIndicator(),
+          if (ingredients.hasError)
+            Text(lang.ingredientLoadError(ingredients.error.toString())),
+          if (ingredients.hasValue && ingredients.value!.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Text(lang.ingredientSearchEmpty),
+            ),
           SizedBox(
-            height: 240,
+            height: (MediaQuery.sizeOf(context).height * 0.42).clamp(
+              200.0,
+              440.0,
+            ),
             child: ListView.separated(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               itemBuilder: (context, index) {
@@ -229,9 +170,9 @@ class IngredientSearch extends HookConsumerWidget {
                 if (ingredient == null) {
                   return SizedBox.shrink();
                 }
-                final selected =
-                    valuePicked.value == index ||
-                    selectedIngredient.matchesSearchResult(ingredient);
+                final selected = selectedIngredient.matchesSearchResult(
+                  ingredient,
+                );
                 return IngredientSearchTile(
                   name: ingredient.name,
                   brand: ingredient.brand,
@@ -241,7 +182,6 @@ class IngredientSearch extends HookConsumerWidget {
                   selected: selected,
                   onTap: () {
                     draft.overrideDraft(ingredient.toDraft());
-                    valuePicked.value = index;
                   },
                 );
               },
@@ -337,16 +277,12 @@ String _brandLabel(String? brand) {
 class IngredientSearchActions extends StatelessWidget {
   final bool isBarcodeScanLoading;
   final bool isPhotoSearchLoading;
-  final VoidCallback onAddManual;
-  final VoidCallback onScanLabel;
   final VoidCallback? onScanBarcode;
   final VoidCallback onSearchPhoto;
 
   const IngredientSearchActions({
     required this.isBarcodeScanLoading,
     required this.isPhotoSearchLoading,
-    required this.onAddManual,
-    required this.onScanLabel,
     required this.onScanBarcode,
     required this.onSearchPhoto,
     super.key,
@@ -359,28 +295,10 @@ class IngredientSearchActions extends StatelessWidget {
       children: [
         Expanded(
           child: IngredientSearchActionButton(
-            icon: const Icon(Icons.add_box_outlined),
-            label: lang.lowTreatmentReasonManual,
-            tooltip: lang.ingredientAddManualTooltip,
-            onPressed: onAddManual,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: IngredientSearchActionButton(
-            icon: const Icon(Icons.add_a_photo_outlined),
-            label: lang.ingredientLabelPhotoButton,
-            tooltip: lang.ingredientScanLabelTooltip,
-            onPressed: onScanLabel,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: IngredientSearchActionButton(
             icon: const Icon(Icons.qr_code_scanner_outlined),
             label: isBarcodeScanLoading
                 ? lang.commonLoading
-                : lang.ingredientCodeButton,
+                : lang.ingredientSearchByCode,
             tooltip: lang.ingredientScanBarcodeTooltip,
             onPressed: isBarcodeScanLoading ? null : onScanBarcode,
           ),
@@ -391,7 +309,7 @@ class IngredientSearchActions extends StatelessWidget {
             icon: const CameraSearchIcon(size: 18),
             label: isPhotoSearchLoading
                 ? lang.ingredientSearching
-                : lang.ingredientFromPhotoButton,
+                : lang.ingredientSearchByPhoto,
             tooltip: lang.ingredientFindFromPhotoTooltip,
             onPressed: isPhotoSearchLoading ? null : onSearchPhoto,
           ),
@@ -433,7 +351,7 @@ class IngredientSearchActionButton extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.labelSmall,
@@ -656,10 +574,8 @@ String _photoSearchErrorMessage(Object error) {
 }
 
 extension IngredientSearchSelectionX on IngredientDraft {
-  bool get hasSearchSelection => map(
-    draft: (draft) => draft.name.trim().isNotEmpty,
-    existing: (_) => true,
-  );
+  bool get hasSearchSelection =>
+      map(draft: (_) => false, existing: (_) => true);
 
   bool matchesSearchResult(domain.Ingredient ingredient) {
     return map(

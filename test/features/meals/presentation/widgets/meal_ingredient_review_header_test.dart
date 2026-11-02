@@ -1,7 +1,8 @@
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import 'package:diabeatthis/features/meals/data/drafts/meal_draft.dart';
-import 'package:diabeatthis/features/meals/presentation/widgets/amount_form.dart';
+import 'package:diabeatthis/features/meals/presentation/utils/meal_ingredient_portion_formatters.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/meal_ingredient_review_header.dart';
 import 'package:diabeatthis/features/portions/data/drafts/portion_draft.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,7 +17,7 @@ void main() {
       name: 'Test ingredient',
       portion: 'kromka',
       grams: 35.0,
-      expected: '1 kromka to 35 g',
+      expected: '1 × kromka = 35 g',
     ),
     (
       isReference: true,
@@ -24,7 +25,8 @@ void main() {
       name: 'Test ingredient',
       portion: 'porcja',
       grams: 100.0,
-      expected: '1 porcja to 100 g',
+      expected:
+          'Wartości dotyczą jednej porcji referencyjnej. Wybierz liczbę porcji.',
     ),
     (
       isReference: false,
@@ -32,7 +34,7 @@ void main() {
       name: 'uyyg',
       portion: 'asd4',
       grams: 1.0,
-      expected: '1 asd4 to 1 g',
+      expected: '1 × asd4 = 1 g',
     ),
     (
       isReference: false,
@@ -40,7 +42,7 @@ void main() {
       name: 'uyyg',
       portion: 'asd4',
       grams: 1.0,
-      expected: '1 asd4 to 1 g',
+      expected: '1 × asd4 = 1 g',
     ),
   ]) {
     final isReference = example.isReference;
@@ -80,10 +82,9 @@ void main() {
       await tester.pumpWidget(
         localizedMaterialApp(
           home: Scaffold(
-            body: AmountFormInfo(
-              draft: draft,
-              gramsPerPortion: grams,
-              isLoadingPortionAmount: false,
+            body: MealIngredientReviewHeader(
+              name: draft.ingredient.name,
+              description: draft.measureDescription(gramsPerPortion: grams),
             ),
           ),
         ),

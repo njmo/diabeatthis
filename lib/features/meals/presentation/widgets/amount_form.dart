@@ -5,17 +5,18 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/nutrition/ingredient_amount_calculator.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
 import '../../../ingredients/data/icons/ingredient_icon_provider.dart';
-import '../../../ingredients/presentation/widgets/ingredient_icon.dart';
 import '../../../portions/data/providers/portion_provider.dart';
-import '../../data/drafts/meal_draft.dart';
 import '../../data/providers/add_ingredients_provider.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import '../utils/meal_ingredient_portion_formatters.dart';
 import 'confidence_slider.dart';
-import 'summary.dart';
+import 'ingredient_amount_portions.dart';
+import 'meal_ingredient_review_header.dart';
 
 class AmountForm extends ConsumerWidget {
-  const AmountForm({super.key});
+  const AmountForm({super.key, this.onEditReference});
+
+  final VoidCallback? onEditReference;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,12 +52,12 @@ class AmountForm extends ConsumerWidget {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: formKey,
-          autovalidateMode: AutovalidateMode.always,
+          autovalidateMode: AutovalidateMode.disabled,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AmountFormInfo(
+              MealIngredientReviewHeader(
                 iconAssetPath:
                     draft.ingredient.iconAssetPath ??
                     ref
@@ -68,16 +69,32 @@ class AmountForm extends ConsumerWidget {
                         )
                         .asData
                         ?.value,
-                draft: draft,
-                gramsPerPortion: gramsPerPortion,
-                isLoadingPortionAmount: isLoadingPortionAmount,
-                onChangeMeasure: draft.ingredient.isReference
-                    ? null
-                    : ref.read(addMealIngredientStageProvider.notifier).back,
+                name: draft.ingredient.name,
+                description: draft.measureDescription(
+                  gramsPerPortion: gramsPerPortion,
+                  isLoading: isLoadingPortionAmount,
+                ),
               ),
+              if (!draft.ingredient.isReference) ...[
+                const SizedBox(height: 16),
+                const IngredientAmountPortions(),
+              ],
+              if (draft.ingredient.isReference && onEditReference != null)
+                TextButton.icon(
+                  onPressed: onEditReference,
+                  icon: const Icon(Icons.edit_outlined),
+                  label: Text(context.lang.ingredientEditReferenceData),
+                ),
               const SizedBox(height: 16),
               FormField<double>(
-                validator: (_) => amount.isFinite && amount > 0 ? null : '',
+                validator: (_) =>
+                    amount.isFinite &&
+                        amount > 0 &&
+                        !isLoadingPortionAmount &&
+                        gramsPerPortion != null &&
+                        gramsPerPortion > 0
+                    ? null
+                    : '',
                 builder: (field) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -85,7 +102,9 @@ class AmountForm extends ConsumerWidget {
                       FriendlyAmountSelector(
                         value: amount,
                         min: 0,
-                        step: draft.usesGramAmount ? 5 : 0.5,
+                        step: draft.usesGramAmount ? 5 : 1,
+                        innerStep: draft.usesGramAmount ? 1 : 0.5,
+                        additiveOptions: true,
                         options: AmountFormOptions.quickOptions(
                           unitLabel: unitLabel,
                           isGramAmount: draft.usesGramAmount,
@@ -100,7 +119,9 @@ class AmountForm extends ConsumerWidget {
                       if (field.hasError) ...[
                         const SizedBox(height: 8),
                         Text(
-                          context.lang.amountGreaterThanZero,
+                          gramsPerPortion == null || gramsPerPortion <= 0
+                              ? context.lang.amountMissingPortionWeight
+                              : context.lang.amountGreaterThanZero,
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(context).colorScheme.error,
@@ -112,109 +133,15 @@ class AmountForm extends ConsumerWidget {
                 },
               ),
               const SizedBox(height: 20),
-              AddIngredientSummaryContent(
-                draft: draft.copyWith(amount: amount),
-                gramsPerPortion: gramsPerPortion,
-                isLoadingPortionAmount: isLoadingPortionAmount,
-                inline: true,
-              ),
-              const SizedBox(height: 20),
-              Text(
-                context.lang.amountConfidenceTitle,
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-              const SizedBox(height: 8),
               ConfidenceSlider(
                 value: confidence,
+                title: context.lang.amountConfidenceTitle,
                 onChanged: confidenceNotifier.setConfidence,
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class AmountFormInfo extends StatelessWidget {
-  final String? iconAssetPath;
-  final MealIngredientsDraft draft;
-  final double? gramsPerPortion;
-  final bool isLoadingPortionAmount;
-  final VoidCallback? onChangeMeasure;
-
-  const AmountFormInfo({
-    required this.draft,
-    required this.gramsPerPortion,
-    required this.isLoadingPortionAmount,
-    this.onChangeMeasure,
-    super.key,
-    this.iconAssetPath,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                IngredientIcon(
-                  assetPath: iconAssetPath ?? draft.ingredient.iconAssetPath,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    draft.ingredient.name,
-                    style: textTheme.titleMedium,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _description(context),
-              style: textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            if (onChangeMeasure != null)
-              TextButton.icon(
-                onPressed: onChangeMeasure,
-                icon: const Icon(Icons.swap_horiz, size: 18),
-                label: Text(context.lang.amountChangeMeasure),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _description(BuildContext context) {
-    if (draft.usesGramAmount) {
-      return context.lang.amountWeightInGramsHint;
-    }
-    if (isLoadingPortionAmount) {
-      return context.lang.amountLoadingPortionWeight;
-    }
-    final amount = gramsPerPortion;
-    if (amount == null || amount <= 0) {
-      return context.lang.amountMissingPortionWeight;
-    }
-    return context.lang.amountPortionWeightDescription(
-      amount.formattedAmount,
-      unitLabelForAmount(1, draft.portionCountUnitLabel),
-      draft.portionWeightUnitLabel,
     );
   }
 }
@@ -227,26 +154,27 @@ class AmountFormOptions {
     required bool isGramAmount,
   }) {
     if (isGramAmount) {
-      return const [
-        FriendlyAmountOption(label: '50 g', value: 50),
-        FriendlyAmountOption(label: '100 g', value: 100),
-        FriendlyAmountOption(label: '150 g', value: 150),
+      return [
+        for (final increment in [50.0, 100.0, 200.0])
+          FriendlyAmountOption(
+            label: lang.ingredientQuickAddAmount(
+              increment.formattedAmount,
+              'g',
+            ),
+            value: increment,
+          ),
       ];
     }
 
     return [
-      FriendlyAmountOption(
-        label: '1 ${unitLabelForAmount(1, unitLabel)}',
-        value: 1,
-      ),
-      FriendlyAmountOption(
-        label: '2 ${unitLabelForAmount(2, unitLabel)}',
-        value: 2,
-      ),
-      FriendlyAmountOption(
-        label: '5 ${unitLabelForAmount(5, unitLabel)}',
-        value: 5,
-      ),
+      for (final increment in [0.5, 1.0, 2.0])
+        FriendlyAmountOption(
+          label: lang.ingredientQuickAddAmount(
+            increment.formattedAmount,
+            unitLabelForAmount(increment, unitLabel),
+          ),
+          value: increment,
+        ),
     ];
   }
 }

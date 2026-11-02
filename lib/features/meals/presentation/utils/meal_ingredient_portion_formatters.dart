@@ -37,6 +37,17 @@ extension MealIngredientPortionPresentationX on MealIngredientsDraft {
         portion.unitHint.trim().isEmpty ? 'g' : portion.unitHint,
   );
 
+  String measureDescription({
+    required double? gramsPerPortion,
+    bool isLoading = false,
+  }) {
+    if (ingredient.isReference) return lang.ingredientReferenceAmountHint;
+    if (usesGramAmount) return lang.addIngredientAddedInGrams;
+    if (isLoading) return lang.commonLoading;
+    if (gramsPerPortion == null) return lang.amountMissingPortionWeight;
+    return '1 × ${unitLabelForAmount(1, portionCountUnitLabel)} = ${gramsPerPortion.formattedAmount} $portionWeightUnitLabel';
+  }
+
   String portionDescription({
     required double? portionAmount,
     required bool isLoading,
@@ -93,7 +104,9 @@ String unitLabelForAmount(double amount, String unitLabel) {
     return lang.commonPortionUnit(amount);
   }
   if (normalized == 'sztuka' || normalized == 'piece') {
-    return lang.commonPieceUnit(amount);
+    return lang.commonPieceUnit(
+      amount == amount.truncateToDouble() ? amount : 2,
+    );
   }
   return normalized.isEmpty ? lang.commonPortionUnit(amount) : normalized;
 }

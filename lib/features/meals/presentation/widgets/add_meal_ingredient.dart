@@ -3,24 +3,21 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
-import '../../../../common/widgets/forms.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
-import '../../../ingredients/data/models/ingredient_scan_result.dart';
 import '../../../ingredients/data/providers/ingredient_photo_scan_capture_provider.dart';
+import '../../../ingredients/data/providers/ingredient_portion_suggestions_provider.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
+import '../../../ingredients/data/providers/ingredient_search_query_provider.dart';
+import '../../../ingredients/presentation/controllers/ingredient_barcode_lookup_controller.dart';
+import '../../../ingredients/presentation/controllers/ingredient_barcode_scan_feedback_controller.dart';
 import '../../../ingredients/presentation/controllers/ingredient_photo_scan_controller.dart';
-import '../../../ingredients/presentation/widgets/ingredient_form.dart';
-import '../../../ingredients/presentation/widgets/ingredient_photo_scan.dart';
-import '../../../ingredients/presentation/widgets/ingredient_portion_amount_form.dart';
-import '../../../ingredients/presentation/widgets/ingredient_scan_review_dialog.dart';
-import '../../../ingredients/presentation/widgets/ingredient_search.dart';
+import '../../../ingredients/presentation/controllers/ingredient_photo_search_controller.dart';
 import '../../../portions/data/providers/portion_provider.dart';
-import '../../../portions/presentation/widgets/portion_form.dart';
-import '../../../portions/presentation/widgets/portion_search.dart';
 import '../../data/drafts/meal_draft.dart';
 import '../../data/providers/add_ingredients_provider.dart';
 import '../../data/providers/meal_draft_provider.dart';
-import 'amount_form.dart';
+import 'add_meal_ingredient_actions.dart';
+import 'add_meal_ingredient_body.dart';
 
 Future<MealIngredientsDraft?> showAddMealIngredientSheet({
   required BuildContext context,
@@ -31,13 +28,22 @@ Future<MealIngredientsDraft?> showAddMealIngredientSheet({
   ref.invalidate(mealIngredientsDraftProvider);
   ref.invalidate(mealIngredientAmountDraftProvider);
   ref.invalidate(mealIngredientConfidenceDraftProvider);
+  ref.invalidate(ingredientDraftProvider);
+  ref.invalidate(ingredientSearchQueryProvider);
+  ref.invalidate(ingredientPhotoScanCaptureControllerProvider);
+  ref.invalidate(ingredientPhotoScanControllerProvider);
+  ref.invalidate(ingredientPhotoSearchControllerProvider);
+  ref.invalidate(ingredientBarcodeLookupControllerProvider);
+  ref.invalidate(ingredientBarcodeScanFeedbackProvider);
+  ref.invalidate(ingredientPortionSuggestionsProvider);
+  ref.invalidate(portionDraftProvider);
 
   if (initialDraft != null) {
     // Keep the existing draft subscription while the editor moves between stages.
     ref.watch(mealIngredientsDraftProvider.notifier);
     ref
         .watch(addMealIngredientStageProvider.notifier)
-        .editIngredient(initialDraft);
+        .editIngredientInline(initialDraft);
   }
 
   return showModalBottomSheet<MealIngredientsDraft>(
@@ -50,253 +56,68 @@ Future<MealIngredientsDraft?> showAddMealIngredientSheet({
 
 class AddMealIngredient extends ConsumerWidget {
   const AddMealIngredient({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Keep drafts and captures alive while moving through the same sheet.
     ref.watch(portionFilterProvider);
     ref.watch(ingredientDraftProvider);
-    final addingStage = ref.watch(addMealIngredientStageProvider);
-    final photoScanState = ref.watch(ingredientPhotoScanControllerProvider);
-    final photoScanInput = ref.watch(
-      ingredientPhotoScanCaptureControllerProvider,
-    );
-    final isScanningIngredient =
-        addingStage == AddMealIngredientStage.ingredientPhotoScan &&
-        photoScanState.isLoading;
-    final isIngredientPhotoScanStage =
-        addingStage == AddMealIngredientStage.ingredientPhotoScan;
-    final canScanIngredientPhotos =
-        !isIngredientPhotoScanStage || photoScanInput.hasRequiredPhotos;
-    final addingStateNotifier = ref.read(
-      addMealIngredientStageProvider.notifier,
-    );
-    if (addingStage == AddMealIngredientStage.dismiss) {
+    ref.watch(ingredientPhotoScanCaptureControllerProvider);
+    ref.watch(ingredientPhotoScanControllerProvider);
+    ref.watch(ingredientPhotoSearchControllerProvider);
+    final stage = ref.watch(addMealIngredientStageProvider);
+    final controller = ref.read(addMealIngredientStageProvider.notifier);
+    if (stage == AddMealIngredientStage.dismiss) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          Navigator.of(context).pop();
-        }
+        if (context.mounted) Navigator.of(context).pop();
       });
     }
-
-    return KeyboardAwareBottomSheet(
-      header: switch (addingStage) {
-        AddMealIngredientStage.dismiss => const SizedBox.shrink(),
-        AddMealIngredientStage.ingredientSearch => BottomSheetStepHeader(
-          title: context.lang.addIngredientSearchTitle,
-          onBack: () => Navigator.of(context).pop(),
-        ),
-        AddMealIngredientStage.ingredientPhotoScan => BottomSheetStepHeader(
-          title: context.lang.addIngredientFromPhotosTitle,
-          onBack: addingStateNotifier.back,
-        ),
-        AddMealIngredientStage.ingredientForm => BottomSheetStepHeader(
-          title: context.lang.addIngredientTitle,
-          onBack: addingStateNotifier.back,
-          actions: [
-            IconButton(
-              tooltip: context.lang.addIngredientSearchTitle,
-              onPressed: addingStateNotifier.toOppositeStage,
-              icon: const Icon(Icons.search),
-            ),
-          ],
-        ),
-        AddMealIngredientStage.portionAddNewSearch => BottomSheetStepHeader(
-          title: context.lang.addIngredientPickPortionTitle,
-          onBack: addingStateNotifier.back,
-          actions: [
-            IconButton(
-              tooltip: context.lang.addIngredientAddPortionTooltip,
-              onPressed: addingStateNotifier.toOppositeStage,
-              icon: const Icon(Icons.add),
-            ),
-          ],
-        ),
-        AddMealIngredientStage.definedPortionsSearch => BottomSheetStepHeader(
-          title: context.lang.addIngredientSearchExistingPortionTitle,
-          onBack: addingStateNotifier.back,
-          actions: [
-            IconButton(
-              tooltip: context.lang.addIngredientAddPortionTooltip,
-              onPressed: addingStateNotifier.toOppositeStage,
-              icon: const Icon(Icons.add_box_outlined),
-            ),
-          ],
-        ),
-        AddMealIngredientStage.amountForm => BottomSheetStepHeader(
-          title: context.lang.addIngredientAmountTitle,
-          onBack: addingStateNotifier.back,
-        ),
-        AddMealIngredientStage.portionSpecifyAmount => BottomSheetStepHeader(
-          title: context.lang.addIngredientPortionWeightTitle,
-          onBack: addingStateNotifier.back,
-        ),
-        AddMealIngredientStage.portionAddNewForm => BottomSheetStepHeader(
-          title: context.lang.addIngredientNewPortionTitle,
-          onBack: addingStateNotifier.back,
-          actions: [
-            IconButton(
-              tooltip: context.lang.addIngredientSearchPortionTooltip,
-              onPressed: addingStateNotifier.toOppositeStage,
-              icon: const Icon(Icons.search),
-            ),
-          ],
-        ),
+    return PopScope(
+      canPop:
+          stage == AddMealIngredientStage.ingredientSearch ||
+          stage == AddMealIngredientStage.dismiss,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) controller.back();
       },
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        switchInCurve: Curves.easeOut,
-        switchOutCurve: Curves.easeIn,
-        child: switch (addingStage) {
-          AddMealIngredientStage.dismiss => const SizedBox.shrink(),
-          AddMealIngredientStage.ingredientSearch => IngredientSearch(),
-          AddMealIngredientStage.ingredientPhotoScan => IngredientPhotoScan(),
-          AddMealIngredientStage.ingredientForm => const SingleChildScrollView(
-            child: IngredientForm(),
-          ),
-          AddMealIngredientStage.portionAddNewSearch => PortionSearch(),
-          AddMealIngredientStage.definedPortionsSearch => PortionSearch(),
-          AddMealIngredientStage.amountForm => AmountForm(),
-          AddMealIngredientStage.portionSpecifyAmount =>
-            IngredientPortionAmountForm(
-              amount: ref.watch(
-                mealIngredientsDraftProvider.select(
-                  (draft) => draft.ingredientPortion.amount,
-                ),
-              ),
-              onAmountChanged: ref
-                  .read(mealIngredientsDraftProvider.notifier)
-                  .setIngredientPortionAmount,
-            ),
-          AddMealIngredientStage.portionAddNewForm => PortionForm(),
-        },
-      ),
-      actions: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton(
-              onPressed: isScanningIngredient || !canScanIngredientPhotos
-                  ? null
-                  : () async {
-                      if (addingStage == AddMealIngredientStage.amountForm) {
-                        if (validateForm(
-                          ref.read(mealIngredientFormKeyProvider),
-                        )) {
-                          Navigator.of(
-                            context,
-                          ).pop(addingStateNotifier.completeAmountForm());
-                        }
-                      } else if (addingStage ==
-                          AddMealIngredientStage.ingredientPhotoScan) {
-                        await addingStateNotifier.nextStage();
-                        if (!context.mounted) {
-                          return;
-                        }
-                        final scanResult = ref
-                            .read(ingredientPhotoScanControllerProvider)
-                            .when(
-                              data: (value) => value,
-                              error: (_, _) => null,
-                              loading: () => null,
-                            );
-                        if (scanResult?.status ==
-                            IngredientScanStatus.needsReview) {
-                          final shouldContinue =
-                              await showIngredientScanReviewDialog(
-                                context: context,
-                                result: scanResult!,
-                              );
-                          if (shouldContinue == true) {
-                            addingStateNotifier
-                                .continueWithIngredientScanReview();
-                          }
-                        }
-                      } else {
-                        final formKey = _formKeyForStage(ref, addingStage);
-                        if (validateForm(formKey)) {
-                          await addingStateNotifier.nextStage();
-                        }
-                      }
-                    },
-              child: (addingStage == AddMealIngredientStage.amountForm)
-                  ? Text(context.lang.addIngredientTitle)
-                  : Text(
-                      isScanningIngredient
-                          ? context.lang.addIngredientReadingData
-                          : addingStage ==
-                                AddMealIngredientStage.ingredientPhotoScan
-                          ? photoScanInput.hasRequiredPhotos
-                                ? context.lang.addIngredientReadData
-                                : context.lang.addIngredientAddPhotos
-                          : context.lang.addIngredientNext,
-                    ),
-            ),
-          ),
-          addingStage != AddMealIngredientStage.definedPortionsSearch &&
-                  addingStage != AddMealIngredientStage.portionAddNewSearch
-              ? SizedBox.shrink()
-              : Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      addingStateNotifier.setOverride();
-                    },
-                    child: Text(context.lang.addIngredientAddInGrams),
-                  ),
-                ),
-          addingStage != AddMealIngredientStage.amountForm
-              ? SizedBox.shrink()
-              : Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final result = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: Text(
-                            context.lang.addIngredientDiscardChangesTitle,
-                          ),
-                          content: Text(
-                            context.lang.addIngredientDiscardChangesMessage,
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop(true);
-                              },
-                              child: Text(context.lang.commonYes),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop(false);
-                              },
-                              child: Text(context.lang.commonNo),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (result == true) {
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      }
-                    },
-                    child: Text(context.lang.addIngredientDiscard),
-                  ),
-                ),
-        ],
+      child: KeyboardAwareBottomSheet(
+        header: BottomSheetStepHeader(
+          title: ingredientStageTitle(context.lang, stage),
+          onBack: stage == AddMealIngredientStage.ingredientSearch
+              ? () => Navigator.of(context).pop()
+              : controller.back,
+        ),
+        body: KeyedSubtree(
+          key: ValueKey(stage),
+          child: const AddMealIngredientBody(),
+        ),
+        actions: const AddMealIngredientActions(),
       ),
     );
   }
 }
 
-GlobalKey<FormState> _formKeyForStage(
-  WidgetRef ref,
+String ingredientStageTitle(
+  AppLocalizations lang,
   AddMealIngredientStage stage,
 ) {
   return switch (stage) {
-    AddMealIngredientStage.ingredientSearch => ref.read(
-      ingredientSearchFormKeyProvider,
-    ),
-    AddMealIngredientStage.ingredientForm => ref.read(
-      ingredientFormKeyProvider,
-    ),
-    _ => ref.read(mealIngredientFormKeyProvider),
+    AddMealIngredientStage.dismiss => '',
+    AddMealIngredientStage.ingredientSearch => lang.addIngredientSearchTitle,
+    AddMealIngredientStage.ingredientCreationMethod => lang.ingredientCreateNew,
+    AddMealIngredientStage.ingredientPhotoScan =>
+      lang.addIngredientFromPhotosTitle,
+    AddMealIngredientStage.ingredientForm => lang.ingredientCreateNew,
+    AddMealIngredientStage.referenceIngredientForm =>
+      lang.ingredientReferenceDishTitle,
+    AddMealIngredientStage.portionAddNewSearch =>
+      lang.addIngredientPickPortionTitle,
+    AddMealIngredientStage.definedPortionsSearch =>
+      lang.addIngredientSearchExistingPortionTitle,
+    AddMealIngredientStage.portionAddNewForm =>
+      lang.addIngredientNewPortionTitle,
+    AddMealIngredientStage.portionSpecifyAmount =>
+      lang.addIngredientPortionWeightTitle,
+    AddMealIngredientStage.amountForm => lang.ingredientPortionAndAmountTitle,
+    AddMealIngredientStage.summary => lang.addIngredientSummaryTitle,
   };
 }

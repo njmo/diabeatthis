@@ -29,13 +29,14 @@ class IngredientPhotoScanController extends _$IngredientPhotoScanController {
     try {
       final useCase = ref.read(scanIngredientFromPhotosUseCaseProvider);
       final result = await useCase.call(input);
+      if (!ref.mounted) return null;
       state = AsyncData(result);
       if (result.needsRetake || result.needsReview) {
         return null;
       }
       return result.toIngredientDraft();
     } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
+      if (ref.mounted) state = AsyncError(error, stackTrace);
       return null;
     }
   }

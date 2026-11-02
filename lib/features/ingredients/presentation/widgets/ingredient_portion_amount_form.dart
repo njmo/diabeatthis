@@ -68,11 +68,13 @@ class IngredientPortionAmountForm extends ConsumerWidget {
     required this.amount,
     required this.onAmountChanged,
     this.formKey,
+    this.portionLabel,
   });
 
   final double amount;
   final ValueChanged<double> onAmountChanged;
   final GlobalKey<FormState>? formKey;
+  final String? portionLabel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -83,12 +85,12 @@ class IngredientPortionAmountForm extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       child: Form(
         key: effectiveFormKey,
-        autovalidateMode: AutovalidateMode.always,
+        autovalidateMode: AutovalidateMode.disabled,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const IngredientPortionAmountHeader(),
+            IngredientPortionAmountHeader(portionLabel: portionLabel),
             const SizedBox(height: 16),
             FormField<double>(
               validator: (_) => amount > 0 ? null : '',
@@ -100,6 +102,7 @@ class IngredientPortionAmountForm extends ConsumerWidget {
                       value: amount,
                       min: 0,
                       step: 5,
+                      additiveOptions: true,
                       options: IngredientPortionAmountOptions.options,
                       valueLabel: (value) => '${value.formatted} g',
                       onChanged: (value) {
@@ -128,7 +131,9 @@ class IngredientPortionAmountForm extends ConsumerWidget {
 }
 
 class IngredientPortionAmountHeader extends StatelessWidget {
-  const IngredientPortionAmountHeader({super.key});
+  const IngredientPortionAmountHeader({super.key, this.portionLabel});
+
+  final String? portionLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +161,7 @@ class IngredientPortionAmountHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    lang.ingredientOnePortionWeightTitle,
+                    portionLabel ?? lang.ingredientOnePortionWeightTitle,
                     style: textTheme.titleMedium,
                   ),
                   const SizedBox(height: 4),
@@ -179,16 +184,12 @@ class IngredientPortionAmountHeader extends StatelessWidget {
 class IngredientPortionAmountOptions {
   const IngredientPortionAmountOptions._();
 
-  static const options = [
-    FriendlyAmountOption(label: '25 g', value: 25, icon: Icons.scale_outlined),
-    FriendlyAmountOption(label: '50 g', value: 50, icon: Icons.scale_outlined),
-    FriendlyAmountOption(
-      label: '100 g',
-      value: 100,
-      icon: Icons.check_circle_outline,
-    ),
-    FriendlyAmountOption(label: '150 g', value: 150, icon: Icons.add_outlined),
-    FriendlyAmountOption(label: '200 g', value: 200, icon: Icons.add_chart),
+  static List<FriendlyAmountOption> get options => [
+    for (final increment in [50.0, 100.0, 200.0])
+      FriendlyAmountOption(
+        label: lang.ingredientQuickAddAmount(increment.formatted, 'g'),
+        value: increment,
+      ),
   ];
 }
 

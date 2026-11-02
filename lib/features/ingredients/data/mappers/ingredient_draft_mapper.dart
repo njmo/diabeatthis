@@ -30,6 +30,25 @@ extension DomainIngredientDraftMapper on domain.Ingredient {
 }
 
 extension IngredientDraftDomainMapper on IngredientDraft {
+  IngredientDraft asNewDraft() => IngredientDraft.draft(
+    name: name,
+    carbsPer100g: carbsPer100g,
+    fatPer100g: fatPer100g,
+    fiberPer100g: fiberPer100g,
+    proteinPer100g: proteinPer100g,
+    nutritionConfidence: nutritionConfidence,
+    isReference: isReference,
+    carbsLabelMode: carbsLabelMode,
+    netKcalPer100g: netKcalPer100g,
+    kcalPer100g: kcalPer100g,
+    wbtKcalPer100g: wbtKcalPer100g,
+    ig: ig,
+    preparation: preparation,
+    brand: brand,
+    barcode: barcode,
+    iconAssetPath: iconAssetPath,
+  );
+
   domain.Ingredient toDomain() {
     return map(
       draft: (_) => throw StateError('Ingredient draft does not have an id'),

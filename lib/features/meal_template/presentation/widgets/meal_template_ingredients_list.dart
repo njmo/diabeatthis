@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/portions/standard_portion_names.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/providers/portion_provider.dart';
 import '../../data/provider/meal_template_draft_provider.dart';
@@ -44,7 +45,7 @@ class MealTemplateIngredientsList extends ConsumerWidget {
                   draft: (name, hint) => Text(
                     context.lang.templatePortionDescription(
                       amount.toString(),
-                      name,
+                      localizedPortionName(name, context.lang),
                       (portionAmount * amount).toString(),
                       hint,
                     ),
@@ -56,7 +57,7 @@ class MealTemplateIngredientsList extends ConsumerWidget {
                       return Text(
                         context.lang.templatePortionDescription(
                           amount.toString(),
-                          name,
+                          localizedPortionName(name, context.lang),
                           (amount * portionAmount).toString(),
                           hint,
                         ),

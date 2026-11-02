@@ -24,6 +24,7 @@ import 'migrations/migrate_stress_events.dart';
 import 'migrations/migrate_temp_target_operations.dart';
 import 'migrations/migrate_typed_low_treatments.dart';
 import 'migrations/migrate_wizard_identity.dart';
+import 'seed/seed_standard_portions.dart';
 
 part 'database_impl.g.dart';
 
@@ -45,11 +46,23 @@ part 'database_impl.g.dart';
   ],
 )
 class DatabaseImpl extends _$DatabaseImpl implements Database {
+  /// The app-owned connection includes defaults. Injected databases remain
+  /// isolated for backups, migrations and other temporary database workflows.
   DatabaseImpl([QueryExecutor? executor])
-    : this._tracked(executor ?? _openConnection(), DatabaseOpenTracker());
+    : this._tracked(
+        executor ?? _openConnection(),
+        DatabaseOpenTracker(),
+        executor == null,
+      );
 
-  DatabaseImpl._tracked(QueryExecutor executor, DatabaseOpenTracker tracker)
-    : _openTracker = tracker,
+  DatabaseImpl.withStandardPortions(QueryExecutor executor)
+    : this._tracked(executor, DatabaseOpenTracker(), true);
+
+  DatabaseImpl._tracked(
+    QueryExecutor executor,
+    DatabaseOpenTracker tracker,
+    this._includeStandardPortions,
+  ) : _openTracker = tracker,
       super(
         // The connection overload also retains shared stream invalidations.
         executor is DatabaseConnection
@@ -61,6 +74,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
   int get schemaVersion => 41;
 
   final DatabaseOpenTracker _openTracker;
+  final bool _includeStandardPortions;
 
   /// Optional workflow persistence must not initialize an unavailable lazy DB.
   bool get hasOpened => _openTracker.hasOpened;
@@ -240,6 +254,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
+      if (_includeStandardPortions) await seedStandardPortions(this);
       await customStatement(
         'DROP TRIGGER IF EXISTS ingredient_nutrition_changed',
       );

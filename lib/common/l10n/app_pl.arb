@@ -3245,5 +3245,50 @@
   "mealEditTime": "Edytuj termin",
   "mealEditCategory": "Zmień rodzaj posiłku",
   "mealWaitingForDeliveryConfirmation": "Oczekiwanie na potwierdzenie podania insuliny",
-  "mealCategoryChoose": "Wybierz rodzaj posiłku"
+  "mealCategoryChoose": "Wybierz rodzaj posiłku",
+  "ingredientCreateNew": "Utwórz nowy składnik",
+  "ingredientSelect": "Wybierz składnik",
+  "ingredientSelectNamed": "Wybierz {name}",
+  "@ingredientSelectNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientSearchByCode": "Szukaj po kodzie",
+  "ingredientSearchByPhoto": "Szukaj po zdjęciu",
+  "ingredientCreatePhotos": "Dodaj przez zdjęcia",
+  "ingredientCreatePhotosHint": "Zdjęcie przodu opakowania i tabeli wartości odżywczych.",
+  "ingredientCreateCode": "Skanuj kod",
+  "ingredientCreateCodeHint": "Znajdź produkt lub użyj danych z sieci do utworzenia składnika.",
+  "ingredientCreateReferenceHint": "Zapisz węglowodany i eCarbs jednej porcji do ponownego użycia.",
+  "ingredientCreateManual": "Wpisz ręcznie",
+  "ingredientCreateManualHint": "Uzupełnij nazwę, ikonę i wartości odżywcze.",
+  "ingredientDataConfidence": "Pewność danych odżywczych",
+  "ingredientWithoutPortion": "Bez porcji",
+  "ingredientReviewAmount": "Podsumowanie",
+  "ingredientEditReferenceData": "Zmień dane referencyjne",
+  "ingredientCombinedConfidence": "Łączna pewność",
+  "ingredientReferenceAmountHint": "Wartości dotyczą jednej porcji referencyjnej. Wybierz liczbę porcji.",
+  "ingredientQuickAddAmount": "+{amount} {unit}",
+  "@ingredientQuickAddAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientDefineNewPortion": "Zdefiniuj nową porcję",
+  "ingredientCreatePortionName": "Utwórz nową nazwę porcji",
+  "ingredientRecognizedPortions": "Porcje odczytane z produktu",
+  "ingredientRecognizedPortionsHint": "Wybierz podpowiedź, a następnie potwierdź nazwę i wagę porcji.",
+  "ingredientCodeCreateTitle": "Dodać nowy składnik?",
+  "ingredientCodeCreateMessage": "Brak produktu w Twojej bazie. Znaleźliśmy dane w sieci — sprawdź je przed dodaniem.",
+  "ingredientSearchEmpty": "Brak pasujących składników. Możesz utworzyć nowy poniżej.",
+  "ingredientReferenceEditHint": "Zmiany dotyczą tego dodania. Zapiszemy je jako osobny wariant dania referencyjnego.",
+  "ingredientPortionAndAmountTitle": "Porcja i ilość"
 }

@@ -36,6 +36,7 @@ class IngredientBarcodeLookupController
 
     try {
       final localIngredient = await findIngredientByBarcode.call(barcode);
+      if (!ref.mounted) return const IngredientBarcodeScanOutcome.failed(null);
       if (localIngredient != null) {
         final outcome = IngredientBarcodeScanOutcome.existingIngredient(
           localIngredient,
@@ -45,11 +46,15 @@ class IngredientBarcodeLookupController
       }
 
       final result = await scanIngredientFromBarcode.call(barcode);
+      if (!ref.mounted) return const IngredientBarcodeScanOutcome.failed(null);
       if (!result.needsRetake) {
         final matchingIngredient = await _findMatchingIngredientOrNull(
           useCase: findMatchingIngredient,
           result: result,
         );
+        if (!ref.mounted) {
+          return const IngredientBarcodeScanOutcome.failed(null);
+        }
         if (matchingIngredient != null) {
           final outcome = IngredientBarcodeScanOutcome.existingIngredient(
             matchingIngredient,
@@ -63,15 +68,21 @@ class IngredientBarcodeLookupController
           ? result.toIngredientDraft()
           : null;
       final outcome = switch ((result.needsReview, draft)) {
-        (true, final draft?) => IngredientBarcodeScanOutcome.needsReview(draft),
-        (false, final draft?) => IngredientBarcodeScanOutcome.newDraft(draft),
+        (true, final draft?) => IngredientBarcodeScanOutcome.needsReview(
+          draft,
+          portions: result.portions,
+        ),
+        (false, final draft?) => IngredientBarcodeScanOutcome.newDraft(
+          draft,
+          portions: result.portions,
+        ),
         _ => const IngredientBarcodeScanOutcome.failed(null),
       };
       state = AsyncData(outcome);
       return outcome;
     } catch (error, stackTrace) {
       final outcome = IngredientBarcodeScanOutcome.failed(error);
-      state = AsyncError(error, stackTrace);
+      if (ref.mounted) state = AsyncError(error, stackTrace);
       return outcome;
     }
   }

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../l10n/language.dart';
 
@@ -11,11 +12,13 @@ class MacronutrientProportions extends StatelessWidget {
     required this.carbsGrams,
     required this.proteinGrams,
     required this.fatGrams,
+    this.fatBeforeProtein = false,
   });
 
-  final int carbsGrams;
-  final int proteinGrams;
-  final int fatGrams;
+  final num carbsGrams;
+  final num proteinGrams;
+  final num fatGrams;
+  final bool fatBeforeProtein;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +40,15 @@ class MacronutrientProportions extends StatelessWidget {
         color: Colors.orange,
       ),
     ];
-    final total = nutrients.fold(0, (sum, nutrient) => sum + nutrient.grams);
+    if (fatBeforeProtein) {
+      final protein = nutrients.removeAt(1);
+      nutrients.add(protein);
+    }
+    final format = NumberFormat("0.#", context.lang.localeName);
+    final total = nutrients.fold<num>(
+      0,
+      (sum, nutrient) => sum + nutrient.grams,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -58,7 +69,10 @@ class MacronutrientProportions extends StatelessWidget {
                         for (final nutrient in nutrients)
                           if (nutrient.grams > 0)
                             Expanded(
-                              flex: nutrient.grams,
+                              flex: (nutrient.grams * 1000).round().clamp(
+                                1,
+                                1000000000,
+                              ),
                               child: ColoredBox(
                                 color: nutrient.color,
                                 child: const SizedBox.expand(),
@@ -88,7 +102,7 @@ class MacronutrientProportions extends StatelessWidget {
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      '${nutrient.label}: ${nutrient.grams} g · ${total == 0 ? 0 : (100 * nutrient.grams / total).round()}%',
+                      '${nutrient.label}: ${format.format(nutrient.grams)} g · ${total == 0 ? 0 : (100 * nutrient.grams / total).round()}%',
                       style: theme.textTheme.bodySmall,
                     ),
                   ),

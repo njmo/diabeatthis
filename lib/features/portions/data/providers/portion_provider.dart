@@ -28,7 +28,7 @@ Future<List<domain.Portion>> portions(Ref ref) async {
 @riverpod
 Future<List<domain.Portion>> portionsByQuery(Ref ref, String query) async {
   final db = ref.watch(databaseProvider);
-  final portions = await db.portionDao.searchPortionsByName(query).get();
+  final portions = await db.portionDao.getPortionsByQuery(query);
   return portions.map((e) => e.toDomain()).toList();
 }
 

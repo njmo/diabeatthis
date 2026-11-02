@@ -1,29 +1,39 @@
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
-import 'package:diabeatthis/features/meal_template/data/provider/add_meal_template_ingredients_provider.dart';
+import 'package:diabeatthis/features/meal_template/data/mapper/meal_ingredient_template_mapper.dart';
 import 'package:diabeatthis/features/meal_template/data/provider/meal_template_draft_provider.dart';
+import 'package:diabeatthis/features/meals/data/providers/add_ingredients_provider.dart';
+import 'package:diabeatthis/features/meals/data/providers/meal_draft_provider.dart';
 import 'package:diabeatthis/features/portions/data/drafts/portion_filter.dart';
 import 'package:diabeatthis/features/portions/data/providers/portion_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 void main() {
-  group('AddMealTemplateIngredientStageNotifier', () {
+  group('Shared template ingredient flow', () {
     test('opens existing portions when modifying existing ingredient', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
+      final draft = container
+          .read(mealIngredientsDraftProvider)
+          .copyWith(ingredient: _existingIngredient(id: 21));
+      final notifier = container.read(addMealIngredientStageProvider.notifier);
+      notifier.editIngredientInline(draft);
       container
-          .read(mealTemplateIngredientsDraftProvider.notifier)
-          .setIngredient(_existingIngredient(id: 21));
-      final notifier = container.read(
-        addMealTemplateIngredientStageProvider.notifier,
+          .read(mealTemplateDraftProvider.notifier)
+          .addMealTemplateIngredient(draft.toTemplateIngredient());
+      expect(
+        container
+            .read(mealTemplateDraftProvider)
+            .mealIngredients
+            .single
+            .ingredient,
+        draft.ingredient,
       );
 
-      notifier.modifyIngredientStage(false);
-
       expect(
-        container.read(addMealTemplateIngredientStageProvider),
-        AddMealTemplateIngredientStage.definedPortionsSearch,
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.amountForm,
       );
       expect(
         container.read(portionFilterProvider),
@@ -33,8 +43,8 @@ void main() {
       notifier.back();
 
       expect(
-        container.read(addMealTemplateIngredientStageProvider),
-        AddMealTemplateIngredientStage.dismiss,
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.dismiss,
       );
     });
   });

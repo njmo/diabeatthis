@@ -3,10 +3,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
-import '../../data/drafts/template_meal_draft.dart';
+import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
+import '../../data/mapper/meal_ingredient_template_mapper.dart';
 import '../../data/provider/meal_template_draft_provider.dart';
 import '../../data/provider/meal_template_ingredients_list_provider.dart';
-import 'add_meal_template_ingredient.dart';
 import 'meal_template_ingredients_list.dart';
 
 class MealTemplateIngredientsListEditor extends ConsumerWidget {
@@ -40,20 +40,15 @@ class MealTemplateIngredientsListEditor extends ConsumerWidget {
                     const Spacer(),
                     InkWell(
                       onTap: () async {
-                        final mealTemplateIngredient =
-                            await showModalBottomSheet<
-                              MealTemplateIngredientsDraft
-                            >(
-                              context: context,
-                              useRootNavigator: false,
-                              isScrollControlled: true,
-                              builder: (_) => AddMealTemplateIngredient(),
-                            );
-                        if (mealTemplateIngredient != null) {
+                        final ingredient = await showAddMealIngredientSheet(
+                          context: context,
+                          ref: ref,
+                        );
+                        if (ingredient != null && context.mounted) {
                           ref
                               .read(mealTemplateDraftProvider.notifier)
                               .addMealTemplateIngredient(
-                                mealTemplateIngredient,
+                                ingredient.toTemplateIngredient(),
                               );
                         }
                       },

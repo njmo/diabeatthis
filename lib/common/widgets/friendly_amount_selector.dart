@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/language.dart';
+import 'amount_adjustment_button.dart';
 import 'amount_entry_dialog.dart';
 
 class FriendlyAmountOption {
@@ -25,6 +26,8 @@ class FriendlyAmountSelector extends StatelessWidget {
     this.min = 0,
     this.max,
     this.step = 0.5,
+    this.innerStep = 1,
+    this.additiveOptions = false,
     this.compact = false,
     this.onEditingChanged,
   });
@@ -36,6 +39,8 @@ class FriendlyAmountSelector extends StatelessWidget {
   final double min;
   final double? max;
   final double step;
+  final double innerStep;
+  final bool additiveOptions;
   final bool compact;
   final ValueChanged<bool>? onEditingChanged;
 
@@ -56,23 +61,24 @@ class FriendlyAmountSelector extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             child: Row(
               children: [
-                IconButton.filledTonal(
-                  padding: const EdgeInsets.all(15),
+                AmountAdjustmentButton(
+                  label: _stepLabel(-step),
+                  emphasized: true,
                   tooltip: context.lang.commonLessTooltip,
                   onPressed: normalizedValue <= min
                       ? null
                       : () => onChanged(_normalize(normalizedValue - step)),
-                  icon: compact
-                      ? const Icon(Icons.remove)
-                      : Text(_stepLabel(-step), style: TextStyle(fontSize: 20)),
+                  icon: compact ? Icons.remove : null,
                 ),
                 if (!compact)
-                  IconButton.filledTonal(
+                  AmountAdjustmentButton(
+                    label: _stepLabel(-innerStep),
                     tooltip: context.lang.commonLessTooltip,
                     onPressed: normalizedValue <= min
                         ? null
-                        : () => onChanged(_normalize(normalizedValue - 1)),
-                    icon: Text(_stepLabel(-1)),
+                        : () => onChanged(
+                            _normalize(normalizedValue - innerStep),
+                          ),
                   ),
                 Expanded(
                   child: Tooltip(
@@ -101,39 +107,47 @@ class FriendlyAmountSelector extends StatelessWidget {
                           if (entered != null) onChanged(_normalize(entered));
                         }
                       },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              valueLabel(normalizedValue),
-                              textAlign: TextAlign.center,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) => Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  valueLabel(normalizedValue),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.edit_outlined, size: 14),
-                        ],
+                            if (constraints.maxWidth >= 96) ...[
+                              const SizedBox(width: 4),
+                              const Icon(Icons.edit_outlined, size: 14),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
                 if (!compact)
-                  IconButton.filledTonal(
+                  AmountAdjustmentButton(
+                    label: _stepLabel(innerStep),
                     tooltip: context.lang.commonMoreTooltip,
                     onPressed: max != null && normalizedValue >= max!
                         ? null
-                        : () => onChanged(_normalize(normalizedValue + 1)),
-                    icon: Text(_stepLabel(1)),
+                        : () => onChanged(
+                            _normalize(normalizedValue + innerStep),
+                          ),
                   ),
-                IconButton.filledTonal(
-                  padding: const EdgeInsets.all(15),
+                AmountAdjustmentButton(
+                  label: _stepLabel(step),
+                  emphasized: true,
                   tooltip: context.lang.commonMoreTooltip,
                   onPressed: max != null && normalizedValue >= max!
                       ? null
                       : () => onChanged(_normalize(normalizedValue + step)),
-                  icon: compact
-                      ? const Icon(Icons.add)
-                      : Text(_stepLabel(step), style: TextStyle(fontSize: 20)),
+                  icon: compact ? Icons.add : null,
                 ),
               ],
             ),
@@ -145,14 +159,27 @@ class FriendlyAmountSelector extends StatelessWidget {
           runSpacing: 8,
           children: [
             for (final option in options)
-              ChoiceChip(
-                selected: _isSelected(normalizedValue, option.value),
-                avatar: option.icon == null
-                    ? null
-                    : Icon(option.icon, size: 18),
-                label: Text(option.label),
-                onSelected: (_) => onChanged(_normalize(option.value)),
-              ),
+              if (additiveOptions)
+                ActionChip(
+                  avatar: option.icon == null
+                      ? null
+                      : Icon(option.icon, size: 18),
+                  label: Text(option.label),
+                  onPressed: max != null && normalizedValue >= max!
+                      ? null
+                      : () => onChanged(
+                          _normalize(normalizedValue + option.value),
+                        ),
+                )
+              else
+                ChoiceChip(
+                  selected: _isSelected(normalizedValue, option.value),
+                  avatar: option.icon == null
+                      ? null
+                      : Icon(option.icon, size: 18),
+                  label: Text(option.label),
+                  onSelected: (_) => onChanged(_normalize(option.value)),
+                ),
           ],
         ),
       ],
