@@ -16,10 +16,7 @@ class MealAiButton extends StatelessWidget {
       isScrollControlled: true,
       showDragHandle: true,
       useSafeArea: true,
-      builder: (context) => SizedBox(
-        height: MediaQuery.sizeOf(context).height * .9,
-        child: MealAiSheet(mealId: mealId, name: name),
-      ),
+      builder: (context) => MealAiSheet(mealId: mealId, name: name),
     ),
   );
 }

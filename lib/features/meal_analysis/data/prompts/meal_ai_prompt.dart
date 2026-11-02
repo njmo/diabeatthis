@@ -1,8 +1,9 @@
+import '../../../../common/analysis/dml_evidence_references.dart';
 import '../../../../common/analysis/dml_semantics.dart';
 import '../../domain/models/meal_ai_result.dart';
 import '../../domain/models/meal_dml_document.dart';
 
-const mealAiPromptVersion = 1;
+const mealAiPromptVersion = 2;
 String buildMealAiPrompt(MealDmlDocument document, String language) =>
     '''
 Analyze this historical meal for a person with type 1 diabetes or their parent.
@@ -24,7 +25,10 @@ Overview: key takeaway. Before: preconditions. Response: post-meal episode. Comp
 Do not repeat numbers/episodes. Empty summaries/findings are valid; never invent missing history.
 
 Cite actual section IDs or dotted object-field paths; no array indices or wildcards.
-Allowed section IDs: ${document.evidenceIds.join(', ')}.
+Use ONLY an exact reference from this list (copy it unchanged):
+${dmlEvidenceReferences(document.text, document.evidenceIds).join(', ')}.
+For array contents cite the array field itself, for example meal_cgm.blocks.
+Eating timestamps belong under recorded_timing, for example meal.recorded_timing.eating_started_at.
 JSON shape: {"schema_version":1,"language":"$language","sections":{
 "overview":SECTION,"before":SECTION,"response":SECTION,"comparison":SECTION}}
 SECTION: {"status":"ok" or "insufficient_data","summary":"max 320 characters","findings":[],"missing_data":[]}
