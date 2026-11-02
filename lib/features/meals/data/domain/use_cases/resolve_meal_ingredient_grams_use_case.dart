@@ -13,6 +13,10 @@ class ResolveMealIngredientGramsUseCase {
   final Ref ref;
 
   Future<double> call(MealIngredientsDraft mi) async {
+    return mi.amount * await resolveGramsPerPortion(mi);
+  }
+
+  Future<double> resolveGramsPerPortion(MealIngredientsDraft mi) async {
     final isReference = mi.ingredient.isReference;
     var portionAmount = mi.ingredientPortion.amount;
     final isEmpty = mi.ingredientPortion.portion.maybeMap(
@@ -45,6 +49,6 @@ class ResolveMealIngredientGramsUseCase {
           storedGramsPerPortion: portionAmount,
         ) ??
         0;
-    return mi.amount * gramsPerPortion;
+    return gramsPerPortion;
   }
 }

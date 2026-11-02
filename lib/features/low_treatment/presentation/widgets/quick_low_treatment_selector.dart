@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/horizontal_choice_list.dart';
 import '../../../../common/widgets/responsive_metric_list.dart';
 import '../../../../common/widgets/section_surface.dart';
 import '../../../../core/domain/model/quick_low_treatment_item.dart';
@@ -60,7 +61,6 @@ class QuickLowTreatmentSelector extends HookConsumerWidget {
     }, [selected, multiplier.value, enabled]);
     final lang = context.lang;
     final theme = Theme.of(context);
-    final tileHeight = 88.0 * MediaQuery.textScalerOf(context).scale(14) / 14;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -91,56 +91,50 @@ class QuickLowTreatmentSelector extends HookConsumerWidget {
             onPressed: () => ref.invalidate(quickLowTreatmentItemsProvider),
             child: Text(lang.lowTreatmentRelationRetry),
           ),
-        SizedBox(
-          height: tileHeight,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length + 1,
-            separatorBuilder: (_, _) => const SizedBox(width: 10),
-            itemBuilder: (context, index) => SizedBox(
-              width: 128,
-              child: index < items.length
-                  ? QuickLowTreatmentTile(
-                      item: items[index],
-                      selected: selected?.id == items[index].id,
-                      onTap: enabled
-                          ? () {
-                              cleared.value = false;
-                              if (selectedItemId.value != items[index].id) {
-                                multiplier.value = 1;
-                              }
-                              selectedItemId.value = items[index].id;
-                            }
-                          : null,
-                    )
-                  : OutlinedButton(
-                      onPressed: enabled
-                          ? () => addQuickLowTreatmentShortcut(
-                              context: context,
-                              ref: ref,
-                            )
-                          : null,
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.add_rounded, size: 28),
-                          const SizedBox(height: 8),
-                          Text(
-                            items.length < maxQuickLowTreatmentItems
-                                ? lang.lowTreatmentAddShortcut
-                                : lang.ingredientEditAction,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
+        HorizontalChoiceList(
+          itemWidth: 128,
+          children: [
+            for (final item in items)
+              QuickLowTreatmentTile(
+                item: item,
+                selected: selected?.id == item.id,
+                onTap: enabled
+                    ? () {
+                        cleared.value = false;
+                        if (selectedItemId.value != item.id) {
+                          multiplier.value = 1;
+                        }
+                        selectedItemId.value = item.id;
+                      }
+                    : null,
+              ),
+            OutlinedButton(
+              onPressed: enabled
+                  ? () =>
+                        addQuickLowTreatmentShortcut(context: context, ref: ref)
+                  : null,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.all(8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.add_rounded, size: 28),
+                  const SizedBox(height: 8),
+                  Text(
+                    items.length < maxQuickLowTreatmentItems
+                        ? lang.lowTreatmentAddShortcut
+                        : lang.ingredientEditAction,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
         if (selected != null) ...[
           const SizedBox(height: 10),

@@ -3,8 +3,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/quick_low_treatment_item.dart';
 import '../../../../core/drift/providers/database_provider.dart';
+import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/drafts/ingredient_draft_validation.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
+import '../../../meals/data/domain/use_cases/resolve_meal_ingredient_grams_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -27,26 +29,34 @@ class UpsertQuickLowTreatmentItemUseCase {
     required MealIngredientsDraft mealIngredient,
     QuickLowTreatmentItem? existingItem,
   }) async {
-    _validateQuickLowTreatmentItem(slot: slot, mealIngredient: mealIngredient);
+    final resolvedIngredient = await _resolveStoredPortionWeight(
+      mealIngredient,
+    );
+    _validateQuickLowTreatmentItem(
+      slot: slot,
+      mealIngredient: resolvedIngredient,
+    );
 
     final db = ref.read(databaseProvider);
 
     return db.transaction(() async {
       final ingredient = await ref.read(
-        insertIngredientProvider(mealIngredient.ingredient).future,
+        insertIngredientProvider(resolvedIngredient.ingredient).future,
       );
       final portion = await ref.read(
-        insertPortionProvider(mealIngredient.ingredientPortion.portion).future,
+        insertPortionProvider(
+          resolvedIngredient.ingredientPortion.portion,
+        ).future,
       );
       await ref.read(
         insertIngredientPortionProvider(
           ingredient,
           portion,
-          mealIngredient.ingredientPortion.amount,
+          resolvedIngredient.ingredientPortion.amount,
         ).future,
       );
 
-      final item = mealIngredient.toQuickLowTreatmentItemCompanion(
+      final item = resolvedIngredient.toQuickLowTreatmentItemCompanion(
         ingredient: ingredient,
         portion: portion,
         sortOrder: slot,
@@ -61,6 +71,28 @@ class UpsertQuickLowTreatmentItemUseCase {
         item,
       );
     });
+  }
+
+  Future<MealIngredientsDraft> _resolveStoredPortionWeight(
+    MealIngredientsDraft mealIngredient,
+  ) async {
+    final portion = mealIngredient.ingredientPortion;
+    final hasStoredPortion = portion.portion.maybeMap(
+      existing: (_) => true,
+      orElse: () => false,
+    );
+    if (portion.amount != 0 ||
+        !hasStoredPortion ||
+        mealIngredient.ingredient.getIngredientIdOrNull() == null) {
+      return mealIngredient;
+    }
+
+    final grams = await ResolveMealIngredientGramsUseCase(
+      ref,
+    ).resolveGramsPerPortion(mealIngredient);
+    return mealIngredient.copyWith(
+      ingredientPortion: portion.copyWith(amount: grams),
+    );
   }
 
   void _validateQuickLowTreatmentItem({

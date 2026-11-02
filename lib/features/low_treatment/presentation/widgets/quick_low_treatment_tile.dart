@@ -41,6 +41,7 @@ class QuickLowTreatmentTile extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(8),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IngredientIcon(
@@ -50,8 +51,6 @@ class QuickLowTreatmentTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   item.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.labelLarge,
                 ),

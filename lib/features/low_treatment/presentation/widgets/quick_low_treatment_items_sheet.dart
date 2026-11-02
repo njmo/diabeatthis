@@ -4,6 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/message_dialog.dart';
+import '../../../../core/logger/logger.dart';
 import '../../../ingredients/presentation/widgets/ingredient_icon_button.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
@@ -189,12 +191,13 @@ Future<void> _addOrEditQuickLowTreatmentItem({
   required QuickLowTreatmentSlot slot,
   MealIngredientsDraft? initialDraft,
 }) async {
+  final navigator = Navigator.of(context);
   final mealIngredient = await showAddMealIngredientSheet(
     context: context,
     ref: ref,
     initialDraft: initialDraft,
   );
-  if (mealIngredient == null) {
+  if (mealIngredient == null || !ref.context.mounted) {
     return;
   }
 
@@ -206,14 +209,19 @@ Future<void> _addOrEditQuickLowTreatmentItem({
           mealIngredient: mealIngredient,
           existingItem: slot.item,
         );
-  } catch (error) {
+  } catch (error, stackTrace) {
+    Log.e(
+      'QuickLowTreatmentItems',
+      'Could not save shortcut',
+      error: error,
+      stackTrace: stackTrace,
+    );
     final errorMessage = _quickItemSaveErrorMessage(error);
-    if (!context.mounted) {
+    if (!navigator.mounted) {
       return;
     }
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(errorMessage)));
+    // A snackbar on the underlying scaffold is hidden by the treatment sheet.
+    await showMessageDialog(context: navigator.context, message: errorMessage);
   }
 }
 
