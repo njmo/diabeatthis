@@ -3350,5 +3350,7 @@
   "beforeMealNoEcarbs": "Brak trwających harmonogramów eCarbs.",
   "beforeMealNoLows": "Brak zapisanych dosłodzeń przed posiłkiem.",
   "mealBeforeInsulinAndPod": "Insulina i pod przed posiłkiem",
-  "mealObservationInsulin": "Insulina podczas obserwacji"
+  "mealObservationInsulin": "Insulina podczas obserwacji",
+  "dashboardWaitingForData": "Oczekiwanie na dane",
+  "dashboardWaitingForHistory": "Oczekiwanie na historię pomiarów"
 }

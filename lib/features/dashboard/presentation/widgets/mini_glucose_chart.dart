@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/waiting_for_data.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../data/providers/blood_sugar_readings_list_provider.dart';
 import 'glucose_chart_scale.dart';
@@ -18,12 +19,8 @@ class MiniGlucoseChart extends ConsumerWidget {
     return glucose.when(
       data: (glucose) {
         if (glucose.length < 3) {
-          return const Center(
-            child: SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
+          return WaitingForData(
+            message: context.lang.dashboardWaitingForHistory,
           );
         }
 
@@ -83,7 +80,8 @@ class MiniGlucoseChart extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const CircularProgressIndicator(),
+      loading: () =>
+          WaitingForData(message: context.lang.dashboardWaitingForHistory),
       error: (error, _) => Text(context.lang.activityError(error)),
     );
   }

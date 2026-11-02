@@ -13,9 +13,9 @@ class DashboardGlucoseReading extends StatelessWidget {
     this.change,
   });
 
-  final int value;
+  final int? value;
   final Color color;
-  final IconData trendIcon;
+  final IconData? trendIcon;
   final String? change;
 
   @override
@@ -27,18 +27,18 @@ class DashboardGlucoseReading extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '$value',
+              value?.toString() ?? '??',
               style: GoogleFonts.nunito(
                 fontSize: 86,
                 fontWeight: FontWeight.w700,
                 color: color,
               ),
             ),
-            const SizedBox(width: 12),
+            if (trendIcon != null || change != null) const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(trendIcon, size: 56, color: color),
+                if (trendIcon != null) Icon(trendIcon, size: 56, color: color),
                 if (change != null)
                   Semantics(
                     label: '${context.lang.dashboardGlucoseChange}: $change',

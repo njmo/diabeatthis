@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../foreground/providers/blood_sugar_value_provider.dart';
 import '../../data/providers/device_status_ui_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 import '../../data/utils/nightscout_utils.dart';
+import 'dashboard_glucose_reading.dart';
 import 'device_status_dashboard.dart';
 import 'glucose_dashboard.dart';
 
@@ -17,13 +19,11 @@ class NightscoutPanel extends ConsumerWidget {
     final glucoseValue = ref.watch(bloodSugarValueProvider);
     final timeNowStream = ref.watch(timeNowProvider);
 
-    if (deviceStatusValue == null && glucoseValue == null) {
-      return const CircularProgressIndicator();
-    }
-
-    final readingDate = deviceStatusValue?.date ?? glucoseValue!.date;
+    final readingDate = deviceStatusValue?.date ?? glucoseValue?.date;
     final lastUpdate = timeNowStream
-        .whenData((data) => data.difference(readingDate))
+        .whenData(
+          (data) => readingDate == null ? null : data.difference(readingDate),
+        )
         .value;
 
     final theme = Theme.of(context);
@@ -45,7 +45,9 @@ class NightscoutPanel extends ConsumerWidget {
                     children: [
                       RepaintBoundary(
                         child: Text(
-                          formatAgo(lastUpdate ?? Duration.zero),
+                          readingDate == null
+                              ? context.lang.dashboardWaitingForData
+                              : formatAgo(lastUpdate ?? Duration.zero),
                           style: textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -55,8 +57,14 @@ class NightscoutPanel extends ConsumerWidget {
                   ),
                   if (deviceStatusValue != null)
                     DeviceStatusDashboard(deviceStatus: deviceStatusValue)
+                  else if (glucoseValue != null)
+                    GlucoseDashboard(glucose: glucoseValue)
                   else
-                    GlucoseDashboard(glucose: glucoseValue!),
+                    DashboardGlucoseReading(
+                      value: null,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      trendIcon: null,
+                    ),
                 ],
               ),
             ),

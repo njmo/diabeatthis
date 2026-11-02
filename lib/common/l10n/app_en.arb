@@ -2893,5 +2893,7 @@
   "beforeMealNoEcarbs": "No ongoing eCarbs schedules.",
   "beforeMealNoLows": "No low treatments recorded before the meal.",
   "mealBeforeInsulinAndPod": "Insulin and pod before the meal",
-  "mealObservationInsulin": "Insulin during observation"
+  "mealObservationInsulin": "Insulin during observation",
+  "dashboardWaitingForData": "Waiting for data",
+  "dashboardWaitingForHistory": "Waiting for glucose history"
 }
