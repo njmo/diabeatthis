@@ -10,7 +10,12 @@ class MealPlannedTimeField extends FormField<DateTime> {
     super.key,
     required ValueChanged<DateTime> onChanged,
     bool retrospective = false,
+    bool showTimeLabel = true,
     DateTime? initialDate,
+    DateTime? calculatorDate,
+    String? timeLabel,
+    String? calculatorHint,
+    VoidCallback? onCalculatorSelected,
   }) : super(
          initialValue: initialDate,
          onSaved: (value) {
@@ -29,13 +34,28 @@ class MealPlannedTimeField extends FormField<DateTime> {
            return Column(
              crossAxisAlignment: CrossAxisAlignment.stretch,
              children: [
-               Text(
-                 retrospective
-                     ? context.lang.uiEatingStarted
-                     : context.lang.addMealPlannedDateLabel,
-                 style: Theme.of(context).textTheme.labelLarge,
-               ),
-               const SizedBox(height: 8),
+               if (showTimeLabel)
+                 Text(
+                   timeLabel ??
+                       (retrospective
+                           ? context.lang.uiEatingStarted
+                           : context.lang.addMealPlannedDateLabel),
+                   style: Theme.of(context).textTheme.labelLarge,
+                 ),
+               if (showTimeLabel) const SizedBox(height: 8),
+               if (retrospective && calculatorDate != null) ...[
+                 Text(calculatorHint ?? context.lang.mealFlowCalculatorHint),
+                 Align(
+                   alignment: Alignment.centerLeft,
+                   child: TextButton.icon(
+                     onPressed:
+                         onCalculatorSelected ?? () => select(calculatorDate),
+                     icon: const Icon(Icons.history),
+                     label: Text(context.lang.mealFlowCalculatorTime),
+                   ),
+                 ),
+                 const SizedBox(height: 8),
+               ],
                if (!retrospective) ...[
                  DateTimeShortcuts(onSelected: select),
                  const SizedBox(height: 8),

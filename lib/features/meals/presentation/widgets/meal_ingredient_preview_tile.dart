@@ -13,12 +13,12 @@ class MealIngredientPreviewTile extends ConsumerWidget {
   const MealIngredientPreviewTile({
     super.key,
     required this.draft,
-    required this.onRemove,
+    this.onRemove,
     this.onEdit,
   });
 
   final MealIngredientsDraft draft;
-  final VoidCallback onRemove;
+  final VoidCallback? onRemove;
   final VoidCallback? onEdit;
 
   @override
@@ -62,11 +62,12 @@ class MealIngredientPreviewTile extends ConsumerWidget {
                   onPressed: onEdit,
                   icon: const Icon(Icons.edit_outlined),
                 ),
-              IconButton(
-                tooltip: context.lang.mealRemoveIngredientTooltip,
-                onPressed: onRemove,
-                icon: const Icon(Icons.delete_outline),
-              ),
+              if (onRemove != null)
+                IconButton(
+                  tooltip: context.lang.mealRemoveIngredientTooltip,
+                  onPressed: onRemove,
+                  icon: const Icon(Icons.delete_outline),
+                ),
             ],
           ),
         ),

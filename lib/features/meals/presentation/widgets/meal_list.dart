@@ -1,11 +1,14 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/l10n/language.dart';
+import '../../../../common/meal/meal_category.dart';
 import '../../../../common/widgets/add_meal_icon.dart';
 import '../../../../common/widgets/delete_confirmation_dialog.dart';
+import '../../../../common/widgets/meal_category_field.dart';
 import '../../../../common/widgets/search_bar_action_button.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../ingredients/data/providers/ingredient_filter_controller.dart';
@@ -15,15 +18,17 @@ import '../../data/providers/meal_draft_provider.dart';
 import '../controllers/meal_list_controller.dart';
 import 'meal_list/meal_list_content.dart';
 
-class MealList extends ConsumerWidget {
+class MealList extends HookConsumerWidget {
   const MealList({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final category = useState<MealCategory?>(null);
     final listState = ref.watch(mealListControllerProvider);
     final controller = ref.read(mealListControllerProvider.notifier);
     final mealsState = ref.watch(
       mealListWindowProvider(
+        category: category.value?.name,
         filter: listState.filter,
         limit: listState.visibleLimit,
       ),
@@ -56,6 +61,14 @@ class MealList extends ConsumerWidget {
               ),
             ],
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: MealCategoryField(
+              value: category.value,
+              filter: true,
+              onChanged: (value) => category.value = value,
+            ),
+          ),
           Expanded(
             child: MealListContent(
               meals: mealsState.value ?? const [],
@@ -71,6 +84,7 @@ class MealList extends ConsumerWidget {
               onRetry: () {
                 ref.invalidate(
                   mealListWindowProvider(
+                    category: category.value?.name,
                     filter: listState.filter,
                     limit: listState.visibleLimit,
                   ),

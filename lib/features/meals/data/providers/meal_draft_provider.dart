@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/meal/meal_category.dart';
 import '../../../../common/nutrition/confidence_level.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
@@ -105,6 +106,15 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
 
 @riverpod
 class MealDraftNotifier extends _$MealDraftNotifier with Logging {
+  bool _usesAutomaticName = true;
+  bool get usesAutomaticName => _usesAutomaticName;
+
+  void applyGeneratedName(String name) {
+    if (usesAutomaticName && state.name != name) {
+      state = state.copyWith(name: name);
+    }
+  }
+
   @override
   MealDraft build() {
     return _emptyDraft();
@@ -119,8 +129,18 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
     );
   }
 
-  void reset() => state = _emptyDraft();
-  void setName(String name) => state = state.copyWith(name: name);
+  void reset() {
+    _usesAutomaticName = true;
+    state = _emptyDraft();
+  }
+
+  void setName(String name) {
+    _usesAutomaticName = false;
+    state = state.copyWith(name: name);
+  }
+
+  void setCategory(MealCategory? category) =>
+      state = state.copyWith(category: category);
   void setPlannedAt(DateTime plannedAt) {
     logI("Srtting planned at to ${plannedAt.toIso8601String()}");
     state = state.copyWith(plannedAt: plannedAt);

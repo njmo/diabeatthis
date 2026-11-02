@@ -58,7 +58,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 40;
+  int get schemaVersion => 41;
 
   final DatabaseOpenTracker _openTracker;
 
@@ -81,6 +81,12 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
+      if (from < 41) {
+        final columns = await customSelect('PRAGMA table_info(meal)').get();
+        if (!columns.any((row) => row.read<String>('name') == 'category')) {
+          await m.addColumn(meal, meal.category);
+        }
+      }
       if (from < 40) {
         await migrateMealCompletionDecision(this, m);
       }

@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../common/meal/meal_category.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
@@ -24,6 +25,7 @@ abstract class MealIngredientsDraft with _$MealIngredientsDraft {
 abstract class MealDraft with _$MealDraft {
   const factory MealDraft({
     required String name,
+    MealCategory? category,
     required List<MealIngredientsDraft> mealIngredients,
     required DateTime plannedAt,
     @Default(MealPurpose.meal) MealPurpose purpose,

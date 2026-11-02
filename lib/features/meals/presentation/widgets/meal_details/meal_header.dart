@@ -8,8 +8,9 @@ import 'meal_macro_strip.dart';
 
 class MealHeader extends StatelessWidget {
   final MealPageState state;
+  final Widget? categoryAction;
 
-  const MealHeader({super.key, required this.state});
+  const MealHeader({super.key, required this.state, this.categoryAction});
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +23,7 @@ class MealHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(details.meal.name, style: theme.textTheme.headlineMedium),
+          if (categoryAction != null) categoryAction!,
           const SizedBox(height: 6),
           Text(
             mealDateTime(details.analysisTime),

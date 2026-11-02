@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/widgets.dart';
 
+import '../../common/routing/form_bottom_sheet_route.dart';
 import '../../features/activity/presentation/screens/activity_log_page.dart';
 import '../../features/activity/presentation/screens/activity_page.dart';
 import '../../features/dashboard/presentation/screens/dashboard_page.dart';
@@ -34,7 +35,11 @@ class AppRouter extends RootStackRouter {
       path: '/initial-configuration',
     ),
     AutoRoute(page: SettingsRoute.page, path: '/settings'),
-    AutoRoute(page: AddMealRoute.page),
+    CustomRoute(
+      page: AddMealRoute.page,
+      customRouteBuilder: formBottomSheetRoute,
+      opaque: false,
+    ),
     AutoRoute(page: AddMealTemplateRoute.page),
     AutoRoute(page: MealSummaryRoute.page, path: '/meal-summary/:mealId'),
     AutoRoute(page: MealRoute.page, path: '/meal/:mealId'),

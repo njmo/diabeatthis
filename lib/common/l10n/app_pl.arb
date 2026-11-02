@@ -3157,5 +3157,92 @@
       }
     }
   },
-  "mealCompletionDecisionContext": "Późniejsza korekta w AAPS nie jest tu potwierdzona. To możliwy kontekst do analizy przebiegu glikemii."
+  "mealCompletionDecisionContext": "Późniejsza korekta w AAPS nie jest tu potwierdzona. To możliwy kontekst do analizy przebiegu glikemii.",
+  "mealFlowComposition": "Skład",
+  "mealFlowWhen": "Kiedy",
+  "mealFlowReview": "Podsumowanie",
+  "mealFlowPastCompositionTitle": "Co zjadłeś?",
+  "mealFlowCompositionTitle": "Co będzie w posiłku?",
+  "mealFlowCopy": "Skopiuj z posiłku lub szablonu",
+  "mealFlowFutureTitle": "Kiedy planujesz zjeść?",
+  "mealFlowPastTitle": "Kiedy i jak zjadłeś?",
+  "mealFlowReviewTitle": "Podsumowanie posiłku",
+  "mealFlowNextTime": "Dalej: kiedy",
+  "mealFlowNextReview": "Dalej: podsumowanie",
+  "mealFlowBack": "Wstecz",
+  "mealFlowChange": "Zmień",
+  "mealFlowPlan": "Zaplanuj posiłek",
+  "mealFlowSaveAndLink": "Zapisz i przypisz",
+  "mealFlowCalculatorTime": "Użyj czasu wpisu kalkulatora",
+  "mealFlowCalculatorHint": "Czas wpisu kalkulatora jest proponowanym początkiem jedzenia. Możesz wybrać inną godzinę — posiłek nadal zostanie przypisany do tego wpisu.",
+  "mealFlowNutrition": "Cały posiłek",
+  "mealFlowNetCarbs": "Carbs (netto)",
+  "mealFlowTotalCarbs": "Węglowodany",
+  "mealFlowInsulinTime": "Czas insuliny",
+  "mealFlowEatingEnd": "Koniec jedzenia",
+  "mealFlowCopiedSource": "Skopiowano z: {name}",
+  "mealFlowMinutes": "{minutes} min",
+  "@mealFlowCopiedSource": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@mealFlowMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "mealMacroProportionsByWeight": "Proporcje makro · według gramów",
+  "mealTimeAnchorLabel": "Podana godzina oznacza",
+  "mealTimeAnchorHint": "Pozostałe godziny obliczamy z czasu jedzenia i odstępu od insuliny.",
+  "mealTimelineTitle": "Wyliczony przebieg",
+  "mealTimelineFutureEvent": "{event}: {time} wypada w przyszłości. Sprawdź podaną godzinę, jej znaczenie i odstępy. Zapis wstecz dotyczy zakończonego posiłku.",
+  "mealCalculatorInsulinHint": "Czas wpisu kalkulatora przyjmujemy jako czas insuliny. Pozostałe zdarzenia wyliczamy z podanych odstępów. Powiązanie z wpisem pozostaje także po zmianie czasu.",
+  "@mealTimelineFutureEvent": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealAutomaticName": "Posiłek: {ingredients}",
+  "@mealAutomaticName": {
+    "placeholders": {
+      "ingredients": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCategoryBreakfast": "Śniadanie",
+  "mealCategorySecondBreakfast": "II śniadanie",
+  "mealCategoryLunch": "Obiad",
+  "mealCategorySnack": "Przekąska",
+  "mealCategoryAfternoonSnack": "Podwieczorek",
+  "mealCategoryDinner": "Kolacja",
+  "mealCategoryLabel": "Rodzaj posiłku",
+  "mealCategoryNone": "Posiłek",
+  "mealCategoryAll": "Wszystkie rodzaje",
+  "mealCategorizedName": "{category}: {ingredients}",
+  "@mealCategorizedName": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "ingredients": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCategoryRequired": "Wybierz rodzaj posiłku.",
+  "mealEditName": "Edytuj nazwę",
+  "mealEditTime": "Edytuj termin",
+  "mealEditCategory": "Zmień rodzaj posiłku",
+  "mealCategoryChoose": "Wybierz rodzaj posiłku"
 }

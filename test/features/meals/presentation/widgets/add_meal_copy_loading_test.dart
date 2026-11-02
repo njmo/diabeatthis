@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../helpers/localized_material_app.dart';
+import '../../../../helpers/meal_flow_test_fixture.dart';
 
 void main() {
   for (final leavePage in [false, true]) {
@@ -29,6 +30,10 @@ void main() {
       addTearDown(container.dispose);
       final draftSubscription = container.listen(mealDraftProvider, (_, _) {});
       addTearDown(draftSubscription.close);
+      final ingredient = mealFlowIngredient(container);
+      container.read(mealDraftProvider.notifier).setMealIngredients([
+        ingredient,
+      ]);
       final before = container.read(mealDraftProvider);
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -37,7 +42,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final saveButton = find.widgetWithText(FilledButton, 'Zapisz posiłek');
+      final saveButton = find.widgetWithText(FilledButton, 'Dalej: kiedy');
       expect(tester.widget<FilledButton>(saveButton).onPressed, isNotNull);
       final operation = container
           .read(copyMealSourceControllerProvider.notifier)
@@ -60,7 +65,7 @@ void main() {
         findsOneWidget,
       );
       if (leavePage) await tester.pumpWidget(const SizedBox.shrink());
-      completion.complete([]);
+      completion.complete([ingredient]);
       expect(await operation, !leavePage);
       await tester.pumpAndSettle();
       if (leavePage) {

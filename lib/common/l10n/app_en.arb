@@ -2717,5 +2717,92 @@
       }
     }
   },
-  "mealCompletionDecisionContext": "A later AAPS correction is not confirmed here. This is possible context for reviewing the glucose pattern."
+  "mealCompletionDecisionContext": "A later AAPS correction is not confirmed here. This is possible context for reviewing the glucose pattern.",
+  "mealFlowComposition": "Ingredients",
+  "mealFlowWhen": "When",
+  "mealFlowReview": "Summary",
+  "mealFlowPastCompositionTitle": "What did you eat?",
+  "mealFlowCompositionTitle": "What is in your meal?",
+  "mealFlowCopy": "Copy from a meal or template",
+  "mealFlowFutureTitle": "When do you plan to eat?",
+  "mealFlowPastTitle": "When and how did you eat?",
+  "mealFlowReviewTitle": "Meal summary",
+  "mealFlowNextTime": "Next: when",
+  "mealFlowNextReview": "Next: review",
+  "mealFlowBack": "Back",
+  "mealFlowChange": "Change",
+  "mealFlowPlan": "Plan meal",
+  "mealFlowSaveAndLink": "Save and link",
+  "mealFlowCalculatorTime": "Use calculator entry time",
+  "mealFlowCalculatorHint": "The calculator entry time is the suggested eating start. You can choose a different time — the meal will still be linked to this entry.",
+  "mealFlowNutrition": "Whole meal",
+  "mealFlowNetCarbs": "Carbs (net)",
+  "mealFlowTotalCarbs": "Carbohydrates",
+  "mealFlowInsulinTime": "Insulin time",
+  "mealFlowEatingEnd": "Eating end",
+  "mealFlowCopiedSource": "Copied from: {name}",
+  "mealFlowMinutes": "{minutes} min",
+  "@mealFlowCopiedSource": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@mealFlowMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "mealMacroProportionsByWeight": "Macro proportions · by weight",
+  "mealTimeAnchorLabel": "This time refers to",
+  "mealTimeAnchorHint": "The other times are calculated from the eating duration and insulin interval.",
+  "mealTimelineTitle": "Calculated timeline",
+  "mealTimelineFutureEvent": "{event}: {time} is in the future. Check the reference time, its meaning and the intervals. A retrospective entry must describe a completed meal.",
+  "mealCalculatorInsulinHint": "The calculator entry time is used as the insulin time. Other events are calculated from the entered intervals. Changing the time preserves the link to the entry.",
+  "@mealTimelineFutureEvent": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealAutomaticName": "Meal: {ingredients}",
+  "@mealAutomaticName": {
+    "placeholders": {
+      "ingredients": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCategoryBreakfast": "Breakfast",
+  "mealCategorySecondBreakfast": "Second breakfast",
+  "mealCategoryLunch": "Lunch",
+  "mealCategorySnack": "Snack",
+  "mealCategoryAfternoonSnack": "Afternoon snack",
+  "mealCategoryDinner": "Dinner",
+  "mealCategoryLabel": "Meal category",
+  "mealCategoryNone": "Meal",
+  "mealCategoryAll": "All categories",
+  "mealCategorizedName": "{category}: {ingredients}",
+  "@mealCategorizedName": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "ingredients": {
+        "type": "String"
+      }
+    }
+  },
+  "mealCategoryRequired": "Choose a meal category.",
+  "mealEditName": "Edit name",
+  "mealEditTime": "Edit time",
+  "mealEditCategory": "Change meal category",
+  "mealCategoryChoose": "Choose a meal category"
 }

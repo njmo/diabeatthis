@@ -468,19 +468,24 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.watch();
   }
 
-  Stream<List<MealData>> watchRecentMeals({required int limit}) {
+  Stream<List<MealData>> watchRecentMeals({
+    required int limit,
+    String? category,
+  }) {
     final query = select(db.meal)
       ..where((tbl) => tbl.purpose.equals('meal'))
       ..orderBy([
         (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
       ])
       ..limit(limit);
+    if (category != null) query.where((row) => row.category.equals(category));
     return query.watch();
   }
 
   Stream<List<MealData>> watchMealsByName({
     required String queryString,
     required int limit,
+    String? category,
   }) {
     final normalizedQuery = queryString.trim().toLowerCase();
     final query = select(db.meal)
@@ -490,12 +495,14 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
         (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.desc),
       ])
       ..limit(limit);
+    if (category != null) query.where((row) => row.category.equals(category));
     return query.watch();
   }
 
   Stream<List<MealData>> watchMealsByIngredientIds({
     required List<int> ingredientIds,
     required int limit,
+    String? category,
   }) {
     final distinctIngredientIds = ingredientIds.toSet().toList(growable: false);
     final distinctIngredientCount = db.mealIngredients.ingredientId.count(
@@ -523,6 +530,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
           ])
           ..limit(limit);
 
+    if (category != null) query.where(db.meal.category.equals(category));
     return query.watch().map(
       (rows) => rows.map((row) => row.readTable(db.meal)).toList(),
     );
@@ -532,6 +540,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     required String queryString,
     required List<int> ingredientIds,
     required int limit,
+    String? category,
   }) {
     final normalizedQuery = queryString.trim();
     final distinctIngredientIds = ingredientIds.toSet().toList(growable: false);
@@ -561,6 +570,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
           ])
           ..limit(limit);
 
+    if (category != null) query.where(db.meal.category.equals(category));
     return query.watch().map(
       (rows) => rows.map((row) => row.readTable(db.meal)).toList(),
     );

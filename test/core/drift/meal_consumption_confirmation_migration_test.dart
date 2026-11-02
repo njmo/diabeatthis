@@ -62,7 +62,7 @@ void main() {
         (await db.select(db.mealWizardLink).get()).single.remoteWizardId,
         'wizard-id',
       );
-      expect(db.schemaVersion, 40);
+      expect(db.schemaVersion, 41);
     },
   );
 }

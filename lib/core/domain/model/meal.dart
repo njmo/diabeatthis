@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../common/meal/meal_category.dart';
+
 part 'meal.freezed.dart';
 
 @JsonEnum(valueField: 'storageValue')
@@ -27,6 +29,7 @@ abstract class Meal with _$Meal {
   const factory Meal({
     required int id,
     required String name,
+    MealCategory? category,
     int? glucose,
     int? carbs,
     double? insulin,

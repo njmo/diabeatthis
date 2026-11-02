@@ -3,6 +3,7 @@ import 'meal_template.drift';
 CREATE TABLE meal (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
+  category TEXT,
 
   planned_at INTEGER NOT NULL,
   summarized_at INTEGER,

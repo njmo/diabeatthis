@@ -24,6 +24,9 @@ class RetrospectiveMealFields extends StatelessWidget {
     subtitle: subtitle ?? context.lang.mealRetrospectiveFullPortionNote,
     children: [
       TextFormField(
+        initialValue: value.eatingMinutes == null
+            ? ''
+            : '${value.eatingMinutes}',
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
           labelText: context.lang.uiHowLongDidEatingTakeMin,

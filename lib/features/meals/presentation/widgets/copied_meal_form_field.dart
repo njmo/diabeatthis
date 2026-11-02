@@ -10,6 +10,7 @@ class CopiedMealFormField extends FormField<CopiedMealType?> {
     super.validator,
     super.enabled,
     bool isLoading = false,
+    String? labelText,
     required Future<CopiedMealType?> Function(BuildContext context) picker,
     required Future<bool> Function(CopiedMealType) onPicked,
   }) : super(
@@ -46,7 +47,8 @@ class CopiedMealFormField extends FormField<CopiedMealType?> {
                        },
                  child: InputDecorator(
                    decoration: InputDecoration(
-                     labelText: state.context.lang.copiedMealFieldLabel,
+                     labelText:
+                         labelText ?? state.context.lang.copiedMealFieldLabel,
                      enabled: state.widget.enabled,
                      suffixIcon: isLoading
                          ? Padding(

@@ -2,18 +2,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../common/nutrition/ingredient_amount_calculator.dart';
-import '../../../../common/nutrition/ingredient_amount_kind.dart';
 import '../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
-import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/mappers/portion_draft_mapper.dart';
+import '../domain/use_cases/resolve_meal_ingredient_grams_use_case.dart';
 import '../drafts/meal_draft.dart';
 import 'meal_draft_provider.dart';
 
@@ -148,39 +146,7 @@ Future<Macronutrients> calculateMealIngredientsMacronutrients(
   var netCarbsTotal = 0;
 
   for (final mi in ingredients) {
-    final isReference = mi.ingredient.isReference;
-    var portionAmount = mi.ingredientPortion.amount;
-    final isEmpty = mi.ingredientPortion.portion.maybeMap(
-      orElse: () => false,
-      empty: (empty) => true,
-    );
-
-    if (!isEmpty && portionAmount == 0) {
-      final ingredientDomain = mi.ingredient.toDomain();
-      final portionDomain = mi.ingredientPortion.portion.toDomain();
-
-      final fetched = await ref.read(
-        getAmountForPortionIngredientProvider(
-          ingredientDomain,
-          portionDomain,
-        ).future,
-      );
-
-      portionAmount = fetched ?? 0;
-    }
-    final gramsPerPortion =
-        resolveIngredientGramsPerPortion(
-          kind: !isEmpty
-              ? IngredientAmountKind.portion
-              : isReference
-              ? IngredientAmountKind.referencePortion
-              : IngredientAmountKind.grams,
-          portionGrams: portionAmount,
-          // Keep aggregation's resolved weight, including legacy zero/negative values.
-          storedGramsPerPortion: portionAmount,
-        ) ??
-        0;
-    final grams = mi.amount * gramsPerPortion;
+    final grams = await ResolveMealIngredientGramsUseCase(ref).call(mi);
     carbsTotal += (mi.ingredient.carbsPer100g * grams / 100).ceil();
     fatTotal += (mi.ingredient.fatPer100g * grams / 100).ceil();
     fiberTotal += (mi.ingredient.fiberPer100g * grams / 100).ceil();

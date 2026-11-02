@@ -12,17 +12,23 @@ Stream<List<domain.Meal>> mealListWindow(
   Ref ref, {
   required MealListFilter filter,
   required int limit,
+  String? category,
 }) {
   final db = ref.watch(databaseProvider);
   final meals = filter.map(
-    recent: (_) => db.mealDao.watchRecentMeals(limit: limit),
-    byQuery: (filter) =>
-        db.mealDao.watchMealsByName(queryString: filter.query, limit: limit),
+    recent: (_) =>
+        db.mealDao.watchRecentMeals(limit: limit, category: category),
+    byQuery: (filter) => db.mealDao.watchMealsByName(
+      queryString: filter.query,
+      limit: limit,
+      category: category,
+    ),
     byIngredients: (filter) => db.mealDao.watchMealsByIngredientIds(
       ingredientIds: filter.ingredientIds
           .take(mealIngredientFilterLimit)
           .toList(growable: false),
       limit: limit,
+      category: category,
     ),
     byQueryAndIngredients: (filter) =>
         db.mealDao.watchMealsByNameAndIngredientIds(
@@ -31,6 +37,7 @@ Stream<List<domain.Meal>> mealListWindow(
               .take(mealIngredientFilterLimit)
               .toList(growable: false),
           limit: limit,
+          category: category,
         ),
   );
   return meals.map((items) => items.toDomainList());

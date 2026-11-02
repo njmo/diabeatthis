@@ -10,22 +10,60 @@ import 'meal_ingredients_empty_state.dart';
 import 'meal_ingredients_list.dart';
 
 class MealIngredientsListEditor extends ConsumerWidget {
-  const MealIngredientsListEditor({super.key});
+  const MealIngredientsListEditor({
+    super.key,
+    this.showNutritionSummary = true,
+    this.compact = false,
+  });
+  final bool showNutritionSummary;
+  final bool compact;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final calculatedMacronutrients = ref.watch(
-      calculatedMacronutrientsProvider,
-    );
+    final calculatedMacronutrients = showNutritionSummary
+        ? ref.watch(calculatedMacronutrientsProvider)
+        : null;
     final ingredientDrafts = ref.watch(mealDraftIngredientsProvider);
+
+    if (compact) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  ingredientDrafts.isEmpty
+                      ? context.lang.mealIngredientsListTitle
+                      : context.lang.mealIngredientsListCountTitle(
+                          ingredientDrafts.length,
+                        ),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              IconButton.filled(
+                tooltip: context.lang.mealAddFirstIngredient,
+                onPressed: () => _addIngredient(context, ref),
+                icon: const Icon(Icons.add),
+              ),
+            ],
+          ),
+          if (ingredientDrafts.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            const MealIngredientsList(),
+          ],
+        ],
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        calculatedMacronutrients.when(
-          data: (value) => NutrientSummaryChart(macros: value),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => Text(context.lang.mealIngredientsLoadError(err)),
-        ),
+        if (calculatedMacronutrients != null)
+          calculatedMacronutrients.when(
+            data: (value) => NutrientSummaryChart(macros: value),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => Text(context.lang.mealIngredientsLoadError(err)),
+          ),
         const SizedBox(height: 16),
         Text(
           ingredientDrafts.isEmpty

@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/l10n/language.dart';
+import '../../../../common/meal/meal_category.dart';
 import '../../../../common/widgets/anchored_fab_menu.dart';
 import '../../../../common/widgets/fab_action_option.dart';
 import '../../../../common/widgets/responsive_metric_list.dart';
@@ -72,6 +73,7 @@ class DashboardFAB extends HookConsumerWidget with Logging {
                   if (mealIngredient != null) {
                     final draft = ref.read(mealDraftProvider.notifier);
                     draft.addMealIngredient(mealIngredient);
+                    draft.setCategory(MealCategory.snack);
                     draft.setName("QM: ${mealIngredient.ingredient.name}");
                     final quickMealDraft = ref.read(mealDraftProvider);
                     late final Meal addedMeal;

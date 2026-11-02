@@ -15,6 +15,7 @@ import '../widgets/meal_details/meal_activity_analysis_section.dart';
 import '../widgets/meal_details/meal_advice_history_section.dart';
 import '../widgets/meal_details/meal_advisor_result_section.dart';
 import '../widgets/meal_details/meal_before_context_section.dart';
+import '../widgets/meal_details/meal_category_edit_button.dart';
 import '../widgets/meal_details/meal_charts_section.dart';
 import '../widgets/meal_details/meal_comparison_section.dart';
 import '../widgets/meal_details/meal_header.dart';
@@ -101,7 +102,12 @@ class MealPageBody extends HookConsumerWidget {
             onChanged: (value) => advanced.value = value,
           ),
           const SizedBox(height: 16),
-          MealHeader(state: state),
+          MealHeader(
+            state: state,
+            categoryAction: MealCategoryEditButton(
+              mealId: state.details.meal.id,
+            ),
+          ),
           const SizedBox(height: 12),
           if (details.meal.isEaten)
             MealReviewChapter(

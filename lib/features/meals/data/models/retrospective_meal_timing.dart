@@ -1,6 +1,7 @@
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/manual_meal_decision.dart';
 import '../../../../common/meal/meal_decision.dart';
+import '../../../../common/meal/meal_time_anchor.dart';
 
 class RetrospectiveMealTiming {
   final ManualMealDecision choice;
@@ -24,18 +25,24 @@ class RetrospectiveMealTiming {
         bolusAfterStartMinutes ?? this.bolusAfterStartMinutes,
   );
 
+  DateTime startFromReference(DateTime reference, MealTimeAnchor anchor) =>
+      switch (anchor) {
+        MealTimeAnchor.eatingStart => reference,
+        MealTimeAnchor.eatingEnd => reference.subtract(
+          Duration(minutes: eatingMinutes ?? 0),
+        ),
+        MealTimeAnchor.insulin =>
+          choice.decision == MealDecision.eatNowBolusLater
+              ? reference.subtract(Duration(minutes: bolusAfterStartMinutes))
+              : reference.add(Duration(minutes: choice.waitMinutes)),
+      };
+
   DateTime bolusAt(DateTime start) =>
       choice.decision == MealDecision.eatNowBolusLater
       ? start.add(Duration(minutes: bolusAfterStartMinutes))
       : start.subtract(Duration(minutes: choice.waitMinutes));
 
   void validate(DateTime start, DateTime now) {
-    if (start.isAfter(now) ||
-        bolusAt(start).isAfter(now) ||
-        (eatingMinutes != null &&
-            start.add(Duration(minutes: eatingMinutes!)).isAfter(now))) {
-      throw ArgumentError(lang.uiMealAndInsulinTimesCannotBeInTheFuture);
-    }
     if (eatingMinutes == null || eatingMinutes! <= 0) {
       throw ArgumentError(lang.uiEnterTheEatingDurationToReconstructTheMealEnd);
     }
@@ -50,6 +57,21 @@ class RetrospectiveMealTiming {
         (bolusAfterStartMinutes <= 0 ||
             bolusAfterStartMinutes < (eatingMinutes ?? 0))) {
       throw ArgumentError(lang.uiInsulinAfterEatingCannotPrecedeTheEndOfThe);
+    }
+    final events = [
+      (label: lang.uiEatingStarted, time: start),
+      (label: lang.mealFlowInsulinTime, time: bolusAt(start)),
+      (
+        label: lang.mealFlowEatingEnd,
+        time: start.add(Duration(minutes: eatingMinutes!)),
+      ),
+    ];
+    for (final event in events) {
+      if (event.time.isAfter(now)) {
+        final time =
+            '${event.time.hour.toString().padLeft(2, '0')}:${event.time.minute.toString().padLeft(2, '0')}';
+        throw ArgumentError(lang.mealTimelineFutureEvent(event.label, time));
+      }
     }
   }
 

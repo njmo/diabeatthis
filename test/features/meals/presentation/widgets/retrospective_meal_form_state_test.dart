@@ -1,14 +1,15 @@
 import 'package:diabeatthis/features/meals/data/models/retrospective_meal_timing.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_draft_provider.dart';
 import 'package:diabeatthis/features/meals/presentation/screens/add_meal_page.dart';
-import 'package:diabeatthis/features/meals/presentation/widgets/add_meal/add_meal_basic_info_section.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/add_meal/meal_planned_time_field.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/add_meal/meal_timing_step.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/add_meal/retrospective_meal_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/localized_material_app.dart';
+import '../../../../helpers/meal_flow_test_fixture.dart';
 
 void main() {
   testWidgets('eating duration is required', (tester) async {
@@ -38,6 +39,11 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       final container = ProviderContainer();
       addTearDown(container.dispose);
+      final subscription = container.listen(mealDraftProvider, (_, _) {});
+      addTearDown(subscription.close);
+      container.read(mealDraftProvider.notifier).setMealIngredients([
+        mealFlowIngredient(container),
+      ]);
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
@@ -47,12 +53,14 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.tap(find.text('Dalej: kiedy'));
+      await tester.pumpAndSettle();
       final selected = DateTime(2026, 3, 7, 13, 25);
       final dateField = find.byType(MealPlannedTimeField);
       tester.state<FormFieldState<DateTime>>(dateField).didChange(selected);
       tester
-          .widget<AddMealBasicInfoSection>(find.byType(AddMealBasicInfoSection))
-          .onPlannedAtChanged(selected);
+          .widget<MealTimingStep>(find.byType(MealTimingStep))
+          .onDateChanged(selected);
       await tester.pump();
 
       final duration = find.widgetWithText(
@@ -82,12 +90,22 @@ void main() {
 
       expect(tester.state<FormFieldState<DateTime>>(dateField).value, selected);
       expect(container.read(mealDraftProvider).plannedAt, selected);
-      expect(find.textContaining('13:25'), findsOneWidget);
+      expect(
+        find.descendant(of: dateField, matching: find.textContaining('13:25')),
+        findsOneWidget,
+      );
       await tester.scrollUntilVisible(
         duration,
         250,
         scrollable: find.byType(Scrollable).first,
       );
+      expect(find.text('25'), findsOneWidget);
+      await tester.tap(find.text('Wstecz'));
+      await tester.pumpAndSettle();
+      expect(find.byType(MealPlannedTimeField), findsNothing);
+      await tester.tap(find.text('Dalej: kiedy'));
+      await tester.pumpAndSettle();
+      expect(tester.state<FormFieldState<DateTime>>(dateField).value, selected);
       expect(find.text('25'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },

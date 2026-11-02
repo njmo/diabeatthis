@@ -45,7 +45,7 @@ void main() {
       final db = DatabaseImpl(NativeDatabase(file));
       addTearDown(db.close);
       final meal = (await db.mealDao.getMealById(1))!;
-      expect(db.schemaVersion, 40);
+      expect(db.schemaVersion, 41);
       expect(meal.status, 'waiting-for-bolus');
       expect(meal.consumptionConfirmedEndedAt, 2000);
       expect(meal.addOnBolusContext, isNull);
