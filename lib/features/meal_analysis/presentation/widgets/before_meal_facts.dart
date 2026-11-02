@@ -3,18 +3,23 @@ import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/analysis_metric.dart';
+import '../../../../common/widgets/glucose_summary_metric.dart';
+import '../../../../common/widgets/nutrition_summary_metric.dart';
 import '../../../../common/widgets/responsive_metric_list.dart';
 import '../../domain/models/before_meal_context.dart';
+import 'before_meal_details_card.dart';
 import 'before_meal_event_metrics.dart';
 import 'before_meal_history_facts.dart';
 
 class BeforeMealFacts extends StatelessWidget {
   final BeforeMealContext data;
   final bool hasRecordedStart;
+  final bool showHistory;
   const BeforeMealFacts({
     super.key,
     required this.data,
     required this.hasRecordedStart,
+    this.showHistory = false,
   });
 
   @override
@@ -40,9 +45,18 @@ class BeforeMealFacts extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '${hasRecordedStart ? lang.mealReviewRecordedStart : lang.mealReviewFallbackStart}: ${time(data.asOf)}',
+        SizedBox(
+          width: double.infinity,
+          child: NutritionSummaryMetric(
+            label: hasRecordedStart
+                ? lang.mealReviewRecordedStart
+                : lang.mealReviewFallbackStart,
+            value: time(data.asOf),
+            icon: Icons.restaurant_rounded,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
+        const SizedBox(height: 8),
         if (!hasRecordedStart) Text(lang.mealReviewFallbackContext),
         if (data.failedSources.isNotEmpty)
           Text(
@@ -53,63 +67,77 @@ class BeforeMealFacts extends StatelessWidget {
           maxColumns: 3,
           minimumWidth: 110,
           children: [
-            AnalysisMetric(
-              label: lang.mealReviewGlucose,
-              value: value(data.latestCgm?.sgv, 'mg/dl'),
+            GlucoseSummaryMetric(
+              glucose: data.latestCgm,
               detail: data.latestCgm == null
-                  ? lang.mealReviewNoNearbyReading
+                  ? null
                   : '${time(data.latestCgm!.date)} · ${data.hasFreshCgm ? lang.beforeMealFresh : lang.beforeMealStale}',
             ),
-            AnalysisMetric(
+            NutritionSummaryMetric(
               label: 'IOB',
+              icon: Icons.water_drop_outlined,
+              color: Theme.of(context).colorScheme.secondary,
               value: value(status?.hasIob == true ? status!.iob : null, 'U'),
               detail: status == null
                   ? lang.mealReviewNoNearbyReading
                   : time(status.date),
             ),
-            AnalysisMetric(
+            NutritionSummaryMetric(
               label: 'COB',
+              icon: Icons.restaurant_rounded,
+              color: Theme.of(context).colorScheme.tertiary,
               value: value(status?.hasCob == true ? status!.cob : null, 'g'),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        BeforeMealEventMetrics(data: data),
-        ExpansionTile(
-          tilePadding: EdgeInsets.zero,
-          title: Text(lang.beforeMealDetailsTitle),
-          children: [
-            ResponsiveMetricList(
-              maxColumns: 3,
-              minimumWidth: 110,
-              children: [
-                AnalysisMetric(
-                  label: lang.dayRecordedBoluses,
-                  value: value(data.boluses?.units, 'U'),
-                  detail:
-                      '${time(data.asOf.subtract(data.windows.insulin))}–${time(data.asOf)}',
-                ),
-                AnalysisMetric(
-                  label: lang.dayBasalTitle,
-                  value: value(hasBasal ? basal.units : null, 'U'),
-                  detail:
-                      '${lang.dayBasalCoverage}: ${value(basal == null ? null : basal.coverage * 100, '%')}',
-                ),
-                AnalysisMetric(
-                  label: lang.beforeMealPod,
-                  value: data.podAge == null
-                      ? '—'
-                      : '${data.podAge!.inDays} d ${data.podAge!.inHours.remainder(24)} h',
-                ),
-              ],
-            ),
-            BeforeMealHistoryFacts(data: data),
-            Text(
-              lang.beforeMealReconstruction,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
+        if (!showHistory)
+          BeforeMealEventMetrics(
+            data: data,
+            showMealCount: !showHistory,
+            showActivityCount: !showHistory,
+          ),
+        if (showHistory)
+          BeforeMealHistoryFacts(data: data, precedingMealOnly: true),
+        if (showHistory) ...[
+          const SizedBox(height: 12),
+          BeforeMealDetailsCard(data: data),
+        ] else
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: Text(lang.beforeMealDetailsTitle),
+            children: [
+              ResponsiveMetricList(
+                maxColumns: 3,
+                minimumWidth: 110,
+                children: [
+                  AnalysisMetric(
+                    label: lang.dayRecordedBoluses,
+                    value: value(data.boluses?.units, 'U'),
+                    detail:
+                        '${time(data.asOf.subtract(data.windows.insulin))}–${time(data.asOf)}',
+                  ),
+                  AnalysisMetric(
+                    label: lang.dayBasalTitle,
+                    value: value(hasBasal ? basal.units : null, 'U'),
+                    detail:
+                        '${lang.dayBasalCoverage}: ${value(basal == null ? null : basal.coverage * 100, '%')}',
+                  ),
+                  AnalysisMetric(
+                    label: lang.beforeMealPod,
+                    value: data.podAge == null
+                        ? '—'
+                        : '${data.podAge!.inDays} d ${data.podAge!.inHours.remainder(24)} h',
+                  ),
+                ],
+              ),
+              if (!showHistory) BeforeMealHistoryFacts(data: data),
+              Text(
+                lang.beforeMealReconstruction,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
       ],
     );
   }

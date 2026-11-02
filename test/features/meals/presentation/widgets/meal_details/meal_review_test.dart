@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/widgets/swipeable_cards.dart';
 import 'package:diabeatthis/common/widgets/timeline_analysis_charts.dart';
 import 'package:diabeatthis/common/widgets/timeline_selection_summary.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
@@ -46,8 +47,9 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         expect(find.byType(MealOutcomeSection), findsOneWidget);
-        expect(find.text('Czas do szczytu'), findsOneWidget);
-        expect(find.text('Początek wzrostu glikemii'), findsOneWidget);
+        expect(find.text('Czas do najwyższej glikemii'), findsOneWidget);
+        // This fixture rises below the confirmed-onset threshold.
+        expect(find.text('Początek wzrostu glikemii'), findsNothing);
         expect(find.byType(Slider), findsNothing);
         final basicChart = tester.widget<TimelineAnalysisCharts>(
           find.byType(TimelineAnalysisCharts),
@@ -56,9 +58,6 @@ void main() {
           basicChart.events.any((event) => event.label == 'Bolus'),
           isTrue,
         );
-        expect(find.text('Bolusy ręczne'), findsOneWidget);
-        expect(find.text('Pozostałe korekty'), findsOneWidget);
-        expect(find.text('O 5 min krócej niż proponowano'), findsOneWidget);
         final eating = basicChart.ranges.singleWhere(
           (range) => range.label == 'Jedzenie posiłku',
         );
@@ -67,8 +66,6 @@ void main() {
           const Duration(minutes: 20),
         );
         expect(find.byType(MealTimelineEventTile), findsNothing);
-        await tester.tap(find.text('Zaawansowany'));
-        await tester.pumpAndSettle();
         await tester.ensureVisible(find.byType(MealChartsSection));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
@@ -99,7 +96,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Zaawansowany'));
+    tester
+        .widget<SwipeableCards>(find.byType(SwipeableCards))
+        .controller
+        .animateTo(3);
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byType(MealTimelineEventTile));
     await tester.pumpAndSettle();
@@ -133,8 +133,6 @@ void main() {
           child: localizedMaterialApp(home: const MealPage(mealId: 1)),
         ),
       );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Zaawansowany'));
       await tester.pumpAndSettle();
       final chart = tester.widget<TimelineAnalysisCharts>(
         find.byType(TimelineAnalysisCharts),

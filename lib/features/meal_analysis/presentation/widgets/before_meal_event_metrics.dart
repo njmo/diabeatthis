@@ -8,7 +8,14 @@ import '../../domain/models/before_meal_context.dart';
 
 class BeforeMealEventMetrics extends StatelessWidget {
   final BeforeMealContext data;
-  const BeforeMealEventMetrics({super.key, required this.data});
+  final bool showMealCount;
+  final bool showActivityCount;
+  const BeforeMealEventMetrics({
+    super.key,
+    required this.data,
+    this.showMealCount = true,
+    this.showActivityCount = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,21 +30,23 @@ class BeforeMealEventMetrics extends StatelessWidget {
       maxColumns: 2,
       minimumWidth: 130,
       children: [
-        AnalysisMetric(
-          icon: Icons.restaurant,
-          label: lang.beforeMealPreviousMeals,
-          value: data.priorMeals?.length.toString() ?? '—',
-        ),
+        if (showMealCount)
+          AnalysisMetric(
+            icon: Icons.restaurant,
+            label: lang.beforeMealPreviousMeals,
+            value: data.priorMeals?.length.toString() ?? '—',
+          ),
         AnalysisMetric(
           icon: Icons.cake_outlined,
           label: lang.beforeMealLows,
           value: data.lowTreatments?.length.toString() ?? '—',
         ),
-        AnalysisMetric(
-          icon: Icons.directions_run,
-          label: lang.beforeMealActivities,
-          value: data.activities?.length.toString() ?? '—',
-        ),
+        if (showActivityCount)
+          AnalysisMetric(
+            icon: Icons.directions_run,
+            label: lang.beforeMealActivities,
+            value: data.activities?.length.toString() ?? '—',
+          ),
         AnalysisMetric(
           icon: Icons.schedule,
           label: lang.beforeMealEcarbs,

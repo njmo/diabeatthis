@@ -9,14 +9,20 @@ import 'meal_snapshot_comparison_row.dart';
 
 class MealSnapshotsSection extends StatelessWidget {
   final MealDetailsData details;
+  final bool inline;
 
-  const MealSnapshotsSection({super.key, required this.details});
+  const MealSnapshotsSection({
+    super.key,
+    required this.details,
+    this.inline = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final rows = _snapshotRows(context, details);
 
     return MealSectionTile(
+      collapsible: !inline,
       title: context.lang.mealSnapshotsTitle,
       children: [
         for (final row in rows) MealSnapshotComparisonRow(row: row),

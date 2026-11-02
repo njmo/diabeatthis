@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/detail_tabs.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/models/ingredient_portion_data.dart';
 import '../../data/providers/ingredient_provider.dart';
@@ -51,7 +52,6 @@ class IngredientPageViewState extends ConsumerState<IngredientPage>
     final controller = ref.read(
       ingredientDetailsControllerProvider(ingredientId).notifier,
     );
-    final colors = Theme.of(context).colorScheme;
     Widget scroll(Widget child) => SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         16,
@@ -148,25 +148,12 @@ class IngredientPageViewState extends ConsumerState<IngredientPage>
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: TabBar(
+                    child: DetailTabs(
                       controller: tabs,
-                      labelColor: colors.primary,
-                      labelStyle: Theme.of(context).textTheme.labelLarge
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                      unselectedLabelColor: colors.onSurfaceVariant,
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      splashBorderRadius: BorderRadius.circular(18),
-                      labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-                      indicator: BoxDecoration(
-                        color: colors.primary.withValues(alpha: 0.13),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      indicatorPadding: const EdgeInsets.symmetric(vertical: 4),
-                      dividerColor: Colors.transparent,
-                      tabs: [
-                        Tab(text: context.lang.ingredientDataTab),
-                        Tab(text: context.lang.ingredientMealsTab),
-                        Tab(text: context.lang.ingredientHistoryTab),
+                      labels: [
+                        context.lang.ingredientDataTab,
+                        context.lang.ingredientMealsTab,
+                        context.lang.ingredientHistoryTab,
                       ],
                     ),
                   ),

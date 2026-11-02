@@ -1,26 +1,29 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/widgets/detail_content_section.dart';
+
 class MealSectionTile extends StatelessWidget {
   final String title;
   final List<Widget> children;
   final bool initiallyExpanded;
+  final bool collapsible;
 
   const MealSectionTile({
     super.key,
     required this.title,
     required this.children,
     this.initiallyExpanded = false,
+    this.collapsible = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: ExpansionTile(
-        title: Text(title),
-        initiallyExpanded: initiallyExpanded,
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        children: children,
-      ),
+    return DetailContentSection(
+      collapsible: collapsible,
+      title: Text(title),
+      initiallyExpanded: initiallyExpanded,
+      childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      children: children,
     );
   }
 }

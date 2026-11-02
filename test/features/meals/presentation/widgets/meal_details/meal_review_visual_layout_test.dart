@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:diabeatthis/common/l10n/language.dart';
+import 'package:diabeatthis/common/widgets/swipeable_cards.dart';
 import 'package:diabeatthis/features/meals/common/widgets/meal_comparison_bar.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_analysis_data.dart';
 import 'package:diabeatthis/features/meals/presentation/controllers/meal_details_controller.dart';
@@ -55,7 +56,7 @@ void main() {
 
   for (final dark in [false, true]) {
     testWidgets(
-      'advanced chapters retain technical records in ${dark ? "dark" : "light"} mode',
+      'application context retains technical records in ${dark ? "dark" : "light"} mode',
       (tester) async {
         tester.view.devicePixelRatio = 1;
         tester.view.physicalSize = const Size(390, 1200);
@@ -82,16 +83,11 @@ void main() {
         );
         await tester.pumpAndSettle();
         await capture(tester, key, 'meal-basic-${dark ? "dark" : "light"}');
-        await tester.tap(find.text('Zaawansowany'));
+        tester
+            .widget<SwipeableCards>(find.byType(SwipeableCards))
+            .controller
+            .animateTo(5);
         await tester.pumpAndSettle();
-        for (final title in [
-          'Przebieg glikemii',
-          'Co mogło mieć znaczenie',
-          'Co zostało zjedzone',
-          'Decyzje i ich przebieg',
-        ]) {
-          expect(find.text(title), findsOneWidget);
-        }
         expect(find.byType(MealBasicInfoSection), findsNothing);
         await tester.ensureVisible(find.byType(MealTechnicalSection));
         await tester.pumpAndSettle();

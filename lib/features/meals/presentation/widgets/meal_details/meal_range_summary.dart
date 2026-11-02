@@ -85,12 +85,14 @@ class MealRangeSummary extends StatelessWidget {
             ),
           ],
         ),
-        if (summary.missing > Duration.zero) ...[
+        if (summary.sampleCoverage.hasSignificantMissing) ...[
           const SizedBox(height: 14),
           MealRangeLegendItem(
             color: palette.missing,
             label: messages.mealReviewMissing,
-            value: formatDurationLabel(summary.missing),
+            value: formatDurationLabel(
+              Duration(minutes: summary.sampleCoverage.missing * 5),
+            ),
           ),
         ],
       ],

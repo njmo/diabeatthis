@@ -8,12 +8,14 @@ class NutritionSummaryMetric extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.color,
+    this.detail,
   });
 
   final String label;
   final String value;
   final IconData icon;
   final Color color;
+  final String? detail;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +57,15 @@ class NutritionSummaryMetric extends StatelessWidget {
               letterSpacing: -0.5,
             ),
           ),
+          if (detail != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              detail!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ],
       ),
     );

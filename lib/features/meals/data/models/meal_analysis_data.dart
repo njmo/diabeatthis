@@ -60,6 +60,15 @@ class MealAnalysisData {
     end: chartEnd,
   );
 
+  TimeSeriesCoverage get postMealGlucoseCoverage =>
+      TimeSeriesCoverage.fromTimestamps(
+        timestamps: glucoseReadings
+            .where((g) => g.type == GlucoseType.cgm && g.sgv > 0)
+            .map((g) => g.date),
+        start: mealTime,
+        end: chartEnd,
+      );
+
   bool get hasContinuousGlucoseHistory => hasContinuousHistory(
     timestamps: glucoseReadings
         .where((g) => g.type == GlucoseType.cgm && g.sgv > 0)

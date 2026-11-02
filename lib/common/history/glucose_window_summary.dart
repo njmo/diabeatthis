@@ -1,5 +1,6 @@
 import '../../core/domain/model/glucose.dart';
 import 'nearest_cgm_reading.dart';
+import 'time_series_coverage.dart';
 
 enum GlucoseBaselinePolicy { atOrBefore, nearest }
 
@@ -80,6 +81,12 @@ class GlucoseWindowSummary {
       aboveRange: above,
     );
   }
+
+  TimeSeriesCoverage get sampleCoverage => TimeSeriesCoverage.fromTimestamps(
+    timestamps: readings.map((reading) => reading.date),
+    start: start,
+    end: end,
+  );
 
   Duration get observed => belowRange + inRange + aboveRange;
   Duration get missing {

@@ -2,6 +2,7 @@ import '../../../../core/domain/model/low_treatment_context.dart';
 
 /// A saved consumption entry, distinct from an unaccepted AAPS suggestion.
 class RecordedLowTreatment {
+  final List<({String name, double grams})> ingredients;
   final int mealId;
   final DateTime eatenAt;
   final double? netCarbsGrams;
@@ -12,6 +13,7 @@ class RecordedLowTreatment {
   final double? suggestedCarbs;
 
   const RecordedLowTreatment({
+    this.ingredients = const [],
     required this.mealId,
     required this.eatenAt,
     required this.netCarbsGrams,

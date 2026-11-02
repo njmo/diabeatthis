@@ -1,7 +1,7 @@
+import 'package:diabeatthis/common/widgets/glucose_summary_metric.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_analysis_data.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_start_context_data.dart';
-import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_start_context_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -76,12 +76,14 @@ void main() {
         localizedMaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
-              child: MealStartContextSection(data: context([sample(409)])),
+              child: GlucoseSummaryMetric(
+                glucose: context([sample(409)]).glucose,
+              ),
             ),
           ),
         ),
       );
-      expect(find.text('132'), findsOneWidget);
+      expect(find.text('132 mg/dl'), findsOneWidget);
       expect(find.byIcon(Icons.south_east_rounded), findsOneWidget);
       expect(find.text('Brak zapisanego kierunku zmian'), findsNothing);
       expect(tester.takeException(), isNull);
@@ -95,7 +97,7 @@ void main() {
         localizedMaterialApp(
           home: Scaffold(
             body: SingleChildScrollView(
-              child: MealStartContextSection(data: context([])),
+              child: GlucoseSummaryMetric(glucose: context([]).glucose),
             ),
           ),
         ),
@@ -112,14 +114,14 @@ void main() {
       localizedMaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
-            child: MealStartContextSection(
-              data: context([sample(409, direction: '')]),
+            child: GlucoseSummaryMetric(
+              glucose: context([sample(409, direction: '')]).glucose,
             ),
           ),
         ),
       ),
     );
-    expect(find.text('132'), findsOneWidget);
+    expect(find.text('132 mg/dl'), findsOneWidget);
     expect(find.text('Brak zapisanego kierunku zmian'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

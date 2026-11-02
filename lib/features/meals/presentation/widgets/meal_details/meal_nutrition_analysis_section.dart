@@ -14,8 +14,17 @@ import 'meal_metric_components.dart';
 
 class MealNutritionAnalysisSection extends StatelessWidget {
   final MealDetailsData details;
+  final bool? initiallyExpanded;
+  final bool inline;
+  final bool showSummary;
 
-  const MealNutritionAnalysisSection({super.key, required this.details});
+  const MealNutritionAnalysisSection({
+    super.key,
+    required this.details,
+    this.initiallyExpanded,
+    this.inline = false,
+    this.showSummary = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,14 +38,16 @@ class MealNutritionAnalysisSection extends StatelessWidget {
     );
 
     return MealSectionTile(
+      collapsible: !inline,
       title: context.lang.mealNutritionTitle,
-      initiallyExpanded: !details.meal.isEaten,
+      initiallyExpanded: initiallyExpanded ?? !details.meal.isEaten,
       children: [
-        MealNutritionMacroSummary(
-          nutrition: nutrition,
-          hasAddOn: details.hasAddOn,
-          addOnNetCarbsG: details.addOnNetCarbsG,
-        ),
+        if (showSummary)
+          MealNutritionMacroSummary(
+            nutrition: nutrition,
+            hasAddOn: details.hasAddOn,
+            addOnNetCarbsG: details.addOnNetCarbsG,
+          ),
         const SizedBox(height: 12),
         for (final ingredient in details.ingredients)
           MealIngredientTile(

@@ -14,10 +14,12 @@ import 'meal_wizard_history_row.dart';
 class MealAdviceHistorySection extends StatelessWidget {
   final MealDetailsData details;
   final MealAnalysisData? analysis;
+  final bool inline;
   const MealAdviceHistorySection({
     super.key,
     required this.details,
     required this.analysis,
+    this.inline = false,
   });
 
   @override
@@ -31,6 +33,7 @@ class MealAdviceHistorySection extends StatelessWidget {
         : MealAdviceHistoryComparison(history);
     final stats = history?.glucoseStats;
     return MealSectionTile(
+      collapsible: !inline,
       title: context.lang.uiAdviceAndRecordedEvents,
       children: [
         MealInfoRow(

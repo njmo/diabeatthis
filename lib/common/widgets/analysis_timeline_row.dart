@@ -6,7 +6,7 @@ class AnalysisTimelineRow extends StatelessWidget {
   final String detail;
   final IconData icon;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Widget? trailing;
 
   const AnalysisTimelineRow({
@@ -16,7 +16,7 @@ class AnalysisTimelineRow extends StatelessWidget {
     required this.detail,
     required this.icon,
     required this.selected,
-    required this.onTap,
+    this.onTap,
     this.trailing,
   });
 

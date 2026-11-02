@@ -7,6 +7,7 @@ import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../core/domain/model/treatment_base.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
+import '../use_cases/select_preceding_context_use_case.dart';
 import 'before_meal_windows.dart';
 import 'extended_carb_plan_context.dart';
 import 'meal_activity_context.dart';
@@ -46,6 +47,14 @@ class BeforeMealContext {
   final List<MealActivityContext>? activities;
   final Duration? podAge;
   final Set<BeforeMealSource> failedSources;
+
+  static const precedingMealWindow = SelectPrecedingContextUseCase.mealWindow;
+
+  RecordedMealContext? get precedingMeal =>
+      const SelectPrecedingContextUseCase().meal(priorMeals, asOf, mealId);
+
+  MealActivityContext? get recentPrecedingActivity =>
+      const SelectPrecedingContextUseCase().activity(activities, asOf);
 
   BeforeMealContext({
     required this.asOf,

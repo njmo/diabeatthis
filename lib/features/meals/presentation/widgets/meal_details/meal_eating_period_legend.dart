@@ -29,7 +29,7 @@ class MealEatingPeriodLegend extends StatelessWidget {
             width: 18,
             height: 18,
             decoration: BoxDecoration(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.14),
+              color: theme.colorScheme.primary.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(4),
             ),
           ),

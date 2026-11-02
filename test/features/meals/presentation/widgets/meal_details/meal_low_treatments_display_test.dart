@@ -2,46 +2,43 @@ import 'package:diabeatthis/core/domain/model/carbs_label_mode.dart';
 import 'package:diabeatthis/core/domain/model/low_treatment_context.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_details_data.dart';
 import 'package:diabeatthis/features/meals/presentation/models/meal_page_state.dart';
-import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_header.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_low_treatments_section.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_preview_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../helpers/localized_material_app.dart';
 
 void main() {
-  testWidgets('shows low treatment chip and section for linked treatments', (
-    tester,
-  ) async {
-    final details = mealDetailsWithLowTreatment();
+  testWidgets(
+    'shows the meal header and inline details for linked low treatments',
+    (tester) async {
+      final details = mealDetailsWithLowTreatment();
 
-    await tester.pumpWidget(
-      localizedMaterialApp(
-        home: Scaffold(
-          body: ListView(
-            children: [
-              MealHeader(state: MealPageState(details: details)),
-              MealLowTreatmentsSection(details: details),
-            ],
+      await tester.pumpWidget(
+        localizedMaterialApp(
+          home: Scaffold(
+            body: ListView(
+              children: [
+                MealPreviewHeader(state: MealPageState(details: details)),
+                MealLowTreatmentsSection(details: details),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(
-      find.descendant(of: find.byType(Chip), matching: find.text('Dosłodzono')),
-      findsOneWidget,
-    );
-    expect(find.text('Dosłodzono po 45 min'), findsOneWidget);
-    expect(find.text('Dosłodzenia'), findsOneWidget);
-    expect(find.text('12:45 • po 45 min'), findsOneWidget);
-    expect(find.text('Niski cukier • Ekran główny'), findsOneWidget);
-    expect(find.text('Glukoza: 10g'), findsOneWidget);
-    expect(
-      find.text('Razem 10g netto • sugestia 12g • w 15 min'),
-      findsOneWidget,
-    );
-  });
+      expect(find.text('Obiad'), findsOneWidget);
+      expect(find.text('Dosłodzenia'), findsOneWidget);
+      expect(find.text('12:45 • po 45 min'), findsOneWidget);
+      expect(find.text('Niski cukier • Ekran główny'), findsOneWidget);
+      expect(find.text('Glukoza: 10g'), findsOneWidget);
+      expect(
+        find.text('Razem 10g netto • sugestia 12g • w 15 min'),
+        findsOneWidget,
+      );
+    },
+  );
 }
 
 MealDetailsData mealDetailsWithLowTreatment() {

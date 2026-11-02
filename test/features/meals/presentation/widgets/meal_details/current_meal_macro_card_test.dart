@@ -1,10 +1,8 @@
-import 'package:diabeatthis/common/widgets/detail_section_card.dart';
-import 'package:diabeatthis/features/meals/common/widgets/meal_macro_comparison.dart';
+import 'package:diabeatthis/common/widgets/swipeable_cards.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_details_data.dart';
 import 'package:diabeatthis/features/meals/presentation/models/meal_page_state.dart';
 import 'package:diabeatthis/features/meals/presentation/screens/meal_page.dart';
-import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/current_meal_macro_comparison.dart';
-import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/similar_meals_section.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_portion_overview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -41,65 +39,46 @@ void main() {
     ),
   );
 
-  testWidgets(
-    'basic mode shows a standalone macro card above similar meals; advanced hides it',
-    (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: localizedMaterialApp(
-            home: Scaffold(
-              body: MealPageBody(state: MealPageState(details: details)),
-            ),
+  testWidgets('macros appear only on the portion tab', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: localizedMaterialApp(
+          home: Scaffold(
+            body: MealPageBody(state: MealPageState(details: details)),
           ),
         ),
-      );
-      await tester.pumpAndSettle();
-      final current = find.byType(CurrentMealMacroComparison);
-      final similar = find.byType(SimilarMealsSection);
-      expect(current, findsOneWidget);
-      expect(
-        find.descendant(of: current, matching: find.byType(DetailSectionCard)),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: current, matching: find.text('WW netto 25 g')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: similar,
-          matching: find.byType(MealMacroComparison),
-        ),
-        findsNothing,
-      );
-      expect(
-        tester.getTopLeft(current).dy,
-        lessThan(tester.getTopLeft(similar).dy),
-      );
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(MealPortionOverview), findsNothing);
+    tester
+        .widget<SwipeableCards>(find.byType(SwipeableCards))
+        .controller
+        .animateTo(1);
+    await tester.pumpAndSettle();
+    expect(find.byType(MealPortionOverview), findsOneWidget);
+    expect(find.text('30 g'), findsOneWidget);
+    expect(find.text('250 kcal'), findsOneWidget);
+    tester
+        .widget<SwipeableCards>(find.byType(SwipeableCards))
+        .controller
+        .animateTo(0);
+    await tester.pumpAndSettle();
+    expect(find.byType(MealPortionOverview), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
-      await tester.tap(find.text('Zaawansowany'));
-      await tester.pumpAndSettle();
-      expect(current, findsNothing);
-      expect(similar, findsOneWidget);
-      await tester.tap(find.text('Podstawowy'));
-      await tester.pumpAndSettle();
-      expect(current, findsOneWidget);
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets('missing macro snapshot does not leave an empty card', (
+  testWidgets('missing macro snapshot is explicitly unconfirmed', (
     tester,
   ) async {
     await tester.pumpWidget(
       localizedMaterialApp(
         home: Scaffold(
-          body: CurrentMealMacroComparison(
-            details: mealDetailsWithLowTreatment(),
-          ),
+          body: MealPortionOverview(details: mealDetailsWithLowTreatment()),
         ),
       ),
     );
-    expect(find.byType(DetailSectionCard), findsNothing);
+    expect(find.text('250 kcal'), findsNothing);
+    expect(find.text('Nie potwierdzono zjedzonej porcji'), findsOneWidget);
   });
 }

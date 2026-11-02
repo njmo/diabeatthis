@@ -23,5 +23,10 @@ class TimeSeriesCoverage {
   final int available;
   final int expected;
 
+  int get missing => (expected - available).clamp(0, expected);
+
+  /// Presentation threshold: strictly more than 10% of expected samples.
+  bool get hasSignificantMissing => expected > 0 && missing * 10 > expected;
+
   bool get isBelowHalf => expected > 0 && available * 2 < expected;
 }

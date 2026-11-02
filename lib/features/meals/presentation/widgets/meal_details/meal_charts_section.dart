@@ -24,6 +24,8 @@ class MealChartsSection extends HookConsumerWidget {
   final String? analysisError;
   final DateTime? selectedTimestamp;
   final bool advanced;
+  final bool compact;
+  final bool embedded;
 
   const MealChartsSection({
     super.key,
@@ -32,6 +34,8 @@ class MealChartsSection extends HookConsumerWidget {
     required this.analysisError,
     required this.selectedTimestamp,
     this.advanced = false,
+    this.compact = false,
+    this.embedded = false,
   });
 
   @override
@@ -51,18 +55,20 @@ class MealChartsSection extends HookConsumerWidget {
     void select(DateTime time) => ref
         .read(mealDetailsControllerProvider(details.meal.id).notifier)
         .selectTimestamp(time);
-    return DetailSectionCard(
-      title: messages.mealReviewTimeline,
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: embedded
+              ? const EdgeInsets.symmetric(vertical: 12)
+              : const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 '${mealTime(data.chartStart)}–${mealTime(data.chartEnd)} · mg/dl',
               ),
-              const SizedBox(height: 16),
+              if (advanced) const SizedBox(height: 16),
               if (advanced)
                 Wrap(
                   spacing: 8,
@@ -84,9 +90,10 @@ class MealChartsSection extends HookConsumerWidget {
                 chartStart: data.chartStart,
                 chartEnd: data.chartEnd,
                 focusTimestamp: selected,
-                selectedTimestamp: advanced ? selectedTimestamp : null,
+                selectedTimestamp: selectedTimestamp,
                 fitToWidth: !advanced || !zoomed.value,
                 showDeviceMetrics: false,
+                overviewStyle: compact,
                 glucoseReadings: data.glucoseReadings,
                 deviceStatuses: data.deviceStatuses,
                 events:
@@ -97,28 +104,36 @@ class MealChartsSection extends HookConsumerWidget {
                               !event.timestamp.isAfter(data.chartEnd),
                         )
                         .toList(),
-                ranges: mealTimelineChartRanges(
-                  data,
-                  details: details,
-                  messages: messages,
-                  eatingColor: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                onTimestampSelected: advanced ? select : null,
+                ranges:
+                    mealTimelineChartRanges(
+                          data,
+                          details: details,
+                          messages: messages,
+                          eatingColor: Theme.of(context).colorScheme.primary,
+                        )
+                        .where(
+                          (range) =>
+                              !compact ||
+                              range.label == messages.mealEatingPeriod,
+                        )
+                        .toList(),
+                onTimestampSelected: select,
               ),
               const SizedBox(height: 8),
-              MealCorrectionsSummary(analysis: data),
+              if (!compact) MealCorrectionsSummary(analysis: data),
               const SizedBox(height: 12),
-              GlucoseBoundaryMetrics(
-                summary:
-                    data.outcomeContext?.glucoseSummary.window ??
-                    GlucosePeriodSummary.calculate(
-                      data.glucoseReadings,
-                      data.mealTime,
-                      data.chartEnd,
-                      baselinePolicy: GlucoseBaselinePolicy.nearest,
-                    ).window,
-                startLabel: messages.mealChartStartGlucose,
-              ),
+              if (!compact)
+                GlucoseBoundaryMetrics(
+                  summary:
+                      data.outcomeContext?.glucoseSummary.window ??
+                      GlucosePeriodSummary.calculate(
+                        data.glucoseReadings,
+                        data.mealTime,
+                        data.chartEnd,
+                        baselinePolicy: GlucoseBaselinePolicy.nearest,
+                      ).window,
+                  startLabel: messages.mealChartStartGlucose,
+                ),
               const SizedBox(height: 12),
               MealEatingPeriodLegend(details: details),
               const SizedBox(height: 8),
@@ -132,7 +147,7 @@ class MealChartsSection extends HookConsumerWidget {
                   messages.mealReviewTouchChart,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-              if (advanced && selectedTimestamp != null) ...[
+              if (selectedTimestamp != null) ...[
                 if (selected.isBefore(data.chartStart) ||
                     selected.isAfter(data.chartEnd))
                   Text(messages.mealReviewOutsideWindow),
@@ -174,5 +189,11 @@ class MealChartsSection extends HookConsumerWidget {
         ),
       ],
     );
+    return embedded
+        ? content
+        : DetailSectionCard(
+            title: messages.mealReviewTimeline,
+            children: [content],
+          );
   }
 }

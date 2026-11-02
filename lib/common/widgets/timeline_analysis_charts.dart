@@ -13,6 +13,7 @@ class TimelineAnalysisCharts extends StatefulWidget {
   final DateTime? focusTimestamp;
   final bool fitToWidth;
   final bool showDeviceMetrics;
+  final bool overviewStyle;
   final DateTime? selectedTimestamp;
   final List<Glucose> glucoseReadings;
   final List<DeviceStatus> deviceStatuses;
@@ -27,6 +28,7 @@ class TimelineAnalysisCharts extends StatefulWidget {
     this.focusTimestamp,
     this.fitToWidth = false,
     this.showDeviceMetrics = true,
+    this.overviewStyle = false,
     this.selectedTimestamp,
     required this.glucoseReadings,
     required this.deviceStatuses,
@@ -79,7 +81,9 @@ class _TimelineAnalysisChartsState extends State<TimelineAnalysisCharts> {
         return SingleChildScrollView(
           controller: _scrollController,
           scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
+          physics: widget.fitToWidth
+              ? const NeverScrollableScrollPhysics()
+              : const BouncingScrollPhysics(),
           child: SizedBox(
             width: chartWidth,
             child: Column(
@@ -93,6 +97,7 @@ class _TimelineAnalysisChartsState extends State<TimelineAnalysisCharts> {
                   events: widget.events,
                   ranges: widget.ranges,
                   showBottomTitles: !widget.showDeviceMetrics,
+                  overviewStyle: widget.overviewStyle,
                   onTimestampSelected: widget.onTimestampSelected,
                 ),
                 if (widget.showDeviceMetrics) ...[
@@ -178,6 +183,7 @@ class TimelineGlucoseChart extends StatelessWidget {
   final List<TimelineChartEvent> events;
   final List<TimelineChartRange> ranges;
   final bool showBottomTitles;
+  final bool overviewStyle;
   final ValueChanged<DateTime>? onTimestampSelected;
 
   const TimelineGlucoseChart({
@@ -189,6 +195,7 @@ class TimelineGlucoseChart extends StatelessWidget {
     this.events = const [],
     this.ranges = const [],
     this.showBottomTitles = true,
+    this.overviewStyle = false,
     this.onTimestampSelected,
   });
 
@@ -196,7 +203,7 @@ class TimelineGlucoseChart extends StatelessWidget {
   Widget build(BuildContext context) {
     if (glucoseReadings.isEmpty) {
       return SizedBox(
-        height: 260,
+        height: overviewStyle ? 220 : 260,
         child: Center(child: Text(context.lang.commonNoGlucoseReadings)),
       );
     }
@@ -218,7 +225,7 @@ class TimelineGlucoseChart extends StatelessWidget {
           ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
     return SizedBox(
-      height: 260,
+      height: overviewStyle ? 220 : 260,
       child: LineChart(
         LineChartData(
           minX: 0,
@@ -238,7 +245,7 @@ class TimelineGlucoseChart extends StatelessWidget {
           ),
           lineBarsData: [
             ..._glucoseSegments(bounds),
-            ..._eventMarkers(bounds, allEvents),
+            if (!overviewStyle) ..._eventMarkers(bounds, allEvents),
           ],
           titlesData: _titles(context, bounds),
           gridData: FlGridData(
@@ -248,14 +255,18 @@ class TimelineGlucoseChart extends StatelessWidget {
               final isThreshold = value == 70 || value == 180 || value == 250;
               return FlLine(
                 color: isThreshold
-                    ? scheme.outline.withValues(alpha: 0.45)
-                    : scheme.outlineVariant.withValues(alpha: 0.45),
+                    ? scheme.outline.withValues(
+                        alpha: overviewStyle ? 0.18 : 0.45,
+                      )
+                    : scheme.outlineVariant.withValues(
+                        alpha: overviewStyle ? 0.18 : 0.45,
+                      ),
                 strokeWidth: isThreshold ? 1.2 : 0.8,
               );
             },
           ),
           borderData: FlBorderData(
-            show: true,
+            show: !overviewStyle,
             border: Border.all(
               color: scheme.outlineVariant.withValues(alpha: 0.8),
             ),

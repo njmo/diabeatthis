@@ -49,6 +49,7 @@ class RecordedLowTreatmentRepository {
       meal.id,
     );
     final mapper = MealDetailsDataMapper(db: db);
+    final consumedIngredients = <({String name, double grams})>[];
     var carbs = ingredients.isEmpty ? null : 0.0;
     for (final ingredient in ingredients) {
       final mapped = await mapper.mapIngredient(
@@ -57,6 +58,10 @@ class RecordedLowTreatmentRepository {
         plannedSnapshot: null,
         consumedSnapshot: null,
       );
+      consumedIngredients.add((
+        name: mapped.ingredientName,
+        grams: mapped.consumedTotalGrams,
+      ));
       final amount = mapped.consumedNetCarbsContribution;
       if (!amount.isFinite || amount < 0) {
         carbs = null;
@@ -66,6 +71,7 @@ class RecordedLowTreatmentRepository {
     }
     final suggested = context?.suggestedCarbs;
     return RecordedLowTreatment(
+      ingredients: List.unmodifiable(consumedIngredients),
       mealId: meal.id,
       eatenAt: DateTime.fromMillisecondsSinceEpoch(meal.plannedAt),
       netCarbsGrams: carbs,

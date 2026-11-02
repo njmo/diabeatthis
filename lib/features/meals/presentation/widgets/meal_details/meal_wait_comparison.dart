@@ -3,13 +3,19 @@ import 'package:flutter/material.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/utils/format_duration_label.dart';
 import '../../../../../common/widgets/analysis_metric.dart';
+import '../../../../../common/widgets/plan_actual_meter.dart';
 import '../../../../../common/widgets/responsive_metric_list.dart';
 import '../../../data/models/meal_start_context_data.dart';
 
 class MealWaitComparison extends StatelessWidget {
   final MealStartContextData data;
+  final bool visual;
 
-  const MealWaitComparison({super.key, required this.data});
+  const MealWaitComparison({
+    super.key,
+    required this.data,
+    this.visual = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +55,15 @@ class MealWaitComparison extends StatelessWidget {
               ),
             ],
           ),
+          if (visual && actual != null) ...[
+            const SizedBox(height: 12),
+            PlanActualMeter(
+              planned: proposed.inSeconds.toDouble(),
+              actual: actual.inSeconds.toDouble(),
+              semanticLabel:
+                  '${messages.mealWaitProposed}: ${formatDurationLabel(proposed)}; ${messages.mealWaitActual}: ${formatDurationLabel(actual)}',
+            ),
+          ],
           if (difference != null) ...[
             const SizedBox(height: 8),
             Text(
