@@ -62,7 +62,7 @@ class MealList extends HookConsumerWidget {
             ],
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: MealCategoryField(
               value: category.value,
               filter: true,

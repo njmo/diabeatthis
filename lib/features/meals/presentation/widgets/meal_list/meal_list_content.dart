@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../../../../common/history/history_day_group.dart';
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/widgets/history_day_section.dart';
 import '../../../../../core/domain/model/meal.dart' as domain;
 import 'meal_list_item.dart';
 
@@ -49,6 +51,7 @@ class MealListContent extends StatelessWidget {
       return Center(child: Text(context.lang.mealEmptyList));
     }
 
+    final groups = groupHistoryByDay(meals, (meal) => meal.plannedAt);
     final bottomPadding = 24 + MediaQuery.paddingOf(context).bottom;
 
     return NotificationListener<ScrollNotification>(
@@ -66,17 +69,25 @@ class MealListContent extends StatelessWidget {
         scrollCacheExtent: const ScrollCacheExtent.pixels(0),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         separatorBuilder: (_, _) => const SizedBox(height: 10),
-        itemCount: meals.length + 1,
+        itemCount: groups.length + 1,
         itemBuilder: (context, index) {
-          if (index == meals.length) {
+          if (index == groups.length) {
             return _buildTail(context);
           }
 
-          final meal = meals[index];
-          return MealListItem(
-            meal: meal,
-            onTap: () => onMealTap(meal),
-            onDelete: () => onMealDelete(meal),
+          final group = groups[index];
+          return HistoryDaySection(
+            key: ValueKey(group.date),
+            date: group.date,
+            itemCount: group.items.length,
+            itemBuilder: (context, mealIndex) {
+              final meal = group.items[mealIndex];
+              return MealListItem(
+                meal: meal,
+                onTap: () => onMealTap(meal),
+                onDelete: () => onMealDelete(meal),
+              );
+            },
           );
         },
       ),

@@ -5,7 +5,9 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/history/history_day_group.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/history_day_section.dart';
 import '../../data/providers/activity_provider.dart';
 import 'activity_log_card.dart';
 import 'activity_log_list_tail.dart';
@@ -45,6 +47,10 @@ class ActivityLogList extends HookConsumerWidget {
         final visibleActivityLogs = activityLogs
             .take(visibleLimit.value)
             .toList(growable: false);
+        final groups = groupHistoryByDay(
+          visibleActivityLogs,
+          (activity) => activity.startedAt,
+        );
         final hasMore = visibleActivityLogs.length < activityLogs.length;
 
         void loadNextPage() {
@@ -85,9 +91,9 @@ class ActivityLogList extends HookConsumerWidget {
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
                 separatorBuilder: (_, _) => const SizedBox(height: 8),
-                itemCount: visibleActivityLogs.length + 1,
+                itemCount: groups.length + 1,
                 itemBuilder: (context, index) {
-                  if (index == visibleActivityLogs.length) {
+                  if (index == groups.length) {
                     return ActivityLogListTail(
                       isLoading: false,
                       hasMore: hasMore,
@@ -96,14 +102,24 @@ class ActivityLogList extends HookConsumerWidget {
                     );
                   }
 
-                  final activityLog = visibleActivityLogs[index];
-                  return ActivityLogCard(
-                    name: activityLog.activityName,
-                    startedAt: activityLog.startedAt,
-                    endedAt: activityLog.endedAt,
-                    onTap: () {
-                      context.router.push(
-                        routes.ActivityLogRoute(activityLogId: activityLog.id),
+                  final group = groups[index];
+                  return HistoryDaySection(
+                    key: ValueKey(group.date),
+                    date: group.date,
+                    itemCount: group.items.length,
+                    itemBuilder: (context, activityIndex) {
+                      final activityLog = group.items[activityIndex];
+                      return ActivityLogCard(
+                        name: activityLog.activityName,
+                        startedAt: activityLog.startedAt,
+                        endedAt: activityLog.endedAt,
+                        onTap: () {
+                          context.router.push(
+                            routes.ActivityLogRoute(
+                              activityLogId: activityLog.id,
+                            ),
+                          );
+                        },
                       );
                     },
                   );

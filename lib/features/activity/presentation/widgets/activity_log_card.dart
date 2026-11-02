@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/history_entry_row.dart';
 import 'activity_log_meta_pill.dart';
 import 'activity_log_status_chip.dart';
 
@@ -22,65 +23,21 @@ class ActivityLogCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isActive = endedAt == null;
 
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 1,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  ActivityLogStatusChip(active: isActive),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  ActivityLogMetaPill(
-                    icon: Icons.calendar_today,
-                    text: _formatDate(startedAt),
-                  ),
-                  ActivityLogMetaPill(
-                    icon: Icons.access_time,
-                    text: _formatTimeRange(startedAt, endedAt),
-                  ),
-                  ActivityLogMetaPill(
-                    icon: Icons.timer,
-                    text: _formatDuration(startedAt, endedAt),
-                  ),
-                ],
-              ),
-            ],
-          ),
+    return HistoryEntryRow(
+      name: name,
+      onTap: onTap,
+      metadata: [
+        ActivityLogStatusChip(active: isActive),
+        ActivityLogMetaPill(
+          icon: Icons.access_time,
+          text: _formatTimeRange(startedAt.toLocal(), endedAt?.toLocal()),
         ),
-      ),
+        ActivityLogMetaPill(
+          icon: Icons.timer,
+          text: _formatDuration(startedAt, endedAt),
+        ),
+      ],
     );
-  }
-
-  static String _formatDate(DateTime date) {
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    return '$day.$month.${date.year}';
   }
 
   static String _formatTime(DateTime date) {
