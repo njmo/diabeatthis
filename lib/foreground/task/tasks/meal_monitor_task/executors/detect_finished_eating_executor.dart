@@ -19,6 +19,7 @@ import '../../../base/runtime_context.dart';
 import '../helpers/bolus_reminder_helper.dart';
 import '../helpers/meal_add_on_bolus_waiter.dart';
 import '../helpers/record_meal_wizard_link.dart';
+import '../helpers/wait_for_meal_bolus_delivery.dart';
 import '../meal_monitor_context.dart';
 import 'finalize_meal_executor.dart';
 import 'meal_monitor_state_executor.dart';
@@ -220,14 +221,20 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           .read(notificationsControllerForegroundProvider)
           .cancelMealNotifications(mealMonitorContext.activeMeal!.id);
       mealMonitorContext.throwIfStopped(runtimeContext);
+      final confirmed = await const WaitForMealBolusDelivery()(
+        runtimeContext,
+        mealMonitorContext,
+        calculatorResponse.data,
+      );
+      mealMonitorContext.throwIfStopped(runtimeContext);
       await const RecordMealWizardLink()(
         runtimeContext,
-        calculatorResponse.data,
+        confirmed.wizard,
         mealMonitorContext.activeMeal!.id,
         type: MealWizardRelationType.continuation,
       );
       mealMonitorContext.throwIfStopped(runtimeContext);
-      consumeBolusWizard(runtimeContext.container, calculatorResponse.data);
+      consumeBolusWizard(runtimeContext.container, confirmed.wizard);
       return true;
     }
 
@@ -246,14 +253,20 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
       isAddOn: true,
       ensureActive: () => mealMonitorContext.throwIfStopped(runtimeContext),
       onBolusRecorded: (wizard) async {
+        final confirmed = await const WaitForMealBolusDelivery()(
+          runtimeContext,
+          mealMonitorContext,
+          wizard,
+        );
+        mealMonitorContext.throwIfStopped(runtimeContext);
         await const RecordMealWizardLink()(
           runtimeContext,
-          wizard,
+          confirmed.wizard,
           mealMonitorContext.activeMeal!.id,
           type: MealWizardRelationType.continuation,
         );
         mealMonitorContext.throwIfStopped(runtimeContext);
-        consumeBolusWizard(runtimeContext.container, wizard);
+        consumeBolusWizard(runtimeContext.container, confirmed.wizard);
       },
     );
   }

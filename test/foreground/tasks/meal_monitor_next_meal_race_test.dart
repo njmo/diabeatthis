@@ -12,7 +12,6 @@ import 'package:diabeatthis/features/meals/data/providers/meal_database_provider
 import 'package:diabeatthis/foreground/collector/next_meal_collector.dart';
 import 'package:diabeatthis/foreground/event/internal/meal_event.dart';
 import 'package:diabeatthis/foreground/event/internal/meal_status_changed_event.dart';
-import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
 import 'package:diabeatthis/foreground/task/base/collector_context.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/detect_finished_eating_executor.dart';
@@ -25,6 +24,7 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/delivered_meal_bolus.dart';
 import '../utils/fake_notifications_controller.dart';
 import '../utils/fake_runtime_harness.dart';
 
@@ -220,19 +220,18 @@ void main() {
             expect(notifications.shownEvents, hasLength(1));
             expect(updates, isEmpty);
 
-            harness.dispatchEventToTask(
-              task,
-              TreatmentAvailableEvent<BolusWizard>(
-                BolusWizard(
-                  nightscoutObjectId: null,
-                  createdAt: now,
-                  date: now,
-                  glucose: 120,
-                  units: 'mg/dl',
-                  notes: null,
-                  calculatorResult: null,
-                ),
+            dispatchDeliveredMealBolus(
+              harness,
+              BolusWizard(
+                nightscoutObjectId: null,
+                createdAt: now,
+                date: now,
+                glucose: 120,
+                units: 'mg/dl',
+                notes: null,
+                calculatorResult: null,
               ),
+              task: task,
             );
             async.flushMicrotasks();
             expect(updates, [(84, 'bolused-eating')]);

@@ -101,6 +101,7 @@ class MyTaskHandler extends TaskHandler with Logging {
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
     _isStopping = true;
     try {
+      await _externalEventHandler?.flushPendingTreatments();
       await ForegroundRuntimeDisposer().dispose(
         scheduler: _taskScheduler,
         collectors: _collectors ?? const [],

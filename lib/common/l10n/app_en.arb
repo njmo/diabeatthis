@@ -1227,7 +1227,7 @@
   "uiFirstMarkTheMealAsEatenThenSaveThe": "First mark the meal as eaten, then save the summary.",
   "mealPendingAdviceUnavailable": "Current CGM readings or complete IOB/COB data are missing. Open the meal and choose a decision manually.",
   "uiForNonEULabelsCarbohydratesMustBeGreaterThan": "For non-EU labels, carbohydrates must be greater than fiber.",
-  "uiLabelCarbohydratesAreAlreadyNet": "Label carbohydrates are already net",
+  "uiLabelCarbohydratesAreAlreadyNet": "Carbohydrates are already net",
   "uiFiberIsSubtractedFromTotalCarbohydrates": "Fiber is subtracted from total carbohydrates",
   "uiEU": "EU",
   "uiNonEU": "non-EU",
@@ -2804,5 +2804,6 @@
   "mealEditName": "Edit name",
   "mealEditTime": "Edit time",
   "mealEditCategory": "Change meal category",
+  "mealWaitingForDeliveryConfirmation": "Waiting for insulin delivery confirmation",
   "mealCategoryChoose": "Choose a meal category"
 }

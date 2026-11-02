@@ -1,7 +1,9 @@
 import 'package:diabeatthis/common/events/data/task/task_data_synchronization_payload.dart';
 import 'package:diabeatthis/common/events/task_event_payload.dart';
+import 'package:diabeatthis/common/treatments/calculator_submission.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/models/wizard_carbohydrate_component.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart' as domain;
 import 'package:diabeatthis/core/domain/model/manual_bolus.dart' as domain;
 import 'package:diabeatthis/core/domain/model/temporary_target.dart' as domain;
@@ -10,6 +12,7 @@ import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/foreground/event/external/local_treatments/local_treatments_event.dart';
 import 'package:diabeatthis/foreground/event/external/local_treatments/local_treatments_handler.dart';
+import 'package:diabeatthis/foreground/event/internal/calculator_submission_changed_event.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/event/router/task_event_router.dart';
 import 'package:diabeatthis/foreground/providers/task_event_router_provider.dart';
@@ -172,7 +175,7 @@ void main() {
     );
 
     test(
-      'preserves bolus wizard related treatments from separate broadcasts',
+      'attaches calculator carbohydrates while preserving actual delivery from separate broadcasts',
       () async {
         final db = DatabaseImpl(NativeDatabase.memory());
         final container = ProviderContainer(
@@ -231,11 +234,44 @@ void main() {
 
         expect(bolusWizards, hasLength(1));
         expect(manualBoluses, hasLength(1));
-        expect(treats, hasLength(1));
+        expect(treats, isEmpty);
+        expect(
+          WizardCarbohydrateComponent.fromJson(
+            bolusWizards.single.carbohydrateComponent!,
+          ).externalId,
+          'treat-1',
+        );
         expect(harness.emittedEvents, [
+          isA<CalculatorSubmissionChangedEvent>().having(
+            (event) => event.submission.status,
+            'status',
+            CalculatorSubmissionStatus.awaitingDeliveryConfirmation,
+          ),
           isA<TreatmentAvailableEvent<domain.BolusWizard>>(),
+          isA<CalculatorSubmissionChangedEvent>().having(
+            (event) => event.submission.status,
+            'status',
+            CalculatorSubmissionStatus.deliveryConfirmed,
+          ),
           isA<TreatmentAvailableEvent<domain.ManualBolus>>(),
+          isA<CalculatorSubmissionChangedEvent>()
+              .having(
+                (event) => event.submission.status,
+                'status',
+                CalculatorSubmissionStatus.deliveryConfirmed,
+              )
+              .having(
+                (event) =>
+                    event.submission.wizard.carbohydrateRecord?.externalId,
+                'carbohydrate component',
+                'treat-1',
+              ),
           isA<TreatmentAvailableEvent<domain.Treat>>(),
+          isA<TreatmentAvailableEvent<domain.BolusWizard>>().having(
+            (event) => event.data.carbohydrateRecord?.externalId,
+            'carbohydrate component',
+            'treat-1',
+          ),
         ]);
 
         await harness.dispose();
@@ -244,7 +280,7 @@ void main() {
     );
 
     test(
-      'preserves treatment received before matching bolus wizard record',
+      'attaches carbohydrates received before their matching calculator record',
       () async {
         final db = DatabaseImpl(NativeDatabase.memory());
         final container = ProviderContainer(
@@ -303,8 +339,13 @@ void main() {
 
         expect(bolusWizards, hasLength(1));
         expect(manualBoluses, hasLength(1));
-        expect(treats, hasLength(1));
-        expect(treats.single.externalId, 'treat-1');
+        expect(treats, isEmpty);
+        expect(
+          WizardCarbohydrateComponent.fromJson(
+            bolusWizards.single.carbohydrateComponent!,
+          ).externalId,
+          'treat-1',
+        );
 
         await harness.dispose();
         await db.close();

@@ -17,9 +17,8 @@ class MirroringTreatmentSourceRepository implements TreatmentSourceRepository {
 
   @override
   Future<List<Treatment>> pollTreatments() {
-    return _mirroring.treatments(
+    return _mirroring.normalizedTreatments(
       read: _delegate.pollTreatments,
-      extract: (treatments) => treatments,
       source: _source,
       operation: 'Treatment',
     );

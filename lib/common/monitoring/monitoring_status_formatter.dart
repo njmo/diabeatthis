@@ -22,6 +22,8 @@ class MonitoringStatusFormatter {
       ),
       MealMonitoringPhase.preparing => lang.uiPreparingForAMeal,
       MealMonitoringPhase.waitingForBolus => lang.uiWaitingForABolus,
+      MealMonitoringPhase.waitingForDeliveryConfirmation =>
+        lang.mealWaitingForDeliveryConfirmation,
       MealMonitoringPhase.waitingToEat => lang.uiWaitingToStartEating,
       MealMonitoringPhase.eating => lang.uiMealInProgress,
       MealMonitoringPhase.eatingThenBolus =>

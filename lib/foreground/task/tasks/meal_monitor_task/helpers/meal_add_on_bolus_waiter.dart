@@ -17,13 +17,12 @@ import '../../../../../core/notifications/providers/notifications_controller_pro
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
 import '../../../../../features/meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
 import '../../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
-import '../../../../../features/meals/common/models/meal_wizard_relation_type.dart';
 import '../../../../event/internal/treatment_available_event.dart';
 import '../../../../providers/latest_bolus_wizard_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
 import 'bolus_reminder_helper.dart';
-import 'record_meal_wizard_link.dart';
+import 'wait_for_meal_bolus_delivery.dart';
 
 /// Returns null for legacy meals, which retain their original monitor path.
 class MealAddOnBolusWaiter {
@@ -69,27 +68,25 @@ class MealAddOnBolusWaiter {
           !ignoredWizardKeys.contains(mealBolusWizardKey(wizard));
       Future<void> record(BolusWizard wizard) async {
         mealContext.throwIfStopped(runtime);
+        final submission = await const WaitForMealBolusDelivery()(
+          runtime,
+          mealContext,
+          wizard,
+          acceptsWizard: accepts,
+        );
+        mealContext.throwIfStopped(runtime);
         final accepted = await acceptMealAddOnBolus(
           db,
           mealId,
-          wizard,
+          submission.wizard,
           requestedAt: request.requestedAt,
         );
         mealContext.throwIfStopped(runtime);
         if (accepted == null) {
-          ignoredWizardKeys.add(mealBolusWizardKey(wizard));
+          ignoredWizardKeys.add(mealBolusWizardKey(submission.wizard));
           return;
         }
-        await const RecordMealWizardLink()(
-          runtime,
-          wizard,
-          mealId,
-          type: request.bolusConfirmed
-              ? MealWizardRelationType.continuation
-              : MealWizardRelationType.initial,
-        );
-        mealContext.throwIfStopped(runtime);
-        consumeBolusWizard(runtime.container, wizard);
+        consumeBolusWizard(runtime.container, submission.wizard);
         await refreshInstruction(runtime, mealContext, accepted);
       }
 

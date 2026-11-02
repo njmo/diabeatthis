@@ -1,4 +1,7 @@
+import 'package:diabeatthis/common/treatments/calculator_submission.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
+import 'package:diabeatthis/foreground/event/internal/calculator_submission_changed_event.dart';
+import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_event_dispatcher.dart';
 import 'package:diabeatthis/foreground/event/model/foreground_event.dart';
 import 'package:diabeatthis/foreground/providers/latest_bolus_wizard_provider.dart';
@@ -30,14 +33,29 @@ void main() {
 
     dispatch(wizard);
     expect(container.read(latestBolusWizardProvider), wizard);
-    expect(events, hasLength(1));
+    expect(
+      events.whereType<TreatmentAvailableEvent<BolusWizard>>(),
+      hasLength(1),
+    );
+    expect(
+      events
+          .whereType<CalculatorSubmissionChangedEvent>()
+          .single
+          .submission
+          .status,
+      CalculatorSubmissionStatus.awaitingDeliveryConfirmation,
+    );
     consumeBolusWizard(container, wizard);
     expect(container.read(latestBolusWizardProvider), isNull);
 
     final next = wizardAt(wizard.createdAt.add(const Duration(minutes: 1)));
     dispatch(next);
     expect(container.read(latestBolusWizardProvider), next);
-    expect(events, hasLength(2));
+    expect(
+      events.whereType<TreatmentAvailableEvent<BolusWizard>>(),
+      hasLength(2),
+    );
+    expect(events.whereType<CalculatorSubmissionChangedEvent>(), hasLength(2));
   });
 
   test('consuming an older wizard preserves a newer cached wizard', () {

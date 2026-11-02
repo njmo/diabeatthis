@@ -18,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../../foreground/tasks/meal_monitor_test.dart'
     show testBolusWizard;
 import '../../../../foreground/utils/fake_notifications_controller.dart';
+import '../../../../helpers/delivered_meal_bolus.dart';
 
 void main() {
   final start = DateTime(2026, 11, 2, 12);
@@ -116,7 +117,7 @@ void main() {
         (await readMealAddOnBolusContext(db, 1))!.reportedExtendedCarbs,
         19,
       );
-      await acceptMealAddOnBolus(
+      await acceptDeliveredMealAddOnBolus(
         db,
         1,
         testBolusWizard(
@@ -173,6 +174,7 @@ void main() {
         "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('first','aaps',?,30)",
         [start.millisecondsSinceEpoch],
       );
+      await seedDeliveredMealBolus(db, start);
       await db.mealWizardLinkDao.link(
         mealId: 1,
         localWizardId: 'first',
@@ -204,6 +206,7 @@ void main() {
         "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('between','aaps',?,44)",
         [now.add(const Duration(seconds: 30)).millisecondsSinceEpoch],
       );
+      await seedDeliveredMealBolus(db, now.add(const Duration(seconds: 30)));
       final second = await add(
         meat: 300,
         at: now.add(const Duration(minutes: 1)),
@@ -228,10 +231,10 @@ void main() {
         carbs: 44,
       );
       expect(
-        await acceptMealAddOnBolus(db, 1, wizard, requestedAt: now),
+        await acceptDeliveredMealAddOnBolus(db, 1, wizard, requestedAt: now),
         isNull,
       );
-      final accepted = await acceptMealAddOnBolus(
+      final accepted = await acceptDeliveredMealAddOnBolus(
         db,
         1,
         wizard,
@@ -249,6 +252,7 @@ void main() {
         "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('early','aaps',?,42)",
         [start.add(const Duration(minutes: 5)).millisecondsSinceEpoch],
       );
+      await seedDeliveredMealBolus(db, start.add(const Duration(minutes: 5)));
       final first = await add();
       expect(first.aapsCarbs.carbs, 2);
       expect((await readMealAddOnBolusContext(db, 1))!.coveredCarbs, 42);
@@ -266,6 +270,7 @@ void main() {
         "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('dismissed','aaps',?,42)",
         [start.add(const Duration(minutes: 5)).millisecondsSinceEpoch],
       );
+      await seedDeliveredMealBolus(db, start.add(const Duration(minutes: 5)));
       await db.mealWizardLinkDao.link(
         mealId: 1,
         localWizardId: 'dismissed',
@@ -281,6 +286,7 @@ void main() {
         "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('other-meal','aaps',?,42)",
         [start.add(const Duration(minutes: 6)).millisecondsSinceEpoch],
       );
+      await seedDeliveredMealBolus(db, start.add(const Duration(minutes: 6)));
       await db.mealWizardLinkDao.link(
         mealId: 2,
         localWizardId: 'other-meal',
@@ -300,9 +306,9 @@ void main() {
         createdAt: now.add(const Duration(seconds: 30)),
         carbs: 20,
       );
-      await acceptMealAddOnBolus(db, 1, wizard, requestedAt: now);
+      await acceptDeliveredMealAddOnBolus(db, 1, wizard, requestedAt: now);
       expect(
-        await acceptMealAddOnBolus(
+        await acceptDeliveredMealAddOnBolus(
           db,
           1,
           wizard.copyWith(localId: 'mirrored-later'),
@@ -318,7 +324,7 @@ void main() {
     'actual calculator confirmation survives reload and the next add-on only asks its delta',
     () async {
       await add();
-      final accepted = await acceptMealAddOnBolus(
+      final accepted = await acceptDeliveredMealAddOnBolus(
         db,
         1,
         testBolusWizard(
@@ -344,7 +350,7 @@ void main() {
     'default completion releases actual eCarbs including the add-on without repeating its bolus',
     () async {
       await add();
-      await acceptMealAddOnBolus(
+      await acceptDeliveredMealAddOnBolus(
         db,
         1,
         testBolusWizard(
@@ -376,7 +382,7 @@ void main() {
       expect(meal.status, 'waiting-for-bolus');
       expect(meal.consumptionConfirmedEndedAt, isNotNull);
       expect((await readMealAddOnBolusContext(db, 1))!.requestedCarbs, 2);
-      await acceptMealAddOnBolus(
+      await acceptDeliveredMealAddOnBolus(
         db,
         1,
         testBolusWizard(
@@ -392,14 +398,18 @@ void main() {
   );
 
   test(
-    'already eaten extra meatball finishes directly without adding potatoes or reopening eating',
+    'already eaten extra meatball waits for remaining delivery without adding potatoes or reopening eating',
     () async {
       await seedWithStatus('bolused-eating');
       final result = await finish(meat: 200);
-      expect(result.requiresBolus, isFalse);
+      expect(result.requiresBolus, isTrue);
       expect(result.aapsCarbs!.carbs, 2);
       expect(result.aapsCarbs!.extendedCarbs, 17);
-      expect((await db.mealDao.getMealById(1))!.status, 'summarized');
+      expect((await db.mealDao.getMealById(1))!.status, 'waiting-for-bolus');
+      final pending = (await readMealAddOnBolusContext(db, 1))!;
+      expect(pending.awaitingBolus, isTrue);
+      expect(pending.coveredCarbs, 42);
+      expect(pending.requestedCarbs, 2);
       expect(
         (await db.mealIngredientsDao.getMealIngredientsForMeal(
           1,
@@ -420,7 +430,7 @@ void main() {
     () async {
       await add();
       expect(
-        await acceptMealAddOnBolus(
+        await acceptDeliveredMealAddOnBolus(
           db,
           1,
           testBolusWizard(
@@ -445,12 +455,12 @@ void main() {
         carbs: 46,
       );
       expect(
-        await acceptMealAddOnBolus(db, 1, wizard, requestedAt: now),
+        await acceptDeliveredMealAddOnBolus(db, 1, wizard, requestedAt: now),
         isNull,
       );
       await db.mealDao.interruptMeal(1);
       expect(
-        await acceptMealAddOnBolus(
+        await acceptDeliveredMealAddOnBolus(
           db,
           1,
           wizard,

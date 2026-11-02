@@ -4,6 +4,7 @@ import '../../../../../common/meal/meal_bolus_coverage.dart';
 import '../../../../../common/meal/meal_bolus_timing.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../common/notifications/meal_notification_cancellation.dart';
+import '../../../../../core/data_sources/local_mirror/mappers/bolus_wizard_drift_mapper.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/logger/logger.dart';
@@ -19,6 +20,7 @@ import '../../../base/runtime_context.dart';
 import '../helpers/bolus_reminder_helper.dart';
 import '../helpers/meal_add_on_bolus_waiter.dart';
 import '../helpers/record_meal_wizard_link.dart';
+import '../helpers/wait_for_meal_bolus_delivery.dart';
 import '../meal_monitor_context.dart';
 import 'bolus_then_wait_executor.dart';
 import 'detect_finished_eating_executor.dart';
@@ -96,10 +98,18 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
             .cancelMealNotifications(meal.id, includeTargetConsent: true);
         return NewMealCheckExecutor();
       }
-      await runtimeContext.container.read(
-        updateMealProvider(meal, 'eaten-bolused').future,
-      );
+      // A later add-on can confirm this status again. Record this occurrence
+      // explicitly instead of reusing the earlier status or a cached write.
+      final recorded = await runtimeContext.container
+          .read(databaseProvider)
+          .mealDao
+          .tryUpdateMealStatus(
+            meal.id,
+            'eaten-bolused',
+            occurredAt: clock.now(),
+          );
       mealMonitorContext.throwIfStopped(runtimeContext);
+      if (!recorded) return NewMealCheckExecutor();
       return FinalizeMealExecutor();
     }
     final notificationProvider = runtimeContext.container.read(
@@ -131,6 +141,24 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
 
     TreatmentAvailableEvent<BolusWizard>? calculatorResponse;
     var latestBolus = runtimeContext.container.read(latestBolusWizardProvider);
+    if (latestBolus == null &&
+        runtimeContext.container.exists(databaseProvider)) {
+      final db = runtimeContext.container.read(databaseProvider);
+      if (db.hasOpened) {
+        final reference = meal.updatedAt ?? waitingSince;
+        final saved = await db.localMirrorDao.getBolusWizardsBetween(
+          reference.subtract(const Duration(minutes: 5)),
+          clock.now(),
+        );
+        for (final row in saved.reversed) {
+          final candidate = row.toDomain();
+          if (!await mealBolusWizardAlreadyAssigned(db, candidate)) {
+            latestBolus = candidate;
+            break;
+          }
+        }
+      }
+    }
     if (latestBolus != null &&
         runtimeContext.container.exists(databaseProvider)) {
       final db = runtimeContext.container.read(databaseProvider);
@@ -196,6 +224,18 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
     }
 
     mealMonitorContext.throwIfStopped(runtimeContext);
+    final pendingCalculator = calculatorResponse;
+    if (pendingCalculator != null) {
+      final confirmed = await const WaitForMealBolusDelivery()(
+        runtimeContext,
+        mealMonitorContext,
+        pendingCalculator.data,
+      );
+      calculatorResponse = TreatmentAvailableEvent<BolusWizard>(
+        confirmed.wizard,
+      );
+      mealMonitorContext.throwIfStopped(runtimeContext);
+    }
     final nextStatus = decision == MealDecision.eatNowBolusLater
         ? 'eaten-bolused'
         : decision.status;

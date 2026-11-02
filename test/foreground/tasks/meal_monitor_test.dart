@@ -11,6 +11,7 @@ import 'package:diabeatthis/common/monitoring/meal_monitoring_phase.dart';
 import 'package:diabeatthis/core/domain/model/bolus_calculator_result.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/core/domain/model/device_status.dart';
+import 'package:diabeatthis/core/domain/model/manual_bolus.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
@@ -65,6 +66,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/available_meal_advice_eligibility.dart';
 import '../../helpers/available_meal_advisor_device_status.dart';
+import '../../helpers/delivered_meal_bolus.dart';
 import '../../helpers/device_status_factory.dart';
 import '../utils/fake_notifications_controller.dart';
 import '../utils/fake_runtime_harness.dart';
@@ -721,9 +723,7 @@ void main() {
               });
           _settle(async);
 
-          harness.dispatchEvent(
-            TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-          );
+          dispatchDeliveredMealBolus(harness, testBolusWizard());
           _settle(async);
 
           expect(calls, hasLength(1));
@@ -796,10 +796,7 @@ void main() {
             MealMonitoringPhase.waitingToEat,
           );
 
-          harness.dispatchEventToTask(
-            task,
-            TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-          );
+          dispatchDeliveredMealBolus(harness, testBolusWizard(), task: task);
           _advanceMinutes(harness, async, 0);
           _settle(async);
 
@@ -846,9 +843,7 @@ void main() {
                 });
             _settle(async);
 
-            harness.dispatchEvent(
-              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-            );
+            dispatchDeliveredMealBolus(harness, testBolusWizard());
             _settle(async);
 
             expect(notifications.shownEvents, hasLength(1));
@@ -1117,9 +1112,7 @@ void main() {
           expect(reminder.extendedCarbsDelayMinutes, 30);
           expect(reminder.extendedCarbsDurationMinutes, 90);
 
-          harness.dispatchEvent(
-            TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-          );
+          dispatchDeliveredMealBolus(harness, testBolusWizard());
           _settle(async);
 
           expect(completed, isTrue);
@@ -1339,9 +1332,7 @@ void main() {
           );
           notifications.shownEvents.clear();
 
-          harness.dispatchEvent(
-            TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-          );
+          dispatchDeliveredMealBolus(harness, testBolusWizard());
           _settle(async);
 
           expect(completed, isTrue);
@@ -1448,10 +1439,7 @@ void main() {
 
           expect(task.state, isA<WaitForBolusExecutor>());
 
-          harness.dispatchEventToTask(
-            task,
-            TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-          );
+          dispatchDeliveredMealBolus(harness, testBolusWizard(), task: task);
           _settle(async);
 
           expect(task.state, isA<MealMonitorStateIdle>());
@@ -1617,10 +1605,7 @@ void main() {
             expect(secondReminderTyped.isAddOn, true);
             expect(secondReminderTyped.carbs, 10);
 
-            harness.dispatchEventToTask(
-              task,
-              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-            );
+            dispatchDeliveredMealBolus(harness, testBolusWizard(), task: task);
             _settle(async);
 
             _advanceMinutes(harness, async, 5);
@@ -1998,10 +1983,7 @@ void main() {
             );
             _settle(async);
 
-            harness.dispatchEventToTask(
-              task,
-              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-            );
+            dispatchDeliveredMealBolus(harness, testBolusWizard(), task: task);
             _settle(async);
 
             for (var i = 0; i < 3; i++) {
@@ -2106,10 +2088,7 @@ void main() {
             );
             _settle(async);
 
-            harness.dispatchEventToTask(
-              task,
-              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-            );
+            dispatchDeliveredMealBolus(harness, testBolusWizard(), task: task);
             _settle(async);
 
             for (var i = 0; i < 3; i++) {
@@ -2215,10 +2194,7 @@ void main() {
             );
             _settle(async);
 
-            harness.dispatchEventToTask(
-              task,
-              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-            );
+            dispatchDeliveredMealBolus(harness, testBolusWizard(), task: task);
             _settle(async);
 
             for (var i = 0; i < 3; i++) {
@@ -2381,10 +2357,7 @@ void main() {
             );
             fakeNotifications.shownEvents.clear();
 
-            harness.dispatchEventToTask(
-              task,
-              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-            );
+            dispatchDeliveredMealBolus(harness, testBolusWizard(), task: task);
             _settle(async);
 
             expect(calls, hasLength(1));
@@ -2500,10 +2473,7 @@ void main() {
             );
             _settle(async);
 
-            harness.dispatchEventToTask(
-              task,
-              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-            );
+            dispatchDeliveredMealBolus(harness, testBolusWizard(), task: task);
             _settle(async);
 
             lastReadingDate = lastReadingDate.add(Duration(minutes: 5));
@@ -2642,10 +2612,7 @@ void main() {
             );
             _settle(async);
 
-            harness.dispatchEventToTask(
-              task,
-              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-            );
+            dispatchDeliveredMealBolus(harness, testBolusWizard(), task: task);
             _settle(async);
 
             for (var i = 0; i < 3; i++) {
@@ -2826,10 +2793,7 @@ void main() {
             );
             _settle(async);
 
-            harness.dispatchEventToTask(
-              task,
-              TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-            );
+            dispatchDeliveredMealBolus(harness, testBolusWizard(), task: task);
             _settle(async);
 
             expect(calls, hasLength(2));
@@ -3145,6 +3109,13 @@ void main() {
             ],
           );
           final harness = FakeRuntimeHarness(container: container);
+          harness.dispatchEvent(
+            TreatmentAvailableEvent<ManualBolus>(
+              deliveredMealBolus(
+                container.read(latestBolusWizardProvider)!.createdAt,
+              ),
+            ),
+          );
           final executor = WaitForBolusExecutor();
           var completed = false;
           MealMonitorStateExecutor? nextExecutor;
@@ -3206,6 +3177,13 @@ void main() {
             ],
           );
           final harness = FakeRuntimeHarness(container: container);
+          harness.dispatchEvent(
+            TreatmentAvailableEvent<ManualBolus>(
+              deliveredMealBolus(
+                container.read(latestBolusWizardProvider)!.createdAt,
+              ),
+            ),
+          );
           final executor = WaitForBolusExecutor(
             waitingSince: start.add(Duration(minutes: 2)),
           );
@@ -3424,10 +3402,7 @@ void main() {
           harness.dispatchEventToTask(task, MealBolusedWaitingEvent(mealId: 1));
           _settle(async);
 
-          harness.dispatchEventToTask(
-            task,
-            TreatmentAvailableEvent<BolusWizard>(testBolusWizard()),
-          );
+          dispatchDeliveredMealBolus(harness, testBolusWizard(), task: task);
           _settle(async);
 
           lastReadingDate = lastReadingDate.add(Duration(minutes: 5));

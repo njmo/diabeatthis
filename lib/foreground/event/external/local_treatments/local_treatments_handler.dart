@@ -24,15 +24,14 @@ class LocalTreatmentsHandler with Logging {
       return;
     }
 
+    var treatments = event.data;
     if (config.mirrorToLocal) {
-      await container
+      treatments = await container
           .read(localMirrorWriterProvider)
           .mirrorTreatments(event.data, TreatmentsSource.aaps);
     }
 
-    for (final treatment in event.data) {
-      if (!treatment.isValid) continue;
-
+    for (final treatment in treatments) {
       _treatmentEventDispatcher.dispatch(
         container: container,
         emitEvent: runtimeContext.emitEvent,

@@ -4,6 +4,7 @@ import '../../../../core/logger/logger.dart';
 import '../../../task/base/runtime_context.dart';
 import '../local_device_status/local_device_status_handler.dart';
 import '../local_glucose/local_glucose_handler.dart';
+import '../local_treatments/local_treatments_event.dart';
 import '../local_treatments/local_treatments_handler.dart';
 import 'native_receiver_event.dart';
 
@@ -11,6 +12,11 @@ class NativeReceiverEventHandler with Logging {
   final _localDeviceStatusHandler = LocalDeviceStatusHandler();
   final _localGlucoseHandler = LocalGlucoseHandler();
   final _localTreatmentsHandler = LocalTreatmentsHandler();
+
+  Future<void> handleTreatments(
+    LocalTreatmentsEvent event,
+    RuntimeContext runtimeContext,
+  ) => _localTreatmentsHandler.handle(event, runtimeContext);
 
   void handle(NativeReceiverEvent event, RuntimeContext runtimeContext) {
     event.when(

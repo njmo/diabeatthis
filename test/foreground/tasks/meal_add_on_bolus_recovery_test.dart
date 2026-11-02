@@ -24,6 +24,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../features/meal_summary/domain/use_cases/record_meal_add_on_use_case_test.dart'
     show addOnDraft, seedAddOnMeal;
+import '../../helpers/delivered_meal_bolus.dart';
 import '../utils/fake_notifications_controller.dart';
 import '../utils/fake_runtime_harness.dart';
 import 'meal_monitor_test.dart' show testBolusWizard;
@@ -79,6 +80,10 @@ void main() {
       await db.customStatement(
         "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('cold-response','aaps',?,44)",
         [requestAt.add(const Duration(minutes: 1)).millisecondsSinceEpoch],
+      );
+      await seedDeliveredMealBolus(
+        db,
+        requestAt.add(const Duration(minutes: 1)),
       );
       container
           .read(latestBolusWizardProvider.notifier)
@@ -146,7 +151,7 @@ void main() {
     'confirmed add-on context resumes eating after restart without waiting for another calculator',
     () async {
       await add();
-      await acceptMealAddOnBolus(
+      await acceptDeliveredMealAddOnBolus(
         db,
         1,
         testBolusWizard(
@@ -180,6 +185,10 @@ void main() {
       await db.customStatement(
         "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('partial','aaps',?,20)",
         [requestAt.add(const Duration(minutes: 1)).millisecondsSinceEpoch],
+      );
+      await seedDeliveredMealBolus(
+        db,
+        requestAt.add(const Duration(minutes: 1)),
       );
       await withClock(
         Clock.fixed(requestAt.add(const Duration(minutes: 11))),
@@ -242,6 +251,7 @@ void main() {
         "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('pending-response','aaps',?,2)",
         [end.add(const Duration(seconds: 10)).millisecondsSinceEpoch],
       );
+      await seedDeliveredMealBolus(db, end.add(const Duration(seconds: 10)));
       final context = await monitorContext();
       final next = await withClock(
         Clock.fixed(end.add(const Duration(seconds: 20))),

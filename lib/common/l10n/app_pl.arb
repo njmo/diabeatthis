@@ -1434,7 +1434,7 @@
   "uiFirstMarkTheMealAsEatenThenSaveThe": "Najpierw oznacz posiłek jako zjedzony. Dopiero potem zapisz podsumowanie.",
   "mealPendingAdviceUnavailable": "Brakuje aktualnych odczytów CGM lub kompletnych danych IOB/COB. Otwórz posiłek i wybierz decyzję ręcznie.",
   "uiForNonEULabelsCarbohydratesMustBeGreaterThan": "Dla non-UE węglowodany muszą być większe niż błonnik.",
-  "uiLabelCarbohydratesAreAlreadyNet": "Węglowodany z etykiety są już netto",
+  "uiLabelCarbohydratesAreAlreadyNet": "Węglowodanyy są już netto",
   "uiFiberIsSubtractedFromTotalCarbohydrates": "Błonnik odejmujemy od total carbs",
   "uiEU": "UE",
   "uiNonEU": "non-UE",
@@ -3244,5 +3244,6 @@
   "mealEditName": "Edytuj nazwę",
   "mealEditTime": "Edytuj termin",
   "mealEditCategory": "Zmień rodzaj posiłku",
+  "mealWaitingForDeliveryConfirmation": "Oczekiwanie na potwierdzenie podania insuliny",
   "mealCategoryChoose": "Wybierz rodzaj posiłku"
 }

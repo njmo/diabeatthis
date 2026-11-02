@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 
+import '../../data_sources/local_mirror/models/wizard_carbohydrate_component.dart';
+import '../../data_sources/local_mirror/models/wizard_submission_evidence.dart';
 import '../database_impl.dart';
 import '../helpers/merge_bolus_wizard.dart';
 import '../helpers/validate_wizard_identity.dart';
@@ -153,6 +155,91 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
     );
   }
 
+  Future<void> attachWizardCarbohydrateComponent(
+    DateTime wizardCreatedAt,
+    WizardCarbohydrateComponent component,
+  ) async {
+    final stored =
+        await (select(db.bolusWizard)..where(
+              (row) =>
+                  row.createdAt.equals(wizardCreatedAt.millisecondsSinceEpoch),
+            ))
+            .getSingleOrNull();
+    if (stored == null) return;
+    final evidence = WizardSubmissionEvidence.fromJson(
+      stored.carbohydrateComponent,
+    );
+    await (update(db.bolusWizard)..where(
+          (row) => row.createdAt.equals(wizardCreatedAt.millisecondsSinceEpoch),
+        ))
+        .write(
+          BolusWizardCompanion(
+            carbohydrateComponent: Value(
+              WizardSubmissionEvidence(
+                carbohydrates: component,
+                hasUnresolvedDelivery: evidence.hasUnresolvedDelivery,
+              ).toJson(),
+            ),
+          ),
+        );
+  }
+
+  Future<void> clearWizardCarbohydrateComponent(
+    DateTime wizardCreatedAt,
+  ) async {
+    final stored =
+        await (select(db.bolusWizard)..where(
+              (row) =>
+                  row.createdAt.equals(wizardCreatedAt.millisecondsSinceEpoch),
+            ))
+            .getSingleOrNull();
+    if (stored == null) return;
+    final evidence = WizardSubmissionEvidence.fromJson(
+      stored.carbohydrateComponent,
+    );
+    await (update(db.bolusWizard)..where(
+          (row) => row.createdAt.equals(wizardCreatedAt.millisecondsSinceEpoch),
+        ))
+        .write(
+          BolusWizardCompanion(
+            carbohydrateComponent: Value(
+              WizardSubmissionEvidence(
+                hasUnresolvedDelivery: evidence.hasUnresolvedDelivery,
+              ).toJson(),
+            ),
+          ),
+        );
+  }
+
+  Future<BolusWizardData?> markWizardDeliveryUnresolved(
+    DateTime wizardCreatedAt,
+  ) async {
+    final query = select(db.bolusWizard)
+      ..where(
+        (row) => row.createdAt.equals(wizardCreatedAt.millisecondsSinceEpoch),
+      );
+    final stored = await query.getSingleOrNull();
+    if (stored == null) return null;
+    final evidence = WizardSubmissionEvidence.fromJson(
+      stored.carbohydrateComponent,
+    );
+    if (!evidence.hasUnresolvedDelivery) {
+      await (update(
+        db.bolusWizard,
+      )..where((row) => row.localId.equals(stored.localId))).write(
+        BolusWizardCompanion(
+          carbohydrateComponent: Value(
+            WizardSubmissionEvidence(
+              carbohydrates: evidence.carbohydrates,
+              hasUnresolvedDelivery: true,
+            ).toJson(),
+          ),
+        ),
+      );
+    }
+    return query.getSingle();
+  }
+
   Future<void> deleteBolusWizard(BolusWizardCompanion event) =>
       transaction(() async {
         final table = db.bolusWizard;
@@ -162,6 +249,14 @@ class LocalMirrorDao extends DatabaseAccessor<DatabaseImpl>
                 .getSingleOrNull();
         if (stored == null) return;
         validateWizardIdentity(stored, event);
+        final component = WizardSubmissionEvidence.fromJson(
+          stored.carbohydrateComponent,
+        ).carbohydrates;
+        if (component != null) {
+          await into(
+            db.treat,
+          ).insert(component.toCompanion(), mode: InsertMode.insertOrIgnore);
+        }
         await (delete(
           table,
         )..where((row) => row.localId.equals(stored.localId))).go();

@@ -4,6 +4,7 @@ import '../../../domain/model/bolus_calculator_result.dart' as domain;
 import '../../../domain/model/bolus_wizard.dart' as domain;
 import '../../../drift/database_impl.dart' as drift;
 import '../../config/data_source_config.dart';
+import '../models/wizard_submission_evidence.dart';
 
 extension BolusWizardDriftMapper on domain.BolusWizard {
   drift.BolusWizardCompanion toCompanion(TreatmentsSource source) {
@@ -57,13 +58,23 @@ extension BolusWizardDriftMapper on domain.BolusWizard {
       wasTrendUsed: Value(calculator?.wasTrendUsed),
       wereCarbsUsed: Value(calculator?.wereCarbsUsed),
       notes: Value(notes),
+      carbohydrateComponent: hasUnresolvedDelivery
+          ? Value(
+              const WizardSubmissionEvidence(
+                hasUnresolvedDelivery: true,
+              ).toJson(),
+            )
+          : const Value.absent(),
     );
   }
 }
 
 extension BolusWizardDomainMapper on drift.BolusWizardData {
   domain.BolusWizard toDomain() {
+    final evidence = WizardSubmissionEvidence.fromJson(carbohydrateComponent);
     return domain.BolusWizard(
+      carbohydrateRecord: evidence.carbohydrates?.treatment,
+      hasUnresolvedDelivery: evidence.hasUnresolvedDelivery,
       localId: localId,
       remoteSource: remoteSource,
       nightscoutObjectId: nightscoutId,

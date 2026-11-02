@@ -18,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../foreground/tasks/meal_monitor_test.dart'
     show testBolusWizard;
+import '../../../../helpers/delivered_meal_bolus.dart';
 import '../../../../helpers/localized_material_app.dart';
 import '../../../meal_summary/domain/use_cases/record_meal_add_on_use_case_test.dart'
     show addOnDraft, seedAddOnMeal;
@@ -100,7 +101,7 @@ void main() {
         var progress = (await readMealAddOnBolusContext(db, 1))!;
         final originalECarbs = progress.requestedExtendedCarbs;
         expect(originalECarbs, greaterThan(0));
-        progress = (await acceptMealAddOnBolus(
+        progress = (await acceptDeliveredMealAddOnBolus(
           db,
           1,
           testBolusWizard(
@@ -113,11 +114,11 @@ void main() {
         expect(progress.awaitingBolus, isTrue);
         expect(calculator, findsOneWidget);
 
-        progress = (await acceptMealAddOnBolus(
+        progress = (await acceptDeliveredMealAddOnBolus(
           db,
           1,
           testBolusWizard(
-            createdAt: requestedAt.add(const Duration(seconds: 2)),
+            createdAt: requestedAt.add(const Duration(seconds: 30)),
             carbs: progress.requestedCarbs.toDouble(),
           ),
           requestedAt: requestedAt,

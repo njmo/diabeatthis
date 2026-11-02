@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'bolus_calculator_result.dart';
+import 'treat.dart';
 import 'treatment_base.dart';
 
 part 'bolus_wizard.freezed.dart';
@@ -20,6 +21,8 @@ abstract class BolusWizard with _$BolusWizard implements Treatment {
     required String? units,
     required String? notes,
     required BolusCalculatorResult? calculatorResult,
+    Treat? carbohydrateRecord,
+    @Default(false) bool hasUnresolvedDelivery,
     @Default(true) bool isValid,
   }) = _BolusWizard;
 

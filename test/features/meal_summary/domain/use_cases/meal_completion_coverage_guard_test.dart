@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../foreground/utils/fake_notifications_controller.dart';
+import '../../../../helpers/delivered_meal_bolus.dart';
 import 'record_meal_add_on_use_case_test.dart' show addOnDraft, seedAddOnMeal;
 
 void main() {
@@ -76,6 +77,7 @@ void main() {
         "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('after-review','aaps',?,44)",
         [addOnAt.add(const Duration(minutes: 1)).millisecondsSinceEpoch],
       );
+      await seedDeliveredMealBolus(db, addOnAt.add(const Duration(minutes: 1)));
 
       await expectLater(
         save(draft),
@@ -145,6 +147,7 @@ void main() {
         "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('zero-carbs','aaps',?,0)",
         [addOnAt.add(const Duration(minutes: 1)).millisecondsSinceEpoch],
       );
+      await seedDeliveredMealBolus(db, addOnAt.add(const Duration(minutes: 1)));
       await db.mealWizardLinkDao.link(
         mealId: 1,
         localWizardId: 'zero-carbs',

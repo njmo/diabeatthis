@@ -12,6 +12,7 @@ CREATE TABLE bolus_wizard (
   units TEXT,
   carbs REAL,
   insulin REAL,
+  carbohydrate_component TEXT,
   basal_iob REAL,
   bolus_iob REAL,
   carbs_insulin REAL,

@@ -19,9 +19,8 @@ class MirroringTreatmentsHistoryRepository
 
   @override
   Future<List<Treatment>> fetchTreatmentsBetween(DateTime start, DateTime end) {
-    return _mirroring.treatments(
+    return _mirroring.normalizedTreatments(
       read: () => _delegate.fetchTreatmentsBetween(start, end),
-      extract: (treatments) => treatments,
       source: _source,
       operation: 'Treatments history',
     );

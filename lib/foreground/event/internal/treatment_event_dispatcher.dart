@@ -12,10 +12,12 @@ import '../../../core/domain/model/temporary_target.dart';
 import '../../../core/domain/model/treat.dart';
 import '../../../core/domain/model/treatment_base.dart';
 import '../../../core/logger/logger.dart';
+import '../../providers/calculator_submissions_provider.dart';
 import '../../providers/latest_bolus_wizard_provider.dart';
 import '../../providers/task_event_router_provider.dart';
 import '../../synchronization/synchronization_cache_controller.dart';
 import '../model/foreground_event.dart';
+import 'calculator_submission_changed_event.dart';
 import 'treatment_available_event.dart';
 
 typedef ForegroundEventEmitter = void Function(ForegroundEvent event);
@@ -30,6 +32,16 @@ class TreatmentEventDispatcher with Logging {
       "${treatment.runtimeType} treatment available at "
       "${treatment.createdAt?.toIso8601String()}",
     );
+
+    final changes = container
+        .read(calculatorSubmissionsProvider.notifier)
+        .record(treatment);
+    for (final submission in changes) {
+      emitEvent(CalculatorSubmissionChangedEvent(submission));
+    }
+    // Invalidations still update the normalized submission, but are not new
+    // treatment availability events and cannot advance a meal workflow.
+    if (!treatment.isValid) return;
 
     switch (treatment) {
       case BolusWizard():

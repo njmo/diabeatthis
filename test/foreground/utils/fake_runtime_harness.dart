@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
+import 'package:diabeatthis/core/domain/model/manual_bolus.dart';
+import 'package:diabeatthis/foreground/event/internal/calculator_submission_changed_event.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/event/model/foreground_event.dart';
+import 'package:diabeatthis/foreground/providers/calculator_submissions_provider.dart';
 import 'package:diabeatthis/foreground/providers/latest_bolus_wizard_provider.dart';
 import 'package:diabeatthis/foreground/runtime/deadline_waiter.dart';
 import 'package:diabeatthis/foreground/runtime/event_inbox.dart';
@@ -146,6 +149,21 @@ class FakeRuntimeHarness {
   }
 
   void _cacheEvent(ForegroundEvent event) {
+    final treatment = switch (event) {
+      TreatmentAvailableEvent<BolusWizard>() => event.data,
+      TreatmentAvailableEvent<ManualBolus>() => event.data,
+      _ => null,
+    };
+    if (treatment != null) {
+      for (final submission
+          in container
+              .read(calculatorSubmissionsProvider.notifier)
+              .record(treatment)) {
+        _deliverInput(
+          RuntimeEventInput(CalculatorSubmissionChangedEvent(submission)),
+        );
+      }
+    }
     if (event is TreatmentAvailableEvent<BolusWizard>) {
       container.read(latestBolusWizardProvider.notifier).update(event.data);
     }

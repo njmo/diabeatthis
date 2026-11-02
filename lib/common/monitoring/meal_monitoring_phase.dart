@@ -6,6 +6,7 @@ enum MealMonitoringPhase {
   preparing,
   waitingForUser,
   waitingForBolus,
+  waitingForDeliveryConfirmation,
   waitingToEat,
   eating,
   eatingThenBolus,

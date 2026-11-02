@@ -1,4 +1,5 @@
 import 'package:clock/clock.dart';
+import 'package:diabeatthis/common/meal/meal_add_on_bolus_progress.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
@@ -10,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../foreground/utils/fake_notifications_controller.dart';
+import '../../../../helpers/delivered_meal_bolus.dart';
 import 'complete_meal_use_case_test.dart'
     show completionDraft, seedCompletionMeal;
 
@@ -62,6 +64,7 @@ void main() {
           "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('confirmed','aaps',?,10)",
           [bolusAt.millisecondsSinceEpoch],
         );
+        await seedDeliveredMealBolus(db, bolusAt);
         await db.mealWizardLinkDao.link(
           mealId: 1,
           localWizardId: 'confirmed',
@@ -92,9 +95,19 @@ void main() {
         expect(snapshot.id, original.id);
         expect(snapshot.totalGrams, consumed);
         expect(snapshot.totalNetCarbsG, consumed * 0.2);
-        expect(result.requiresBolus, isFalse);
+        final requiresRemainingDelivery = consumed > 50;
+        expect(result.requiresBolus, requiresRemainingDelivery);
         expect(result.aapsCarbs!.carbs, (consumed * 0.2 - 10).ceil());
-        expect((await db.mealDao.getMealById(1))!.status, 'summarized');
+        expect(
+          (await db.mealDao.getMealById(1))!.status,
+          requiresRemainingDelivery ? 'waiting-for-bolus' : 'summarized',
+        );
+        if (requiresRemainingDelivery) {
+          final pending = (await readMealAddOnBolusContext(db, 1))!;
+          expect(pending.awaitingBolus, isTrue);
+          expect(pending.coveredCarbs, 10);
+          expect(pending.requestedCarbs, 5);
+        }
         final history = await db.select(db.mealStatusHistory).get();
         expect(
           history.singleWhere((row) => row.status == 'eaten-bolused').createdAt,

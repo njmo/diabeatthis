@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../data_sources/local_mirror/models/wizard_submission_evidence.dart';
 import '../database_impl.dart';
 import 'validate_wizard_identity.dart';
 
@@ -36,6 +37,14 @@ Insertable<BolusWizardData> mergeBolusWizard(
         remoteSource: const Value.absent(),
       )
       .toColumns(true);
+  final storedEvidence = WizardSubmissionEvidence.fromJson(
+    stored.carbohydrateComponent,
+  );
+  final incomingEvidence = WizardSubmissionEvidence.fromJson(
+    incoming.carbohydrateComponent.present
+        ? incoming.carbohydrateComponent.value
+        : null,
+  );
   return RawValuesInsertable({
     for (final entry in columns.entries)
       if (entry.value is! Variable || (entry.value as Variable).value != null)
@@ -45,6 +54,15 @@ Insertable<BolusWizardData> mergeBolusWizard(
     ...BolusWizardCompanion(
       nightscoutId: Value(remoteId),
       remoteSource: Value(remoteSource),
+      carbohydrateComponent: Value(
+        WizardSubmissionEvidence(
+          carbohydrates:
+              incomingEvidence.carbohydrates ?? storedEvidence.carbohydrates,
+          hasUnresolvedDelivery:
+              storedEvidence.hasUnresolvedDelivery ||
+              incomingEvidence.hasUnresolvedDelivery,
+        ).toJson(),
+      ),
     ).toColumns(true),
   });
 }

@@ -35,6 +35,20 @@ class LocalRepositoryMirroring with Logging {
     );
   }
 
+  Future<List<Treatment>> normalizedTreatments({
+    required Future<List<Treatment>> Function() read,
+    required TreatmentsSource source,
+    required String operation,
+  }) async {
+    final records = await read();
+    try {
+      return await _writer.mirrorTreatments(records, source);
+    } catch (error, stackTrace) {
+      logW('$operation local mirror write failed: $error\n$stackTrace');
+      return records;
+    }
+  }
+
   Future<T> deviceStatuses<T>({
     required Future<T> Function() read,
     required Iterable<DeviceStatus> Function(T result) extract,

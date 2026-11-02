@@ -2,11 +2,14 @@ import 'dart:math' as math;
 
 import 'package:drift/drift.dart';
 
+import '../../core/data_sources/config/data_source_config.dart';
 import '../../core/data_sources/local_mirror/mappers/bolus_wizard_drift_mapper.dart';
 import '../../core/domain/model/bolus_wizard.dart' as domain;
 import '../../core/drift/database_impl.dart';
+import '../../core/drift/helpers/validate_wizard_identity.dart';
 import 'meal_add_on_bolus_context.dart';
 import 'meal_bolus_coverage.dart';
+import 'meal_calculator_submission.dart';
 import 'meal_completion_timing.dart';
 import 'meal_extended_carbs.dart';
 
@@ -31,8 +34,8 @@ bool mealAddOnAcceptsWizard(
       'at:${wizard.createdAt.millisecondsSinceEpoch}',
     );
 
-/// Confirms only the still-current request. The context update and the link can
-/// share a caller transaction so a restart cannot lose or double-count carbs.
+/// Confirms only the still-current request against persisted completion evidence.
+/// The meal link and coverage commit together so a restart cannot lose the relation.
 Future<MealAddOnBolusContext?> acceptMealAddOnBolus(
   DatabaseImpl db,
   int mealId,
@@ -61,17 +64,31 @@ Future<MealAddOnBolusContext?> acceptMealAddOnBolus(
                 row.createdAt.equals(wizard.createdAt.millisecondsSinceEpoch),
           ))
           .getSingleOrNull();
-  if (storedWizard != null) {
-    final links = await db.mealWizardLinkDao.forWizardIds(
-      localIds: [storedWizard.localId],
-      remoteIds: storedWizard.nightscoutId == null
-          ? []
-          : [storedWizard.nightscoutId!],
-    );
-    if (links.isNotEmpty) return null;
+  // The delivery gate persists accepted evidence before calling this function.
+  // A missing row can be an invalidation, never permission to resurrect a
+  // previously confirmed in-memory snapshot.
+  if (storedWizard == null) return null;
+  final canonical = storedWizard.toDomain();
+  if (!canonical.carbs.isFinite ||
+      (canonical.carbs - wizard.carbs).abs() > 0.001) {
+    return null;
+  }
+  final links = await db.mealWizardLinkDao.forWizardIds(
+    localIds: [storedWizard.localId],
+    remoteIds: storedWizard.nightscoutId == null
+        ? []
+        : [storedWizard.nightscoutId!],
+  );
+  if (links.isNotEmpty) return null;
+  validateWizardIdentity(
+    storedWizard,
+    wizard.toCompanion(TreatmentsSource.fromStorage(storedWizard.source)),
+  );
+  if (!(await readMealCalculatorSubmission(db, canonical)).isComplete) {
+    return null;
   }
   final coverage = await readMealBolusCoverage(db, mealId, context: current);
-  final coveredCarbs = coverage.carbs + wizard.carbs;
+  final coveredCarbs = coverage.carbs + canonical.carbs;
   final totals = await db.ingredientDao.totalsForMealConsumed(mealId);
   final requestedCarbs = math
       .max(0, (totals?.netCarbsGrams ?? 0) - coveredCarbs)
@@ -86,6 +103,11 @@ Future<MealAddOnBolusContext?> acceptMealAddOnBolus(
       mealBolusWizardKey(wizard),
       'at:${wizard.createdAt.millisecondsSinceEpoch}',
     }.toList(),
+  );
+  await db.mealWizardLinkDao.link(
+    mealId: mealId,
+    localWizardId: storedWizard.localId,
+    relationType: current.bolusConfirmed ? 'continuation' : 'initial',
   );
   await (db.update(db.meal)..where((row) => row.id.equals(mealId))).write(
     MealCompanion(addOnBolusContext: Value(updated.encode())),
@@ -147,7 +169,7 @@ Future<MealAddOnBolusContext?> reconcileMealAddOnBolusProgress(
   }.contains(meal.status)) {
     return context;
   }
-  if (context == null || !context.awaitingBolus) return context;
+  if (context == null) return context;
   var pending = context;
   final responseSince = pending.bolusWindowStartedAt.millisecondsSinceEpoch;
   final candidates =
@@ -165,11 +187,6 @@ Future<MealAddOnBolusContext?> reconcileMealAddOnBolusProgress(
       requestedAt: previous.requestedAt,
     );
     if (accepted == null) continue;
-    await db.mealWizardLinkDao.link(
-      mealId: mealId,
-      localWizardId: candidate.localId,
-      relationType: previous.bolusConfirmed ? 'continuation' : 'initial',
-    );
     pending = accepted;
   }
   final coverage = await readMealBolusCoverage(db, mealId, context: pending);

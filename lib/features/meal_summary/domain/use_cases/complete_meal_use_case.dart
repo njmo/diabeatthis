@@ -6,9 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_activation_guard.dart';
-import '../../../../common/meal/meal_add_on_bolus_context.dart';
 import '../../../../common/meal/meal_add_on_bolus_progress.dart';
 import '../../../../common/meal/meal_bolus_coverage.dart';
+import '../../../../common/meal/meal_completion_bolus_request.dart';
 import '../../../../common/meal/meal_completion_decision.dart';
 import '../../../../common/meal/meal_completion_timing.dart';
 import '../../../../common/meal/meal_extended_carbs.dart';
@@ -177,11 +177,13 @@ class CompleteMealUseCase {
             (addOn?.reportedExtendedCarbs ??
                 mealExtendedCarbsFromMacros(before)),
       );
-      final requiresBolus =
-          (meal.status == 'eating-then-bolus' ||
-              (meal.status != 'eaten-bolused' &&
-                  (addOn?.awaitingBolus ?? false))) &&
-          remainingCarbs > 0;
+      final requiresBolus = mealCompletionRequiresDelivery(
+        remainingCarbs: remainingCarbs,
+        hasRecordedBolus: coverage.hasRecordedBolus,
+        awaitingBolus:
+            meal.status == 'eating-then-bolus' ||
+            (addOn?.awaitingBolus ?? false),
+      );
       final alreadyEnded = mealStatusReadyToSummarize(meal.status);
       final endStatus = alreadyEnded
           ? timing.endStatus ?? meal.status
@@ -208,29 +210,24 @@ class CompleteMealUseCase {
           .read(mealSnapshotControllerProvider)
           .saveConsumedSnapshot(draft.mealId);
       if (requiresBolus) {
-        final pending = MealAddOnBolusContext(
-          originalStatus: addOn?.originalStatus ?? meal.status,
-          eatingStartedAt: timing.startedAt,
-          requestedAt: addOn?.requestedAt ?? clock.now(),
-          bolusWindowStartedAt: addOn?.bolusWindowStartedAt,
-          coveredCarbs: coverage.carbs,
-          statusCoveredCarbs:
-              addOn?.statusCoveredCarbs ?? coverage.statusBaselineCarbs,
-          reportedExtendedCarbs: totalExtendedCarbs,
-          requestedCarbs: remainingCarbs,
-          requestedExtendedCarbs: extendedCarbsDelta,
-          awaitingBolus: true,
-          bolusConfirmed: coverage.hasRecordedBolus,
-          acceptedWizardKeys: addOn?.acceptedWizardKeys ?? const [],
-        );
-        await (db.update(
-          db.meal,
-        )..where((row) => row.id.equals(draft.mealId))).write(
-          MealCompanion(
-            consumptionConfirmedEndedAt: Value(endedAt.millisecondsSinceEpoch),
-            addOnBolusContext: Value(pending.encode()),
-          ),
-        );
+        try {
+          if (!await persistMealCompletionBolusRequest(
+            db,
+            mealId: meal.id,
+            currentStatus: meal.status,
+            timing: timing,
+            endedAt: endedAt,
+            coverage: coverage,
+            previousContext: addOn,
+            remainingCarbs: remainingCarbs,
+            totalExtendedCarbs: totalExtendedCarbs,
+            extendedCarbsDelta: extendedCarbsDelta,
+          )) {
+            throw MealSummaryCannotFinishException(lang.mealCompletionStale);
+          }
+        } on MealActivationException catch (error) {
+          throw MealSummaryCannotFinishException(error.userMessage);
+        }
       } else {
         await db.mealDao.updateMealStatus(draft.mealId, 'summarized');
       }

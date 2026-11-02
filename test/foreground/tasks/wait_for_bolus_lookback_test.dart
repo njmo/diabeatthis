@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
+import 'package:diabeatthis/core/domain/model/manual_bolus.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/meal_advisor_result_provider.dart';
@@ -17,6 +18,7 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/delivered_meal_bolus.dart';
 import '../utils/fake_notifications_controller.dart';
 import '../utils/fake_runtime_harness.dart';
 
@@ -76,6 +78,11 @@ void main() {
                     .read(latestBolusWizardProvider.notifier)
                     .update(wizard);
                 final harness = FakeRuntimeHarness(container: container);
+                harness.dispatchEvent(
+                  TreatmentAvailableEvent<ManualBolus>(
+                    deliveredMealBolus(wizard.createdAt),
+                  ),
+                );
                 MealMonitorStateExecutor? next;
                 WaitForBolusExecutor()
                     .execute(
@@ -100,10 +107,9 @@ void main() {
                   expect(next, isNull);
                   expect(notifications.shownEvents, hasLength(1));
                   // Rejecting the old cache must still allow a later calculator event.
-                  harness.dispatchEvent(
-                    TreatmentAvailableEvent<BolusWizard>(
-                      wizard.copyWith(createdAt: now, date: now),
-                    ),
+                  dispatchDeliveredMealBolus(
+                    harness,
+                    wizard.copyWith(createdAt: now, date: now),
                   );
                   async.flushMicrotasks();
                   expect(updates, [(84, expectedStatus)]);
