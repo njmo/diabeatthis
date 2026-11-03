@@ -1,9 +1,8 @@
-import '../../../../common/analysis/dml_evidence_references.dart';
 import '../../../../common/analysis/dml_semantics.dart';
 import '../../domain/models/meal_ai_result.dart';
 import '../../domain/models/meal_dml_document.dart';
 
-const mealAiPromptVersion = 2;
+const mealAiPromptVersion = 3;
 String buildMealAiPrompt(MealDmlDocument document, String language) =>
     '''
 Analyze this historical meal for a person with type 1 diabetes or their parent.
@@ -11,24 +10,20 @@ Write user-facing text in $language. Return ONLY JSON, without Markdown.
 
 ${dmlSemantics()}
 
-Read the target meal, its before snapshot and outcome, then earlier similar meals.
-Only the target meal is analyzed; comparisons are context. Compare portions, starting CGM/trend,
-IOB/COB, recorded timing, confidence and overlapping food, eCarbs, activity, stress and rescues.
-Explain concrete local intervals and event sequences beyond restating dashboard statistics.
-A rise already underway before eating cannot be attributed solely to this meal. Check early/late
-rises, lows/recovery and the loop response. CGM alone cannot establish absorption or insulin effectiveness.
-Suspiciously long workflow waits or overnight stage gaps can be recording issues, not physiology.
-Similar ingredients or repeated associations do not prove a causal benefit from waiting.
-Separate observations from hypotheses, include alternatives and relevant missing evidence.
-Do not diagnose, judge the user, propose insulin doses/percentages, bolus timing or treatment changes.
-Overview: key takeaway. Before: preconditions. Response: post-meal episode. Comparison: reference differences/limits.
-Do not repeat numbers/episodes. Empty summaries/findings are valid; never invent missing history.
+Analyze only the target meal's before snapshot and outcome; earlier similar meals are context.
+Compare portions, starting CGM/trend, IOB/COB, recorded timing, confidence, overlapping food,
+eCarbs, activity, stress and rescues. Explain local intervals and event sequences, not just statistics.
+Check pre-existing/early/late rises, lows/recovery and loop response; a pre-existing rise is not
+solely meal-related. CGM cannot establish absorption or insulin effectiveness. Long waits/overnight
+stage gaps may be recording issues. Similar ingredients/repeated associations do not prove waiting helps.
+Separate observations/hypotheses, alternatives and missing evidence. Never diagnose, judge, suggest
+insulin doses/percentages, bolus timing or treatment changes, repeat numbers/episodes or invent history.
+Overview: takeaway. Before: preconditions. Response: episode. Comparison: differences/limits.
+Empty summaries/findings are valid.
 
-Cite actual section IDs or dotted object-field paths; no array indices or wildcards.
-Use ONLY an exact reference from this list (copy it unchanged):
-${dmlEvidenceReferences(document.text, document.evidenceIds).join(', ')}.
-For array contents cite the array field itself, for example meal_cgm.blocks.
-Eating timestamps belong under recorded_timing, for example meal.recorded_timing.eating_started_at.
+Cite these section IDs or their exact dotted JSON object paths: ${document.evidenceIds.join(', ')}.
+Never invent/flatten paths or use array indices/wildcards; cite arrays as a whole (meal_cgm.blocks).
+Eating timestamps are nested: meal.recorded_timing.eating_started_at.
 JSON shape: {"schema_version":1,"language":"$language","sections":{
 "overview":SECTION,"before":SECTION,"response":SECTION,"comparison":SECTION}}
 SECTION: {"status":"ok" or "insufficient_data","summary":"max 320 characters","findings":[],"missing_data":[]}

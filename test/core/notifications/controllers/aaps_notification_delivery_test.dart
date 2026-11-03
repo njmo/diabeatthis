@@ -10,7 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const platformChannel = MethodChannel('dexterous.com/flutter/notifications');
+  const platformChannel = MethodChannel(
+    'dexterous.com/flutter/local_notifications',
+  );
   const event = AapsBolusSuggestionNotificationEvent(
     mealId: 73,
     carbs: 0,
