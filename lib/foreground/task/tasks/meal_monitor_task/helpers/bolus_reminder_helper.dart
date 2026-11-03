@@ -12,6 +12,7 @@ import '../../../../../core/notifications/base/notifications_controller.dart';
 import '../../../../../core/notifications/domain/events/meal_suggestion_notification.dart';
 import '../../../../../features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
+import '../../../../../features/meal_advisor/data/providers/get_meal_activity_advice_use_case_provider.dart';
 import '../../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../../../features/meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../../event/internal/treatment_available_event.dart';
@@ -150,10 +151,17 @@ class BolusReminderHelper with Logging {
       await notificationProvider.cancelMealNotifications(mealId);
       ensureActive?.call();
 
+      final activityDoseSuggestion = carbs > 0
+          ? await runtimeContext.container.read(
+              getMealActivityAdviceUseCaseProvider,
+            )(mealId: mealId)
+          : null;
+      ensureActive?.call();
       logI("User should bolus after eating, showing notification");
       await notificationProvider.show(
         MealSuggestionNotificationEvent(
           mealId: mealId,
+          activityDoseSuggestion: activityDoseSuggestion,
           decision: MealDecision.bolus,
           carbs: carbs,
           extendedCarbs: extendedCarbs,

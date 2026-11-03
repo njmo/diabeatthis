@@ -1,4 +1,5 @@
 import '../../../../common/l10n/language.dart';
+import '../../../../features/meal_advisor/domain/models/meal_activity_dose_suggestion.dart';
 import '../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import '../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../models/notification_event.dart';
@@ -8,6 +9,7 @@ import '../models/notification_key.dart';
 class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   const AapsBolusSuggestionNotificationEvent({
     required this.carbs,
+    this.activityDoseSuggestion,
     this.mealId,
     this.mealName,
     this.extendedCarbs = 0,
@@ -16,6 +18,10 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
     this.extendedCarbsDelayMinutes,
     this.extendedCarbsDurationMinutes,
   });
+
+  final MealActivityDoseSuggestion? activityDoseSuggestion;
+  bool get hasActivityDoseSuggestion =>
+      carbs > 0 && activityDoseSuggestion != null;
 
   final int carbs;
   final int? mealId;
@@ -100,6 +106,8 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   @override
   Map<String, Object?> toJson() => {
     'carbs': carbs,
+    if (activityDoseSuggestion != null)
+      'activityDoseSuggestion': activityDoseSuggestion!.toJson(),
     if (mealId != null) 'mealId': mealId,
     if (mealName != null) 'mealName': mealName,
     'extendedCarbs': extendedCarbs,
@@ -114,6 +122,9 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   ) {
     return AapsBolusSuggestionNotificationEvent(
       carbs: json['carbs'] as int,
+      activityDoseSuggestion: MealActivityDoseSuggestion.fromJson(
+        json['activityDoseSuggestion'],
+      ),
       mealId: json['mealId'] as int?,
       mealName: json['mealName'] as String?,
       extendedCarbs: json['extendedCarbs'] as int? ?? 0,

@@ -5,6 +5,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
 import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import 'ai_assisted_meal_advisor_switch.dart';
+import 'meal_activity_windows_settings.dart';
 import 'settings_section_card.dart';
 
 class MealAdvisorSettingsSection extends ConsumerWidget {
@@ -23,6 +24,8 @@ class MealAdvisorSettingsSection extends ConsumerWidget {
       subtitle: context.lang.settingsMealAdvisorSubtitle,
       children: [
         const AiAssistedMealAdvisorSwitch(),
+        const SizedBox(height: 16),
+        const MealActivityWindowsSettings(),
         const SizedBox(height: 12),
         settingsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),

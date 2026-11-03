@@ -32,8 +32,10 @@ class MealCalculatorRequest {
 
   List<bool> get completedRows => progress.completedRows([
     MealHandoffInstruction.bolusAction,
+    if (event.hasActivityDoseSuggestion) MealHandoffInstruction.bolusAction,
     if (event.extendedCarbs > 0) MealHandoffInstruction.extendedCarbsAction,
-    if (event.extendedCarbs > 0 &&
+    if (!event.hasActivityDoseSuggestion &&
+        event.extendedCarbs > 0 &&
         event.extendedCarbsDelayMinutes != null &&
         event.extendedCarbsDurationMinutes != null)
       MealHandoffInstruction.extendedCarbsAction,

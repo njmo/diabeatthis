@@ -40,6 +40,7 @@ class SuggestionPipChannel(activity: Activity, messenger: BinaryMessenger) {
                 val launch = Intent(activity, SuggestionPipActivity::class.java)
                     .putStringArrayListExtra("labels", ArrayList(call.argument<List<String>>("labels") ?: emptyList()))
                     .putStringArrayListExtra("values", ArrayList(call.argument<List<String>>("values") ?: emptyList()))
+                    .putExtra("prominentRows", call.argument<List<Boolean>>("prominentRows")?.toBooleanArray())
                     .putExtra("actionRows", call.argument<List<Boolean>>("actionRows")?.toBooleanArray())
                     .putExtra("packageName", call.argument<String>("packageName"))
                     .putExtra("sessionId", call.argument<String>("sessionId"))

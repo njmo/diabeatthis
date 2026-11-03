@@ -64,6 +64,9 @@ class ExternalAppInstructionPip implements HandoffGateway {
             'closeLabel': instruction.closeLabel,
             'labels': [for (final step in instruction.steps) step.label],
             'values': [for (final step in instruction.steps) step.value],
+            'prominentRows': [
+              for (final step in instruction.steps) step.prominent,
+            ],
             'actionRows': [
               for (final step in instruction.steps) step.showCheckbox,
             ],

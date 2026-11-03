@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/platform/aaps_suggestion_prompt.dart';
 import '../../../dashboard/data/utils/meal_advisor.dart';
 import '../../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
+import '../../../meal_advisor/data/providers/get_meal_activity_advice_use_case_provider.dart';
 import 'meal_summary_aaps_suggestion.dart';
 import 'meal_summary_carbs_delta.dart';
 
@@ -25,8 +26,13 @@ Future<void> openMealAapsCarbsSuggestion({
           ),
         ).getPostMealExtendedCarbsScheduleSettings()
       : null;
+  if (!context.mounted) return;
+  final activityDoseSuggestion = carbs.carbs > 0
+      ? await ref.read(getMealActivityAdviceUseCaseProvider)(mealId: mealId)
+      : null;
   final event = buildMealSummaryAapsSuggestionEvent(
     aapsCarbs: carbs,
+    activityDoseSuggestion: activityDoseSuggestion,
     extendedCarbsScheduleSettings: schedule,
     mealId: mealId,
     mealName: mealName,

@@ -1,5 +1,6 @@
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/meal_macro_summary.dart';
+import '../models/meal_activity_dose_suggestion.dart';
 import '../models/meal_advice.dart';
 import '../models/meal_advisor_config.dart';
 import '../services/meal_advisor.dart';
@@ -12,6 +13,7 @@ class GetMealAdviceUseCase {
 
   MealAdvice call({
     required MealMacroSummary macros,
+    MealActivityDoseSuggestion? activityDoseSuggestion,
     required DeviceStatus deviceStatus,
     required ExtendedCarbsScheduleSettings settings,
   }) {
@@ -21,6 +23,7 @@ class GetMealAdviceUseCase {
     return MealAdvisor(
       config: MealAdvisorConfig(extendedCarbsScheduleSettings: settings),
     ).getMealAdvice(
+      activityDoseSuggestion: activityDoseSuggestion,
       bg: deviceStatus.bg,
       iob: deviceStatus.iob,
       cob: deviceStatus.cob,

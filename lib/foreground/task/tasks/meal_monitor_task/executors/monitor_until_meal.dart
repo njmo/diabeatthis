@@ -15,6 +15,7 @@ import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
 import '../../../../../features/meal_advisor/data/providers/check_meal_advice_eligibility_use_case_provider.dart';
 import '../../../../../features/meal_advisor/data/providers/check_meal_advisor_device_status_use_case_provider.dart';
 import '../../../../../features/meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
+import '../../../../../features/meal_advisor/data/providers/get_meal_activity_advice_use_case_provider.dart';
 import '../../../../../features/meal_advisor/data/providers/get_meal_advice_use_case_provider.dart';
 import '../../../../../features/meal_advisor/domain/models/meal_advice_eligibility.dart';
 import '../../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
@@ -425,12 +426,18 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                   );
                   return MealMonitorStateIdle();
                 }
+                final activityDoseSuggestion = await runtimeContext.container
+                    .read(
+                      getMealActivityAdviceUseCaseProvider,
+                    )(mealAt: mealPlannedAt);
+                mealMonitorContext.throwIfStopped(runtimeContext);
                 advice = runtimeContext.container
                     .read(getMealAdviceUseCaseProvider)
                     .call(
                       macros: mealStatus,
                       deviceStatus: deviceStatus,
                       settings: extendedCarbsScheduleSettings,
+                      activityDoseSuggestion: activityDoseSuggestion,
                     );
 
                 final iterationsRemaining = iterationsLeft - 1;
@@ -516,6 +523,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               MealSuggestionNotificationEvent(
                 mealId: mealMonitorContext.activeMeal!.id,
                 minutes: mealAdvice.wait?.recommendedMinutes ?? 0,
+                activityDoseSuggestion: mealAdvice.activityDoseSuggestion,
                 decision: mealAdvice.decision!,
                 carbs: mealStatus.netCarbsGrams.ceil(),
                 extendedCarbs:

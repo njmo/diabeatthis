@@ -10,6 +10,7 @@ AapsBolusSuggestionNotificationEvent? calculatorInstructionEvent(
   return AapsBolusSuggestionNotificationEvent(
     mealId: event.mealId,
     carbs: event.carbs,
+    activityDoseSuggestion: event.activityDoseSuggestion,
     extendedCarbs: event.extendedCarbs,
     extendedCarbsAreAdditional: event.extendedCarbsAreAdditional,
     extendedCarbsDeliveryMode: event.extendedCarbsDeliveryMode,

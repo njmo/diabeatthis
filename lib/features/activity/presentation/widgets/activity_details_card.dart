@@ -25,12 +25,12 @@ class ActivityDetailsCard extends StatelessWidget {
         DetailInfoRow(
           icon: Icons.schedule,
           label: context.lang.activityPreMealSensitivityLabel,
-          value: context.lang.activityPercentLess(percentagePre),
+          value: context.lang.activityDosePercent(percentagePre),
         ),
         DetailInfoRow(
           icon: Icons.sports_score,
           label: context.lang.activityPostWorkoutSensitivityLabel,
-          value: context.lang.activityPercentLess(percentagePost),
+          value: context.lang.activityDosePercent(percentagePost),
         ),
         DetailInfoRow(
           icon: Icons.timer,

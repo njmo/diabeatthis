@@ -10,6 +10,7 @@ import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
+import '../../../meal_advisor/data/providers/get_meal_activity_advice_use_case_provider.dart';
 import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../meals/data/domain/use_cases/complete_bolus_wait_use_case.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
@@ -149,6 +150,9 @@ Future<AapsBolusSuggestionNotificationEvent?> _aapsSuggestionNotificationEvent(
   return AapsBolusSuggestionNotificationEvent(
     mealId: meal.id,
     mealName: meal.name,
+    activityDoseSuggestion: carbs > 0
+        ? await ref.read(getMealActivityAdviceUseCaseProvider)(mealId: meal.id)
+        : null,
     carbs: carbs,
     extendedCarbs: extendedCarbsGrams,
     extendedCarbsAreAdditional:

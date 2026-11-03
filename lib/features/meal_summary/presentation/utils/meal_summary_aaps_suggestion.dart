@@ -1,4 +1,5 @@
 import '../../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
+import '../../../meal_advisor/domain/models/meal_activity_dose_suggestion.dart';
 import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import 'meal_summary_carbs_delta.dart';
 
@@ -9,6 +10,7 @@ bool shouldOpenAapsForMealSummaryAapsCarbs(MealSummaryAapsCarbs aapsCarbs) {
 AapsBolusSuggestionNotificationEvent? buildMealSummaryAapsSuggestionEvent({
   required MealSummaryAapsCarbs aapsCarbs,
   required ExtendedCarbsScheduleSettings? extendedCarbsScheduleSettings,
+  MealActivityDoseSuggestion? activityDoseSuggestion,
   int? mealId,
   String? mealName,
   bool extendedCarbsAreAdditional = false,
@@ -19,6 +21,7 @@ AapsBolusSuggestionNotificationEvent? buildMealSummaryAapsSuggestionEvent({
 
   return AapsBolusSuggestionNotificationEvent(
     mealId: mealId,
+    activityDoseSuggestion: activityDoseSuggestion,
     mealName: mealName,
     carbs: aapsCarbs.carbs,
     extendedCarbs: aapsCarbs.extendedCarbs,

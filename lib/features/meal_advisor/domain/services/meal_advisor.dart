@@ -1,4 +1,5 @@
 import '../../../../common/meal/meal_decision.dart';
+import '../models/meal_activity_dose_suggestion.dart';
 import '../models/meal_advice.dart';
 import '../models/meal_advice_reason.dart';
 import '../models/meal_advisor_config.dart';
@@ -23,6 +24,7 @@ class MealAdvisor {
   }
 
   MealAdvice getMealAdvice({
+    MealActivityDoseSuggestion? activityDoseSuggestion,
     required int bg,
     required double iob,
     required double cob,
@@ -65,6 +67,7 @@ class MealAdvisor {
       return MealAdvice(
         decision,
         wait,
+        activityDoseSuggestion: activityDoseSuggestion,
         extendedCarbs: extendedCarbs,
         reason: reason,
       );
@@ -73,6 +76,7 @@ class MealAdvisor {
     return MealAdvice(
       decision,
       null,
+      activityDoseSuggestion: activityDoseSuggestion,
       extendedCarbs: extendedCarbs,
       reason: reason,
     );

@@ -16,6 +16,7 @@ import '../../../../../core/notifications/domain/models/notification_key.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
 import '../../../../../features/meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
+import '../../../../../features/meal_advisor/data/providers/get_meal_activity_advice_use_case_provider.dart';
 import '../../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../../event/internal/treatment_available_event.dart';
 import '../../../../providers/latest_bolus_wizard_provider.dart';
@@ -198,6 +199,12 @@ class MealAddOnBolusWaiter {
         ).getPostMealExtendedCarbsScheduleSettings();
       }
       mealContext.throwIfStopped(runtime);
+      final activityDoseSuggestion = request.requestedCarbs > 0
+          ? await runtime.container.read(getMealActivityAdviceUseCaseProvider)(
+              mealId: mealId,
+            )
+          : null;
+      mealContext.throwIfStopped(runtime);
       final current = await readMealAddOnBolusContext(
         runtime.container.read(databaseProvider),
         mealId,
@@ -207,6 +214,7 @@ class MealAddOnBolusWaiter {
       await notifications.show(
         AapsBolusSuggestionNotificationEvent(
           mealId: mealId,
+          activityDoseSuggestion: activityDoseSuggestion,
           carbs: request.requestedCarbs,
           extendedCarbs: pendingExtendedCarbs,
           extendedCarbsAreAdditional: true,

@@ -39,7 +39,7 @@ class SuggestionPipActivity : Activity(), CalculatorWindow {
             return
         }
         SuggestionPipSession.attach(this, intent.getStringExtra("sessionId"))
-        table = SuggestionPipTableView(this, intent.getStringExtra("title") ?: "", labels, values, intent.getBooleanArrayExtra("actionRows")?.toList())
+        table = SuggestionPipTableView(this, intent.getStringExtra("title") ?: "", labels, values, intent.getBooleanArrayExtra("actionRows")?.toList(), intent.getBooleanArrayExtra("prominentRows")?.toList())
         setContentView(table)
         if (reported && enteredPip) CalculatorWindowRegistry.markReady(intent.getStringExtra("sessionId"))
     }
@@ -51,7 +51,7 @@ class SuggestionPipActivity : Activity(), CalculatorWindow {
             if (reported || isFinishing) return@post
             try {
                 val rowCount = intent.getStringArrayListExtra("labels")?.size ?: 3
-                val ratio = when (rowCount) {
+                val ratio = if (intent.getBooleanArrayExtra("prominentRows")?.any { it } == true) Rational(7, 4) else when (rowCount) {
                     1 -> Rational(239, 100)
                     2 -> Rational(11, 5)
                     else -> Rational(2, 1)

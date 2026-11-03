@@ -12,6 +12,7 @@ import '../../meal_advisor/data/providers/ai_assisted_meal_advisor_settings_prov
 import '../../meal_advisor/data/providers/check_meal_advice_eligibility_use_case_provider.dart';
 import '../../meal_advisor/data/providers/check_meal_advisor_device_status_use_case_provider.dart';
 import '../../meal_advisor/data/providers/extended_carbs_schedule_settings_provider.dart';
+import '../../meal_advisor/data/providers/get_meal_activity_advice_use_case_provider.dart';
 import '../../meal_advisor/data/providers/get_meal_advice_use_case_provider.dart';
 import '../../meal_advisor/data/providers/meal_advisor_context_provider.dart';
 import '../../meal_advisor/data/providers/resolve_meal_advisor_device_status_use_case_provider.dart';
@@ -178,6 +179,10 @@ class MealDialogController extends _$MealDialogController with Logging {
         resolvedStatus.eligibility == MealAdviceEligibility.available
         ? null
         : resolvedStatus.eligibility;
+    final activityDoseSuggestion = await ref.read(
+      getMealActivityAdviceUseCaseProvider,
+    )(mealAt: clock.now());
+    if (!ref.mounted || request != _adviceRequest) return;
     var advice = deviceStatus == null || unavailableReason != null
         ? MealAdvice.empty()
         : ref
@@ -194,6 +199,7 @@ class MealDialogController extends _$MealDialogController with Logging {
                     ),
                 deviceStatus: deviceStatus,
                 settings: extendedCarbsScheduleSettings,
+                activityDoseSuggestion: activityDoseSuggestion,
               );
     if (advice.decision != null) {
       final eligibility = await _checkAdviceEligibility();

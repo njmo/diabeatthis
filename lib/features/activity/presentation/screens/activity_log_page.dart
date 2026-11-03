@@ -208,13 +208,13 @@ class ActivityLogPage extends ConsumerWidget {
                 children: [
                   DetailInfoRow(
                     icon: Icons.schedule,
-                    label: context.lang.activityBeforeMealLabel,
-                    value: context.lang.activityPercentLess(log.percentagePre),
+                    label: context.lang.activityPreMealSensitivityLabel,
+                    value: context.lang.activityDosePercent(log.percentagePre),
                   ),
                   DetailInfoRow(
                     icon: Icons.sports_score,
                     label: context.lang.activityAfterWorkoutLabel,
-                    value: context.lang.activityPercentLess(log.percentagePost),
+                    value: context.lang.activityDosePercent(log.percentagePost),
                   ),
                 ],
               ),

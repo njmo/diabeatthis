@@ -13,6 +13,7 @@ import '../../../../common/widgets/meal_start/meal_start_sheet.dart';
 import '../../../../common/widgets/meal_start/meal_start_summary.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../meal_advisor/presentation/widgets/meal_activity_warning.dart';
 import '../../../meal_summary/domain/utils/meal_add_on_status.dart';
 import '../../data/meal_dialog_controller.dart';
 import '../../data/meal_dialog_state.dart';
@@ -109,6 +110,10 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
                 MealAdviceUnavailable(
                   reason: s.unavailableReason,
                   onRetry: saving.value ? null : c.chooseEat,
+                ),
+              if (!s.skipMeal && s.advice.activityDoseSuggestion != null)
+                MealActivityWarning(
+                  suggestion: s.advice.activityDoseSuggestion!,
                 ),
             ],
           );

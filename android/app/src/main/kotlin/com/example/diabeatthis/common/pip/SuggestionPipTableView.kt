@@ -9,8 +9,10 @@ import android.text.TextUtils
 import android.view.View
 
 /** Scales the heading and table to the actual PiP bounds rather than a full-screen layout. */
-class SuggestionPipTableView(context: Context, private val title: String, private val labels: List<String>, private val values: List<String>, private val actionRows: List<Boolean>? = null) : View(context) {
+class SuggestionPipTableView(context: Context, private val title: String, private val labels: List<String>, private val values: List<String>, private val actionRows: List<Boolean>? = null, private val prominentRows: List<Boolean>? = null) : View(context) {
     private fun isActionRow(index: Int) = actionRows?.getOrNull(index) ?: (index < 2)
+
+    private val contextRow = SuggestionPipContextRow()
 
     private var completed = List(labels.size) { false }
 
@@ -36,8 +38,12 @@ class SuggestionPipTableView(context: Context, private val title: String, privat
         super.onDraw(canvas)
         canvas.drawColor(Color.rgb(20, 28, 36))
         val padding = width * 0.025f
-        val headerHeight = height * if (labels.size == 1) 0.36f else 0.25f
-        val rowHeight = (height - headerHeight) / labels.size
+        val hasContext = prominentRows?.any { it } == true
+        val contextCount = labels.indices.count { prominentRows?.getOrNull(it) == true }
+        val headerHeight = height * if (hasContext) 0.18f else if (labels.size == 1) 0.36f else 0.25f
+        val contextHeight = if (hasContext) height * 0.44f / contextCount else 0f
+        val normalCount = labels.size - contextCount
+        val rowHeight = if (normalCount > 0) (height - headerHeight - contextHeight * contextCount) / normalCount else 0f
         textPaint.color = Color.WHITE
         textPaint.typeface = Typeface.DEFAULT_BOLD
         textPaint.textSize = headerHeight * 0.38f
@@ -54,7 +60,18 @@ class SuggestionPipTableView(context: Context, private val title: String, privat
         val heading = TextUtils.ellipsize(title, textPaint, titleWidth, TextUtils.TruncateAt.END)
         val titleBaseline = headerHeight / 2 - (textPaint.ascent() + textPaint.descent()) / 2
         canvas.drawText(heading.toString(), titleLeft, titleBaseline, textPaint)
-        labels.zip(values).forEachIndexed { index, (label, value) ->
+        val displayOrder = labels.indices.sortedBy { if (prominentRows?.getOrNull(it) == true) 0 else 1 }
+        var nextTop = headerHeight
+        displayOrder.forEach { index ->
+            val label = labels[index]
+            val value = values[index]
+            val top = nextTop
+            if (prominentRows?.getOrNull(index) == true) {
+                contextRow.draw(canvas, label, value, padding, top, width - padding, contextHeight)
+                nextTop += contextHeight
+                return@forEach
+            }
+            nextTop += rowHeight
             val isAction = isActionRow(index)
             paint.textSize = minOf(rowHeight * if (isAction) 0.40f else 0.34f, height * 0.19f)
             val box = minOf(rowHeight * 0.30f, height * 0.12f)
@@ -62,7 +79,6 @@ class SuggestionPipTableView(context: Context, private val title: String, privat
             val required = paint.measureText(label) + paint.measureText(value)
             val available = width - textLeft - padding * 2
             if (required > available) paint.textSize *= available / required
-            val top = headerHeight + rowHeight * index
             paint.color = Color.rgb(49, 63, 73)
             canvas.drawLine(padding, top, width - padding, top, paint)
             val baseline = top + rowHeight / 2 - (paint.ascent() + paint.descent()) / 2

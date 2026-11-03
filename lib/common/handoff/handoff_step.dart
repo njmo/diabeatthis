@@ -5,10 +5,12 @@ class HandoffStep {
     required this.value,
     required this.actionId,
     this.showCheckbox = true,
+    this.prominent = false,
   });
 
   final String label;
   final String value;
   final String actionId;
   final bool showCheckbox;
+  final bool prominent;
 }

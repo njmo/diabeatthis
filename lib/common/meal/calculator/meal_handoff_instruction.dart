@@ -1,4 +1,5 @@
 import '../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
+import '../../../features/meal_advisor/domain/models/meal_activity_dose_suggestion.dart';
 import '../../../features/meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import '../../handoff/handoff_instruction.dart';
 import '../../handoff/handoff_step.dart';
@@ -12,6 +13,7 @@ class MealHandoffInstruction {
     AapsBolusSuggestionNotificationEvent event,
     AppLocalizations strings,
   ) {
+    final suggestion = event.activityDoseSuggestion;
     final delay = event.extendedCarbsDelayMinutes;
     final duration = event.extendedCarbsDurationMinutes;
     final schedule =
@@ -33,15 +35,36 @@ class MealHandoffInstruction {
           value: '${event.carbs} g',
           actionId: bolusAction,
         ),
+        if (event.hasActivityDoseSuggestion && suggestion != null)
+          HandoffStep(
+            label: strings.mealActivityDoseProposal(suggestion.dosePercent),
+            value:
+                '${switch (suggestion.phase) {
+                  MealActivityPhase.upcoming => strings.mealActivityUpcoming,
+                  MealActivityPhase.ongoing => strings.mealActivityOngoing,
+                  MealActivityPhase.completed => strings.mealActivityCompleted,
+                }} · ${suggestion.activityName}',
+            actionId: bolusAction,
+            showCheckbox: false,
+            prominent: true,
+          ),
         if (hasExtendedCarbs)
           HandoffStep(
             label: event.extendedCarbsAreAdditional
                 ? strings.aapsPipAdditionalExtendedCarbs
                 : strings.aapsPipExtendedCarbs,
-            value: '${event.extendedCarbs} g',
+            value:
+                event.hasActivityDoseSuggestion &&
+                    delay != null &&
+                    duration != null
+                ? '${event.extendedCarbs} g · $schedule'
+                : '${event.extendedCarbs} g',
             actionId: extendedCarbsAction,
           ),
-        if (hasExtendedCarbs && delay != null && duration != null)
+        if (hasExtendedCarbs &&
+            delay != null &&
+            duration != null &&
+            !event.hasActivityDoseSuggestion)
           HandoffStep(
             label: strings.aapsPipTime,
             value: schedule,

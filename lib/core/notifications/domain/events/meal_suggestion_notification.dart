@@ -1,5 +1,6 @@
 import '../../../../common/l10n/language.dart';
 import '../../../../features/dashboard/data/utils/meal_advisor.dart';
+import '../../../../features/meal_advisor/domain/models/meal_activity_dose_suggestion.dart';
 import '../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_formatter.dart';
 import '../../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../models/notification_event.dart';
@@ -12,6 +13,7 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
     required this.minutes,
     required this.decision,
     required this.carbs,
+    this.activityDoseSuggestion,
     this.extendedCarbs = 0,
     this.extendedCarbsAreAdditional = false,
     this.extendedCarbsDeliveryMode = ExtendedCarbsDeliveryMode.extendedCarbs,
@@ -23,6 +25,7 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
   final int mealId;
   final MealDecision decision;
   final int minutes;
+  final MealActivityDoseSuggestion? activityDoseSuggestion;
   final int carbs;
   final int extendedCarbs;
   final bool extendedCarbsAreAdditional;
@@ -107,6 +110,8 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
     'mealId': mealId,
     'minutes': minutes,
     'carbs': carbs,
+    if (activityDoseSuggestion != null)
+      'activityDoseSuggestion': activityDoseSuggestion!.toJson(),
     'extendedCarbs': extendedCarbs,
     if (extendedCarbsAreAdditional) 'extendedCarbsAreAdditional': true,
     'extendedCarbsDeliveryMode': extendedCarbsDeliveryMode.name,
@@ -123,6 +128,9 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
       mealId: json['mealId'] as int,
       minutes: json['minutes'] as int,
       carbs: json['carbs'] as int,
+      activityDoseSuggestion: MealActivityDoseSuggestion.fromJson(
+        json['activityDoseSuggestion'],
+      ),
       extendedCarbs: json['extendedCarbs'] as int? ?? 0,
       extendedCarbsAreAdditional:
           json['extendedCarbsAreAdditional'] as bool? ?? false,
