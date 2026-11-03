@@ -36,7 +36,7 @@ void main() {
         matching: find.byType(Material),
       );
       final bounds = tester.getRect(surface);
-      expect(bounds.height, 64);
+      expect(bounds.height, 56);
       expect(bounds.bottom, closeTo(800 - inset - 12, 0.1));
       expect(tester.takeException(), isNull);
     }

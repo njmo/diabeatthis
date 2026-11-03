@@ -93,7 +93,9 @@ class AnchoredFabMenu extends HookWidget {
             highlightElevation: 0,
             focusElevation: 0,
             hoverElevation: 0,
-            shape: const CircleBorder(),
+            shape: CircleBorder(
+              side: BorderSide(color: theme.colorScheme.surface, width: 1),
+            ),
             onPressed: onToggle,
             child: Icon(open ? Icons.close : Icons.add),
           ),

@@ -1,14 +1,15 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../common/l10n/language.dart';
-import 'dashboard_destination.dart';
+import 'dashboard_navigation_group.dart';
 import 'dashboard_navigation_outline.dart';
 import 'dashboard_navigation_shape.dart';
 
 double dashboardBottomBarHeight(BuildContext context) =>
-    64 + (MediaQuery.textScalerOf(context).scale(12) - 12) * 1.4;
+    56 + (MediaQuery.textScalerOf(context).scale(12.5) - 12.5);
 
 class DashboardBottomBar extends StatelessWidget {
   const DashboardBottomBar({
@@ -25,10 +26,10 @@ class DashboardBottomBar extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final dark = Theme.of(context).brightness == Brightness.dark;
     final destinations = [
-      (context.lang.dashboardHomeTab, Icons.home_outlined),
-      (context.lang.dashboardDayTab, Icons.today_outlined),
-      (context.lang.dashboardHistoryTab, Icons.history),
-      (context.lang.dashboardCatalogTab, Icons.menu_book_outlined),
+      (context.lang.dashboardHomeTab, LucideIcons.panelsTopLeft),
+      (context.lang.dashboardDayTab, LucideIcons.calendarRange),
+      (context.lang.dashboardHistoryTab, LucideIcons.logs),
+      (context.lang.dashboardCatalogTab, LucideIcons.library),
     ];
     return SafeArea(
       top: false,
@@ -40,7 +41,9 @@ class DashboardBottomBar extends StatelessWidget {
           child: CustomPaint(
             foregroundPainter: DashboardNavigationOutline(
               geometry: Scaffold.geometryOf(context),
-              color: Theme.of(context).colorScheme.outlineVariant,
+              color: (dark ? Colors.white : Colors.black).withValues(
+                alpha: dark ? 0.08 : 0.10,
+              ),
               leftInset: 12 + MediaQuery.paddingOf(context).left,
             ),
             child: BottomAppBar(
@@ -51,7 +54,7 @@ class DashboardBottomBar extends StatelessWidget {
               shadowColor: Colors.transparent,
               elevation: 0,
               height: dashboardBottomBarHeight(context),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 2),
               shape: DashboardNavigationShape(
                 horizontalInset: 12 + MediaQuery.paddingOf(context).left,
               ),
@@ -61,21 +64,23 @@ class DashboardBottomBar extends StatelessWidget {
                 filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Row(
                   children: [
-                    for (
-                      var index = 0;
-                      index < destinations.length;
-                      index++
-                    ) ...[
-                      if (index == 2) const SizedBox(width: 64),
-                      Expanded(
-                        child: DashboardDestination(
-                          label: destinations[index].$1,
-                          icon: destinations[index].$2,
-                          selected: selectedIndex == index,
-                          onTap: () => onSelected(index),
-                        ),
+                    Expanded(
+                      child: DashboardNavigationGroup(
+                        destinations: destinations.sublist(0, 2),
+                        startIndex: 0,
+                        selectedIndex: selectedIndex,
+                        onSelected: onSelected,
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 60),
+                    Expanded(
+                      child: DashboardNavigationGroup(
+                        destinations: destinations.sublist(2),
+                        startIndex: 2,
+                        selectedIndex: selectedIndex,
+                        onSelected: onSelected,
+                      ),
+                    ),
                   ],
                 ),
               ),

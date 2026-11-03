@@ -30,7 +30,7 @@ class DashboardNavigationOutline extends CustomPainter {
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2,
+        ..strokeWidth = 0.75,
     );
   }
 

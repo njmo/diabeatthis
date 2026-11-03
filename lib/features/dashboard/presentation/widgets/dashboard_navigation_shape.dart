@@ -5,7 +5,7 @@ class DashboardNavigationShape extends NotchedShape {
 
   final double horizontalInset;
 
-  static const double notchMargin = 4;
+  static const double notchMargin = 1;
 
   @override
   Path getOuterPath(Rect host, Rect? guest) => Path.combine(
