@@ -1,5 +1,7 @@
 import '../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
+import '../../handoff/handoff_progress.dart';
 import 'meal_calculator_evidence.dart';
+import 'meal_handoff_instruction.dart';
 
 class MealCalculatorRequest {
   MealCalculatorRequest({
@@ -21,14 +23,21 @@ class MealCalculatorRequest {
   bool acceptedByMeal = false;
   List<int> acceptedWizardTimes = [];
 
-  List<bool> get completedRows => [
-    tracker.bolusConfirmed,
-    if (event.extendedCarbs > 0) tracker.extendedCarbsConfirmed,
+  HandoffProgress get progress => HandoffProgress({
+    MealHandoffInstruction.bolusAction: tracker.bolusConfirmed,
+    if (event.extendedCarbs > 0)
+      MealHandoffInstruction.extendedCarbsAction:
+          tracker.extendedCarbsConfirmed,
+  });
+
+  List<bool> get completedRows => progress.completedRows([
+    MealHandoffInstruction.bolusAction,
+    if (event.extendedCarbs > 0) MealHandoffInstruction.extendedCarbsAction,
     if (event.extendedCarbs > 0 &&
         event.extendedCarbsDelayMinutes != null &&
         event.extendedCarbsDurationMinutes != null)
-      tracker.extendedCarbsConfirmed,
-  ];
+      MealHandoffInstruction.extendedCarbsAction,
+  ]);
 
   Map<String, dynamic> toJson() => {
     'event': event.toJson(),

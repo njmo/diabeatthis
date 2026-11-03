@@ -9,13 +9,15 @@ import android.text.TextUtils
 import android.view.View
 
 /** Scales the heading and table to the actual PiP bounds rather than a full-screen layout. */
-class SuggestionPipTableView(context: Context, private val title: String, private val labels: List<String>, private val values: List<String>) : View(context) {
+class SuggestionPipTableView(context: Context, private val title: String, private val labels: List<String>, private val values: List<String>, private val actionRows: List<Boolean>? = null) : View(context) {
+    private fun isActionRow(index: Int) = actionRows?.getOrNull(index) ?: (index < 2)
+
     private var completed = List(labels.size) { false }
 
     fun setCompleted(value: List<Boolean>) {
         completed = List(labels.size) { value.getOrElse(it) { false } }
         contentDescription = title + ". " + labels.zip(values).mapIndexed { index, (label, value) ->
-            if (index < 2) "${if (completed[index]) "☑" else "☐"} $label: $value"
+            if (isActionRow(index)) "${if (completed[index]) "☑" else "☐"} $label: $value"
             else "$label: $value"
         }.joinToString(". ")
         invalidate()
@@ -53,7 +55,7 @@ class SuggestionPipTableView(context: Context, private val title: String, privat
         val titleBaseline = headerHeight / 2 - (textPaint.ascent() + textPaint.descent()) / 2
         canvas.drawText(heading.toString(), titleLeft, titleBaseline, textPaint)
         labels.zip(values).forEachIndexed { index, (label, value) ->
-            val isAction = index < 2
+            val isAction = isActionRow(index)
             paint.textSize = minOf(rowHeight * if (isAction) 0.40f else 0.34f, height * 0.19f)
             val box = minOf(rowHeight * 0.30f, height * 0.12f)
             val textLeft = padding * 2 + box

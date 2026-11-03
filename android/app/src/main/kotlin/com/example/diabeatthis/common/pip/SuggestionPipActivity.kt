@@ -39,7 +39,7 @@ class SuggestionPipActivity : Activity(), CalculatorWindow {
             return
         }
         SuggestionPipSession.attach(this, intent.getStringExtra("sessionId"))
-        table = SuggestionPipTableView(this, intent.getStringExtra("title") ?: "", labels, values)
+        table = SuggestionPipTableView(this, intent.getStringExtra("title") ?: "", labels, values, intent.getBooleanArrayExtra("actionRows")?.toList())
         setContentView(table)
         if (reported && enteredPip) CalculatorWindowRegistry.markReady(intent.getStringExtra("sessionId"))
     }
