@@ -7,11 +7,13 @@ class NightscoutSettingsDraft {
     required this.tempTargetsEnabled,
     required this.childName,
     this.dataSourceConfig,
+    this.lowTreatmentsEnabled = false,
   });
 
   final String url;
   final String token;
   final bool tempTargetsEnabled;
+  final bool lowTreatmentsEnabled;
   final String childName;
   final DataSourceConfig? dataSourceConfig;
 }

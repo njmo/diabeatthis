@@ -1,0 +1,11 @@
+-- Immutable delivery snapshot. Kept after local deletion to resolve uncertain writes.
+CREATE TABLE low_treatment_upload (
+  meal_id INTEGER NOT NULL PRIMARY KEY,
+  identifier TEXT NOT NULL UNIQUE,
+  source_key TEXT NOT NULL,
+  eaten_at INTEGER NOT NULL,
+  carbs REAL NOT NULL CHECK (carbs > 0),
+  state TEXT NOT NULL DEFAULT 'queued',
+  attempted INTEGER NOT NULL DEFAULT 0,
+  next_attempt_at INTEGER NOT NULL DEFAULT 0
+);

@@ -1,6 +1,8 @@
+import 'package:diabeatthis/features/low_treatment/data/providers/low_treatment_upload_provider.dart';
 import 'package:diabeatthis/features/low_treatment/domain/models/recorded_low_treatment.dart';
 import 'package:diabeatthis/features/low_treatment/presentation/widgets/recorded_low_treatment_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/localized_material_app.dart';
@@ -10,14 +12,21 @@ void main() {
     'shows consumed ingredients inline without a navigation control',
     (tester) async {
       await tester.pumpWidget(
-        localizedMaterialApp(
-          home: Scaffold(
-            body: RecordedLowTreatmentCard(
-              treatment: RecordedLowTreatment(
-                mealId: 42,
-                eatenAt: DateTime(2026, 9, 5, 10, 21),
-                netCarbsGrams: 7.35,
-                ingredients: const [(name: 'Juice', grams: 75)],
+        ProviderScope(
+          overrides: [
+            lowTreatmentUploadStatusProvider(
+              42,
+            ).overrideWith((ref) => Stream.value(null)),
+          ],
+          child: localizedMaterialApp(
+            home: Scaffold(
+              body: RecordedLowTreatmentCard(
+                treatment: RecordedLowTreatment(
+                  mealId: 42,
+                  eatenAt: DateTime(2026, 9, 5, 10, 21),
+                  netCarbsGrams: 7.35,
+                  ingredients: const [(name: 'Juice', grams: 75)],
+                ),
               ),
             ),
           ),

@@ -8,6 +8,7 @@ extension LowTreatmentContextDataToDomain on LowTreatmentContextData {
       relatedMealId: relatedMealId,
       relatedActivityLogId: relatedActivityLogId,
       source: domain.LowTreatmentContextSource.fromStorage(source),
+      recordedCarbs: recordedCarbs,
       suggestedCarbs: suggestedCarbs,
       suggestedWithinMinutes: suggestedWithinMinutes,
       suggestionAt: _date(suggestionAt),

@@ -3533,5 +3533,13 @@
   "activityEditAction": "Edytuj",
   "activityHistoryAction": "Pokaż historię aktywności",
   "activitySummaryHide": "Ukryj",
-  "activityLogEditTitle": "Edytuj aktywność"
+  "activityLogEditTitle": "Edytuj aktywność",
+  "settingsLowTreatmentUploadTitle": "Wysyłaj dosłodzenia do Nightscout",
+  "settingsLowTreatmentUploadDescription": "Po zatwierdzeniu nowego dosłodzenia wyślij zapisane węglowodany do Nightscout zamiast otwierać AAPS. Wymaga uprawnień odczytu i tworzenia treatments. Wyłączenie opcji wstrzymuje kolejkę; nie wpisuj tych samych węglowodanów ręcznie w AAPS. Wysyłane są tylko nowe wpisy.",
+  "lowTreatmentUploadQueued": "Nightscout: oczekuje na wysłanie",
+  "lowTreatmentUploadVerifying": "Nightscout: oczekuje na potwierdzenie lub ponowienie",
+  "lowTreatmentUploadSent": "Nightscout: wysłano",
+  "lowTreatmentUploadCancelled": "Nightscout: wysyłka anulowana po lokalnych zmianach",
+  "lowTreatmentUploadPaused": "Nightscout: wstrzymano — sprawdź ustawienia wysyłki",
+  "lowTreatmentConsiderCalculator": "Przy dosłodzeniu powyżej 10 g rozważ później użycie kalkulatora w AAPS."
 }

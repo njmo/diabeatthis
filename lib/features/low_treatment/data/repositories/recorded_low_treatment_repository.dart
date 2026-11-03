@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../../common/meal/low_treatment_delivery_carbs.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../../meals/data/mappers/meal_details_data_mapper.dart';
 import '../../domain/models/recorded_low_treatment.dart';
@@ -74,7 +75,13 @@ class RecordedLowTreatmentRepository {
       ingredients: List.unmodifiable(consumedIngredients),
       mealId: meal.id,
       eatenAt: DateTime.fromMillisecondsSinceEpoch(meal.plannedAt),
-      netCarbsGrams: carbs,
+      netCarbsGrams:
+          context?.recordedCarbs?.toDouble() ??
+          (carbs == null
+              ? null
+              : carbs >= 0.5
+              ? lowTreatmentDeliveryCarbs(carbs)
+              : 0.0),
       reason: context?.reason,
       source: context?.source,
       relatedMealId: context?.relatedMealId,

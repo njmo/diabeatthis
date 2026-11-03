@@ -72,7 +72,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 42;
+  int get schemaVersion => 44;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -96,6 +96,12 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
+      if (from < 43) {
+        final existing = await customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'low_treatment_upload'",
+        ).getSingleOrNull();
+        if (existing == null) await m.createTable(lowTreatmentUpload);
+      }
       if (from < 42) await migrateActivitySummary(this, m);
       if (from < 41) {
         final columns = await customSelect('PRAGMA table_info(meal)').get();
@@ -252,6 +258,19 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       }
       if (from < 36) {
         await migrateTempTargetOperations(this, m);
+      }
+      if (from < 44) {
+        final columns = await customSelect(
+          'PRAGMA table_info(low_treatment_context)',
+        ).get();
+        if (!columns.any(
+          (row) => row.read<String>('name') == 'recorded_carbs',
+        )) {
+          await m.addColumn(
+            lowTreatmentContext,
+            lowTreatmentContext.recordedCarbs,
+          );
+        }
       }
     },
     beforeOpen: (details) async {

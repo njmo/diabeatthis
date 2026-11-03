@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/profile_name_field.dart';
 import '../../data/models/nightscout_settings_save_state.dart';
+import 'low_treatment_upload_settings_switch.dart';
 import 'nightscout_connection_fields.dart';
 import 'settings_section_card.dart';
 import 'temp_target_settings_switch.dart';
@@ -19,12 +20,16 @@ class NightscoutSettingsSection extends StatelessWidget {
     required this.onChanged,
     required this.onTempTargetsChanged,
     required this.onSave,
+    this.lowTreatmentsEnabled = false,
+    this.onLowTreatmentsChanged,
   });
 
   final TextEditingController urlController;
   final TextEditingController tokenController;
   final TextEditingController childNameController;
   final bool tempTargetsEnabled;
+  final bool lowTreatmentsEnabled;
+  final ValueChanged<bool>? onLowTreatmentsChanged;
   final bool urlRequired;
   final NightscoutSettingsSaveState saveState;
   final VoidCallback onChanged;
@@ -56,7 +61,7 @@ class NightscoutSettingsSection extends StatelessWidget {
           urlController: urlController,
           tokenController: tokenController,
           urlRequired: urlRequired,
-          tokenRequired: tempTargetsEnabled,
+          tokenRequired: tempTargetsEnabled || lowTreatmentsEnabled,
           onChanged: (_) => onChanged(),
         ),
         TempTargetSettingsSwitch(
@@ -65,6 +70,13 @@ class NightscoutSettingsSection extends StatelessWidget {
           hasToken: tokenController.text.trim().isNotEmpty,
           onChanged: onTempTargetsChanged,
         ),
+        if (onLowTreatmentsChanged != null)
+          LowTreatmentUploadSettingsSwitch(
+            enabled: !saveState.isSaving,
+            value: lowTreatmentsEnabled,
+            hasToken: tokenController.text.trim().isNotEmpty,
+            onChanged: onLowTreatmentsChanged!,
+          ),
         const SizedBox(height: 16),
         ProfileNameField(
           enabled: !saveState.isSaving,

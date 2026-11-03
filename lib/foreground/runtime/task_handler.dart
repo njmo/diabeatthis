@@ -25,6 +25,7 @@ import '../task/tasks/aaps_carbs_request_monitor_task.dart';
 import '../task/tasks/activity_monitor_task/activity_monitor_task.dart';
 import '../task/tasks/activity_schedule_task.dart';
 import '../task/tasks/low_treatment_handoff_task.dart';
+import '../task/tasks/low_treatment_upload_task.dart';
 import '../task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import '../task/tasks/service_status_updater_task.dart';
 import 'foreground_runtime_disposer.dart';
@@ -80,6 +81,7 @@ class MyTaskHandler extends TaskHandler with Logging {
       const ActivityScheduleTask(),
       const AapsCarbsRequestMonitorTask(),
       const LowTreatmentHandoffTask(),
+      const LowTreatmentUploadTask(),
     ];
     for (final task in tasks) {
       _taskScheduler!.startTask(task, runtimeContext);

@@ -1,10 +1,12 @@
 import 'package:diabeatthis/core/domain/model/carbs_label_mode.dart';
 import 'package:diabeatthis/core/domain/model/low_treatment_context.dart';
+import 'package:diabeatthis/features/low_treatment/data/providers/low_treatment_upload_provider.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_details_data.dart';
 import 'package:diabeatthis/features/meals/presentation/models/meal_page_state.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_low_treatments_section.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_preview_header.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../../helpers/localized_material_app.dart';
@@ -16,13 +18,20 @@ void main() {
       final details = mealDetailsWithLowTreatment();
 
       await tester.pumpWidget(
-        localizedMaterialApp(
-          home: Scaffold(
-            body: ListView(
-              children: [
-                MealPreviewHeader(state: MealPageState(details: details)),
-                MealLowTreatmentsSection(details: details),
-              ],
+        ProviderScope(
+          overrides: [
+            lowTreatmentUploadStatusProvider(
+              2,
+            ).overrideWith((ref) => Stream.value(null)),
+          ],
+          child: localizedMaterialApp(
+            home: Scaffold(
+              body: ListView(
+                children: [
+                  MealPreviewHeader(state: MealPageState(details: details)),
+                  MealLowTreatmentsSection(details: details),
+                ],
+              ),
             ),
           ),
         ),

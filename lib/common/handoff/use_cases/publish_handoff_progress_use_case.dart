@@ -17,6 +17,7 @@ class PublishHandoffProgressUseCase {
         'Every required action must be represented in the window',
       );
     }
+    if (!gateway.isSupported) return Future.value();
     return gateway.updateRows(sessionId, progress.completedRows(rows));
   }
 }

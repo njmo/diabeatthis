@@ -49,6 +49,7 @@ abstract class LowTreatmentContext with _$LowTreatmentContext {
     int? relatedMealId,
     int? relatedActivityLogId,
     required LowTreatmentContextSource source,
+    int? recordedCarbs,
     double? suggestedCarbs,
     int? suggestedWithinMinutes,
     DateTime? suggestionAt,

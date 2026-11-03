@@ -8,6 +8,7 @@ import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../data/models/low_treatment_sheet_state.dart';
+import '../../data/providers/low_treatment_aaps_provider.dart';
 import '../controllers/low_treatment_context_controller.dart';
 import 'low_treatment_carbs_summary.dart';
 import 'low_treatment_context_section.dart';
@@ -20,10 +21,7 @@ Future<LowTreatmentContext?> showLowTreatmentSheet(
   BuildContext context, {
   DateTime? historicalAt,
 }) async {
-  final launcher = ProviderScope.containerOf(
-    context,
-    listen: false,
-  ).read(aapsLauncherProvider);
+  final container = ProviderScope.containerOf(context, listen: false);
   final saved = await showModalBottomSheet<LowTreatmentContext>(
     context: context,
     useRootNavigator: false,
@@ -40,7 +38,15 @@ Future<LowTreatmentContext?> showLowTreatmentSheet(
           ),
   );
   if (saved != null && historicalAt == null && context.mounted) {
-    final result = await launcher.openAaps();
+    final delivery = container.read(lowTreatmentAapsControllerProvider);
+    final automatic = await delivery.usesNightscout(saved.mealId);
+    if (!context.mounted) return saved;
+    final result = await delivery.open(saved.mealId, context.lang);
+    if (automatic && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.lang.lowTreatmentUploadQueued)),
+      );
+    }
     if (result != AapsLaunchResult.opened && context.mounted) {
       ScaffoldMessenger.of(
         context,

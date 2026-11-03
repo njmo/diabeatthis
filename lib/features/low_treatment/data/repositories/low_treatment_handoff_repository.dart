@@ -96,7 +96,7 @@ class LowTreatmentHandoffRepository implements LowTreatmentHandoffGateway {
         meal.plannedAt,
       );
     }
-    final selected = const MatchLowTreatmentHandoffsUseCase()(
+    final selected = const MatchLowTreatmentHandoffsUseCase().select(
       pending: unresolved,
       recordedAtByMeal: recordedAtByMeal,
       treatments: treatments,
@@ -105,18 +105,30 @@ class LowTreatmentHandoffRepository implements LowTreatmentHandoffGateway {
       now: now,
     );
     for (final item in unresolved) {
-      final candidate = selected[item.mealId];
-      if (candidate == null) continue;
-      await db
-          .into(db.lowTreatmentReview)
-          .insert(
-            LowTreatmentReviewCompanion.insert(
-              occurredAt: Value(candidate.createdAt.millisecondsSinceEpoch),
-              externalId: Value(candidate.externalId),
-              mealId: Value(item.mealId),
-              dismissed: const Value(false),
-            ),
-          );
+      final receipts = selected[item.mealId];
+      if (receipts == null) continue;
+      final candidate = receipts.last;
+      final actualCarbs = receipts.fold<int>(
+        0,
+        (sum, entry) => sum + entry.carbs,
+      );
+      for (final receipt in receipts) {
+        await db
+            .into(db.lowTreatmentReview)
+            .insert(
+              LowTreatmentReviewCompanion.insert(
+                occurredAt: Value(receipt.createdAt.millisecondsSinceEpoch),
+                externalId: Value(receipt.externalId),
+                mealId: Value(item.mealId),
+                dismissed: const Value(false),
+              ),
+            );
+      }
+      await (db.update(
+        db.lowTreatmentContext,
+      )..where((row) => row.mealId.equals(item.mealId))).write(
+        LowTreatmentContextCompanion(recordedCarbs: Value(actualCarbs)),
+      );
       await (db.update(
         db.lowTreatmentHandoff,
       )..where((row) => row.mealId.equals(item.mealId))).write(

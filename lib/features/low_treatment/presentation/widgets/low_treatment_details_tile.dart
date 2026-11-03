@@ -7,6 +7,8 @@ import '../../../meals/data/models/meal_details_data.dart';
 import '../../../meals/presentation/widgets/meal_details/meal_detail_formatters.dart';
 import '../formatters/low_treatment_context_formatters.dart';
 
+import 'low_treatment_upload_status.dart';
+
 class LowTreatmentDetailsTile extends StatelessWidget {
   const LowTreatmentDetailsTile({
     super.key,
@@ -41,6 +43,7 @@ class LowTreatmentDetailsTile extends StatelessWidget {
                 lowTreatmentSourceLabel(lowTreatmentContext.source, lang),
               ].join(' • '),
             ),
+            LowTreatmentUploadStatus(mealId: treatment.meal.id),
             const SizedBox(height: 4),
             Text(_ingredientsLabel(lang)),
             const SizedBox(height: 4),

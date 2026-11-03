@@ -30,3 +30,5 @@ import 'tables/accepted_meal_ai.drift';
 
 import 'tables/activity_schedule.drift';
 import 'tables/temp_target_operation.drift';
+
+import 'tables/low_treatment_upload.drift';

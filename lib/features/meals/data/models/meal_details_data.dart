@@ -242,6 +242,7 @@ class MealLowTreatmentDetailsData {
   }
 
   double get totalNetCarbsG {
+    if (context.recordedCarbs case final carbs?) return carbs.toDouble();
     return ingredients.fold(0.0, (sum, ingredient) {
       return sum + ingredient.consumedNetCarbsContribution;
     });

@@ -42,6 +42,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
     final childNameController = useTextEditingController();
 
     final tempTargetsEnabled = useState(false);
+    final lowTreatmentsEnabled = useState(false);
     useListenable(tokenController);
     final initialized = useState(false);
     final saveState = ref.watch(nightscoutSettingsControllerProvider);
@@ -73,6 +74,10 @@ class SettingsPage extends HookConsumerWidget with Logging {
               (pendingDraft?.tempTargetsEnabled ??
                   prefs.getBool(nightscoutTempTargetsEnabledKey) == true) &&
               tokenController.text.trim().isNotEmpty;
+          lowTreatmentsEnabled.value =
+              (pendingDraft?.lowTreatmentsEnabled ??
+                  prefs.getBool(nightscoutLowTreatmentsEnabledKey) == true) &&
+              tokenController.text.trim().isNotEmpty;
           childNameController.text =
               pendingDraft?.childName ?? prefs.getString(childNameKey) ?? '';
           initialized.value = true;
@@ -91,6 +96,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
               url: urlController.text,
               token: tokenController.text,
               tempTargetsEnabled: tempTargetsEnabled.value,
+              lowTreatmentsEnabled: lowTreatmentsEnabled.value,
               childName: childNameController.text,
               dataSourceConfig: visibleDataSourceConfig,
             ),
@@ -174,9 +180,17 @@ class SettingsPage extends HookConsumerWidget with Logging {
                       tokenController: tokenController,
                       childNameController: childNameController,
                       tempTargetsEnabled: tempTargetsEnabled.value,
+                      lowTreatmentsEnabled: lowTreatmentsEnabled.value,
+                      onLowTreatmentsChanged: (value) {
+                        lowTreatmentsEnabled.value = value;
+                        ref
+                            .read(nightscoutSettingsControllerProvider.notifier)
+                            .clearFailure();
+                      },
                       urlRequired:
                           (visibleDataSourceConfig?.usesCloud ?? true) ||
                           tempTargetsEnabled.value ||
+                          lowTreatmentsEnabled.value ||
                           tokenController.text.trim().isNotEmpty,
                       saveState: saveState,
                       onChanged: () => ref

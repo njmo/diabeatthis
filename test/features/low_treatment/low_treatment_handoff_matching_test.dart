@@ -29,7 +29,7 @@ void main() {
   );
 
   test(
-    'requires exact amount and a timestamp inside the five-minute window',
+    'requires at least the expected amount inside the five-minute window',
     () {
       expect(match([event(-1)]), isEmpty);
       expect(match([event(301)]), isEmpty);
@@ -46,9 +46,9 @@ void main() {
     },
   );
   test(
-    'does not choose between two valid events or replace a manual decision',
+    'accumulates two valid events without replacing a manual decision',
     () {
-      expect(match([event(60), event(120)]), isEmpty);
+      expect(match([event(60), event(120)])[1]?.carbs, 20);
       expect(
         match(
           [event(60)],

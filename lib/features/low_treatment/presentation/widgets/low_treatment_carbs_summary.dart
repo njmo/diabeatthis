@@ -6,6 +6,7 @@ import '../../../../common/l10n/language.dart';
 import '../../domain/models/low_treatment_suggestion_comparison.dart';
 import '../controllers/low_treatment_context_controller.dart';
 import '../providers/low_treatment_context_providers.dart';
+import 'low_treatment_calculator_hint.dart';
 import 'low_treatment_suggestion_status.dart';
 import 'low_treatment_summary_row.dart';
 
@@ -42,6 +43,7 @@ class LowTreatmentCarbsSummary extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const Divider(height: 12),
+        if (data != null) LowTreatmentCalculatorHint(carbs: data.carbsTotal),
         if (color != null)
           LowTreatmentSuggestionStatusBanner(
             comparison: comparison,

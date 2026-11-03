@@ -18,7 +18,9 @@ import '../../data/models/low_treatment_sheet_state.dart';
 import '../../data/providers/low_treatment_handoff_provider.dart';
 import '../../data/providers/low_treatment_related_activity_provider.dart';
 import '../../data/providers/low_treatment_related_meal_provider.dart';
+import '../../data/providers/low_treatment_upload_provider.dart';
 import '../../domain/use_cases/add_low_treatment_context_entry_use_case.dart';
+
 part 'low_treatment_context_controller.g.dart';
 
 @riverpod
@@ -335,6 +337,7 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
                   ? null
                   : context.suggestionAt,
             );
+        await ref.read(registerLowTreatmentUploadUseCaseProvider)(mealId);
       }
       return (context: context, contextDraft: contextDraft);
     });

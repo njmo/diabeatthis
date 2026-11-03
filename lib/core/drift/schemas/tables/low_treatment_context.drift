@@ -10,6 +10,7 @@ CREATE TABLE low_treatment_context (
     REFERENCES activity_log(id) ON DELETE SET NULL,
 
   source TEXT NOT NULL CHECK (source IN ('manual', 'aapsSuggestion', 'dashboardAction')),
+  recorded_carbs INTEGER CHECK (recorded_carbs >= 0),
   suggested_carbs REAL,
   suggested_within_minutes INTEGER,
   suggestion_at INTEGER,

@@ -5,12 +5,13 @@ import '../../../app/providers/app_foreground_bridge_provider.dart';
 import '../../../app/providers/foreground_task_state_provider.dart';
 import '../../../common/events/data/app/execute_command_event.dart';
 import '../../../common/events/data/app/sync_data_key.dart';
+import '../../../common/identifiers/create_uuid.dart';
 import '../../../core/data/provider/monitor_service_enabled_provider.dart';
 import '../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../core/data_sources/config/data_source_config_provider.dart';
-import '../../../core/data_sources/nightscout/nightscout_cloud_connection_tester.dart';
 import '../../../core/data_sources/nightscout/nightscout_storage_keys.dart';
 import '../../../core/data_sources/nightscout/nightscout_token_validator.dart';
+import '../../../core/data_sources/nightscout/providers/nightscout_connection_check_provider.dart';
 import '../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import '../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../../../core/logger/logger.dart';
@@ -48,7 +49,13 @@ class SaveNightscoutSettingsUseCase with Logging {
         draft.tempTargetsEnabled !=
         (prefs.getBool(nightscoutTempTargetsEnabledKey) ?? false);
 
-    if (draft.tempTargetsEnabled && token.isEmpty) {
+    final lowTreatmentsChanged =
+        draft.lowTreatmentsEnabled !=
+        (prefs.getBool(nightscoutLowTreatmentsEnabledKey) ?? false);
+    final requiresWrite =
+        draft.tempTargetsEnabled || draft.lowTreatmentsEnabled;
+
+    if (requiresWrite && token.isEmpty) {
       throw const NightscoutTokenValidationException(
         NightscoutTokenIssue.required,
       );
@@ -56,22 +63,28 @@ class SaveNightscoutSettingsUseCase with Logging {
     // Existing verified credentials need no network request for local edits.
     // Enabling uploads or changing credentials still validates before any write.
     final enablingTempTargets = draft.tempTargetsEnabled && tempTargetsChanged;
-    if (enablingTempTargets || (connectionChanged && token.isNotEmpty)) {
+    if (enablingTempTargets ||
+        (draft.lowTreatmentsEnabled && lowTreatmentsChanged) ||
+        (connectionChanged && token.isNotEmpty)) {
       await validator.validate(
         url: url,
         token: token,
-        requireTreatmentWrite: draft.tempTargetsEnabled,
+        requireTreatmentWrite: requiresWrite,
       );
     }
     if (connectionChanged && config.usesCloud) {
-      await NightscoutCloudConnectionTester.fromUrl(
-        url,
-        nightscoutToken: token,
-      ).testConnection();
+      await _ref.read(nightscoutConnectionCheckProvider)(
+        url: url,
+        token: token,
+      );
     }
     if (!_ref.mounted) return;
 
-    if (urlChanged) await prefs.setString(nightscoutUrlKey, url);
+    if (urlChanged) {
+      // Rotate before changing URL: interrupted settings saves pause old deliveries.
+      await prefs.setString(nightscoutDeliveryRevisionKey, createUuid());
+      await prefs.setString(nightscoutUrlKey, url);
+    }
     if (tokenChanged) await prefs.setString(nightscoutTokenKey, token);
     if (childNameChanged) await prefs.setString(childNameKey, childName);
     if (tempTargetsChanged) {
@@ -80,23 +93,36 @@ class SaveNightscoutSettingsUseCase with Logging {
         draft.tempTargetsEnabled,
       );
     }
+    if (lowTreatmentsChanged) {
+      await prefs.setBool(
+        nightscoutLowTreatmentsEnabledKey,
+        draft.lowTreatmentsEnabled,
+      );
+    }
     if (!_ref.mounted) return;
 
-    if (connectionChanged || childNameChanged || tempTargetsChanged) {
+    if (connectionChanged ||
+        childNameChanged ||
+        tempTargetsChanged ||
+        lowTreatmentsChanged) {
       _ref.invalidate(sharedPrefsProvider);
       _ref.invalidate(nightscoutRepositoryProvider);
       _ref.invalidate(nightscoutUrlProvider);
       _ref.invalidate(nightscoutTokenProvider);
     }
 
-    if (tempTargetsChanged && !connectionChanged) {
+    if ((tempTargetsChanged || lowTreatmentsChanged) && !connectionChanged) {
       _ref
           .read(appEventRouterProvider)
           .send(
             ExecuteCommandEvent.syncSettings(
               data: {
-                nightscoutTempTargetsEnabledKey: draft.tempTargetsEnabled
-                    .toString(),
+                if (tempTargetsChanged)
+                  nightscoutTempTargetsEnabledKey: draft.tempTargetsEnabled
+                      .toString(),
+                if (lowTreatmentsChanged)
+                  nightscoutLowTreatmentsEnabledKey: draft.lowTreatmentsEnabled
+                      .toString(),
               },
             ),
           );

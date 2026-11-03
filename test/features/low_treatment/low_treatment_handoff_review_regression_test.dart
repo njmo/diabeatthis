@@ -69,7 +69,7 @@ void main() {
       expect(await db.select(db.lowTreatmentReview).get(), isEmpty);
     },
   );
-  test('offline batch keeps two matching entries ambiguous', () async {
+  test('offline batch accumulates two matching entries', () async {
     await pending();
     history.offline = true;
     expect(
@@ -77,9 +77,9 @@ void main() {
         now: start.add(const Duration(minutes: 3)),
         liveTreatments: [carb(60), carb(120)],
       ),
-      isEmpty,
+      hasLength(1),
     );
-    expect(await db.select(db.lowTreatmentReview).get(), isEmpty);
+    expect(await db.select(db.lowTreatmentReview).get(), hasLength(2));
   });
   test('offline batch still excludes calculator neighbours', () async {
     await pending();

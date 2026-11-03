@@ -6,6 +6,8 @@ import '../../../../common/widgets/nutrition_summary_metric.dart';
 import '../../domain/models/recorded_low_treatment.dart';
 import '../formatters/low_treatment_context_formatters.dart';
 
+import 'low_treatment_upload_status.dart';
+
 /// Inline historical consumption; a low treatment has no meal-detail route.
 class RecordedLowTreatmentCard extends StatelessWidget {
   const RecordedLowTreatmentCard({super.key, required this.treatment});
@@ -28,6 +30,7 @@ class RecordedLowTreatmentCard extends StatelessWidget {
             ).format(treatment.eatenAt.toLocal()),
             style: Theme.of(context).textTheme.titleSmall,
           ),
+          LowTreatmentUploadStatus(mealId: treatment.mealId),
           const SizedBox(height: 8),
           NutritionSummaryMetric(
             label: lang.beforeMealCarbs,

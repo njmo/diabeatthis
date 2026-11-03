@@ -1,4 +1,5 @@
 import '../../../../common/history/bolus_wizard_grouping.dart';
+import '../../../../common/history/immediate_carbohydrate.dart';
 import '../../../../core/data_sources/domain/treatments_history_repository.dart';
 import '../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../core/domain/model/treat.dart';
@@ -75,8 +76,11 @@ class LowTreatmentHandoffUseCase with Logging {
       // Live batches can still be reconciled without a local mirror.
     }
     // Local and remote copies must not hide calculator neighbours as duplicates.
+    final normalized = [
+      for (final item in treatments) immediateCarbohydrate(item) ?? item,
+    ];
     final canonical = <Object, Treatment>{};
-    for (final item in treatments) {
+    for (final item in normalized) {
       final key = switch (item) {
         Treat() => (Treat, item.createdAt, item.carbs, item.isValid),
         BolusWizard() => (
@@ -96,7 +100,7 @@ class LowTreatmentHandoffUseCase with Logging {
         .where(groups.isRelated)
         .map((item) => item.createdAt)
         .toSet();
-    final treats = treatments
+    final treats = normalized
         .whereType<Treat>()
         .where(
           (item) =>

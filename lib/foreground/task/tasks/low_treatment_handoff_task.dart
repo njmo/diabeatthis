@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 
+import '../../../common/history/bolus_wizard_grouping.dart';
 import '../../../core/domain/model/treatment_base.dart';
 import '../../../features/low_treatment/data/providers/aaps_carbs_request_episode_store_provider.dart';
+import '../../../features/low_treatment/data/providers/low_treatment_aaps_provider.dart';
 import '../../../features/low_treatment/data/providers/low_treatment_handoff_provider.dart';
 import '../../../features/low_treatment/domain/models/low_treatment_handoff_match.dart';
 import '../../../features/low_treatment/domain/use_cases/low_treatment_handoff_use_case.dart';
@@ -27,45 +29,46 @@ class LowTreatmentHandoffTask extends WorkflowTask {
     var nextRecovery = clock.now();
     try {
       while (!context.isCancelled) {
-        final wake = context.eventWait<ForegroundEvent>();
-        wake.future.ignore();
         var failed = false;
         try {
-          final events = inbox.drain();
-          final incoming = events
-              .whereType<TreatmentAvailableEvent<Treatment>>()
-              .map((event) => event.data)
-              .toList();
-          pendingEvents.addAll(incoming);
-          final useCase = context.container.read(
-            lowTreatmentHandoffUseCaseProvider,
-          );
-          pendingEvents.removeWhere(
-            (event) =>
-                event.createdAt == null ||
-                event.createdAt!.isBefore(
-                  clock.now().subtract(const Duration(minutes: 10)),
-                ),
-          );
-          if (incoming.isNotEmpty || !clock.now().isBefore(nextRecovery)) {
-            final matches = await useCase.reconcile(
-              now: clock.now(),
-              liveTreatments: List.of(pendingEvents),
+          await context.withWaitScope((scope) async {
+            // Subscribe before asynchronous history reads; the inbox retains events.
+            final wake = scope.eventWait<ForegroundEvent>();
+            wake.future.ignore();
+            final events = inbox.drain();
+            final incoming = events
+                .whereType<TreatmentAvailableEvent<Treatment>>()
+                .map((event) => event.data)
+                .toList();
+            pendingEvents.addAll(incoming);
+            final useCase = scope.container.read(
+              lowTreatmentHandoffUseCaseProvider,
             );
-            await _confirm(context, useCase, matches);
-            nextRecovery = clock.now().add(recoveryInterval);
-          }
-          final deadline = context.durationWait(
-            nextRecovery.difference(clock.now()),
-          );
-          try {
-            await Future.any<void>([
-              wake.future.then<void>((_) {}),
-              deadline.future,
+            pendingEvents.removeWhere(
+              (event) =>
+                  event.createdAt == null ||
+                  event.createdAt!.isBefore(
+                    clock.now().subtract(const Duration(minutes: 10)),
+                  ),
+            );
+            if (incoming.isNotEmpty || !clock.now().isBefore(nextRecovery)) {
+              final matches = await useCase.reconcile(
+                now: clock.now(),
+                liveTreatments: List.of(pendingEvents),
+              );
+              await _confirm(scope, useCase, matches);
+              nextRecovery = clock.now().add(
+                incoming.isNotEmpty
+                    ? BolusWizardGrouping.carbSubmissionWindow +
+                          const Duration(seconds: 1)
+                    : recoveryInterval,
+              );
+            }
+            await scope.any<void>([
+              wake.map<void>((_) {}),
+              scope.wallClockWaitUntilHandle(nextRecovery),
             ]);
-          } finally {
-            await deadline.cancel();
-          }
+          });
         } on TaskCancelledException {
           rethrow;
         } catch (error) {
@@ -73,10 +76,14 @@ class LowTreatmentHandoffTask extends WorkflowTask {
           context.log(
             'Low treatment reconciliation failed: ${error.runtimeType}',
           );
-        } finally {
-          await wake.cancel();
         }
-        if (failed) await context.waitForDuration(retryInterval);
+        if (failed) {
+          await context.withWaitScope(
+            (scope) => scope.any<void>([
+              scope.wallClockWaitUntilHandle(clock.now().add(retryInterval)),
+            ]),
+          );
+        }
       }
     } finally {
       inbox.close();
@@ -89,6 +96,9 @@ class LowTreatmentHandoffTask extends WorkflowTask {
     List<LowTreatmentHandoffMatch> matches,
   ) async {
     for (final match in matches) {
+      await context.container.read(confirmLowTreatmentAapsUseCaseProvider)(
+        match.mealId,
+      );
       final suggestionAt = match.suggestionAt;
       if (suggestionAt == null) {
         await useCase.markCompleted(match.mealId);

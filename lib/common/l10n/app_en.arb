@@ -3076,5 +3076,13 @@
   "activityEditAction": "Edit",
   "activityHistoryAction": "Show activity history",
   "activitySummaryHide": "Hide",
-  "activityLogEditTitle": "Edit activity"
+  "activityLogEditTitle": "Edit activity",
+  "settingsLowTreatmentUploadTitle": "Send low treatments to Nightscout",
+  "settingsLowTreatmentUploadDescription": "After you confirm a new low treatment, send its recorded carbohydrates to Nightscout instead of opening AAPS. Requires treatment read and create permissions. Pending uploads pause when disabled; do not enter the same carbohydrates manually in AAPS. Only new entries are sent.",
+  "lowTreatmentUploadQueued": "Nightscout: waiting to send",
+  "lowTreatmentUploadVerifying": "Nightscout: awaiting confirmation or retry",
+  "lowTreatmentUploadSent": "Nightscout: sent",
+  "lowTreatmentUploadCancelled": "Nightscout: upload cancelled after local changes",
+  "lowTreatmentUploadPaused": "Nightscout: paused — check upload settings",
+  "lowTreatmentConsiderCalculator": "For a low treatment above 10 g, consider using the AAPS calculator later."
 }
