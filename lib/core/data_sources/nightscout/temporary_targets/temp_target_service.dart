@@ -10,6 +10,7 @@ import '../../../../common/temporary_targets/temp_target_operation.dart';
 import '../../../../common/temporary_targets/temp_target_policy.dart';
 import '../../../../common/temporary_targets/temp_target_proposal.dart';
 import '../../../../common/temporary_targets/temp_target_request_id.dart';
+import '../../../../common/temporary_targets/temp_target_treatment.dart';
 import '../../../data/provider/shared_prefs_provider.dart';
 import '../../../domain/model/temporary_target.dart';
 import '../../../drift/database_impl.dart'
@@ -459,6 +460,83 @@ class TempTargetService with Logging {
       await operations.markUnknownResult(id);
     }
     logW('Temporary target upload failed: ${error.runtimeType}');
+  }
+
+  /// Explicit user action only. A display association never authorizes a stop.
+  Future<TempTargetSendResult> stopDisplayedTarget(
+    TemporaryTarget target, {
+    required String source,
+  }) async {
+    if (_sending) return TempTargetSendResult.ignored;
+    _sending = true;
+    try {
+      final prefs = await _preferences();
+      if (!isEnabled(prefs) || source != _source(prefs)) {
+        return TempTargetSendResult.ignored;
+      }
+      final token = prefs.getString(nightscoutTokenKey) ?? '';
+      final operations = await _operations(prefs);
+      await _recover(operations, prefs);
+      final now = clock.now();
+      final latest = await writer.latest(source, token, at: now);
+      // Require both identity and content to still match the displayed record.
+      if (!target.isValid ||
+          target.createdAt.isAfter(now) ||
+          latest == null ||
+          latest['isValid'] == false ||
+          (target.nightscoutId != null &&
+              latest['_id'] != target.nightscoutId) ||
+          TempTargetTreatment.startedAt(latest)?.millisecondsSinceEpoch !=
+              target.createdAt.millisecondsSinceEpoch ||
+          TempTargetTreatment.duration(latest) !=
+              Duration(minutes: target.duration) ||
+          latest['targetBottom'] != target.targetBottom ||
+          latest['targetTop'] != target.targetTop ||
+          !target.createdAt
+              .add(Duration(minutes: target.duration))
+              .isAfter(clock.now()) ||
+          now.difference(target.createdAt) < const Duration(seconds: 1)) {
+        return TempTargetSendResult.expired;
+      }
+      final currentPreferences = await _preferences();
+      if (!isEnabled(currentPreferences) ||
+          source != _source(currentPreferences) ||
+          token != currentPreferences.getString(nightscoutTokenKey)) {
+        return TempTargetSendResult.ignored;
+      }
+      final displayed = OwnedTempTarget(
+        entityId: 0,
+        targetType: 'manual',
+        source: source,
+        startedAt: target.createdAt,
+        until: target.createdAt.add(Duration(minutes: target.duration)),
+        target: target.targetTop,
+        durationMinutes: target.duration,
+        nightscoutId: target.nightscoutId,
+      );
+      final stop = await operations.createStop(
+        requestId:
+            'display-stop-${Uri.encodeComponent(source)}-'
+            '${target.nightscoutId ?? target.createdAt.microsecondsSinceEpoch}',
+        owned: displayed,
+        stoppedAt: now,
+      );
+      if (!await operations.claimStop(stop.requestId)) {
+        return TempTargetSendResult.ignored;
+      }
+      try {
+        await writer.stop(url: source, token: token, at: now);
+        await operations.markSent(stop.requestId);
+        return TempTargetSendResult.sent;
+      } catch (error) {
+        await _recordFailure(operations, stop.requestId, error);
+        return TempTargetSendResult.failed;
+      }
+    } catch (_) {
+      return TempTargetSendResult.failed;
+    } finally {
+      _sending = false;
+    }
   }
 
   /// Uses the actual closure timestamp, preserving later manual replacements.

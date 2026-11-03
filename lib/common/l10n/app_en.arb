@@ -2895,5 +2895,40 @@
   "mealBeforeInsulinAndPod": "Insulin and pod before the meal",
   "mealObservationInsulin": "Insulin during observation",
   "dashboardWaitingForData": "Waiting for data",
-  "dashboardWaitingForHistory": "Waiting for glucose history"
+  "dashboardWaitingForHistory": "Waiting for glucose history",
+  "dashboardAttachMeal": "Attach meal",
+  "dashboardNoMealsToAttach": "No meals around this target. Add a meal first.",
+  "dashboardStopTarget": "Stop temporary target",
+  "dashboardTargetActionFailed": "Could not complete the action. Refresh the data before trying again.",
+  "dashboardTargetChanged": "This target has changed or ended. Refresh the data.",
+  "dashboardActivityProgress": "{elapsed} of {total} min",
+  "dashboardCancelPlannedActivity": "Cancel planned activity",
+  "dashboardTargetValue": "{value} mg/dl",
+  "@dashboardTargetValue": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "@dashboardActivityProgress": {
+    "placeholders": {
+      "elapsed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardActivityStartedAt": "Activity started",
+  "dashboardActivityStartNow": "Now",
+  "dashboardActivityChooseStart": "Choose time",
+  "dashboardActivityStartInFuture": "The activity start cannot be in the future.",
+  "activityHistoryDeleteTitle": "Delete activity entry?",
+  "activityHistoryDeleteMessage": "Delete “{name}” ({time}) from history?",
+  "activityHistoryDeleteActiveMessage": "Deleting an active entry also ends its monitoring.",
+  "activityHistoryDeleteSuccess": "Activity entry deleted.",
+  "activityHistoryDeleteFailed": "Could not delete the activity entry. Try again.",
+  "dashboardChangeLinkedMeal": "Change linked meal"
 }

@@ -276,4 +276,16 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
       db.activityLog,
     )..where((tbl) => tbl.id.equals(companion.id.value))).go();
   }
+
+  Future<bool> removeActivityLogIfOpen(int id, DateTime expectedStart) async {
+    final removed =
+        await (delete(db.activityLog)..where(
+              (row) =>
+                  row.id.equals(id) &
+                  row.startedAt.equals(expectedStart.millisecondsSinceEpoch) &
+                  row.endedAt.isNull(),
+            ))
+            .go();
+    return removed == 1;
+  }
 }

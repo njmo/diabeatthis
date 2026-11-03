@@ -6,9 +6,12 @@ import '../../../../core/logger/logger.dart';
 part 'temporary_target_ui_provider.g.dart';
 
 @Riverpod(keepAlive: true)
-class TemporaryTargetUiNotifier extends _$TemporaryTargetUiNotifier with Logging{
+class TemporaryTargetUiNotifier extends _$TemporaryTargetUiNotifier
+    with Logging {
   @override
   TemporaryTarget? build() => null;
+
+  void clear() => state = null;
 
   void update(TemporaryTarget target) {
     if (target.isActive()) {

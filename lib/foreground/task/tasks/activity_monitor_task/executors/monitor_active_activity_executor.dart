@@ -95,7 +95,9 @@ class MonitorActiveActivityExecutor extends ActivityMonitorStateExecutor {
           activityLogId: activityLogId,
         );
       } else {
-        await runtimeContext.waitUntil(endsAt);
+        await runtimeContext.withWaitScope(
+          (scope) => scope.any<void>([scope.wallClockWaitUntilHandle(endsAt)]),
+        );
       }
     }
     runtimeContext.throwIfCancelled();

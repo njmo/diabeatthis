@@ -7,6 +7,7 @@ import '../../../../core/drift/database_impl.dart' as db;
 import '../../../../core/drift/mappers/activity_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
+import '../domain/use_cases/end_activity_entry_use_case.dart';
 import '../drafts/activity_draft.dart';
 import '../drafts/activity_log_draft.dart';
 import '../mappers/activity_draft_mapper.dart';
@@ -216,17 +217,11 @@ Stream<List<ActivityLogSummaryData>> activityLogListStream(
 @riverpod
 Future<void> stopActivity(Ref ref, ActivityLogSummaryData activityLog) async {
   final db = ref.watch(databaseProvider);
-  final updated = domain.ActivityLog(
-    id: activityLog.id,
-    activityId: activityLog.activityId,
-    startedAt: activityLog.startedAt,
-    endedAt: clock.now(),
-  );
-  if (activityLog.startedAt.isBefore(clock.now())) {
-    await db.activityDao.updateActivityLog(updated.toCompanion());
-  } else {
-    await db.activityDao.removeActivityLog(updated.toCompanion());
-  }
+  await EndActivityEntryUseCase(
+    now: clock.now,
+    finishIfOpen: db.activityDao.finishActivityLogIfOpen,
+    cancelIfUnchanged: db.activityDao.removeActivityLogIfOpen,
+  )(activityLog);
 }
 
 @riverpod

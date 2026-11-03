@@ -8,7 +8,10 @@ import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/history/history_day_group.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/history_day_section.dart';
+import '../../common/controllers/activity_actions_controller.dart';
+import '../../common/widgets/swipe_to_delete_history_entry.dart';
 import '../../data/providers/activity_provider.dart';
+import '../utils/delete_activity_history_entry.dart';
 import 'activity_log_card.dart';
 import 'activity_log_list_tail.dart';
 
@@ -19,6 +22,9 @@ class ActivityLogList extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final actionPending = ref
+        .watch(activityActionsControllerProvider)
+        .isLoading;
     final visibleLimit = useState(activityLogListPageSize);
     final activityLogsState = ref.watch(
       activityLogListStreamProvider(activityId: activityId),
@@ -109,17 +115,27 @@ class ActivityLogList extends HookConsumerWidget {
                     itemCount: group.items.length,
                     itemBuilder: (context, activityIndex) {
                       final activityLog = group.items[activityIndex];
-                      return ActivityLogCard(
-                        name: activityLog.activityName,
-                        startedAt: activityLog.startedAt,
-                        endedAt: activityLog.endedAt,
-                        onTap: () {
-                          context.router.push(
-                            routes.ActivityLogRoute(
-                              activityLogId: activityLog.id,
-                            ),
-                          );
-                        },
+                      return SwipeToDeleteHistoryEntry(
+                        key: ValueKey(activityLog.id),
+                        entryKey: 'activity-log-${activityLog.id}',
+                        enabled: !actionPending,
+                        onDelete: () => deleteActivityHistoryEntry(
+                          context,
+                          ref,
+                          activityLog,
+                        ),
+                        child: ActivityLogCard(
+                          name: activityLog.activityName,
+                          startedAt: activityLog.startedAt,
+                          endedAt: activityLog.endedAt,
+                          onTap: () {
+                            context.router.push(
+                              routes.ActivityLogRoute(
+                                activityLogId: activityLog.id,
+                              ),
+                            );
+                          },
+                        ),
                       );
                     },
                   );

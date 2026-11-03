@@ -3352,5 +3352,40 @@
   "mealBeforeInsulinAndPod": "Insulina i pod przed posiłkiem",
   "mealObservationInsulin": "Insulina podczas obserwacji",
   "dashboardWaitingForData": "Oczekiwanie na dane",
-  "dashboardWaitingForHistory": "Oczekiwanie na historię pomiarów"
+  "dashboardWaitingForHistory": "Oczekiwanie na historię pomiarów",
+  "dashboardAttachMeal": "Podepnij posiłek",
+  "dashboardNoMealsToAttach": "Brak posiłków w pobliżu tego celu. Najpierw dodaj posiłek.",
+  "dashboardStopTarget": "Zatrzymaj cel tymczasowy",
+  "dashboardTargetActionFailed": "Nie udało się wykonać akcji. Odśwież dane przed kolejną próbą.",
+  "dashboardTargetChanged": "Ten cel zmienił się lub zakończył. Odśwież dane.",
+  "dashboardActivityProgress": "{elapsed} z {total} min",
+  "dashboardCancelPlannedActivity": "Anuluj zaplanowaną aktywność",
+  "dashboardTargetValue": "{value} mg/dl",
+  "@dashboardTargetValue": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "@dashboardActivityProgress": {
+    "placeholders": {
+      "elapsed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardActivityStartedAt": "Początek aktywności",
+  "dashboardActivityStartNow": "Teraz",
+  "dashboardActivityChooseStart": "Wybierz godzinę",
+  "dashboardActivityStartInFuture": "Początek aktywności nie może być w przyszłości.",
+  "activityHistoryDeleteTitle": "Usunąć wpis aktywności?",
+  "activityHistoryDeleteMessage": "Usunąć wpis „{name}” ({time}) z historii?",
+  "activityHistoryDeleteActiveMessage": "Usunięcie aktywnego wpisu zakończy również jego monitorowanie.",
+  "activityHistoryDeleteSuccess": "Wpis aktywności został usunięty.",
+  "activityHistoryDeleteFailed": "Nie udało się usunąć wpisu aktywności. Spróbuj ponownie.",
+  "dashboardChangeLinkedMeal": "Zmień powiązany posiłek"
 }
