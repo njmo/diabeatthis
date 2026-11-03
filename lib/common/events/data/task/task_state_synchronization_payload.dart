@@ -13,6 +13,9 @@ abstract class TaskStateSynchronizationPayload
   const factory TaskStateSynchronizationPayload.alive({required bool data}) =
       TaskAliveStateSynchronization;
 
+  const factory TaskStateSynchronizationPayload.carbsRequestChanged() =
+      TaskCarbsRequestChanged;
+
   factory TaskStateSynchronizationPayload.fromJson(Map<String, dynamic> json) =>
       _$TaskStateSynchronizationPayloadFromJson(json);
 

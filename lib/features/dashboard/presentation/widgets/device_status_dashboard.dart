@@ -5,6 +5,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/carbohydrate_icon.dart';
 import '../../../../common/widgets/nutrition_metric_tile.dart';
 import '../../../../core/domain/model/device_status.dart';
+import '../../../low_treatment/data/providers/low_treatment_suggestion_visibility_provider.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_sheet.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_suggestion_card.dart';
 import '../../data/providers/old_reading_provider.dart';
@@ -74,7 +75,16 @@ class DeviceStatusDashboard extends ConsumerWidget {
               ),
             ],
           ),
-          if (deviceStatus.carbsReq > 0)
+          if (deviceStatus.carbsReq > 0 &&
+              ref
+                      .watch(
+                        lowTreatmentSuggestionVisibilityProvider(
+                          deviceStatus.suggestedAt ?? deviceStatus.date,
+                        ),
+                      )
+                      .asData
+                      ?.value ==
+                  true)
             LowTreatmentSuggestionCard(
               carbsReq: deviceStatus.carbsReq,
               carbsReqWithin: deviceStatus.carbsReqWithin,

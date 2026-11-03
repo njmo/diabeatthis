@@ -13,6 +13,7 @@ import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/notification_event_factory.dart';
 import '../../../core/notifications/handlers/notification_response_handler.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../../features/low_treatment/data/providers/low_treatment_suggestion_visibility_provider.dart';
 import '../../../features/low_treatment/presentation/controllers/low_treatment_sheet_launcher.dart';
 import '../../providers/foreground_task_state_provider.dart';
 import '../../router/providers/app_router_provider.dart';
@@ -77,6 +78,8 @@ class TaskEventHandler with Logging {
       case TaskStateSynchronizationEvent(data: final payload):
         logI('Received task state synchronization: $payload');
         payload.when(
+          carbsRequestChanged: () =>
+              _ref.invalidate(lowTreatmentSuggestionVisibilityProvider),
           alive: (data) {
             _ref.read(foregroundTaskStateProvider.notifier).setAlive(data);
           },
@@ -92,6 +95,7 @@ class TaskEventHandler with Logging {
   }
 
   void retryPendingUiActions() {
+    _ref.invalidate(lowTreatmentSuggestionVisibilityProvider);
     _lowTreatmentLauncher.retryPending();
     _mealCompletionLauncher.retryPending();
     unawaited(recoverPendingMealCompletions());

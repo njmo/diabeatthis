@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 
+import '../../../common/events/data/task/task_state_synchronization_payload.dart';
 import '../../../core/domain/model/glucose.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/aaps_carbs_request_notification.dart';
@@ -16,6 +17,7 @@ import '../../../features/low_treatment/domain/models/aaps_carbs_request_signal.
 import '../../../features/low_treatment/domain/use_cases/evaluate_aaps_carbs_request_use_case.dart';
 import '../../event/internal/aaps_carbs_request_acknowledged_event.dart';
 import '../../event/model/foreground_event.dart';
+import '../../providers/task_event_router_provider.dart';
 import '../../runtime/event_inbox.dart';
 import '../../runtime/task_cancelled_exception.dart';
 import '../../synchronization/synchronization_cache_controller.dart';
@@ -140,6 +142,7 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
       final id =
           '${requestAt.microsecondsSinceEpoch}:${status.externalId ?? ''}';
       await store.start(id);
+      _publishRequestChanged(context);
       episode = episode.start(id);
     }
     if (episode.acknowledged || !_isDue(episode, now)) return episode;
@@ -254,6 +257,7 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
         continue;
       }
       await store.acknowledge(id);
+      _publishRequestChanged(context);
       pending.removeAt(0);
       episode = episode.acknowledge(id);
       episode = await _cancelPending(context, episode, store);
@@ -328,8 +332,15 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
   ) async {
     if (episode.id == null) return episode;
     await store.clear();
+    _publishRequestChanged(context);
     final cleared = episode.clear();
     return _cancelPending(context, cleared, store);
+  }
+
+  void _publishRequestChanged(RuntimeContext context) {
+    context.container
+        .read(taskEventRouterProvider)
+        .send(const TaskStateSynchronizationPayload.carbsRequestChanged());
   }
 
   Future<AapsCarbsRequestEpisode> _cancelPending(
