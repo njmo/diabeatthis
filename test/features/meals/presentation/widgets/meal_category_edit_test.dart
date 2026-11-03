@@ -32,7 +32,7 @@ void main() {
           await Future<void>.delayed(const Duration(milliseconds: 50));
         });
         await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(ChoiceChip, 'Obiad'));
+        await tester.tap(find.text('Obiad'));
         await tester.runAsync(() async {
           await Future<void>.delayed(const Duration(milliseconds: 50));
         });

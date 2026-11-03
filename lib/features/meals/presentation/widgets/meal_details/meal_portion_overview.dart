@@ -5,8 +5,10 @@ import '../../../../../common/l10n/language.dart';
 import '../../../../../common/widgets/summary_detail_card.dart';
 import '../../../data/models/meal_details_data.dart';
 import '../../../domain/use_cases/build_meal_portion_use_case.dart';
+import '../../controllers/meal_application_review_controller.dart';
 import '../../controllers/meal_portion_controller.dart';
 import 'meal_macro_comparison.dart';
+import 'meal_origin_card.dart';
 import 'meal_portion_ingredient.dart';
 import 'meal_portion_macros.dart';
 
@@ -18,6 +20,7 @@ class MealPortionOverview extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = context.lang;
     final number = NumberFormat('0.#', lang.localeName);
+    final origin = const MealApplicationReviewController().origin(details);
     final summary = const MealPortionController().build(details);
     final planned = summary.planned;
     final consumed = summary.consumed;
@@ -37,6 +40,10 @@ class MealPortionOverview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (origin != null) ...[
+            MealOriginCard(origin: origin),
+            const Divider(height: 24),
+          ],
           Text(status, style: Theme.of(context).textTheme.titleSmall),
           if (consumed == null && details.meal.isEaten && planned != null)
             Text(lang.mealPortionPlanOnly),

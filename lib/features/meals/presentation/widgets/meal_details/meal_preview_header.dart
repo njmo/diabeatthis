@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/meal/meal_category.dart';
 import '../../models/meal_page_state.dart';
+import 'meal_category_edit_button.dart';
 import 'meal_detail_formatters.dart';
 
 /// The essential identity and observation state, before any optional detail.
@@ -43,6 +45,8 @@ class MealPreviewHeader extends StatelessWidget {
             details.meal.name,
             style: Theme.of(context).textTheme.headlineSmall,
           ),
+          if (MealCategory.fromStorage(details.meal.category) == null)
+            MealCategoryEditButton(mealId: details.meal.id, assign: true),
           const SizedBox(height: 6),
           Text(mealDateTime(details.analysisTime)),
           const SizedBox(height: 8),

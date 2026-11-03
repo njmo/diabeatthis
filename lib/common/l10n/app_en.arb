@@ -2930,5 +2930,96 @@
   "activityHistoryDeleteActiveMessage": "Deleting an active entry also ends its monitoring.",
   "activityHistoryDeleteSuccess": "Activity entry deleted.",
   "activityHistoryDeleteFailed": "Could not delete the activity entry. Try again.",
-  "dashboardChangeLinkedMeal": "Change linked meal"
+  "dashboardChangeLinkedMeal": "Change linked meal",
+  "mealAapsCarbsSuggestion": "AAPS suggested carbohydrates",
+  "mealAapsCarbsSuggestionNote": "Suggestion from a saved AAPS snapshot. A nearby carbohydrate entry does not automatically confirm it was followed.",
+  "mealAdvisorCreatedEvent": "App decision saved",
+  "mealAdvisorUpdatedEvent": "App decision updated",
+  "mealAssignCategory": "Assign meal category",
+  "mealBasalCoveredOnly": "Both amounts cover only the intervals with available data.",
+  "mealBasalProfile": "Profile basal",
+  "mealCarbsSamePlan": "Planned and consumed portion",
+  "mealCompletionChoiceNote": "This records a choice in the app, not confirmation of an AAPS correction.",
+  "mealCompletionChoiceTitle": "Decision after eating",
+  "mealCopySourceUnavailable": "Copied from meal #{id}; the source is no longer available.",
+  "@mealCopySourceUnavailable": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "mealCorrectionChosen": "Carbohydrate correction selected",
+  "mealCorrectionNotChosen": "Finished without requesting a correction",
+  "mealDifferenceCarbs": "Consumed versus calculator",
+  "mealDifferenceMatched": "Matching amounts",
+  "mealDifferenceMultiple": "Multiple calculations — check times and amounts",
+  "mealDifferenceUnavailable": "Cannot compare — missing record",
+  "mealDifferenceWait": "Waiting",
+  "mealDifferencesTitle": "Proposal and recorded actions",
+  "mealEcarbsProposalOnly": "This is the saved proposal, not confirmation that the schedule was started.",
+  "mealJustBefore": "Just before eating",
+  "mealLinkedCalculator": "Calculator linked to this meal",
+  "mealNoProposedEcarbs": "No eCarbs proposed",
+  "mealOriginTitle": "Meal origin",
+  "mealOtherContext": "Other context",
+  "mealPlannedTimeReference": "Planned meal time",
+  "mealPrecedingTarget": "Temporary target before the meal",
+  "mealPreviouslyReported": "Previously reported",
+  "mealProposedEcarbs": "Proposed eCarbs schedule",
+  "mealSaveAndSync": "Saving and sync",
+  "mealSaveCreatedEvent": "Meal created",
+  "mealSaveUpdatedEvent": "Meal record updated",
+  "mealSavedQuantityEstimate": "Saved quantity confidence estimate: {value}%",
+  "@mealSavedQuantityEstimate": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "mealTargetActiveAtStart": "Active when eating started",
+  "mealTargetEndedBefore": "Ended {duration} before eating",
+  "@mealTargetEndedBefore": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "mealTargetInferred": "Type inferred from the target value: 90 mg/dl — Meal, 140 mg/dl — activity. This is not a name saved in history.",
+  "mealTargetPreparation": "Meal preparation target",
+  "mealTargetPreparationLead": "Meal target active {duration} before eating started · since {time}",
+  "@mealTargetPreparationLead": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealTargetRangeValue": "{bottom}–{top} mg/dl",
+  "@mealTargetRangeValue": {
+    "placeholders": {
+      "bottom": {
+        "type": "int"
+      },
+      "top": {
+        "type": "int"
+      }
+    }
+  },
+  "mealTargetTypeActivity": "Activity",
+  "mealTargetTypeMeal": "Meal",
+  "mealTargetValue": "{value} mg/dl",
+  "@mealTargetValue": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "mealWindowCalculator": "Calculator without a confirmed link"
 }

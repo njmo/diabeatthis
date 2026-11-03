@@ -7,6 +7,7 @@ import '../../../../../core/drift/database_impl.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../mappers/meal_details_data_mapper.dart';
 import '../../models/meal_details_data.dart';
+import '../../repositories/meal_wizard_link_repository.dart';
 
 part 'load_meal_details_use_case.g.dart';
 
@@ -72,6 +73,9 @@ class LoadMealDetailsUseCase {
     final copyUsages = await _loadCopyUsages(db, meal);
 
     return MealDetailsData(
+      wizardAssignments: await MealWizardLinkRepository(
+        db,
+      ).assignmentsForMeal(mealId),
       meal: mapper.mapMeal(meal),
       advisorDecision: advisorDecision == null
           ? null

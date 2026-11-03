@@ -12,6 +12,7 @@ class MealDetailsDataMapper {
   MealRecordData mapMeal(MealData meal) {
     return MealRecordData(
       id: meal.id,
+      category: meal.category,
       name: meal.name,
       purpose: meal.purpose,
       status: meal.status,

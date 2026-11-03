@@ -3,12 +3,14 @@ import '../../../../common/nutrition/meal_nutrition_totals.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../meal_analysis/domain/models/meal_observation_window.dart';
+import '../../common/models/meal_wizard_assignment.dart';
 import '../../domain/models/ingredient_nutrition_data.dart';
 import '../../domain/models/recorded_meal_timing.dart';
 
 export '../../domain/models/ingredient_nutrition_data.dart';
 
 class MealDetailsData {
+  final List<MealWizardAssignment>? wizardAssignments;
   final MealRecordData meal;
   final MealAdvisorDecisionData? advisorDecision;
   final List<MealIngredientDetailsData> ingredients;
@@ -21,6 +23,7 @@ class MealDetailsData {
   final List<MealLowTreatmentDetailsData> lowTreatments;
 
   const MealDetailsData({
+    this.wizardAssignments,
     required this.meal,
     required this.advisorDecision,
     required this.ingredients,
@@ -34,6 +37,7 @@ class MealDetailsData {
   });
 
   MealDetailsData copyWith({
+    List<MealWizardAssignment>? wizardAssignments,
     MealRecordData? meal,
     MealAdvisorDecisionData? advisorDecision,
     List<MealIngredientDetailsData>? ingredients,
@@ -46,6 +50,7 @@ class MealDetailsData {
     List<MealLowTreatmentDetailsData>? lowTreatments,
   }) {
     return MealDetailsData(
+      wizardAssignments: wizardAssignments ?? this.wizardAssignments,
       meal: meal ?? this.meal,
       advisorDecision: advisorDecision ?? this.advisorDecision,
       ingredients: ingredients ?? this.ingredients,
@@ -267,6 +272,7 @@ class MealCopyUsageData {
 }
 
 class MealRecordData {
+  final String? category;
   final int id;
   final String name;
   final String purpose;
@@ -282,6 +288,7 @@ class MealRecordData {
   final MealCompletionDecision? completionDecision;
 
   const MealRecordData({
+    this.category,
     required this.id,
     required this.name,
     this.purpose = 'meal',

@@ -25,6 +25,14 @@ class MealAnalysisData {
   final List<Treatment> treatments;
   final List<RecordedLowTreatment> lowTreatments;
   final List<TemporaryTarget> temporaryTargets;
+  final List<TemporaryTarget>? temporaryTargetHistory;
+
+  List<TemporaryTarget> get targetHistory =>
+      temporaryTargetHistory ??
+      {
+        ...temporaryTargets,
+        ...treatments.whereType<TemporaryTarget>(),
+      }.toList();
   final List<DeviceStatus> deviceStatuses;
   final List<MealLinkedActivityData> linkedActivities;
   final List<MealLinkedMealData> linkedMeals;
@@ -42,6 +50,7 @@ class MealAnalysisData {
     required this.treatments,
     this.lowTreatments = const [],
     required this.temporaryTargets,
+    this.temporaryTargetHistory,
     required this.deviceStatuses,
     required this.linkedActivities,
     required this.linkedMeals,

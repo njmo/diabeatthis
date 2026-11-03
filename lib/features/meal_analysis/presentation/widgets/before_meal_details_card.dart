@@ -5,6 +5,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/nutrition_summary_metric.dart';
 import '../../../../common/widgets/responsive_metric_list.dart';
 import '../../../../common/widgets/summary_detail_card.dart';
+import '../../common/widgets/basal_profile_comparison.dart';
 import '../../domain/models/before_meal_context.dart';
 
 class BeforeMealDetailsCard extends StatelessWidget {
@@ -65,6 +66,8 @@ class BeforeMealDetailsCard extends StatelessWidget {
             ],
           ),
           if (basal != null && basal.coveredDuration > Duration.zero) ...[
+            const SizedBox(height: 12),
+            BasalProfileComparison(data: basal),
             const SizedBox(height: 10),
             Text(
               '${lang.dayBasalCoverage}: ${number.format(basal.coverage * 100)}%',

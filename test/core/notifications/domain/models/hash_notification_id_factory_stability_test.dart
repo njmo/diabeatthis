@@ -61,7 +61,6 @@ void main() {
 ''');
       for (var run = 0; run < 2; run++) {
         final result = await Process.run('dart', [
-          'run',
           script.path,
         ], runInShell: Platform.isWindows).timeout(const Duration(seconds: 20));
         expect(result.exitCode, 0, reason: result.stderr.toString());

@@ -3387,5 +3387,96 @@
   "activityHistoryDeleteActiveMessage": "Usunięcie aktywnego wpisu zakończy również jego monitorowanie.",
   "activityHistoryDeleteSuccess": "Wpis aktywności został usunięty.",
   "activityHistoryDeleteFailed": "Nie udało się usunąć wpisu aktywności. Spróbuj ponownie.",
-  "dashboardChangeLinkedMeal": "Zmień powiązany posiłek"
+  "dashboardChangeLinkedMeal": "Zmień powiązany posiłek",
+  "mealAapsCarbsSuggestion": "AAPS proponował dosłodzenie",
+  "mealAapsCarbsSuggestionNote": "Sugestia z zapisanego stanu AAPS. Pobliski wpis dosłodzenia nie potwierdza automatycznie jej realizacji.",
+  "mealAdvisorCreatedEvent": "Zapisano decyzję aplikacji",
+  "mealAdvisorUpdatedEvent": "Zmieniono decyzję aplikacji",
+  "mealAssignCategory": "Przypisz rodzaj posiłku",
+  "mealBasalCoveredOnly": "Obie ilości dotyczą wyłącznie czasu pokrytego danymi.",
+  "mealBasalProfile": "Baza według profilu",
+  "mealCarbsSamePlan": "Plan i zjedzona porcja",
+  "mealCompletionChoiceNote": "To zapis wyboru w aplikacji. Nie potwierdza wykonania korekty w AAPS.",
+  "mealCompletionChoiceTitle": "Decyzja po zjedzeniu porcji",
+  "mealCopySourceUnavailable": "Skopiowano z posiłku #{id}; źródło nie jest już dostępne.",
+  "@mealCopySourceUnavailable": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "mealCorrectionChosen": "Wybrano korektę węglowodanów",
+  "mealCorrectionNotChosen": "Zakończono bez zlecenia korekty",
+  "mealDifferenceCarbs": "Zjedzone a kalkulator",
+  "mealDifferenceMatched": "Zgodne ilości",
+  "mealDifferenceMultiple": "Kilka kalkulacji — sprawdź godziny i ilości",
+  "mealDifferenceUnavailable": "Nie można porównać — brakuje zapisu",
+  "mealDifferenceWait": "Czekanie",
+  "mealDifferencesTitle": "Propozycja a wykonanie",
+  "mealEcarbsProposalOnly": "To zapisana propozycja, nie potwierdzenie uruchomienia harmonogramu.",
+  "mealJustBefore": "Tuż przed jedzeniem",
+  "mealLinkedCalculator": "Kalkulator przypisany do posiłku",
+  "mealNoProposedEcarbs": "Nie zaproponowano eCarbs",
+  "mealOriginTitle": "Pochodzenie posiłku",
+  "mealOtherContext": "Pozostały kontekst",
+  "mealPlannedTimeReference": "Planowany termin posiłku",
+  "mealPrecedingTarget": "Cel tymczasowy przed posiłkiem",
+  "mealPreviouslyReported": "Wcześniej zgłoszono",
+  "mealProposedEcarbs": "Proponowany harmonogram eCarbs",
+  "mealSaveAndSync": "Zapis i synchronizacja",
+  "mealSaveCreatedEvent": "Utworzono posiłek",
+  "mealSaveUpdatedEvent": "Zmieniono zapis posiłku",
+  "mealSavedQuantityEstimate": "Zapisana ocena pewności ilości: {value}%",
+  "@mealSavedQuantityEstimate": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "mealTargetActiveAtStart": "Obowiązywał przy rozpoczęciu jedzenia",
+  "mealTargetEndedBefore": "Zakończony {duration} przed jedzeniem",
+  "@mealTargetEndedBefore": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "mealTargetInferred": "Typ rozpoznany po wartości celu: 90 mg/dl — Meal, 140 mg/dl — aktywność. Nie jest to nazwa zapisana w historii.",
+  "mealTargetPreparation": "Przygotowanie do posiłku · Meal",
+  "mealTargetPreparationLead": "Target Meal aktywny {duration} przed rozpoczęciem jedzenia · od {time}",
+  "@mealTargetPreparationLead": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mealTargetRangeValue": "{bottom}–{top} mg/dl",
+  "@mealTargetRangeValue": {
+    "placeholders": {
+      "bottom": {
+        "type": "int"
+      },
+      "top": {
+        "type": "int"
+      }
+    }
+  },
+  "mealTargetTypeActivity": "Aktywność",
+  "mealTargetTypeMeal": "Meal",
+  "mealTargetValue": "{value} mg/dl",
+  "@mealTargetValue": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "mealWindowCalculator": "Kalkulator bez potwierdzonego powiązania"
 }

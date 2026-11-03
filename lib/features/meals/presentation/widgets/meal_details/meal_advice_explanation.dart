@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/meal/manual_meal_decision.dart';
 import '../../../../../common/meal/stored_meal_decision.dart';
 import '../../../../../common/widgets/information_button.dart';
 import '../../../../../common/widgets/summary_detail_card.dart';
 import '../../../data/models/meal_details_data.dart';
+import '../../controllers/meal_application_review_controller.dart';
 import 'meal_detail_formatters.dart';
 
 class MealAdviceExplanation extends StatelessWidget {
@@ -36,10 +38,19 @@ class MealAdviceExplanation extends StatelessWidget {
               '${storedMealDecisionLabel(decision.result)} · ${mealTime(decision.createdAt)}',
               style: Theme.of(context).textTheme.titleSmall,
             ),
+            if (decision.isManual)
+              Text(
+                mealDecisionLabel(
+                  const MealApplicationReviewController().manualChoice(details),
+                ),
+              ),
             if (!decision.isManual) ...[
               const SizedBox(height: 8),
               Text(reason),
-              Text('${lang.mealWaitProposed}: ${decision.initialWaitTime} min'),
+              if (decision.initialWaitTime > 0)
+                Text(
+                  '${lang.mealWaitProposed}: ${decision.initialWaitTime} min',
+                ),
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,

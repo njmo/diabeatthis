@@ -8,8 +8,8 @@ import 'package:diabeatthis/features/meals/data/models/meal_analysis_data.dart';
 import 'package:diabeatthis/features/meals/presentation/controllers/meal_details_controller.dart';
 import 'package:diabeatthis/features/meals/presentation/screens/meal_page.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_basic_info_section.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_saved_information_card.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_snapshot_comparison_row.dart';
-import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_technical_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -89,12 +89,11 @@ void main() {
             .animateTo(5);
         await tester.pumpAndSettle();
         expect(find.byType(MealBasicInfoSection), findsNothing);
-        await tester.ensureVisible(find.byType(MealTechnicalSection));
+        expect(find.byType(MealSavedInformationCard), findsOneWidget);
+        await tester.ensureVisible(find.byType(MealSavedInformationCard));
         await tester.pumpAndSettle();
-        await capture(tester, key, 'meal-advanced-${dark ? "dark" : "light"}');
-        await tester.tap(find.text('Szczegóły zapisu'));
-        await tester.pumpAndSettle();
-        expect(find.byType(MealBasicInfoSection), findsOneWidget);
+        await capture(tester, key, 'meal-record-${dark ? "dark" : "light"}');
+        expect(find.byType(ExpansionTile), findsNothing);
         expect(tester.takeException(), isNull);
       },
     );

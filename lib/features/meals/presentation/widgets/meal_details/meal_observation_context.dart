@@ -5,6 +5,7 @@ import '../../../../../common/l10n/language.dart';
 import '../../../../../common/widgets/nutrition_summary_metric.dart';
 import '../../../../../common/widgets/responsive_metric_list.dart';
 import '../../../../../common/widgets/summary_detail_card.dart';
+import '../../../../meal_analysis/common/widgets/basal_profile_comparison.dart';
 import '../../../data/models/meal_analysis_data.dart';
 import 'meal_detail_formatters.dart';
 
@@ -53,6 +54,8 @@ class MealObservationContext extends StatelessWidget {
             ],
           ),
           if (basal != null && basal.coveredDuration > Duration.zero) ...[
+            const SizedBox(height: 12),
+            BasalProfileComparison(data: basal),
             const SizedBox(height: 8),
             Text(
               '${lang.dayBasalCoverage}: ${number.format(basal.coverage * 100)}%',

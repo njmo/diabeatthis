@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../../../data/models/meal_start_context_data.dart';
+import '../../../../../common/l10n/language.dart';
+import '../../../../../common/widgets/summary_detail_card.dart';
 import '../../models/meal_page_state.dart';
 import 'meal_advice_explanation.dart';
-import 'meal_advice_history_section.dart';
-import 'meal_advisor_result_section.dart';
-import 'meal_category_edit_button.dart';
-import 'meal_comparison_section.dart';
+import 'meal_application_differences.dart';
+import 'meal_completion_choice_card.dart';
+import 'meal_proposed_ecarbs_card.dart';
 import 'meal_recorded_actions.dart';
 import 'meal_recorded_carbs_card.dart';
-import 'meal_technical_section.dart';
-import 'meal_wait_comparison.dart';
+import 'meal_saved_information_card.dart';
 
 class MealApplicationContext extends StatelessWidget {
   const MealApplicationContext({super.key, required this.state});
@@ -23,26 +22,27 @@ class MealApplicationContext extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        MealCompletionChoiceCard(decision: details.meal.completionDecision),
+        MealApplicationDifferences(state: state),
+        const SizedBox(height: 16),
         MealAdviceExplanation(details: details),
-        if (analysis != null)
-          MealWaitComparison(
-            data: MealStartContextData(details: details, analysis: analysis),
-            visual: true,
-          ),
         const SizedBox(height: 16),
         MealRecordedActions(details: details),
         if (analysis != null && details.meal.isEaten) ...[
           const SizedBox(height: 16),
           MealRecordedCarbsCard(details: details, analysis: analysis),
+        ] else ...[
+          const SizedBox(height: 16),
+          SummaryDetailCard(
+            title: context.lang.mealRecordedCarbsTitle,
+            icon: Icons.calculate_outlined,
+            child: Text(context.lang.uiHistoryIsNotAvailableYet),
+          ),
         ],
         const SizedBox(height: 16),
-        MealAdviceHistorySection(details: details, analysis: analysis),
+        MealProposedEcarbsCard(details: details),
         const SizedBox(height: 16),
-        MealAdvisorResultSection(details: details),
-        if (analysis != null && details.meal.isEaten)
-          MealComparisonSection(details: details, analysis: analysis),
-        MealCategoryEditButton(mealId: details.meal.id),
-        MealTechnicalSection(state: state),
+        MealSavedInformationCard(state: state),
       ],
     );
   }

@@ -10,6 +10,7 @@ import '../../domain/models/before_meal_context.dart';
 import 'before_meal_details_card.dart';
 import 'before_meal_event_metrics.dart';
 import 'before_meal_history_facts.dart';
+import 'before_meal_overview.dart';
 
 class BeforeMealFacts extends StatelessWidget {
   final BeforeMealContext data;
@@ -24,6 +25,9 @@ class BeforeMealFacts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (showHistory) {
+      return BeforeMealOverview(data: data, hasRecordedStart: hasRecordedStart);
+    }
     final lang = context.lang;
     final number = NumberFormat('0.##', lang.localeName);
     String value(num? n, String unit) =>
@@ -74,7 +78,7 @@ class BeforeMealFacts extends StatelessWidget {
                   : '${time(data.latestCgm!.date)} · ${data.hasFreshCgm ? lang.beforeMealFresh : lang.beforeMealStale}',
             ),
             NutritionSummaryMetric(
-              label: 'IOB',
+              label: lang.dashboardIobLabel,
               icon: Icons.water_drop_outlined,
               color: Theme.of(context).colorScheme.secondary,
               value: value(status?.hasIob == true ? status!.iob : null, 'U'),
@@ -83,7 +87,7 @@ class BeforeMealFacts extends StatelessWidget {
                   : time(status.date),
             ),
             NutritionSummaryMetric(
-              label: 'COB',
+              label: lang.dashboardCobLabel,
               icon: Icons.restaurant_rounded,
               color: Theme.of(context).colorScheme.tertiary,
               value: value(status?.hasCob == true ? status!.cob : null, 'g'),

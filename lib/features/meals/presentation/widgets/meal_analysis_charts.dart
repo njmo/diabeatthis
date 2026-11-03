@@ -4,6 +4,8 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/stress_event_chart_ranges.dart';
 import '../../../../common/widgets/timeline_analysis_charts.dart';
 import '../../../../core/domain/model/temporary_target.dart';
+import '../../../meal_analysis/common/charts/meal_target_preparation_range.dart';
+import '../../../meal_analysis/common/controllers/meal_target_preparation_controller.dart';
 import '../../data/models/meal_analysis_data.dart';
 import '../../data/models/meal_details_data.dart';
 import 'meal_details/meal_detail_formatters.dart';
@@ -43,6 +45,12 @@ List<TimelineChartRange> mealTimelineChartRanges(
 }) {
   final start = details.recordedEatingStartedAt;
   final end = details.recordedEatingEndedAt;
+  const controller = MealTargetPreparationController();
+  final preparation = controller.build(
+    treatments: analysis.targetHistory,
+    recordedMealStart: start,
+  );
+  final periods = controller.periods(analysis.targetHistory);
   return [
     ...stressEventChartRanges(
       treatments: analysis.treatments,
@@ -50,7 +58,19 @@ List<TimelineChartRange> mealTimelineChartRanges(
       end: analysis.chartEnd,
       messages: messages,
     ),
-    ...analysis.temporaryTargets.map(_temporaryTargetRange),
+    for (final period in periods)
+      if (period.target.createdAt.isBefore(analysis.chartEnd) &&
+          period.end.isAfter(analysis.chartStart))
+        _temporaryTargetRange(
+          period.target,
+          period.end,
+          messages,
+          start: preparation?.target == period.target
+              ? preparation!.mealStartedAt
+              : null,
+        ),
+    if (preparation != null)
+      mealTargetPreparationRange(preparation, messages, eatingColor),
     if (start != null &&
         end != null &&
         end.isAfter(start) &&
@@ -70,16 +90,23 @@ List<TimelineChartRange> mealTimelineChartRanges(
   ];
 }
 
-TimelineChartRange _temporaryTargetRange(TemporaryTarget target) {
+TimelineChartRange _temporaryTargetRange(
+  TemporaryTarget target,
+  DateTime end,
+  AppLocalizations messages, {
+  DateTime? start,
+}) {
   return TimelineChartRange(
-    start: target.createdAt,
-    end: target.createdAt.add(Duration(minutes: target.duration)),
+    start: start ?? target.createdAt,
+    end: end,
     color: Colors.blue,
     alpha: 0.12,
-    label: '${target.targetBottom}-${target.targetTop} mg/dL',
+    label: target.targetBottom == target.targetTop
+        ? messages.mealTargetValue(target.targetTop)
+        : messages.mealTargetRangeValue(target.targetBottom, target.targetTop),
     startIcon: Icons.timer,
     endIcon: Icons.timer_off,
-    startLabel: lang.tempTargetRangeStartLabel,
-    endLabel: lang.tempTargetRangeEndLabel,
+    startLabel: messages.tempTargetRangeStartLabel,
+    endLabel: messages.tempTargetRangeEndLabel,
   );
 }

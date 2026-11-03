@@ -159,6 +159,9 @@ class AnalyzeMealUseCase {
       treatments: treatments,
       lowTreatments: lowTreatments,
       temporaryTargets: temporaryTargets,
+      temporaryTargetHistory: targetTreatments
+          .whereType<TemporaryTarget>()
+          .toList(),
       deviceStatuses: deviceStatuses,
       linkedActivities: linkedActivities,
       linkedMeals: linkedMeals,

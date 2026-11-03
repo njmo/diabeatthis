@@ -50,6 +50,15 @@ class MealPortionIngredient extends StatelessWidget {
                 ? lang.mealConsumedInline('${number.format(amount)} g')
                 : lang.mealPlanInline('${number.format(amount)} g'),
           ),
+          if (ingredient.quantityConfidence.isFinite &&
+              ingredient.quantityConfidence >= 0 &&
+              ingredient.quantityConfidence < 1)
+            Text(
+              lang.mealSavedQuantityEstimate(
+                number.format(ingredient.quantityConfidence * 100),
+              ),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           if (hasConsumedSnapshot && !reported)
             Text(lang.mealPortionUnconfirmed),
           if (ingredient.isExtra)

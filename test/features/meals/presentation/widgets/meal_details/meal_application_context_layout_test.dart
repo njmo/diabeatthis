@@ -1,6 +1,6 @@
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_application_context.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_application_differences.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_recorded_actions.dart';
-import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_wait_comparison.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -35,10 +35,11 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(MealRecordedActions), findsOneWidget);
-    expect(
-      tester.widget<MealWaitComparison>(find.byType(MealWaitComparison)).visual,
-      isTrue,
-    );
+    expect(find.byType(MealApplicationDifferences), findsOneWidget);
+    expect(find.byType(ExpansionTile), findsNothing);
+    expect(find.text('Zmień rodzaj posiłku'), findsNothing);
+    expect(find.byIcon(Icons.arrow_downward_rounded), findsNothing);
+    expect(find.text('Zapis i synchronizacja'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

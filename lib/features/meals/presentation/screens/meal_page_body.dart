@@ -10,6 +10,7 @@ import '../models/meal_page_state.dart';
 import '../widgets/meal_details/meal_application_context.dart';
 import '../widgets/meal_details/meal_before_card.dart';
 import '../widgets/meal_details/meal_charts_section.dart';
+import '../widgets/meal_details/meal_comparison_section.dart';
 import '../widgets/meal_details/meal_events_card.dart';
 import '../widgets/meal_details/meal_glucose_card.dart';
 import '../widgets/meal_details/meal_history_download_button.dart';
@@ -111,7 +112,15 @@ class MealPageBody extends HookConsumerWidget {
               });
             },
           ),
-          SimilarMealsSection(details: details, inline: true),
+          Column(
+            children: [
+              SimilarMealsSection(details: details, inline: true),
+              MealComparisonSection(
+                details: details,
+                analysis: state.analysis!,
+              ),
+            ],
+          ),
         ],
         MealApplicationContext(state: state),
       ],
