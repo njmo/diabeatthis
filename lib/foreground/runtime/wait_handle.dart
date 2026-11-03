@@ -22,7 +22,11 @@ class WaitHandle<T> {
   }
 
   WaitHandle<R> map<R>(FutureOr<R> Function(T value) mapper) {
-    return WaitHandle<R>(future: future.then(mapper), cancel: cancel);
+    final mapped = future.then(mapper);
+    // A later wait factory can throw before a race subscribes to this handle.
+    // Observing it here preserves errors for awaiters without leaking them.
+    mapped.ignore();
+    return WaitHandle<R>(future: mapped, cancel: cancel);
   }
 
   WaitHandle<T?> timeoutOrNull(

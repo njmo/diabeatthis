@@ -6,6 +6,8 @@ class WaitScope {
   final Set<WaitHandle<dynamic>> _handles = {};
 
   WaitHandle<T> track<T>(WaitHandle<T> handle) {
+    // Reconciliation can fail or be cancelled before the race is installed.
+    handle.future.ignore();
     _handles.add(handle);
     return handle;
   }

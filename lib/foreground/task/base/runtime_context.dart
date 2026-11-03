@@ -302,11 +302,15 @@ class RuntimeContext with Logging {
   }
 
   Future<T> any<T>(Iterable<WaitHandle<T>> waits) async {
-    cancellation.throwIfCancelled();
-
     final handles = waits.toList();
+    // Handles may already be cancelled while their caller finishes I/O.
+    // Observe every future before checking cancellation, including mapped ones.
+    for (final handle in handles) {
+      handle.future.ignore();
+    }
 
     try {
+      cancellation.throwIfCancelled();
       final result = await interruptController.race(
         Future.any(handles.map((h) => h.future)),
       );
