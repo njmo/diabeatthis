@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/profile_name_field.dart';
 import '../../data/models/nightscout_settings_save_state.dart';
 import 'nightscout_connection_fields.dart';
 import 'settings_section_card.dart';
@@ -65,14 +66,10 @@ class NightscoutSettingsSection extends StatelessWidget {
           onChanged: onTempTargetsChanged,
         ),
         const SizedBox(height: 16),
-        TextFormField(
+        ProfileNameField(
           enabled: !saveState.isSaving,
           controller: childNameController,
-          decoration: InputDecoration(
-            labelText: context.lang.settingsChildNameLabel,
-            hintText: context.lang.settingsNameHint,
-          ),
-          textCapitalization: TextCapitalization.words,
+          label: context.lang.settingsChildNameLabel,
           onChanged: (_) => onChanged(),
         ),
         if (errorMessage != null) ...[

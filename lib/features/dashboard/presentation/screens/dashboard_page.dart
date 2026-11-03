@@ -33,6 +33,13 @@ class DashboardPage extends HookConsumerWidget {
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        bottom: destination.value == 0
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(8),
+                child: SizedBox(height: 8),
+              )
+            : null,
         title: destination.value == 0
             ? const DashboardGreeting()
             : isCollection
@@ -43,7 +50,7 @@ class DashboardPage extends HookConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               )
-            : null,
+            : Text(context.lang.dashboardDayTab),
         actions: [
           if (isCollection)
             CompactCategorySelector(
@@ -61,9 +68,8 @@ class DashboardPage extends HookConsumerWidget {
               ],
               selectedIndex: category.value,
               onSelected: (index) => category.value = index,
-            )
-          else
-            const DashboardUserMenu(),
+            ),
+          if (destination.value == 0) const DashboardUserMenu(),
           const SizedBox(width: 8),
         ],
       ),

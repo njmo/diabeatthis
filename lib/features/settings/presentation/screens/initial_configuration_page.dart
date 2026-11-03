@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/application_language.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/profile_name_field.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
 import '../controllers/initial_configuration_controller.dart';
 import '../widgets/application_language_selector.dart';
@@ -99,13 +100,10 @@ class InitialConfigurationPage extends HookConsumerWidget {
                     title: context.lang.settingsUserPreferencesTitle,
                     subtitle: context.lang.settingsUserPreferencesSubtitle,
                     children: [
-                      TextFormField(
+                      ProfileNameField(
                         initialValue: state.userName,
-                        decoration: InputDecoration(
-                          labelText: context.lang.settingsUserNameLabel,
-                          hintText: context.lang.settingsNameHint,
-                        ),
-                        textCapitalization: TextCapitalization.words,
+                        enabled: !state.isSaving,
+                        label: context.lang.settingsUserNameLabel,
                         onSaved: (value) {
                           controller.setUserName(value?.trim() ?? '');
                         },
