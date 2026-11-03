@@ -3,6 +3,7 @@ import 'package:clock/clock.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../activity_monitor_context.dart';
+import '../helpers/activity_monitor_context_loader.dart';
 import 'activity_monitor_state_executor.dart';
 import 'idle_executor.dart';
 import 'monitor_active_activity_executor.dart';
@@ -34,19 +35,13 @@ class NewActivityCheckExecutor extends ActivityMonitorStateExecutor {
       return const ActivityMonitorStateIdle();
     }
 
-    final activity = await db.activityDao.getActivityById(nextLog.activityId);
-    activityMonitorContext.replaceWith(
-      ActivityMonitorContext(
-        activityLogId: nextLog.id,
-        activityId: nextLog.activityId,
-        activityName: activity.name,
-        startsAt: DateTime.fromMillisecondsSinceEpoch(nextLog.startedAt),
-        durationMinutes: await db.activityDao.getEffectiveDurationForLog(
-          nextLog.id,
-          activity.durationMinutes,
-        ),
-      ),
-    );
+    final loaded = await loadActivityMonitorContext(runtimeContext, nextLog.id);
+    runtimeContext.throwIfCancelled();
+    if (loaded == null) {
+      activityMonitorContext.clear();
+      return const ActivityMonitorStateIdle();
+    }
+    activityMonitorContext.replaceWith(loaded);
 
     if (activityMonitorContext.startsAt!.isAfter(clock.now())) {
       return const MonitorUntilActivityExecutor();

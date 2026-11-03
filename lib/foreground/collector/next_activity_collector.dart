@@ -3,11 +3,14 @@ import 'dart:async';
 import '../../core/drift/database_impl.dart';
 import '../../core/drift/providers/database_provider.dart';
 import '../event/internal/activity_event.dart';
+import '../runtime/wait_handle.dart';
 import '../task/base/collector_context.dart';
 import 'foreground_collector.dart';
 
 class NextActivityCollector extends ForegroundCollector {
   StreamSubscription<List<ActivityLogData>>? _dbSubscription;
+  StreamSubscription<List<ActivityData>>? _definitionSubscription;
+  int? _lastDurationMinutes;
   bool _disposed = false;
   int? _lastActivityLogId;
   int? _lastActivityId;
@@ -25,86 +28,113 @@ class NextActivityCollector extends ForegroundCollector {
           context.emitSignal('next_activity_db_changed');
         });
 
+    _definitionSubscription = context.container
+        .read(databaseProvider)
+        .activityDao
+        .watchActivities()
+        .listen((_) {
+          context.emitSignal('next_activity_db_changed');
+        });
     unawaited(runGuarded(() => _run(context)));
   }
 
   Future<void> _run(CollectorContext context) async {
     while (!_disposed) {
-      final db = context.container.read(databaseProvider);
-      final current = await db.activityDao.getNearestActivityLog();
-      if (_disposed) return;
+      final dbHandle = context.signalWait('next_activity_db_changed');
+      try {
+        final db = context.container.read(databaseProvider);
+        final current = await db.activityDao.getNearestActivityLog();
+        if (_disposed) return;
 
-      if (current == null) {
-        await _emitPreviousActivityEndIfNeeded(context);
-        _clearLastActivity();
-        await context.waitForSignal('next_activity_db_changed');
-        continue;
-      }
-
-      if (_lastActivityLogId != null && _lastActivityLogId != current.id) {
-        await _emitPreviousActivityEndIfNeeded(context);
-      }
-
-      final changed =
-          _lastActivityLogId != current.id ||
-          _lastActivityId != current.activityId ||
-          _lastStartedAt != current.startedAt ||
-          _lastEndedAt != current.endedAt;
-
-      if (changed) {
-        if (_lastActivityLogId != current.id) {
-          _startedActivityLogId = null;
+        if (current == null) {
+          await _emitPreviousActivityEndIfNeeded(context);
+          _clearLastActivity();
+          await dbHandle.future;
+          continue;
         }
-        _lastActivityLogId = current.id;
-        _lastActivityId = current.activityId;
-        _lastStartedAt = current.startedAt;
-        _lastEndedAt = current.endedAt;
+
+        if (_lastActivityLogId != null && _lastActivityLogId != current.id) {
+          await _emitPreviousActivityEndIfNeeded(context);
+        }
+
+        final activity = await db.activityDao.getActivityById(
+          current.activityId,
+        );
+        final durationMinutes = await db.activityDao.getEffectiveDurationForLog(
+          current.id,
+          activity.durationMinutes,
+        );
+        if (_disposed) return;
+        final changed =
+            _lastActivityLogId != current.id ||
+            _lastActivityId != current.activityId ||
+            _lastStartedAt != current.startedAt ||
+            _lastEndedAt != current.endedAt ||
+            _lastDurationMinutes != durationMinutes;
+
+        if (changed) {
+          if (_lastActivityLogId != current.id) {
+            _startedActivityLogId = null;
+          }
+          _lastActivityLogId = current.id;
+          _lastActivityId = current.activityId;
+          _lastStartedAt = current.startedAt;
+          _lastEndedAt = current.endedAt;
+          _lastDurationMinutes = durationMinutes;
+
+          final startsAt = DateTime.fromMillisecondsSinceEpoch(
+            current.startedAt,
+          );
+
+          logI("Nearest activity from database $current");
+          logI(
+            "Detected nearest activity change: ${current.id}, "
+            "activity: ${current.activityId}, "
+            "at: ${startsAt.toIso8601String()}",
+          );
+
+          context.emitEvent(
+            NextActivityEvent(
+              activityLogId: current.id,
+              activityId: current.activityId,
+              startsAt: startsAt,
+            ),
+          );
+        }
+
+        _emitActivityStartedIfNeeded(context, current);
 
         final startsAt = DateTime.fromMillisecondsSinceEpoch(current.startedAt);
+        final now = DateTime.now();
+        final waitDuration = startsAt.difference(now);
 
-        logI("Nearest activity from database $current");
-        logI(
-          "Detected nearest activity change: ${current.id}, "
-          "activity: ${current.activityId}, "
-          "at: ${startsAt.toIso8601String()}",
-        );
+        if (waitDuration <= Duration.zero) {
+          await _waitForDurationOrDbChange(
+            context,
+            const Duration(seconds: 1),
+            dbHandle,
+          );
+          continue;
+        }
 
-        context.emitEvent(
-          NextActivityEvent(
-            activityLogId: current.id,
-            activityId: current.activityId,
-            startsAt: startsAt,
-          ),
-        );
+        await _waitForDurationOrDbChange(context, waitDuration, dbHandle);
+      } finally {
+        await dbHandle.cancel();
       }
-
-      _emitActivityStartedIfNeeded(context, current);
-
-      final startsAt = DateTime.fromMillisecondsSinceEpoch(current.startedAt);
-      final now = DateTime.now();
-      final waitDuration = startsAt.difference(now);
-
-      if (waitDuration <= Duration.zero) {
-        await _waitForDurationOrDbChange(context, const Duration(seconds: 1));
-        continue;
-      }
-
-      await _waitForDurationOrDbChange(context, waitDuration);
     }
   }
 
   Future<void> _waitForDurationOrDbChange(
     CollectorContext context,
     Duration duration,
+    WaitHandle<void> dbHandle,
   ) async {
     final timeHandle = context.durationWait(duration);
-    final dbHandle = context.signalWait('next_activity_db_changed');
 
     try {
       await Future.any([timeHandle.future, dbHandle.future]);
     } finally {
       await timeHandle.cancel();
-      await dbHandle.cancel();
     }
   }
 
@@ -112,6 +142,7 @@ class NextActivityCollector extends ForegroundCollector {
   Future<void> dispose() async {
     _disposed = true;
     await _dbSubscription?.cancel();
+    await _definitionSubscription?.cancel();
   }
 
   void _emitActivityStartedIfNeeded(
@@ -192,6 +223,7 @@ class NextActivityCollector extends ForegroundCollector {
     _lastActivityId = null;
     _lastStartedAt = null;
     _lastEndedAt = null;
+    _lastDurationMinutes = null;
     _startedActivityLogId = null;
   }
 }

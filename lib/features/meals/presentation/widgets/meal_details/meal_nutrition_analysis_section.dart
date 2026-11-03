@@ -240,11 +240,15 @@ class MealIngredientTile extends StatelessWidget {
         ),
         MealInfoRow(
           label: context.lang.mealPlannedMassLabel,
-          value: formatGrams(ingredient.plannedTotalGrams),
+          value: ingredient.recordedWeightAvailable
+              ? formatGrams(ingredient.plannedTotalGrams)
+              : context.lang.amountMissingPortionWeight,
         ),
         MealInfoRow(
           label: context.lang.mealConsumedMassLabel,
-          value: formatGrams(consumedGrams),
+          value: ingredient.recordedWeightAvailable
+              ? formatGrams(consumedGrams)
+              : context.lang.amountMissingPortionWeight,
         ),
         MealInfoRow(
           label: context.lang.mealPrepMethodLabel,

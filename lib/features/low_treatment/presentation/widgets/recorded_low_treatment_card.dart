@@ -34,12 +34,17 @@ class RecordedLowTreatmentCard extends StatelessWidget {
           const SizedBox(height: 8),
           NutritionSummaryMetric(
             label: lang.beforeMealCarbs,
-            value: treatment.netCarbsGrams == null
+            value: treatment.historicalCarbs == null
                 ? lang.beforeMealUnknownMacros
-                : '${number.format(treatment.netCarbsGrams)} g',
+                : '${number.format(treatment.historicalCarbs)} g',
             icon: Icons.cake_outlined,
             color: colors.tertiary,
           ),
+          if (!treatment.ingredientsAvailable)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(lang.amountMissingPortionWeight),
+            ),
           for (final ingredient in treatment.ingredients)
             Padding(
               padding: const EdgeInsets.only(top: 8),

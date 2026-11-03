@@ -39,25 +39,26 @@ class TreatmentFactory {
         );
         continue;
       }
+      // A combined delivery contains independent insulin and carbohydrate facts.
+      // Handle it before the duration-based extended-carbohydrate record shape.
+      if (type.contains('meal bolus') || type.contains('carb correction')) {
+        if (t['insulin'] != null) {
+          list.add(ManualBolusDto.fromJson(t).toDomain());
+        }
+        if (t['carbs'] != null) {
+          if (t['duration'] is num && (t['duration'] as num) > 0) {
+            list.add(ExtendedCarbDto.fromJson(t).toDomain());
+          } else {
+            list.add(TreatDto.fromJson(t).toDomain());
+          }
+        }
+        continue;
+      }
       if (t is Map<String, dynamic> &&
           t['duration'] is num &&
           t['carbs'] is num) {
         list.add(ExtendedCarbDto.fromJson(t).toDomain());
         continue;
-      }
-      // sms bolus
-      if (type.contains('meal bolus') || type.contains('carb correction')) {
-        if (t['carbs'] == null) {
-          list.add(ManualBolusDto.fromJson(t).toDomain());
-          continue;
-        }
-        if (t['insulin'] == null) {
-          list.add(TreatDto.fromJson(t).toDomain());
-          continue;
-        }
-      }
-      if (type.contains('carb correction')) {
-        list.add(TreatDto.fromJson(t).toDomain());
       }
       if (type.contains('correction bolus')) {
         list.add(CorrectionBolusDto.fromJson(t).toDomain());

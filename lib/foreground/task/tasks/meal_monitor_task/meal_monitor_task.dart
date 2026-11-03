@@ -4,7 +4,9 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../common/monitoring/meal_monitoring_status.dart';
+import '../../../../common/notifications/meal_notification_cancellation.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../event/internal/meal_event.dart';
 import '../../../event/internal/meal_status_changed_event.dart';
@@ -28,7 +30,7 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
 
   @override
   List<bool Function(ForegroundEvent)> get interruptableEventsMatcher => [
-    (e) => e is NextMealEvent,
+    (e) => e is NextMealEvent || e is PlannedMealsClearedEvent,
     (e) => e is MealStatusChangedEvent,
   ];
 
@@ -38,6 +40,10 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
   @override
   bool shouldInterrupt(ForegroundEvent event) {
     logI("MealMonitorTask shouldInterrupt ${event.runtimeType}");
+    if (event is PlannedMealsClearedEvent) {
+      if (_loadingMealId != null) return _loadingPlannedMeal;
+      return _state is MonitorUntilMeal || _state is NewMealCheckExecutor;
+    }
     if (event is MealEatingExtraEvent &&
         _stoppedMeals[event.mealId] is MealSummarizedEvent) {
       // A new, persisted add-on may intentionally reopen a completed summary.
@@ -64,6 +70,7 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
   MealMonitorStateExecutor _state = MealMonitorStateIdle();
   MealMonitorContext _activeMealExecutorContext = MealMonitorContext();
   int? _loadingMealId;
+  bool _loadingPlannedMeal = false;
   final Map<int, MealStatusChangedEvent> _stoppedMeals = {};
 
   void _throwIfMealStopped(RuntimeContext context) {
@@ -122,6 +129,29 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
     MealMonitorTransition? mealMonitorTransition;
 
     switch (interruptedEvent) {
+      case PlannedMealsClearedEvent():
+        final removedMealId = _activeMealExecutorContext.activeMeal?.id;
+        if (removedMealId != null) {
+          try {
+            await context.container
+                .read(notificationsControllerForegroundProvider)
+                .cancelMealNotifications(
+                  removedMealId,
+                  includeTargetConsent: true,
+                );
+          } catch (error, stackTrace) {
+            // A platform cancellation failure must not keep a deleted meal active.
+            logW(
+              'Could not cancel notifications for removed meal $removedMealId: $error\n$stackTrace',
+            );
+          }
+        }
+        context.container.invalidate(getNearestMealProvider);
+        mealMonitorTransition = MealMonitorTransition(
+          MealMonitorContext(),
+          MealMonitorStateIdle(),
+        );
+        break;
       case NextMealEvent():
         // user added new meal which is nearer than previous
         // reset whole state machine and perform cleanup
@@ -130,15 +160,28 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
         // than our observed meal, otherwise we need to ignore this
         // this will be handled by MonitorUntilMealExecutor state
         // if we come here it means this is new meal we want to focus on.
-        final nextMealExecutorContext = await buildMealMonitorContext(
-          context,
-          interruptedEvent.mealId,
-        );
-        // NewMealEvent is raised only when created meal has planned state
-        // and is sooner than currently monitored, we know proper executor.
+        late final MealMonitorContext nextMealExecutorContext;
+        _loadingPlannedMeal = true;
+        try {
+          nextMealExecutorContext = await buildMealMonitorContext(
+            context,
+            interruptedEvent.mealId,
+          );
+        } finally {
+          _loadingPlannedMeal = false;
+        }
+        // The candidate may have changed status while its row was loading.
+        final latestMeal = nextMealExecutorContext.activeMeal;
+        final nextExecutor = latestMeal == null
+            ? NewMealCheckExecutor()
+            : mealStatusChangedEventToExecutor(
+                    MealStatusChangedEvent.fromMealStatus(latestMeal),
+                    true,
+                  ) ??
+                  NewMealCheckExecutor();
         mealMonitorTransition = MealMonitorTransition(
           nextMealExecutorContext,
-          MonitorUntilMeal(),
+          nextExecutor,
         );
         break;
       case MealStatusChangedEvent():

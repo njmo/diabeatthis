@@ -139,17 +139,19 @@ class DatabaseBackupService {
     }
     var rowCount = 0;
     try {
-      await _withForeignKeysDisabled(() async {
-        await _clearForImport();
+      await _withForeignKeysDisabled(
+        () => _db.withRecordedPortionConversionsPreserved(() async {
+          await _clearForImport();
 
-        for (final tableName in _tableNamesForScope(scope)) {
-          final rows = tableRows[tableName] ?? const [];
-          for (final row in rows) {
-            await _insertRow(tableName, row);
+          for (final tableName in _tableNamesForScope(scope)) {
+            final rows = tableRows[tableName] ?? const [];
+            for (final row in rows) {
+              await _insertRow(tableName, row);
+            }
+            rowCount += rows.length;
           }
-          rowCount += rows.length;
-        }
-      });
+        }),
+      );
     } catch (_) {
       await imageBackup.removeImages(restoredImages.values);
       rethrow;

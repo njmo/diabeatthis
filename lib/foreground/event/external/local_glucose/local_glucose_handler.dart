@@ -1,4 +1,5 @@
 import '../../../../common/events/data/task/task_data_synchronization_payload.dart';
+import '../../../../common/monitoring/live_reading_order.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/local_mirror/providers/local_mirror_writer_provider.dart';
@@ -30,6 +31,16 @@ class LocalGlucoseHandler with Logging {
 
     if (config.mirrorToLocal) {
       await container.read(localMirrorWriterProvider).mirrorGlucose([glucose]);
+    }
+
+    final current = container.read(bloodSugarValueProvider);
+    if (!acceptsLiveReading(
+      incomingAt: glucose.date,
+      incomingSource: glucose.source,
+      currentAt: current?.date,
+      currentSource: current?.source,
+    )) {
+      return;
     }
 
     container

@@ -21,10 +21,18 @@ class DataSourceDropdown<T extends Object> extends StatelessWidget {
     return DropdownButtonFormField<T>(
       key: ValueKey(value),
       initialValue: value,
+      isExpanded: true,
       decoration: InputDecoration(labelText: label),
       items: [
         for (final source in values)
-          DropdownMenuItem(value: source, child: Text(labelFor(source))),
+          DropdownMenuItem(
+            value: source,
+            child: Text(
+              labelFor(source),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
       ],
       onChanged: (value) {
         if (value == null) return;

@@ -11,6 +11,7 @@ part 'meal_draft.freezed.dart';
 abstract class MealIngredientsDraft with _$MealIngredientsDraft {
   const factory MealIngredientsDraft({
     int? mealIngredientId,
+    double? recordedGramsPerAmount,
     required IngredientDraft ingredient,
     required IngredientPortionDraft ingredientPortion,
     required double amount,

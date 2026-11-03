@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 
+import '../../../../../common/monitoring/activity_duration_source.dart';
 import '../../../../../common/monitoring/activity_monitoring_phase.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../features/activity/data/domain/use_cases/auto_finish_activity_use_case.dart';
@@ -7,6 +8,7 @@ import '../../../../event/internal/activity_event.dart';
 import '../../../../event/model/foreground_event.dart';
 import '../../../base/runtime_context.dart';
 import '../activity_monitor_context.dart';
+import '../helpers/activity_monitor_context_loader.dart';
 import '../helpers/activity_temp_target_monitor.dart';
 import 'activity_monitor_state_executor.dart';
 import 'finish_activity_executor.dart';
@@ -33,7 +35,7 @@ class MonitorActiveActivityExecutor extends ActivityMonitorStateExecutor {
       case ActivityCancelledEvent():
         return event.activityLogId == activityMonitorContext.activityLogId;
       case NextActivityEvent():
-        return false;
+        return event.activityLogId == activityMonitorContext.activityLogId;
       default:
         return false;
     }
@@ -101,6 +103,20 @@ class MonitorActiveActivityExecutor extends ActivityMonitorStateExecutor {
       }
     }
     runtimeContext.throwIfCancelled();
+    if (activityMonitorContext.durationSource ==
+        ActivityDurationSource.definition) {
+      final refreshed = await loadActivityMonitorContext(
+        runtimeContext,
+        activityLogId,
+      );
+      runtimeContext.throwIfCancelled();
+      if (refreshed == null) return const FinishActivityExecutor();
+      if (refreshed.durationMinutes != durationMinutes ||
+          refreshed.startsAt != startsAt) {
+        activityMonitorContext.replaceWith(refreshed);
+        return this;
+      }
+    }
     final db = runtimeContext.container.read(databaseProvider);
     await AutoFinishActivityUseCase(
       now: clock.now,

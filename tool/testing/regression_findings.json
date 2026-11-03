@@ -1,0 +1,401 @@
+{
+  "phase": "regression_repairs_verified",
+  "findings": [
+    {
+      "id": "historical-portion-conversion",
+      "status": "resolved",
+      "test": "test/features/meal_analysis/historical_portion_conversion_known_defect_test.dart",
+      "expected": "A recorded meal containing two 30 g slices still exposes 60 g after the current slice is changed to 40 g. Historical macro totals and ingredient amounts agree.",
+      "observed": "Historical aggregate remains 60 g and 30 g carbohydrates, but the ingredient amount becomes 80 g.",
+      "reproduce": "flutter test --no-pub --run-skipped test/features/meal_analysis/historical_portion_conversion_known_defect_test.dart",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Persist the conversion used by each meal ingredient; preserve it after edits and portion deletion, including summary, copy, similarity and LLM paths.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "reopen-add-on-calculator",
+      "status": "resolved_test_setup_only",
+      "test": "test/features/meals/presentation/widgets/active_meal_add_on_bolus_action_test.dart",
+      "scenario": "pending add-on remains reachable after returning to the dashboard",
+      "expected": "Tapping Open calculator opens the calculator once.",
+      "observed": "The existing assertion expects launcher.opens == 1 and receives 0, both in the full suite and in an isolated run.",
+      "reproduce": "flutter test --no-pub test/features/meals/presentation/widgets/active_meal_add_on_bolus_action_test.dart",
+      "normalSuite": "Enabled; original scenarios and assertions are preserved.",
+      "diagnosis": "An opened database enables activity advice, which reads meal activity windows from shared preferences. The original widget test does not mock those preferences.",
+      "diagnosticResult": "All three original assertions pass when an external diagnostic wrapper supplies SharedPreferences.setMockInitialValues({}); the original file is unchanged.",
+      "resolution": "User-approved empty SharedPreferences mock added. All eight original calculator and add-on scenarios pass unchanged."
+    },
+    {
+      "id": "calculator-ecarbs-missing-preferences-mock",
+      "status": "resolved_test_setup_only",
+      "test": "test/features/dashboard/presentation/utils/meal_consumed_ecarbs_test.dart",
+      "scenario": "reopening the calculator uses the plan before eating",
+      "observed": "The unmodified test waits for an unmocked settings read. The full regression run was interrupted after 2919 passed tests, one known skip and one separate assertion failure. It is not a completed full-suite result.",
+      "diagnosticResult": "All five original scenarios pass when an external diagnostic wrapper supplies SharedPreferences.setMockInitialValues({}); the original file is unchanged.",
+      "reproduce": "flutter test --no-pub test/features/dashboard/presentation/utils/meal_consumed_ecarbs_test.dart",
+      "resolution": "User-approved empty SharedPreferences mock added. All eight original calculator and add-on scenarios pass unchanged.",
+      "normalSuite": "Enabled; original scenarios and assertions are preserved."
+    },
+    {
+      "id": "nightscout-combined-meal-bolus-dropped",
+      "status": "resolved",
+      "source": "lib/core/data_sources/nightscout/helpers/treatments_factory.dart",
+      "test": "test/features/meal_analysis/meal_bolus_import_known_defect_test.dart",
+      "expected": "An isolated valid Meal Bolus record with insulin=2 U and carbs=15 g contributes the delivered 2 U to the meal outcome.",
+      "observed": "The parser returns no treatment for this record, so the downstream outcome reports 0 U.",
+      "reproduce": "flutter test --no-pub --run-skipped test/features/meal_analysis/meal_bolus_import_known_defect_test.dart",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Parse carbohydrate and actual insulin components independently, preserving provenance and calculator deduplication.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "explicit-zero-consumption-retains-positive-history",
+      "status": "resolved",
+      "priority": "high",
+      "source": "lib/features/dashboard/data/utils/meal_snapshot_controller.dart:197",
+      "test": "test/features/meal_analysis/safety_audit_zero_consumption_history_test.dart",
+      "expected": "Finishing a meal with every consumed amount explicitly zero records a consumed snapshot with zero grams and zero macros, and exposes zero historical facts.",
+      "observed": "FinalizeMealSummaryUseCase stores consumed_amount=0 and status=summarized, but saveConsumedSnapshot skips the snapshot. Without an earlier consumed snapshot, LLM facts use the 200 g/30 g net planned meal; with one, they retain the old 150 g/22.5 g net snapshot.",
+      "reproduction": [
+        "Create a meal with a positive plan and reported consumption.",
+        "While status is eaten, set every consumed amount to zero in its summary.",
+        "Finish the summary and reload meal details / LLM facts."
+      ],
+      "evidence": "Two expected-correct cases fail through the real finalization use case and SQLite. The summary save page has no all-zero guard.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Persist explicit zero consumed snapshots and avoid undefined confidence averages.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "low-treatment-historical-precision-rounded-for-delivery",
+      "status": "resolved",
+      "priority": "medium",
+      "source": "lib/features/low_treatment/data/repositories/recorded_low_treatment_repository.dart:78",
+      "test": "test/features/day_analysis/safety_audit_low_treatment_precision_test.dart",
+      "expected": "Fractional historical nutrition remains precise in day summaries and LLM input when no explicit recorded-carbs override exists.",
+      "observed": "Consumed snapshots contain 7.6 g + 2.6 g = 10.2 g; the repository rounds these to 8 g + 3 g and the real day summary stores 11 g.",
+      "evidence": "Real SQLite meals without a recorded-carbs override, real repository and day-summary builder; expected 10.2, actual 11.",
+      "qualification": "Whole-gram rounding for a delivery/handoff is intentional. This finding concerns reusing rounded delivery values as historical nutrition, particularly legacy records without an explicit override.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Separate precise historical nutrition from the existing delivery contract through shared availability-aware repositories.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "meal-and-template-preview-ceil-per-ingredient",
+      "status": "resolved",
+      "priority": "medium",
+      "source": [
+        "lib/features/meals/data/providers/meal_ingredients_list_provider.dart:150",
+        "lib/features/meal_template/data/provider/meal_template_ingredients_list_provider.dart:125"
+      ],
+      "test": "test/features/meals/data/providers/safety_audit_rounding_split_ingredient_test.dart",
+      "expected": "Sum nutrient contributions before rounding the displayed integer total.",
+      "observed": "Two distinct foods added through public draft APIs, each 52 g at 20 g carbs/100 g: exact sum is 20.8 g, rounded once 21 g; both previews display 22 g.",
+      "evidence": "Both public meal and template preview tests fail expected 21, actual 22. Saved SQL nutrition sums fractional contributions.",
+      "qualification": "Confirmed preview inconsistency; this alone does not prove that an AAPS handoff also sends the inflated number.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Sum precise contributions before rounding meal and template totals once.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "snapshot-resave-resolves-first-calculation-ingredient-facts",
+      "status": "resolved",
+      "priority": "high",
+      "source": [
+        "lib/features/dashboard/data/utils/meal_snapshot_controller.dart:240",
+        "lib/features/meals/data/mappers/meal_details_data_mapper.dart:112"
+      ],
+      "test": "test/features/meal_analysis/safety_audit_snapshot_resave_timestamp_test.dart",
+      "expected": "Constituent nutrition and confidence correspond to the calculation represented by the saved snapshot.",
+      "observed": "After an ingredient revision and real controller snapshot upsert, the aggregate reflects new nutrition (30 g net), but ingredient resolution uses retained createdAt and returns 20 g carbs/100 g and confidence .4 instead of 25 g and .7.",
+      "evidence": "Correct expectation fails expected 25, actual 20 through MealSnapshotController.saveSnapshot and LoadMealDetailsUseCase.",
+      "qualification": "Persistence/reader inconsistency is reproduced. The exact UI sequence of editing an ingredient between two consumed-snapshot saves has not been exercised end to end.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_boundary_inconsistency_ui_unverified",
+      "resolution": "Persist calculatedAt independently of generic metadata updates; mark ambiguous legacy provenance unavailable.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "reviewed-draft-portion-differs-from-saved-portion",
+      "status": "resolved",
+      "priority": "high",
+      "source": [
+        "lib/features/meals/data/domain/use_cases/add_meal_use_case.dart:64",
+        "lib/core/drift/schemas/tables/ingredient_portions.drift:29"
+      ],
+      "test": "test/features/meals/data/domain/use_cases/safety_audit_stale_portion_draft_test.dart",
+      "expected": "Save must preserve the reviewed grams or explicitly reject a stale conversion without a partial save.",
+      "observed": "A draft retains 2 slices at 30 g = 60 g. If the saved conversion changes to 40 g before AddMealUseCase runs, the saved meal becomes 80 g / 40 g carbs instead of the reviewed 60 g / 30 g carbs.",
+      "evidence": "Unchanged-conversion control passes; changed-conversion case fails expected 60, actual 80.",
+      "qualification": "The use-case boundary is proven, but ordinary navigation changing a portion while retaining the original open draft is not verified. A proposed duplicate-ingredient UI route was rejected by a real guard.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_boundary_inconsistency_ui_unverified",
+      "resolution": "Capture the displayed assigned conversion at review and reject a later mapping change atomically.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "foreground-late-glucose-overwrites-newer-reading",
+      "status": "resolved",
+      "priority": "high",
+      "source": [
+        "lib/foreground/event/external/local_glucose/local_glucose_handler.dart",
+        "lib/foreground/providers/blood_sugar_value_provider.dart"
+      ],
+      "test": "test/integration/foreground_ui/synchronization_ui_foreground_test.dart",
+      "expected": "After receiving 140 mg/dL now, a delayed 90 mg/dL sample from two or seven minutes ago must not replace the newer current reading in either foreground or UI.",
+      "observed": "A two-minute-old sample changes both to 90; a seven-minute-old sample clears both to null.",
+      "evidence": "Real source handler, serialized foreground-to-UI router, TaskEventHandler, production dashboard and independent containers. Both expected-correct tuple assertions fail when enabled.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Shared source/time ordering guards protect foreground and UI, with recovery from a future-dated current sample.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "foreground-late-device-status-overwrites-newer-iob",
+      "status": "resolved",
+      "priority": "high",
+      "source": [
+        "lib/foreground/event/external/local_device_status/local_device_status_handler.dart",
+        "lib/foreground/providers/device_status_value_provider.dart"
+      ],
+      "test": "test/integration/foreground_ui/device_status_ui_foreground_test.dart",
+      "expected": "After a fresh IOB of 1.25 U, delayed pump status with 9 U must not replace the newer reading in foreground or dashboard.",
+      "observed": "Two-minute-old status changes both IOB values to 9 U; seven-minute-old status clears foreground IOB while UI displays 9 U.",
+      "evidence": "Real handler and production DeviceStatusDashboard through TaskEventHandler. Expected (1.25,1.25), actual (9,9) and (null,9) in forced runs.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Apply shared ordering before publishing pump data and in foreground/UI providers and cache.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "foreground-settings-reuses-stale-inflight-history",
+      "status": "resolved",
+      "priority": "high",
+      "source": "lib/foreground/synchronization/synchronization_cache_controller.dart",
+      "test": "test/foreground/synchronization/safety_audit_fg_ui_history_reload_race_test.dart",
+      "expected": "An in-flight request from the old history repository must not populate the cache after settings invalidate its source.",
+      "observed": "The reload reuses the old pending request; old-source readings populate the cache and the replacement repository is not loaded.",
+      "evidence": "Controlled request completers, real SynchronizationCacheController, repository invalidation and cache reload. No-pending-request control passes.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Invalidate load generation and pending-load references; obsolete completions cannot repopulate the cache.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "foreground-last-planned-meal-deletion-keeps-monitor",
+      "status": "resolved",
+      "priority": "high",
+      "source": [
+        "lib/foreground/collector/next_meal_collector.dart",
+        "lib/foreground/collector/meal_status_collector.dart"
+      ],
+      "test": "test/integration/foreground_ui/planned_meal_ui_foreground_test.dart",
+      "expected": "Deleting the only planned meal in the UI clears the foreground planned-meal monitor.",
+      "observed": "The meal is removed from both DB clients, but the monitor remains MonitorUntilMeal with the removed meal ID.",
+      "evidence": "Real UI deletion, WorkflowScheduler and both production collectors. A task-level expected-correct reproduction also exists in test/foreground/tasks/safety_audit_planned_meal_delete_test.dart. Subsequent notification firing is not proven by this finding.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Consume committed watched candidates, pre-register change waits, and clear removed plans immediately while preserving candidate stabilization.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "foreground-activity-duration-edit-retains-old-deadline",
+      "status": "resolved",
+      "priority": "high",
+      "source": [
+        "lib/foreground/task/tasks/activity_monitor_task/activity_monitor_context.dart",
+        "lib/features/activity/data/providers/activity_provider.dart"
+      ],
+      "test": "test/integration/foreground_ui/activity_ui_foreground_test.dart",
+      "expected": "Editing an active unscheduled activity duration from 30 to 60 minutes must keep displayed duration and foreground end deadline consistent.",
+      "observed": "The UI/current definition shows 60 minutes, but foreground closes the activity at the old 30-minute deadline.",
+      "evidence": "Real activity detail edit and scheduler boundary; expected open endedAt is instead set at the old deadline. A task-level reproduction also exists in test/foreground/tasks/safety_audit_activity_duration_edit_test.dart.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Load duration provenance through one shared loader; refresh mutable definitions while retaining supplied and occurrence durations.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "deleted-activity-retains-visible-confirmation-notification",
+      "status": "resolved",
+      "priority": "medium",
+      "source": "lib/features/activity/data/services/activity_schedule_service.dart",
+      "test": "test/integration/foreground_ui/notification_timing_ui_foreground_test.dart",
+      "expected": "Deleting an occurrence after its confirmation has appeared cancels the already shown occurrence-specific notification.",
+      "observed": "The occurrence is deleted through the UI, but its notification remains active in the notification port.",
+      "evidence": "Real ActivityScheduleTask reaches actionAt; actual upcoming-list delete action; expected contains(prompt)=false, actual true. Deletion before actionAt control suppresses the prompt correctly.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Cancel occurrence-scoped confirmation notifications after skip, removal and move transactions.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "ui-allows-second-open-activity",
+      "status": "resolved",
+      "priority": "high",
+      "source": [
+        "lib/features/dashboard/presentation/widgets/dashboard_fab.dart",
+        "lib/features/activity/data/providers/activity_provider.dart",
+        "lib/core/drift/dao/activity_dao.dart"
+      ],
+      "test": "test/integration/foreground_ui/activity_ui_foreground_test.dart",
+      "expected": "Starting another activity while the first is active must not silently create a second open session when dashboard and monitor can expose only one.",
+      "observed": "The production dashboard creation/start flow inserts a second open activity log. Queries select the earliest open log, so only the first is exposed as active.",
+      "evidence": "Fully traversed dashboard FAB, activity picker, definition creation, and Start Now; real shared SQLite contains two open logs when one is expected. The existing earliest log remains selected. Whether overlapping active sessions should be supported explicitly is a product decision; silent insertion with only one active read model is the observed inconsistency.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Guard immediate activity activation within the save transaction.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "source-settings-history-dropdown-overflows-narrow-layout",
+      "status": "resolved",
+      "priority": "low",
+      "source": "lib/features/settings/presentation/widgets/data_source_settings_section.dart",
+      "test": "test/integration/foreground_ui/source_settings_ui_foreground_test.dart",
+      "expected": "History-source dropdown fits its available width on the normal narrow viewport.",
+      "observed": "The history dropdown Row overflows at 800 px (also observed at 1200 px); functional settings scenarios use a wide fixture while a separate correct-layout expectation is retained.",
+      "evidence": "Actual DataSourceSettingsSection rendering; explicit narrow-layout test. This is a presentation issue, not a confirmed nutrition or history mutation.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Expand the dropdown and constrain displayed labels within the available width.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    },
+    {
+      "id": "completion-recovery-reopens-dismissed-sheet",
+      "status": "resolved",
+      "priority": "medium",
+      "source": [
+        "lib/app/event/task/task_event_handler.dart",
+        "lib/common/meal/pending_meal_completion_recovery.dart"
+      ],
+      "test": "test/integration/foreground_ui/notification_completion_navigation_ui_foreground_test.dart",
+      "expected": "A recovery started while the completion sheet is open must not reopen the same sheet after its cancellation has acknowledged the pending intent.",
+      "observed": "Ordinary recovery opens and dismisses once. A repeated recovery still reading the pending meal reopens the sheet after cancellation: actual navigation has two modal pushes and one modal pop.",
+      "evidence": "Real TaskEventHandler, AppRouter held by the production provider, serialized external response, shared SQLite and production completion sheet. NavigatorObserver records expected (1 push,1 pop), actual (2,1). No duplicate database write was demonstrated by this finding.",
+      "normalSuite": "Enabled and passing in the complete 3068-test regression; the recorded expected-correct assertions are retained.",
+      "statusBeforeRepair": "confirmed_defect_deferred",
+      "resolution": "Invalidate stale recovery per meal when its completion sheet closes and acknowledges the pending intent.",
+      "resolutionVerification": "Full regression: 3068 passed, 0 skipped, 0 failed (2026-11-03)."
+    }
+  ],
+  "verification": {
+    "fullSuite": {
+      "passed": 3068,
+      "skipped": 0,
+      "failed": 0,
+      "date": "2026-11-03",
+      "command": "flutter test --no-pub --coverage --concurrency=4"
+    },
+    "additionalTimelineScenarios": {
+      "passed": 3,
+      "failed": 0
+    },
+    "knownDefectRuns": "Previously deferred regression cases are enabled and pass in the full suite.",
+    "analysis": "No issues found (flutter analyze --no-pub, 2026-11-03)",
+    "concreteUseCasesAndControllers": 175,
+    "concreteUseCasesAndControllersWithExecution": 175,
+    "uncoveredExecutableLines": 333,
+    "coverageMeaning": "Execution coverage is not proof that every business rule has been checked. Remaining branches still require scenario review.",
+    "previousFullSuite": {
+      "passed": 2958,
+      "skipped": 1,
+      "failed": 0,
+      "note": "Completed after approved calculator mock changes; the later timeline tests and combined Meal Bolus defect test were checked separately."
+    },
+    "beforeRepairFullSuite": {
+      "passed": 3018,
+      "skipped": 21,
+      "failed": 0,
+      "date": "2026-11-03",
+      "command": "flutter test --no-pub --coverage --concurrency=4",
+      "note": "Completed full application suite. Final completion-navigation and native-scheduling boundary tests were added afterward and are verified by the separate final focused run."
+    },
+    "functionUseCases": 2,
+    "functionUseCasesWithExecution": 2
+  },
+  "safetyAudit": {
+    "productionChanges": false,
+    "existingTestsEdited": false,
+    "confirmedScenarioRun": {
+      "passedControls": 2,
+      "expectedCorrectAssertionsFailing": 7,
+      "command": "flutter test --no-pub --run-skipped <safety audit tests>"
+    },
+    "checksWithoutNewConfirmedDefects": [
+      "Ordinary add-meal flow rejects duplicate persisted ingredient identity; new public-notifier guard test passes.",
+      "Add-meal and low-treatment UI/controller paths guard concurrent saves; food writes use transactions.",
+      "Backup core import clears all tables, but replacement is explicitly disclosed in the confirmation; no unintended corruption was confirmed.",
+      "No controlled chronological proof was established for same-second nutrition-history collisions.",
+      "Extremely large manually entered finite quantities are allowed, but no automatic inflation or violated specified numeric limit was proven."
+    ],
+    "notes": "Confirmed boundary inconsistencies are distinguished from reproduced ordinary user flows. Deferred defects remain explicit skipped tests until the agreed repair stage.",
+    "neighboringRegressionRun": {
+      "passed": 31,
+      "skippedKnownDefectScenarios": 7,
+      "failed": 0,
+      "note": "Focused suite, not a new full-suite run."
+    }
+  },
+  "foregroundUiAudit": {
+    "productionChanges": true,
+    "existingTestsEdited": true,
+    "scenarioInventory": "tool/testing/foreground_ui_scenarios.json",
+    "verification": {
+      "status": "repaired_and_verified",
+      "fullSuite": {
+        "passed": 3068,
+        "skipped": 0,
+        "failed": 0,
+        "date": "2026-11-03",
+        "command": "flutter test --no-pub --coverage --concurrency=4"
+      },
+      "deferredScenariosRemaining": 0
+    },
+    "limits": [
+      "Notification timing means calls to the application notification port, not proof of OS delivery or rendering.",
+      "The integration harness shares one in-memory Drift database across separate UI and foreground clients; external platform/network ports are replaced.",
+      "The audit does not claim every possible product scenario or native lifecycle transition is proven."
+    ],
+    "newConfirmedFindings": 9,
+    "expectationChanges": "Only three explicitly user-approved scenarios in two existing files; all other expectations preserved."
+  },
+  "regressionReady": true,
+  "repairVerification": {
+    "resolvedFindings": 16,
+    "productionChanges": true,
+    "schemaVersion": 45,
+    "fullSuite": {
+      "passed": 3068,
+      "skipped": 0,
+      "failed": 0,
+      "date": "2026-11-03",
+      "command": "flutter test --no-pub --coverage --concurrency=4"
+    },
+    "approvedExpectationChanges": [
+      {
+        "test": "test/features/meals/data/providers/meal_ingredient_macronutrients_test.dart",
+        "scope": "Two scenarios: protein 15 -> 14; carbs/net carbs 2 -> 1, plus the sum-rounding scenario title. User approved explicitly."
+      },
+      {
+        "test": "test/features/meals/data/repositories/meal_ingredient_facts_test.dart",
+        "scope": "Only the missing-conversion scenario: assert unavailable conversion and no manufactured gram amounts instead of a one-gram fallback. User approved explicitly."
+      }
+    ],
+    "otherExistingExpectations": "Preserved. New integration fixtures received complete notification-port mocks and bounded semantic frame/I/O waits.",
+    "additionalProtection": [
+      "Backup import preserves known and unknown conversion metadata transactionally, including rollback.",
+      "Copy, preview, summary, similarity and LLM paths share recorded quantities and historical source availability.",
+      "Optional snapshot-history failure preserves independently available chart and timeline context.",
+      "Collector disposal cancels timers and releases waits without relying on runtime shutdown."
+    ],
+    "legacyPolicy": "Do not fill absent historical conversions from current mappings or claim an exact calculation time from ambiguous metadata. Preserve authoritative saved aggregates and expose unavailable supporting facts.",
+    "analysis": "No issues found (flutter analyze --no-pub, 2026-11-03)",
+    "coverageMeaning": "All 175 concrete use-case/controller classes and both function use cases executed. 333 executable lines remain uncovered; execution coverage is not proof of every possible business scenario."
+  }
+}

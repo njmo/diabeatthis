@@ -14,8 +14,8 @@ import '../../../core/data_sources/config/data_source_config.dart';
 import '../../../core/data_sources/config/data_source_config_sync_payload.dart';
 import '../../../core/data_sources/config/data_source_option_availability.dart';
 import '../../../core/data_sources/config/helpers/data_source_config_storer.dart';
-import '../../../core/data_sources/nightscout/nightscout_cloud_connection_tester.dart';
 import '../../../core/data_sources/nightscout/nightscout_storage_keys.dart';
+import '../../../core/data_sources/nightscout/providers/nightscout_connection_check_provider.dart';
 import '../../../core/data_sources/receiver/providers/data_receiver_activation_controller_provider.dart';
 import '../data/settings_storage_keys.dart';
 
@@ -44,10 +44,10 @@ class ApplyInitialConfigurationUseCase {
     availability.ensureConfigAvailable(config);
 
     if (config.usesCloud) {
-      await NightscoutCloudConnectionTester.fromUrl(
-        nightscoutUrl,
-        nightscoutToken: nightscoutToken,
-      ).testConnection();
+      await _ref.read(nightscoutConnectionCheckProvider)(
+        url: nightscoutUrl,
+        token: nightscoutToken,
+      );
     }
 
     final prefs = await _ref.read(sharedPrefsProvider.future);

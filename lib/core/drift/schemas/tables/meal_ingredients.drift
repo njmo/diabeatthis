@@ -1,6 +1,7 @@
 import 'ingredient.drift';
 import 'meal.drift';
 import 'portion.drift';
+import 'ingredient_portions.drift';
 
 CREATE TABLE meal_ingredients (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -13,6 +14,7 @@ CREATE TABLE meal_ingredients (
   portion_id INTEGER
     REFERENCES portion (id) ON DELETE SET NULL,
 
+  grams_per_portion_used REAL CHECK (grams_per_portion_used > 0),
   amount REAL NOT NULL DEFAULT 0,
   quantity_confidence REAL NOT NULL CHECK (quantity_confidence >= 0 AND quantity_confidence <= 1),
 
@@ -29,10 +31,30 @@ CREATE TABLE meal_ingredients (
   notes TEXT
 );
 
+CREATE TRIGGER meal_ingredients_capture_portion
+AFTER INSERT ON meal_ingredients
+WHEN NEW.grams_per_portion_used IS NULL
+BEGIN
+  UPDATE meal_ingredients SET grams_per_portion_used = CASE
+    WHEN (SELECT is_reference FROM ingredient WHERE id = NEW.ingredient_id) = 1 THEN 100.0
+    WHEN NEW.portion_id IS NULL THEN 1.0
+    ELSE (SELECT grams_per_portion FROM ingredient_portions
+          WHERE ingredient_id = NEW.ingredient_id AND portion_id = NEW.portion_id)
+    END WHERE id = NEW.id;
+END;
+
 CREATE TRIGGER meal_ingredients_summary_set_updated_at
 AFTER UPDATE ON meal_ingredients
 FOR EACH ROW
-WHEN NEW.updated_at = OLD.updated_at
+WHEN NEW.updated_at = OLD.updated_at AND (
+  NEW.meal_id IS NOT OLD.meal_id OR NEW.ingredient_id IS NOT OLD.ingredient_id OR
+  NEW.portion_id IS NOT OLD.portion_id OR NEW.amount IS NOT OLD.amount OR
+  NEW.quantity_confidence IS NOT OLD.quantity_confidence OR NEW.entry_type IS NOT OLD.entry_type OR
+  NEW.consumed_amount IS NOT OLD.consumed_amount OR NEW.consumed_confidence IS NOT OLD.consumed_confidence OR
+  NEW.is_synced IS NOT OLD.is_synced OR NEW.created_at IS NOT OLD.created_at OR
+  NEW.prep_method IS NOT OLD.prep_method OR NEW.notes IS NOT OLD.notes OR
+  (OLD.grams_per_portion_used IS NOT NULL AND NEW.grams_per_portion_used IS NOT OLD.grams_per_portion_used)
+)
 BEGIN
   UPDATE meal_ingredients
   SET updated_at = (CAST(strftime('%s','now') AS INTEGER) * 1000)

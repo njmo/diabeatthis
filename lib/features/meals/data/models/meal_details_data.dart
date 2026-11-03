@@ -2,6 +2,7 @@ import '../../../../common/meal/meal_completion_decision.dart';
 import '../../../../common/nutrition/meal_nutrition_totals.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
+import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
 import '../../../meal_analysis/domain/models/meal_observation_window.dart';
 import '../../common/models/meal_wizard_assignment.dart';
 import '../../domain/models/ingredient_nutrition_data.dart';
@@ -137,10 +138,14 @@ class MealDetailsData {
 
   bool get hasLowTreatments => lowTreatments.isNotEmpty;
 
-  double get lowTreatmentNetCarbsG {
-    return lowTreatments.fold(0.0, (sum, treatment) {
-      return sum + treatment.totalNetCarbsG;
-    });
+  double? get lowTreatmentNetCarbsG {
+    var total = 0.0;
+    for (final treatment in lowTreatments) {
+      final carbs = treatment.totalNetCarbsG;
+      if (carbs == null) return null;
+      total += carbs;
+    }
+    return total;
   }
 
   Duration? get firstLowTreatmentDelay {
@@ -228,24 +233,43 @@ class MealLowTreatmentDetailsData {
   final MealRecordData meal;
   final LowTreatmentContext context;
   final List<MealIngredientDetailsData> ingredients;
+  final RecordedLowTreatment? recorded;
 
   const MealLowTreatmentDetailsData({
     required this.meal,
     required this.context,
     required this.ingredients,
+    this.recorded,
   });
 
-  double get totalCarbsG {
-    return ingredients.fold(0.0, (sum, ingredient) {
-      return sum + ingredient.consumedCarbsContribution;
-    });
+  bool get ingredientsAvailable =>
+      recorded?.ingredientsAvailable ??
+      ingredients.every((ingredient) => ingredient.recordedWeightAvailable);
+
+  double? get totalCarbsG {
+    if (ingredients.any(
+      (ingredient) => ingredient.consumedHistoricalNutritionUnavailable,
+    )) {
+      return null;
+    }
+    return ingredients.fold<double>(
+      0.0,
+      (sum, ingredient) => sum + ingredient.consumedCarbsContribution,
+    );
   }
 
-  double get totalNetCarbsG {
+  double? get totalNetCarbsG {
+    if (recorded case final entry?) return entry.historicalCarbs;
     if (context.recordedCarbs case final carbs?) return carbs.toDouble();
-    return ingredients.fold(0.0, (sum, ingredient) {
-      return sum + ingredient.consumedNetCarbsContribution;
-    });
+    if (ingredients.any(
+      (ingredient) => ingredient.consumedHistoricalNutritionUnavailable,
+    )) {
+      return null;
+    }
+    return ingredients.fold<double>(
+      0.0,
+      (sum, ingredient) => sum + ingredient.consumedNetCarbsContribution,
+    );
   }
 }
 
@@ -390,6 +414,7 @@ class MealIngredientDetailsData {
   final double? consumedAmount;
   final double quantityConfidence;
   final double? consumedConfidence;
+  final bool recordedWeightAvailable;
   final double plannedTotalGrams;
   final double consumedTotalGrams;
   final String? prepMethod;
@@ -401,7 +426,12 @@ class MealIngredientDetailsData {
   final IngredientNutritionData consumedNutrition;
   final bool plannedNutritionDiffersFromCurrent;
   final bool consumedNutritionDiffersFromCurrent;
-  final bool historicalNutritionUnavailable;
+  final bool plannedHistoricalNutritionUnavailable;
+  final bool consumedHistoricalNutritionUnavailable;
+
+  bool get historicalNutritionUnavailable =>
+      plannedHistoricalNutritionUnavailable ||
+      consumedHistoricalNutritionUnavailable;
 
   const MealIngredientDetailsData({
     required this.mealIngredientId,
@@ -413,6 +443,7 @@ class MealIngredientDetailsData {
     required this.consumedAmount,
     required this.quantityConfidence,
     required this.consumedConfidence,
+    this.recordedWeightAvailable = true,
     required this.plannedTotalGrams,
     required this.consumedTotalGrams,
     required this.prepMethod,
@@ -424,8 +455,15 @@ class MealIngredientDetailsData {
     required this.consumedNutrition,
     required this.plannedNutritionDiffersFromCurrent,
     required this.consumedNutritionDiffersFromCurrent,
-    required this.historicalNutritionUnavailable,
-  });
+    required bool historicalNutritionUnavailable,
+    bool? plannedHistoricalNutritionUnavailable,
+    bool? consumedHistoricalNutritionUnavailable,
+  }) : plannedHistoricalNutritionUnavailable =
+           plannedHistoricalNutritionUnavailable ??
+           historicalNutritionUnavailable,
+       consumedHistoricalNutritionUnavailable =
+           consumedHistoricalNutritionUnavailable ??
+           historicalNutritionUnavailable;
 
   bool get isExtra => entryType == 'extra';
 

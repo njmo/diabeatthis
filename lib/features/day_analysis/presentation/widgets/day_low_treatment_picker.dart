@@ -20,7 +20,7 @@ class DayLowTreatmentPicker extends StatelessWidget {
           ...entries.map(
             (low) => ListTile(
               title: Text(
-                '${DateFormat('HH:mm').format(low.eatenAt)} · ${low.netCarbsGrams?.toStringAsFixed(0) ?? '—'} g',
+                '${DateFormat('HH:mm').format(low.eatenAt)} · ${low.historicalCarbs?.toStringAsFixed(0) ?? '—'} g',
               ),
               trailing: const Icon(Icons.link),
               onTap: () => Navigator.of(context).pop(low.mealId),

@@ -1,3 +1,4 @@
+import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_completion_decision.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../models/meal_details_data.dart';
@@ -108,10 +109,10 @@ class MealDetailsDataMapper {
     final mealCreatedAt = date(meal.createdAt);
     final plannedReference = plannedSnapshot == null
         ? mealCreatedAt
-        : date(plannedSnapshot.createdAt);
+        : date(plannedSnapshot.calculatedAt ?? plannedSnapshot.createdAt);
     final consumedReference = consumedSnapshot == null
         ? date(mealIngredient.createdAt)
-        : date(consumedSnapshot.createdAt);
+        : date(consumedSnapshot.calculatedAt ?? consumedSnapshot.createdAt);
     final currentNutrition = nutritionMapper.current(ingredient);
     final plannedVersion = nutritionMapper.at(
       ingredient: ingredient,
@@ -133,6 +134,7 @@ class MealDetailsDataMapper {
       consumedAmount: mealIngredient.consumedAmount,
       quantityConfidence: mealIngredient.quantityConfidence,
       consumedConfidence: mealIngredient.consumedConfidence,
+      recordedWeightAvailable: amounts.conversionAvailable,
       plannedTotalGrams: amounts.plannedGrams,
       consumedTotalGrams: amounts.consumedGrams,
       prepMethod: mealIngredient.prepMethod,
@@ -148,10 +150,26 @@ class MealDetailsDataMapper {
       consumedNutritionDiffersFromCurrent: consumedVersion.nutrition
           .differsFrom(currentNutrition),
       historicalNutritionUnavailable:
+          !amounts.conversionAvailable ||
           plannedVersion.historicalUnavailable ||
-          consumedVersion.historicalUnavailable,
+          consumedVersion.historicalUnavailable ||
+          _hasUnknownCalculationTime(plannedSnapshot) ||
+          _hasUnknownCalculationTime(consumedSnapshot),
+      plannedHistoricalNutritionUnavailable:
+          !amounts.conversionAvailable ||
+          plannedVersion.historicalUnavailable ||
+          _hasUnknownCalculationTime(plannedSnapshot),
+      consumedHistoricalNutritionUnavailable:
+          !amounts.conversionAvailable ||
+          consumedVersion.historicalUnavailable ||
+          _hasUnknownCalculationTime(consumedSnapshot),
     );
   }
+
+  bool _hasUnknownCalculationTime(MealSnapshotData? snapshot) =>
+      snapshot != null &&
+      snapshot.calculatedAt == null &&
+      snapshot.updatedAt != snapshot.createdAt;
 
   DateTime date(int millisecondsSinceEpoch) {
     return DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
@@ -166,9 +184,12 @@ class MealDetailsDataMapper {
       return '100g reference';
     }
     if (portionId == null) {
-      return '1g';
+      return '${_formatNumber(gramsPerPortion)}g';
     }
     final portion = await db.portionDao.getPortionById(portionId);
+    if (gramsPerPortion <= 0) {
+      return '${portion.name} (${lang.amountMissingPortionWeight})';
+    }
     return '${portion.name} (${_formatNumber(gramsPerPortion)}g)';
   }
 

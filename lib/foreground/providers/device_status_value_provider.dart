@@ -3,13 +3,15 @@ import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../common/monitoring/live_reading_order.dart';
 import '../../core/domain/model/device_status.dart';
 import '../../core/logger/logger.dart';
 
 part 'device_status_value_provider.g.dart';
 
 @Riverpod(keepAlive: true)
-class DeviceStatusValueNotifier extends _$DeviceStatusValueNotifier  with Logging {
+class DeviceStatusValueNotifier extends _$DeviceStatusValueNotifier
+    with Logging {
   Timer? _expiryTimer;
 
   @override
@@ -22,6 +24,15 @@ class DeviceStatusValueNotifier extends _$DeviceStatusValueNotifier  with Loggin
   }
 
   void update(DeviceStatus value) {
+    final current = state;
+    if (!acceptsLiveReading(
+      incomingAt: value.date,
+      incomingSource: value.source,
+      currentAt: current?.date,
+      currentSource: current?.source,
+    )) {
+      return;
+    }
     final now = clock.now();
     final readingAge = now.difference(value.date);
 

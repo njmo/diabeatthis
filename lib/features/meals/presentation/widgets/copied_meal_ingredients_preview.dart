@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../meal_template/data/provider/meal_template_ingredients_list_provider.dart';
+import '../../data/mappers/copy_recorded_meal_ingredient.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
 import 'copied_meal_history_button.dart';
@@ -62,7 +63,11 @@ class CopiedMealIngredientsPreview extends ConsumerWidget {
                     heightFactor: 1,
                     child: Text(context.lang.copiedMealNoIngredients),
                   )
-                : CopiedMealPreviewIngredientList(items: items),
+                : CopiedMealPreviewIngredientList(
+                    items: source is CopiedMealFromMeal
+                        ? items.map(copyRecordedMealIngredient).toList()
+                        : items,
+                  ),
           ),
         ),
         const SizedBox(height: 12),

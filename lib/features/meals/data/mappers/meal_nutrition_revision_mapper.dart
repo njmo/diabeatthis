@@ -14,7 +14,7 @@ class MealNutritionRevisionMapper {
                     ? 0
                     : ingredient.plannedTotalGrams) >
                 0 &&
-            (ingredient.historicalNutritionUnavailable ||
+            (historicalUnavailable(ingredient, details.hasConsumedData) ||
                 (details.hasConsumedData
                     ? ingredient.consumedNutritionDiffersFromCurrent
                     : ingredient.plannedNutritionDiffersFromCurrent)))
@@ -42,10 +42,20 @@ class MealNutritionRevisionMapper {
                         : ingredient.plannedNutrition)
                     .nutritionConfidence,
             currentConfidence: ingredient.currentNutrition.nutritionConfidence,
-            historicalUnavailable: ingredient.historicalNutritionUnavailable,
+            historicalUnavailable: historicalUnavailable(
+              ingredient,
+              details.hasConsumedData,
+            ),
           ),
     ];
   }
+
+  bool historicalUnavailable(
+    MealIngredientDetailsData ingredient,
+    bool consumed,
+  ) => consumed
+      ? ingredient.consumedHistoricalNutritionUnavailable
+      : ingredient.plannedHistoricalNutritionUnavailable;
 
   Map<String, double> values(IngredientNutritionData data) => {
     'net_carbs_g': data.safeNetCarbsPer100g,

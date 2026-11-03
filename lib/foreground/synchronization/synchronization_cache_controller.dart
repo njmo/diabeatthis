@@ -2,6 +2,7 @@ import 'package:circular_buffer/circular_buffer.dart';
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../common/monitoring/live_reading_order.dart';
 import '../../core/data_sources/providers/source_repository_providers.dart';
 import '../../core/domain/model/device_status.dart';
 import '../../core/domain/model/glucose.dart';
@@ -37,6 +38,15 @@ class SynchronizationCache {
   }
 
   void cacheDeviceStatus(DeviceStatus deviceStatus) {
+    final current = deviceStatusCache;
+    if (!acceptsLiveReading(
+      incomingAt: deviceStatus.date,
+      incomingSource: deviceStatus.source,
+      currentAt: current?.date,
+      currentSource: current?.source,
+    )) {
+      return;
+    }
     deviceStatusCache = deviceStatus;
   }
 
@@ -64,6 +74,7 @@ class SynchronizationCacheController with Logging {
 
   Future<void>? _glucoseReadingsLoad;
   Future<void>? _deviceStatusLoad;
+  int _generation = 0;
 
   Future<void> init(ProviderContainer container) async {
     await Future.wait([
@@ -107,9 +118,14 @@ class SynchronizationCacheController with Logging {
     final currentLoad = _glucoseReadingsLoad;
     if (currentLoad != null) return currentLoad;
 
-    final load = _loadGlucoseReadingsOnce(container, reason: reason)
-        .whenComplete(() {
-          _glucoseReadingsLoad = null;
+    final generation = _generation;
+    final load =
+        _loadGlucoseReadingsOnce(
+          container,
+          reason: reason,
+          generation: generation,
+        ).whenComplete(() {
+          if (generation == _generation) _glucoseReadingsLoad = null;
         });
     _glucoseReadingsLoad = load;
 
@@ -119,12 +135,14 @@ class SynchronizationCacheController with Logging {
   Future<void> _loadGlucoseReadingsOnce(
     ProviderContainer container, {
     required String reason,
+    required int generation,
   }) async {
     try {
       final repository = await container.read(
         glucoseHistoryRepositoryProvider.future,
       );
       final glucoseReadings = await repository.fetchRecentGlucose(10);
+      if (generation != _generation) return;
       final latestReadings = [...glucoseReadings, ...cache.glucoseReadingsCache]
         ..sort((a, b) => b.date.compareTo(a.date));
       final limitedReadings = latestReadings.take(10).toList();
@@ -154,11 +172,15 @@ class SynchronizationCacheController with Logging {
     final currentLoad = _deviceStatusLoad;
     if (currentLoad != null) return currentLoad;
 
-    final load = _loadDeviceStatusOnce(container, reason: reason).whenComplete(
-      () {
-        _deviceStatusLoad = null;
-      },
-    );
+    final generation = _generation;
+    final load =
+        _loadDeviceStatusOnce(
+          container,
+          reason: reason,
+          generation: generation,
+        ).whenComplete(() {
+          if (generation == _generation) _deviceStatusLoad = null;
+        });
     _deviceStatusLoad = load;
 
     return load;
@@ -167,6 +189,7 @@ class SynchronizationCacheController with Logging {
   Future<void> _loadDeviceStatusOnce(
     ProviderContainer container, {
     required String reason,
+    required int generation,
   }) async {
     try {
       final repository = await container.read(
@@ -176,6 +199,7 @@ class SynchronizationCacheController with Logging {
         clock.now(),
       );
 
+      if (generation != _generation) return;
       logI(
         _describeDeviceStatus(
           _cacheFetchLabel(reason, 'device status'),
@@ -200,11 +224,13 @@ class SynchronizationCacheController with Logging {
     ProviderContainer container, {
     required String reason,
   }) async {
+    final generation = _generation;
     try {
       final repository = await container.read(
         treatmentsHistoryRepositoryProvider.future,
       );
       final lastTarget = await repository.fetchLastTemporaryTarget();
+      if (generation != _generation) return;
       final activeTarget = lastTarget?.isActive() == true ? lastTarget : null;
 
       logI(
@@ -244,6 +270,9 @@ class SynchronizationCacheController with Logging {
   }
 
   void invalidateLiveData() {
+    _generation++;
+    _glucoseReadingsLoad = null;
+    _deviceStatusLoad = null;
     cache.replaceGlucoseReadings(const []);
     cache.invalidateDeviceStatusCache();
     cache.invalidateTargetCache();

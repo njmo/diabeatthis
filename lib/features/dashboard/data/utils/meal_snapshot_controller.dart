@@ -1,4 +1,5 @@
-import 'package:drift/drift.dart' show DoUpdate;
+import 'package:clock/clock.dart';
+import 'package:drift/drift.dart' show DoUpdate, Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/nutrition/ingredient_confidence.dart';
@@ -7,8 +8,8 @@ import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../../core/drift/mappers/meal_snapshot_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../meals/data/domain/use_cases/resolve_meal_ingredient_grams_use_case.dart';
 import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
-import '../../../portions/data/drafts/portion_draft.dart';
 
 class MealSnapshotController with Logging {
   final Ref ref;
@@ -44,18 +45,9 @@ class MealSnapshotController with Logging {
         nutritionConfidence: nutritionConfidence,
         quantityConfidence: itemQuantityConfidence,
       );
-      final double grams;
-      if (mealIngredient.ingredient.isReference) {
-        grams = mealIngredient.amount * 100.0;
-      } else {
-        grams = mealIngredient.ingredientPortion.portion.map(
-          empty: (_) => mealIngredient.amount.toDouble(),
-          existing: (_) =>
-              mealIngredient.ingredientPortion.amount *
-              mealIngredient.amount.toDouble(),
-          draft: (_) => throw UnimplementedError(),
-        );
-      }
+      final grams = await ResolveMealIngredientGramsUseCase(
+        ref,
+      ).call(mealIngredient);
       final proteinG = grams * mealIngredient.ingredient.proteinPer100g / 100.0;
       final fatG = grams * mealIngredient.ingredient.fatPer100g / 100.0;
       final netCarbsG = calculateNetCarbs(
@@ -160,16 +152,11 @@ class MealSnapshotController with Logging {
         nutritionConfidence: nutritionConfidence,
         quantityConfidence: itemQuantityConfidence,
       );
-      final double grams;
-      if (mealIngredient.ingredient.isReference) {
-        grams = amount * 100.0;
-      } else {
-        grams = mealIngredient.ingredientPortion.portion.map(
-          empty: (_) => amount,
-          existing: (_) => mealIngredient.ingredientPortion.amount * amount,
-          draft: (_) => throw UnimplementedError(),
-        );
-      }
+      final grams =
+          amount *
+          await ResolveMealIngredientGramsUseCase(
+            ref,
+          ).resolveGramsPerPortion(mealIngredient);
 
       final proteinG = grams * mealIngredient.ingredient.proteinPer100g / 100.0;
       final fatG = grams * mealIngredient.ingredient.fatPer100g / 100.0;
@@ -194,10 +181,7 @@ class MealSnapshotController with Logging {
       wbtWeightedEffectiveConfidence += effectiveConfidence * wbtKcal;
     }
 
-    if (consumedIngredientsCount == 0) {
-      logI('No consumed ingredients, skipping snapshot');
-      return;
-    }
+    if (mealIngredients.isEmpty) return;
 
     final totalWbtKcal = summary.fatGrams * 9 + summary.proteinGrams * 4;
 
@@ -212,8 +196,12 @@ class MealSnapshotController with Logging {
       totalNetCarbsG: summary.netCarbsGrams,
       totalCaloriesKcal: summary.totalKcal,
       ingredientsCount: consumedIngredientsCount,
-      avgQuantityConfidence: quantityConfidenceSum / consumedIngredientsCount,
-      minQuantityConfidence: minQuantityConfidence,
+      avgQuantityConfidence: consumedIngredientsCount > 0
+          ? quantityConfidenceSum / consumedIngredientsCount
+          : null,
+      minQuantityConfidence: consumedIngredientsCount > 0
+          ? minQuantityConfidence
+          : null,
       carbWeightedQuantityConfidence: summary.netCarbsGrams > 0
           ? carbWeightedQuantityConfidence / summary.netCarbsGrams
           : null,
@@ -239,7 +227,9 @@ class MealSnapshotController with Logging {
 
   Future<void> saveSnapshot(MealSnapshot snapshot) async {
     final db = ref.read(databaseProvider);
-    final values = snapshot.toCompanion();
+    final values = snapshot.toCompanion().copyWith(
+      calculatedAt: Value(clock.now().millisecondsSinceEpoch),
+    );
     await db
         .into(db.mealSnapshot)
         .insert(

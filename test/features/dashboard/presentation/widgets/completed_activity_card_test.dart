@@ -1,7 +1,7 @@
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart'
-    show DatabaseImpl, ActivityCompanion, ActivityLogCompanion;
+    show ActivityCompanion, ActivityLogCompanion, DatabaseImpl;
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/activity/data/providers/activity_provider.dart';
 import 'package:diabeatthis/features/activity/data/providers/activity_summary_provider.dart';

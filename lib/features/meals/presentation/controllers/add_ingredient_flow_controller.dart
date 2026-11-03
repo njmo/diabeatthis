@@ -519,6 +519,18 @@ class AddMealIngredientStageNotifier extends Notifier<AddMealIngredientStage> {
         'Ingredient amount must be finite and greater than zero',
       );
     }
+    final reviewed = ref.read(mealIngredientsDraftProvider);
+    final hasSelectedPortion = reviewed.ingredientPortion.portion.maybeMap(
+      existing: (_) => true,
+      orElse: () => false,
+    );
+    if (!reviewed.ingredient.isReference && hasSelectedPortion && reviewed.ingredientPortion.amount <= 0) {
+      final weight = ref.read(gramsPerPortionProvider(reviewed.ingredient, reviewed.ingredientPortion.portion)).asData?.value;
+      if (weight == null || !weight.isFinite || weight <= 0) {
+        throw StateError('The selected portion weight is not ready for review');
+      }
+      ref.read(mealIngredientsDraftProvider.notifier).setIngredientPortionAmount(weight);
+    }
     ref
         .read(mealIngredientsDraftProvider.notifier)
         .applyAmountForm(

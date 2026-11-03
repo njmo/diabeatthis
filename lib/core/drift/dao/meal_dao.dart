@@ -357,20 +357,23 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.map((row) => row.readTable(db.meal)).get();
   }
 
-  Future<MealData?> getNearestMeal() async {
-    final now = clock.now().toUtc();
-    final todayMillisecondsSinceEpoch = now.millisecondsSinceEpoch;
-    final query = select(db.meal)
+  Future<MealData?> getNearestMeal() =>
+      (_futurePlannedMealsQuery()..limit(1)).getSingleOrNull();
+
+  /// The collector evaluates this committed snapshot as wall-clock time moves.
+  Stream<List<MealData>> watchFuturePlannedMeals() =>
+      _futurePlannedMealsQuery().watch();
+
+  SimpleSelectStatement<Meal, MealData> _futurePlannedMealsQuery() {
+    return select(db.meal)
       ..where(
-        (tbl) => tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch),
+        (row) => row.plannedAt.isBiggerThanValue(
+          clock.now().toUtc().millisecondsSinceEpoch,
+        ),
       )
-      ..where((tbl) => tbl.purpose.equals('meal'))
-      ..where((tbl) => tbl.status.equals('planned'))
-      ..orderBy([
-        (m) => OrderingTerm(expression: m.plannedAt, mode: OrderingMode.asc),
-      ])
-      ..limit(1);
-    return query.getSingleOrNull();
+      ..where((row) => row.purpose.equals('meal'))
+      ..where((row) => row.status.equals('planned'))
+      ..orderBy([(row) => OrderingTerm.asc(row.plannedAt)]);
   }
 
   SimpleSelectStatement<Meal, MealData> _latestMealBeforeQuery(

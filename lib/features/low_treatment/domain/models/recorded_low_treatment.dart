@@ -6,17 +6,30 @@ class RecordedLowTreatment {
   final int mealId;
   final DateTime eatenAt;
   final double? netCarbsGrams;
+  final double? historicalNutritionCarbsGrams;
+  final bool historicalNutritionUnavailable;
+  final bool ingredientsAvailable;
+  final bool snapshotHistoryAvailable;
   final LowTreatmentReason? reason;
   final LowTreatmentContextSource? source;
   final int? relatedMealId;
   final int? relatedActivityLogId;
   final double? suggestedCarbs;
 
+  /// Precise nutrition for historical summaries; delivery retains its contract.
+  double? get historicalCarbs => historicalNutritionUnavailable
+      ? null
+      : historicalNutritionCarbsGrams ?? netCarbsGrams;
+
   const RecordedLowTreatment({
     this.ingredients = const [],
     required this.mealId,
     required this.eatenAt,
     required this.netCarbsGrams,
+    this.historicalNutritionCarbsGrams,
+    this.historicalNutritionUnavailable = false,
+    this.ingredientsAvailable = true,
+    this.snapshotHistoryAvailable = true,
     this.reason,
     this.source,
     this.relatedMealId,

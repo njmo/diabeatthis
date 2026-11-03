@@ -67,14 +67,18 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
   void overrideMealIngredient(MealIngredientsDraft mealIngredient) =>
       state = mealIngredient;
 
-  void setIngredient(IngredientDraft ingredient) =>
-      state = state.copyWith(ingredient: ingredient);
+  void setIngredient(IngredientDraft ingredient) => state = state.copyWith(
+    ingredient: ingredient,
+    recordedGramsPerAmount: null,
+  );
   void setIngredientPortion(PortionSelection portion) => state = state.copyWith(
+    recordedGramsPerAmount: null,
     ingredientPortion: state.ingredientPortion.copyWith(portion: portion),
   );
   void selectIngredientPortion(PortionSelection portion) {
     if (state.ingredientPortion.portion == portion) return;
     state = state.copyWith(
+      recordedGramsPerAmount: null,
       ingredientPortion: state.ingredientPortion.copyWith(
         portion: portion,
         amount: 0,
@@ -83,6 +87,7 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
   }
 
   void setIngredientPortionAmount(double amount) => state = state.copyWith(
+    recordedGramsPerAmount: null,
     ingredientPortion: state.ingredientPortion.copyWith(amount: amount),
   );
   void applyAmountForm({

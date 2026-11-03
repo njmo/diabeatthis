@@ -25,6 +25,7 @@ class TaskEventHandler with Logging {
   final DataSynchronizationBridge synchronizationDataBridge;
   bool _recoveringMealCompletion = false;
   bool _disposed = false;
+  final Map<int, int> _completionNavigationRevisions = {};
 
   TaskEventHandler(this._ref)
     : synchronizationDataBridge = DataSynchronizationBridge(_ref);
@@ -53,6 +54,11 @@ class TaskEventHandler with Logging {
         context,
         mealId: mealId,
         router: _ref.read(appRouterProvider),
+      );
+      _completionNavigationRevisions.update(
+        mealId,
+        (revision) => revision + 1,
+        ifAbsent: () => 1,
       );
       await requests.acknowledge(mealId);
     },
@@ -104,6 +110,9 @@ class TaskEventHandler with Logging {
   Future<void> recoverPendingMealCompletions() async {
     if (_disposed || _recoveringMealCompletion) return;
     _recoveringMealCompletion = true;
+    final navigationRevisions = Map<int, int>.from(
+      _completionNavigationRevisions,
+    );
     try {
       final pending = await PendingMealCompletionRecovery(
         database: _ref.read(databaseProvider),
@@ -111,6 +120,10 @@ class TaskEventHandler with Logging {
       ).recover(replayFresh: replayFinishedEatingConfirmation);
       if (_disposed) return;
       for (final mealId in pending) {
+        if (_completionNavigationRevisions[mealId] !=
+            navigationRevisions[mealId]) {
+          continue;
+        }
         _mealCompletionLauncher.request(mealId);
       }
     } catch (error, stackTrace) {

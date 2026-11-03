@@ -159,14 +159,15 @@ void main() {
   }
 
   test(
-    'missing portion conversion preserves legacy one-gram fallback',
+    'missing portion conversion reports unavailable without inventing grams',
     () async {
       await db.delete(db.ingredientPortions).go();
       final amounts = await MealIngredientAmountsRepository(
         db,
       ).load(await entry(portion: portionId));
-      expect(amounts.gramsPerPortion, 1);
-      expect(amounts.consumedGrams, 2);
+      expect(amounts.conversionAvailable, isFalse);
+      expect(amounts.gramsPerPortion, 0);
+      expect(amounts.consumedGrams, 0);
     },
   );
 

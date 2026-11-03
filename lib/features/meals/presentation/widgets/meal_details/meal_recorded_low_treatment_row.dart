@@ -31,10 +31,10 @@ class MealRecordedLowTreatmentRow extends StatelessWidget {
         formatDurationOffset(entry.eatenAt.difference(reference)),
       ),
       value: [
-        entry.netCarbsGrams == null
+        entry.historicalCarbs == null
             ? context.lang.uiConsumedAmountUnknown
             : context.lang.mealLowRecordedAmount(
-                formatGrams(entry.netCarbsGrams!),
+                formatGrams(entry.historicalCarbs!),
               ),
         reason,
         if (entry.suggestedCarbs != null)

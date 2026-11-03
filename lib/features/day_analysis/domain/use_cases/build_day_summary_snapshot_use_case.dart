@@ -28,7 +28,7 @@ class BuildDaySummarySnapshotUseCase {
       limitations.add('meals');
     }
     if (day.lowTreatments == null ||
-        day.lowTreatments!.any((low) => low.netCarbsGrams == null)) {
+        day.lowTreatments!.any((low) => low.historicalCarbs == null)) {
       limitations.add('lowTreatments');
     }
     if (day.activities == null) limitations.add('activities');
@@ -91,11 +91,11 @@ class BuildDaySummarySnapshotUseCase {
         DaySummaryMetric.lowTreatmentCount: day.lowTreatments?.length,
         DaySummaryMetric.lowTreatmentCarbsGrams:
             day.lowTreatments == null ||
-                day.lowTreatments!.any((low) => low.netCarbsGrams == null)
+                day.lowTreatments!.any((low) => low.historicalCarbs == null)
             ? null
             : day.lowTreatments!.fold<double>(
                 0,
-                (sum, low) => sum + low.netCarbsGrams!,
+                (sum, low) => sum + low.historicalCarbs!,
               ),
         DaySummaryMetric.activityMinutes: day.activities?.fold<int>(
           0,

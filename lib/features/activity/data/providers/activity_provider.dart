@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/activity/activity_activation_guard.dart';
 import '../../../../core/domain/model/activity.dart' as domain;
 import '../../../../core/domain/model/activity_log.dart' as domain;
 import '../../../../core/drift/database_impl.dart' as db;
@@ -187,6 +188,12 @@ Future<domain.ActivityLog> insertActivityLog(
         'Historical activity must end after its start and not in the future',
       );
     }
+    await ensureActivityActivationAllowed(
+      db,
+      startsAt: activityLog.startedAt,
+      endsAt: end,
+      now: clock.now(),
+    );
     final activity = await saveActivityDraft(db, activityLog.activity);
     if (activity == null) {
       throw Exception('Could not insert activity');

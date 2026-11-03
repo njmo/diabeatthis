@@ -62,6 +62,18 @@ class AddMealUseCase with Logging {
         logI('Added ${portion?.name ?? 'no portion'}');
 
         if (portion != null) {
+          final currentConversion = await db.portionDao.getGramsPerPortion(
+            ingredient.id,
+            portion.id,
+          );
+          if (currentConversion != null &&
+              (currentConversion - mealIngredient.ingredientPortion.amount)
+                      .abs() >
+                  0.000001) {
+            throw StateError(
+              'The portion conversion changed after this meal was reviewed',
+            );
+          }
           await db.insertIngredientPortion(
             ingredient.id,
             portion.id,

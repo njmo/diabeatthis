@@ -17,6 +17,7 @@ class ResolveMealIngredientGramsUseCase {
   }
 
   Future<double> resolveGramsPerPortion(MealIngredientsDraft mi) async {
+    if (mi.recordedGramsPerAmount != null) return mi.recordedGramsPerAmount!;
     final isReference = mi.ingredient.isReference;
     var portionAmount = mi.ingredientPortion.amount;
     final isEmpty = mi.ingredientPortion.portion.maybeMap(

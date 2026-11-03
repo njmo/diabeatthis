@@ -34,7 +34,12 @@ class SimilarMealQueryMapper {
         fiberGrams: snapshot.totalFiberG,
         totalGrams: snapshot.totalGrams,
       ),
-      composition: MealComposition(grams),
+      composition:
+          details.ingredients.any(
+            (ingredient) => !ingredient.recordedWeightAvailable,
+          )
+          ? null
+          : MealComposition(grams),
     );
   }
 }

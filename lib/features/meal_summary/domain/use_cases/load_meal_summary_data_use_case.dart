@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
-import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
 import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
@@ -41,7 +41,7 @@ class LoadMealSummaryDataUseCase {
         name: mealIngredient.ingredient.name,
         id: mealIngredient.mealIngredientId!,
         isReference: mealIngredient.ingredient.isReference,
-        portion: _mapPortion(mealIngredient.ingredientPortion),
+        portion: _mapPortion(mealIngredient),
         plannedAmount: plannedAmount,
         reportedAmount: reportedAmount,
         consumedAmount: reportedAmount,
@@ -89,6 +89,9 @@ class LoadMealSummaryDataUseCase {
   }
 
   double _gramsPerAmount(MealIngredientsDraft mealIngredient) {
+    if (mealIngredient.recordedGramsPerAmount != null) {
+      return mealIngredient.recordedGramsPerAmount!;
+    }
     if (mealIngredient.ingredient.isReference) return 100;
     return mealIngredient.ingredientPortion.portion.map(
       empty: (_) => 1.0,
@@ -97,10 +100,20 @@ class LoadMealSummaryDataUseCase {
     );
   }
 
-  MealSummaryPortion? _mapPortion(IngredientPortionDraft ingredientPortion) {
+  MealSummaryPortion? _mapPortion(MealIngredientsDraft item) {
+    final ingredientPortion = item.ingredientPortion;
     final portion = ingredientPortion.portion;
     return portion.map(
-      empty: (_) => null,
+      empty: (_) =>
+          item.recordedGramsPerAmount != null &&
+              item.recordedGramsPerAmount != 1 &&
+              !item.ingredient.isReference
+          ? MealSummaryPortion(
+              name: lang.mealPortionLabel,
+              hint: 'piece',
+              amountInPortion: item.recordedGramsPerAmount!,
+            )
+          : null,
       existing: (e) => MealSummaryPortion(
         name: e.name,
         hint: e.unitHint,

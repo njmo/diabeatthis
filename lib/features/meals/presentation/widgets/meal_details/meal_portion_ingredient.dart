@@ -46,7 +46,9 @@ class MealPortionIngredient extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            reported
+            !ingredient.recordedWeightAvailable
+                ? lang.amountMissingPortionWeight
+                : reported
                 ? lang.mealConsumedInline('${number.format(amount)} g')
                 : lang.mealPlanInline('${number.format(amount)} g'),
           ),

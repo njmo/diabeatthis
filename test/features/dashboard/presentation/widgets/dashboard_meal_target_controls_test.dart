@@ -1,10 +1,10 @@
 import 'package:clock/clock.dart';
-import 'package:diabeatthis/features/dashboard/common/widgets/status_time_progress.dart';
 import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/nightscout_storage_keys.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart' show MealData;
 import 'package:diabeatthis/features/activity/data/providers/activity_provider.dart';
+import 'package:diabeatthis/features/dashboard/common/widgets/status_time_progress.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/linked_target_meal_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/temporary_target_ui_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/time_now_provider.dart';

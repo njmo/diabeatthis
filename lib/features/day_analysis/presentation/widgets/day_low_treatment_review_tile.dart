@@ -29,7 +29,7 @@ class DayLowTreatmentReviewTile extends StatelessWidget {
     final time = DateFormat(
       'HH:mm',
     ).format(entry.recorded?.eatenAt ?? entry.occurredAt);
-    final carbs = entry.recorded?.netCarbsGrams;
+    final carbs = entry.recorded?.historicalCarbs;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),

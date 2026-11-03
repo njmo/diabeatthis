@@ -36,7 +36,7 @@ void main() {
           carbsTotal: 54,
           fatTotal: 27,
           fiberTotal: 5,
-          proteinTotal: 15,
+          proteinTotal: 14,
           netCarbsTotal: 54,
         ),
       );
@@ -119,21 +119,24 @@ void main() {
     },
   );
 
-  test('rounds each ingredient before adding it to the meal total', () async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
-    container.read(mealDraftProvider.notifier).setMealIngredients([
-      macroIngredient(amount: 2),
-      macroIngredient(amount: 2),
-    ]);
+  test(
+    'rounds the combined ingredient amount once for the meal total',
+    () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container.read(mealDraftProvider.notifier).setMealIngredients([
+        macroIngredient(amount: 2),
+        macroIngredient(amount: 2),
+      ]);
 
-    final macros = await container.read(
-      calculatedMacronutrientsProvider.future,
-    );
+      final macros = await container.read(
+        calculatedMacronutrientsProvider.future,
+      );
 
-    expect(macros.carbsTotal, 2);
-    expect(macros.netCarbsTotal, 2);
-  });
+      expect(macros.carbsTotal, 1);
+      expect(macros.netCarbsTotal, 1);
+    },
+  );
 
   test('retains explicit portion weight on legacy reference entries', () async {
     final container = ProviderContainer();

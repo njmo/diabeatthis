@@ -38,8 +38,8 @@ jobs:
       - name: Analyze
         run: flutter analyze lib test
 
-      - name: Test
-        run: flutter test
+      - name: Test and audit use case and controller coverage
+        run: bash tool/testing/run_behavior_regression.sh
 
       - name: Build Android debug APK
         run: flutter build apk --debug --no-pub

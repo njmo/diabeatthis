@@ -136,21 +136,22 @@ MealAdvisorInput serializeMealAdvisorContext(
     final prefix = 'similar_${entry.$1 + 1}';
     add('${prefix}_match', {
       'same_ingredients': entry.$2.match.matchesIngredients,
-      'nutrition_revision_matches': [
-        for (final revision in entry.$2.observation.meal.nutritionRevisions)
-          {
-            'ingredient_id': revision.ingredientId,
-            'planned_quantity_g':
-                target?.composition?.grams[revision.ingredientId],
-            'historical_quantity_g': revision.grams,
-            'ingredient_present_in_planned_meal': target?.composition?.grams
-                .containsKey(revision.ingredientId),
-            'same_quantity': target?.composition == null
-                ? null
-                : target!.composition!.grams[revision.ingredientId] ==
-                      revision.grams,
-          },
-      ],
+      if (entry.$2.observation.meal.nutritionRevisions.isNotEmpty)
+        'nutrition_revision_matches': [
+          for (final revision in entry.$2.observation.meal.nutritionRevisions)
+            {
+              'ingredient_id': revision.ingredientId,
+              'planned_quantity_g':
+                  target?.composition?.grams[revision.ingredientId],
+              'historical_quantity_g': revision.grams,
+              'ingredient_present_in_planned_meal': target?.composition?.grams
+                  .containsKey(revision.ingredientId),
+              'same_quantity': target?.composition == null
+                  ? null
+                  : target!.composition!.grams[revision.ingredientId] ==
+                        revision.grams,
+            },
+        ],
       'portion_ratio_reference_to_current': entry.$2.match.portionRatio,
       'macro_or_composition_distance': entry.$2.match.distance,
       'starting_conditions_must_be_compared_separately': true,

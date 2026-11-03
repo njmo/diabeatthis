@@ -64,6 +64,9 @@ class LowTreatmentDetailsTile extends StatelessWidget {
     }
     return treatment.ingredients
         .map((ingredient) {
+          if (!ingredient.recordedWeightAvailable) {
+            return '${ingredient.ingredientName}: ${lang.amountMissingPortionWeight}';
+          }
           return '${ingredient.ingredientName}: ${formatGrams(ingredient.consumedTotalGrams)}';
         })
         .join(', ');

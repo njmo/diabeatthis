@@ -61,7 +61,13 @@ class MealAdvisorTargetMapper {
       name: details.meal.name,
       plannedAt: details.meal.plannedAt,
       macros: macros,
-      composition: grams.isEmpty ? null : MealComposition(grams),
+      composition:
+          grams.isEmpty ||
+              details.ingredients.any(
+                (ingredient) => !ingredient.recordedWeightAvailable,
+              )
+          ? null
+          : MealComposition(grams),
       ingredients: ingredients,
       confidence: !usable
           ? null

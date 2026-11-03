@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../core/drift/providers/database_provider.dart';
-import '../../mappers/meal_details_data_mapper.dart';
+import '../../../../low_treatment/data/repositories/linked_low_treatment_details_repository.dart';
 import '../../models/meal_details_data.dart';
 
 part 'load_low_treatments_for_meal_use_case.g.dart';
@@ -21,7 +21,7 @@ class LoadLowTreatmentsForMealUseCase {
 
   Future<List<MealLowTreatmentDetailsData>> call(int mealId) async {
     final db = ref.read(databaseProvider);
-    final mapper = MealDetailsDataMapper(db: db);
+    final repository = LinkedLowTreatmentDetailsRepository(db);
     final contexts = await db.lowTreatmentContextDao.getContextsForRelatedMeal(
       mealId,
     );
@@ -33,27 +33,7 @@ class LoadLowTreatmentsForMealUseCase {
         continue;
       }
 
-      final mealIngredients = await db.mealIngredientsDao
-          .getMealIngredientsForMeal(meal.id);
-      final ingredients = <MealIngredientDetailsData>[];
-      for (final mealIngredient in mealIngredients) {
-        ingredients.add(
-          await mapper.mapIngredient(
-            meal: meal,
-            mealIngredient: mealIngredient,
-            plannedSnapshot: null,
-            consumedSnapshot: null,
-          ),
-        );
-      }
-
-      treatments.add(
-        MealLowTreatmentDetailsData(
-          meal: mapper.mapMeal(meal),
-          context: context,
-          ingredients: ingredients,
-        ),
-      );
+      treatments.add(await repository.load(meal, context));
     }
 
     treatments.sort((a, b) => a.meal.plannedAt.compareTo(b.meal.plannedAt));

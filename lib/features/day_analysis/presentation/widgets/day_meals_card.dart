@@ -14,8 +14,8 @@ class DayMealsCard extends StatelessWidget {
     final lang = context.lang;
     final meals = day.meals;
     final lows = day.lowTreatments;
-    final knownLows = lows?.where((x) => x.netCarbsGrams != null).toList();
-    final lowCarbs = knownLows?.fold(0.0, (sum, x) => sum + x.netCarbsGrams!);
+    final knownLows = lows?.where((x) => x.historicalCarbs != null).toList();
+    final lowCarbs = knownLows?.fold(0.0, (sum, x) => sum + x.historicalCarbs!);
     final hasMacros =
         meals != null &&
         (meals.count == 0 || meals.count > meals.missingSnapshotCount);

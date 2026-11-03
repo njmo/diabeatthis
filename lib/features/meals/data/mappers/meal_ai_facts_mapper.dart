@@ -58,7 +58,11 @@ class MealAiFactsMapper {
       endedAt: details.recordedEatingEndedAt,
       wait: details.recordedWait,
       window: details.observationWindow,
-      macroSource: details.hasConsumedData ? 'consumed' : 'planned',
+      macroSource: snapshot == null
+          ? 'missing'
+          : details.hasConsumedData
+          ? 'consumed'
+          : 'planned',
       macros: query?.target,
       composition: query?.composition,
       ingredients: [

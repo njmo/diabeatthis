@@ -55,6 +55,7 @@ CREATE TABLE meal_snapshot (
       (wbt_weighted_effective_confidence >= 0 AND wbt_weighted_effective_confidence <= 1)
   ),
 
+  calculated_at INTEGER,
   created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
   updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER) * 1000),
 

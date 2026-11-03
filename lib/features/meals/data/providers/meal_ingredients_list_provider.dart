@@ -55,17 +55,18 @@ Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMeal(
       );
       continue;
     }
+    if (mealIngredient.portionId != null &&
+        mealIngredient.gramsPerPortionUsed == null) {
+      throw StateError('The recorded meal portion conversion is unavailable');
+    }
     IngredientPortionDraft ingredientPortion;
     final portionId = mealIngredient.portionId;
     if (portionId != null) {
-      final gramsPerPortion = await db.portionDao.getGramsPerPortion(
-        ingredient.id,
-        portionId,
-      );
+      final gramsPerPortion = mealIngredient.gramsPerPortionUsed!;
       final portion = await db.portionDao.getPortionById(portionId);
       ingredientPortion = IngredientPortionDraft(
         portion: portion.toSelection(),
-        amount: gramsPerPortion ?? 1,
+        amount: gramsPerPortion,
       );
     } else {
       ingredientPortion = IngredientPortionDraft(
@@ -77,6 +78,12 @@ Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMeal(
     list.add(
       MealIngredientsDraft(
         mealIngredientId: mealIngredient.id,
+        recordedGramsPerAmount:
+            mealIngredient.portionId == null &&
+                mealIngredient.gramsPerPortionUsed != null &&
+                mealIngredient.gramsPerPortionUsed != 1
+            ? mealIngredient.gramsPerPortionUsed
+            : null,
         ingredient: ingredient.toDomain().toDraft(),
         ingredientPortion: ingredientPortion,
         amount: mealIngredient.amount,
@@ -139,30 +146,30 @@ Future<Macronutrients> calculateMealIngredientsMacronutrients(
   Ref ref,
   List<MealIngredientsDraft> ingredients,
 ) async {
-  var carbsTotal = 0;
-  var fatTotal = 0;
-  var fiberTotal = 0;
-  var proteinTotal = 0;
-  var netCarbsTotal = 0;
+  var carbsTotal = 0.0;
+  var fatTotal = 0.0;
+  var fiberTotal = 0.0;
+  var proteinTotal = 0.0;
+  var netCarbsTotal = 0.0;
 
   for (final mi in ingredients) {
     final grams = await ResolveMealIngredientGramsUseCase(ref).call(mi);
-    carbsTotal += (mi.ingredient.carbsPer100g * grams / 100).ceil();
-    fatTotal += (mi.ingredient.fatPer100g * grams / 100).ceil();
-    fiberTotal += (mi.ingredient.fiberPer100g * grams / 100).ceil();
-    proteinTotal += (mi.ingredient.proteinPer100g * grams / 100).ceil();
+    carbsTotal += (mi.ingredient.carbsPer100g * grams / 100);
+    fatTotal += (mi.ingredient.fatPer100g * grams / 100);
+    fiberTotal += (mi.ingredient.fiberPer100g * grams / 100);
+    proteinTotal += (mi.ingredient.proteinPer100g * grams / 100);
     netCarbsTotal += calculateNetCarbs(
       carbs: mi.ingredient.carbsPer100g * grams / 100,
       fiber: mi.ingredient.fiberPer100g * grams / 100,
       labelMode: mi.ingredient.carbsLabelMode,
-    ).ceil();
+    );
   }
 
   return Macronutrients(
-    carbsTotal: carbsTotal,
-    fatTotal: fatTotal,
-    fiberTotal: fiberTotal,
-    proteinTotal: proteinTotal,
-    netCarbsTotal: netCarbsTotal,
+    carbsTotal: carbsTotal.ceil(),
+    fatTotal: fatTotal.ceil(),
+    fiberTotal: fiberTotal.ceil(),
+    proteinTotal: proteinTotal.ceil(),
+    netCarbsTotal: netCarbsTotal.ceil(),
   );
 }

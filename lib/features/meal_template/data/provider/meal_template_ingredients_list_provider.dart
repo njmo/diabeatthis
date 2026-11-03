@@ -88,11 +88,11 @@ Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMealTemplate(
 @riverpod
 Future<Macronutrients> calculatedTemplateMacronutrients(Ref ref) async {
   final ingredients = ref.watch(mealTemplateDraftIngredientsProvider);
-  var carbsTotal = 0;
-  var fatTotal = 0;
-  var fiberTotal = 0;
-  var proteinTotal = 0;
-  var netCarbsTotal = 0;
+  var carbsTotal = 0.0;
+  var fatTotal = 0.0;
+  var fiberTotal = 0.0;
+  var proteinTotal = 0.0;
+  var netCarbsTotal = 0.0;
 
   for (final mi in ingredients) {
     final isReference = mi.ingredient.isReference;
@@ -122,22 +122,22 @@ Future<Macronutrients> calculatedTemplateMacronutrients(Ref ref) async {
       portionAmount = fetched ?? 0;
     }
     final grams = mi.defaultAmount * portionAmount;
-    carbsTotal += (mi.ingredient.carbsPer100g * grams / 100).ceil();
-    fatTotal += (mi.ingredient.fatPer100g * grams / 100).ceil();
-    fiberTotal += (mi.ingredient.fiberPer100g * grams / 100).ceil();
-    proteinTotal += (mi.ingredient.proteinPer100g * grams / 100).ceil();
+    carbsTotal += (mi.ingredient.carbsPer100g * grams / 100);
+    fatTotal += (mi.ingredient.fatPer100g * grams / 100);
+    fiberTotal += (mi.ingredient.fiberPer100g * grams / 100);
+    proteinTotal += (mi.ingredient.proteinPer100g * grams / 100);
     netCarbsTotal += calculateNetCarbs(
       carbs: mi.ingredient.carbsPer100g * grams / 100,
       fiber: mi.ingredient.fiberPer100g * grams / 100,
       labelMode: mi.ingredient.carbsLabelMode,
-    ).ceil();
+    );
   }
 
   return Macronutrients(
-    carbsTotal: carbsTotal,
-    fatTotal: fatTotal,
-    fiberTotal: fiberTotal,
-    proteinTotal: proteinTotal,
-    netCarbsTotal: netCarbsTotal,
+    carbsTotal: carbsTotal.ceil(),
+    fatTotal: fatTotal.ceil(),
+    fiberTotal: fiberTotal.ceil(),
+    proteinTotal: proteinTotal.ceil(),
+    netCarbsTotal: netCarbsTotal.ceil(),
   );
 }

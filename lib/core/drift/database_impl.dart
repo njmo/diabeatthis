@@ -72,7 +72,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 44;
+  int get schemaVersion => 45;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -89,6 +89,21 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       ),
     );
   }
+
+  /// Restore recorded conversions verbatim, including explicitly unknown legacy
+  /// values. Live inserts capture the current mapping; backup restoration must not.
+  Future<void> withRecordedPortionConversionsPreserved(
+    Future<void> Function() restore,
+  ) => transaction(() async {
+    await customStatement(
+      'DROP TRIGGER IF EXISTS meal_ingredients_capture_portion',
+    );
+    try {
+      await restore();
+    } finally {
+      await Migrator(this).createTrigger(mealIngredientsCapturePortion);
+    }
+  });
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -271,6 +286,40 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
             lowTreatmentContext.recordedCarbs,
           );
         }
+      }
+      if (from < 45) {
+        final snapshotColumns = await customSelect(
+          'PRAGMA table_info(meal_snapshot)',
+        ).get();
+        if (!snapshotColumns.any(
+          (row) => row.read<String>('name') == 'calculated_at',
+        )) {
+          await m.addColumn(mealSnapshot, mealSnapshot.calculatedAt);
+        }
+        await customStatement(
+          'UPDATE meal_snapshot SET calculated_at = created_at WHERE calculated_at IS NULL AND updated_at = created_at',
+        );
+        final ingredientColumns = await customSelect(
+          'PRAGMA table_info(meal_ingredients)',
+        ).get();
+        if (!ingredientColumns.any(
+          (row) => row.read<String>('name') == 'grams_per_portion_used',
+        )) {
+          await m.addColumn(
+            mealIngredients,
+            mealIngredients.gramsPerPortionUsed,
+          );
+        }
+        // Legacy conversions are intentionally left unknown; current mappings
+        // cannot establish the conversion used by an already recorded meal.
+        await customStatement(
+          'DROP TRIGGER IF EXISTS meal_ingredients_capture_portion',
+        );
+        await Migrator(this).createTrigger(mealIngredientsCapturePortion);
+        await customStatement(
+          'DROP TRIGGER IF EXISTS meal_ingredients_summary_set_updated_at',
+        );
+        await m.createTrigger(mealIngredientsSummarySetUpdatedAt);
       }
     },
     beforeOpen: (details) async {

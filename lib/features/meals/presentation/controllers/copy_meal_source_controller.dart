@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../meal_template/data/provider/meal_template_ingredients_list_provider.dart';
+import '../../data/mappers/copy_recorded_meal_ingredient.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/meal_draft_provider.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
@@ -13,10 +14,17 @@ class CopyMealSourceController extends _$CopyMealSourceController {
 
   @override
   FutureOr<void> build() {
-    ref.onDispose(cancelPendingCopy);
+    ref.onDispose(() {
+      _requestId++;
+    });
   }
 
-  void cancelPendingCopy() => _requestId++;
+  void cancelPendingCopy() {
+    _requestId++;
+    if (ref.mounted && state.isLoading) {
+      state = const AsyncData(null);
+    }
+  }
 
   Future<bool> copyFromSource(CopiedMealType source) async {
     final requestId = ++_requestId;
@@ -33,7 +41,14 @@ class CopyMealSourceController extends _$CopyMealSourceController {
       if (!ref.mounted || requestId != _requestId) {
         return false;
       }
-      ref.read(mealDraftProvider.notifier).applySource(source, ingredients);
+      ref
+          .read(mealDraftProvider.notifier)
+          .applySource(
+            source,
+            source is CopiedMealFromMeal
+                ? ingredients.map(copyRecordedMealIngredient).toList()
+                : ingredients,
+          );
       state = const AsyncData(null);
       return true;
     } catch (error, stackTrace) {

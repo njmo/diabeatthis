@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:diabeatthis/common/profile/profile_photo_controller.dart';
 import 'package:diabeatthis/common/profile/profile_photo_source.dart';
 import 'package:diabeatthis/common/profile/profile_photo_store.dart';
+import 'package:diabeatthis/common/profile/profile_photo_store_provider.dart'
+    as photo_store;
 import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -34,7 +36,7 @@ void main() {
         overrides: [
           sharedPrefsProvider.overrideWith((ref) async => prefs),
           profilePhotoSourceProvider.overrideWithValue(source),
-          profilePhotoStoreProvider.overrideWith(
+          photo_store.profilePhotoStoreProvider.overrideWith(
             (ref) async => ScriptedProfilePhotoStore(
               loads: loads,
               saves: saves,
@@ -77,7 +79,7 @@ void main() {
       overrides: [
         sharedPrefsProvider.overrideWith((ref) async => prefs),
         profilePhotoSourceProvider.overrideWithValue(source),
-        profilePhotoStoreProvider.overrideWith(
+        photo_store.profilePhotoStoreProvider.overrideWith(
           (ref) async => ScriptedProfilePhotoStore(
             loads: loads,
             saves: saves,

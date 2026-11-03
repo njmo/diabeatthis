@@ -25,7 +25,7 @@ class DayLinkedLowTreatmentReviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final time = DateFormat('HH:mm').format(recorded.eatenAt);
-    final carbs = recorded.netCarbsGrams;
+    final carbs = recorded.historicalCarbs;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),

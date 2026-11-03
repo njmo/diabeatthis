@@ -211,7 +211,7 @@ DayDmlDocument serializeDayAnalysisContext(DayAnalysisContext context) {
                 if (inSeries(low.eatenAt))
                   (
                     at: low.eatenAt,
-                    values: [finite(low.netCarbsGrams), low.reason?.name],
+                    values: [finite(low.historicalCarbs), low.reason?.name],
                   ),
             ],
     ),

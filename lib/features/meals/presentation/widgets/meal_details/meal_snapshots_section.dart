@@ -31,7 +31,7 @@ class MealSnapshotsSection extends StatelessWidget {
           MealInfoRow(
             label: context.lang.mealExtraIngredientLabel,
             value:
-                '${ingredient.ingredientName}: ${formatNumber(ingredient.consumedTotalGrams)}g',
+                '${ingredient.ingredientName}: ${ingredient.recordedWeightAvailable ? '${formatNumber(ingredient.consumedTotalGrams)}g' : context.lang.amountMissingPortionWeight}',
           ),
       ],
     );

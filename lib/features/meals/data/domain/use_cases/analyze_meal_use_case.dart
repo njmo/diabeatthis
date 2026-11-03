@@ -307,7 +307,10 @@ class AnalyzeMealUseCase {
     final ingredients = treatment.ingredients
         .map(_lowTreatmentIngredientValue)
         .join(', ');
-    final total = '${_formatNumber(treatment.totalNetCarbsG)} g netto';
+    final carbs = treatment.totalNetCarbsG;
+    final total = carbs == null
+        ? lang.uiUnknownAmount
+        : '${_formatNumber(carbs)} g netto';
 
     if (ingredients.isEmpty) {
       return total;
@@ -316,13 +319,16 @@ class AnalyzeMealUseCase {
   }
 
   String _lowTreatmentIngredientValue(MealIngredientDetailsData ingredient) {
+    if (!ingredient.recordedWeightAvailable) {
+      return '${ingredient.ingredientName}: ${lang.amountMissingPortionWeight}';
+    }
     return '${ingredient.ingredientName} ${_formatNumber(ingredient.consumedTotalGrams)} g';
   }
 
   MealTimelineEventData _recordedLowTreatmentEvent(
     RecordedLowTreatment treatment,
   ) {
-    final carbs = treatment.netCarbsGrams;
+    final carbs = treatment.historicalCarbs;
     return MealTimelineEventData(
       timestamp: treatment.eatenAt,
       type: MealTimelineEventType.lowTreatment,

@@ -1,5 +1,5 @@
-import 'package:diabeatthis/features/dashboard/common/temporary_targets/meal_target_links.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
+import 'package:diabeatthis/features/dashboard/common/temporary_targets/meal_target_links.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

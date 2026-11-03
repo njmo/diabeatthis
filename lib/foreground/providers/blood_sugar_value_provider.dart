@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../common/monitoring/live_reading_order.dart';
 import '../../core/domain/model/glucose.dart';
 
 part 'blood_sugar_value_provider.g.dart';
@@ -21,7 +22,15 @@ class BloodSugarValueNotifier extends _$BloodSugarValueNotifier {
   }
 
   void update(Glucose value) {
-
+    final current = state;
+    if (!acceptsLiveReading(
+      incomingAt: value.date,
+      incomingSource: value.source,
+      currentAt: current?.date,
+      currentSource: current?.source,
+    )) {
+      return;
+    }
     final now = clock.now();
     final readingAge = now.difference(value.date);
 

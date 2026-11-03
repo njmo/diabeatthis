@@ -1,0 +1,407 @@
+{
+  "schema_version": 1,
+  "metadata": {
+    "verification": {
+      "status": "repaired_and_root_verified",
+      "fullSuitePassed": 3068,
+      "fullSuiteSkipped": 0,
+      "fullSuiteFailed": 0,
+      "date": "2026-11-03"
+    },
+    "baseline": {
+      "fullSuitePassed": 3018,
+      "fullSuiteSkipped": 21,
+      "fullSuiteFailed": 0,
+      "date": "2026-11-03",
+      "note": "Final boundary cases verified separately."
+    },
+    "scope": "Production UI, controllers, shared database, foreground collectors/tasks and notification response/timing boundaries. Inventory records explicit scenarios and limitations, not exhaustive proof of every possible product interaction."
+  },
+  "harness_limits": [
+    "ForegroundUiHarness substitutes an in-memory notification controller. It records calls to show/schedule/cancel but does not prove native OS rendering, delivery, sound, permission behavior, or background delivery timing.",
+    "The native controller contract test mocks the Flutter local-notifications MethodChannel; it validates serialized plugin calls but does not invoke platform OS notification APIs.",
+    "UI scenarios share independent UI and foreground database clients backed by one in-memory Drift database; they do not cover persistent on-device database recovery unless a separate recovery test is listed."
+  ],
+  "scenarios": [
+    {
+      "feature": "Finished-eating reminder timing",
+      "trigger": "MealStartedEatingEvent; mutable clock and WorkflowScheduler ticks; snooze and agree responses use serialized notification wire through ExternalEventHandler.",
+      "expectedUI": "No notification or completion widget is mounted; fake OS port and persisted completion handoff are observed.",
+      "expectedDB": "Meal transitions from eating to eaten in both clients with exactly one eaten history entry.",
+      "expectedFG": "FinishedEatingNotificationEvent is absent before five minutes, shown once at five minutes, shown again five minutes after snooze, and not repeated after agree. Agree cancels the active finished-eating notification and schedules one summary reminder for two minutes later.",
+      "notificationboundary/actions": "Foreground task to timed fake NotificationsController; serialized snooze and agree go through ExternalEventHandler.",
+      "testfile": "test/integration/foreground_ui/notification_timing_ui_foreground_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Activity confirmation timing and pre-deadline deletion",
+      "trigger": "ActivityScheduleTask receives a tick at and just before each occurrence actionAt; user deletes the later occurrence from ActivityUpcomingList.",
+      "expectedUI": "Production upcoming-activity list delete action is used.",
+      "expectedDB": "Deleted occurrence is asserted to have status deleted.",
+      "expectedFG": "No activity confirmation before the retained occurrence actionAt; exactly one ActivityScheduleNotificationEvent at that boundary with its occurrence ID; deleted occurrence produces no later prompt.",
+      "notificationboundary/actions": "Foreground task to fake NotificationsController; actual UI deletion before the notification deadline.",
+      "testfile": "test/integration/foreground_ui/notification_timing_ui_foreground_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Delete an occurrence after its confirmation is already shown",
+      "trigger": "Activity confirmation is shown at actionAt, then the occurrence is deleted from ActivityUpcomingList.",
+      "expectedUI": "Production upcoming-activity list delete action is used.",
+      "expectedDB": "Deletion action updates the occurrence; the skipped body expects the notification key to no longer be active.",
+      "expectedFG": "Already shown ActivityScheduleNotificationEvent should be cancelled and not remain active.",
+      "notificationboundary/actions": "Foreground task to fake NotificationsController; assertion checks active notification identity.",
+      "testfile": "test/integration/foreground_ui/notification_timing_ui_foreground_test.dart",
+      "knownskip/gap": null,
+      "previousKnownDefect": "Skipped (skip: true): ActivityScheduleService delete/remove currently does not cancel an already shown activity confirmation notification.",
+      "verification": "Enabled and passed in the complete regression after production repair."
+    },
+    {
+      "feature": "Serialized finished-eating response for a late meal",
+      "trigger": "ExternalEventHandler receives the serialized Agree action for FinishedEatingNotificationEvent.",
+      "expectedUI": "No completion screen is mounted; the foreground-to-UI router receives task_open_meal_completion for the meal.",
+      "expectedDB": "Meal remains eating in both clients and status history is unchanged while completion handling is pending.",
+      "expectedFG": "Pending meal completion request contains the meal ID; serialized Agree does not mutate meal status directly.",
+      "notificationboundary/actions": "Serialized notification response wire to ExternalEventHandler.",
+      "testfile": "test/integration/foreground_ui/notification_response_ui_foreground_test.dart",
+      "knownskip/gap": "The test verifies a navigation handoff and pending request, not that the completion screen actually opens."
+    },
+    {
+      "feature": "Finished-eating snooze and dismiss response",
+      "trigger": "ExternalEventHandler receives serialized snooze and empty actions for the target meal notification.",
+      "expectedUI": "No notification or completion screen rendering assertion.",
+      "expectedDB": "Target meal, unrelated meal, and their status history remain unchanged.",
+      "expectedFG": "Foreground-to-UI router receives no messages for snooze or empty; this case does not test the task's snooze timer.",
+      "notificationboundary/actions": "Serialized snooze and empty response wire actions.",
+      "testfile": "test/integration/foreground_ui/notification_response_ui_foreground_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Meal summary reminder Agree",
+      "trigger": "ExternalEventHandler receives serialized Agree twice for a MealSummaryReminderNotificationEvent.",
+      "expectedUI": "MealListToday refreshes; after summary Agree the ready meal disappears from the list.",
+      "expectedDB": "Meal is summarized in both clients; consumed amount and one consumed snapshot are asserted; unrelated planned meal remains unchanged.",
+      "expectedFG": "No notification delivery or schedule-time assertion.",
+      "notificationboundary/actions": "Serialized notification response wire through ExternalEventHandler.",
+      "testfile": "test/integration/foreground_ui/notification_response_ui_foreground_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Notification response identity guards",
+      "trigger": "Finished-eating Agree actions use an unknown meal ID and a deleted meal ID.",
+      "expectedUI": "No rendered UI assertion.",
+      "expectedDB": "Valid meal and history remain unchanged.",
+      "expectedFG": "No navigation handoff; pending completion request set remains empty.",
+      "notificationboundary/actions": "Serialized response wire; unknown and deleted entity identities.",
+      "testfile": "test/integration/foreground_ui/notification_response_ui_foreground_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Activity schedule response Agree and skip",
+      "trigger": "ExternalEventHandler receives serialized Agree and skip actions for separate activity occurrence IDs.",
+      "expectedUI": "ActivityUpcomingList is mounted and refreshes; planned and skipped labels are asserted.",
+      "expectedDB": "Agreed occurrence becomes planned and has a linked activity log; skipped occurrence becomes skipped; unrelated occurrence remains pending.",
+      "expectedFG": "Response event updates the relevant occurrence through production schedule service; no notification timing or active-notification cancellation assertion.",
+      "notificationboundary/actions": "Serialized activity-schedule notification response wire.",
+      "testfile": "test/integration/foreground_ui/notification_response_ui_foreground_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Serialized response action routing for Eat Now, meal suggestion, AAPS carbs request, and finished activity",
+      "trigger": "ExternalEventHandler receives production notification payloads converted to notification-response wire actions; typed EventInbox subscriptions are opened before dispatch.",
+      "expectedUI": "No visible UI is asserted; route integration is tested against the real ExternalEventHandler and shared foreground runtime.",
+      "expectedDB": "Finished-activity response is asserted not to mutate its activity log because repository search found no production consumer for ActivityFinishedResponseEvent.",
+      "expectedFG": "Eat Now and meal-suggestion responses emit the expected typed events; AAPS carbs Agree emits the matching acknowledgement; AAPS empty action sends task_open_low_treatment; activity-finished Agree emits its typed response event.",
+      "notificationboundary/actions": "Actual notification.toPayload() response data is wrapped in serialized ExternalEventHandler wire; no native OS callback is invoked here.",
+      "testfile": "test/integration/foreground_ui/notification_action_routing_ui_foreground_test.dart",
+      "knownskip/gap": "ActivityFinishedNotificationEvent has no production emitter, and ActivityFinishedResponseEvent has no production consumer. The test documents a dormant event type, not a live user flow."
+    },
+    {
+      "feature": "Native callback forwarding",
+      "trigger": "Flutter notification callback receives a selected action for a finished-eating notification and forwards serialized data through the recording platform.",
+      "expectedUI": "No rendered UI assertion.",
+      "expectedDB": "Meal remains eating after callback dispatch.",
+      "expectedFG": "Exactly one platform message and the task_open_meal_completion handoff are recorded; pending request contains the meal ID. No native notification presentation/delivery is asserted.",
+      "notificationboundary/actions": "Flutter callback adapter to recording platform to ExternalEventHandler.",
+      "testfile": "test/integration/foreground_ui/notification_response_ui_foreground_test.dart",
+      "knownskip/gap": "Only the finished-eating action is exercised through the native callback adapter."
+    },
+    {
+      "feature": "Local notification controller summary-reminder schedule contract",
+      "trigger": "LocalNotificationsController shows and schedules summary reminders for two meal IDs with a two-minute delay, then cancels one ID.",
+      "expectedUI": "No widgets or OS notifications are rendered.",
+      "expectedDB": "No database access or mutation.",
+      "expectedFG": "Actual FlutterLocalNotificationsPlugin Android MethodChannel calls carry a zoned schedule between real before/after time-plus-delay bounds, Europe/Warsaw wall time, exactAllowWhileIdle, and the summary response payload with meal ID. Show/schedule/cancel share stable per-entity IDs; cancelling one leaves the other pending.",
+      "notificationboundary/actions": "LocalNotificationsController to FlutterLocalNotificationsPlugin MethodChannel; all platform reads/writes are mocked and recorded.",
+      "testfile": "test/core/notifications/controllers/local_notification_schedule_contract_test.dart",
+      "knownskip/gap": "Does not validate OS alarm delivery, exact-alarm permission, rendering, or background execution."
+    },
+    {
+      "feature": "Activity scheduled confirmation task boundaries",
+      "trigger": "WorkflowScheduler ticks the activity schedule task through pending, action, restart, and confirmation windows.",
+      "expectedUI": "No UI widgets are mounted.",
+      "expectedDB": "Confirm response creates an activity log; restart preserves occurrence state; previous-evening confirmation reserves the session.",
+      "expectedFG": "Task tests assert notification types and counts around configured action times; they do not use wall-clock timed history.",
+      "notificationboundary/actions": "ActivityScheduleTask to fake NotificationsController; direct typed task responses.",
+      "testfile": "test/foreground/tasks/activity_schedule_task_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Meal monitor notification timing and cleanup",
+      "trigger": "FakeAsync advances meal monitor task through finished-eating reminder, snooze, agree, and interruption paths.",
+      "expectedUI": "No UI widgets are mounted.",
+      "expectedDB": "Assertions vary by task case; completion and interruption cases cover status/update behavior.",
+      "expectedFG": "Reminder timing, notification type, entity ID, scheduling, and cancellation are asserted in selected cases.",
+      "notificationboundary/actions": "MealMonitorTask to fake NotificationsController; direct typed task responses.",
+      "testfile": "test/foreground/tasks/meal_monitor_test.dart; test/foreground/tasks/meal_notification_cleanup_test.dart; test/foreground/tasks/late_meal_completion_notification_test.dart",
+      "knownskip/gap": "Task-level evidence does not prove native OS rendering or delivery."
+    },
+    {
+      "feature": "Activity notification cleanup on session finish",
+      "trigger": "Activity monitor finishes a session that owns activity-scoped notifications.",
+      "expectedUI": "No UI widgets are mounted.",
+      "expectedDB": "Existing session and occurrence rows are used to resolve the finished activity scope.",
+      "expectedFG": "Scoped activity notifications are cancelled while other activity and meal notifications remain active.",
+      "notificationboundary/actions": "Activity monitor task/executor to fake NotificationsController.",
+      "testfile": "test/foreground/tasks/activity_notification_cleanup_test.dart; test/foreground/tasks/activity_monitor_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Create meal through the production review flow",
+      "trigger": "User advances through meal timing/review, selects a category, then saves; companion cases cancel before final save or tap save twice rapidly.",
+      "expectedUI": "Production AddMealPage review flow is used; category and review controls are exercised.",
+      "expectedDB": "Saved meal and ingredient persist in both DB clients; rapid taps create one row. Cancel before save leaves both meal tables empty.",
+      "expectedFG": "Saved planned meal is published to meal monitoring; cancel leaves monitoring idle.",
+      "notificationboundary/actions": "No notification assertion; foreground monitor state is observed.",
+      "testfile": "test/integration/foreground_ui/create_meal_ui_foreground_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Start a planned meal from manual decision UI",
+      "trigger": "User selects food-first, insulin-and-wait, or insulin-and-food-now decision and starts the meal; companion cancels a manual decision.",
+      "expectedUI": "Production meal status dialog, manual decision form, and next action are exercised.",
+      "expectedDB": "Meal status becomes eating-then-bolus or waiting-for-bolus; plannedAt remains fixed and meal advisor result records manual choice and initial wait. Cancel leaves status planned.",
+      "expectedFG": "Monitoring phase and meal ID match the persisted state; foreground monitor observes the selected transition.",
+      "notificationboundary/actions": "No notification delivery assertion; test launcher and UI actions are used.",
+      "testfile": "test/integration/foreground_ui/meal_start_ui_foreground_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Planned meal display, skip, deletion, and replacement monitoring",
+      "trigger": "Production meal list and status dialog actions display, skip, or delete planned meals; duplicate skip confirmation is tapped twice; another active meal blocks starting a planned meal.",
+      "expectedUI": "MealListToday and MealStatusDialog are exercised; confirmed skip updates the UI, cancelled skip leaves it open and unchanged.",
+      "expectedDB": "Skip writes one skipped history row in each client; duplicate confirmation persists once. Delete removes meal. Active-meal guard leaves selected planned and active rows unchanged.",
+      "expectedFG": "Foreground status follows the planned meal, stops after skip/delete, and selects replacement meal after deleting the first of two.",
+      "notificationboundary/actions": "No notification delivery assertions.",
+      "testfile": "test/integration/foreground_ui/planned_meal_ui_foreground_test.dart",
+      "knownskip/gap": null,
+      "previousKnownDefect": "The last-planned-meal deletion scenario is skipped: NextMealCollector does not publish removal of the last planned meal.",
+      "verification": "Enabled and passed in the complete regression after production repair."
+    },
+    {
+      "feature": "Meal completion editor and monitor handoff",
+      "trigger": "User saves planned or adjusted consumed amount from MealCompletionView; companion cases cancel, or complete in eat-then-bolus flow.",
+      "expectedUI": "Production completion view and amount selector are exercised; saved or cancelled completion view closes/continues as expected.",
+      "expectedDB": "Consumed amount is stored in both DB clients; adjusted values update consumed macro totals; eat-then-bolus persists waiting-for-bolus, status history, and consumed snapshot. Cancel preserves eating state and amount.",
+      "expectedFG": "After summary, meal monitor is idle; when waiting for bolus, monitor remains in WaitForBolusExecutor.",
+      "notificationboundary/actions": "No notification timing or native notification delivery assertion.",
+      "testfile": "test/integration/foreground_ui/meal_completion_ui_foreground_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Interrupt an active meal through production UI",
+      "trigger": "User cancels interruption, confirms stop-tracking, encounters a stale confirmation after a terminal status, or cold-restores with multiple meals.",
+      "expectedUI": "MealListToday and active progress card show or remove the active meal as the status changes.",
+      "expectedDB": "Cancel preserves both clients, status history, and snapshots. Confirm writes one interrupted status in both clients and no snapshots. Stale confirmation does not overwrite eaten status.",
+      "expectedFG": "Cancel preserves active monitor; confirmed interruption returns monitor to idle; cold restore selects eating meal and keeps it aligned with the active card.",
+      "notificationboundary/actions": "No notification timing assertion; interruption is an in-app UI action.",
+      "testfile": "test/integration/foreground_ui/meal_interruption_ui_foreground_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Add-on meal amount editor",
+      "trigger": "User cancels add-on choices/editor or confirms a larger portion from eating and bolused-eating states.",
+      "expectedUI": "Production add-on choice and MealAddOnEditor are exercised; cancellation closes editor without committing.",
+      "expectedDB": "Cancel preserves status and consumed amounts. Confirm scales ingredient consumption once in both clients and persists add-on bolus context with covered/requested carbs.",
+      "expectedFG": "Confirmed add-on sets eating-extra data and waiting-for-bolus phase for the meal; cancelled add-on preserves current monitoring status.",
+      "notificationboundary/actions": "No notification boundary assertion.",
+      "testfile": "test/integration/foreground_ui/meal_addon_ui_foreground_test.dart",
+      "knownskip/gap": null
+    },
+    {
+      "feature": "Activity dashboard and upcoming activity UI",
+      "trigger": "Activity starts/auto-ends, user cancels a planned activity, edits duration/details, or moves an upcoming occurrence; duplicate start while active has a skipped regression case.",
+      "expectedUI": "DashboardStatusCard, completed summary card, ActivityPage, picker sheet, and ActivityUpcomingList production actions are exercised.",
+      "expectedDB": "Finish closes log; cancel planned action removes planned log; edit cancel leaves DB unchanged; upcoming move creates skipped old and pending moved occurrence rows in both DB clients.",
+      "expectedFG": "Active/preparing status and log IDs match selected activity; auto-end publishes summary-ready state; moved occurrence no longer retains old prompt identity.",
+      "notificationboundary/actions": "Upcoming move case uses fake notification controller to assert the old prompt key is no longer active; no native OS delivery assertion.",
+      "testfile": "test/integration/foreground_ui/activity_ui_foreground_test.dart",
+      "knownskip/gap": null,
+      "previousKnownDefect": "Two cases are skipped: starting another activity while one is active can insert a second open log; running monitor snapshots its default duration and ignores later duration edits.",
+      "verification": "Enabled and passed in the complete regression after production repair."
+    },
+    {
+      "feature": "Glucose foreground and dashboard synchronization",
+      "trigger": "Local glucose handler receives fresh, wrong-source, duplicate, expired, or late readings; returning UI requests cache synchronization.",
+      "expectedUI": "Dashboard glucose view shows accepted value, returns to unknown after expiry, and displays synchronized history on UI return.",
+      "expectedDB": "Synced history contains newest-first accepted readings with unique timestamps; late-sample cases do not mutate a database assertion.",
+      "expectedFG": "Foreground value accepts fresh configured source, ignores wrong-source/duplicate values, expires after six minutes, and supplies cache values to UI.",
+      "notificationboundary/actions": "No notification actions; test observes foreground providers and sync event router.",
+      "testfile": "test/integration/foreground_ui/synchronization_ui_foreground_test.dart",
+      "knownskip/gap": null,
+      "previousKnownDefect": "Late 2-minute and 7-minute sample cases are skipped because a delayed old sample may replace or clear the current value.",
+      "verification": "Enabled and passed in the complete regression after production repair."
+    },
+    {
+      "feature": "Pump device status dashboard synchronization",
+      "trigger": "Local device status handler receives fresh, wrong-source, invalid-BG, or late pump status.",
+      "expectedUI": "DeviceStatusDashboard displays IOB and COB from accepted sample and preserves current values on rejected samples.",
+      "expectedDB": "No database persistence assertion in these scenarios.",
+      "expectedFG": "Foreground device status provider accepts valid configured-source sample and rejects wrong-source or invalid-BG sample.",
+      "notificationboundary/actions": "No notification actions; device status adapter and app transport are exercised.",
+      "testfile": "test/integration/foreground_ui/device_status_ui_foreground_test.dart",
+      "knownskip/gap": null,
+      "previousKnownDefect": "Late 2-minute and 7-minute status cases are skipped because old status can roll back or clear the current sample.",
+      "verification": "Enabled and passed in the complete regression after production repair."
+    },
+    {
+      "feature": "Data source settings and foreground config synchronization",
+      "trigger": "User changes glucose source and mirror-to-local setting, tries unavailable source, or opens settings at narrow width.",
+      "expectedUI": "DataSourceSettingsSection dropdown and switch are exercised; unavailable sources are absent; narrow-width history dropdown has a skipped no-overflow regression.",
+      "expectedDB": "Shared preference keys persist selected source and mirror setting.",
+      "expectedFG": "Foreground DataSourceConfig reflects persisted source and mirror setting after app-event transport.",
+      "notificationboundary/actions": "No notification actions; app event router is observed.",
+      "testfile": "test/integration/foreground_ui/source_settings_ui_foreground_test.dart",
+      "knownskip/gap": null,
+      "previousKnownDefect": "Narrow-layout no-overflow scenario is skipped due to a known HistorySource dropdown overflow.",
+      "verification": "Enabled and passed in the complete regression after production repair."
+    },
+    {
+      "feature": "Notification completion navigation and recovery",
+      "trigger": "Late finished-eating Agree with UI present or absent; actual TaskEventHandler and deferred UI recovery.",
+      "expectedUI": "Real MealCompletionEntry opens for the requested meal, once. Cancel closes it; a concurrent recovery must not reopen the dismissed sheet.",
+      "expectedDB": "Eating status, consumed amount and status history remain unchanged until explicit completion; pending navigation intent is acknowledged after cancel.",
+      "expectedFG": "Serialized ExternalEventHandler response persists and forwards the completion intent; UI consumes the production task payload.",
+      "notificationboundary/actions": "Serialized response -> foreground handler -> task bridge -> TaskEventHandler -> production completion sheet.",
+      "testfile": "test/integration/foreground_ui/notification_completion_navigation_ui_foreground_test.dart",
+      "knownskip/gap": null,
+      "verification": "Enabled and passed in the complete regression after production repair.",
+      "previousKnownDefect": "Concurrent recovery case is skipped: a recovery completing after cancellation reopens the acknowledged sheet. Ordinary recovery and direct navigation controls remain enabled."
+    }
+  ],
+  "notification_response_action_audit": [
+    {
+      "actionType": "activity_schedule_response",
+      "evidence": [
+        "test/integration/foreground_ui/notification_response_ui_foreground_test.dart",
+        "test/foreground/tasks/activity_schedule_task_test.dart"
+      ],
+      "routeCoverage": "serialized UI/foreground response and direct task response",
+      "highRiskGap": null,
+      "previousGap": "No assertion that deleting or moving an already-prompted occurrence cancels its active OS notification; the dedicated cancellation case is skipped."
+    },
+    {
+      "actionType": "eat_now_response",
+      "evidence": [
+        "test/integration/foreground_ui/notification_action_routing_ui_foreground_test.dart",
+        "test/foreground/tasks/meal_monitor_test.dart",
+        "test/foreground/tasks/meal_monitor_interruption_test.dart"
+      ],
+      "routeCoverage": "serialized ExternalEventHandler routing for eating, dismiss, and empty; direct task response",
+      "highRiskGap": null
+    },
+    {
+      "actionType": "temp_target_response",
+      "evidence": [
+        "test/core/data_sources/nightscout/temporary_targets/temp_target_response_test.dart",
+        "test/core/data_sources/nightscout/temporary_targets/temp_target_manual_reminder_test.dart",
+        "test/foreground/tasks/activity_monitor_temp_targets_test.dart"
+      ],
+      "routeCoverage": "typed handler/service and task tests",
+      "highRiskGap": "No production UI-to-response end-to-end test; native OS presentation/delivery is outside harness scope."
+    },
+    {
+      "actionType": "meal_suggestion_response",
+      "evidence": [
+        "test/integration/foreground_ui/notification_action_routing_ui_foreground_test.dart",
+        "test/foreground/tasks/meal_monitor_test.dart",
+        "test/foreground/tasks/meal_notification_cleanup_test.dart"
+      ],
+      "routeCoverage": "serialized ExternalEventHandler routing for agree, skip, snooze with input, and empty; direct task response",
+      "highRiskGap": null
+    },
+    {
+      "actionType": "meal_summary_reminder_response",
+      "evidence": [
+        "test/integration/foreground_ui/notification_response_ui_foreground_test.dart",
+        "test/foreground/tasks/meal_monitor_test.dart"
+      ],
+      "routeCoverage": "serialized response to production handler and UI/database refresh; task-level scheduling",
+      "highRiskGap": null
+    },
+    {
+      "actionType": "finished_eating_response",
+      "evidence": [
+        "test/integration/foreground_ui/notification_response_ui_foreground_test.dart",
+        "test/integration/foreground_ui/notification_timing_ui_foreground_test.dart",
+        "test/foreground/tasks/meal_monitor_test.dart",
+        "test/foreground/tasks/late_meal_completion_notification_test.dart"
+      ],
+      "routeCoverage": "serialized agree/snooze/empty; native callback forwarding for agree; direct task timing responses",
+      "highRiskGap": "Native callback adapter is only checked for message forwarding and persisted state, not native OS action rendering or delivery."
+    },
+    {
+      "actionType": "activity_finished_response",
+      "evidence": [
+        "test/integration/foreground_ui/notification_action_routing_ui_foreground_test.dart"
+      ],
+      "routeCoverage": "Serialized agree/dismiss/empty actions are routed to the typed event inbox; production source search found no notification emitter or downstream consumer.",
+      "highRiskGap": "Dormant notification/event type: production currently neither emits ActivityFinishedNotificationEvent nor consumes ActivityFinishedResponseEvent."
+    },
+    {
+      "actionType": "aaps_carbs_request_response",
+      "evidence": [
+        "test/integration/foreground_ui/notification_action_routing_ui_foreground_test.dart",
+        "test/foreground/tasks/aaps_carbs_request_monitor_task_test.dart",
+        "test/foreground/tasks/aaps_carbs_request_freshness_test.dart"
+      ],
+      "routeCoverage": "Serialized Agree acknowledgement and empty-action task handoff; episode/task tests also exist.",
+      "highRiskGap": null
+    }
+  ],
+  "high_risk_gaps": [
+    "activity_finished_response is a dormant type: no production emitter or downstream consumer was found.",
+    "The foreground UI harness cannot establish actual OS notification rendering, permission handling, sound, or background delivery timing."
+  ],
+  "repairVerification": {
+    "resolvedFindings": 16,
+    "productionChanges": true,
+    "schemaVersion": 45,
+    "fullSuite": {
+      "passed": 3068,
+      "skipped": 0,
+      "failed": 0,
+      "date": "2026-11-03",
+      "command": "flutter test --no-pub --coverage --concurrency=4"
+    },
+    "approvedExpectationChanges": [
+      {
+        "test": "test/features/meals/data/providers/meal_ingredient_macronutrients_test.dart",
+        "scope": "Two scenarios: protein 15 -> 14; carbs/net carbs 2 -> 1, plus the sum-rounding scenario title. User approved explicitly."
+      },
+      {
+        "test": "test/features/meals/data/repositories/meal_ingredient_facts_test.dart",
+        "scope": "Only the missing-conversion scenario: assert unavailable conversion and no manufactured gram amounts instead of a one-gram fallback. User approved explicitly."
+      }
+    ],
+    "otherExistingExpectations": "Preserved. New integration fixtures received complete notification-port mocks and bounded semantic frame/I/O waits.",
+    "additionalProtection": [
+      "Backup import preserves known and unknown conversion metadata transactionally, including rollback.",
+      "Copy, preview, summary, similarity and LLM paths share recorded quantities and historical source availability.",
+      "Optional snapshot-history failure preserves independently available chart and timeline context.",
+      "Collector disposal cancels timers and releases waits without relying on runtime shutdown."
+    ],
+    "legacyPolicy": "Do not fill absent historical conversions from current mappings or claim an exact calculation time from ambiguous metadata. Preserve authoritative saved aggregates and expose unavailable supporting facts.",
+    "analysis": "No issues found (flutter analyze --no-pub, 2026-11-03)",
+    "coverageMeaning": "All 175 concrete use-case/controller classes and both function use cases executed. 333 executable lines remain uncovered; execution coverage is not proof of every possible business scenario."
+  }
+}

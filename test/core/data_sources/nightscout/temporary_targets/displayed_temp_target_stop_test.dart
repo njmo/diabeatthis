@@ -27,8 +27,8 @@ void main() {
   late DatabaseImpl db;
   late Map<String, dynamic> remote;
   late TempTargetService service;
-  int posts = 0;
-  int reads = 0;
+  var posts = 0;
+  var reads = 0;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({

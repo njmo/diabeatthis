@@ -179,7 +179,21 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
     return query.write(IngredientCompanion(barcode: Value(barcode)));
   }
 
+  Future<void> _ensureRecordedPortionConversions(int mealId) async {
+    final unknown = await customSelect(
+      'SELECT mi.id FROM meal_ingredients mi JOIN ingredient i ON i.id = mi.ingredient_id '
+      'WHERE mi.meal_id = ? AND mi.portion_id IS NOT NULL '
+      'AND mi.grams_per_portion_used IS NULL AND i.is_reference = 0 LIMIT 1',
+      variables: [Variable.withInt(mealId)],
+      readsFrom: {db.mealIngredients, db.ingredient},
+    ).getSingleOrNull();
+    if (unknown != null) {
+      throw StateError('The recorded meal portion conversion is unavailable');
+    }
+  }
+
   Future<MealMacroSummary?> totalsForMealConsumed(int mealId) async {
+    await _ensureRecordedPortionConversions(mealId);
     final mi = db.mealIngredients;
     final ing = ingredient;
     final ip = db.ingredientPortions;
@@ -218,6 +232,10 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
         CaseWhen(
           ing.isReference.equals(1),
           then: effectiveAmount * const Constant(100.0),
+        ),
+        CaseWhen(
+          mi.gramsPerPortionUsed.isNotNull(),
+          then: effectiveAmount * mi.gramsPerPortionUsed.cast<double>(),
         ),
         CaseWhen(mi.portionId.isNull(), then: effectiveAmount),
       ],
@@ -258,6 +276,7 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
   }
 
   Future<MealMacroSummary?> totalsForMeal(int mealId) async {
+    await _ensureRecordedPortionConversions(mealId);
     final mi = db.mealIngredients;
     final ing = ingredient;
     final ip = db.ingredientPortions;
@@ -276,6 +295,11 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
         CaseWhen(
           ing.isReference.equals(1),
           then: mi.amount.cast<double>() * const Constant(100.0),
+        ),
+        CaseWhen(
+          mi.gramsPerPortionUsed.isNotNull(),
+          then:
+              mi.amount.cast<double>() * mi.gramsPerPortionUsed.cast<double>(),
         ),
         CaseWhen(mi.portionId.isNull(), then: mi.amount.cast<double>()),
       ],

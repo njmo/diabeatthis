@@ -1,4 +1,3 @@
-import 'package:diabeatthis/features/dashboard/common/temporary_targets/meal_target_links.dart';
 import 'package:diabeatthis/common/temporary_targets/owned_temp_target.dart';
 import 'package:diabeatthis/common/temporary_targets/temp_target_proposal.dart';
 import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
@@ -7,6 +6,7 @@ import 'package:diabeatthis/core/data_sources/nightscout/temporary_targets/temp_
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart' show DatabaseImpl, MealCompanion, MealData;
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
+import 'package:diabeatthis/features/dashboard/common/temporary_targets/meal_target_links.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/linked_target_meal_provider.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

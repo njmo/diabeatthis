@@ -61,7 +61,7 @@ class BeforeMealHistoryFacts extends StatelessWidget {
         if (data.lowTreatments?.isNotEmpty != true)
           Text(empty(data.lowTreatments)),
         for (final low in data.lowTreatments ?? const <RecordedLowTreatment>[])
-          Text('${time(low.eatenAt)} · ${grams(low.netCarbsGrams)}'),
+          Text('${time(low.eatenAt)} · ${grams(low.historicalCarbs)}'),
         const SizedBox(height: 12),
         Text(lang.beforeMealActivities, style: style),
         Text(

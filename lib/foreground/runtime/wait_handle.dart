@@ -73,6 +73,19 @@ class WaitHandle<T> {
     );
   }
 
+  /// A cancellable elapsed-time delay independent of periodic workflow ticks.
+  static WaitHandle<void> delay(Duration duration) {
+    final completion = Completer<void>();
+    final timer = Timer(duration, completion.complete);
+    return WaitHandle<void>(
+      future: completion.future,
+      cancel: () {
+        timer.cancel();
+        if (!completion.isCompleted) completion.complete();
+      },
+    );
+  }
+
   static WaitHandle<T> fromFuture<T>(Future<T> future) {
     return WaitHandle<T>(future: future, cancel: () {});
   }
