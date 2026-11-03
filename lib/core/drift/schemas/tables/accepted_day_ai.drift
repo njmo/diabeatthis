@@ -1,3 +1,5 @@
+import 'accepted_day_summary.drift';
+
 CREATE TABLE accepted_day_ai (
  day_key TEXT NOT NULL PRIMARY KEY REFERENCES accepted_day_summary(day_key),
  accepted_at INTEGER NOT NULL,
