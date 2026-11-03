@@ -7,6 +7,7 @@ import '../../../activity/common/controllers/activity_actions_controller.dart';
 import '../controllers/dashboard_status_controller.dart';
 import 'dashboard_activity_card.dart';
 import 'dashboard_activity_target_card.dart';
+import 'dashboard_completed_activity_card.dart';
 import 'dashboard_meal_target_card.dart';
 
 class DashboardStatusCard extends ConsumerWidget {
@@ -26,7 +27,17 @@ class DashboardStatusCard extends ConsumerWidget {
         DashboardActivityCard(
           activity: activity,
           now: status.now,
-          target: status.linkedTarget,
+          target: status.linkedCompletedActivityId == null
+              ? status.linkedTarget
+              : null,
+        ),
+      for (final completed in status.completedActivities)
+        DashboardCompletedActivityCard(
+          activity: completed,
+          now: status.now,
+          target: completed.id == status.linkedCompletedActivityId
+              ? status.linkedTarget
+              : null,
         ),
       if (target != null && isActivityTempTarget(target))
         DashboardActivityTargetCard(

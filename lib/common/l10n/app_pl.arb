@@ -3510,5 +3510,23 @@
         "type": "String"
       }
     }
-  }
+  },
+  "activitySummaryTitle": "Podsumowanie treningu",
+  "activityPerceivedIntensity": "Odczuwana intensywność",
+  "activityIntensityLight": "Lekka",
+  "activityIntensityModerate": "Umiarkowana",
+  "activityIntensityHigh": "Wysoka",
+  "activityIntensityVeryHigh": "Bardzo wysoka",
+  "activityIntensityUnspecified": "Nie wybrano",
+  "activitySummarySaveFailed": "Nie udało się zapisać podsumowania. Spróbuj ponownie.",
+  "activitySummaryAction": "Podsumuj",
+  "activitySummaryEdit": "Edytuj podsumowanie",
+  "activitySummaryReady": "Zakończona",
+  "activitySummaryCompleted": "Trening podsumowany",
+  "activitySummaryClose": "Zamknij podsumowanie",
+  "activitySummarySkip": "Pomiń podsumowanie",
+  "activityEditAction": "Edytuj",
+  "activityHistoryAction": "Pokaż historię aktywności",
+  "activitySummaryHide": "Ukryj",
+  "activityLogEditTitle": "Edytuj aktywność"
 }

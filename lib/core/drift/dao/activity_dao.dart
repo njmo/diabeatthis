@@ -160,6 +160,62 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     return count == 1;
   }
 
+  Future<bool> updateCompletedActivitySummary({
+    required int id,
+    required String? intensity,
+    required String? notes,
+  }) async {
+    final count =
+        await (update(
+          db.activityLog,
+        )..where((row) => row.id.equals(id) & row.endedAt.isNotNull())).write(
+          ActivityLogCompanion(
+            intensity: Value(intensity),
+            notes: Value(notes),
+            summarizedAt: Value(DateTime.now().millisecondsSinceEpoch),
+          ),
+        );
+    return count == 1;
+  }
+
+  Stream<List<ActivityLogViewData>> watchCompletedActivitySummaries() {
+    final query =
+        select(db.activityLog).join([
+            innerJoin(
+              db.activity,
+              db.activity.id.equalsExp(db.activityLog.activityId),
+            ),
+            leftOuterJoin(
+              db.activityOccurrence,
+              db.activityOccurrence.activityLogId.equalsExp(db.activityLog.id),
+            ),
+          ])
+          ..where(
+            db.activityLog.endedAt.isNotNull() &
+                db.activityLog.summaryDismissedAt.isNull(),
+          )
+          ..orderBy([OrderingTerm.desc(db.activityLog.endedAt)]);
+    return query.watch().map((rows) => rows.map(_activityLogViewData).toList());
+  }
+
+  Future<bool> dismissActivitySummary(int id) async {
+    final count =
+        await (update(db.activityLog)..where(
+              (row) =>
+                  row.id.equals(id) &
+                  row.endedAt.isNotNull() &
+                  row.summarizedAt.isNotNull(),
+            ))
+            .write(
+              ActivityLogCompanion(
+                summaryDismissedAt: Value(
+                  DateTime.now().millisecondsSinceEpoch,
+                ),
+              ),
+            );
+    return count == 1;
+  }
+
   Future<int?> getScheduledDurationForLog(int activityLogId) async {
     return (await getOccurrenceForLog(activityLogId))?.durationMinutes;
   }

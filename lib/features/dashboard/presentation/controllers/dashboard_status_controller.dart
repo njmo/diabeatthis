@@ -12,6 +12,7 @@ import '../../../activity/common/controllers/activity_actions_controller.dart';
 import '../../../activity/common/controllers/serialized_status_action_controller.dart';
 import '../../../activity/data/drafts/activity_log_draft.dart';
 import '../../../activity/data/providers/activity_provider.dart';
+import '../../../activity/data/providers/activity_summary_provider.dart';
 import '../../common/temporary_targets/meal_target_links.dart';
 import '../../data/providers/linked_target_meal_provider.dart';
 import '../../data/providers/temporary_target_ui_provider.dart';
@@ -31,6 +32,9 @@ final dashboardStatusViewModelProvider =
         pendingActivity: activity.asData?.value,
         target: ref.watch(temporaryTargetUiProvider),
         loading: activity.isLoading,
+        completedActivities:
+            ref.watch(completedActivitySummariesProvider).asData?.value ??
+            const [],
       );
     });
 

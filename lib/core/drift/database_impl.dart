@@ -16,6 +16,7 @@ import 'dao/meal_wizard_link_dao.dart';
 import 'dao/portion_dao.dart';
 import 'dao/quick_low_treatment_item_dao.dart';
 import 'database.dart';
+import 'migrations/migrate_activity_summary.dart';
 import 'migrations/migrate_meal_add_on_bolus_context.dart';
 import 'migrations/migrate_meal_completion_decision.dart';
 import 'migrations/migrate_meal_consumption_confirmation.dart';
@@ -71,7 +72,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 41;
+  int get schemaVersion => 42;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -95,6 +96,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await m.createAll();
     },
     onUpgrade: (m, from, to) async {
+      if (from < 42) await migrateActivitySummary(this, m);
       if (from < 41) {
         final columns = await customSelect('PRAGMA table_info(meal)').get();
         if (!columns.any((row) => row.read<String>('name') == 'category')) {

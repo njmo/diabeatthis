@@ -6,6 +6,7 @@ import '../../data/domain/use_cases/load_activity_log_analysis_use_case.dart';
 import '../../data/domain/use_cases/load_activity_log_details_use_case.dart';
 import '../../data/domain/use_cases/load_low_treatments_for_activity_log_use_case.dart';
 import '../../data/models/activity_log_details_data.dart';
+import '../../data/providers/save_activity_summary_provider.dart';
 import '../../data/providers/update_completed_activity_times_provider.dart';
 import '../models/activity_log_page_state.dart';
 
@@ -60,6 +61,26 @@ class ActivityLogDetailsControllerNotifier
       expectedEnd: previousEnd,
       startedAt: startedAt,
       endedAt: endedAt,
+    );
+    if (!ref.mounted) return;
+    ref.invalidate(dayContextForDateProvider);
+    ref.invalidateSelf();
+  }
+
+  Future<void> updateCompletedEntry({
+    required ActivityLogDetailsData original,
+    required DateTime startedAt,
+    required DateTime endedAt,
+    required String? intensity,
+    required String notes,
+  }) async {
+    await ref.read(updateCompletedActivityEntryUseCaseProvider)(
+      id: activityLogId,
+      original: original,
+      startedAt: startedAt,
+      endedAt: endedAt,
+      intensity: intensity,
+      notes: notes,
     );
     if (!ref.mounted) return;
     ref.invalidate(dayContextForDateProvider);

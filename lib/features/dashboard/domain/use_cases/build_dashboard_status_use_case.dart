@@ -13,6 +13,7 @@ class BuildDashboardStatusUseCase {
     required ActivityLogSummaryData? pendingActivity,
     required TemporaryTarget? target,
     bool loading = false,
+    List<ActivityLogSummaryData> completedActivities = const [],
   }) {
     if (loading) return DashboardStatusViewModel(now: now, loading: true);
     final visible =
@@ -24,7 +25,22 @@ class BuildDashboardStatusUseCase {
     final activeTarget = isTemporaryTargetActive(target, at: now)
         ? target
         : null;
+    ActivityLogSummaryData? linkedCompleted;
+    if (activeTarget != null && isActivityTempTarget(activeTarget)) {
+      for (final entry in completedActivities) {
+        final end = entry.endedAt;
+        if (end != null &&
+            !activeTarget.createdAt.isAfter(end) &&
+            activeTarget.createdAt
+                .add(Duration(minutes: activeTarget.duration))
+                .isAfter(entry.startedAt)) {
+          linkedCompleted = entry;
+          break;
+        }
+      }
+    }
     final linked =
+        linkedCompleted == null &&
         activeTarget != null &&
         isActivityTempTargetLinked(
           activityVisible: visible,
@@ -34,8 +50,10 @@ class BuildDashboardStatusUseCase {
     return DashboardStatusViewModel(
       now: now,
       activity: visible ? pendingActivity : null,
-      linkedTarget: linked ? activeTarget : null,
-      standaloneTarget: linked ? null : activeTarget,
+      linkedTarget: linked || linkedCompleted != null ? activeTarget : null,
+      standaloneTarget: linked || linkedCompleted != null ? null : activeTarget,
+      completedActivities: completedActivities,
+      linkedCompletedActivityId: linkedCompleted?.id,
       canAttachActivity: !visible,
     );
   }

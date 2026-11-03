@@ -11,7 +11,11 @@ class ActivityLogTimeEditDialog extends HookWidget {
     required this.startedAt,
     required this.endedAt,
     required this.onSave,
+    this.title,
+    this.additionalFieldsBuilder,
   });
+  final String? title;
+  final Widget Function(bool saving)? additionalFieldsBuilder;
   final DateTime startedAt;
   final DateTime endedAt;
   final Future<void> Function(DateTime startedAt, DateTime endedAt) onSave;
@@ -26,7 +30,7 @@ class ActivityLogTimeEditDialog extends HookWidget {
     return PopScope(
       canPop: !saving.value,
       child: AlertDialog(
-        title: Text(context.lang.activityLogEditTimes),
+        title: Text(title ?? context.lang.activityLogEditTimes),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -55,6 +59,10 @@ class ActivityLogTimeEditDialog extends HookWidget {
                   failed.value = false;
                 },
               ),
+              if (additionalFieldsBuilder != null) ...[
+                const SizedBox(height: 16),
+                additionalFieldsBuilder!(saving.value),
+              ],
               if (invalid.value || failed.value)
                 Padding(
                   padding: const EdgeInsets.only(top: 12),

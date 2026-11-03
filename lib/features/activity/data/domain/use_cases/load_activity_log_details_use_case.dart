@@ -33,6 +33,9 @@ class LoadActivityLogDetailsUseCase {
           : DateTime.fromMillisecondsSinceEpoch(log.endedAt!),
       intensity: log.intensity,
       notes: log.notes,
+      summarizedAt: log.summarizedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(log.summarizedAt!),
       isSynced: log.isSynced,
       createdAt: DateTime.fromMillisecondsSinceEpoch(log.createdAt),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(log.updatedAt),

@@ -45,7 +45,7 @@ void main() {
       final db = DatabaseImpl(NativeDatabase(file));
       addTearDown(db.close);
       final meal = (await db.mealDao.getMealById(1))!;
-      expect(db.schemaVersion, 41);
+      expect(db.schemaVersion, greaterThan(41));
       expect(meal.status, 'summarized');
       expect(meal.notes, 'Keep note');
       expect(meal.consumptionConfirmedEndedAt, 2000);

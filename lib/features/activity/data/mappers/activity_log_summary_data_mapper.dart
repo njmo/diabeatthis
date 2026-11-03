@@ -6,6 +6,11 @@ extension ActivityLogViewDataMapper on ActivityLogViewData {
   ActivityLogSummaryData toSummaryData() {
     return ActivityLogSummaryData(
       id: log.id,
+      intensity: log.intensity,
+      notes: log.notes,
+      summarizedAt: log.summarizedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(log.summarizedAt!),
       activityName: activity.name,
       activityId: activity.id,
       startedAt: DateTime.fromMillisecondsSinceEpoch(log.startedAt),

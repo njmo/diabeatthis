@@ -9,6 +9,8 @@ import '../../../../common/widgets/detail_section_card.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../../core/domain/model/treatment_base.dart';
+import '../../common/widgets/activity_intensity_field.dart';
+import '../../common/widgets/activity_summary_values.dart';
 import '../../data/models/activity_log_analysis_data.dart';
 import '../controllers/activity_log_details_controller.dart';
 import '../widgets/activity_glucose_chart.dart';
@@ -28,7 +30,16 @@ class ActivityLogPage extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(context.lang.activityLogTitle)),
+      appBar: AppBar(
+        title: Text(context.lang.activityLogTitle),
+        actions: [
+          if (state.asData?.value.data.endedAt != null)
+            ActivityLogEditTimeButton(
+              log: state.asData!.value.data,
+              compact: true,
+            ),
+        ],
+      ),
       body: state.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) =>
@@ -71,28 +82,38 @@ class ActivityLogPage extends ConsumerWidget {
                           _StatusChip(active: log.isActive),
                         ],
                       ),
-                      if (log.endedAt != null)
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: ActivityLogEditTimeButton(log: log),
-                        ),
                       const SizedBox(height: 12),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
+                        child: FilledButton.tonalIcon(
                           onPressed: () {
                             context.router.push(
                               routes.ActivityRoute(activityId: log.activityId),
                             );
                           },
-                          icon: const Icon(Icons.open_in_new),
-                          label: Text(context.lang.activityViewActivity),
+                          icon: const Icon(Icons.history),
+                          label: Text(context.lang.activityHistoryAction),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
+              if (log.isSummarized) ...[
+                const SizedBox(height: 12),
+                DetailSectionCard(
+                  title: context.lang.activitySummaryCompleted,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: ActivitySummaryValues(
+                        intensity: log.intensity,
+                        notes: log.notes,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 12),
               if (log.endedAt == null)
                 DetailSectionCard(
@@ -201,16 +222,21 @@ class ActivityLogPage extends ConsumerWidget {
               DetailSectionCard(
                 title: context.lang.activityDetailsTitle,
                 children: [
-                  DetailInfoRow(
-                    icon: Icons.speed,
-                    label: context.lang.activityIntensityLabel,
-                    value: _fallback(log.intensity),
-                  ),
-                  DetailInfoRow(
-                    icon: Icons.notes,
-                    label: context.lang.activityNotesLabel,
-                    value: _fallback(log.notes),
-                  ),
+                  if (!log.isSummarized) ...[
+                    DetailInfoRow(
+                      icon: Icons.speed,
+                      label: context.lang.activityIntensityLabel,
+                      value: ActivityIntensityField.label(
+                        context.lang,
+                        log.intensity,
+                      ),
+                    ),
+                    DetailInfoRow(
+                      icon: Icons.notes,
+                      label: context.lang.activityNotesLabel,
+                      value: _fallback(log.notes),
+                    ),
+                  ],
                   DetailInfoRow(
                     icon: Icons.sync,
                     label: context.lang.activitySyncLabel,

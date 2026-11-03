@@ -3053,5 +3053,23 @@
         "type": "String"
       }
     }
-  }
+  },
+  "activitySummaryTitle": "Workout summary",
+  "activityPerceivedIntensity": "Perceived intensity",
+  "activityIntensityLight": "Light",
+  "activityIntensityModerate": "Moderate",
+  "activityIntensityHigh": "High",
+  "activityIntensityVeryHigh": "Very high",
+  "activityIntensityUnspecified": "Not selected",
+  "activitySummarySaveFailed": "Could not save the summary. Try again.",
+  "activitySummaryAction": "Summarize",
+  "activitySummaryEdit": "Edit summary",
+  "activitySummaryReady": "Finished",
+  "activitySummaryCompleted": "Workout summarized",
+  "activitySummaryClose": "Close summary",
+  "activitySummarySkip": "Skip summary",
+  "activityEditAction": "Edit",
+  "activityHistoryAction": "Show activity history",
+  "activitySummaryHide": "Hide",
+  "activityLogEditTitle": "Edit activity"
 }

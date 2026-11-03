@@ -9,6 +9,9 @@ class ActivityLogDetailsData {
   final DateTime? endedAt;
   final String? intensity;
   final String? notes;
+  final DateTime? summarizedAt;
+
+  bool get isSummarized => summarizedAt != null;
   final bool isSynced;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -24,6 +27,7 @@ class ActivityLogDetailsData {
     required this.endedAt,
     required this.intensity,
     required this.notes,
+    this.summarizedAt,
     required this.isSynced,
     required this.createdAt,
     required this.updatedAt,

@@ -6,6 +6,8 @@ class DashboardStatusViewModel {
     required this.now,
     this.activity,
     this.linkedTarget,
+    this.completedActivities = const [],
+    this.linkedCompletedActivityId,
     this.standaloneTarget,
     this.canAttachActivity = false,
     this.loading = false,
@@ -13,6 +15,8 @@ class DashboardStatusViewModel {
   final DateTime now;
   final ActivityLogSummaryData? activity;
   final TemporaryTarget? linkedTarget;
+  final List<ActivityLogSummaryData> completedActivities;
+  final int? linkedCompletedActivityId;
   final TemporaryTarget? standaloneTarget;
   final bool canAttachActivity;
   final bool loading;
