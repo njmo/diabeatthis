@@ -87,6 +87,9 @@ class FakeRuntimeHarness {
 
   int get activeWaitersCount => _waiters.length;
 
+  Iterable<DateTime> get pendingDeadlines =>
+      _waiters.whereType<DeadlineWaiter>().map((waiter) => waiter.deadline);
+
   void debugPrintState() {
     debugPrint('--- FAKE RUNTIME HARNESS ---');
     debugPrint('waiters: ${_waiters.length}');

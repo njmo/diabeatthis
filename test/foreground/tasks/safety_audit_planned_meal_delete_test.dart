@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../foreground/utils/pending_notifications_controller.dart';
+import '../../helpers/common/wait_for_condition.dart';
 
 void main() {
   test('planned meal deletion is reflected by the real database query', () async {
@@ -69,13 +70,18 @@ void main() {
       (await initialCandidate.timeout(const Duration(seconds: 5))).mealId,
       1,
     );
-    await pumpEventQueue(times: 100);
+    await waitForCondition(
+      () => task.state is MonitorUntilMeal,
+      description: 'the planned meal to enter monitoring',
+    );
     expect(task.state, isA<MonitorUntilMeal>());
 
     await db.mealDao.deleteMealAndGeneratedData(1);
     expect(await db.mealDao.getNearestMeal(), isNull);
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    await pumpEventQueue(times: 100);
+    await waitForCondition(
+      () => task.state is MealMonitorStateIdle,
+      description: 'the monitor to clear the deleted planned meal',
+    );
 
     // Expected after removal is published to the monitor task.
     expect(task.state, isA<MealMonitorStateIdle>());

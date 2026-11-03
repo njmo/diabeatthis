@@ -9,6 +9,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/common/wait_for_condition.dart';
 import '../utils/fake_notifications_controller.dart';
 import '../utils/fake_runtime_harness.dart';
 
@@ -50,19 +51,35 @@ void main() {
         harness.cancel();
         await running;
       });
-      await _settle();
+      await waitForCondition(
+        () => harness.pendingDeadlines.contains(
+          startsAt.add(const Duration(minutes: 30)),
+        ),
+        description: 'the activity monitor to wait for its original end',
+      );
 
       await (db.update(db.activity)..where((row) => row.id.equals(1))).write(
         const ActivityCompanion(durationMinutes: Value(60)),
       );
       now = startsAt.add(const Duration(minutes: 30));
       harness.dispatchTick(now);
-      await _settle();
+      // Wait for the old deadline to be processed and the edited deadline to
+      // be registered before asserting that the activity remains open.
+      await waitForCondition(
+        () => harness.pendingDeadlines.contains(
+          startsAt.add(const Duration(minutes: 60)),
+        ),
+        description: 'the activity monitor to adopt the edited duration',
+      );
       expect((await db.activityDao.getActivityLogById(1)).endedAt, isNull);
 
       now = startsAt.add(const Duration(minutes: 60));
       harness.dispatchTick(now);
-      await _settle();
+      await waitForCondition(
+        () async =>
+            (await db.activityDao.getActivityLogById(1)).endedAt != null,
+        description: 'the activity to finish at its edited deadline',
+      );
       expect(
         (await db.activityDao.getActivityLogById(1)).endedAt,
         now.millisecondsSinceEpoch,
@@ -72,9 +89,3 @@ void main() {
 }
 
 late DateTime now;
-
-Future<void> _settle() async {
-  for (var i = 0; i < 10; i++) {
-    await Future<void>.delayed(Duration.zero);
-  }
-}
