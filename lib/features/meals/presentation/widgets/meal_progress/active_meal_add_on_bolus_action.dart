@@ -66,7 +66,9 @@ class ActiveMealAddOnBolusActionState
           meal == null ||
           progress == null ||
           !(mealStatusesStartingEating.contains(meal.status) ||
-              meal.status == 'eating-extra') ||
+              meal.status == 'eating-extra' ||
+              meal.status == 'waiting-for-bolus' ||
+              mealStatusReadyToSummarize(meal.status)) ||
           !progress.showCalculatorAction) {
         return;
       }
@@ -74,9 +76,12 @@ class ActiveMealAddOnBolusActionState
         context: context,
         ref: ref,
         mealId: widget.mealId,
+        mealName: meal.name,
         aapsCarbs: MealSummaryAapsCarbs(
           carbs: progress.requestedCarbs,
-          extendedCarbs: progress.requestedExtendedCarbs,
+          extendedCarbs: progress.extendedCarbsConfirmed
+              ? 0
+              : progress.requestedExtendedCarbs,
         ),
       );
     } catch (_) {

@@ -1,6 +1,11 @@
+import 'dart:async';
+
+import '../../../common/meal/calculator/calculator_request_command.dart';
+import '../../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
 import '../../../common/treatments/native_treatment_payloads.dart';
 import '../../../common/treatments/raw_treatment_batch_buffer.dart';
 import '../../../core/logger/logger.dart';
+import '../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
 import '../../task/base/runtime_context.dart';
 import 'app/app_event_handler.dart';
 import 'external_event.dart';
@@ -37,6 +42,27 @@ class ExternalEventHandler with Logging {
   Future<void> flushPendingTreatments() => _treatmentBuffer.flush();
 
   void handle(Map<String, dynamic> event) {
+    if (event['external_event'] == 'app_event' &&
+        (event['data'] as Map?)?['app_event'] ==
+            CalculatorRequestCommand.type) {
+      final command = Map<String, dynamic>.from(
+        (event['data'] as Map)['data'] as Map,
+      );
+      unawaited(
+        _runtimeContext.container
+            .read(mealCalculatorRequestControllerProvider)
+            .register(
+              AapsBolusSuggestionNotificationEvent.fromPayload(
+                Map<String, dynamic>.from(command['event'] as Map),
+              ),
+              sessionId: command['sessionId'] as String,
+              openedAt: DateTime.fromMillisecondsSinceEpoch(
+                command['openedAt'] as int,
+              ),
+            ),
+      );
+      return;
+    }
     final rawTreatments = nativeTreatmentPayloads(event);
     if (rawTreatments != null) {
       _treatmentBuffer.add(rawTreatments);

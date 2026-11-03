@@ -49,7 +49,13 @@ void main() {
           'at:${requestedAt.millisecondsSinceEpoch ~/ 1000 * 1000}',
         ],
       );
-      expect(acceptedThisSecond.showCalculatorAction, isFalse);
+      expect(acceptedThisSecond.showCalculatorAction, isTrue);
+      expect(
+        acceptedThisSecond
+            .copyWith(extendedCarbsConfirmed: true)
+            .showCalculatorAction,
+        isFalse,
+      );
       expect(acceptedThisSecond.requestedExtendedCarbs, 11);
     },
   );
@@ -126,7 +132,8 @@ void main() {
         await tester.pumpAndSettle();
         expect(progress.awaitingBolus, isFalse);
         expect(progress.requestedExtendedCarbs, originalECarbs);
-        expect(calculator, findsNothing);
+        expect(progress.extendedCarbsConfirmed, isFalse);
+        expect(calculator, findsOneWidget);
         expect(find.widgetWithText(OutlinedButton, 'Dokładka'), findsNothing);
         expect((await db.mealDao.getMealById(1))!.status, 'eating-extra');
 

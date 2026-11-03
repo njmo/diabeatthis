@@ -63,6 +63,9 @@ class MealAddOnBolusWaiter {
       }
       if (!context.awaitingBolus) return true;
       final request = context;
+      final pendingExtendedCarbs = request.extendedCarbsConfirmed
+          ? 0
+          : request.requestedExtendedCarbs;
       bool accepts(BolusWizard wizard) =>
           mealAddOnAcceptsWizard(request, wizard) &&
           !ignoredWizardKeys.contains(mealBolusWizardKey(wizard));
@@ -126,7 +129,7 @@ class MealAddOnBolusWaiter {
         }
       }
       var schedule = const ExtendedCarbsScheduleSettings.defaults();
-      if (request.requestedExtendedCarbs > 0) {
+      if (pendingExtendedCarbs > 0) {
         schedule = MealAdvisor(
           config: MealAdvisorConfig(
             extendedCarbsScheduleSettings: await runtime.container.read(
@@ -140,7 +143,7 @@ class MealAddOnBolusWaiter {
         notifications,
         mealId,
         carbs: request.requestedCarbs,
-        extendedCarbs: request.requestedExtendedCarbs,
+        extendedCarbs: pendingExtendedCarbs,
         extendedCarbsAreAdditional: true,
         extendedCarbsDeliveryMode: schedule.deliveryMode,
         extendedCarbsDelayMinutes: schedule.delayMinutes,
@@ -160,6 +163,9 @@ class MealAddOnBolusWaiter {
     MealAddOnBolusContext request,
   ) async {
     final mealId = mealContext.activeMeal!.id;
+    final pendingExtendedCarbs = request.extendedCarbsConfirmed
+        ? 0
+        : request.requestedExtendedCarbs;
     try {
       mealContext.throwIfStopped(runtime);
       final before = await readMealAddOnBolusContext(
@@ -178,11 +184,11 @@ class MealAddOnBolusWaiter {
         ),
       );
       mealContext.throwIfStopped(runtime);
-      if (request.requestedCarbs == 0 && request.requestedExtendedCarbs == 0) {
+      if (request.requestedCarbs == 0 && pendingExtendedCarbs == 0) {
         return;
       }
       var schedule = const ExtendedCarbsScheduleSettings.defaults();
-      if (request.requestedExtendedCarbs > 0) {
+      if (pendingExtendedCarbs > 0) {
         schedule = MealAdvisor(
           config: MealAdvisorConfig(
             extendedCarbsScheduleSettings: await runtime.container.read(
@@ -202,7 +208,7 @@ class MealAddOnBolusWaiter {
         AapsBolusSuggestionNotificationEvent(
           mealId: mealId,
           carbs: request.requestedCarbs,
-          extendedCarbs: request.requestedExtendedCarbs,
+          extendedCarbs: pendingExtendedCarbs,
           extendedCarbsAreAdditional: true,
           extendedCarbsDeliveryMode: schedule.deliveryMode,
           extendedCarbsDelayMinutes: schedule.delayMinutes,

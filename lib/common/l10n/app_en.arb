@@ -1,4 +1,13 @@
 {
+  "aapsSuggestionTitle": "Diabeatthis — suggestion",
+  "aapsSuggestionClose": "Close suggestion",
+  "aapsPipAdditionalExtendedCarbs": "Additional e-carbs",
+  "aapsPipCarbs": "Carbs",
+  "aapsPipExtendedCarbs": "E-carbs",
+  "aapsPipTime": "Time",
+  "aapsPipSchedule": "in {delay} for {duration}",
+  "aapsPipNoSchedule": "—",
+  "@aapsPipSchedule": {"placeholders": {"delay": {"type": "String"}, "duration": {"type": "String"}}},
   "@@locale": "en",
   "appTitle": "DiabeatThis",
   "notificationActionFinishActivity": "Finish workout",

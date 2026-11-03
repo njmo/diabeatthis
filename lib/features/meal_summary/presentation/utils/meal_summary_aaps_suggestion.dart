@@ -10,6 +10,7 @@ AapsBolusSuggestionNotificationEvent? buildMealSummaryAapsSuggestionEvent({
   required MealSummaryAapsCarbs aapsCarbs,
   required ExtendedCarbsScheduleSettings? extendedCarbsScheduleSettings,
   int? mealId,
+  String? mealName,
   bool extendedCarbsAreAdditional = false,
 }) {
   if (!shouldOpenAapsForMealSummaryAapsCarbs(aapsCarbs)) {
@@ -18,6 +19,7 @@ AapsBolusSuggestionNotificationEvent? buildMealSummaryAapsSuggestionEvent({
 
   return AapsBolusSuggestionNotificationEvent(
     mealId: mealId,
+    mealName: mealName,
     carbs: aapsCarbs.carbs,
     extendedCarbs: aapsCarbs.extendedCarbs,
     extendedCarbsAreAdditional: extendedCarbsAreAdditional,

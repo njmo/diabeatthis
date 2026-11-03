@@ -16,6 +16,7 @@ class MealAddOnBolusContext {
     required this.awaitingBolus,
     required this.bolusConfirmed,
     this.acceptedWizardKeys = const [],
+    this.extendedCarbsConfirmed = false,
   }) : bolusWindowStartedAt = bolusWindowStartedAt ?? requestedAt;
 
   final String originalStatus;
@@ -31,19 +32,13 @@ class MealAddOnBolusContext {
   final int requestedExtendedCarbs;
   final bool awaitingBolus;
   final bool bolusConfirmed;
+  final bool extendedCarbsConfirmed;
   final List<String> acceptedWizardKeys;
 
-  /// A completed calculator step leaves eating as the primary action. Retain
-  /// eCarbs instructions as data; a carb bolus does not confirm their delivery.
+  /// Bolus acceptance and extended-carbs confirmation are independent.
+  /// The foreground state owner projects the latter only from recorded evidence.
   bool get showCalculatorAction =>
-      awaitingBolus ||
-      (requestedExtendedCarbs > 0 &&
-          !acceptedWizardKeys.any((key) {
-            if (!key.startsWith('at:')) return false;
-            final at = int.tryParse(key.substring(3));
-            return at != null &&
-                at ~/ 1000 >= requestedAt.millisecondsSinceEpoch ~/ 1000;
-          }));
+      awaitingBolus || (requestedExtendedCarbs > 0 && !extendedCarbsConfirmed);
 
   static MealAddOnBolusContext? decode(String? value) {
     if (value == null) return null;
@@ -83,6 +78,7 @@ class MealAddOnBolusContext {
       requestedExtendedCarbs: requestedExtendedCarbs,
       awaitingBolus: json['awaitingBolus'] as bool,
       bolusConfirmed: json['bolusConfirmed'] as bool,
+      extendedCarbsConfirmed: json['extendedCarbsConfirmed'] as bool? ?? false,
       acceptedWizardKeys: (json['acceptedWizardKeys'] as List).cast<String>(),
     );
   }
@@ -100,6 +96,7 @@ class MealAddOnBolusContext {
     'requestedExtendedCarbs': requestedExtendedCarbs,
     'awaitingBolus': awaitingBolus,
     'bolusConfirmed': bolusConfirmed,
+    'extendedCarbsConfirmed': extendedCarbsConfirmed,
     'acceptedWizardKeys': acceptedWizardKeys,
   });
 
@@ -111,6 +108,7 @@ class MealAddOnBolusContext {
     int? requestedExtendedCarbs,
     bool? awaitingBolus,
     bool? bolusConfirmed,
+    bool? extendedCarbsConfirmed,
     List<String>? acceptedWizardKeys,
   }) => MealAddOnBolusContext(
     originalStatus: originalStatus,
@@ -125,6 +123,13 @@ class MealAddOnBolusContext {
         requestedExtendedCarbs ?? this.requestedExtendedCarbs,
     awaitingBolus: awaitingBolus ?? this.awaitingBolus,
     bolusConfirmed: bolusConfirmed ?? this.bolusConfirmed,
+    extendedCarbsConfirmed:
+        extendedCarbsConfirmed ??
+        ((requestedAt == null || requestedAt == this.requestedAt) &&
+                (requestedExtendedCarbs == null ||
+                    requestedExtendedCarbs == this.requestedExtendedCarbs)
+            ? this.extendedCarbsConfirmed
+            : false),
     acceptedWizardKeys: acceptedWizardKeys ?? this.acceptedWizardKeys,
   );
 }

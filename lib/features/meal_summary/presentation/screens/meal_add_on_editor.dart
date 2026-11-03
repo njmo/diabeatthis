@@ -149,6 +149,7 @@ class MealAddOnEditorState extends ConsumerState<MealAddOnEditor> {
         context: context,
         ref: ref,
         mealId: result.meal.id,
+        mealName: result.meal.name,
         aapsCarbs: result.aapsCarbs,
       );
     } catch (failure, stackTrace) {

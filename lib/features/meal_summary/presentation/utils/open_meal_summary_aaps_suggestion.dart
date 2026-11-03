@@ -11,6 +11,7 @@ Future<void> openMealAapsCarbsSuggestion({
   required BuildContext context,
   required WidgetRef ref,
   required int mealId,
+  String? mealName,
   required MealSummaryAapsCarbs aapsCarbs,
 }) async {
   final carbs = aapsCarbs;
@@ -28,6 +29,7 @@ Future<void> openMealAapsCarbsSuggestion({
     aapsCarbs: carbs,
     extendedCarbsScheduleSettings: schedule,
     mealId: mealId,
+    mealName: mealName,
     extendedCarbsAreAdditional: true,
   );
   if (event != null && context.mounted) {

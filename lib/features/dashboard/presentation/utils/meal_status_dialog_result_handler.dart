@@ -148,6 +148,7 @@ Future<AapsBolusSuggestionNotificationEvent?> _aapsSuggestionNotificationEvent(
   if (carbs == 0 && extendedCarbsGrams == 0) return null;
   return AapsBolusSuggestionNotificationEvent(
     mealId: meal.id,
+    mealName: meal.name,
     carbs: carbs,
     extendedCarbs: extendedCarbsGrams,
     extendedCarbsAreAdditional:

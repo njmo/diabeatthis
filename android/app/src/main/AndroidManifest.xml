@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-permission android:name="com.eveningoutpost.dexdrip.permissions.RECEIVE_BG_ESTIMATE"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <application
         android:label="diabeatthis"
         android:fullBackupContent="@xml/backup_rules"
@@ -29,6 +30,21 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity
+            android:name=".common.pip.SuggestionPipActivity"
+            android:exported="false"
+            android:supportsPictureInPicture="true"
+            android:taskAffinity="${applicationId}.suggestion_pip"
+            android:excludeFromRecents="true"
+            android:resizeableActivity="true"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
+        <activity
+            android:name=".common.pip.SuggestionOverlayPermissionActivity"
+            android:exported="false"
+            android:taskAffinity="${applicationId}.suggestion_overlay"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

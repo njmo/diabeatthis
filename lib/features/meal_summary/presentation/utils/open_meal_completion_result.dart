@@ -29,6 +29,7 @@ Future<void> openMealCompletionResult({
       context: context,
       ref: ref,
       mealId: result.meal.id,
+      mealName: result.meal.name,
       aapsCarbs: result.aapsCarbs!,
     );
   }

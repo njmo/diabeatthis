@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers/app_lifecycle_state_provider.dart';
 import '../../../common/events/data/task/task_data_synchronization_payload.dart';
+import '../../../common/meal/calculator/calculator_evidence_snapshot.dart';
+import '../../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
 import '../../../core/domain/model/bolus_wizard.dart';
 import '../../../core/domain/model/correction_bolus.dart';
 import '../../../core/domain/model/extended_carb.dart';
@@ -38,6 +41,19 @@ class TreatmentEventDispatcher with Logging {
         .record(treatment);
     for (final submission in changes) {
       emitEvent(CalculatorSubmissionChangedEvent(submission));
+    }
+    if (changes.isNotEmpty || treatment is ExtendedCarb || treatment is Treat) {
+      unawaited(
+        container
+            .read(mealCalculatorRequestControllerProvider)
+            .observe(
+              CalculatorEvidenceSnapshot(
+                container.read(calculatorSubmissionsProvider),
+                treatment is ExtendedCarb ? treatment : null,
+                carbCorrection: treatment is Treat ? treatment : null,
+              ).toJson(),
+            ),
+      );
     }
     // Invalidations still update the normalized submission, but are not new
     // treatment availability events and cannot advance a meal workflow.

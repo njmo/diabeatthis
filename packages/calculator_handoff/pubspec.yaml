@@ -1,0 +1,16 @@
+name: calculator_handoff
+description: Shared Android calculator window bridge for UI and foreground engines.
+version: 0.0.1
+publish_to: 'none'
+environment:
+  sdk: ^3.12.0
+  flutter: '>=3.47.0'
+dependencies:
+  flutter:
+    sdk: flutter
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: pl.diabeatthis.calculator_handoff
+        pluginClass: CalculatorHandoffPlugin

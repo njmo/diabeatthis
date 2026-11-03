@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/router/observers/riverpod_debug_observer.dart';
 import '../../common/events/data/task/task_state_synchronization_payload.dart';
 import '../../common/l10n/application_language.dart';
+import '../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
 import '../../core/logger/logger.dart';
 import '../collector/device_status_collector.dart';
 import '../collector/foreground_collector.dart';
@@ -55,6 +56,9 @@ class MyTaskHandler extends TaskHandler with Logging {
 
     final runtimeContext = _taskScheduler!.createContext(_container!);
     _externalEventHandler = ExternalEventHandler(runtimeContext);
+    unawaited(
+      _container!.read(mealCalculatorRequestControllerProvider).refresh(),
+    );
     _container!
         .read(taskEventRouterProvider)
         .send(const TaskStateSynchronizationPayload.alive(data: true));

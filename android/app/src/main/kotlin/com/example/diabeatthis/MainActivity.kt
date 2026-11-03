@@ -1,5 +1,7 @@
 package com.example.diabeatthis
 
+import com.example.diabeatthis.common.pip.SuggestionPipChannel
+import com.example.diabeatthis.common.pip.SuggestionOverlayChannel
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -7,6 +9,8 @@ import io.flutter.plugin.common.MethodChannel
 class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        SuggestionPipChannel(this, flutterEngine.dartExecutor.binaryMessenger)
+        SuggestionOverlayChannel(this, flutterEngine.dartExecutor.binaryMessenger)
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,

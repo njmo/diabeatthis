@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers/app_lifecycle_state_provider.dart';
 import '../../data_sources/nightscout/temporary_targets/temp_target_service.dart';
+import '../../logger/logger.dart';
 import '../base/notifications_controller.dart';
 import '../domain/events/temp_target_notification.dart';
 import '../domain/models/notification_event.dart';
@@ -14,8 +16,9 @@ class NotificationsControllerImpl implements NotificationsController {
   final Ref _ref;
   final NotificationsController _localController;
   final NotificationsController _inAppController;
+  final Future<void> Function(NotificationEvent)? onShown;
 
-  NotificationsControllerImpl(this._ref, this._inAppController)
+  NotificationsControllerImpl(this._ref, this._inAppController, {this.onShown})
     : _localController = LocalNotificationsController(
         _ref.read(localNotificationsPluginProvider),
       );
@@ -42,6 +45,21 @@ class NotificationsControllerImpl implements NotificationsController {
         await _inAppController.show(event);
       } else {
         await _localController.show(event);
+      }
+      if (onShown != null) {
+        unawaited(
+          Future<void>.sync(() => onShown!(event)).catchError((
+            Object error,
+            StackTrace stack,
+          ) {
+            Log.e(
+              'NotificationsController',
+              'Calculator state observer failed',
+              error: error,
+              stackTrace: stack,
+            );
+          }),
+        );
       }
       if (event is TempTargetNotificationEvent && event.requestId != null) {
         await _ref

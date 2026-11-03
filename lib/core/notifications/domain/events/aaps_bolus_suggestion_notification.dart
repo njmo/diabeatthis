@@ -9,6 +9,7 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   const AapsBolusSuggestionNotificationEvent({
     required this.carbs,
     this.mealId,
+    this.mealName,
     this.extendedCarbs = 0,
     this.extendedCarbsAreAdditional = false,
     this.extendedCarbsDeliveryMode,
@@ -18,6 +19,7 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
 
   final int carbs;
   final int? mealId;
+  final String? mealName;
   final int extendedCarbs;
   final bool extendedCarbsAreAdditional;
   // TODO: Use delivery mode when rendering e-carbs text once MealAdvisor
@@ -99,6 +101,7 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
   Map<String, Object?> toJson() => {
     'carbs': carbs,
     if (mealId != null) 'mealId': mealId,
+    if (mealName != null) 'mealName': mealName,
     'extendedCarbs': extendedCarbs,
     if (extendedCarbsAreAdditional) 'extendedCarbsAreAdditional': true,
     'extendedCarbsDeliveryMode': extendedCarbsDeliveryMode?.name,
@@ -112,6 +115,7 @@ class AapsBolusSuggestionNotificationEvent implements NotificationEvent {
     return AapsBolusSuggestionNotificationEvent(
       carbs: json['carbs'] as int,
       mealId: json['mealId'] as int?,
+      mealName: json['mealName'] as String?,
       extendedCarbs: json['extendedCarbs'] as int? ?? 0,
       extendedCarbsAreAdditional:
           json['extendedCarbsAreAdditional'] as bool? ?? false,
