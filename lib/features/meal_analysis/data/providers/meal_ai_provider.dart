@@ -3,22 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/llm/analysis_llm_provider.dart';
-import '../../../meals/common/models/meal_wizard_assignment.dart';
 import '../../../meals/data/domain/use_cases/analyze_meal_use_case.dart';
 import '../../../meals/data/domain/use_cases/load_meal_details_use_case.dart';
-import '../../../meals/data/mappers/meal_ai_facts_mapper.dart';
 import '../../../meals/data/providers/meal_wizard_link_repository_provider.dart';
-import '../../domain/models/meal_ai_context.dart';
-import '../../domain/models/meal_outcome_context.dart';
 import '../../domain/services/meal_ai_client.dart';
 import '../../domain/use_cases/accept_meal_ai_use_case.dart';
 import '../../domain/use_cases/analyze_meal_ai_use_case.dart';
 import '../../domain/use_cases/build_meal_ai_context_use_case.dart';
 import '../clients/llm_meal_ai_client.dart';
+import '../domain/use_cases/build_recorded_meal_context_use_case.dart';
 import '../prompts/meal_ai_prompt.dart';
 import '../repositories/meal_ai_repository.dart';
 import 'build_before_meal_context_use_case_provider.dart';
-import 'find_similar_meals_provider.dart';
 
 final mealAiClientProvider = Provider<MealAiClient>(
   (ref) => LlmMealAiClient(
@@ -46,58 +42,29 @@ final acceptMealAiUseCaseProvider = Provider(
   ),
 );
 
-final buildMealAiContextUseCaseProvider = Provider.autoDispose((ref) {
+final buildRecordedMealContextUseCaseProvider = Provider.autoDispose((ref) {
   final load = ref.watch(loadMealDetailsUseCaseProvider);
   final analyze = ref.watch(analyzeMealUseCaseProvider);
   final before = ref.watch(buildBeforeMealContextUseCaseProvider(false));
-  final similar = ref.watch(findSimilarMealsUseCaseProvider);
   final links = ref.watch(mealWizardLinkRepositoryProvider);
+  return BuildRecordedMealContextUseCase(
+    now: clock.now,
+    loadDetails: load.call,
+    loadAssignments: links.assignmentsForMeal,
+    loadBefore: (facts) =>
+        before(asOf: facts.eatenAt, mealId: facts.mealId, macros: facts.macros),
+    loadOutcome: (details, cutoff) async =>
+        (await analyze(details, asOf: cutoff))?.outcomeContext,
+  );
+});
+
+final buildMealAiContextUseCaseProvider = Provider.autoDispose((ref) {
+  final recorded = ref.watch(buildRecordedMealContextUseCaseProvider);
   return BuildMealAiContextUseCase(
     now: clock.now,
-    loadObservation: (mealId, cutoff) async {
-      // Both historical UI and AI use the existing analysis use case and history providers.
-      final details = await load(mealId);
-      List<MealWizardAssignment>? assignments;
-      try {
-        assignments = await links.assignmentsForMeal(mealId);
-      } catch (_) {
-        /* Missing links must remain unknown, never inferred from time proximity. */
-      }
-      final facts = const MealAiFactsMapper().map(
-        details,
-        cutoff: cutoff,
-        wizardAssignments: assignments,
-      );
-      if (facts.eatenAt.isAfter(cutoff ?? clock.now())) {
-        throw StateError('Future meal');
-      }
-      final precedingFuture = before(
-        asOf: facts.eatenAt,
-        mealId: mealId,
-        macros: facts.macros,
-      );
-      MealOutcomeContext? outcome;
-      try {
-        outcome = (await analyze(details, asOf: cutoff))?.outcomeContext;
-      } catch (_) {
-        /* Missing outcome is explicit in DML; pre-meal evidence remains usable. */
-      }
-      final preceding = await precedingFuture;
-      return MealAiObservation(
-        meal: facts,
-        before: preceding,
-        outcome: outcome,
-      );
-    },
-    loadSimilar: (current) async {
-      final facts = current.meal;
-      if (facts.macros == null) return null;
-      return similar(
-        mealId: facts.mealId,
-        asOf: facts.eatenAt,
-        target: facts.macros!,
-        composition: facts.composition,
-      );
-    },
+    loadObservation: recorded.call,
+    // Retrospective analysis concerns this meal only. Similar cases belong to
+    // the before-meal advisor, which uses the same recorded context builder.
+    loadSimilar: (_) async => null,
   );
 });

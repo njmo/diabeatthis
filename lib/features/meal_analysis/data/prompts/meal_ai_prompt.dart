@@ -2,7 +2,7 @@ import '../../../../common/analysis/dml_semantics.dart';
 import '../../domain/models/meal_ai_result.dart';
 import '../../domain/models/meal_dml_document.dart';
 
-const mealAiPromptVersion = 3;
+const mealAiPromptVersion = 4;
 String buildMealAiPrompt(MealDmlDocument document, String language) =>
     '''
 Analyze this historical meal for a person with type 1 diabetes or their parent.
@@ -20,6 +20,14 @@ Separate observations/hypotheses, alternatives and missing evidence. Never diagn
 insulin doses/percentages, bolus timing or treatment changes, repeat numbers/episodes or invent history.
 Overview: takeaway. Before: preconditions. Response: episode. Comparison: differences/limits.
 Empty summaries/findings are valid.
+Nutrition revisions compare historical ingredient data with current data at the SAME recorded quantity.
+Always analyze the historical outcome using recorded meal macros; do not replace them with current values.
+Higher nutrition confidence means higher reported estimate quality, not proven accuracy or a better glucose outcome.
+A revision basis of unknown must not be described as label verification, weighing or successful calibration.
+Quantity confidence is separate and does not increase when nutrition confidence increases.
+When comparing a planned meal with history, only apply a revision to matching ingredients and quantities;
+explicitly distinguish better documented nutrition from evidence of improved glucose outcomes.
+If historical data is unavailable, do not invent old values or infer a confidence improvement.
 
 Cite these section IDs or their exact dotted JSON object paths: ${document.evidenceIds.join(', ')}.
 Never invent/flatten paths or use array indices/wildcards; cite arrays as a whole (meal_cgm.blocks).

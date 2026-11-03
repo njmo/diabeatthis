@@ -11,6 +11,7 @@ import '../../models/meal_metric_view_data.dart';
 import 'meal_detail_components.dart';
 import 'meal_detail_formatters.dart';
 import 'meal_metric_components.dart';
+import 'meal_nutrition_revision_notice.dart';
 
 class MealNutritionAnalysisSection extends StatelessWidget {
   final MealDetailsData details;
@@ -37,27 +38,34 @@ class MealNutritionAnalysisSection extends StatelessWidget {
       netCarbsTotal: (nutrition?.totalNetCarbsG ?? 0).ceil(),
     );
 
-    return MealSectionTile(
-      collapsible: !inline,
-      title: context.lang.mealNutritionTitle,
-      initiallyExpanded: initiallyExpanded ?? !details.meal.isEaten,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (showSummary)
-          MealNutritionMacroSummary(
-            nutrition: nutrition,
-            hasAddOn: details.hasAddOn,
-            addOnNetCarbsG: details.addOnNetCarbsG,
-          ),
-        const SizedBox(height: 12),
-        for (final ingredient in details.ingredients)
-          MealIngredientTile(
-            ingredient: ingredient,
-            usePlannedConsumptionFallback: details.meal.status != 'interrupted',
-          ),
-        const SizedBox(height: 12),
-        NutrientSummaryChart(macros: macros),
-        const SizedBox(height: 8),
-        MealContributionBreakdown(details: details),
+        MealNutritionRevisionNotice(details: details),
+        MealSectionTile(
+          collapsible: !inline,
+          title: context.lang.mealNutritionTitle,
+          initiallyExpanded: initiallyExpanded ?? !details.meal.isEaten,
+          children: [
+            if (showSummary)
+              MealNutritionMacroSummary(
+                nutrition: nutrition,
+                hasAddOn: details.hasAddOn,
+                addOnNetCarbsG: details.addOnNetCarbsG,
+              ),
+            const SizedBox(height: 12),
+            for (final ingredient in details.ingredients)
+              MealIngredientTile(
+                ingredient: ingredient,
+                usePlannedConsumptionFallback:
+                    details.meal.status != 'interrupted',
+              ),
+            const SizedBox(height: 12),
+            NutrientSummaryChart(macros: macros),
+            const SizedBox(height: 8),
+            MealContributionBreakdown(details: details),
+          ],
+        ),
       ],
     );
   }

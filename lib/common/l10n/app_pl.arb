@@ -3487,5 +3487,28 @@
       }
     }
   },
-  "mealWindowCalculator": "Kalkulator bez potwierdzonego powiązania"
+  "mealWindowCalculator": "Kalkulator bez potwierdzonego powiązania",
+  "mealNutritionRefinedTitle": "Dane składników doprecyzowano — pewność wzrosła",
+  "mealNutritionUpdatedTitle": "Dane składników zostały zaktualizowane",
+  "mealNutritionRecordedUnchanged": "Zapisane makro posiłku pozostaje bez zmian.",
+  "mealNutritionHistoryMissing": "Brak pełnych danych historycznych do porównania.",
+  "mealNutritionRevisionValues": "Węglowodany netto dla zapisanej ilości: wtedy {before}, obecnie {after}. Pewność wartości odżywczych: {oldConfidence} → {newConfidence}.",
+  "mealNutritionConfidenceIncreased": "Zapisana pewność wartości odżywczych wzrosła.",
+  "mealNutritionRevisionCaution": "Wyższa pewność danych nie potwierdza lepszego przebiegu glikemii. Pewność ilości pozostaje oddzielna.",
+  "@mealNutritionRevisionValues": {
+    "placeholders": {
+      "before": {
+        "type": "String"
+      },
+      "after": {
+        "type": "String"
+      },
+      "oldConfidence": {
+        "type": "String"
+      },
+      "newConfidence": {
+        "type": "String"
+      }
+    }
+  }
 }

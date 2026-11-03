@@ -52,6 +52,15 @@ void appendMealObservationDml(
   final before = observed.before;
   final outcome = observed.outcome;
   add(prefix, _mealFacts(meal));
+  if (meal.nutritionRevisions.isNotEmpty) {
+    add('${prefix}_nutrition_revisions', {
+      'scope': 'later_ingredient_data_changes_not_changes_to_food_eaten',
+      'recorded_meal_macros_unchanged': true,
+      'items': [
+        for (final revision in meal.nutritionRevisions) revision.toJson(),
+      ],
+    });
+  }
   add(
     '${prefix}_record_evidence',
     mealRecordEvidenceDml(

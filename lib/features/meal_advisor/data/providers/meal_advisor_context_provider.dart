@@ -32,6 +32,6 @@ final buildMealAdvisorContextUseCaseProvider = Provider(
           composition: target.composition,
         ),
     loadHistorical: (id, cutoff) async =>
-        ref.read(buildMealAiContextUseCaseProvider).loadObservation(id, cutoff),
+        ref.read(buildRecordedMealContextUseCaseProvider)(id, cutoff),
   ),
 );

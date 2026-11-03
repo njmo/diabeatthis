@@ -2,6 +2,7 @@ import '../../../meal_analysis/domain/models/meal_ai_facts.dart';
 import '../../../meal_analysis/domain/models/meal_record_evidence.dart';
 import '../../common/models/meal_wizard_assignment.dart';
 import '../models/meal_details_data.dart';
+import 'meal_nutrition_revision_mapper.dart';
 import 'similar_meal_query_mapper.dart';
 
 class MealAiFactsMapper {
@@ -26,6 +27,7 @@ class MealAiFactsMapper {
     }
     final query = const SimilarMealQueryMapper().map(details);
     return MealAiFacts(
+      nutritionRevisions: const MealNutritionRevisionMapper().map(details),
       evidence: MealRecordEvidence(
         eatingTimeSource: details.recordedEatingStartedAt != null
             ? MealEatingTimeSource.recordedStage

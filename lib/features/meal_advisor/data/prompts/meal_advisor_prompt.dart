@@ -23,6 +23,12 @@ stress, eCarbs, recorded timing and data quality. Similarity alone cannot justif
 Use similar_meals search_status/matched_count/included_count to distinguish empty search from failure.
 Never calculate insulin units, dose percentages or recommend settings changes. This is a timing draft for review.
 Abstain when evidence is insufficient or contradictory.
+Historical nutrition_revisions describe later ingredient data changes at the recorded quantity.
+Use recorded macros for historical glucose outcomes. Current ingredient values are not a new historical outcome.
+Only relate revisions to the planned meal when ingredient identities match; compare quantities separately.
+Higher nutrition confidence can support better documented estimates, never a guaranteed better glucose outcome.
+Unknown change_basis is not evidence of label verification, weighing or successful calibration.
+Nutrition confidence changes do not improve quantity confidence. Missing historical values remain unknown.
 Return only one JSON object, exactly these keys:
 {"schema_version":1,"request_id":${jsonEncode(input.requestId)},"status":"suggestion|insufficient_data","action":null,"wait_minutes":null,"reason":"brief evidence-based explanation","evidence":[],"missing_data":[]}
 For suggestion: action must be one of ${policy.allowedActions.map((a) => a.name).join(', ')}.

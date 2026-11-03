@@ -173,10 +173,16 @@ void main() {
   test(
     'legacy meal observation uses nutrition at consumption, not current nutrition',
     () async {
+      final createdAt = recordedAt
+          .subtract(const Duration(hours: 2))
+          .millisecondsSinceEpoch;
+      await (db.update(db.ingredient)..where((t) => t.id.equals(ingredient.id)))
+          .write(IngredientCompanion(createdAt: Value(createdAt)));
+      ingredient = ingredient.copyWith(createdAt: createdAt);
       final row = await entry(portion: portionId);
       for (final version in [
-        (at: recordedAt.subtract(const Duration(hours: 1)), fat: 20.0),
-        (at: recordedAt.add(const Duration(hours: 1)), fat: 0.0),
+        (at: recordedAt.subtract(const Duration(hours: 1)), fat: 0.0),
+        (at: recordedAt.add(const Duration(hours: 1)), fat: 20.0),
       ]) {
         await db
             .into(db.ingredientStatusHistory)

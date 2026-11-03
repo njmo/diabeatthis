@@ -1,0 +1,91 @@
+import 'package:diabeatthis/core/domain/model/carbs_label_mode.dart';
+import 'package:diabeatthis/features/meals/data/models/meal_details_data.dart';
+
+MealDetailsData nutritionRevisionMeal({
+  String status = 'eaten',
+  bool changed = true,
+  bool unavailable = false,
+  double currentCarbs = 24,
+}) {
+  final time = DateTime(2026, 9, 1, 12);
+  IngredientNutritionData nutrition(double carbs, double confidence) =>
+      IngredientNutritionData(
+        carbsPer100g: carbs,
+        fatPer100g: 0,
+        fiberPer100g: 0,
+        proteinPer100g: 0,
+        carbsLabelMode: CarbsLabelMode.eu,
+        nutritionConfidence: confidence,
+        effectiveAt: null,
+      );
+  return MealDetailsData(
+    meal: MealRecordData(
+      id: 1,
+      name: 'Rice',
+      status: status,
+      plannedAt: time,
+      summarizedAt: time,
+      mealTemplateId: null,
+      basedOnMealId: null,
+      notes: null,
+      createdAt: time,
+      updatedAt: time,
+      isSynced: false,
+    ),
+    advisorDecision: null,
+    plannedSnapshot: MealSnapshotDetailsData(
+      id: 1,
+      mealId: 1,
+      snapshotType: 'planned',
+      totalGrams: 200,
+      totalCarbsG: 40,
+      totalFiberG: 0,
+      totalNetCarbsG: 40,
+      totalFatG: 0,
+      totalProteinG: 0,
+      totalCaloriesKcal: 160,
+      ingredientsCount: 1,
+      avgQuantityConfidence: .8,
+      minQuantityConfidence: .8,
+      carbWeightedQuantityConfidence: .8,
+      wbtWeightedQuantityConfidence: null,
+      carbWeightedNutritionConfidence: .4,
+      wbtWeightedNutritionConfidence: null,
+      carbWeightedEffectiveConfidence: .32,
+      wbtWeightedEffectiveConfidence: null,
+      createdAt: time,
+      updatedAt: time,
+      isSynced: false,
+    ),
+    consumedSnapshot: null,
+    statusHistory: const [],
+    ingredients: [
+      MealIngredientDetailsData(
+        mealIngredientId: 1,
+        ingredientId: 2,
+        ingredientName: 'Rice',
+        entryType: 'planned',
+        portionLabel: 'g',
+        plannedAmount: 200,
+        consumedAmount: 200,
+        quantityConfidence: .8,
+        consumedConfidence: .8,
+        plannedTotalGrams: 200,
+        consumedTotalGrams: 200,
+        prepMethod: null,
+        notes: null,
+        createdAt: time,
+        updatedAt: time,
+        currentNutrition: nutrition(
+          changed ? currentCarbs : 20,
+          changed ? .9 : .4,
+        ),
+        plannedNutrition: nutrition(20, .4),
+        consumedNutrition: nutrition(20, .4),
+        plannedNutritionDiffersFromCurrent: changed,
+        consumedNutritionDiffersFromCurrent: changed,
+        historicalNutritionUnavailable: unavailable,
+      ),
+    ],
+  );
+}

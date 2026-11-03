@@ -1,8 +1,10 @@
+import '../../../../common/nutrition/nutrition_revision_comparison.dart';
 import '../../../../core/domain/model/meal_macro_summary.dart';
 import 'meal_composition.dart';
 import 'meal_record_evidence.dart';
 
 class MealAiFacts {
+  final List<NutritionRevisionComparison> nutritionRevisions;
   final int mealId;
   final String name;
   final DateTime eatenAt;
@@ -16,6 +18,7 @@ class MealAiFacts {
   final List<({String name, double grams})> ingredients;
   final List<({String status, DateTime at})> stages;
   MealAiFacts({
+    this.nutritionRevisions = const [],
     required this.mealId,
     required this.name,
     required this.eatenAt,

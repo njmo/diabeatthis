@@ -3030,5 +3030,28 @@
       }
     }
   },
-  "mealWindowCalculator": "Calculator without a confirmed link"
+  "mealWindowCalculator": "Calculator without a confirmed link",
+  "mealNutritionRefinedTitle": "Ingredient data refined — confidence increased",
+  "mealNutritionUpdatedTitle": "Ingredient data has been updated",
+  "mealNutritionRecordedUnchanged": "Recorded meal macros remain unchanged.",
+  "mealNutritionHistoryMissing": "Historical data is incomplete; a comparison is unavailable.",
+  "mealNutritionRevisionValues": "Net carbs for the recorded quantity: then {before}, now {after}. Nutrition confidence: {oldConfidence} → {newConfidence}.",
+  "mealNutritionConfidenceIncreased": "Recorded nutrition confidence has increased.",
+  "mealNutritionRevisionCaution": "Higher data confidence does not establish a better glucose outcome. Quantity confidence remains separate.",
+  "@mealNutritionRevisionValues": {
+    "placeholders": {
+      "before": {
+        "type": "String"
+      },
+      "after": {
+        "type": "String"
+      },
+      "oldConfidence": {
+        "type": "String"
+      },
+      "newConfidence": {
+        "type": "String"
+      }
+    }
+  }
 }

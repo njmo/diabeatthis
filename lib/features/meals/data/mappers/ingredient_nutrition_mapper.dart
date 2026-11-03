@@ -14,14 +14,22 @@ class IngredientNutritionMapper {
     required List<IngredientStatusHistoryData> history,
     required DateTime reference,
   }) {
+    if (reference.isBefore(date(ingredient.createdAt))) {
+      return (nutrition: current(ingredient), historicalUnavailable: true);
+    }
+    // History contains the state BEFORE each edit. The first later edit
+    // therefore holds the values that applied at the requested instant.
     final sorted = history.toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      ..sort((a, b) {
+        final time = a.createdAt.compareTo(b.createdAt);
+        return time != 0 ? time : a.id.compareTo(b.id);
+      });
     IngredientStatusHistoryData? selected;
     for (final entry in sorted) {
       if (date(entry.createdAt).isAfter(reference)) {
+        selected = entry;
         break;
       }
-      selected = entry;
     }
 
     if (selected != null) {
@@ -35,22 +43,15 @@ class IngredientNutritionMapper {
             ingredient.carbsLabelMode,
           ),
           nutritionConfidence: selected.nutritionConfidence,
-          effectiveAt: date(selected.createdAt),
+          effectiveAt:
+              null, // The edit timestamp ends this state; it does not start it.
         ),
         historicalUnavailable: false,
       );
     }
 
     final currentNutrition = current(ingredient);
-    final changedAfterReference = history.any(
-      (entry) => date(entry.createdAt).isAfter(reference),
-    );
-    return (
-      nutrition: currentNutrition,
-      historicalUnavailable:
-          changedAfterReference &&
-          date(ingredient.updatedAt).isAfter(reference),
-    );
+    return (nutrition: currentNutrition, historicalUnavailable: false);
   }
 
   IngredientNutritionData current(IngredientData ingredient) {
