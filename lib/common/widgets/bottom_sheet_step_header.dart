@@ -5,6 +5,7 @@ class BottomSheetStepHeader extends StatelessWidget {
   final VoidCallback? onBack;
   final List<Widget> actions;
   final int? titleMaxLines;
+  final TextStyle? titleStyle;
 
   const BottomSheetStepHeader({
     super.key,
@@ -12,6 +13,7 @@ class BottomSheetStepHeader extends StatelessWidget {
     this.onBack,
     this.actions = const [],
     this.titleMaxLines,
+    this.titleStyle,
   });
 
   @override
@@ -25,7 +27,7 @@ class BottomSheetStepHeader extends StatelessWidget {
             title,
             maxLines: titleMaxLines,
             overflow: titleMaxLines == null ? null : TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleMedium,
+            style: titleStyle ?? Theme.of(context).textTheme.titleMedium,
           ),
         ),
         ...actions,

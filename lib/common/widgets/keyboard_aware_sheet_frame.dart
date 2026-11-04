@@ -5,6 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 
 import 'sheet_content_height_request.dart';
 import 'sheet_height_request.dart';
+import 'sheet_surface.dart';
 
 /// Keeps a scaffold's footer above the keyboard inside a bounded modal sheet.
 class KeyboardAwareSheetFrame extends HookWidget {
@@ -68,7 +69,7 @@ class KeyboardAwareSheetFrame extends HookWidget {
                 child: MediaQuery.removeViewInsets(
                   context: context,
                   removeBottom: true,
-                  child: child,
+                  child: SheetSurface(child: child),
                 ),
               ),
             );

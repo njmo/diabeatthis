@@ -7,15 +7,17 @@ class InformationButton extends StatelessWidget {
     super.key,
     required this.title,
     required this.message,
+    this.icon = Icons.info_outline,
   });
 
   final String title;
   final String message;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) => IconButton(
     tooltip: context.lang.commonInformationTooltip,
-    icon: const Icon(Icons.info_outline),
+    icon: Icon(icon),
     onPressed: () => showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(

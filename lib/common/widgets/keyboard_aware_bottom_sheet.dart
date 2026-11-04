@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'sheet_surface.dart';
+
 class KeyboardAwareBottomSheet extends StatelessWidget {
   const KeyboardAwareBottomSheet({
     super.key,
@@ -31,22 +33,24 @@ class KeyboardAwareBottomSheet extends StatelessWidget {
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
       padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
-      child: SafeArea(
-        top: true,
-        child: Padding(
-          padding: padding,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxHeight),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                header,
-                const SizedBox(height: 8),
-                Flexible(child: SingleChildScrollView(child: body)),
-                const SizedBox(height: 12),
-                actions,
-              ],
+      child: SheetSurface(
+        child: SafeArea(
+          top: true,
+          child: Padding(
+            padding: padding,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxHeight),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  header,
+                  const SizedBox(height: 8),
+                  Flexible(child: SingleChildScrollView(child: body)),
+                  const SizedBox(height: 12),
+                  actions,
+                ],
+              ),
             ),
           ),
         ),

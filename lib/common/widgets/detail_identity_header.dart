@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/application_accent_colors.dart';
-import 'detail_date_accent_painter.dart';
+import 'detail_metadata_row.dart';
 
 /// Shared identity layout for meal, ingredient, activity and history previews.
 class DetailIdentityHeader extends StatelessWidget {
@@ -11,18 +11,30 @@ class DetailIdentityHeader extends StatelessWidget {
     required this.status,
     required this.dateLabel,
     this.statusColor,
+    this.dateIcon,
+    this.titleAction,
     this.child,
   });
   final String title;
   final String status;
   final String dateLabel;
   final Color? statusColor;
+  final IconData? dateIcon;
+  final Widget? titleAction;
   final Widget? child;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final accent = ApplicationAccentColors.warm(theme.brightness);
+    final titleText = Text(
+      title,
+      style: theme.textTheme.headlineSmall?.copyWith(
+        fontWeight: FontWeight.w700,
+        height: 1.25,
+        letterSpacing: -.4,
+      ),
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 12),
       child: Column(
@@ -52,34 +64,18 @@ class DetailIdentityHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Text(
-            title,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              height: 1.25,
-              letterSpacing: -.4,
+          if (titleAction == null)
+            titleText
+          else
+            Row(
+              children: [
+                Expanded(child: titleText),
+                const SizedBox(width: 12),
+                titleAction!,
+              ],
             ),
-          ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              ExcludeSemantics(
-                child: CustomPaint(
-                  size: const Size(28, 14),
-                  painter: DetailDateAccentPainter(accent),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  dateLabel,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          DetailMetadataRow(label: dateLabel, icon: dateIcon),
           if (child != null) ...[const SizedBox(height: 8), child!],
         ],
       ),

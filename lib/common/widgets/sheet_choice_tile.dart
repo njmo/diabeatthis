@@ -5,14 +5,14 @@ class SheetChoiceTile extends StatelessWidget {
     super.key,
     required this.icon,
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     required this.onTap,
     this.selected = false,
   });
 
   final IconData icon;
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final VoidCallback? onTap;
   final bool selected;
 
@@ -31,7 +31,7 @@ class SheetChoiceTile extends StatelessWidget {
           child: Icon(icon),
         ),
         title: Text(title),
-        subtitle: Text(subtitle),
+        subtitle: subtitle == null ? null : Text(subtitle!),
         selected: selected,
         trailing: Icon(selected ? Icons.check_circle : Icons.chevron_right),
         onTap: onTap,

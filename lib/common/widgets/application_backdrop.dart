@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/application_accent_colors.dart';
+import 'application_corner_accent.dart';
 
 /// One backdrop behind the navigator; opaque functional screens can opt out.
 class ApplicationBackdrop extends StatelessWidget {
@@ -20,22 +20,7 @@ class ApplicationBackdrop extends StatelessWidget {
             right: -100,
             width: 440,
             height: 380,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    colors: [
-                      ApplicationAccentColors.glow(theme.brightness).withValues(
-                        alpha: theme.brightness == Brightness.dark ? .28 : .55,
-                      ),
-                      ApplicationAccentColors.glow(
-                        theme.brightness,
-                      ).withValues(alpha: 0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            child: const ApplicationCornerAccent(),
           ),
           child,
         ],
