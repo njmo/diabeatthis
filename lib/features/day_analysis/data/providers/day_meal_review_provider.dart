@@ -6,7 +6,6 @@ import '../../../meals/data/providers/meal_wizard_link_repository_provider.dart'
 import '../../domain/models/day_meal_review_entry.dart';
 import '../../domain/models/day_recorded_meal.dart';
 import '../../domain/use_cases/build_day_meal_review_use_case.dart';
-import '../../domain/use_cases/reconcile_day_meal_review_use_case.dart';
 import '../repositories/day_local_history_repository.dart';
 import 'day_context_provider.dart';
 
@@ -32,20 +31,7 @@ final dayMealReviewProvider = FutureProvider.autoDispose
             local.loadRecordedMeals(start, end, includeIds: ids),
         now: clock.now,
       );
-      return ReconcileDayMealReviewUseCase(
-        build: build.call,
-        linkAutomatically: (wizard, mealId) => links.link(
-          mealId: mealId,
-          localWizardId: wizard.localId,
-          remoteWizardId: wizard.remoteSource == null
-              ? null
-              : wizard.nightscoutObjectId,
-          remoteSource: wizard.nightscoutObjectId == null
-              ? null
-              : wizard.remoteSource,
-          automatic: true,
-        ),
-      )(date);
+      return build(date);
     });
 
 final dayMealCandidatesProvider = FutureProvider.autoDispose
