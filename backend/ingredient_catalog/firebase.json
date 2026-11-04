@@ -1,0 +1,7 @@
+{
+  "functions": [{
+    "source": ".",
+    "codebase": "ingredient-catalog",
+    "ignore": ["node_modules", ".git", "*.log", "test", "firebase.json"]
+  }]
+}
