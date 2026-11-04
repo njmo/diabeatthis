@@ -3889,6 +3889,17 @@
       }
     }
   },
+  "mealCompositionAddIngredient": "Dodaj składnik",
+  "mealCompositionUsePrevious": "Użyj wcześniejszego posiłku",
+  "mealCompositionCopy": "Skopiuj z posiłku",
+  "mealCopyReplaceTitle": "Zastąpić składniki?",
+  "mealCopyReplaceMessage": "Składniki wybranego posiłku zastąpią obecną listę.",
+  "mealCopyReplaceAction": "Zastąp składniki",
   "activityIntensityNotRecorded": "Nie podano",
-  "activityHistoryShort": "Historia"
+  "copiedMealViewStatistics": "Zobacz statystyki",
+  "copiedMealIngredientCount": "{count, plural, one{1 składnik} few{{count} składniki} other{{count} składników}}",
+  "@copiedMealIngredientCount": {"placeholders": {"count": {"type": "int"}}},
+  "activityHistoryShort": "Historia",
+  "mealCompositionTitle": "Skład posiłku",
+  "copiedMealMissingConversion": "W tym starszym posiłku nie zapisano gramatury porcji. Potwierdź ją, aby wczytać i skopiować składniki."
 }

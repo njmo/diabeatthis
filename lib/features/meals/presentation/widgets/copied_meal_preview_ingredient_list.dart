@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import '../../../../common/l10n/language.dart';
 import '../../data/drafts/meal_draft.dart';
 import 'copied_meal_ingredient_row.dart';
+import 'copied_meal_preview_totals.dart';
 
 class CopiedMealPreviewIngredientList extends HookWidget {
   const CopiedMealPreviewIngredientList({super.key, required this.items});
@@ -12,7 +13,7 @@ class CopiedMealPreviewIngredientList extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rowHeight = 96.0 * MediaQuery.textScalerOf(context).scale(14) / 14;
+    final rowHeight = 72.0 * MediaQuery.textScalerOf(context).scale(14) / 14;
     final controller = useScrollController();
     final theme = Theme.of(context);
     return Column(
@@ -23,36 +24,50 @@ class CopiedMealPreviewIngredientList extends HookWidget {
           child: Container(
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerLow,
+              color: theme.colorScheme.surfaceContainerLowest,
               borderRadius: BorderRadius.circular(20),
             ),
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: rowHeight * 3),
-              child: Scrollbar(
-                controller: controller,
-                thumbVisibility: true,
-                radius: const Radius.circular(4),
-                child: ListView.builder(
-                  controller: controller,
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  itemExtent: rowHeight,
-                  itemCount: items.length,
-                  itemBuilder: (_, index) => Column(
-                    children: [
-                      Expanded(
-                        child: CopiedMealIngredientRow(item: items[index]),
-                      ),
-                      if (index < items.length - 1)
-                        Divider(
-                          height: 1,
-                          color: theme.colorScheme.outlineVariant.withValues(
-                            alpha: 0.3,
-                          ),
+              constraints: BoxConstraints(
+                maxHeight:
+                    rowHeight * 3 +
+                    56 * MediaQuery.textScalerOf(context).scale(14) / 14,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Scrollbar(
+                      controller: controller,
+                      thumbVisibility: true,
+                      radius: const Radius.circular(4),
+                      child: ListView.builder(
+                        controller: controller,
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        itemExtent: rowHeight,
+                        itemCount: items.length,
+                        itemBuilder: (_, index) => Column(
+                          children: [
+                            Expanded(
+                              child: CopiedMealIngredientRow(
+                                item: items[index],
+                              ),
+                            ),
+                            if (index < items.length - 1)
+                              Divider(
+                                height: 1,
+                                color: theme.colorScheme.outlineVariant
+                                    .withValues(alpha: 0.3),
+                              ),
+                          ],
                         ),
-                    ],
+                      ),
+                    ),
                   ),
-                ),
+                  const Divider(height: 1),
+                  CopiedMealPreviewTotals(items: items),
+                ],
               ),
             ),
           ),

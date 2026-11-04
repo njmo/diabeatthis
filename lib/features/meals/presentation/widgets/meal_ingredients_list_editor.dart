@@ -3,9 +3,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
-import '../../data/providers/meal_draft_provider.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
-import 'add_meal_ingredient.dart';
+import 'add_ingredient_to_meal_draft.dart';
 import 'meal_ingredients_empty_state.dart';
 import 'meal_ingredients_list.dart';
 
@@ -42,7 +41,7 @@ class MealIngredientsListEditor extends ConsumerWidget {
               ),
               IconButton.filled(
                 tooltip: context.lang.mealAddFirstIngredient,
-                onPressed: () => _addIngredient(context, ref),
+                onPressed: () => addIngredientToMealDraft(context, ref),
                 icon: const Icon(Icons.add),
               ),
             ],
@@ -78,7 +77,7 @@ class MealIngredientsListEditor extends ConsumerWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: FilledButton.icon(
-              onPressed: () => _addIngredient(context, ref),
+              onPressed: () => addIngredientToMealDraft(context, ref),
               icon: const Icon(Icons.add),
               label: Text(context.lang.mealAddNextIngredient),
             ),
@@ -87,27 +86,10 @@ class MealIngredientsListEditor extends ConsumerWidget {
         const SizedBox(height: 12),
         ingredientDrafts.isEmpty
             ? MealIngredientsEmptyState(
-                onAdd: () => _addIngredient(context, ref),
+                onAdd: () => addIngredientToMealDraft(context, ref),
               )
             : const MealIngredientsList(),
       ],
     );
-  }
-
-  Future<void> _addIngredient(BuildContext context, WidgetRef ref) async {
-    final mealIngredient = await showAddMealIngredientSheet(
-      context: context,
-      ref: ref,
-    );
-    if (mealIngredient != null) {
-      final added = ref
-          .read(mealDraftProvider.notifier)
-          .addMealIngredient(mealIngredient);
-      if (!added && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.lang.mealIngredientAlreadyOnList)),
-        );
-      }
-    }
   }
 }

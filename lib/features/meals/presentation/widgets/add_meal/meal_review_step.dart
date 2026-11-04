@@ -7,6 +7,7 @@ import '../../../../../common/widgets/review_section_header.dart';
 import '../../../data/model/copied_meal_type.dart';
 import '../../../data/models/retrospective_meal_timing.dart';
 import '../../../data/providers/meal_draft_provider.dart';
+import '../copied_meal_source_card.dart';
 import '../meal_ingredient_preview_tile.dart';
 import 'meal_review_name.dart';
 import 'meal_review_nutrition.dart';
@@ -64,7 +65,7 @@ class MealReviewStep extends ConsumerWidget {
           onChange: onChangeComposition,
         ),
         if (source != null) ...[
-          Text(context.lang.mealFlowCopiedSource(source!.name)),
+          CopiedMealSourceCard(source: source!),
           const SizedBox(height: 8),
         ],
         for (final ingredient in draft.mealIngredients)

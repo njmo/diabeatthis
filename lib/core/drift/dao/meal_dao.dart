@@ -653,9 +653,14 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.getSingleOrNull();
   }
 
-  Future<List<MealData>> searchRecentMeals() {
+  Future<List<MealData>> searchRecentMeals({bool onlySummarized = false}) {
     final query = select(db.meal)
       ..where((tbl) => tbl.purpose.equals('meal'))
+      ..where(
+        (tbl) => onlySummarized
+            ? tbl.status.equals('summarized')
+            : const Constant(true),
+      )
       ..orderBy([
         (m) => OrderingTerm(expression: m.updatedAt, mode: OrderingMode.desc),
       ])
@@ -664,10 +669,18 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return query.get();
   }
 
-  Future<List<MealData>> searchMealsByName(String queryString) {
+  Future<List<MealData>> searchMealsByName(
+    String queryString, {
+    bool onlySummarized = false,
+  }) {
     final normalizedQuery = queryString.trim();
     final query = select(db.meal)
       ..where((tbl) => tbl.purpose.equals('meal'))
+      ..where(
+        (tbl) => onlySummarized
+            ? tbl.status.equals('summarized')
+            : const Constant(true),
+      )
       ..where((tbl) => tbl.name.like('%$normalizedQuery%'))
       ..orderBy([
         (m) => OrderingTerm(expression: m.updatedAt, mode: OrderingMode.desc),
@@ -678,6 +691,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   }
 
   Future<List<MealData>> searchMealsByIngredientIds({
+    bool onlySummarized = false,
     required List<int> ingredientIds,
   }) {
     final distinctIngredientIds = ingredientIds.toSet().toList(growable: false);
@@ -692,6 +706,11 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
             ),
           ])
           ..where(db.meal.purpose.equals('meal'))
+          ..where(
+            onlySummarized
+                ? db.meal.status.equals('summarized')
+                : const Constant(true),
+          )
           ..where(db.mealIngredients.ingredientId.isIn(distinctIngredientIds))
           ..groupBy([db.meal.id])
           ..orderBy([
@@ -710,6 +729,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   }
 
   Future<List<MealData>> searchMealsByNameAndIngredientIds({
+    bool onlySummarized = false,
     required String queryString,
     required List<int> ingredientIds,
   }) {
@@ -726,6 +746,11 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
             ),
           ])
           ..where(db.meal.purpose.equals('meal'))
+          ..where(
+            onlySummarized
+                ? db.meal.status.equals('summarized')
+                : const Constant(true),
+          )
           ..where(db.meal.name.like('%$normalizedQuery%'))
           ..where(db.mealIngredients.ingredientId.isIn(distinctIngredientIds))
           ..groupBy([db.meal.id])

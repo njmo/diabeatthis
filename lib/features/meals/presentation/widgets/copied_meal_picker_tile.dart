@@ -8,12 +8,10 @@ class CopiedMealPickerTile extends StatelessWidget {
     super.key,
     required this.copiedMeal,
     required this.onPreview,
-    required this.onUse,
   });
 
   final CopiedMealType copiedMeal;
   final VoidCallback onPreview;
-  final VoidCallback onUse;
 
   @override
   Widget build(BuildContext context) {
@@ -21,12 +19,12 @@ class CopiedMealPickerTile extends StatelessWidget {
     final isTemplate = copiedMeal is CopiedMealFromTemplate;
     return Card.filled(
       margin: const EdgeInsets.only(bottom: 12),
-      color: theme.colorScheme.surfaceContainerLow,
+      color: theme.colorScheme.surfaceContainerLowest,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onPreview,
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(12),
           child: Row(
             children: [
               CircleAvatar(
@@ -58,21 +56,14 @@ class CopiedMealPickerTile extends StatelessWidget {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.lang.copiedMealPreview,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton.filledTonal(
-                onPressed: onUse,
-                tooltip: context.lang.copiedMealUseIngredients,
-                icon: const Icon(Icons.content_copy_rounded, size: 20),
+              IconButton(
+                onPressed: onPreview,
+                tooltip: context.lang.copiedMealPreview,
+                icon: const Icon(Icons.chevron_right),
               ),
             ],
           ),

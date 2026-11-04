@@ -25,13 +25,16 @@ Future<List<CopiedMealType>> copiedFromMealByQuery(
   final db = ref.watch(databaseProvider);
   final filter = ref.watch(copiedMealFilterProvider(query));
   final meals = await filter.map(
-    recent: (_) => db.mealDao.searchRecentMeals(),
-    byQuery: (filter) => db.mealDao.searchMealsByName(filter.query),
+    recent: (_) => db.mealDao.searchRecentMeals(onlySummarized: true),
+    byQuery: (filter) =>
+        db.mealDao.searchMealsByName(filter.query, onlySummarized: true),
     byIngredients: (filter) => db.mealDao.searchMealsByIngredientIds(
+      onlySummarized: true,
       ingredientIds: filter.ingredientIds,
     ),
     byQueryAndIngredients: (filter) =>
         db.mealDao.searchMealsByNameAndIngredientIds(
+          onlySummarized: true,
           queryString: filter.query,
           ingredientIds: filter.ingredientIds,
         ),

@@ -10,7 +10,9 @@ import 'add_meal_ingredient.dart';
 import 'meal_ingredient_preview_tile.dart';
 
 class MealIngredientsList extends ConsumerWidget {
-  const MealIngredientsList({super.key});
+  const MealIngredientsList({super.key, this.compact = false});
+
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,6 +28,7 @@ class MealIngredientsList extends ConsumerWidget {
         for (final draft in mealIngredientDrafts)
           MealIngredientPreviewTile(
             draft: draft,
+            compact: compact,
             onRemove: () => mealDraft.removeMealIngredient(draft),
             onEdit: () => _editIngredient(context, ref, draft),
           ),

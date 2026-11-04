@@ -27,7 +27,7 @@ void main() {
     copiedFromMealId: null,
   );
 
-  testWidgets('starts with meal history and keeps saved templates separately', (
+  testWidgets('shows meal history without a saved templates action', (
     tester,
   ) async {
     final container = ProviderContainer(
@@ -56,10 +56,8 @@ void main() {
       tester.widget<TextField>(find.byType(TextField)).controller!.text,
       'Obiad',
     );
-    await tester.tap(find.text('Zapisane szablony'));
-    await tester.pumpAndSettle();
-    expect(find.text(template.name), findsOneWidget);
-    expect(find.text(meal.name), findsNothing);
+    expect(find.text('Historia posiłków'), findsOneWidget);
+    expect(find.text('Zapisane szablony'), findsNothing);
   });
 
   testWidgets('returns from preview to the same query and scroll position', (

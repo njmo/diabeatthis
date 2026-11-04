@@ -15,11 +15,13 @@ class MealIngredientPreviewTile extends ConsumerWidget {
     required this.draft,
     this.onRemove,
     this.onEdit,
+    this.compact = false,
   });
 
   final MealIngredientsDraft draft;
   final VoidCallback? onRemove;
   final VoidCallback? onEdit;
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,12 +43,17 @@ class MealIngredientPreviewTile extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          border: Border.all(color: colorScheme.outlineVariant),
-          borderRadius: BorderRadius.circular(8),
+          color: compact ? colorScheme.surfaceContainerLowest : null,
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(
+              alpha: compact ? .25 : 1,
+            ),
+          ),
+          borderRadius: BorderRadius.circular(compact ? 20 : 8),
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.only(left: 12, right: 4),
-          leading: IngredientIcon(assetPath: iconPath),
+          leading: compact ? null : IngredientIcon(assetPath: iconPath),
           title: IngredientIdentityText(
             name: draft.ingredient.name,
             brand: draft.ingredient.brand,

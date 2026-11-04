@@ -3432,6 +3432,17 @@
       }
     }
   },
+  "mealCompositionAddIngredient": "Add ingredient",
+  "mealCompositionUsePrevious": "Use a previous meal",
+  "mealCompositionCopy": "Copy from a meal",
+  "mealCopyReplaceTitle": "Replace ingredients?",
+  "mealCopyReplaceMessage": "The selected meal’s ingredients will replace the current list.",
+  "mealCopyReplaceAction": "Replace ingredients",
   "activityIntensityNotRecorded": "Not recorded",
-  "activityHistoryShort": "History"
+  "copiedMealViewStatistics": "View statistics",
+  "copiedMealIngredientCount": "{count, plural, one{1 ingredient} other{{count} ingredients}}",
+  "@copiedMealIngredientCount": {"placeholders": {"count": {"type": "int"}}},
+  "activityHistoryShort": "History",
+  "mealCompositionTitle": "Meal ingredients",
+  "copiedMealMissingConversion": "This older meal has no recorded portion weight. Confirm it to load and copy the ingredients."
 }

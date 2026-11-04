@@ -228,7 +228,7 @@ class MealPhotoReviewScreen extends HookWidget {
                 SheetContentSectionReporter(
                   section: SheetContentSection.header,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    padding: const EdgeInsets.fromLTRB(12, 16, 12, 0),
                     child: Column(
                       children: [
                         FormStepHeader(

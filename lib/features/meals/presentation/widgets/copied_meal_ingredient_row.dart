@@ -27,38 +27,23 @@ class CopiedMealIngredientRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleSmall,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  item.ingredient.isReference
-                      ? context.lang.ingredientReferenceBadge
-                      : item.portionDescription(
-                          portionAmount: item.ingredientPortion.amount,
-                          isLoading: false,
-                        ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                if (item.ingredient.isReference) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    context.lang.ingredientReferenceBadge,
+                    style: theme.textTheme.bodySmall,
                   ),
-                ),
+                ],
               ],
             ),
           ),
           const SizedBox(width: 16),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                '${item.amount.formattedAmount} ${unitLabelForAmount(item.amount, item.portionCountUnitLabel)}',
-                textAlign: TextAlign.end,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: theme.colorScheme.onSecondaryContainer,
-                ),
-              ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 120),
+            child: Text(
+              '${item.amount.formattedAmount} ${unitLabelForAmount(item.amount, item.portionCountUnitLabel)}',
+              textAlign: TextAlign.end,
+              style: theme.textTheme.titleSmall,
             ),
           ),
         ],

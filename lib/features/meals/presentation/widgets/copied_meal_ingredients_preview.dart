@@ -6,9 +6,9 @@ import '../../../meal_template/data/provider/meal_template_ingredients_list_prov
 import '../../data/mappers/copy_recorded_meal_ingredient.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
-import 'copied_meal_history_button.dart';
 import 'copied_meal_preview_header.dart';
 import 'copied_meal_preview_ingredient_list.dart';
+import 'copied_meal_preview_load_error.dart';
 
 class CopiedMealIngredientsPreview extends ConsumerWidget {
   const CopiedMealIngredientsPreview({
@@ -32,16 +32,7 @@ class CopiedMealIngredientsPreview extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        CopiedMealPreviewHeader(
-          source: source,
-          onBack: onBack,
-          onUse:
-              ingredients.isLoading ||
-                  ingredients.hasError ||
-                  (ingredients.value?.isEmpty ?? true)
-              ? null
-              : onUse,
-        ),
+        CopiedMealPreviewHeader(source: source, onBack: onBack),
         Flexible(
           child: ingredients.when(
             loading: () => const Padding(
@@ -51,12 +42,11 @@ class CopiedMealIngredientsPreview extends ConsumerWidget {
                 child: CircularProgressIndicator(),
               ),
             ),
-            error: (error, stackTrace) => Center(
-              heightFactor: 1,
-              child: TextButton(
-                onPressed: () => ref.invalidate(provider),
-                child: Text(context.lang.copiedMealLoadRetry),
-              ),
+            error: (error, stackTrace) => CopiedMealPreviewLoadError(
+              error: error,
+              stackTrace: stackTrace,
+              mealId: source is CopiedMealFromMeal ? source.id : null,
+              onRetry: () => ref.invalidate(provider),
             ),
             data: (items) => items.isEmpty
                 ? Center(
@@ -71,17 +61,16 @@ class CopiedMealIngredientsPreview extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Text(
-          context.lang.copiedMealUseHint,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+        FilledButton.icon(
+          onPressed:
+              ingredients.isLoading ||
+                  ingredients.hasError ||
+                  (ingredients.value?.isEmpty ?? true)
+              ? null
+              : onUse,
+          icon: const Icon(Icons.content_copy_rounded),
+          label: Text(context.lang.copiedMealUseIngredients),
         ),
-        if (source is CopiedMealFromMeal) ...[
-          const SizedBox(height: 16),
-          CopiedMealHistoryButton(source: source),
-        ],
       ],
     );
   }

@@ -6,7 +6,7 @@ import 'package:diabeatthis/features/meals/data/providers/meal_draft_provider.da
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
 import 'package:diabeatthis/features/meals/presentation/controllers/copy_meal_source_controller.dart';
 import 'package:diabeatthis/features/meals/presentation/screens/add_meal_page.dart';
-import 'package:diabeatthis/features/meals/presentation/widgets/copied_meal_form_field.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/add_meal/meal_composition_step.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -59,8 +59,8 @@ void main() {
       expect(tester.widget<FilledButton>(saveButton).onPressed, isNull);
       expect(
         find.descendant(
-          of: find.byType(CopiedMealFormField),
-          matching: find.byType(CircularProgressIndicator),
+          of: find.byType(MealCompositionStep),
+          matching: find.byType(LinearProgressIndicator),
         ),
         findsOneWidget,
       );
@@ -74,8 +74,8 @@ void main() {
         expect(tester.widget<FilledButton>(saveButton).onPressed, isNotNull);
         expect(
           find.descendant(
-            of: find.byType(CopiedMealFormField),
-            matching: find.byType(CircularProgressIndicator),
+            of: find.byType(MealCompositionStep),
+            matching: find.byType(LinearProgressIndicator),
           ),
           findsNothing,
         );

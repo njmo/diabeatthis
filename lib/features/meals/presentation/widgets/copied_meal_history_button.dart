@@ -13,14 +13,13 @@ class CopiedMealHistoryButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return OutlinedButton.icon(
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(0, 48),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return TextButton.icon(
+      style: TextButton.styleFrom(
+        padding: EdgeInsets.zero,
+        alignment: Alignment.centerLeft,
       ),
-      icon: const Icon(Icons.history, size: 18),
-      label: Text(context.lang.copiedMealHistoryDetails),
+      icon: const Icon(Icons.show_chart_rounded, size: 18),
+      label: Text(context.lang.copiedMealViewStatistics),
       onPressed: () async {
         final messenger = ScaffoldMessenger.of(context);
         final previewMealId = await ref.read(
