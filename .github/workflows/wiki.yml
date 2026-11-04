@@ -1,0 +1,38 @@
+name: Publish Wiki
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'docs/wiki/**'
+      - 'tool/wiki/**'
+      - '.github/workflows/wiki.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-wiki
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check Wiki credentials
+        env:
+          WIKI_TOKEN: ${{ secrets.WIKI_TOKEN }}
+        run: |
+          if [ -z "$WIKI_TOKEN" ]; then
+            echo '::error::Add the WIKI_TOKEN repository secret. See docs/wiki-publishing.md.'
+            exit 1
+          fi
+      - name: Publish documentation
+        env:
+          WIKI_TOKEN: ${{ secrets.WIKI_TOKEN }}
+        run: bash tool/wiki/publish.sh
