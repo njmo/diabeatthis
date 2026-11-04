@@ -3565,6 +3565,7 @@
   "ingredientOriginCloud": "Pobrano z chmury",
   "ingredientOriginLocal": "Utworzono lokalnie",
   "ingredientOriginCloudCopy": "Edytowalna kopia z chmury",
+  "mealIngredientPortionDetails": "Szczegóły porcji składnika",
   "mealWeightedConfidenceTitle": "Pewność całego posiłku",
   "mealWeightedConfidenceExplanation": "Dla każdego składnika łączymy pewność danych i ilości średnią geometryczną. Pewność posiłku to średnia tych wyników ważona masą składników zapisaną w posiłku.",
   "mealWeightedConfidenceUnavailable": "Brak pełnych danych do obliczenia pewności posiłku.",
@@ -3583,6 +3584,9 @@
       }
     }
   },
+  "ingredientReferenceEditorHint": "Składnik referencyjny opisuje całość, bez porcji i przeliczania na gramy. Podaj węglowodany i eCarbs, a suwakiem ustaw udział energii z białka i tłuszczu.",
   "catalogOtherResults": "Pozostałe wyniki",
-  "catalogSelectedProduct": "Wybrany"
+  "catalogSelectedProduct": "Wybrany",
+  "mealNetCarbsLabel": "Węglowodany netto",
+  "mealMacroCarbsTotal": "carbs"
 }

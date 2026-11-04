@@ -57,7 +57,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.byType(Tab), findsNWidgets(3));
-        expect(find.text('Porcje'), findsOneWidget);
+        expect(find.text('Porcje'), reference ? findsNothing : findsOneWidget);
         expect(find.byType(IngredientConfidenceBanner), findsOneWidget);
         if (reference) {
           expect(find.text('Wartości referencyjne'), findsOneWidget);

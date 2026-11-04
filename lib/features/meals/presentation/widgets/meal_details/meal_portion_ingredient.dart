@@ -1,10 +1,11 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../app/router/app_router.dart';
 import '../../../../../common/l10n/language.dart';
-import '../../../../../common/widgets/show_detail_sheet.dart';
+import '../../../../../common/widgets/ingredient_confidence_summary.dart';
 import '../../../data/models/meal_details_data.dart';
-import 'meal_nutrition_analysis_section.dart';
 
 class MealPortionIngredient extends StatelessWidget {
   const MealPortionIngredient({
@@ -30,14 +31,6 @@ class MealPortionIngredient extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: Icon(
-        ingredient.isExtra || increased
-            ? Icons.add_circle_outline
-            : Icons.restaurant_rounded,
-        color: ingredient.isExtra || increased
-            ? colors.tertiary
-            : colors.primary,
-      ),
       title: Text(
         ingredient.ingredientName,
         style: Theme.of(context).textTheme.titleSmall,
@@ -52,15 +45,18 @@ class MealPortionIngredient extends StatelessWidget {
                 ? lang.mealConsumedInline('${number.format(amount)} g')
                 : lang.mealPlanInline('${number.format(amount)} g'),
           ),
-          if (ingredient.quantityConfidence.isFinite &&
-              ingredient.quantityConfidence >= 0 &&
-              ingredient.quantityConfidence < 1)
-            Text(
-              lang.mealSavedQuantityEstimate(
-                number.format(ingredient.quantityConfidence * 100),
-              ),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+          IngredientConfidenceSummary(
+            nutritionConfidence: hasConsumedSnapshot
+                ? ingredient.consumedHistoricalNutritionUnavailable
+                      ? null
+                      : ingredient.consumedNutrition.nutritionConfidence
+                : ingredient.plannedHistoricalNutritionUnavailable
+                ? null
+                : ingredient.plannedNutrition.nutritionConfidence,
+            quantityConfidence: hasConsumedSnapshot
+                ? ingredient.consumedConfidence
+                : ingredient.quantityConfidence,
+          ),
           if (hasConsumedSnapshot && !reported)
             Text(lang.mealPortionUnconfirmed),
           if (ingredient.isExtra)
@@ -94,15 +90,10 @@ class MealPortionIngredient extends StatelessWidget {
             ),
         ],
       ),
-      trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: () => showDetailSheet(
-        context: context,
-        title: ingredient.ingredientName,
-        builder: (_) => MealIngredientTile(
-          ingredient: ingredient,
-          usePlannedConsumptionFallback: false,
-        ),
+      onTap: () => context.router.push(
+        IngredientRoute(ingredientId: ingredient.ingredientId),
       ),
+      trailing: const Icon(Icons.chevron_right),
     );
   }
 }

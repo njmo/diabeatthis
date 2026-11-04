@@ -13,6 +13,7 @@ class SummaryDetailCard extends StatelessWidget {
   final IconData icon;
   final Color? headerColor;
   final Color? headerForeground;
+  final bool showHeader;
 
   const SummaryDetailCard({
     super.key,
@@ -24,6 +25,7 @@ class SummaryDetailCard extends StatelessWidget {
     this.icon = Icons.insights_rounded,
     this.headerColor,
     this.headerForeground,
+    this.showHeader = true,
   }) : assert(onDetails == null || actionLabel != null);
 
   @override
@@ -34,33 +36,34 @@ class SummaryDetailCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: headerColor ?? scheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  icon,
-                  color: headerForeground ?? scheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+          if (showHeader)
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: headerColor ?? scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: headerForeground ?? scheme.onPrimaryContainer,
                   ),
                 ),
-              ),
-              if (explanation != null)
-                InformationButton(title: title, message: explanation!),
-            ],
-          ),
-          const SizedBox(height: 16),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                if (explanation != null)
+                  InformationButton(title: title, message: explanation!),
+              ],
+            ),
+          if (showHeader) const SizedBox(height: 16),
           child,
           if (onDetails != null)
             Padding(

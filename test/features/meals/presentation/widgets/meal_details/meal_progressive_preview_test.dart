@@ -8,6 +8,7 @@ import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/mea
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
 import '../../../../../helpers/localized_material_app.dart';
 import 'meal_low_treatments_display_test.dart'
     show mealDetailsWithLowTreatment, mealRecord;
@@ -68,7 +69,9 @@ void main() {
       expect(find.text('Co zostało zjedzone'), findsNothing);
       expect(
         tester.widget<SwipeableCards>(find.byType(SwipeableCards)).labels,
-        contains('Działanie aplikacji'),
+        status == 'planned'
+            ? equals(['Porcja i makro'])
+            : contains('Działanie aplikacji'),
       );
       expect(tester.takeException(), isNull);
     });

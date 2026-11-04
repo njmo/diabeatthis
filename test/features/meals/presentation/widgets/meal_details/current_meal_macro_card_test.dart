@@ -57,7 +57,8 @@ void main() {
         .animateTo(1);
     await tester.pumpAndSettle();
     expect(find.byType(MealPortionOverview), findsOneWidget);
-    expect(find.text('30 g'), findsOneWidget);
+    expect(find.text('25,0 g'), findsOneWidget);
+    expect(find.text('Węglowodany netto'), findsOneWidget);
     expect(find.text('250 kcal'), findsOneWidget);
     tester
         .widget<SwipeableCards>(find.byType(SwipeableCards))

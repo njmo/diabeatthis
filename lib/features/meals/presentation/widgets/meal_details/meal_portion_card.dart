@@ -4,9 +4,15 @@ import '../../../data/models/meal_details_data.dart';
 import 'meal_portion_overview.dart';
 
 class MealPortionCard extends StatelessWidget {
-  const MealPortionCard({super.key, required this.details});
+  const MealPortionCard({
+    super.key,
+    required this.details,
+    this.showHeader = true,
+  });
+  final bool showHeader;
   final MealDetailsData details;
 
   @override
-  Widget build(BuildContext context) => MealPortionOverview(details: details);
+  Widget build(BuildContext context) =>
+      MealPortionOverview(details: details, showHeader: showHeader);
 }

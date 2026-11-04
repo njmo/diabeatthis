@@ -1,9 +1,11 @@
 import 'package:diabeatthis/common/widgets/plan_actual_meter.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_portion_confidence.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_portion_ingredient.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_portion_macros.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_portion_overview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
 import '../../../../../helpers/localized_material_app.dart';
 import 'meal_cards_test.dart' show cardSnapshot;
 import 'meal_low_treatments_display_test.dart'
@@ -12,7 +14,7 @@ import 'meal_low_treatments_display_test.dart'
 void main() {
   for (final consumed in [20.0, 30.0, 0.0]) {
     testWidgets(
-      'portion $consumed shows ingredients first and compares only changes',
+      'portion $consumed shows macros before confidence and ingredients and compares only changes',
       (tester) async {
         final details = mealDetailsWithLowTreatment().copyWith(
           ingredients: [
@@ -45,8 +47,12 @@ void main() {
         if (consumed == 20) {
           expect(find.byType(MealPortionMacros), findsOneWidget);
           expect(
-            tester.getTopLeft(find.byType(MealPortionIngredient)).dy,
-            lessThan(tester.getTopLeft(find.byType(MealPortionMacros)).dy),
+            tester.getTopLeft(find.byType(MealPortionMacros)).dy,
+            lessThan(tester.getTopLeft(find.byType(MealPortionConfidence)).dy),
+          );
+          expect(
+            tester.getTopLeft(find.byType(MealPortionMacros)).dy,
+            lessThan(tester.getTopLeft(find.byType(MealPortionIngredient)).dy),
           );
         }
         expect(tester.takeException(), isNull);

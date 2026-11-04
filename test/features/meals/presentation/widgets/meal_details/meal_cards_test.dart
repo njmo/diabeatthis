@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/widgets/carbohydrate_totals_summary.dart';
 import 'package:diabeatthis/common/widgets/swipeable_cards.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_details_data.dart';
 import 'package:diabeatthis/features/meals/data/providers/similar_meals_provider.dart';
@@ -5,9 +6,11 @@ import 'package:diabeatthis/features/meals/presentation/models/meal_page_state.d
 import 'package:diabeatthis/features/meals/presentation/screens/meal_page.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_glucose_card.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_portion_card.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_preview_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
 import '../../../../../helpers/localized_material_app.dart';
 import 'meal_low_treatments_display_test.dart'
     show mealDetailsWithLowTreatment, mealRecord;
@@ -21,7 +24,7 @@ MealSnapshotDetailsData cardSnapshot(String type, double carbs, double grams) =>
       totalGrams: grams,
       totalCarbsG: carbs,
       totalFiberG: 2,
-      totalNetCarbsG: carbs - 2,
+      totalNetCarbsG: (carbs - 2).clamp(0.0, double.infinity).toDouble(),
       totalFatG: 7.5,
       totalProteinG: 10,
       totalCaloriesKcal: 300,
@@ -62,10 +65,11 @@ void main() {
         ),
       );
       expect(find.text('Porcja i makro'), findsOneWidget);
-      expect(find.text('62 g'), findsOneWidget);
+      expect(find.text('60,0 g'), findsOneWidget);
+      expect(find.text('Węglowodany netto'), findsWidgets);
       expect(find.text('7,5 g'), findsOneWidget);
       expect(find.text('300 kcal'), findsOneWidget);
-      expect(find.text('plan 50 g'), findsOneWidget);
+      expect(find.text('plan 48 g'), findsOneWidget);
       expect(find.byType(ExpansionTile), findsNothing);
       expect(tester.takeException(), isNull);
     },
@@ -96,8 +100,14 @@ void main() {
         consumedSnapshot: cardSnapshot('consumed', 0, 0),
       ),
     );
-    expect(find.text('0 g'), findsOneWidget);
-    expect(find.text('plan 50 g'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(CarbohydrateTotalsSummary),
+        matching: find.text('0 g'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('plan 48 g'), findsOneWidget);
     expect(find.textContaining('0 g'), findsWidgets);
   });
 
@@ -124,11 +134,20 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      tester
-          .widget<SwipeableCards>(find.byType(SwipeableCards))
-          .controller
-          .animateTo(1);
-      await tester.pumpAndSettle();
+      if (status == 'planned') {
+        expect(
+          tester.widget<SwipeableCards>(find.byType(SwipeableCards)).labels,
+          ['Porcja i makro'],
+        );
+        expect(find.byType(Tab), findsOneWidget);
+        expect(find.byType(MealPreviewActions), findsNothing);
+      } else {
+        tester
+            .widget<SwipeableCards>(find.byType(SwipeableCards))
+            .controller
+            .animateTo(1);
+        await tester.pumpAndSettle();
+      }
       expect(find.text('Planowana porcja'), findsOneWidget);
       expect(find.byType(MealPortionCard), findsOneWidget);
       expect(find.byType(MealGlucoseCard), findsNothing);

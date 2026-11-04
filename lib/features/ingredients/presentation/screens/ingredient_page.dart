@@ -203,6 +203,7 @@ class IngredientPageViewState extends ConsumerState<IngredientPage>
                         ],
                         IngredientNutritionCard(ingredient: s.data.ingredient),
                         const SizedBox(height: 16),
+                        if (!s.data.ingredient.isReference)
                           IngredientPortionsSection(portions: s.data.portions),
                       ],
                     ),

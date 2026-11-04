@@ -125,7 +125,7 @@ String? _macroValidationMessage(IngredientDraft value) {
 }
 
 String? _netCarbsValidationMessage(IngredientDraft value) {
-  if (!value.hasPositiveNonEuNetCarbs) {
+  if (!value.hasValidNonEuNetCarbs) {
     return lang.ingredientNetCarbsInvalid;
   }
   return null;

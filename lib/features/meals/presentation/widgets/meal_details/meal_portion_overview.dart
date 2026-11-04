@@ -9,11 +9,17 @@ import '../../controllers/meal_application_review_controller.dart';
 import '../../controllers/meal_portion_controller.dart';
 import 'meal_macro_comparison.dart';
 import 'meal_origin_card.dart';
+import 'meal_portion_confidence.dart';
 import 'meal_portion_ingredient.dart';
 import 'meal_portion_macros.dart';
 
 class MealPortionOverview extends StatelessWidget {
-  const MealPortionOverview({super.key, required this.details});
+  const MealPortionOverview({
+    super.key,
+    required this.details,
+    this.showHeader = true,
+  });
+  final bool showHeader;
   final MealDetailsData details;
 
   @override
@@ -34,16 +40,33 @@ class MealPortionOverview extends StatelessWidget {
     };
     return SummaryDetailCard(
       title: lang.mealPortionCardTitle,
+      showHeader: showHeader,
       icon: Icons.restaurant_rounded,
       headerColor: Theme.of(context).colorScheme.tertiaryContainer,
       headerForeground: Theme.of(context).colorScheme.onTertiaryContainer,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (nutrition != null) ...[
+            if (planned != null && consumed != null && !equal)
+              MealMacroComparison(planned: planned, consumed: consumed)
+            else
+              MealPortionMacros(nutrition: nutrition),
+            if (planned != null &&
+                consumed != null &&
+                number.format(planned.totalGrams) !=
+                    number.format(consumed.totalGrams))
+              Text(
+                lang.mealPlanInline('${number.format(planned.totalGrams)} g'),
+              ),
+            const Divider(height: 24),
+          ],
           if (origin != null) ...[
             MealOriginCard(origin: origin),
             const Divider(height: 24),
           ],
+          MealPortionConfidence(details: details),
+          const SizedBox(height: 16),
           Text(status, style: Theme.of(context).textTheme.titleSmall),
           if (consumed == null && details.meal.isEaten && planned != null)
             Text(lang.mealPortionPlanOnly),
@@ -65,24 +88,6 @@ class MealPortionOverview extends StatelessWidget {
               MealPortionIngredient(
                 ingredient: ingredient,
                 hasConsumedSnapshot: consumed != null,
-              ),
-          ],
-          if (nutrition != null) ...[
-            const Divider(height: 28),
-            if (planned != null && consumed != null && !equal)
-              MealMacroComparison(planned: planned, consumed: consumed)
-            else
-              MealPortionMacros(nutrition: nutrition),
-            const SizedBox(height: 12),
-            Text(
-              '${lang.mealTotalMassLabel}: ${number.format(nutrition.totalGrams)} g',
-            ),
-            if (planned != null &&
-                consumed != null &&
-                number.format(planned.totalGrams) !=
-                    number.format(consumed.totalGrams))
-              Text(
-                lang.mealPlanInline('${number.format(planned.totalGrams)} g'),
               ),
           ],
         ],

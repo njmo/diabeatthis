@@ -18,6 +18,7 @@ import '../widgets/meal_details/meal_outcome_section.dart';
 import '../widgets/meal_details/meal_portion_card.dart';
 import '../widgets/meal_details/meal_preview_actions.dart';
 import '../widgets/meal_details/meal_preview_header.dart';
+import '../widgets/meal_details/planned_meal_preview.dart';
 import '../widgets/meal_details/similar_meals_section.dart';
 
 class MealPageBody extends HookConsumerWidget {
@@ -42,6 +43,9 @@ class MealPageBody extends HookConsumerWidget {
       initialLength: complete ? 6 : 3,
       keys: [details.meal.id, complete],
     );
+    if (details.meal.status == 'planned') {
+      return PlannedMealPreview(state: state);
+    }
     final lang = context.lang;
     final overview = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -90,7 +94,7 @@ class MealPageBody extends HookConsumerWidget {
               analysis: state.analysis!,
             ),
           ),
-        MealPortionCard(details: details),
+        MealPortionCard(details: details, showHeader: false),
         if (complete) ...[
           MealEventsCard(
             details: details,

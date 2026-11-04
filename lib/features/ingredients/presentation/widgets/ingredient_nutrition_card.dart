@@ -3,9 +3,10 @@ import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/form_section.dart';
-import '../../../../common/widgets/nutrition_summary_metric.dart';
-import '../../../../common/widgets/responsive_metric_list.dart';
+import '../../../../common/widgets/label_value_row.dart';
+import '../../../../common/widgets/meal_macro_summary.dart';
 import '../../../../common/widgets/section_surface.dart';
+import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../data/models/ingredient_details_data.dart';
 import '../utils/reference_ingredient_macro_calculator.dart';
 import 'ingredient_energy_summary.dart';
@@ -28,13 +29,6 @@ class IngredientNutritionCard extends StatelessWidget {
             .round();
     final colors = Theme.of(context).colorScheme;
     final number = NumberFormat('0.##', lang.localeName);
-    Widget metric(String label, double value, IconData icon, Color color) =>
-        NutritionSummaryMetric(
-          icon: icon,
-          color: color,
-          label: label,
-          value: '${number.format(value)} g',
-        );
     return SectionSurface(
       child: FormSection(
         title: reference
@@ -42,51 +36,34 @@ class IngredientNutritionCard extends StatelessWidget {
             : lang.ingredientNutritionValues,
         subtitle: reference ? null : lang.ingredientPer100g,
         children: [
-          ResponsiveMetricList(
-            maxColumns: 2,
-            children: [
-              metric(
-                reference
-                    ? lang.ingredientSimpleCarbsLabel
-                    : lang.mealCarbsLabel,
-                ingredient.carbsPer100g,
-                Icons.grass_outlined,
-                colors.primary,
-              ),
-              if (reference)
-                metric(
-                  lang.ingredientExtendedCarbsLabel,
-                  referenceExtendedCarbsPer100g(
-                    fatPer100g: ingredient.fatPer100g,
-                    proteinPer100g: ingredient.proteinPer100g,
-                  ),
-                  Icons.schedule,
-                  colors.tertiary,
-                )
-              else ...[
-                metric(
-                  lang.mealFatLabel,
-                  ingredient.fatPer100g,
-                  Icons.opacity,
-                  colors.tertiary,
+          MealMacroSummary(
+            netCarbs: calculateNetCarbs(
+              carbs: ingredient.carbsPer100g,
+              fiber: ingredient.fiberPer100g,
+              labelMode: ingredient.carbsLabelMode,
+            ),
+            protein: ingredient.proteinPer100g,
+            fat: ingredient.fatPer100g,
+            fiber: ingredient.fiberPer100g,
+            calories:
+                ingredient.netKcalPer100g ??
+                calculateNetKcalPer100g(
+                  carbsPer100g: ingredient.carbsPer100g,
+                  fiberPer100g: ingredient.fiberPer100g,
+                  fatPer100g: ingredient.fatPer100g,
+                  proteinPer100g: ingredient.proteinPer100g,
+                  labelMode: ingredient.carbsLabelMode,
                 ),
-                metric(
-                  lang.mealProteinLabel,
-                  ingredient.proteinPer100g,
-                  Icons.egg_outlined,
-                  colors.secondary,
-                ),
-                metric(
-                  lang.mealFiberLabel,
-                  ingredient.fiberPer100g,
-                  Icons.eco_outlined,
-                  colors.primary,
-                ),
-              ],
-            ],
+            showEnergy: false,
           ),
           if (reference) ...[
             const SizedBox(height: 16),
+            LabelValueRow(
+              label: lang.ingredientExtendedCarbsLabel,
+              value:
+                  '${number.format(referenceExtendedCarbsPer100g(fatPer100g: ingredient.fatPer100g, proteinPer100g: ingredient.proteinPer100g))} g',
+            ),
+            const SizedBox(height: 8),
             Text(
               lang.ingredientEcarbsSplit(100 - fatPercent, fatPercent),
               style: Theme.of(context).textTheme.bodyMedium,
