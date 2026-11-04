@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/widgets/detail_metric_tile.dart';
 import '../../../../../common/widgets/responsive_metric_list.dart';
 import '../../models/meal_metric_view_data.dart';
 
@@ -31,48 +32,11 @@ class MealMetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colors.outlineVariant),
-        color: colors.surfaceContainerHighest.withValues(alpha: 0.45),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(metric.icon, size: 20, color: colors.primary),
-            const SizedBox(height: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  metric.label,
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
-                const SizedBox(height: 2),
-                Text.rich(
-                  TextSpan(
-                    text: metric.value,
-                    children: [
-                      if (metric.unit != null)
-                        TextSpan(
-                          text: ' ${metric.unit}',
-                          style: Theme.of(context).textTheme.labelSmall,
-                        ),
-                    ],
-                  ),
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    return DetailMetricTile(
+      icon: metric.icon,
+      label: metric.label,
+      value: metric.value,
+      unit: metric.unit,
     );
   }
 }

@@ -385,7 +385,7 @@ void main() {
       await tester.tap(find.text('Dalej: podsumowanie'));
       await tester.pumpAndSettle();
       expect(find.byType(MealReviewStep), findsOneWidget);
-      expect(find.text('Carbs (netto)'), findsOneWidget);
+      expect(find.text(lang.mealNetCarbsLabel), findsOneWidget);
       expect(find.text(lang.mealStartEcarbsLabel), findsOneWidget);
       final macros = await container.read(
         calculatedMacronutrientsProvider.future,

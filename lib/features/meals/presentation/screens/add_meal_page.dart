@@ -6,7 +6,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_time_anchor.dart';
+import '../../../../common/widgets/form_action_bar.dart';
 import '../../../../common/widgets/form_step_header.dart';
+import '../../../../common/widgets/sheet_content_height_request.dart';
+import '../../../../common/widgets/sheet_content_section_reporter.dart';
 import '../../../../common/widgets/sheet_height_request.dart';
 import '../../data/model/copied_meal_type.dart';
 import '../../data/models/retrospective_meal_timing.dart';
@@ -45,18 +48,12 @@ class AddMealPage extends HookConsumerWidget {
     final timeFormKey = useMemoized(GlobalKey<FormState>.new);
     final reviewFormKey = useMemoized(GlobalKey<FormState>.new);
     final draft = ref.watch(mealDraftProvider);
-    final ingredientCount = draft.mealIngredients.length;
     useEffect(() {
-      final height = step.value == 0
-          ? (0.46 + ingredientCount * 0.08).clamp(0.46, 0.9)
-          : !retrospective && step.value == 1
-          ? 0.44
-          : 0.9;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) SheetHeightRequest(height).dispatch(context);
+        if (context.mounted) const SheetHeightRequest(0.9).dispatch(context);
       });
       return null;
-    }, [step.value, retrospective, ingredientCount]);
+    }, const []);
     final mealDraft = ref.read(mealDraftProvider.notifier);
     final isSaving = ref.watch(addMealControllerProvider).isLoading;
     final isCopying = ref.watch(copyMealSourceControllerProvider).isLoading;
@@ -129,17 +126,21 @@ class AddMealPage extends HookConsumerWidget {
           ),
         ),
         body: SafeArea(
+          bottom: false,
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                child: FormStepHeader(
-                  currentStep: step.value,
-                  labels: [
-                    context.lang.mealFlowComposition,
-                    context.lang.mealFlowWhen,
-                    context.lang.mealFlowReview,
-                  ],
+              SheetContentSectionReporter(
+                section: SheetContentSection.header,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                  child: FormStepHeader(
+                    currentStep: step.value,
+                    labels: [
+                      context.lang.mealFlowComposition,
+                      context.lang.mealFlowWhen,
+                      context.lang.mealFlowReview,
+                    ],
+                  ),
                 ),
               ),
               Expanded(
@@ -147,119 +148,132 @@ class AddMealPage extends HookConsumerWidget {
                   absorbing: busy,
                   child: SingleChildScrollView(
                     key: ValueKey(step.value),
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: switch (step.value) {
-                      0 => MealCompositionStep(
-                        retrospective: retrospective,
-                        source: source.value,
-                        isCopying: isCopying,
-                        picker: (context) => showCopiedMealPicker(context, ref),
-                        onPicked: (value) async {
-                          final applied = await _copyFromSource(
-                            context,
-                            ref,
-                            value,
-                          );
-                          if (applied && context.mounted) source.value = value;
-                          return applied;
+                    child: SheetContentSectionReporter(
+                      section: SheetContentSection.body,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        child: switch (step.value) {
+                          0 => MealCompositionStep(
+                            retrospective: retrospective,
+                            source: source.value,
+                            isCopying: isCopying,
+                            picker: (context) =>
+                                showCopiedMealPicker(context, ref),
+                            onPicked: (value) async {
+                              final applied = await _copyFromSource(
+                                context,
+                                ref,
+                                value,
+                              );
+                              if (applied && context.mounted) {
+                                source.value = value;
+                              }
+                              return applied;
+                            },
+                          ),
+                          1 => Form(
+                            key: timeFormKey,
+                            child: MealTimingStep(
+                              key: ValueKey(timeFieldVersion.value),
+                              retrospective: retrospective,
+                              selectedDate: selectedDate.value,
+                              anchor: timeAnchor.value,
+                              onAnchorChanged: (value) {
+                                timeAnchor.value = value;
+                                updatePlannedStart();
+                              },
+                              onCalculatorSelected: initialEatenAt == null
+                                  ? null
+                                  : () {
+                                      timeAnchor.value = MealTimeAnchor.insulin;
+                                      selectedDate.value = initialEatenAt;
+                                      timeFieldVersion.value++;
+                                      updatePlannedStart();
+                                    },
+                              calculatorDate: retrospective
+                                  ? initialEatenAt
+                                  : null,
+                              onDateChanged: (value) {
+                                selectedDate.value = value;
+                                updatePlannedStart();
+                              },
+                              timing: timing.value,
+                              onTimingChanged: (value) {
+                                timing.value = value;
+                                updatePlannedStart();
+                              },
+                            ),
+                          ),
+                          _ => Form(
+                            key: reviewFormKey,
+                            child: MealReviewStep(
+                              source: source.value,
+                              timing: retrospective ? timing.value : null,
+                              onChangeComposition: () => changeStep(0),
+                              onChangeTime: () => changeStep(1),
+                            ),
+                          ),
                         },
                       ),
-                      1 => Form(
-                        key: timeFormKey,
-                        child: MealTimingStep(
-                          key: ValueKey(timeFieldVersion.value),
-                          retrospective: retrospective,
-                          selectedDate: selectedDate.value,
-                          anchor: timeAnchor.value,
-                          onAnchorChanged: (value) {
-                            timeAnchor.value = value;
-                            updatePlannedStart();
-                          },
-                          onCalculatorSelected: initialEatenAt == null
-                              ? null
-                              : () {
-                                  timeAnchor.value = MealTimeAnchor.insulin;
-                                  selectedDate.value = initialEatenAt;
-                                  timeFieldVersion.value++;
-                                  updatePlannedStart();
-                                },
-                          calculatorDate: retrospective ? initialEatenAt : null,
-                          onDateChanged: (value) {
-                            selectedDate.value = value;
-                            updatePlannedStart();
-                          },
-                          timing: timing.value,
-                          onTimingChanged: (value) {
-                            timing.value = value;
-                            updatePlannedStart();
-                          },
-                        ),
-                      ),
-                      _ => Form(
-                        key: reviewFormKey,
-                        child: MealReviewStep(
-                          source: source.value,
-                          timing: retrospective ? timing.value : null,
-                          onChangeComposition: () => changeStep(0),
-                          onChangeTime: () => changeStep(1),
-                        ),
-                      ),
-                    },
+                    ),
                   ),
                 ),
               ),
             ],
           ),
         ),
-        bottomNavigationBar: SafeArea(
-          minimum: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-          child: Row(
-            children: [
-              if (step.value > 0) ...[
-                TextButton(
-                  onPressed: busy ? null : () => changeStep(step.value - 1),
-                  child: Text(context.lang.mealFlowBack),
-                ),
-                const SizedBox(width: 8),
-              ],
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed:
-                      busy || (step.value == 0 && draft.mealIngredients.isEmpty)
-                      ? null
-                      : step.value < 2
-                      ? next
-                      : () => _saveMeal(
-                          context: context,
-                          ref: ref,
-                          formKey: reviewFormKey,
-                          timing: retrospective ? timing.value : null,
-                        ),
-                  icon: isSaving
-                      ? const SizedBox.square(
-                          dimension: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(
-                          step.value < 2 ? Icons.arrow_forward : Icons.check,
-                        ),
-                  label: Text(
-                    isSaving
-                        ? context.lang.addMealSaving
-                        : switch (step.value) {
-                            0 => context.lang.mealFlowNextTime,
-                            1 => context.lang.mealFlowNextReview,
-                            _ =>
-                              !retrospective
-                                  ? context.lang.mealFlowPlan
-                                  : initialEatenAt != null
-                                  ? context.lang.mealFlowSaveAndLink
-                                  : context.lang.addMealSave,
-                          },
+        bottomNavigationBar: SheetContentSectionReporter(
+          section: SheetContentSection.footer,
+          child: FormActionBar(
+            child: Row(
+              children: [
+                if (step.value > 0) ...[
+                  TextButton(
+                    onPressed: busy ? null : () => changeStep(step.value - 1),
+                    child: Text(context.lang.mealFlowBack),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed:
+                        busy ||
+                            (step.value == 0 && draft.mealIngredients.isEmpty)
+                        ? null
+                        : step.value < 2
+                        ? next
+                        : () => _saveMeal(
+                            context: context,
+                            ref: ref,
+                            formKey: reviewFormKey,
+                            timing: retrospective ? timing.value : null,
+                          ),
+                    icon: isSaving
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(
+                            step.value < 2 ? Icons.arrow_forward : Icons.check,
+                          ),
+                    label: Text(
+                      isSaving
+                          ? context.lang.addMealSaving
+                          : switch (step.value) {
+                              0 => context.lang.mealFlowNextTime,
+                              1 => context.lang.mealFlowNextReview,
+                              _ =>
+                                !retrospective
+                                    ? context.lang.mealFlowPlan
+                                    : initialEatenAt != null
+                                    ? context.lang.mealFlowSaveAndLink
+                                    : context.lang.addMealSave,
+                            },
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

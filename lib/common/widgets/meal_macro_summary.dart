@@ -41,19 +41,6 @@ class MealMacroSummary extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (showEnergy)
-          Wrap(
-            spacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                '${calories.round()} kcal',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              if (weightGrams != null) Text('· ${weightGrams!.round()} g'),
-            ],
-          ),
-        if (showEnergy) const SizedBox(height: 12),
         LayoutBuilder(
           builder: (context, constraints) {
             final largeText = MediaQuery.textScalerOf(context).scale(14) > 20;
@@ -87,6 +74,19 @@ class MealMacroSummary extends StatelessWidget {
           protein: protein,
           fat: fat,
         ),
+        if (showEnergy) const SizedBox(height: 12),
+        if (showEnergy)
+          Wrap(
+            spacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                '${calories.round()} kcal',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              if (weightGrams != null) Text('· ${weightGrams!.round()} g'),
+            ],
+          ),
       ],
     );
   }

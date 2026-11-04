@@ -3189,7 +3189,7 @@
   "mealFlowSaveAndLink": "Zapisz i przypisz",
   "mealFlowCalculatorTime": "Użyj czasu wpisu kalkulatora",
   "mealFlowCalculatorHint": "Czas wpisu kalkulatora jest proponowanym początkiem jedzenia. Możesz wybrać inną godzinę — posiłek nadal zostanie przypisany do tego wpisu.",
-  "mealFlowNutrition": "Cały posiłek",
+  "mealFlowNutrition": "Makroskładniki posiłku",
   "mealFlowNetCarbs": "Carbs (netto)",
   "mealFlowTotalCarbs": "Węglowodany",
   "mealFlowInsulinTime": "Czas insuliny",

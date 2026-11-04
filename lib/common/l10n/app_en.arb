@@ -2749,7 +2749,7 @@
   "mealFlowSaveAndLink": "Save and link",
   "mealFlowCalculatorTime": "Use calculator entry time",
   "mealFlowCalculatorHint": "The calculator entry time is the suggested eating start. You can choose a different time — the meal will still be linked to this entry.",
-  "mealFlowNutrition": "Whole meal",
+  "mealFlowNutrition": "Meal macronutrients",
   "mealFlowNetCarbs": "Carbs (net)",
   "mealFlowTotalCarbs": "Carbohydrates",
   "mealFlowInsulinTime": "Insulin time",
