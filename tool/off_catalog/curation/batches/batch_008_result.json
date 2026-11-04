@@ -1,0 +1,2151 @@
+{
+  "batch_id": "batch_008",
+  "reviewed_at": "2026-11-04",
+  "records": [
+    {
+      "code": "5904000008712",
+      "name": "EMALIA ANTYKOROZYJNA CZARNY PÓŁMATOWY",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000008927",
+      "name": "EMALIA ANTYKOROZYJNA MAHOŃ RAL 3009",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000012559",
+      "name": "FARBA DO BETONU SZARY MAT",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000014638",
+      "name": "PODKŁAD ANTYKOROZYJNY TLENKOWY CZERWONY",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000017554",
+      "name": "EMAKOL POPIELATY POŁYSK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000027904",
+      "name": "EXPRESS TOP BIAŁE SZALEŃSTWO SATYNA",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000027942",
+      "name": "EXPRESS TOP CZYSTA KARTKA SATYNA",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000027973",
+      "name": "EXPRESS TOP W DECHE SATYNA",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000028000",
+      "name": "EXPRESS TOP CZARNA MATERIA MAT",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000028048",
+      "name": "EXPRESS TOP CICHA WODA SATYNA",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000028079",
+      "name": "EXPRESS TOP SZARA KOMÓRKA SATYNA",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000028116",
+      "name": "EXPRESS TOP PLACHTA NA BYKA SATYNA",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000037941",
+      "name": "ŁAZIENKA I KUCHNIA SNIEZNOBIALA MATOWA",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000046714",
+      "name": "EMALIA ANTYKOROZYJNA ANTRACYT POŁYSK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000046769",
+      "name": "EMALIA ANTYKOROZYJNA SZARY JASY RAL 7035",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000810674",
+      "name": "AKRYLIT W SNIEZNOBIALA MATOWA",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000819462",
+      "name": "EMAKOL",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000820109",
+      "name": "EMAKOL BRĄZOWY POŁYSK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000820178",
+      "name": "EMAKOL CZARNY POŁYSK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000820284",
+      "name": "EMAKOL KREMOWY POŁYSK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000820390",
+      "name": "EMAKOL MIĘTOWY POŁYSK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000820512",
+      "name": "EMAKOL POPIELATY POŁYSK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000820635",
+      "name": "EMAKOL ZIELONY SOCZYSTY POŁYSK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000820697",
+      "name": "EMAKOL ŻÓŁTY POŁYSK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000824886",
+      "name": "EMAKOL POPIELATY MATOWY",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000001256",
+      "name": "IMPREGNAT GRUNT",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000003557",
+      "name": "LAKIER JACHTOWY",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000005186",
+      "name": "IMPREGNAT MAHOŃ",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000005216",
+      "name": "IMPREGNAT PALISANDER ŚREDNI",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000005421",
+      "name": "IMPREGNAT DĄB",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000005469",
+      "name": "IMPREGNAT ORZECH CIEMNY",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000005490",
+      "name": "IMPREGNAT",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000005568",
+      "name": "IMPREGNAT DĄB CIEMNY",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000005605",
+      "name": "IMPREGNAT PALISANDER",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000005643",
+      "name": "IMPREGNAT TIK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000006596",
+      "name": "IMPREGNAT SZARY",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000045953",
+      "name": "LAKIEROBEJCA TIK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000045984",
+      "name": "LAKIEROBEJCA PATYNA",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000046011",
+      "name": "LAKIEROBEJCA MAHOŃ",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000046042",
+      "name": "LAKIEROBEJCA KASZTAN",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000046073",
+      "name": "LAKIEROBEJCA TIK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000046110",
+      "name": "LAKIEROBEJCA PALISANDER CIEMNY",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000046141",
+      "name": "LAKIEROBEJCA ORZECH CIEMNY",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000046189",
+      "name": "LAKIEROBEJCA DĄB NATURALNY",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000046219",
+      "name": "LAKIEROBEJCA PALISANDER",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000046264",
+      "name": "LAKIEROBEJCA ORZECH CIEMNY",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000051503",
+      "name": "LAKIER DO MEBLI POŁYSK",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000051534",
+      "name": "LAKIER DO MEBLI PÓŁMAT",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000827726",
+      "name": "OLEJ DO DREWNA PALISANDER",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904000827764",
+      "name": "OLEJ DO DREWNA PALISANDER",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509200037",
+      "name": "PERFEKTA BAZA A",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509289964",
+      "name": "AQUATEX",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509290328",
+      "name": "PROLATEX MATOWY BAZA C",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509290403",
+      "name": "TOP WHITE",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509292179",
+      "name": "BUGOFLEX BAZA A",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509292384",
+      "name": "AQUATEX",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509293343",
+      "name": "ARMASIL T 1mm",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509293961",
+      "name": "ARMASIL F BAZA A",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509294906",
+      "name": "ARMASIL F BAZA B",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509295200",
+      "name": "PROLATEX PÓŁMATOWY BAZA A",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509295293",
+      "name": "PROLATEX MATOWY BAZA A",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509295330",
+      "name": "PROLATEX MATOWY BAZA B",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509295644",
+      "name": "AQUALIT",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509296092",
+      "name": "PERFEKTA BAZA B",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509298843",
+      "name": "SILCO F BAZA C",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5904509806055",
+      "name": "PERFEKTA BAZA A",
+      "status": "excluded_non_food",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "food identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Product name and brand identify a paint, coating, lacquer, primer or building material, not food; excluded from nutrition curation. Excluded from nutrition enrichment: non-food paint/coating/door records in source dump.",
+      "selection_review": "non_food_source_contamination"
+    },
+    {
+      "code": "5903263801047",
+      "name": "Bekon",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://e-delikatesydwojka.pl/produkt/bell-bekon-wedzony-lardons-2-x-60-g/",
+          "source_type": "retailer",
+          "identity_evidence": "Exact code 5903263801047 identifies Bell smoked bacon lardons, 2 x 60 g, with values stated per 100 g.",
+          "matched_barcode": "5903263801047",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 0.5,
+            "fiber": null,
+            "fat": 21.7,
+            "protein": 16.4,
+            "energy_kcal": 263
+          },
+          "notes": "Fiber is not reported."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Fiber is not reported."
+    },
+    {
+      "code": "5905784300658",
+      "name": "Kapusta kiszona z marchewką",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "exact barcode source",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact-code search did not locate a matching product nutrition source."
+    },
+    {
+      "code": "5905784305288",
+      "name": "Świeże jaja z wolnego wybiegu",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "exact barcode source",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact-code search did not locate a matching product nutrition source."
+    },
+    {
+      "code": "5905784317021",
+      "name": "Oliwa z oliwek",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.carrefour.pl/artykuly-spozywcze/sosy-oleje-ocet/oleje-i-oliwy/carrefour-extra-oliwa-z-oliwek-najwyzszej-jakosci-z-pierwszego-tloczenia-500-ml",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Carrefour extra virgin olive oil, 500 ml; page exposes identity but no nutrition values.",
+          "matched_barcode": "5905784317021",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5905784332208",
+      "name": "oliwki zielone z pastą paprykową",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.carrefour.pl/artykuly-spozywcze/przetwory-warzywne-i-owocowe/oliwki-8l/carrefour-classic-oliwki-zielone-odmiana-hojiblanca-z-pasta-paprykowa-935-g",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Hojiblanca green olives with paprika paste, 935 g; no nutrition values surfaced.",
+          "matched_barcode": "5905784332208",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5905784336541",
+      "name": "Classic & Comfort",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.carrefour.pl/drogeria-kosmetyki-i-zdrowie/papier-toaletowy-i-reczniki/papier-toaletowy/carrefour-essential-papier-toaletowy-bialy-8-rolek",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Carrefour Essential toilet paper, 8 rolls, contradicting the supplied food-like name “Classic & Comfort”.",
+          "matched_barcode": "5905784336541",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Barcode resolves to non-food toilet paper; source_id/name mismatch."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "food product identity",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Barcode resolves to non-food toilet paper; source_id/name mismatch."
+    },
+    {
+      "code": "5905784340807",
+      "name": "Mąka Pszenna Luksusowa - Typ 550",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.carrefour.pl/artykuly-spozywcze/sypkie-i-produkty-zbozowe/maka/carrefour-classic-maka-pszenna-luksusowa-typ-550-1-kg/",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Carrefour wheat flour type 550, 1 kg; the retrieved exact-code page did not provide nutrition values.",
+          "matched_barcode": "5905784340807",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Dry flour; no cooking conversion applied."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Dry flour; no cooking conversion applied."
+    },
+    {
+      "code": "5905784343662",
+      "name": "czosnek granulowany",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.carrefour.pl/artykuly-spozywcze/przyprawy-i-dodatki-kulinarne/sol-i-pieprz/carrefour-czosnek-granulowany-20-g",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Carrefour granulated garlic, 20 g; nutrition values unavailable on retrieved page.",
+          "matched_barcode": "5905784343662",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5905784344720",
+      "name": "Korniszony z papryczką chilli",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://supermarkety.carrefour.pl/artykuly-spozywcze/przetwory-warzywne-i-owocowe/ogorki-i-grzyby/carrefour-extra-korniszony-z-papryczka-chilli-delikatesowe-350-g",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Carrefour Extra pickled gherkins with chili, 350 g; retrieved page lacks nutrition values.",
+          "matched_barcode": "5905784344720",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5905784349466",
+      "name": "Ocet spirytusowy 10%",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.carrefour.pl/artykuly-spozywcze/sosy-oleje-ocet/ocet/carrefour-classic-ocet-spirytusowy-10-1-l",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Carrefour spirit vinegar 10% acidity, 1 L; no nutrition panel found.",
+          "matched_barcode": "5905784349466",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5905784356822",
+      "name": "Ziemniaki do gotowania",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "exact barcode source",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact-code search did not locate a matching product nutrition source."
+    },
+    {
+      "code": "5905784359359",
+      "name": "Sok z buraków kiszonych",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.carrefour.pl/owoce-warzywa-ziola/bakalie/carrefour-targ-swiezosci-sok-z-burakow-kiszonych-250-ml/",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Carrefour fermented beet juice, 250 ml; nutrition panel not surfaced in retrieved listing.",
+          "matched_barcode": "5905784359359",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5906724800122",
+      "name": "Mięta",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.carrefour.pl/owoce-warzywa-ziola/ziola-i-salaty/ziola-gm/carrefour-targ-swiezosci-mieta",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Carrefour potted mint intended for consumption; no nutrition panel in listing.",
+          "matched_barcode": "5906724800122",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5906730609498",
+      "name": "Brzuszki z łososia wędzone na gorąco",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://suempol.pl/en/produkty/salmon-bellies-150-g/",
+          "source_type": "manufacturer",
+          "identity_evidence": "Manufacturer page identifies hot-smoked Atlantic salmon bellies, exact EAN 5906730609498, 150 g; full panel per 100 g.",
+          "matched_barcode": "5906730609498",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": 46,
+            "protein": 16,
+            "energy_kcal": 482
+          },
+          "notes": "Carbohydrates are reported as <0.5 g and cannot be represented as an exact numeric value."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbohydrates",
+        "fiber"
+      ],
+      "notes": "Exact item and basis verified; held because carbohydrate is reported only as <0.5 g."
+    },
+    {
+      "code": "5900334004017",
+      "name": "Tymbark gruszka pietruszka",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.rzeszow.pl/tymbark-vega-sok-pietruszka-gruszka-jablko-250-ml",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Tymbark Vega parsley, pear and apple juice, 250 ml; full values explicitly per 100 ml.",
+          "matched_barcode": "5900334004017",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 8.9,
+            "fiber": 0.7,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": 40
+          },
+          "notes": "Fat and protein are listed only as <0.5 g and are not converted to numeric values."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fat",
+        "protein"
+      ],
+      "notes": "Fat and protein are listed only as <0.5 g and are not converted to numeric values."
+    },
+    {
+      "code": "5900334005465",
+      "name": "Tymbark Jabłko Białe Winogrono",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://fr.dodomku.pl/Tymbark_Napoj_owocowy_jablkobiale_winogrono/34083.html",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Tymbark apple and white grape fruit drink; values are explicitly per 100 ml.",
+          "matched_barcode": "5900334005465",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 4.8,
+            "fiber": null,
+            "fat": 0,
+            "protein": 0,
+            "energy_kcal": 20
+          },
+          "notes": "Nutrition variant across formulation/label may vary; source shown reports 4.8 g carbs."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Nutrition variant across formulation/label may vary; source shown reports 4.8 g carbs."
+    },
+    {
+      "code": "5900334010742",
+      "name": "WODA SOK",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://e-delikatesydwojka.pl/produkt/tymbark-po-prostu-woda-sok-jablko-cytryna-400ml/",
+          "source_type": "retailer",
+          "identity_evidence": "Exact code 5900334010742 identifies Tymbark Simply apple-lemon water and juice, 400 ml; panel is per 100 ml.",
+          "matched_barcode": "5900334010742",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 3.1,
+            "fiber": null,
+            "fat": 0,
+            "protein": 0,
+            "energy_kcal": 12
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "exact barcode source",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900334010797",
+      "name": "Tymbark po prostu lemoniada",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/tymbark-po-prostu-lemoniada-cytryna-limonka-jablko",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Tymbark Simply Lemonade lemon, lime and apple, 1.25 L; full panel per 100 ml.",
+          "matched_barcode": "5900334010797",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 4.5,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": 19
+          },
+          "notes": "Fat and protein are stated as <0.5 g; not converted to numeric values."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber",
+        "fat",
+        "protein"
+      ],
+      "notes": "Fat and protein are stated as <0.5 g; not converted to numeric values."
+    },
+    {
+      "code": "5900334014801",
+      "name": "Tymbark H2owoc",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.frisco.pl/pid%2C105655/n%2Ctymbark-h2owoc-napoj-truskawka-winogrono-jablko/stn%2Cproduct",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Tymbark H2Owoc strawberry, grape and apple drink, 400 ml; values are per 100 ml but fiber is absent.",
+          "matched_barcode": "5900334014801",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 4.8,
+            "fiber": null,
+            "fat": 0,
+            "protein": 0,
+            "energy_kcal": 21
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900334018373",
+      "name": "Ice tea",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://catalog.bb-g.pl/brand/177-tymbark",
+          "source_type": "retailer",
+          "identity_evidence": "Tymbark Ice Tea black tea peach drink, 250 ml, is listed with exact EAN 5900334018373; nutrition panel not present.",
+          "matched_barcode": "5900334018373",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact product identity verified; nutrition values unavailable in the retrieved source."
+    },
+    {
+      "code": "5900334020062",
+      "name": "Sok szpinak vega",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/tymbark-vega-sok-szpinak-kiwi-jablko/41",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Tymbark Vega spinach, kiwi and apple juice, 250 ml; panel per 100 ml uses “less than” values for fat and protein.",
+          "matched_barcode": "5900334020062",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 7.7,
+            "fiber": 0.5,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": 35
+          },
+          "notes": "Fat and protein are each reported as <0.5 g; not converted to numeric values."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fat",
+        "protein"
+      ],
+      "notes": "Fat and protein are each reported as <0.5 g; not converted to numeric values."
+    },
+    {
+      "code": "5900334020246",
+      "name": "Tymbark po prostu truskawka 1l",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://torimpex.pl/produkt/tymbark-po-prostu-woda-sok-jablko-i-cytryna-truskawka-125-l/",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Tymbark apple, lemon and strawberry water-and-juice drink, 1.25 L; full panel per 100 ml.",
+          "matched_barcode": "5900334020246",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 3.1,
+            "fiber": null,
+            "fat": 0,
+            "protein": 0,
+            "energy_kcal": 12
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900334020680",
+      "name": "Tymbark Sun set",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "exact barcode source",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact-code searches did not locate a Tymbark Sun Set product listing."
+    },
+    {
+      "code": "5900334020727",
+      "name": "Deli&fruits chia mango",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/tymbark-delifruits-mus-wieloowocowy-chia-mango",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Tymbark Deli&Fruits chia mango fruit puree, 170 g; nutrition per 100 g.",
+          "matched_barcode": "5900334020727",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 16,
+            "fiber": 1.3,
+            "fat": 1.4,
+            "protein": 0.9,
+            "energy_kcal": 84
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "code": "5900334025111",
+      "name": "Tymbark jabłko mięta 1,75 l",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "exact barcode source",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact-code searches did not locate a matching Tymbark apple-mint 1.75 L product listing."
+    },
+    {
+      "code": "5900334027061",
+      "name": "Tymbark sok jabłkowy",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/tymbark-sok-100-jablko-5",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN identifies Tymbark 100% apple juice, 300 ml; nutrition per 100 ml.",
+          "matched_barcode": "5900334027061",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 10,
+            "fiber": null,
+            "fat": 0,
+            "protein": 0,
+            "energy_kcal": 41
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900084006019",
+      "name": "Imbir mielony",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.kamis.pl/produkty/ziola-i-przyprawy/przyprawy-korzenne/imbir-mielony",
+          "source_type": "manufacturer",
+          "identity_evidence": "Official Kamis page identifies the product and displays the exact EAN. Nutrition section says information is forthcoming.",
+          "matched_barcode": "5900084006019",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact identity is verified; no nutrition values are available."
+    },
+    {
+      "code": "5900084025010",
+      "name": "Zioła prowansalskie",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.kamis.pl/produkty/ziola-i-przyprawy/ziola-mieszanki-ziolowe-i-susze-warzywne/ziola-prowansalskie-w-torebce",
+          "source_type": "manufacturer",
+          "identity_evidence": "Official Kamis page identifies the product and displays the exact EAN. Nutrition section says information is forthcoming.",
+          "matched_barcode": "5900084025010",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact identity is verified; no nutrition values are available."
+    },
+    {
+      "code": "5900084182010",
+      "name": "Czosnek staropolski",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.kamis.pl/produkty/ziola-i-przyprawy/ziola-mieszanki-ziolowe-i-susze-warzywne/czosnek-staropolski-w-torebce",
+          "source_type": "manufacturer",
+          "identity_evidence": "Kamis product page identifies Czosnek Staropolski and exact UPC/EAN 5900084182010; nutrition information is unavailable.",
+          "matched_barcode": "5900084182010",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900084203685",
+      "name": "Ocet balsamiczny 6%",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://skorzewo.chatapolska.pl/ocet/1338-kamis-ocet-balsamiczny-250-ml.html",
+          "source_type": "retailer",
+          "identity_evidence": "Exact code 5900084203685 identifies Kamis balsamic vinegar, 250 ml; nutrition values explicitly per 100 ml.",
+          "matched_barcode": "5900084203685",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 13,
+            "fiber": null,
+            "fat": 0,
+            "protein": 0.7,
+            "energy_kcal": 72
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900084235051",
+      "name": "Pieprz biały",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.kamis.pl/produkty/ziola-i-przyprawy/pieprz/pieprz-bialy-mielony-w-torebce",
+          "source_type": "manufacturer",
+          "identity_evidence": "Official Kamis page identifies the product and displays the exact EAN. Nutrition section says information is forthcoming.",
+          "matched_barcode": "5900084235051",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact identity is verified; no nutrition values are available."
+    },
+    {
+      "code": "5900084241748",
+      "name": "Suszone pomidory z czosnkiem i bazylią",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.frisco.pl/pid%2C106415/n%2Ckamis-suszone-pomidory-z-czosnkiem-i-bazylia/stn%2Cproduct",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN 5900084241748 identifies Kamis dried tomatoes with garlic and basil, 15 g; complete panel per 100 g.",
+          "matched_barcode": "5900084241748",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 54,
+            "fiber": null,
+            "fat": 0.8,
+            "protein": 14,
+            "energy_kcal": 310
+          },
+          "notes": "Another exact-code retailer reports 53 g carbs, 1.1 g fat, 12 g protein and 303 kcal per 100 g; no fiber listed."
+        }
+      ],
+      "conflicts": [
+        "Exact-barcode panels disagree: Frisco reports 54 g carbohydrate, 0.8 g fat, 14 g protein, 310 kcal; Food Plus reports 53 g carbohydrate, 1.1 g fat, 12 g protein, 303 kcal per 100 g."
+      ],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Conflicting exact-product panels; label verification needed."
+    },
+    {
+      "code": "5900084270458",
+      "name": "Oregano",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "exact barcode source",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact-code search did not locate a matching Kamis oregano product page with identity evidence."
+    },
+    {
+      "code": "5900084274135",
+      "name": "Ziele angielskie",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "exact barcode source",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact-code search did not locate a matching Kamis allspice product page with identity evidence."
+    }
+  ]
+}

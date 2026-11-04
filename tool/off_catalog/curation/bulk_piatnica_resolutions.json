@@ -1,0 +1,92 @@
+[
+  {
+    "target_id": "off_4902452311139",
+    "original_name": "fromage frais - cookie",
+    "status": "proposed_match",
+    "selected_catalog_id": "piatnica_a5a7dc45f3004bf6091f",
+    "rationale": "The manufacturer's catalog contains Serek homogenizowany ciasteczkowy (cookie-flavored homogenized cheese), matching both food type and flavor. Source: https://piatnica.com.pl/produkt/serek-homogenizowany-ciasteczkowy/; use nutrition only from this catalog row.",
+    "conflicts": [],
+    "confidence": "medium"
+  },
+  {
+    "target_id": "off_5900531001604",
+    "original_name": "Piatnica smietana 18%",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The 1 kg quantity and 18% fat identify the product family, but the local catalog has two distinct 1 kg Śmietana 18% rows with different source URLs and energy values (191 versus 192 kcal per 100 g). No unique row is established.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900531001710",
+    "original_name": "TWOJ SMAK CMETANKOVIY",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The name suggests the Twój Smak cream cheese family, but does not establish flavor. The local catalog has distinct natural, classic, bacon, and salmon variants; no exact flavor match is established.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900531004629",
+    "original_name": "Skyr wiśniowy",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The exact cherry flavor appears in the catalog as Jogurt wiśniowy, while available Skyr rows have other flavors. Matching the cherry yogurt would conflict with the stated food type.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900531004803",
+    "original_name": "Skyr wiśnia z kawałkami czekolady",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The catalog has Skyr czekolada z wiśnią and a separate orange-with-chocolate Skyr, but neither matches the stated cherry flavor with chocolate pieces: the former reverses the described flavor combination. No exact catalog identity is established.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900531004841",
+    "original_name": "Skyr czekoladowo-kokosowy",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The local catalog includes chocolate-and-cherry Skyr but no chocolate-coconut Skyr. Flavor mismatch prevents a match.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900531004896",
+    "original_name": "Skyr z ananasem i maliną",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The local catalog's Skyr fruit flavors do not include the stated pineapple and raspberry combination. Other fruit-flavored Skyr products are not sufficiently similar.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900531006012",
+    "original_name": "Twój smak.Serek aksamitny",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The name identifies the Twój Smak aksamitny family without a flavor. The catalog has classic, bacon, and salmon variants, so the exact flavor cannot be selected.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900531008023",
+    "original_name": "Yogurt",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The generic name does not identify flavor or package. The catalog contains several yogurt flavors and product variants, so no unique identity can be assigned.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900531009013",
+    "original_name": "Bio śmietana 18%",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The local catalog has 18% sour cream rows but no Bio variant. The organic claim is a product distinction and cannot be inferred from the non-Bio catalog entries.",
+    "conflicts": [],
+    "confidence": "high"
+  }
+]

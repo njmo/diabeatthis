@@ -1,0 +1,1305 @@
+{
+  "batch_id": "batch_010",
+  "records": [
+    {
+      "source_id": "4905129989754",
+      "name": "High Protein Quark Bar",
+      "brand": "Mlekovita",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512983899",
+      "name": "Mascarpone",
+      "brand": "Mlekovita",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512984544",
+      "name": "mascarpone",
+      "brand": "mlekovita",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512985404",
+      "name": "masło 82%",
+      "brand": "Mlekovit, Mlekovita",
+      "quantity": "10g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512985466",
+      "name": "Mlekovita Lavati Bez Laktozy150g",
+      "brand": "Mlekovita",
+      "quantity": "150 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512986838",
+      "name": "Ser cheddar plastry",
+      "brand": "Mlekovita",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512987491",
+      "name": "jogurt polski",
+      "brand": "mlekovita",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512987958",
+      "name": "Ser kanapkowy favita",
+      "brand": "Mlekovita",
+      "quantity": "150g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512988610",
+      "name": "Mleko Czekoladowe",
+      "brand": "Mlekovita",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512989662",
+      "name": "kaszka manna",
+      "brand": "mlekovita",
+      "quantity": "150g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512989686",
+      "name": "Wypasiony Serniczek Z polewą truskawkową",
+      "brand": "Mlekovita",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512989716",
+      "name": "Wypasiony Serniczek z polewą brzoskwiniową",
+      "brand": "Mlekovita",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7902712350165",
+      "name": "MiaMu jogurt truskawkowy",
+      "brand": "Mlekovita",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "9068089989747",
+      "name": "Deser śmietankowo czekoladowy",
+      "brand": "Mlekovita",
+      "quantity": "130g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "108800010293244010000310",
+      "name": "Kiełbasa Śląska extra",
+      "brand": "Tarczyński",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "11507160697220406",
+      "name": "Kiełbasa Śląska",
+      "brand": "Tarczyński",
+      "quantity": "310",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5008230422208",
+      "name": "Kabanosy exclusive z indyka",
+      "brand": "Tarczyński",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5742230415920",
+      "name": "Parówki z fileta z kurczaka",
+      "brand": "Tarczyński",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5908230531484",
+      "name": "Kabanosy eXclusive Cheddar",
+      "brand": "Tarczyński",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5908230532979",
+      "name": "Rośl-inne Kiełbaski z boczniakiem - Frankfurterki",
+      "brand": "Tarczyński",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "00408159",
+      "name": "Delecta Cytrynowy",
+      "brand": "Delecta",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59001836",
+      "name": "Orange oil",
+      "brand": "Delecta",
+      "quantity": "12ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": 24.0,
+        "protein": 19.0,
+        "energy_kcal": 292.0
+      }
+    },
+    {
+      "source_id": "5900749565172",
+      "name": "kajmak",
+      "brand": "Delecta",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983000811",
+      "name": "kisiel jabłkowy",
+      "brand": "delecta",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983000880",
+      "name": "Kisiel z kawałkami owoców o smaku truskawkowym",
+      "brand": "Delecta,Owocowy Kubek",
+      "quantity": "30 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983001733",
+      "name": "Kisiel",
+      "brand": "Delecta",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983003997",
+      "name": "Krem Karpatka",
+      "brand": "Delecta",
+      "quantity": "250g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983005502",
+      "name": "krówka",
+      "brand": "delecta",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983005809",
+      "name": "Drożdże",
+      "brand": "Delecta",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983012715",
+      "name": "Galaretka o smaku truskawkowym",
+      "brand": "Delecta",
+      "quantity": "70g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983022912",
+      "name": "Brownie",
+      "brand": "Delecta",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983023322",
+      "name": "Fajny pisak czerwony",
+      "brand": "Delecta,Bakalland",
+      "quantity": "30 g",
+      "nutrition_as_exported": {
+        "carbs": 68.0,
+        "fiber": null,
+        "fat": null,
+        "protein": 0.8,
+        "energy_kcal": 546.0
+      }
+    },
+    {
+      "source_id": "5900983024916",
+      "name": "Babka czekoladowa",
+      "brand": "Delecta",
+      "quantity": "350g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983024923",
+      "name": "Babka jogurtowa",
+      "brand": "Delecta",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983025289",
+      "name": "galaretka mleczna gruszka",
+      "brand": "Delecta",
+      "quantity": "60g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900983503473",
+      "name": "Karpatka",
+      "brand": "Delecta",
+      "quantity": "375g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59027058",
+      "name": "aromat do clast ARAKOWY",
+      "brand": "Delecta",
+      "quantity": "9ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59027065",
+      "name": "Zitrone",
+      "brand": "Delecta",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59027072",
+      "name": "Migdałowy Aromat",
+      "brand": "Delecta",
+      "quantity": "10 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59027089",
+      "name": "Aromat pomarańczowy",
+      "brand": "Delecta",
+      "quantity": "9ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900020036858",
+      "name": "Płatki kukurydziane Corn Flakes",
+      "brand": "Nestlé",
+      "quantity": "45g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900635001111",
+      "name": "Woda mineralna średnionasycona CO2, średnio mineralizowana",
+      "brand": "Nestlé, Nałęczowianka",
+      "quantity": "1,5 l",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900635001517",
+      "name": "Woda mineralna niegazowana",
+      "brand": "Nałęczowianka, Nestlé",
+      "quantity": "1 l",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900635500027",
+      "name": "woda źródlana Nestlé Pure Life",
+      "brand": "nestlé",
+      "quantity": "500 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7613034820655",
+      "name": "Nan",
+      "brand": "Nestlé",
+      "quantity": "800g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7613287255266",
+      "name": "Nałęczowianka 0.75",
+      "brand": "Nestlé",
+      "quantity": "0,75 L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7613287322173",
+      "name": "Klopsiki",
+      "brand": "Garden Gourmet,Nestlé",
+      "quantity": "200 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7613287778512",
+      "name": "Nesquik drink",
+      "brand": "Nesquik, Nestlé",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7613287920577",
+      "name": "Nestle Joe mini caramel",
+      "brand": "Nestlé",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "8445290230720",
+      "name": "KitKat 5",
+      "brand": "Nestlé",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "8445290422248",
+      "name": "Princessa kokos mini",
+      "brand": "Nestlé",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "8593893732926",
+      "name": "Aero",
+      "brand": "Nestlé",
+      "quantity": "24 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "8593893741058",
+      "name": "Višně v hořké čokoládě",
+      "brand": "Orion,Nestlé",
+      "quantity": "240 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5014330000703",
+      "name": "Serek waniliowy",
+      "brand": "Rolmlecz,rm Rolmlecz",
+      "quantity": "150",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900820029791",
+      "name": "serek kokosowy",
+      "brand": "rolmlecz",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900969000255",
+      "name": "Mleko w proszku",
+      "brand": "OSM Siedlce",
+      "quantity": "500g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901242000191",
+      "name": "Czaruś - deser ryżowy z malinami",
+      "brand": "OSM Czarnków",
+      "quantity": "150 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901242000207",
+      "name": "Czaruś - deser ryżowy o smaku waniliowym",
+      "brand": "OSM Czarnków",
+      "quantity": "150 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901957002145",
+      "name": "Twaróg",
+      "brand": "Osm garwolin",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904646000279",
+      "name": "Serek smietankowt krowka",
+      "brand": "Osm Rawicz",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5907529070239",
+      "name": "jogurt",
+      "brand": "osm",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5907529070246",
+      "name": "jogurt",
+      "brand": "osm",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901713000446",
+      "name": "Koncentrat pomidorowy",
+      "brand": "Dawtona",
+      "quantity": "1000g",
+      "nutrition_as_exported": {
+        "carbs": 19.0,
+        "fiber": 3.9,
+        "fat": null,
+        "protein": 4.3,
+        "energy_kcal": 101.0
+      }
+    },
+    {
+      "source_id": "5901713007131",
+      "name": "Sos chiński z grzybkami mun do ryżu",
+      "brand": "Dawtona",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901713011787",
+      "name": "Ogórki luksusowe konserwowe",
+      "brand": "Dawtona",
+      "quantity": "900g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 23.0
+      }
+    },
+    {
+      "source_id": "5901713016171",
+      "name": "Drugie śniadanie - Dawtona - Truskawka, Płatki Owsiane",
+      "brand": "Dawtona",
+      "quantity": "100g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901713016911",
+      "name": "Korniszony z papryką habanero",
+      "brand": "Dawtona",
+      "quantity": "520g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901713017512",
+      "name": "Drugie śniadanie jogurt i mus",
+      "brand": "Dawtona",
+      "quantity": "100g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901713020895",
+      "name": "Tomato juice",
+      "brand": "Dawtona",
+      "quantity": "300 ml",
+      "nutrition_as_exported": {
+        "carbs": 0.1,
+        "fiber": 0.2,
+        "fat": null,
+        "protein": 1.0,
+        "energy_kcal": 57.0
+      }
+    },
+    {
+      "source_id": "5901713030634",
+      "name": "Sol Mexicano Fasola Pinto",
+      "brand": "Dawtona, Sol Mexicano",
+      "quantity": "400 g (240 g)",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "14422881",
+      "name": "Tunczyk",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": 2.7,
+        "protein": 23.34,
+        "energy_kcal": 497.0
+      }
+    },
+    {
+      "source_id": "5900344002225",
+      "name": "Hummus z suszonymi pomidorami Lisner",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344006490",
+      "name": "Lisner SALATKA polska WARZ4ONA 140g OMamo",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344009958",
+      "name": "Filety śledziowe z pieprzem cytrynowym",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344016130",
+      "name": "Szybka Rybka",
+      "brand": "Lisner",
+      "quantity": "170g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 272.0
+      }
+    },
+    {
+      "source_id": "5900344016154",
+      "name": "Szybka Rybka",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344016413",
+      "name": "Łosoś na kanapkę",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": 9.5,
+        "protein": 19.3,
+        "energy_kcal": 168.0
+      }
+    },
+    {
+      "source_id": "5900344023039",
+      "name": "Tuńczyk w kawałkach w oliwie z oliwek",
+      "brand": "Lisner",
+      "quantity": "160g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344026542",
+      "name": "sałatka szparagi",
+      "brand": "lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344026979",
+      "name": "Śledzie w śmietanie 350 g.",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344028652",
+      "name": "Sałatka z pastragiem",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344028737",
+      "name": "Salatka śledziowa",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344029314",
+      "name": "lisner",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344034509",
+      "name": "polska sałatka",
+      "brand": "Lisner",
+      "quantity": "280g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "0944511987903",
+      "name": "Masło ekstra 82%",
+      "brand": "Pilos",
+      "quantity": "200 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "20761974",
+      "name": "Serek Amelia",
+      "brand": "Pilos",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "24567497",
+      "name": "Wołowina wyborna",
+      "brand": "Sokołów",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "2807052005049",
+      "name": "Krajanka",
+      "brand": "Pilos",
+      "quantity": "504g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "4904592188817",
+      "name": "Sopocka loin",
+      "brand": "Sokołów",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5200562021511",
+      "name": "Mini snacki plasniowe sokołów",
+      "brand": "Sokołów",
+      "quantity": "50g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900120004184",
+      "name": "Maślanka",
+      "brand": "Pilos",
+      "quantity": "500g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900120072787",
+      "name": "Mascarpone",
+      "brand": "Pilos",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900486021955",
+      "name": "Gouda Tarta Holenderska",
+      "brand": "Pilos",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": 9.0,
+        "protein": 24.0,
+        "energy_kcal": 348.0
+      }
+    },
+    {
+      "source_id": "5900512110554",
+      "name": "Ser Morski",
+      "brand": "Mlekovita",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": 25.0,
+        "protein": 24.0,
+        "energy_kcal": 321.0
+      }
+    },
+    {
+      "source_id": "5900512300481",
+      "name": "Deserowa Śmietanka Polska 30%",
+      "brand": "Mlekovita",
+      "quantity": "330 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512350011",
+      "name": "Smietana 12% mlekovita",
+      "brand": "Mlekovita",
+      "quantity": "200g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512350219",
+      "name": "mleko zsiadłe",
+      "brand": "mlekovita",
+      "quantity": "370g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512901008",
+      "name": "serek wypasiony",
+      "brand": "mlekovita",
+      "quantity": "100g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512904733",
+      "name": "kefir bez laktozy",
+      "brand": "mlekovita",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512904740",
+      "name": "jogurt polski",
+      "brand": "mlekovita",
+      "quantity": "1kg",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    }
+  ]
+}

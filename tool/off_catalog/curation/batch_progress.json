@@ -1,0 +1,25 @@
+{
+  "review_date": "2026-11-04",
+  "latest_turn": {
+    "assigned_and_searched": 300,
+    "statuses": {
+      "hold": 108,
+      "not_found": 142,
+      "source_backed_proposal": 50
+    }
+  },
+  "cumulative": {
+    "total_records": 646,
+    "food_records": 448,
+    "statuses": {
+      "source_backed_proposal": 91,
+      "hold": 199,
+      "not_found": 158,
+      "excluded_non_food": 198
+    }
+  },
+  "firebase_writes": 0,
+  "firebase_gemini_api_calls": 0,
+  "tests_passed": 15,
+  "remaining_work": "Research remaining unprocessed OFF records in future batches; source-backed proposals still require publication and nutrition convention review."
+}

@@ -1,0 +1,70 @@
+[
+  {
+    "code": "5900512901008",
+    "name": "Wypasiony serek truskawkowy Mlekovita 100 g",
+    "status": "candidate",
+    "sources": [
+      {
+        "url": "https://mlekovita.com.pl/produkt/wypasiony-serek-truskawkowy-831",
+        "identity_evidence": "Manufacturer page names Wypasiony serek truskawkowy, states 100 g, and lists unit EAN 5900512901008.",
+        "basis_amount": 100,
+        "basis_unit": "g",
+        "nutrition": {"carbs": 17, "fiber": null, "fat": 5.0, "protein": 6.9, "energy_kcal": 141},
+        "notes": "Manufacturer's current page; strawberry variant. Fiber is not reported."
+      }
+    ],
+    "conflicts": [],
+    "missing_fields": ["fiber"]
+  },
+  {
+    "code": "5900512904733",
+    "name": "Kefir naturalny bez laktozy Mlekovita",
+    "status": "candidate",
+    "sources": [
+      {
+        "url": "https://mlekovita.com.pl/produkt/kefir-naturalny-bez-laktozy-970",
+        "identity_evidence": "Manufacturer page names Kefir naturalny bez laktozy and lists unit EAN 5900512904733; the unit package is 1 kg.",
+        "basis_amount": 100,
+        "basis_unit": "g",
+        "nutrition": {"carbs": 4.8, "fiber": null, "fat": 2.0, "protein": 3.5, "energy_kcal": 51},
+        "notes": "Manufacturer page reports nutrition per 100 g and a separate portion of 250 g. Values here use the 100 g basis."
+      }
+    ],
+    "conflicts": [],
+    "missing_fields": ["fiber"]
+  },
+  {
+    "code": "5900512904740",
+    "name": "Jogurt Polski Mlekovita 1 kg (truskawka)",
+    "status": "candidate",
+    "sources": [
+      {
+        "url": "https://mlekovita.com.pl/produkt/jogurt-polski-truskawka-964",
+        "identity_evidence": "Manufacturer page names Jogurt Polski truskawka, states a 1 kg unit package, and lists unit EAN 5900512904740.",
+        "basis_amount": 100,
+        "basis_unit": "g",
+        "nutrition": {"carbs": 11, "fiber": null, "fat": 3.1, "protein": 3.0, "energy_kcal": 84},
+        "notes": "EAN resolves to the strawberry variant. Source gives nutrition per 100 g and separately per 250 g; values here use 100 g."
+      }
+    ],
+    "conflicts": ["The supplied record label did not specify strawberry; exact EAN identifies the strawberry variant."],
+    "missing_fields": ["fiber"]
+  },
+  {
+    "code": "5900512983707",
+    "name": "Przysmak Góralski mini Mlekovita 160 g",
+    "status": "candidate",
+    "sources": [
+      {
+        "url": "https://mlekovita.com.pl/produkt/miniprzysmak-goralski-160-g-638",
+        "identity_evidence": "Manufacturer page names Przysmak Góralski mini, states the 160 g unit package, and lists unit EAN 5900512983707.",
+        "basis_amount": 100,
+        "basis_unit": "g",
+        "nutrition": {"carbs": 2.0, "fiber": null, "fat": 19, "protein": 25, "energy_kcal": 279},
+        "notes": "Manufacturer source reports 279 kcal; other indexed retailer listings for this EAN report 278 kcal or 279 kcal, so this proposal follows the manufacturer. Fiber is not reported there."
+      }
+    ],
+    "conflicts": ["Retailer listings indexed for the same EAN report energy as 278 kcal or 279 kcal per 100 g; manufacturer page reports 279 kcal."],
+    "missing_fields": ["fiber"]
+  }
+]

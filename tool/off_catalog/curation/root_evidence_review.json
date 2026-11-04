@@ -1,0 +1,61 @@
+{
+  "review_date": "2026-11-04",
+  "scope": "Independent source text review; no catalog or Firebase mutation.",
+  "findings": [
+    {
+      "code": "5900617031723",
+      "finding": "unsupported_fiber_removed",
+      "url": "https://www.frisco.pl/pid%2C100567/n%2Csante-sniadaniowe-cookies-ciasteczka-musli-z-owocami/stn%2Cproduct"
+    },
+    {
+      "code": "5900783010843",
+      "finding": "unsupported_fiber_removed",
+      "url": "https://stolicazakupow.pl/produkt/pudliszki-potrawka-z-kurczaka-z-warzywami-440g/"
+    },
+    {
+      "code": "5900643048382",
+      "finding": "unsupported_fiber_removed",
+      "url": "https://uk.foodplus.eu/pl/p/Serek-Danio-Bananowy-130g-Danone/25301"
+    },
+    {
+      "code": "5900500033230",
+      "finding": "basis_or_preparation_unresolved",
+      "url": "https://deligro.pl/napoje/niegazowane/owocowe/napoj-pomarancza-mango-500-ml-hortex-1509"
+    },
+    {
+      "code": "5900617042453",
+      "finding": "unsupported_fiber_removed",
+      "url": "https://www.frisco.pl/pid%2C140037/n%2Clovege-napoj-owsiany-bez-cukru/stn%2Cproduct"
+    },
+    {
+      "code": "5900512985466",
+      "finding": "unsupported_fiber_removed",
+      "url": "https://www.frisco.pl/pid%2C119645/n%2Cmlekovita-bez-laktozy-ser-lavati/stn%2Cproduct"
+    },
+    {
+      "code": "5900983022912",
+      "finding": "basis_or_preparation_unresolved",
+      "url": "https://deligro.pl/ciasta-i-desery/ciasta-w-proszku/brownie-mocno-czekoladowe-550-g-delecta-1188"
+    },
+    {
+      "code": "5900983025289",
+      "finding": "basis_or_preparation_unresolved",
+      "url": "https://wesoil.pl/galaretki-kisiele-i-budynie/4112-delecta-galaretka-mleczna-o-smaku-gruszki-60g-5900983025289.html"
+    },
+    {
+      "code": "5900983503473",
+      "finding": "basis_or_preparation_unresolved",
+      "url": "https://deligro.pl/ciasta-i-desery/ciasta-w-proszku/karpatka-z-nuta-waniliowa-375-g-delecta-1191"
+    },
+    {
+      "code": "5900344016130",
+      "finding": "unsupported_fiber_removed",
+      "url": "https://www.frisco.pl/pid%2C118851/n%2Clisner-szybka-rybka-filety-z-mintaja-z-sosem-pomidorowym/stn%2Cproduct"
+    },
+    {
+      "code": "5900344016154",
+      "finding": "unsupported_fiber_removed",
+      "url": "https://www.frisco.pl/pid%2C118847/n%2Clisner-szybka-rybka-filety-z-mintaja-z-sosem-pieczarkowym/stn%2Cproduct"
+    }
+  ]
+}

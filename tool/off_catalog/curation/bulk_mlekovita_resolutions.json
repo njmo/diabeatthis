@@ -1,0 +1,204 @@
+[
+  {
+    "target_id": "off_4905129989754",
+    "original_name": "High Protein Quark Bar",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "No candidate matches a high-protein quark bar; the candidates are unrelated prepared dumplings and JAVOR cheese substitutes.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900512110554",
+    "original_name": "Ser Morski",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_dfc6d5ea847f72d76dad",
+    "rationale": "The product name exactly matches Ser Morski. The catalog row has complete nutrition per 100 g; proposing by name for review.",
+    "conflicts": [
+      "Known identifier conflict: target ID 5900512110554 differs from the catalog row barcode 5900512130309."
+    ],
+    "confidence": "medium"
+  },
+  {
+    "target_id": "off_5900512300481",
+    "original_name": "Deserowa Śmietanka Polska 30%",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_66d62f5ba8ad374976a4",
+    "rationale": "The 30% cream description and 330 ml package match the catalog Śmietanka Polska 30% UHT row. Proposing the name-based match for review.",
+    "conflicts": [
+      "Catalog name specifies Polska 30% UHT while target says Deserowa Śmietanka Polska 30%; the descriptions are not identical."
+    ],
+    "confidence": "medium"
+  },
+  {
+    "target_id": "off_5900512350011",
+    "original_name": "Smietana 12% mlekovita",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_f917457093db41c4aa56",
+    "rationale": "The 12% sour cream description and 200 g package match the catalog Śmietana Polska 12% row. The catalog row has complete nutrition per 100 g.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900512350219",
+    "original_name": "mleko zsiadłe",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_1feaa293d48e2c6f1e3d",
+    "rationale": "The name means soured milk and the 370 g package matches the catalog Mleko zsiadłe Polskie row, with complete nutrition per 100 g.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900512901008",
+    "original_name": "serek wypasiony",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_01b45396ab87a9812bb4",
+    "rationale": "The Wypasiony serek family and 100 g package match. The catalog identifies the strawberry flavor and supplies complete nutrition per 100 g.",
+    "conflicts": [
+      "Catalog row specifies strawberry flavor, which is absent from the target name."
+    ],
+    "confidence": "medium"
+  },
+  {
+    "target_id": "off_5900512904733",
+    "original_name": "kefir bez laktozy",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_2d4a85601f33a423c46d",
+    "rationale": "The target identifies lactose-free kefir; the catalog row is natural lactose-free kefir with complete nutrition per 100 g.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900512904740",
+    "original_name": "jogurt polski",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_3f63984e178ea08b151f",
+    "rationale": "The Jogurt Polski family and 1 kg package match. The catalog row specifies strawberry flavor and has complete nutrition per 100 g.",
+    "conflicts": [
+      "Catalog row specifies strawberry flavor, which is absent from the target name."
+    ],
+    "confidence": "medium"
+  },
+  {
+    "target_id": "off_5900512983707",
+    "original_name": "mini Przysmak Góralski",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_545bf4b5b0922d80dbce",
+    "rationale": "The catalog name contains the exact Przysmak Góralski mini product name; complete nutrition per 100 g is present.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900512983899",
+    "original_name": "Mascarpone",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_fcda746bfa37b7953494",
+    "rationale": "Mascarpone matches the target name; the catalog row is Mascarpone Kuchmistrza with complete nutrition per 100 g.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900512984544",
+    "original_name": "mascarpone",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_34fe7dfea5cd85d4190e",
+    "rationale": "Mascarpone matches the target name; the catalog row is Mascarpone Kuchmistrza with complete nutrition per 100 g.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900512985404",
+    "original_name": "masło 82%",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_e6f6c380500b5bbc3364",
+    "rationale": "The 82% fat claim and 10 g package match the catalog Masło Polskie row, with complete nutrition per 100 g.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900512985466",
+    "original_name": "Mlekovita Lavati Bez Laktozy150g",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The target identifies a Lavati lactose-free product in a 150 g package. Candidates are lactose-free butter in 200 g and milk in other packages; neither matches.",
+    "conflicts": [],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900512986838",
+    "original_name": "Ser cheddar plastry",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The catalog has cheddar slices in 150 g and 1 kg packages, and a third row without nutrition or basis. With no target quantity, identity is ambiguous; the data-incomplete row cannot be used.",
+    "conflicts": [
+      "Package size is unspecified in the target; two complete catalog rows have different package sizes."
+    ],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900512987491",
+    "original_name": "jogurt polski",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_da40d4b3310549cb80a6",
+    "rationale": "The Jogurt Polski family matches. The catalog row is pineapple with fruit pieces and has complete nutrition per 100 g.",
+    "conflicts": [
+      "Catalog row specifies pineapple flavor, which is absent from the target name."
+    ],
+    "confidence": "medium"
+  },
+  {
+    "target_id": "off_5900512987958",
+    "original_name": "Ser kanapkowy favita",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_34996d9bd29354c71a90",
+    "rationale": "The Favita sandwich cheese description and 150 g package align with the catalog Ser Favita slices row, which has complete nutrition per 100 g.",
+    "conflicts": [
+      "Catalog row specifies spinach and garlic, which is absent from the target name."
+    ],
+    "confidence": "medium"
+  },
+  {
+    "target_id": "off_5900512988610",
+    "original_name": "Mleko Czekoladowe",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "Two chocolate milk catalog rows match the product name but have different package sizes (1,000 ml and 200 ml) and different nutrition values; target quantity is missing.",
+    "conflicts": [
+      "Catalog candidates represent different pack sizes and nutrition values; no target quantity distinguishes them."
+    ],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_5900512989662",
+    "original_name": "kaszka manna",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_d6d85be394c3d4a68c94",
+    "rationale": "The semolina porridge description and 150 g package match the catalog Wypasiona kaszka manna row, which has complete nutrition per 100 g.",
+    "conflicts": [
+      "Catalog row specifies strawberry flavor, which is absent from the target name."
+    ],
+    "confidence": "medium"
+  },
+  {
+    "target_id": "off_7902712350165",
+    "original_name": "MiaMu jogurt truskawkowy",
+    "status": "unresolved",
+    "selected_catalog_id": null,
+    "rationale": "The target specifies strawberry yogurt but omits style and package. Candidates include a nutrition-incomplete yogurt, a 1 kg yogurt, and a 250 g drinkable yogurt; no unique complete row can be chosen.",
+    "conflicts": [
+      "Candidate identity and package are ambiguous; one otherwise similar candidate lacks nutrition and basis."
+    ],
+    "confidence": "high"
+  },
+  {
+    "target_id": "off_9068089989747",
+    "original_name": "Deser śmietankowo czekoladowy",
+    "status": "proposed_match",
+    "selected_catalog_id": "mlekovita_2fdbf6ce6b064da5af31",
+    "rationale": "The cream-and-chocolate dessert description and 130 g package exactly match Wypasiony deser śmietankowo-czekoladowy, with complete nutrition per 100 g.",
+    "conflicts": [
+      "Known identifier conflict: target ID 9068089989747 differs from the catalog row barcode 5900512989747."
+    ],
+    "confidence": "medium"
+  }
+]

@@ -1,0 +1,991 @@
+{
+  "review_date": "2026-11-04",
+  "reason": "Non-food paint/coating/door records discovered in OFF source export. No nutrition should be inferred.",
+  "records": [
+    {
+      "source_id": "5901457159974",
+      "name": "PODKŁAD ANTYKOROZYJNY SZARY RAL 7045",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000008903",
+      "name": "EMALIA ANTYKOROZYJNA CZARNY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000009313",
+      "name": "PODKŁAD ANTYKOROZYJNY CZARNY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000012580",
+      "name": "FARBA DO BETONU GRAFITOWY SZARY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000016830",
+      "name": "PODKŁAD ANTYKOROZYJNY CZARNY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000027898",
+      "name": "EXPRESS TOP BIAŁE SZALENSTWO SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000027935",
+      "name": "EXPRESS TOP CZARNA MATERIA SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000027966",
+      "name": "EXPRESS TOP SZACH MAT MAT",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000027997",
+      "name": "EXPRESS TOP CZARNA MAGIA SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028031",
+      "name": "EXPRESS TOP JAK NA LATO SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028062",
+      "name": "EXPRESS TOP PĄCZEK W MAŚLE SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028109",
+      "name": "EXPRESS TOP JAKIŚ KOSMOS",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028185",
+      "name": "EXPRESS TOP FAJNY KLIMAT MAT",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000046707",
+      "name": "EMALIA ANTYKOROZYJNA ANTRACYT PÓŁMATOWY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000046752",
+      "name": "EMALIA ANTYKOROZYJNA CZARNY MAT",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000804468",
+      "name": "FARBA DO BETONU SZARY MAT",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000810698",
+      "name": "AKRYLIT W SNIEZNOBIALA MATOWA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820093",
+      "name": "EMAKOL BRĄZOWY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820161",
+      "name": "EMAKOL CZARNY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820253",
+      "name": "EMAKOL KAWOWY JASNY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820369",
+      "name": "EMAKOL MAHOŃ POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820482",
+      "name": "EMAKOL ORZECH ŚREDNI POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820550",
+      "name": "EMAKOL SZARY JASNY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820680",
+      "name": "EMAKOL ŻÓŁTY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000824879",
+      "name": "EMAKOL EMALIA CZARNY MATOWY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000001232",
+      "name": "IMPREGNAT GRUNT",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000003533",
+      "name": "LAKIER JACHTOWY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005162",
+      "name": "IMPREGNAT DĄB CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005209",
+      "name": "IMPREGNAT PALISANDER",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005247",
+      "name": "IMPREGNAT TIK",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005452",
+      "name": "IMPREGNAT MAHOŃ",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005483",
+      "name": "IMPREGNAT PALISANDER ŚREDNI",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005551",
+      "name": "IMPREGNAT DĄB",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005599",
+      "name": "IMPREGNAT ORZECH CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005629",
+      "name": "IMPREGNAT SOSNA",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000006572",
+      "name": "IMPREGNAT SZARY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000045946",
+      "name": "LAKIEROBEJCA DĄB NATURALNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000045977",
+      "name": "LAKIEROBEJCA PALISANDER",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046004",
+      "name": "LAKIEROBEJCA BEZBARWNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046035",
+      "name": "LAKIEROBEJCA ZŁOTY DĄB",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046066",
+      "name": "LAKIEROBEJCA DĄB NATURALNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046097",
+      "name": "LAKIEROBEJCA PALISANDER",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046134",
+      "name": "LAKIEROBEJCA MAHOŃ",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046165",
+      "name": "LAKIEROBEJCA KASZTAM",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046202",
+      "name": "LAKIEROBEJCA ORZECH JASNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046257",
+      "name": "LAKIEROBEJCA MAHOŃ",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046288",
+      "name": "LAKIEROBEJCA KASZTAN",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000051527",
+      "name": "LAKIER DO MEBLI",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000827719",
+      "name": "OLEJ DO DREWNA TIK",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000827757",
+      "name": "OLEJ DO DREWNA TIK",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904509200020",
+      "name": "OPTIMA BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509284020",
+      "name": "ARMASIL F BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509290311",
+      "name": "PROLATEX MATOWY BAZA",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509290342",
+      "name": "Prolatex PÓŁMATOWY BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509292162",
+      "name": "BUGOFLEX BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509292193",
+      "name": "BUGOFLEX BAZA B",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509292452",
+      "name": "AQUATEX",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509293398",
+      "name": "ARMASIL GT",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509294722",
+      "name": "BUGOFLEX BAZA C",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509295163",
+      "name": "MARMURIT GT",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509295248",
+      "name": "PROLATEX PÓŁMATOWY BAZA B",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509295323",
+      "name": "PROLATEX MATOWY BAZA B",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509295637",
+      "name": "AQUALIT",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509296023",
+      "name": "OPTILATEX BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509298836",
+      "name": "SILCO F BAZA C",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509300454",
+      "name": "PERFEKTA BAZA B",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904000008712",
+      "name": "EMALIA ANTYKOROZYJNA CZARNY PÓŁMATOWY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000008927",
+      "name": "EMALIA ANTYKOROZYJNA MAHOŃ RAL 3009",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000012559",
+      "name": "FARBA DO BETONU SZARY MAT",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000014638",
+      "name": "PODKŁAD ANTYKOROZYJNY TLENKOWY CZERWONY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000017554",
+      "name": "EMAKOL POPIELATY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000027904",
+      "name": "EXPRESS TOP BIAŁE SZALEŃSTWO SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000027942",
+      "name": "EXPRESS TOP CZYSTA KARTKA SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000027973",
+      "name": "EXPRESS TOP W DECHE SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028000",
+      "name": "EXPRESS TOP CZARNA MATERIA MAT",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028048",
+      "name": "EXPRESS TOP CICHA WODA SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028079",
+      "name": "EXPRESS TOP SZARA KOMÓRKA SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028116",
+      "name": "EXPRESS TOP PLACHTA NA BYKA SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000037941",
+      "name": "ŁAZIENKA I KUCHNIA SNIEZNOBIALA MATOWA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000046714",
+      "name": "EMALIA ANTYKOROZYJNA ANTRACYT POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000046769",
+      "name": "EMALIA ANTYKOROZYJNA SZARY JASY RAL 7035",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000810674",
+      "name": "AKRYLIT W SNIEZNOBIALA MATOWA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000819462",
+      "name": "EMAKOL",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820109",
+      "name": "EMAKOL BRĄZOWY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820178",
+      "name": "EMAKOL CZARNY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820284",
+      "name": "EMAKOL KREMOWY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820390",
+      "name": "EMAKOL MIĘTOWY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820512",
+      "name": "EMAKOL POPIELATY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820635",
+      "name": "EMAKOL ZIELONY SOCZYSTY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820697",
+      "name": "EMAKOL ŻÓŁTY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000824886",
+      "name": "EMAKOL POPIELATY MATOWY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000001256",
+      "name": "IMPREGNAT GRUNT",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000003557",
+      "name": "LAKIER JACHTOWY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005186",
+      "name": "IMPREGNAT MAHOŃ",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005216",
+      "name": "IMPREGNAT PALISANDER ŚREDNI",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005421",
+      "name": "IMPREGNAT DĄB",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005469",
+      "name": "IMPREGNAT ORZECH CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005490",
+      "name": "IMPREGNAT",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005568",
+      "name": "IMPREGNAT DĄB CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005605",
+      "name": "IMPREGNAT PALISANDER",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005643",
+      "name": "IMPREGNAT TIK",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000006596",
+      "name": "IMPREGNAT SZARY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000045953",
+      "name": "LAKIEROBEJCA TIK",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000045984",
+      "name": "LAKIEROBEJCA PATYNA",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046011",
+      "name": "LAKIEROBEJCA MAHOŃ",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046042",
+      "name": "LAKIEROBEJCA KASZTAN",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046073",
+      "name": "LAKIEROBEJCA TIK",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046110",
+      "name": "LAKIEROBEJCA PALISANDER CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046141",
+      "name": "LAKIEROBEJCA ORZECH CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046189",
+      "name": "LAKIEROBEJCA DĄB NATURALNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046219",
+      "name": "LAKIEROBEJCA PALISANDER",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046264",
+      "name": "LAKIEROBEJCA ORZECH CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000051503",
+      "name": "LAKIER DO MEBLI POŁYSK",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000051534",
+      "name": "LAKIER DO MEBLI PÓŁMAT",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000827726",
+      "name": "OLEJ DO DREWNA PALISANDER",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000827764",
+      "name": "OLEJ DO DREWNA PALISANDER",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904509200037",
+      "name": "PERFEKTA BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509289964",
+      "name": "AQUATEX",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509290328",
+      "name": "PROLATEX MATOWY BAZA C",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509290403",
+      "name": "TOP WHITE",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509292179",
+      "name": "BUGOFLEX BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509292384",
+      "name": "AQUATEX",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509293343",
+      "name": "ARMASIL T 1mm",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509293961",
+      "name": "ARMASIL F BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509294906",
+      "name": "ARMASIL F BAZA B",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509295200",
+      "name": "PROLATEX PÓŁMATOWY BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509295293",
+      "name": "PROLATEX MATOWY BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509295330",
+      "name": "PROLATEX MATOWY BAZA B",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509295644",
+      "name": "AQUALIT",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509296092",
+      "name": "PERFEKTA BAZA B",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509298843",
+      "name": "SILCO F BAZA C",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509806055",
+      "name": "PERFEKTA BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904000008880",
+      "name": "EMALIA ANTYKOROZYJNA BRĄZOWY CZEKOLADOWY POLYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000008972",
+      "name": "EMALIA ANTYKOROZYJNA ZIELEŃ MCHU",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000012566",
+      "name": "FARBA DO BETONU GRAFITOWO-SZARY MAT",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000016823",
+      "name": "PODKŁAD ANTYKOROZYJNY tlenkowy czerwony",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000027881",
+      "name": "EXPRESS TOP BIAŁE SZALENSTWO SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000027928",
+      "name": "EXPRESS TOP W DECHĘ SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000027959",
+      "name": "EXPRESS TOP KOZIOŁEK MATOŁEK MAT",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000027980",
+      "name": "EXPRESS TOP KAWA NA ŁAWĘ SA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028024",
+      "name": "EXPRESS TOP MUSZTARDA PO OBIEDZIE SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028055",
+      "name": "EXPRESS TOP SIWY DYM SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028086",
+      "name": "EXPRESS TOP ALE CZAD SATYNA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000028147",
+      "name": "EXPRESS TOP DOBRY MATERIAŁ MAT",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000037965",
+      "name": "ŁAZIENKA I KUCHNIA SNIEZNOBIALA MATOWA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000046721",
+      "name": "EMALIA ANTYKOROZYJNA ANTRACYT MAT",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000056775",
+      "name": "MULTIMETAL ANTRACYT MATOWY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000810681",
+      "name": "AKRYLIT W SNIEZNOBIALA MATOWA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000819479",
+      "name": "EMAKOL BIAŁY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820147",
+      "name": "EMAKOL BRĄZOWY CIEMNY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820222",
+      "name": "EMAKOL CZERWONY KARMINOWY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820307",
+      "name": "EMAKOL LAZUROWY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820444",
+      "name": "EMAKOL ORZECH JASNY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820543",
+      "name": "EMAKOL SZARY JASNY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000820642",
+      "name": "EMAKOL ZIELONY SOCZYSTY POŁYSK",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000824855",
+      "name": "EMAKOL BIAŁY MATOWY",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904118004392",
+      "name": "AKRYLIT W SNIEZNOBIALA MATOWA",
+      "brand": "dek"
+    },
+    {
+      "source_id": "5904000001263",
+      "name": "IMPREGNAT GRUNT",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005155",
+      "name": "IMPREGNAT DĄB",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005193",
+      "name": "IMPREGNAT ORZECH CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005223",
+      "name": "IMPREGNAT SOSNA",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005438",
+      "name": "IMPREGNAT DĄB CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005476",
+      "name": "IMPREGNAT PALISANDER",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005513",
+      "name": "IMPREGNAT TIK",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005582",
+      "name": "IMPREGNAT MAHOŃ",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000005612",
+      "name": "IMPREGNAT PALISANDER ŚREDNI",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000006558",
+      "name": "IMPREGNAT SZARY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000034452",
+      "name": "POKOST LNIANY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000045960",
+      "name": "LAKIEROBEJCA ORZECH JASNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000045991",
+      "name": "LAKIEROBEJCA PALISANDER CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046028",
+      "name": "LAKIEROBEJCA ORZECH CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046059",
+      "name": "LAKIEROBEJCA BIAŁY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046080",
+      "name": "LAKIEROBEJCA ORZECH JASNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046127",
+      "name": "LAKIEROBEJCA BEZBARWNA",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046158",
+      "name": "LAKIEROBEJCA ZŁOTY DĄB",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046196",
+      "name": "LAKIEROBEJCA TIK",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046233",
+      "name": "LAKIEROBEJCA PALISANDER CIEMNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000046271",
+      "name": "LAKIEROBEJCA DĄB ZŁOTY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000051510",
+      "name": "LAKIER DO MEBLI POŁYSK",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000827702",
+      "name": "OLEJ DO DREWNA BEZBARWNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904000827740",
+      "name": "OLEJ DO DREWNA BEZBARWNY",
+      "brand": "dre"
+    },
+    {
+      "source_id": "5904509200013",
+      "name": "OPTIMA BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509202055",
+      "name": "PERFEKTA BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509290021",
+      "name": "PERFEKTA BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509290335",
+      "name": "PROLATEX MATOWY BAZA B",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509290410",
+      "name": "TOP WHITE",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509292186",
+      "name": "BUGOFLEX BAZA B",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509292421",
+      "name": "PERFEKTA BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509293350",
+      "name": "ARMASIL T 1,5MM",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509294005",
+      "name": "ARMASIL GRUNT GT",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509294920",
+      "name": "ARMASIL F BAZA C",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509295217",
+      "name": "PROLATEX PÓŁMATOWY BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509295309",
+      "name": "PROLATEX MATOWY BAZA A",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509295361",
+      "name": "PROLATEX PÓŁMATOWY BAZA C",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509296009",
+      "name": "OPTILATEX",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509296108",
+      "name": "PERFEKTA BAZA B",
+      "brand": "kb"
+    },
+    {
+      "source_id": "5904509299512",
+      "name": "TOP WHITE",
+      "brand": "kb"
+    }
+  ]
+}

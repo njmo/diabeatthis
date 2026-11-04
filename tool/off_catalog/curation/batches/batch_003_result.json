@@ -1,0 +1,180 @@
+{
+  "batch_id": "batch_003",
+  "reviewed_at": "2026-11-04",
+  "records": [
+    {
+      "code": "5900120004214",
+      "name": "Maślanka jagoda-poziomka-borówka Łowicz 500 g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.frisco.pl/pid%2C143659/n%2Cosm-lowicz-maslanka-jagoda-poziomka-borowka/stn%2Cproduct",
+          "source_type": "retailer",
+          "identity_evidence": "Product page names Łowicz buttermilk with blueberry, wild strawberry and bilberry, 500 g, and lists EAN 5900120004214.",
+          "matched_barcode": "5900120004214",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 12.0,
+            "fiber": null,
+            "fat": 1.5,
+            "protein": 2.9,
+            "energy_kcal": 73
+          },
+          "notes": "Nutrition is explicitly stated per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": "The retailer marks the product discontinued; the exact EAN and per-100-g nutrition are listed."
+    },
+    {
+      "code": "5900120062283",
+      "name": "Ser Liliput Łowicki 350 g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://mleczarnia.lowicz.pl/produkt/ser-liliput-w-porcji-350-g/?generate_spec=true&product=6595",
+          "source_type": "manufacturer",
+          "identity_evidence": "Łowicz product logistics page identifies Ser Liliput in a 350 g package and EAN 5900120062283.",
+          "matched_barcode": "5900120062283",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 0.1,
+            "fiber": null,
+            "fat": 27.0,
+            "protein": 23.0,
+            "energy_kcal": 335
+          },
+          "notes": "Nutrition is from a separate retailer listing that gives the same EAN and reports values per 100 g: https://hurtownia-spozywcza.pl/lowicz-ser-liliput-350g.html."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": "Exact manufacturer barcode and package match."
+    },
+    {
+      "code": "5900120073289",
+      "name": "Serek wiejski Łowicki 5% 200 g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://mleczarnia.lowicz.pl/produkt/serek-wiejski-lowicki-5-200-g/",
+          "source_type": "manufacturer",
+          "identity_evidence": "Manufacturer product page identifies Łowicki 5% cottage cheese, 200 g; its logistics page lists unit EAN 5900120073289.",
+          "matched_barcode": "5900120073289",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 3.0,
+            "fiber": null,
+            "fat": 5.0,
+            "protein": 11.0,
+            "energy_kcal": 101
+          },
+          "notes": "The manufacturer states nutrition per 100 g on the product page and exact barcode on its logistics page: https://mleczarnia.lowicz.pl/produkt/serek-wiejski-lowicki-5-200-g/?generate_spec=true&product=7427."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": "Used the 5% product values; did not substitute the separate light 3% variant."
+    },
+    {
+      "code": "5900820010881",
+      "name": "Mlekpol processed cheese with paprika, roll 100 g",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://mlekpol.com.pl/index.php/en/produkt/mlekpolprocessed-cheese-with-paprika-roll/",
+          "source_type": "manufacturer",
+          "identity_evidence": "Mlekpol manufacturer page lists barcode 5900820010881 and 100 g package for processed cheese with paprika.",
+          "matched_barcode": "5900820010881",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Exact product identity found, but no usable nutrition panel for this barcode was located."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["nutrition basis", "carbs", "fat", "protein", "energy_kcal"],
+      "notes": "A retailer page found during research lists a different paprika cheese EAN, so its nutrition was not transferred."
+    },
+    {
+      "code": "5900820013325",
+      "name": "Mlekpol Mleko zsiadłe 380 g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://sklep.spolemkielce.pl/produkt/mleko-zsiadle-380g-mlekpol/",
+          "source_type": "retailer",
+          "identity_evidence": "Mlekpol sour milk page lists barcode 5900820013325 and 380 g package; the manufacturer also lists this barcode and package size at https://mlekpol.com.pl/index.php/produkt/mleko-zsiadle/.",
+          "matched_barcode": "5900820013325",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 3.9,
+            "fiber": null,
+            "fat": 3.0,
+            "protein": 3.4,
+            "energy_kcal": 58
+          },
+          "notes": "The retailer gives a full nutrition panel per 100 g for the exact barcode."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": "Manufacturer page independently confirms exact product identity and package size."
+    },
+    {
+      "code": "5900820029265",
+      "name": "Mlekpol yogurt, 400 g",
+      "status": "hold",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": ["exact product identity", "nutrition basis", "carbs", "fat", "protein", "energy_kcal"],
+      "notes": "Searches did not find a reliable product page matching this barcode. Similar Mlekpol yogurt listings had different barcodes and were not used."
+    },
+    {
+      "code": "5908230520662",
+      "name": "Tarczyński Kabanos mini Go! wieprzowy 25 g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.taniaksiazka.pl/tarczynski-kabanos-mini-go-wieprzowy-25-g-p-2097782.html",
+          "source_type": "retailer",
+          "identity_evidence": "Tarczyński mini Go pork kabanos page gives EAN 5908230520662 and describes the 25 g serving; a product list independently pairs this EAN with the same product name: https://www.carrefour.pl/files/displaypage/madrzejemy-g6bui1.pdf.",
+          "matched_barcode": "5908230520662",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 5.3,
+            "fiber": null,
+            "fat": 41.0,
+            "protein": 25.0,
+            "energy_kcal": 490
+          },
+          "notes": "Nutrition panel is explicitly per 100 g; the source also reports separate values for a 25 g portion."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": "Exact barcode corresponds to the mini pork kabanos, rather than an unspecified full-size kabanos."
+    },
+    {
+      "code": "5908230526268",
+      "name": "Kabanosy wieprzowe Tarczyński",
+      "status": "hold",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": ["exact product identity", "nutrition basis", "carbs", "fat", "protein", "energy_kcal"],
+      "notes": "No reliable result matching this exact barcode was found; no similar pork kabanos product was substituted."
+    }
+  ]
+}

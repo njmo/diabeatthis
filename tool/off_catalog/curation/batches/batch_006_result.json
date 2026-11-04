@@ -1,0 +1,172 @@
+{
+  "batch_id": "batch_006",
+  "reviewed_at": "2026-11-04",
+  "records": [
+    {
+      "code": "5900617035851",
+      "name": "Sante Wafle ryżowe z polewą malinową 66 g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://samujacka.sklepkupiec.pl/chleb-tostowy-pieczywo-chrupkie/151221-sante-wafle-ryzowe-z-polewa-malinowa-66-g.html",
+          "source_type": "retailer",
+          "identity_evidence": "Product listing identifies Sante rice cakes with raspberry coating, 66 g, and index 5900617035851.",
+          "matched_barcode": "5900617035851",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 70.0,
+            "fiber": 2.9,
+            "fat": 15.0,
+            "protein": 4.9,
+            "energy_kcal": 440
+          },
+          "notes": "Nutrition values are stated per 100 g on a second listing for the exact EAN: https://e-delikatesydwojka.pl/produkt/sante-wafle-ryzowe-z-polewa-malinowa-66-g/."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact EAN and matching product description found; nutrition basis is per 100 g."
+    },
+    {
+      "code": "5900617042453",
+      "name": "Lovege Oat Drink No Added Sugar 330 ml",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.frisco.pl/pid%2C140037/n%2Clovege-napoj-owsiany-bez-cukru/stn%2Cproduct",
+          "source_type": "retailer",
+          "identity_evidence": "Lovege oat drink, 330 ml, with EAN 5900617042453. The manufacturer catalogue independently lists this exact EAN and product name: https://www.sante.com.pl/wp-content/uploads/2024/08/SANTE_export-brochure.pdf.",
+          "matched_barcode": "5900617042453",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 5.7,
+            "fiber": null,
+            "fat": 0.7,
+            "protein": 0.4,
+            "energy_kcal": 31
+          },
+          "notes": "Values are per 100 ml, as explicitly stated by Ceneo for this EAN: https://www.ceneo.pl/141025180. No conversion from millilitres to grams was made.",
+          "agent_reported_nutrition": {
+            "carbs": 5.7,
+            "fiber": 0.3,
+            "fat": 0.7,
+            "protein": 0.4,
+            "energy_kcal": 31
+          }
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Exact manufacturer-catalogue EAN and 330 ml product match.",
+      "root_review": [
+        "Removed fiber value not supported by the retrieved source text."
+      ]
+    },
+    {
+      "code": "5902180630105",
+      "name": "Sonko Komosa ryżowa biała 200 g (2 x 100 g)",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.carrefour.pl/artykuly-spozywcze/sypkie-i-produkty-zbozowe/kasze/sonko-komosa-ryzowa-biala-200-g-2-x-100-g",
+          "source_type": "retailer",
+          "identity_evidence": "Carrefour lists Sonko white quinoa in a 200 g twin pack and EAN 5902180630105.",
+          "matched_barcode": "5902180630105",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "The exact barcode page has no usable nutrition panel. A manufacturer panel found for a different 300 g package was not transferred."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "nutrition basis",
+        "carbs",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact product identity found, but no nutrition source meeting the exact-product evidence requirement."
+    },
+    {
+      "code": "5902180630136",
+      "name": "Sonko Wafle ryżowe w czekoladzie deserowej bez dodatku cukru 30 g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://allegro.pl/produkt/sonko-wafle-ryzowe-w-czekoladzie-deserowej-bez-dodatku-cukru-30-g-52bc252b-70f6-413e-82c2-eec54a2c4c48",
+          "source_type": "retailer",
+          "identity_evidence": "Product title and EAN 5902180630136 identify Sonko rice cakes in dark chocolate without added sugar, 30 g.",
+          "matched_barcode": "5902180630136",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 62.0,
+            "fiber": 4.8,
+            "fat": 22.0,
+            "protein": 7.7,
+            "energy_kcal": 486
+          },
+          "notes": "Nutrition per 100 g; the same listing provides the exact EAN and product name."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "The exported short name is ambiguous; verified product identity indicates the dark chocolate no-added-sugar variant."
+    },
+    {
+      "code": "5908230527838",
+      "name": "Tarczyński Naturalnie Kabanosy z szynki 110 g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://e-spar.com.pl/towar/kabanosy-tarczynski-naturalne-bez-konserwantow-z-szynki/297991",
+          "source_type": "retailer",
+          "identity_evidence": "Product listing identifies Tarczyński kabanosy made with pork ham and barcode 5908230527838; it describes a 110 g sell unit.",
+          "matched_barcode": "5908230527838",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 0.4,
+            "fiber": null,
+            "fat": 30.0,
+            "protein": 23.0,
+            "energy_kcal": 365
+          },
+          "notes": "Nutrition is explicitly per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Exact barcode and product description match."
+    },
+    {
+      "code": "5908230528354",
+      "name": "Tarczyński kabanos drobiowy z dodatkiem wieprzowiny",
+      "status": "hold",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "exact product identity",
+        "nutrition basis",
+        "carbs",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "No reliable product page matching this exact barcode was found; no similar Tarczyński kabanos was substituted."
+    }
+  ]
+}

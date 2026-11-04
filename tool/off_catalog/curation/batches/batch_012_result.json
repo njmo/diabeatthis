@@ -1,0 +1,2457 @@
+{
+  "batch_id": "batch_012",
+  "reviewed_at": "2026-11-04",
+  "records": [
+    {
+      "code": "5900197030772",
+      "name": "Mikuś",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://bakoma.pl/",
+          "source_type": "manufacturer",
+          "identity_evidence": "Bakoma manufacturer catalog identifies Mikuś; searched exact EAN but no complete nutrition panel located.",
+          "matched_barcode": "5900197030772",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product identity found, but a complete usable nutrition panel was not verified."
+    },
+    {
+      "code": "5900197030932",
+      "name": "Twist Shake",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.carrefour.pl/",
+          "source_type": "retailer",
+          "identity_evidence": "Carrefour listing identifies Bakoma Twist Shake; exact EAN matched, no complete nutrition panel located.",
+          "matched_barcode": "5900197030932",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product identity found, but a complete usable nutrition panel was not verified."
+    },
+    {
+      "code": "5900197031946",
+      "name": "Bakoma keto",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://e-spar.com.pl/towar/bakoma-keto-jogurt-pitny-truskawka-300-g/313753",
+          "source_type": "retailer",
+          "identity_evidence": "Listing identifies Bakoma Keto strawberry drinking yogurt, 300 g; listed code matches input EAN.",
+          "matched_barcode": "5900197031946",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 2.5,
+            "fiber": null,
+            "fat": 4.0,
+            "protein": 5.0,
+            "energy_kcal": 66
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Exact barcode and explicit 100 g/ml basis verified; core macros available."
+    },
+    {
+      "code": "5900197221972",
+      "name": "Bakuś z drazami",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5900197923852",
+      "name": "Creamy yogurt with raspberry and granola",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "06095277",
+      "name": "Granola czekolada z truskawką",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "0942612030795",
+      "name": "Sante Fit",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "2901780020333",
+      "name": "Sonko Wafle ryżowe z solą morską",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=2901780020333",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 2901780020333 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "2901780020333",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "16610002",
+      "name": "mąka krupczatka",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=16610002",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 16610002 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "16610002",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900049823118",
+      "name": "Spaghetti Cienkie",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/lubella-makaron-spaghetti-cienkie",
+          "source_type": "retailer",
+          "identity_evidence": "Listing identifies Lubella thin spaghetti and exact EAN; extracted nutrition table is ambiguous, so values are withheld.",
+          "matched_barcode": "5900049823118",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product identity found, but a complete usable nutrition panel was not verified."
+    },
+    {
+      "code": "5900049824443",
+      "name": "mąka poznańska",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900049824443",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900049824443 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900049824443",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900049824498",
+      "name": "mąka uniwersalna",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "19006109",
+      "name": "Galaretka pomarańczowy smak",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=19006109",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 19006109 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "19006109",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "2312376213921",
+      "name": "Majonez Lekki",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=2312376213921",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 2312376213921 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "2312376213921",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900862217446",
+      "name": "Galaretka poziomkowy smak",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.warszawa.pl/oferta-winiary",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer assortment listing identifies Winiary strawberry-flavour jelly; exact EAN match, no full nutrition panel.",
+          "matched_barcode": "5900862217446",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product identity found, but a complete usable nutrition panel was not verified."
+    },
+    {
+      "code": "7613030333227",
+      "name": "Kisiel z cukrem pomarańczowy smak",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.mediaexpert.pl/supermarket/artykuly-spozywcze/zupy-i-dania-instant/winiary-kisiel-z-cukrem-smak-pomaranczowy-77-g",
+          "source_type": "retailer",
+          "identity_evidence": "Listing identifies Winiary orange kisiel with sugar, 77 g and exact EAN.",
+          "matched_barcode": "7613030333227",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 89.3,
+            "fiber": null,
+            "fat": 0.01,
+            "protein": 0.1,
+            "energy_kcal": 361
+          },
+          "notes": "Values are for dry powder; a separate prepared-kisiel panel is not used."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Exact barcode and explicit 100 g/ml basis verified; core macros available."
+    },
+    {
+      "code": "7613032413224",
+      "name": "Sosy do makaronu - Italia Cztery sery z bazylią",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=7613032413224",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 7613032413224 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "7613032413224",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "7613034023568",
+      "name": "Kogutek bulion",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=7613034023568",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 7613034023568 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "7613034023568",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "7613034441522",
+      "name": "Królewski Rosół Wołowy",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=7613034441522",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 7613034441522 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "7613034441522",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "7613037091342",
+      "name": "Meksykański sos z warzywami",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=7613037091342",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 7613037091342 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "7613037091342",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "7613287120588",
+      "name": "Kisiel kwoce smak lesny",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=7613287120588",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 7613287120588 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "7613287120588",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "8445290246455",
+      "name": "Pomysł na Steki z karkówki w sosie z tymiankiem",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=8445290246455",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 8445290246455 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "8445290246455",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "8445290340771",
+      "name": "Budyń o smaku ciastek maslanych",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=8445290340771",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 8445290340771 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "8445290340771",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "8445291526556",
+      "name": "Sos czosnkowy",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=8445291526556",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 8445291526556 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "8445291526556",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "8445292023337",
+      "name": "Noodle smak kurczak z czarnym pieprzem i chili",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=8445292023337",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 8445292023337 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "8445292023337",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437000176",
+      "name": "Kisiel",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437000176",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437000176 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437000176",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437011110",
+      "name": "Drożdże",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437011110",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437011110 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437011110",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437020402",
+      "name": "Budyń smak Malinowy",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437020402",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437020402 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437020402",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437027562",
+      "name": "kisiel",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5900437033631",
+      "name": "Kisiel poziomka",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437033631",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437033631 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437033631",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437033938",
+      "name": "Kisiel smak cytrynowy",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://zakupy.auchan.pl/products/kisiel-o-smaku-cytrynowym-dr-oetker-38-g/00188257",
+          "source_type": "retailer",
+          "identity_evidence": "Search for exact code 5900437033938 identified the listed product.",
+          "matched_barcode": "5900437033938",
+          "basis_amount": 13,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 13,
+            "fiber": null,
+            "fat": 0,
+            "protein": 0,
+            "energy_kcal": 53
+          },
+          "notes": "Exact EAN; nutrition is for prepared product per 100 g, not dry powder."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact EAN; nutrition is for prepared product per 100 g, not dry powder."
+    },
+    {
+      "code": "5900437034928",
+      "name": "Galaretka o smaku kiwi",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437034928",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437034928 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437034928",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437036045",
+      "name": "Kisiel",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5900437037035",
+      "name": "Kisiel Strawberry",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437037035",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437037035 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437037035",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437037042",
+      "name": "Slodka chwila",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437037042",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437037042 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437037042",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437037073",
+      "name": "Kisiel cytrynowy Słodka chwila",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437037073",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437037073 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437037073",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437038063",
+      "name": "Budyń czekoladowy",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437038063",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437038063 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437038063",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437081007",
+      "name": "Babeczki z płatkami czekolady",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437081007",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437081007 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437081007",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437081106",
+      "name": "Babeczki Czekoladowe",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437081106",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437081106 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437081106",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437084107",
+      "name": "moja Babka",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5900437115313",
+      "name": "Barwnik w żelu Czerwony",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900437115313",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900437115313 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900437115313",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900437197104",
+      "name": "Motylki dekoracje z czekolady",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5900437667027",
+      "name": "Pisak cukrowy czarny",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.oetker.pl/produkty/p/pisak-cukrowy-czarny",
+          "source_type": "manufacturer",
+          "identity_evidence": "Search for exact code 5900437667027 identified the listed product.",
+          "matched_barcode": "5900437667027",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 62,
+            "fiber": null,
+            "fat": 9.6,
+            "protein": 2.4,
+            "energy_kcal": 353
+          },
+          "notes": "Exact EAN checked against product listing; complete values from Frisco per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact EAN checked against product listing; complete values from Frisco per 100 g."
+    },
+    {
+      "code": "59030331",
+      "name": "Aromat śmietankowy",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=59030331",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 59030331 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "59030331",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "59089469",
+      "name": "Danio z kawałkami czekolady XXL",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://zakupy.auchan.pl/products/danio-xxl-serek-z-kawa%C5%82kami-czekolady-danone-200-g/00843392",
+          "source_type": "retailer",
+          "identity_evidence": "Search for exact code 59089469 identified the listed product.",
+          "matched_barcode": "59089469",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 11.8,
+            "fiber": null,
+            "fat": 4.6,
+            "protein": 6.1,
+            "energy_kcal": 113
+          },
+          "notes": "Exact EAN matched; per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact EAN matched; per 100 g."
+    },
+    {
+      "code": "59094388",
+      "name": "Serek z kawałkami czekolady",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=59094388",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 59094388 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "59094388",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "04785538",
+      "name": "Smakują owoce lesne",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "18437231",
+      "name": "Krem do smarowania pieczywa",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "4014500508832",
+      "name": "jogobella do picia",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "4014500511245",
+      "name": "Monte cookies",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.kaufland.pl/product/491851157/",
+          "source_type": "retailer",
+          "identity_evidence": "Search for exact code 4014500511245 identified the listed product.",
+          "matched_barcode": "4014500511245",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 19.6,
+            "fiber": null,
+            "fat": 13,
+            "protein": 3.2,
+            "energy_kcal": 210
+          },
+          "notes": "Exact EAN matched; per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact EAN matched; per 100 g."
+    },
+    {
+      "code": "4014500511412",
+      "name": "Jogurt Jogobella Stand 400g Zott",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "4014500511757",
+      "name": "Belriso mléčná rýže  malina višeň",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=4014500511757",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 4014500511757 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "4014500511757",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "4014500518954",
+      "name": "(Zot) Jogobella",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://leclerc24.net.pl/jogo-jogurt-150g-garden-exotic",
+          "source_type": "retailer",
+          "identity_evidence": "Search for exact code 4014500518954 identified the listed product.",
+          "matched_barcode": "4014500518954",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 12.4,
+            "fiber": null,
+            "fat": 2.7,
+            "protein": 3.5,
+            "energy_kcal": 92
+          },
+          "notes": "Exact EAN matched; per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact EAN matched; per 100 g."
+    },
+    {
+      "code": "4014500522128",
+      "name": "Jogobella pieczone jabłko",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://leclercdrive.lublin.pl/zott-2",
+          "source_type": "retailer",
+          "identity_evidence": "Search for exact code 4014500522128 identified the listed product.",
+          "matched_barcode": "4014500522128",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 13.8,
+            "fiber": null,
+            "fat": 2.7,
+            "protein": 3.5,
+            "energy_kcal": 98
+          },
+          "notes": "Exact EAN matched; per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact EAN matched; per 100 g."
+    },
+    {
+      "code": "5046040003774",
+      "name": "Deser mleczny z ryżem i sosem o smaku pistacji",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5906040063737",
+      "name": "śmietana homogenizowana",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5906040063737",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5906040063737 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5906040063737",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5906040063942",
+      "name": "Smakija vege kaszka",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.dine4fit.pl/produkty/smakija-vege-kaszka-zott",
+          "source_type": "other",
+          "identity_evidence": "Search for exact code 5906040063942 identified the listed product.",
+          "matched_barcode": "5906040063942",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 15.4,
+            "fiber": null,
+            "fat": 3.5,
+            "protein": 1.1,
+            "energy_kcal": 98
+          },
+          "notes": "Carrefour listing establishes the exact EAN and product identity; nutrition source gives values per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Carrefour listing establishes the exact EAN and product identity; nutrition source gives values per 100 g."
+    },
+    {
+      "code": "0000901591648",
+      "name": "Kamis Musztarda Chrzanowa",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=0000901591648",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 0000901591648 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "0000901591648",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "0226080274135",
+      "name": "Ziele Angielskie",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "1540024023016",
+      "name": "Kurkuma",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=1540024023016",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 1540024023016 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "1540024023016",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900084087018",
+      "name": "h",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900084087018",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900084087018 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900084087018",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900084175012",
+      "name": "Przyprawa do kurczaka po staropolsku",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900084175012",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900084175012 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900084175012",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900084239660",
+      "name": "Kmin rzymski mielony",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900084239660",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900084239660 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900084239660",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900084274173",
+      "name": "Pieprz czarny ziarnisty",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900084274173",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900084274173 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900084274173",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900084274197",
+      "name": "Pieprz kolorowy ziarnisty",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900084274197",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900084274197 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900084274197",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900084274234",
+      "name": "liść laurowy",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900084274234",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900084274234 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900084274234",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900084279642",
+      "name": "Papryka ostra mielona",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900084279642",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900084279642 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900084279642",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900084279666",
+      "name": "Papryka słodka mielona",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900084279666",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900084279666 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900084279666",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900084283410",
+      "name": "Papryka wędzona",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900084283410",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900084283410 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900084283410",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "0440330019530",
+      "name": "Musly",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "2040460000781",
+      "name": "Tymbark wisnia",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5900334013521",
+      "name": "Sok multiwit",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://zakupy.auchan.pl/products/sok-multiwitamina-100-tymbark-200-ml/00269170",
+          "source_type": "retailer",
+          "identity_evidence": "Auchan listing identifies Tymbark multiwitamina 200 ml and exact EAN.",
+          "matched_barcode": "5900334013521",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 11,
+            "fiber": null,
+            "fat": 0,
+            "protein": 0,
+            "energy_kcal": 47
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Exact barcode and explicit 100 g/ml basis verified; core macros available."
+    },
+    {
+      "code": "5901067407069",
+      "name": "Mousse de manzana sandia aroina",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "6441142444002",
+      "name": "Tymbark sok 100% Jabłko",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5901687910048",
+      "name": "Niefiltrowane",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5901687910048",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5901687910048 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5901687910048",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5901687910628",
+      "name": "Blond Ale",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5901687910666",
+      "name": "Witbier",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5901687910666",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5901687910666 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5901687910666",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5901886014479",
+      "name": "Sok pomidorowo warzywny żeń szeń",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5901886014479",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5901886014479 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5901886014479",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5901886014486",
+      "name": "Sok 100% pomidorowo-warzywny",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5901886014486",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5901886014486 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5901886014486",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5901886045671",
+      "name": "Mango",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5901886045671",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5901886045671 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5901886045671",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5902709615286",
+      "name": "Marcowe",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5900783003289",
+      "name": "Kukurydza Konserwowa",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900783003289",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900783003289 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900783003289",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900783008741",
+      "name": "Mieszanka warzywna z kukurydzą",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://leclerc24.net.pl/pudl-mieszanka-450g-warz-z-kuku",
+          "source_type": "retailer",
+          "identity_evidence": "Listing identifies Pudliszki Mieszanka warzywna z kukurydzą, 450 g; exact EAN shown.",
+          "matched_barcode": "5900783008741",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 10,
+            "fiber": 1.9,
+            "fat": 0.2,
+            "protein": 1.7,
+            "energy_kcal": 52
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Exact barcode and explicit 100 g/ml basis verified; core macros available."
+    },
+    {
+      "code": "5900783009670",
+      "name": "Fasolka w sosie pomidorowym",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://arena.pl/oferta/pudliszki-fasolka-w-sosie-pomidorowym-500-g-59520223",
+          "source_type": "retailer",
+          "identity_evidence": "Listing identifies Pudliszki beans in tomato sauce, 500 g, exact EAN.",
+          "matched_barcode": "5900783009670",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 11,
+            "fiber": 4.7,
+            "fat": 0.4,
+            "protein": 4.2,
+            "energy_kcal": 75
+          },
+          "notes": "Page body reports 314 kJ / 75 kcal, but item attribute separately reports 314 kcal; conflicting energy values."
+        }
+      ],
+      "conflicts": [
+        "Energy values conflict: 314 kJ / 75 kcal in nutrition panel versus a separate 314 kcal attribute."
+      ],
+      "missing_fields": [],
+      "notes": "Held because source has contradictory energy data."
+    },
+    {
+      "code": "5900783010843",
+      "name": "Potrawka z Kurczaka z Warzywami",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://stolicazakupow.pl/produkt/pudliszki-potrawka-z-kurczaka-z-warzywami-440g/",
+          "source_type": "retailer",
+          "identity_evidence": "Listing identifies Pudliszki chicken stew with vegetables, 440 g, with exact EAN and nutrition basis g/100 g.",
+          "matched_barcode": "5900783010843",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 3.9,
+            "fiber": null,
+            "fat": 4,
+            "protein": 5.6,
+            "energy_kcal": 74
+          },
+          "notes": "",
+          "agent_reported_nutrition": {
+            "carbs": 3.9,
+            "fiber": 0.5,
+            "fat": 4,
+            "protein": 5.6,
+            "energy_kcal": 74
+          }
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Exact barcode and explicit 100 g/ml basis verified; core macros available.",
+      "root_review": [
+        "Removed fiber value not supported by the retrieved source text."
+      ]
+    },
+    {
+      "code": "5900344036817",
+      "name": "salatka grill",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900344036817",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900344036817 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900344036817",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900344043389",
+      "name": "jarzynowa",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5900344043990",
+      "name": "Sałatka z chrupiacym selerem i szynka",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900344043990",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900344043990 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900344043990",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900344403725",
+      "name": "Śledzik na raz w sosie koperkowym",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900344403725",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900344403725 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900344403725",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900344801620",
+      "name": "Pastella pasta jajeczna z bekonem",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900344801620",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900344801620 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900344801620",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "5900344901795",
+      "name": "lisner",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/lisner-sledzik-na-raz-w-oleju-pikantny/73",
+          "source_type": "retailer",
+          "identity_evidence": "Search for exact code 5900344901795 identified the listed product.",
+          "matched_barcode": "5900344901795",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 4.2,
+            "fiber": null,
+            "fat": 26,
+            "protein": 8.2,
+            "energy_kcal": 285
+          },
+          "notes": "Exact EAN matched; multiple listings agree; per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact EAN matched; multiple listings agree; per 100 g."
+    },
+    {
+      "code": "5900344901801",
+      "name": "Śledzik na raz",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.google.com/search?q=5900344901801",
+          "source_type": "other",
+          "identity_evidence": "Exact-code search for 5900344901801 found product identity or a related listing, but did not verify a complete matching nutrition panel.",
+          "matched_barcode": "5900344901801",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Grouped search results did not establish a complete usable label; related barcode variants were not substituted."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein",
+        "explicit nutrition basis"
+      ],
+      "notes": "Product match or related listing surfaced, but exact-code complete nutrition evidence was insufficient."
+    },
+    {
+      "code": "07625101",
+      "name": "goplana",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5900352004860",
+      "name": "Czekolada mleczna",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://dodomku.pl/Goplana_oryginalna_czekolada_mleczna/34992.html",
+          "source_type": "retailer",
+          "identity_evidence": "Search for exact code 5900352004860 identified the listed product.",
+          "matched_barcode": "5900352004860",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 56.1,
+            "fiber": null,
+            "fat": 29,
+            "protein": 8.2,
+            "energy_kcal": 525
+          },
+          "notes": "Exact EAN matched; per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact EAN matched; per 100 g."
+    },
+    {
+      "code": "5900394005313",
+      "name": "Grześki Orzeszkowe",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.frisco.pl/pid%2C157463/n%2Cgrzeski-wafel-kakaowy-z-orzechami-laskowymi-bn/stn%2Cproduct",
+          "source_type": "retailer",
+          "identity_evidence": "Search for exact code 5900394005313 identified the listed product.",
+          "matched_barcode": "5900394005313",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 49,
+            "fiber": null,
+            "fat": 35,
+            "protein": 11,
+            "energy_kcal": 561
+          },
+          "notes": "Exact EAN matched; per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact EAN matched; per 100 g."
+    },
+    {
+      "code": "5900394008864",
+      "name": "Hazelnut break",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "0041945600030",
+      "name": "Pudding waniliowy",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "0202041808397",
+      "name": "Pudding czekoladowy",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    },
+    {
+      "code": "5900562028526",
+      "name": "Sokolow mini czosnek",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://erli.pl/produkt/salami-chips-czosnek-60g-sokolow%2C263844606",
+          "source_type": "retailer",
+          "identity_evidence": "Search for exact code 5900562028526 identified the listed product.",
+          "matched_barcode": "5900562028526",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Exact code identifies garlic Salami Chips, but no nutrition panel was located."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fat",
+        "protein"
+      ],
+      "notes": "Exact product identity found, but complete core nutrition values were not verified."
+    },
+    {
+      "code": "5900562028922",
+      "name": "Salami chips o smaku ketchupu",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Exact-code web searches did not locate a matching food product listing."
+    }
+  ],
+  "research_metadata": {
+    "web_calls": 23,
+    "searched_codes": 90
+  }
+}

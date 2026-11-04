@@ -1,0 +1,1305 @@
+{
+  "batch_id": "batch_012",
+  "records": [
+    {
+      "source_id": "5900197030772",
+      "name": "Mikuś",
+      "brand": "Bakoma",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197030932",
+      "name": "Twist Shake",
+      "brand": "Bakoma",
+      "quantity": "360",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197031946",
+      "name": "Bakoma keto",
+      "brand": "Bakoma",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197221972",
+      "name": "Bakuś z drazami",
+      "brand": "bakoma",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197923852",
+      "name": "Creamy yogurt with raspberry and granola",
+      "brand": "Bakoma",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "06095277",
+      "name": "Granola czekolada z truskawką",
+      "brand": "Sante",
+      "quantity": "350g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "0942612030795",
+      "name": "Sante Fit",
+      "brand": "Sante",
+      "quantity": "225 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "2901780020333",
+      "name": "Sonko Wafle ryżowe z solą morską",
+      "brand": "Sonko",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "16610002",
+      "name": "mąka krupczatka",
+      "brand": "lubella",
+      "quantity": "1kg",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900049823118",
+      "name": "Spaghetti Cienkie",
+      "brand": "Lubella",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900049824443",
+      "name": "mąka poznańska",
+      "brand": "lubella",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900049824498",
+      "name": "mąka uniwersalna",
+      "brand": "lubella",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "19006109",
+      "name": "Galaretka pomarańczowy smak",
+      "brand": "Winiary",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "2312376213921",
+      "name": "Majonez Lekki",
+      "brand": "Winiary",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900862217446",
+      "name": "Galaretka poziomkowy smak",
+      "brand": "Winiary",
+      "quantity": "71g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7613030333227",
+      "name": "Kisiel z cukrem pomarańczowy smak",
+      "brand": "Winiary",
+      "quantity": "77 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7613032413224",
+      "name": "Sosy do makaronu - Italia Cztery sery z bazylią",
+      "brand": "Winiary,Nestlé",
+      "quantity": "37 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7613034023568",
+      "name": "Kogutek bulion",
+      "brand": "Winiary",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7613034441522",
+      "name": "Królewski Rosół Wołowy",
+      "brand": "Nestlé,Winiary",
+      "quantity": "10pcs",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7613037091342",
+      "name": "Meksykański sos z warzywami",
+      "brand": "Nestlé,Winiary",
+      "quantity": "500g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "7613287120588",
+      "name": "Kisiel kwoce smak lesny",
+      "brand": "Winiary",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 49.0
+      }
+    },
+    {
+      "source_id": "8445290246455",
+      "name": "Pomysł na Steki z karkówki w sosie z tymiankiem",
+      "brand": "Winiary",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "8445290340771",
+      "name": "Budyń o smaku ciastek maslanych",
+      "brand": "Winiary",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "8445291526556",
+      "name": "Sos czosnkowy",
+      "brand": "Winiary,Nestlé",
+      "quantity": "300ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "8445292023337",
+      "name": "Noodle smak kurczak z czarnym pieprzem i chili",
+      "brand": "Winiary",
+      "quantity": "62g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437000176",
+      "name": "Kisiel",
+      "brand": "Dr. Oetker,Słodka Chwila",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 58.25242718446602
+      }
+    },
+    {
+      "source_id": "5900437011110",
+      "name": "Drożdże",
+      "brand": "Dr. Oetker",
+      "quantity": "7 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437020402",
+      "name": "Budyń smak Malinowy",
+      "brand": "Dr. Oetker",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437027562",
+      "name": "kisiel",
+      "brand": "Dr. Oetker",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437033631",
+      "name": "Kisiel poziomka",
+      "brand": "Dr. Oetker",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437033938",
+      "name": "Kisiel smak cytrynowy",
+      "brand": "Dr. Oetker",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437034928",
+      "name": "Galaretka o smaku kiwi",
+      "brand": "Dr. Oetker",
+      "quantity": "77g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 52.0
+      }
+    },
+    {
+      "source_id": "5900437036045",
+      "name": "Kisiel",
+      "brand": "Dr. Oetker",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": 30.0,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 206.0
+      }
+    },
+    {
+      "source_id": "5900437037035",
+      "name": "Kisiel Strawberry",
+      "brand": "Dr. Oetker",
+      "quantity": "30g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437037042",
+      "name": "Slodka chwila",
+      "brand": "Dr. Oetker, Słodka Chwila",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437037073",
+      "name": "Kisiel cytrynowy Słodka chwila",
+      "brand": "Dr. Oetker, Słodka Chwila",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437038063",
+      "name": "Budyń czekoladowy",
+      "brand": "Dr. Oetker",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437081007",
+      "name": "Babeczki z płatkami czekolady",
+      "brand": "Dr. Oetker",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437081106",
+      "name": "Babeczki Czekoladowe",
+      "brand": "Dr. Oetker",
+      "quantity": "335 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437084107",
+      "name": "moja Babka",
+      "brand": "Dr. Oetker",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437115313",
+      "name": "Barwnik w żelu Czerwony",
+      "brand": "Dr. Oetker",
+      "quantity": "10g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437197104",
+      "name": "Motylki dekoracje z czekolady",
+      "brand": "Dr. Oetker",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437667027",
+      "name": "Pisak cukrowy czarny",
+      "brand": "Dr. Oetker",
+      "quantity": "19 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59030331",
+      "name": "Aromat śmietankowy",
+      "brand": "Dr. Oetker",
+      "quantity": "9 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59089469",
+      "name": "Danio z kawałkami czekolady XXL",
+      "brand": "Danio",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59094388",
+      "name": "Serek z kawałkami czekolady",
+      "brand": "Danio",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "04785538",
+      "name": "Smakują owoce lesne",
+      "brand": "Zott",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "18437231",
+      "name": "Krem do smarowania pieczywa",
+      "brand": "Zott",
+      "quantity": "130g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "4014500508832",
+      "name": "jogobella do picia",
+      "brand": "zott",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "4014500511245",
+      "name": "Monte cookies",
+      "brand": "Zott",
+      "quantity": "125g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "4014500511412",
+      "name": "Jogurt Jogobella Stand 400g Zott",
+      "brand": "Zott",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "4014500511757",
+      "name": "Belriso mléčná rýže  malina višeň",
+      "brand": "Zott",
+      "quantity": "200 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "4014500518954",
+      "name": "(Zot) Jogobella",
+      "brand": "Zott",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "4014500522128",
+      "name": "Jogobella pieczone jabłko",
+      "brand": "Zott",
+      "quantity": "150g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5046040003774",
+      "name": "Deser mleczny z ryżem i sosem o smaku pistacji",
+      "brand": "Zott",
+      "quantity": "200g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5906040063737",
+      "name": "śmietana homogenizowana",
+      "brand": "Zott",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5906040063942",
+      "name": "Smakija vege kaszka",
+      "brand": "Zott",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "0000901591648",
+      "name": "Kamis Musztarda Chrzanowa",
+      "brand": "Kamis",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "0226080274135",
+      "name": "Ziele Angielskie",
+      "brand": "kamis",
+      "quantity": "12",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "1540024023016",
+      "name": "Kurkuma",
+      "brand": "Kamis",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084087018",
+      "name": "h",
+      "brand": "Kamis,McCormick",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084175012",
+      "name": "Przyprawa do kurczaka po staropolsku",
+      "brand": "Kamis,McCormick",
+      "quantity": "25 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084239660",
+      "name": "Kmin rzymski mielony",
+      "brand": "Kamis, McCormick",
+      "quantity": "15 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084274173",
+      "name": "Pieprz czarny ziarnisty",
+      "brand": "Kamis",
+      "quantity": "16g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084274197",
+      "name": "Pieprz kolorowy ziarnisty",
+      "brand": "kamis",
+      "quantity": "12g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084274234",
+      "name": "liść laurowy",
+      "brand": "kamis",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084279642",
+      "name": "Papryka ostra mielona",
+      "brand": "kamis",
+      "quantity": "16g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084279666",
+      "name": "Papryka słodka mielona",
+      "brand": "kamis",
+      "quantity": "16g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084283410",
+      "name": "Papryka wędzona",
+      "brand": "kamis",
+      "quantity": "16",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "0440330019530",
+      "name": "Musly",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "2040460000781",
+      "name": "Tymbark wisnia",
+      "brand": "Tymbark",
+      "quantity": "1l",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900334013521",
+      "name": "Sok multiwit",
+      "brand": "Tymbark 200ml",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901067407069",
+      "name": "Mousse de manzana sandia aroina",
+      "brand": "TYMBARK - MWS Sp. z o.o.",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": 1.8,
+        "fat": null,
+        "protein": 0.5,
+        "energy_kcal": 54.0
+      }
+    },
+    {
+      "source_id": "6441142444002",
+      "name": "Tymbark sok 100% Jabłko",
+      "brand": "Tymbark",
+      "quantity": "300",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901687910048",
+      "name": "Niefiltrowane",
+      "brand": "Browar Fortuna, Mirosław",
+      "quantity": "500 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901687910628",
+      "name": "Blond Ale",
+      "brand": "Miłosław,Browar Fortuna",
+      "quantity": "500 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901687910666",
+      "name": "Witbier",
+      "brand": "Mirosław,Browar Fortuna",
+      "quantity": "500 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901886014479",
+      "name": "Sok pomidorowo warzywny żeń szeń",
+      "brand": "Fortuna",
+      "quantity": "300 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901886014486",
+      "name": "Sok 100% pomidorowo-warzywny",
+      "brand": "Fortuna",
+      "quantity": "300 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901886045671",
+      "name": "Mango",
+      "brand": "Fortuna",
+      "quantity": "150 g",
+      "nutrition_as_exported": {
+        "carbs": 4.8,
+        "fiber": null,
+        "fat": 0.0,
+        "protein": null,
+        "energy_kcal": 2.0
+      }
+    },
+    {
+      "source_id": "5902709615286",
+      "name": "Marcowe",
+      "brand": "Mirosław,Browar Fortuna",
+      "quantity": "500 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900783003289",
+      "name": "Kukurydza Konserwowa",
+      "brand": "Pudliszki",
+      "quantity": "400 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900783008741",
+      "name": "Mieszanka warzywna z kukurydzą",
+      "brand": "Pudliszki",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900783009670",
+      "name": "Fasolka w sosie pomidorowym",
+      "brand": "Pudliszki",
+      "quantity": "500g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900783010843",
+      "name": "Potrawka z Kurczaka z Warzywami",
+      "brand": "Pudliszki",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344036817",
+      "name": "salatka grill",
+      "brand": "lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344043389",
+      "name": "jarzynowa",
+      "brand": "lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344043990",
+      "name": "Sałatka z chrupiacym selerem i szynka",
+      "brand": "Lisner",
+      "quantity": "500gram",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344403725",
+      "name": "Śledzik na raz w sosie koperkowym",
+      "brand": "Lisner",
+      "quantity": "100 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344801620",
+      "name": "Pastella pasta jajeczna z bekonem",
+      "brand": "Lisner",
+      "quantity": "80 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344901795",
+      "name": "lisner",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900344901801",
+      "name": "Śledzik na raz",
+      "brand": "Lisner",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "07625101",
+      "name": "goplana",
+      "brand": "Goplana",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900352004860",
+      "name": "Czekolada mleczna",
+      "brand": "Goplana",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900394005313",
+      "name": "Grześki Orzeszkowe",
+      "brand": "Goplana",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900394008864",
+      "name": "Hazelnut break",
+      "brand": "Goplana",
+      "quantity": "24 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "0041945600030",
+      "name": "Pudding waniliowy",
+      "brand": "Pilos",
+      "quantity": "200g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "0202041808397",
+      "name": "Pudding czekoladowy",
+      "brand": "Pilos",
+      "quantity": "200g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900562028526",
+      "name": "Sokolow mini czosnek",
+      "brand": "Sokołów",
+      "quantity": "60g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900562028922",
+      "name": "Salami chips o smaku ketchupu",
+      "brand": "Sokołów",
+      "quantity": "60g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,546 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-11-03",
+  "purpose": "Read-only curation proposal for cooked basic foods; not an import or publication manifest.",
+  "firebaseWritesPerformed": false,
+  "baseline": {
+    "publishedFoods": 2203,
+    "file": "tool/food_catalog/data/ready.jsonl",
+    "sha256": "de2d242bcde687838d30cb4e98a7de28c2d6fe459100b6c7b8038d226282dbcd",
+    "exactNamedRiceVariantsAbsent": [
+      "basmati",
+      "jasmine",
+      "arborio"
+    ],
+    "exactTranslationAliasesForThoseVariantsFound": 0
+  },
+  "summary": {
+    "targetFamilies": 19,
+    "alreadyPresent": 10,
+    "verifiedNumericCandidates": 3,
+    "verifiedSourceRecordsAwaitingMapping": 2,
+    "rawCofidRecordsBlocked": 3
+  },
+  "coverage": [
+    {
+      "key": "rice_basmati_white_cooked",
+      "status": "missing_verified_candidate",
+      "existingProducts": [],
+      "candidateIds": [
+        "matvaretabellen_05_337"
+      ]
+    },
+    {
+      "key": "rice_basmati_brown_cooked",
+      "status": "missing_source_requires_normalization",
+      "existingProducts": [],
+      "candidateIds": [
+        "cofid_11_867"
+      ]
+    },
+    {
+      "key": "rice_jasmine_cooked",
+      "status": "missing_verified_candidate",
+      "existingProducts": [],
+      "candidateIds": [
+        "matvaretabellen_05_338"
+      ]
+    },
+    {
+      "key": "rice_arborio_cooked",
+      "status": "missing_source_requires_normalization",
+      "existingProducts": [],
+      "candidateIds": [
+        "cofid_11_879"
+      ]
+    },
+    {
+      "key": "rice_parboiled_white_cooked",
+      "status": "already_present",
+      "existingProducts": [
+        {
+          "id": "usda_169759",
+          "name": "Rice, white, long-grain, parboiled, unenriched, cooked",
+          "namePl": "Ryż biały długoziarnisty parboiled, gotowany, niewzbogacony"
+        },
+        {
+          "id": "usda_169708",
+          "name": "Rice, white, long-grain, parboiled, enriched, cooked",
+          "namePl": "Ryż biały, długoziarnisty, parboiled, wzbogacony, gotowany"
+        }
+      ]
+    },
+    {
+      "key": "rice_white_cooked",
+      "status": "already_present",
+      "existingProducts": [
+        {
+          "id": "usda_169757",
+          "name": "Rice, white, long-grain, regular, unenriched, cooked without salt",
+          "namePl": "Ryż biały długoziarnisty, gotowany bez soli, niewzbogacony"
+        }
+      ]
+    },
+    {
+      "key": "rice_brown_cooked",
+      "status": "already_present",
+      "existingProducts": [
+        {
+          "id": "usda_169704",
+          "name": "Rice, brown, long-grain, cooked (Includes foods for USDA's Food Distribution Program)",
+          "namePl": "Ryż brązowy, długoziarnisty, gotowany"
+        },
+        {
+          "id": "usda_168875",
+          "name": "Rice, brown, medium-grain, cooked (Includes foods for USDA's Food Distribution Program)",
+          "namePl": "Ryż brązowy, średnioziarnisty, gotowany"
+        }
+      ]
+    },
+    {
+      "key": "rice_mixed_cooked",
+      "status": "unresolved",
+      "existingProducts": [],
+      "note": "No verified cooked blend with explicit composition selected. Do not invent proportions or average generic rice records."
+    },
+    {
+      "key": "pasta_durum_cooked",
+      "status": "generic_present_specific_unverified",
+      "existingProducts": [
+        {
+          "id": "usda_168928",
+          "name": "Pasta, cooked, unenriched, without added salt",
+          "namePl": "Makaron, gotowany, niewzbogacony, bez soli"
+        }
+      ],
+      "note": "Generic cooked pasta is present, but the inspected record name does not establish a specific durum-only composition."
+    },
+    {
+      "key": "pasta_wholewheat_cooked",
+      "status": "already_present",
+      "existingProducts": [
+        {
+          "id": "usda_168910",
+          "name": "Pasta, whole-wheat, cooked (Includes foods for USDA's Food Distribution Program)",
+          "namePl": "Makaron pełnoziarnisty, pszenny, gotowany"
+        }
+      ]
+    },
+    {
+      "key": "pasta_rice_cooked",
+      "status": "missing_verified_candidate",
+      "existingProducts": [],
+      "candidateIds": [
+        "usda_168914"
+      ]
+    },
+    {
+      "key": "pasta_red_lentil_cooked",
+      "status": "missing_source_mapping_review",
+      "existingProducts": [],
+      "candidateIds": [
+        "ciqual_9876"
+      ]
+    },
+    {
+      "key": "pasta_chickpea_cooked",
+      "status": "unresolved",
+      "existingProducts": [],
+      "note": "No verified plain cooked chickpea-pasta record selected. Dry manufacturer values must not be presented as cooked values."
+    },
+    {
+      "key": "buckwheat_roasted_groats_cooked",
+      "status": "already_present",
+      "existingProducts": [
+        {
+          "id": "usda_170686",
+          "name": "Buckwheat groats, roasted, cooked",
+          "namePl": "Kasza gryczana palona, gotowana"
+        }
+      ],
+      "note": "This is roasted buckwheat; do not alias it as unroasted buckwheat."
+    },
+    {
+      "key": "millet_cooked",
+      "status": "already_present",
+      "existingProducts": [
+        {
+          "id": "usda_168871",
+          "name": "Millet, cooked",
+          "namePl": "Proso, gotowane"
+        }
+      ],
+      "note": "Suggested clearer Polish display: Kasza jaglana, gotowana; retain Proso as an alias for the same food."
+    },
+    {
+      "key": "barley_pearled_cooked",
+      "status": "already_present",
+      "existingProducts": [
+        {
+          "id": "usda_170285",
+          "name": "Barley, pearled, cooked",
+          "namePl": "Kasza jęczmienna perłowa, gotowana"
+        }
+      ]
+    },
+    {
+      "key": "bulgur_cooked",
+      "status": "already_present",
+      "existingProducts": [
+        {
+          "id": "usda_170287",
+          "name": "Bulgur, cooked",
+          "namePl": "Bulgur, gotowany"
+        }
+      ]
+    },
+    {
+      "key": "couscous_cooked",
+      "status": "already_present",
+      "existingProducts": [
+        {
+          "id": "usda_169700",
+          "name": "Couscous, cooked",
+          "namePl": "Kuskus, gotowany"
+        }
+      ]
+    },
+    {
+      "key": "quinoa_cooked",
+      "status": "already_present",
+      "existingProducts": [
+        {
+          "id": "usda_168917",
+          "name": "Quinoa, cooked",
+          "namePl": "Komosa ryżowa (quinoa), gotowana"
+        }
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "proposedCatalogId": "matvaretabellen_05_337",
+      "status": "verified_candidate_not_imported",
+      "name": "Rice, basmati, cooked",
+      "namePl": "Ryż basmati, gotowany",
+      "aliasesPl": [
+        "ryż basmati",
+        "basmati gotowany"
+      ],
+      "preparation": "cooked",
+      "nutritionBasisGrams": 100,
+      "carbsLabelMode": "eu",
+      "carbohydrateDefinition": "available_excluding_fiber",
+      "carbsPer100g": 25.0,
+      "fiberPer100g": 0.2,
+      "fatPer100g": 0.3,
+      "proteinPer100g": 3.0,
+      "sourceKcalPer100g": 115,
+      "source": {
+        "provider": "Norwegian Food Safety Authority / Matvaretabellen",
+        "edition": "2026",
+        "foodId": "05.337",
+        "originalName": "Rice, Basmati, cooked",
+        "url": "https://www.matvaretabellen.no/en/rice-basmati-cooked/",
+        "apiUrl": "https://www.matvaretabellen.no/api/en/foods.json",
+        "license": "CC-BY-4.0",
+        "methodIds": {
+          "carbs": "MI0181",
+          "fiber": "MI0002",
+          "fat": "MI0002",
+          "protein": "MI0002"
+        }
+      },
+      "notes": [
+        "Values describe 100 g of the cooked edible food, not dry rice.",
+        "Carbohydrates are starch plus sugars and already exclude dietary fiber.",
+        "Source uses published recipe calculations; this is not a measured portion or an individual certainty score."
+      ]
+    },
+    {
+      "proposedCatalogId": "matvaretabellen_05_338",
+      "status": "verified_candidate_not_imported",
+      "name": "Rice, jasmine, cooked",
+      "namePl": "Ryż jaśminowy, gotowany",
+      "aliasesPl": [
+        "ryż jaśminowy",
+        "ryż jasmine"
+      ],
+      "preparation": "cooked",
+      "nutritionBasisGrams": 100,
+      "carbsLabelMode": "eu",
+      "carbohydrateDefinition": "available_excluding_fiber",
+      "carbsPer100g": 25.7,
+      "fiberPer100g": 0.0,
+      "fatPer100g": 0.2,
+      "proteinPer100g": 2.4,
+      "sourceKcalPer100g": 115,
+      "source": {
+        "provider": "Norwegian Food Safety Authority / Matvaretabellen",
+        "edition": "2026",
+        "foodId": "05.338",
+        "originalName": "Rice, Jasmin, cooked",
+        "url": "https://www.matvaretabellen.no/en/rice-jasmin-cooked/",
+        "apiUrl": "https://www.matvaretabellen.no/api/en/foods.json",
+        "license": "CC-BY-4.0",
+        "methodIds": {
+          "carbs": "MI0181",
+          "fiber": "MI0002",
+          "fat": "MI0002",
+          "protein": "MI0002"
+        }
+      },
+      "notes": [
+        "Values describe 100 g of the cooked edible food, not dry rice.",
+        "Carbohydrates are starch plus sugars and already exclude dietary fiber.",
+        "Source uses published recipe calculations; this is not a measured portion or an individual certainty score."
+      ]
+    },
+    {
+      "proposedCatalogId": "usda_168914",
+      "status": "verified_candidate_not_imported",
+      "name": "Rice noodles, cooked",
+      "namePl": "Makaron ryżowy, gotowany",
+      "aliasesPl": [
+        "makaron ryżowy gotowany",
+        "nitki ryżowe gotowane"
+      ],
+      "preparation": "cooked",
+      "nutritionBasisGrams": 100,
+      "carbsLabelMode": "non_eu",
+      "carbohydrateDefinition": "total_including_fiber",
+      "carbsPer100g": 24.0,
+      "fiberPer100g": 1.0,
+      "fatPer100g": 0.2,
+      "proteinPer100g": 1.79,
+      "sourceKcalPer100g": 108,
+      "source": {
+        "provider": "USDA FoodData Central",
+        "dataset": "SR Legacy",
+        "edition": "2018-04",
+        "foodId": "168914",
+        "url": "https://fdc.nal.usda.gov/food-details/168914/nutrients",
+        "downloadUrl": "https://fdc.nal.usda.gov/fdc-datasets/",
+        "archive": "tool/food_catalog/data/sr-legacy-2018.zip",
+        "license": "US public-domain government data"
+      },
+      "notes": [
+        "Present in the original source archive but absent from the published ready set and listed in excluded.json.",
+        "Do not substitute the dry rice-noodle record usda_169742.",
+        "24 g is total carbohydrate including 1 g fiber; available carbohydrate is 23 g per 100 g."
+      ]
+    },
+    {
+      "proposedCatalogId": "ciqual_9876",
+      "status": "verified_source_record_mapping_review_required",
+      "name": "Pasta, red lentil, cooked, no added salt",
+      "namePl": "Makaron z czerwonej soczewicy, gotowany, bez dodatku soli",
+      "preparation": "cooked",
+      "nutritionBasisGrams": 100,
+      "carbsLabelMode": null,
+      "carbohydrateDefinition": "requires_confirmation_from_Ciqual_method_documentation",
+      "sourceValues": {
+        "carbohydrateGrams": 25.1,
+        "fiberGrams": 4.9,
+        "fatGrams": 0.8,
+        "proteinJonesGrams": 11.7,
+        "proteinNitrogenTimes6_25Grams": 12.6,
+        "energyEuKcal": 168.0
+      },
+      "source": {
+        "provider": "ANSES / Ciqual",
+        "edition": "2025",
+        "foodId": "9876",
+        "originalName": "Pasta, dry, gluten-free (from red lentils), cooked, no added salt",
+        "url": "https://zenodo.org/records/17550133",
+        "doi": "10.5281/zenodo.17550133",
+        "file": "Table Ciqual 2025_ENG_2025_11_03.xlsx",
+        "sheet": "food composition",
+        "row": 1088,
+        "columns": {
+          "carbohydrate": "Q",
+          "fiber": "AA",
+          "fat": "R",
+          "proteinJones": "O",
+          "proteinNitrogenTimes6_25": "P",
+          "energyEu": "K"
+        },
+        "fileMd5": "a953e8c473d8cee24a32f89a48fbd54d",
+        "license": "CC-BY-4.0 (publisher repository metadata)"
+      },
+      "notes": [
+        "The source distinguishes Jones-factor protein from N x 6.25 protein. Keep both until the application mapping is reviewed.",
+        "No missing, trace or less-than value was converted to zero.",
+        "Do not use the rice-and-corn record as an alias for pure rice noodles."
+      ]
+    },
+    {
+      "proposedCatalogId": "ciqual_9875",
+      "status": "verified_source_record_mapping_review_required",
+      "name": "Pasta, rice and corn, cooked, no added salt",
+      "namePl": "Makaron ryżowo-kukurydziany, gotowany, bez dodatku soli",
+      "preparation": "cooked",
+      "nutritionBasisGrams": 100,
+      "carbsLabelMode": null,
+      "carbohydrateDefinition": "requires_confirmation_from_Ciqual_method_documentation",
+      "sourceValues": {
+        "carbohydrateGrams": 36.6,
+        "fiberGrams": 1.3,
+        "fatGrams": 0.8,
+        "proteinJonesGrams": 3.15,
+        "proteinNitrogenTimes6_25Grams": 3.38,
+        "energyEuKcal": 170.0
+      },
+      "source": {
+        "provider": "ANSES / Ciqual",
+        "edition": "2025",
+        "foodId": "9875",
+        "originalName": "Pasta, dry, gluten-free (from rice and corn), cooked, no added salt",
+        "url": "https://zenodo.org/records/17550133",
+        "doi": "10.5281/zenodo.17550133",
+        "file": "Table Ciqual 2025_ENG_2025_11_03.xlsx",
+        "sheet": "food composition",
+        "row": 1087,
+        "columns": {
+          "carbohydrate": "Q",
+          "fiber": "AA",
+          "fat": "R",
+          "proteinJones": "O",
+          "proteinNitrogenTimes6_25": "P",
+          "energyEu": "K"
+        },
+        "fileMd5": "a953e8c473d8cee24a32f89a48fbd54d",
+        "license": "CC-BY-4.0 (publisher repository metadata)"
+      },
+      "notes": [
+        "The source distinguishes Jones-factor protein from N x 6.25 protein. Keep both until the application mapping is reviewed.",
+        "No missing, trace or less-than value was converted to zero.",
+        "Do not use the rice-and-corn record as an alias for pure rice noodles."
+      ]
+    }
+  ],
+  "rawSourceRecordsNotReadyForImport": [
+    {
+      "proposedCatalogId": "cofid_11_858",
+      "status": "blocked_nutrient_normalization_review",
+      "foodId": "11-858",
+      "name": "Rice, white, basmati, boiled in unsalted water",
+      "nutritionBasisGrams": 100,
+      "carbsLabelMode": null,
+      "carbohydrateDefinition": "available_monosaccharide_equivalents_excluding_fiber",
+      "sourceValues": {
+        "Carbohydrate (g)": "26.5",
+        "AOAC fibre (g)": "0.6",
+        "Fat (g)": "0.7",
+        "Protein (g)": "2.8",
+        "Energy (kcal) (kcal)": "117"
+      },
+      "source": {
+        "provider": "Public Health England",
+        "edition": "CoFID 2021",
+        "url": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid",
+        "sheet": "1.3 Proximates",
+        "row": 2351,
+        "license": "GOV.UK publication; confirm dataset-specific reuse terms before redistribution"
+      },
+      "blockers": [
+        "Available carbohydrate excludes fiber but is expressed as monosaccharide equivalents, not EU label weight. No universal conversion was applied."
+      ]
+    },
+    {
+      "proposedCatalogId": "cofid_11_867",
+      "status": "blocked_nutrient_normalization_review",
+      "foodId": "11-867",
+      "name": "Rice, brown, basmati, boiled in unsalted water",
+      "nutritionBasisGrams": 100,
+      "carbsLabelMode": null,
+      "carbohydrateDefinition": "available_monosaccharide_equivalents_excluding_fiber",
+      "sourceValues": {
+        "Carbohydrate (g)": "28.7",
+        "AOAC fibre (g)": "1.2",
+        "Fat (g)": "1.1",
+        "Protein (g)": "3.3",
+        "Energy (kcal) (kcal)": "131"
+      },
+      "source": {
+        "provider": "Public Health England",
+        "edition": "CoFID 2021",
+        "url": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid",
+        "sheet": "1.3 Proximates",
+        "row": 2336,
+        "license": "GOV.UK publication; confirm dataset-specific reuse terms before redistribution"
+      },
+      "blockers": [
+        "Available carbohydrate excludes fiber but is expressed as monosaccharide equivalents, not EU label weight. No universal conversion was applied."
+      ]
+    },
+    {
+      "proposedCatalogId": "cofid_11_879",
+      "status": "blocked_nutrient_normalization_review",
+      "foodId": "11-879",
+      "name": "Rice, white, Italian \"Arborio\" risotto, boiled in unsalted water",
+      "nutritionBasisGrams": 100,
+      "carbsLabelMode": null,
+      "carbohydrateDefinition": "available_monosaccharide_equivalents_excluding_fiber",
+      "sourceValues": {
+        "Carbohydrate (g)": "32.2",
+        "AOAC fibre (g)": "Tr",
+        "Fat (g)": "0.5",
+        "Protein (g)": "3.2",
+        "Energy (kcal) (kcal)": "138"
+      },
+      "source": {
+        "provider": "Public Health England",
+        "edition": "CoFID 2021",
+        "url": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid",
+        "sheet": "1.3 Proximates",
+        "row": 2355,
+        "license": "GOV.UK publication; confirm dataset-specific reuse terms before redistribution"
+      },
+      "blockers": [
+        "Available carbohydrate excludes fiber but is expressed as monosaccharide equivalents, not EU label weight. No universal conversion was applied.",
+        "AOAC fiber is Tr (trace), not an exact numeric zero."
+      ]
+    }
+  ],
+  "sourceDefinitions": [
+    {
+      "url": "https://www.mattilsynet.no/en/food-and-beverages/matvaretabellen/about-the-data-in-the-norwegian-food-composition-table",
+      "finding": "100 g edible food; available carbohydrate is starch plus sugars, fiber excluded. Rice uses a nitrogen-to-protein factor of 5.95; preserve source method metadata."
+    },
+    {
+      "url": "https://www.mattilsynet.no/en/food-and-beverages/matvaretabellen/download-the-norwegian-food-composition-table",
+      "finding": "2026 edition; CC BY 4.0; required attribution: The Norwegian Food Composition Table 2026. The Norwegian Food Safety Authority. www.matvaretabellen.no"
+    },
+    {
+      "url": "https://www.matvaretabellen.no/en/api/",
+      "finding": "Official full JSON APIs; not versioned, so retain retrieval date and content hashes."
+    },
+    {
+      "url": "https://assets.publishing.service.gov.uk/media/60538e66d3bf7f03249bac58/McCance_and_Widdowsons_Composition_of_Foods_integrated_dataset_2021.pdf",
+      "finding": "Pages 10 and 16: CoFID carbohydrate excludes fiber but uses monosaccharide equivalents; labelling conversion depends on composition."
+    },
+    {
+      "url": "https://zenodo.org/records/17550133",
+      "finding": "ANSES-authored Ciqual 2025 dataset; publisher metadata license cc-by-4.0; verified spreadsheet MD5 matches published checksum."
+    }
+  ],
+  "doNotImportNotes": [
+    "No basmati or jasmine alias may be attached to generic white rice.",
+    "Keep source qualifiers such as cooked, salted, skin, wholegrain and blend ingredients.",
+    "Preserve less-than, trace and missing values separately. Ciqual 9125 basmati and 9901 rice vermicelli have fiber <0.5 g, not exact zero; they were not selected as numeric-ready candidates.",
+    "Norwegian rice noodles 05.334 have fat 3.1 g and a recipe-calculated provenance; review preparation before treating them as plain boiled rice noodles. USDA 168914 supplies an explicit cooked alternative without that ambiguity."
+  ],
+  "integrationRequiredBeforeFuturePublication": [
+    "Generalize bounded namespaced catalog IDs in backend getCatalogIngredient, FirebaseIngredientCatalogRepository.remoteIdentity and DriftSelectedCatalogIngredientStore.validate; current USDA-only validators reject new provider IDs.",
+    "Extend source-aware publication and audit tooling to preserve EU versus US carbohydrate conventions and exact source references.",
+    "Review Polish names and true same-food aliases, without adding unsupported variety aliases.",
+    "Confirm canonical source choice and protein/carbohydrate mapping for Ciqual records; do not silently apply a universal CoFID conversion.",
+    "Run existing import preflight/read-back and version the search release only after explicit data approval."
+  ],
+  "sourceSnapshotHashes": {
+    "matvaretabellenFoodsSha256": "89b8f5f494a79731bf7d8d98065ee66c55263ccdbb519e7c87941218be6c948d",
+    "ciqualXlsxSha256": "2c3495c8136d17356c50db410918da2102cb28096cb497c9cdf83c5f8ecb10ba",
+    "cofidXlsxSha256": "436e9445ef2adb2a75f3d7edd51302de3adad25385f9795fc94ba58bd030e97d"
+  }
+}

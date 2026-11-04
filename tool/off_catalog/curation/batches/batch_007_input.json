@@ -1,0 +1,1305 @@
+{
+  "batch_id": "batch_007",
+  "records": [
+    {
+      "source_id": "5901457159974",
+      "name": "PODKŁAD ANTYKOROZYJNY SZARY RAL 7045",
+      "brand": "dek",
+      "quantity": "0,9L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000008903",
+      "name": "EMALIA ANTYKOROZYJNA CZARNY POŁYSK",
+      "brand": "dek",
+      "quantity": "0,65",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000009313",
+      "name": "PODKŁAD ANTYKOROZYJNY CZARNY",
+      "brand": "dek",
+      "quantity": "0,5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000012580",
+      "name": "FARBA DO BETONU GRAFITOWY SZARY",
+      "brand": "dek",
+      "quantity": "5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000016830",
+      "name": "PODKŁAD ANTYKOROZYJNY CZARNY",
+      "brand": "dek",
+      "quantity": "0,9L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000027898",
+      "name": "EXPRESS TOP BIAŁE SZALENSTWO SATYNA",
+      "brand": "dek",
+      "quantity": "0,5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000027935",
+      "name": "EXPRESS TOP CZARNA MATERIA SATYNA",
+      "brand": "dek",
+      "quantity": "0,2L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000027966",
+      "name": "EXPRESS TOP SZACH MAT MAT",
+      "brand": "dek",
+      "quantity": "0,5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000027997",
+      "name": "EXPRESS TOP CZARNA MAGIA SATYNA",
+      "brand": "dek",
+      "quantity": "0,5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000028031",
+      "name": "EXPRESS TOP JAK NA LATO SATYNA",
+      "brand": "dek",
+      "quantity": "0,5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000028062",
+      "name": "EXPRESS TOP PĄCZEK W MAŚLE SATYNA",
+      "brand": "dek",
+      "quantity": "0,5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000028109",
+      "name": "EXPRESS TOP JAKIŚ KOSMOS",
+      "brand": "dek",
+      "quantity": "0,5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000028185",
+      "name": "EXPRESS TOP FAJNY KLIMAT MAT",
+      "brand": "dek",
+      "quantity": "0,5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000046707",
+      "name": "EMALIA ANTYKOROZYJNA ANTRACYT PÓŁMATOWY",
+      "brand": "dek",
+      "quantity": "0,65L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000046752",
+      "name": "EMALIA ANTYKOROZYJNA CZARNY MAT",
+      "brand": "dek",
+      "quantity": "0,65L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000804468",
+      "name": "FARBA DO BETONU SZARY MAT",
+      "brand": "dek",
+      "quantity": "5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000810698",
+      "name": "AKRYLIT W SNIEZNOBIALA MATOWA",
+      "brand": "dek",
+      "quantity": "10L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000820093",
+      "name": "EMAKOL BRĄZOWY POŁYSK",
+      "brand": "dek",
+      "quantity": "0,2L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000820161",
+      "name": "EMAKOL CZARNY POŁYSK",
+      "brand": "dek",
+      "quantity": "0,2L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000820253",
+      "name": "EMAKOL KAWOWY JASNY POŁYSK",
+      "brand": "dek",
+      "quantity": "0,9L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000820369",
+      "name": "EMAKOL MAHOŃ POŁYSK",
+      "brand": "dek",
+      "quantity": "0,9L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000820482",
+      "name": "EMAKOL ORZECH ŚREDNI POŁYSK",
+      "brand": "dek",
+      "quantity": "0,9",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000820550",
+      "name": "EMAKOL SZARY JASNY POŁYSK",
+      "brand": "dek",
+      "quantity": "0,9L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000820680",
+      "name": "EMAKOL ŻÓŁTY POŁYSK",
+      "brand": "dek",
+      "quantity": "0,2L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000824879",
+      "name": "EMAKOL EMALIA CZARNY MATOWY",
+      "brand": "dek",
+      "quantity": "0,9L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000001232",
+      "name": "IMPREGNAT GRUNT",
+      "brand": "dre",
+      "quantity": "0,75",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000003533",
+      "name": "LAKIER JACHTOWY",
+      "brand": "dre",
+      "quantity": "0,8",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000005162",
+      "name": "IMPREGNAT DĄB CIEMNY",
+      "brand": "dre",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000005209",
+      "name": "IMPREGNAT PALISANDER",
+      "brand": "dre",
+      "quantity": "0,75",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000005247",
+      "name": "IMPREGNAT TIK",
+      "brand": "dre",
+      "quantity": "0,75",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000005452",
+      "name": "IMPREGNAT MAHOŃ",
+      "brand": "dre",
+      "quantity": "2,5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000005483",
+      "name": "IMPREGNAT PALISANDER ŚREDNI",
+      "brand": "dre",
+      "quantity": "2,5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000005551",
+      "name": "IMPREGNAT DĄB",
+      "brand": "dre",
+      "quantity": "4,5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000005599",
+      "name": "IMPREGNAT ORZECH CIEMNY",
+      "brand": "dre",
+      "quantity": "4,5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000005629",
+      "name": "IMPREGNAT SOSNA",
+      "brand": "dre",
+      "quantity": "4,5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000006572",
+      "name": "IMPREGNAT SZARY",
+      "brand": "dre",
+      "quantity": "2,5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000045946",
+      "name": "LAKIEROBEJCA DĄB NATURALNY",
+      "brand": "dre",
+      "quantity": "0,2L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000045977",
+      "name": "LAKIEROBEJCA PALISANDER",
+      "brand": "dre",
+      "quantity": "0,2L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000046004",
+      "name": "LAKIEROBEJCA BEZBARWNY",
+      "brand": "dre",
+      "quantity": "0,2L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000046035",
+      "name": "LAKIEROBEJCA ZŁOTY DĄB",
+      "brand": "dre",
+      "quantity": "0,2L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000046066",
+      "name": "LAKIEROBEJCA DĄB NATURALNY",
+      "brand": "dre",
+      "quantity": "0,75",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000046097",
+      "name": "LAKIEROBEJCA PALISANDER",
+      "brand": "dre",
+      "quantity": "0,75",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000046134",
+      "name": "LAKIEROBEJCA MAHOŃ",
+      "brand": "dre",
+      "quantity": "0,75",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000046165",
+      "name": "LAKIEROBEJCA KASZTAM",
+      "brand": "dre",
+      "quantity": "0,75",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000046202",
+      "name": "LAKIEROBEJCA ORZECH JASNY",
+      "brand": "dre",
+      "quantity": "2,5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000046257",
+      "name": "LAKIEROBEJCA MAHOŃ",
+      "brand": "dre",
+      "quantity": "2,5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000046288",
+      "name": "LAKIEROBEJCA KASZTAN",
+      "brand": "dre",
+      "quantity": "2,5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000051527",
+      "name": "LAKIER DO MEBLI",
+      "brand": "dre",
+      "quantity": "0,2L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000827719",
+      "name": "OLEJ DO DREWNA TIK",
+      "brand": "dre",
+      "quantity": "0,75L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904000827757",
+      "name": "OLEJ DO DREWNA TIK",
+      "brand": "dre",
+      "quantity": "2,5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509200020",
+      "name": "OPTIMA BAZA A",
+      "brand": "kb",
+      "quantity": "5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509284020",
+      "name": "ARMASIL F BAZA A",
+      "brand": "kb",
+      "quantity": "10L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509290311",
+      "name": "PROLATEX MATOWY BAZA",
+      "brand": "kb",
+      "quantity": "3",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509290342",
+      "name": "Prolatex PÓŁMATOWY BAZA A",
+      "brand": "kb",
+      "quantity": "3L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509292162",
+      "name": "BUGOFLEX BAZA A",
+      "brand": "kb",
+      "quantity": "10L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509292193",
+      "name": "BUGOFLEX BAZA B",
+      "brand": "kb",
+      "quantity": "5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509292452",
+      "name": "AQUATEX",
+      "brand": "kb",
+      "quantity": "3L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509293398",
+      "name": "ARMASIL GT",
+      "brand": "kb",
+      "quantity": "10L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509294722",
+      "name": "BUGOFLEX BAZA C",
+      "brand": "kb",
+      "quantity": "5",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509295163",
+      "name": "MARMURIT GT",
+      "brand": "kb",
+      "quantity": "5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509295248",
+      "name": "PROLATEX PÓŁMATOWY BAZA B",
+      "brand": "kb",
+      "quantity": "5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509295323",
+      "name": "PROLATEX MATOWY BAZA B",
+      "brand": "kb",
+      "quantity": "10L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509295637",
+      "name": "AQUALIT",
+      "brand": "kb",
+      "quantity": "5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509296023",
+      "name": "OPTILATEX BAZA A",
+      "brand": "kb",
+      "quantity": "5L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509298836",
+      "name": "SILCO F BAZA C",
+      "brand": "kb",
+      "quantity": "10",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5904509300454",
+      "name": "PERFEKTA BAZA B",
+      "brand": "kb",
+      "quantity": "3L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901549525687",
+      "name": "Polędwica z dorsza",
+      "brand": "Carrefour",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": 0.6,
+        "protein": 17.5,
+        "energy_kcal": 75.0
+      }
+    },
+    {
+      "source_id": "5905784300504",
+      "name": "Ziemniaki do gotowania",
+      "brand": "Carrefour",
+      "quantity": "2 kg",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5905784304335",
+      "name": "Seler naciowy",
+      "brand": "Carrefour",
+      "quantity": "400 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5905784314839",
+      "name": "Wafelki o smaku śmietankowym",
+      "brand": "Carrefour",
+      "quantity": "300 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5905784332192",
+      "name": "Oliwki zielone",
+      "brand": "Carrefour",
+      "quantity": "340g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5905784332222",
+      "name": "Oliwki zielone Hojiblanca bez pestek",
+      "brand": "Carrefour",
+      "quantity": "935 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5905784339979",
+      "name": "Grzanki pszenne",
+      "brand": "Carrefour",
+      "quantity": "150 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5905784342337",
+      "name": "Carrefour jaja bio 6szt.",
+      "brand": "Carrefour",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5905784344539",
+      "name": "chrupki kukurydziane",
+      "brand": "Carrefour",
+      "quantity": "110 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5905784348797",
+      "name": "Bautura Energizanta",
+      "brand": "Carrefour",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5905784351506",
+      "name": "Coconut milk",
+      "brand": "Carrefour",
+      "quantity": "400ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5905784358321",
+      "name": "Rogaliki z nadzieniem o smaku wiśniowym",
+      "brand": "Carrefour",
+      "quantity": "250 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5905784359854",
+      "name": "Pomidor malinowy",
+      "brand": "Carrefour",
+      "quantity": "500 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5906724802553",
+      "name": "BIO Bazylia",
+      "brand": "Carrefour",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900334002600",
+      "name": "Vitamini brzoskwinia 0.3",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900334004123",
+      "name": "Juice",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900334010728",
+      "name": "Poprostu Tymbark Pomarańcza",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": 5.199999809265137,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 21.0
+      }
+    },
+    {
+      "source_id": "5900334010773",
+      "name": "Tymbark śliwka jabłko",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": 4.699999809265137,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 20.0
+      }
+    },
+    {
+      "source_id": "5900334013651",
+      "name": "Lemoniada cytryna-limonka",
+      "brand": "Tymbark",
+      "quantity": "400ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900334015877",
+      "name": "Ice tea",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": 5.400000095367432,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 23.0
+      }
+    },
+    {
+      "source_id": "5900334019998",
+      "name": "Tymbark czarna porzeczka 0,3",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900334020239",
+      "name": "Tymbark po prostu cytruna",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900334020314",
+      "name": "Tymbark lemoniada arbuz",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900334020710",
+      "name": "Deli&fruits ciastko wiśnia",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900334021717",
+      "name": "tymbark gazowany",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900334025630",
+      "name": "Tymbark jabłko arbuz",
+      "brand": "Tymbark",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084004015",
+      "name": "Ziele angielskie Kamis",
+      "brand": "Kamis",
+      "quantity": "15 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084023016",
+      "name": "Kurkuma",
+      "brand": "Kamis",
+      "quantity": "20 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084098014",
+      "name": "ocet czerwonego wina",
+      "brand": "kamis",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084191906",
+      "name": "Przyprawa do grzańca",
+      "brand": "kamis",
+      "quantity": "40",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084231565",
+      "name": "Przyprawa do sosu tzatziki",
+      "brand": "Kamis",
+      "quantity": "20 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084235518",
+      "name": "Grill grzanki złociste",
+      "brand": "Kamis",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084258029",
+      "name": "Kamis papryka wędzona",
+      "brand": "Kamis",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900084272940",
+      "name": "Przyprawa Chińska 5 Smaków",
+      "brand": "Kamis",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    }
+  ]
+}

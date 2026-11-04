@@ -1,0 +1,1305 @@
+{
+  "batch_id": "batch_011",
+  "records": [
+    {
+      "source_id": "4902452311139",
+      "name": "fromage frais - cookie",
+      "brand": "Piątnica",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900531009013",
+      "name": "Bio śmietana 18%",
+      "brand": "Piątnica",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "6900332001710",
+      "name": "Serek śmietankowy z ziołami",
+      "brand": "OSM Piątnica,Piątnica",
+      "quantity": "135 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5000750000126",
+      "name": "Mleko Łaciate 2,0%",
+      "brand": "Mlekpol",
+      "quantity": "500 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901630000123",
+      "name": "Śmietana rolmlecz 18%",
+      "brand": "Mlekpol",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "10189231",
+      "name": "Gołąbki w sosie pomidorowym",
+      "brand": "Łowicz",
+      "quantity": "580g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900397012042",
+      "name": "Konfitura z Jagód",
+      "brand": "Łowicz",
+      "quantity": "240 g",
+      "nutrition_as_exported": {
+        "carbs": 39.0,
+        "fiber": null,
+        "fat": null,
+        "protein": 0.5,
+        "energy_kcal": 165.0
+      }
+    },
+    {
+      "source_id": "5900397734623",
+      "name": "Dżem truskawkowy",
+      "brand": "Łowicz",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": 0.5,
+        "protein": 0.5,
+        "energy_kcal": 142.0
+      }
+    },
+    {
+      "source_id": "5900397744189",
+      "name": "Truskawka kaszubska",
+      "brand": "Łowicz",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900397745872",
+      "name": "Food supplement in raspberry flavoured syrup",
+      "brand": "Łowicz",
+      "quantity": "680 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900397745933",
+      "name": "Syrop czarny bez łowicz",
+      "brand": "Łowicz",
+      "quantity": "250ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900397756182",
+      "name": "Dżem wiśniowy z nutą coki",
+      "brand": "Łowicz",
+      "quantity": "260 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900397757363",
+      "name": "Dżem truskawka",
+      "brand": "Łowicz",
+      "quantity": "200 g",
+      "nutrition_as_exported": {
+        "carbs": 4.7,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 28.0
+      }
+    },
+    {
+      "source_id": "5900397757394",
+      "name": "Dżem wiśnia",
+      "brand": "Łowicz",
+      "quantity": "200 g",
+      "nutrition_as_exported": {
+        "carbs": 5.3,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 28.0
+      }
+    },
+    {
+      "source_id": "5900397757424",
+      "name": "Dżem czarna i czerwoną porzeczka",
+      "brand": "Łowicz",
+      "quantity": "200 g",
+      "nutrition_as_exported": {
+        "carbs": 4.1,
+        "fiber": null,
+        "fat": null,
+        "protein": 0.6,
+        "energy_kcal": 29.0
+      }
+    },
+    {
+      "source_id": "59085300",
+      "name": "Dżem łowicz malinowy podróżny",
+      "brand": "Łowicz",
+      "quantity": "25g na jedno opakowanie",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59097204",
+      "name": "pasta warzywna",
+      "brand": "Łowicz",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "6900495008540",
+      "name": "Dżem brzoskwiniowy",
+      "brand": "Łowicz",
+      "quantity": "280g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "2802105003607",
+      "name": "Boczek Klasyczny",
+      "brand": "Krakus",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "2878129003541",
+      "name": "Boczek klasyczny wędzony",
+      "brand": "Krakus",
+      "quantity": "354 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900244020411",
+      "name": "Konserwa Krakus-wieprzowina",
+      "brand": "Krakus",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900397738058",
+      "name": "Ogórki korniszony z chili",
+      "brand": "Krakus",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": 6.4,
+        "fiber": null,
+        "fat": null,
+        "protein": 0.5,
+        "energy_kcal": 30.0
+      }
+    },
+    {
+      "source_id": "5900397757523",
+      "name": "Bulion warzywny",
+      "brand": "Krakus",
+      "quantity": "100 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901784161404",
+      "name": "Kabanosy drobiowo-wieprzowe",
+      "brand": "Krakus",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437013800",
+      "name": "Krem do karpatki",
+      "brand": "Dr.Oetker",
+      "quantity": "240g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437027487",
+      "name": "Kisiel smak jagoda",
+      "brand": "Dr.Oetker",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": 14.0,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 55.0
+      }
+    },
+    {
+      "source_id": "5900437071305",
+      "name": "Żelfix 3:1",
+      "brand": "Dr.Oetker",
+      "quantity": "40 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437071503",
+      "name": "Żelfix 2:1",
+      "brand": "Dr.Oetker",
+      "quantity": "40 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900437072111",
+      "name": "Żelatyna w listkach",
+      "brand": "Dr.Oetker",
+      "quantity": "10 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59030324",
+      "name": "Waniliowy aromat",
+      "brand": "Dr.Oetker",
+      "quantity": "9 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59030348",
+      "name": "Arakowy Aromat",
+      "brand": "Dr.Oetker",
+      "quantity": "9 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901588400068",
+      "name": "Ptasie mleczko piernikowe",
+      "brand": "E.Wedel",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901588400358",
+      "name": "Ptasie mleczko waniliowo czekoladowe",
+      "brand": "E.Wedel",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901588400570",
+      "name": "Ptasie Mleczko Orzech Laskowy",
+      "brand": "E.Wedel",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901588400730",
+      "name": "Chrrrup",
+      "brand": "E.Wedel",
+      "quantity": "280 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901588401232",
+      "name": "Mieszanka wedlowska",
+      "brand": "Wedel",
+      "quantity": "356g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901588401928",
+      "name": "jabłko mięta czekolada",
+      "brand": "Wedel",
+      "quantity": "100g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59094425",
+      "name": "Bajeczny",
+      "brand": "E.Wedel",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "0966330047637",
+      "name": "activia probiotyki",
+      "brand": "Danone",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900643035627",
+      "name": "Ale Pitny",
+      "brand": "Danone",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900643044308",
+      "name": "Gratka do picia 280g",
+      "brand": "Danone",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900643047361",
+      "name": "Fantasia z gwiazdkami w czekoladzie",
+      "brand": "Danone",
+      "quantity": "102 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900643048382",
+      "name": "Danio Serek Homogenizowany",
+      "brand": "Danone",
+      "quantity": "130g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900643049174",
+      "name": "ale pitny",
+      "brand": "danone",
+      "quantity": "270g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900643049198",
+      "name": "Ale pitny Danone",
+      "brand": "Danone",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900643050323",
+      "name": "Ale pitny truskawka poziomka",
+      "brand": "Danone",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900643050385",
+      "name": "Ale Pitny Jogurt Borówkoey",
+      "brand": "Danone",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900643050606",
+      "name": "Danio Jogurt Mango",
+      "brand": "Danone",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900643050620",
+      "name": "Danio truskawka pitny",
+      "brand": "Danone",
+      "quantity": "270g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59023944",
+      "name": "Actimel wieloowoc",
+      "brand": "Danone",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59030133",
+      "name": "Fantasia z mleczną czekoladą",
+      "brand": "Fantasia,Danone",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59084358",
+      "name": "Fantasia z malinami",
+      "brand": "Danone,Fantasia",
+      "quantity": "122g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59088073",
+      "name": "danone",
+      "brand": "Danone, Activia",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "59094487",
+      "name": "Fantasia wiśniowa",
+      "brand": "Fantasia, Danone",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "6281022120349",
+      "name": "Alsafi fresh milk",
+      "brand": "Danone",
+      "quantity": "1.5ltr",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "4904191000350",
+      "name": "Tymianek suszony",
+      "brand": "Prymat",
+      "quantity": "10g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135000055",
+      "name": "Przyprawa do mięsa mielonego",
+      "brand": "Prymat",
+      "quantity": "20g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135000178",
+      "name": "Cynamon mielony",
+      "brand": "Prymat",
+      "quantity": "15 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135000239",
+      "name": "Zioła prowansalskie suszone",
+      "brand": "Prymat",
+      "quantity": "10 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135000420",
+      "name": "Ziele angielskie całe",
+      "brand": "Prymat",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135000604",
+      "name": "Bazylia suszona",
+      "brand": "Prymat",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135000635",
+      "name": "Gałka muszkatołowa mielona",
+      "brand": "Prymat",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135000871",
+      "name": "sół  kamienna",
+      "brand": "Prymat",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135016469",
+      "name": "Sól peklująca",
+      "brand": "Prymat",
+      "quantity": "1 kg",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135026376",
+      "name": "Przyprawa do piernika, ciast i deserów",
+      "brand": "Prymat",
+      "quantity": "20 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135030670",
+      "name": "Przyprawa do ogórków konserwowych ( koper itp.)",
+      "brand": "Prymat",
+      "quantity": "40 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135031912",
+      "name": "Papryka wędzona",
+      "brand": "Prymat",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135032285",
+      "name": "Cynamon cały",
+      "brand": "Prymat",
+      "quantity": "3",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135035590",
+      "name": "Cynamon mielony",
+      "brand": "Prymat",
+      "quantity": "15 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135041423",
+      "name": "Czosnek niedźwiedzi suszony",
+      "brand": "Prymat",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135044592",
+      "name": "Ser grill",
+      "brand": "Prymat",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5901135054157",
+      "name": "Chili w płatkach",
+      "brand": "Prymat",
+      "quantity": "10g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900477000693",
+      "name": "Groszek Zielony",
+      "brand": "Hortex",
+      "quantity": "450g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900477000853",
+      "name": "Warzywa na patelnię z przyprawą włoską",
+      "brand": "Hortex",
+      "quantity": "450 g",
+      "nutrition_as_exported": {
+        "carbs": 5.1,
+        "fiber": 2.8,
+        "fat": null,
+        "protein": 2.1,
+        "energy_kcal": 38.0
+      }
+    },
+    {
+      "source_id": "5900477015260",
+      "name": "Warzywa na patelnie z kaszą pęczak i szpinakiem",
+      "brand": "HORTEX",
+      "quantity": "450 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900477018957",
+      "name": "Bigos ze słodkiej kapusty z kiełbasą",
+      "brand": "Hortex",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900477021537",
+      "name": "Lody wowoc",
+      "brand": "Hortex",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": 21.0,
+        "fiber": null,
+        "fat": 0.0,
+        "protein": null,
+        "energy_kcal": 84.0
+      }
+    },
+    {
+      "source_id": "5900477021971",
+      "name": "Warzywa z batatem",
+      "brand": "hortex",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": 51.0
+      }
+    },
+    {
+      "source_id": "5900500000560",
+      "name": "Ananas kaktus",
+      "brand": "Hortex",
+      "quantity": "1l",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900500001130",
+      "name": "Napój wieloosobowy jabłko-malina-limonka",
+      "brand": "Hortex",
+      "quantity": "2 L",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900500025600",
+      "name": "sok jabłkowy",
+      "brand": "hortex",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900500031472",
+      "name": "Sok pomid 300ml",
+      "brand": "Hortex",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900500033230",
+      "name": "Pomar.mango",
+      "brand": "Hortex 0.5ml",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900500035265",
+      "name": "Multivitam juice",
+      "brand": "Hortex",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": 10.800000190734863,
+        "fiber": null,
+        "fat": null,
+        "protein": 0.30000001192092896,
+        "energy_kcal": 45.0
+      }
+    },
+    {
+      "source_id": "5900500040689",
+      "name": "Cytryna limonka",
+      "brand": "Hortex",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900500043284",
+      "name": "Vitaminka odporność jabłko marchwe mango",
+      "brand": "Hortex,Vitaminka",
+      "quantity": "1l",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900500048234",
+      "name": "Napój owocowy jabłko-truskawka",
+      "brand": "Hortex",
+      "quantity": "400 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900500048593",
+      "name": "sok 100% Jabłko",
+      "brand": "Hortex",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5903895633740",
+      "name": "Tuńczyk z kuskusem perłowym i suszonymi pomidorami",
+      "brand": "Graal,Salatino",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "19001025",
+      "name": "TRUFLE",
+      "brand": "Wawel",
+      "quantity": "270 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900102020898",
+      "name": "Tofflairs",
+      "brand": "Wawel",
+      "quantity": "650g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900102021192",
+      "name": "Czekolada",
+      "brand": "Wawel",
+      "quantity": "100g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900102025329",
+      "name": "Marzipan in chocolate",
+      "brand": "Wawel",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900102025756",
+      "name": "Raczki wawel",
+      "brand": "Wawel",
+      "quantity": "105g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900102025848",
+      "name": "Fresch fruit kwaśne",
+      "brand": "Wawel",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900102027064",
+      "name": "CoCoa",
+      "brand": "Wawel",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900102410842",
+      "name": "Mieszanka krakowska",
+      "brand": "wawel",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900512983707",
+      "name": "mini Przysmak Góralski",
+      "brand": "MLEKOVITA",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900531004582",
+      "name": "Skyr",
+      "brand": "Pilos",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": 11.0,
+        "fiber": 10.0,
+        "fat": null,
+        "protein": 10.0,
+        "energy_kcal": 82.0
+      }
+    },
+    {
+      "source_id": "5900562001246",
+      "name": "Wołowina w sosie własnym",
+      "brand": "Sokołów",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    }
+  ]
+}

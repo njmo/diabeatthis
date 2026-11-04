@@ -1,0 +1,83 @@
+{
+  "batch_id": "batch_006",
+  "records": [
+    {
+      "source_id": "5900617035851",
+      "name": "wafle ryzowe z polewa malinowa",
+      "brand": "Sante",
+      "quantity": "66 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900617042453",
+      "name": "OAT no sugar added",
+      "brand": "Lovege,Sante",
+      "quantity": "330 ml",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5902180630105",
+      "name": "Komosa ryżowa biała",
+      "brand": "Sonko",
+      "quantity": "200g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5902180630136",
+      "name": "SONKO wafle.r Dark w czeka.deserowej",
+      "brand": "SONKO",
+      "quantity": "30g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5908230527838",
+      "name": "Kabanosy z szynki",
+      "brand": "Tarczyński",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5908230528354",
+      "name": "Kabanos excellence drobiowy z dodatkiem wieprzowiny",
+      "brand": "Tarczyński",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    }
+  ]
+}

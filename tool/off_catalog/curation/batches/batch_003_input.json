@@ -1,0 +1,109 @@
+{
+  "batch_id": "batch_003",
+  "records": [
+    {
+      "source_id": "5900120004214",
+      "name": "Maślanka",
+      "brand": "Łowicz",
+      "quantity": "500g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900120062283",
+      "name": "liliput",
+      "brand": "Łowicz",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900120073289",
+      "name": "Serek wiejski",
+      "brand": "Łowicz",
+      "quantity": "200g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900820010881",
+      "name": "ser topiony papryka",
+      "brand": "mlekpol",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900820013325",
+      "name": "zsiadle mleko mlekpol",
+      "brand": "Mlekpol",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900820029265",
+      "name": "jogurt",
+      "brand": "mlekpol",
+      "quantity": "400g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5908230520662",
+      "name": "Kabanosy tarczyński",
+      "brand": "Tarczyński",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5908230526268",
+      "name": "kabanosy wieprzowe",
+      "brand": "Tarczyński",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    }
+  ]
+}

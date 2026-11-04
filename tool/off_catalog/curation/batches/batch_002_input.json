@@ -1,0 +1,109 @@
+{
+  "batch_id": "batch_002",
+  "records": [
+    {
+      "source_id": "5900617010919",
+      "name": "Otręby owsiane",
+      "brand": "Sante",
+      "quantity": "200 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900617013224",
+      "name": "Sól himalajska różowa",
+      "brand": "Sante",
+      "quantity": "350 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900617031723",
+      "name": "Ciasteczka zbożowe musli z owocami.",
+      "brand": "Sante",
+      "quantity": "300 g (6 x 50 g)",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5902180130506",
+      "name": "Sucharki",
+      "brand": "Sonko",
+      "quantity": "225g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5902180390504",
+      "name": "Mini sucharki pełnoziarniste",
+      "brand": "Sonko",
+      "quantity": "120 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5902180500132",
+      "name": "Pasta roślinna o smaku wołowiny",
+      "brand": "Sonko",
+      "quantity": "170 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5902172000282",
+      "name": "płatki jęczmienne",
+      "brand": "kupiec",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5902172000701",
+      "name": "Cukier Puder",
+      "brand": "Kupiec",
+      "quantity": "400 g",
+      "nutrition_as_exported": {
+        "carbs": 99.8,
+        "fiber": null,
+        "fat": 0.0,
+        "protein": null,
+        "energy_kcal": 399.0
+      }
+    }
+  ]
+}

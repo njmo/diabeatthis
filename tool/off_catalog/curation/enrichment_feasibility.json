@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-11-04",
+  "status": "feasibility_review_no_catalog_changes",
+  "counts": {
+    "named": 33829,
+    "named_missing_core": 9438,
+    "no_core_at_all": 13522,
+    "unnamed": 5753,
+    "named_core": 24391,
+    "core_missing_fiber": 11003
+  },
+  "findings": [
+    {
+      "code": "5900001421376",
+      "name": "Plant White Barista Owsiane",
+      "status": "hold_conflicting_basis_and_recipe",
+      "sources": [
+        {
+          "url": "https://www.bee.pl/plant-white-napoj-owsiany-barista-1-l_p1945866.html",
+          "identity": "exact_EAN",
+          "basis": "100ml",
+          "carbs": 6.7,
+          "fiber": 1,
+          "fat": 3,
+          "protein": 0.8
+        },
+        {
+          "url": "https://zielonaesencja.pl/product-pol-12217-Napoj-owsiany-dla-baristow-Bez-Cukru-1-L-Plant-White-Barista-Owsiane.html",
+          "identity": "exact_EAN",
+          "basis": "100g",
+          "carbs": 6.7,
+          "fiber": 1,
+          "fat": 3,
+          "protein": 0.8
+        }
+      ],
+      "decision": "Do not merge. Verify current manufacturer or label evidence; identical numbers do not resolve volume versus mass."
+    },
+    {
+      "code": "5900012000287",
+      "name": "Kujawski olej rzepakowy",
+      "status": "candidate_requires_label_verification_and_reuse_review",
+      "source_url": "https://dodomku.pl/Kujawski_olej_rzepakowy/21051.html",
+      "identity": "exact_EAN",
+      "reported_basis": {
+        "amount": 10,
+        "unit": "g",
+        "label": "one tablespoon"
+      },
+      "reported_nutrition": {
+        "fat": 10,
+        "carbs": 0,
+        "protein": 0,
+        "fiber": null
+      },
+      "decision": "Candidate only. Preserve missing fiber; do not infer grams from package volume."
+    }
+  ],
+  "policy": [
+    "Prefer richer official OFF export and verified label images before web enrichment.",
+    "Match exact barcode and variant, market, preparation and source date.",
+    "Keep external evidence separate with URL, units, conflicts and approval state.",
+    "Publicly accessible websites do not automatically grant bulk database redistribution rights.",
+    "No LLM nutrition estimates or replacing missing values with zeros."
+  ]
+}

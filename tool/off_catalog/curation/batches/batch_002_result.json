@@ -1,0 +1,229 @@
+{
+  "batch_id": "batch_002",
+  "reviewed_at": "2026-11-04",
+  "records": [
+    {
+      "code": "5900617010919",
+      "name": "Otręby owsiane",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://torimpex.pl/produkt/sante-otreby-owsiane-wysokoblonnikowe-premium-200-g/",
+          "source_type": "retailer",
+          "identity_evidence": "The page names Sante oat bran, lists barcode 5900617010919 and a 200 g pack, and provides nutrition per 100 g.",
+          "matched_barcode": "5900617010919",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 44,
+            "fiber": 19,
+            "fat": 8.7,
+            "protein": 18,
+            "energy_kcal": 364
+          },
+          "notes": "A second exact-barcode retailer page reports a conflicting panel: 52 g carbs, 18 g fiber, 7.3 g fat, 16 g protein, 374 kcal per 100 g. This source's values are retained as the candidate pending label verification."
+        }
+      ],
+      "conflicts": [
+        "Exact-barcode sources disagree on all core nutrition values: Torimpex reports 44/19/8.7/18/364, while Dallas reports 52/18/7.3/16/374 (carbs/fiber/fat/protein/kcal per 100 g)."
+      ],
+      "missing_fields": [],
+      "notes": "Candidate is identity and basis verified, but macro conflict requires label review before catalog acceptance."
+    },
+    {
+      "code": "5900617013224",
+      "name": "Sól himalajska różowa",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://e-delikatesydwojka.pl/produkt/sante-sol-himalajska-rozowa-350-g/",
+          "source_type": "retailer",
+          "identity_evidence": "Exact barcode 5900617013224, Sante pink Himalayan salt, 350 g; the page provides a nutrition panel per 100 g.",
+          "matched_barcode": "5900617013224",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 0,
+            "fiber": 0,
+            "fat": 0,
+            "protein": 0,
+            "energy_kcal": 0
+          },
+          "notes": "Panel explicitly reports zero values for all requested nutrients."
+        }
+      ],
+      "conflicts": [
+        "Another exact-barcode retailer lists iodine 2313 µg/100 g whereas this page reports 3026 µg/100 g; requested macro fields agree at zero."
+      ],
+      "missing_fields": [],
+      "notes": "Hold: nutrition for salt is all zeros and existing OFF policy does not establish whether such a record is useful; exact identity and basis are supported."
+    },
+    {
+      "code": "5900617031723",
+      "name": "Ciasteczka zbożowe musli z owocami",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.frisco.pl/pid%2C100567/n%2Csante-sniadaniowe-cookies-ciasteczka-musli-z-owocami/stn%2Cproduct",
+          "source_type": "retailer",
+          "identity_evidence": "The page identifies Sante muesli fruit breakfast cookies, barcode 5900617031723 and 300 g, and provides nutrition per 100 g.",
+          "matched_barcode": "5900617031723",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 65,
+            "fiber": null,
+            "fat": 15,
+            "protein": 8.5,
+            "energy_kcal": 443
+          },
+          "notes": "Product is marked discontinued by the retailer; values are per 100 g.",
+          "agent_reported_nutrition": {
+            "carbs": 65,
+            "fiber": 7,
+            "fat": 15,
+            "protein": 8.5,
+            "energy_kcal": 443
+          }
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Exact barcode also appears in Sante product catalog for its muesli fruit breakfast cookies.",
+      "root_review": [
+        "Removed fiber value not supported by the retrieved source text."
+      ]
+    },
+    {
+      "code": "5902180130506",
+      "name": "Sucharki",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://apps.auchan.pl/feeds/29857/0",
+          "source_type": "retailer",
+          "identity_evidence": "Auchan product feed identifies Sonko rusks with EAN 5902180130506 and provides nutrition per 100 g.",
+          "matched_barcode": "5902180130506",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 69.5,
+            "fiber": 3.7,
+            "fat": 7.3,
+            "protein": 10.5,
+            "energy_kcal": 393
+          },
+          "notes": "Another exact-barcode retailer's panel differs, reporting 68 g carbs, 4.3 g fiber, 7 g fat, 11 g protein, 388 kcal."
+        }
+      ],
+      "conflicts": [
+        "Exact-barcode sources show different nutrition panels; likely formulation/label differences. The Auchan feed is selected as candidate pending label verification."
+      ],
+      "missing_fields": [],
+      "notes": "Exact identity and per-100-g basis are supported; conflicting values require package review."
+    },
+    {
+      "code": "5902180390504",
+      "name": "Mini sucharki pełnoziarniste",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/sonko-mini-sucharki-pelnoziarniste-60-sztuk/98",
+          "source_type": "retailer",
+          "identity_evidence": "Exact EAN 5902180390504, Sonko mini wholegrain rusks, 120 g pack; nutrition table explicitly states per 100 g.",
+          "matched_barcode": "5902180390504",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 65.9,
+            "fiber": 6.4,
+            "fat": 10.5,
+            "protein": 11.8,
+            "energy_kcal": 418
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [
+        "Other exact-barcode retailer pages provide 1666 kJ / 395 kcal, fat 9 g, carbs 63 g, fiber 7.2 g, protein 12 g per 100 g. The selected panel is the one with directly itemized kcal and complete core macros."
+      ],
+      "missing_fields": [],
+      "notes": "Hold recommended for package verification because another exact-barcode source reports a materially different panel."
+    },
+    {
+      "code": "5902180500132",
+      "name": "Pasta roślinna o smaku wołowiny",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "exact barcode product source",
+        "nutrition basis",
+        "carbohydrates",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact-code searches did not produce a source establishing this product identity and a nutrition panel. Similar Sonko spreads were excluded."
+    },
+    {
+      "code": "5902172000282",
+      "name": "Płatki jęczmienne błyskawiczne",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://torimpex.pl/produkt/kupiec-platki-jeczmienne-blyskawiczne-400-g/",
+          "source_type": "retailer",
+          "identity_evidence": "The page identifies Kupiec instant barley flakes, exact barcode 5902172000282, 400 g package, and a nutrition panel per 100 g.",
+          "matched_barcode": "5902172000282",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 70,
+            "fiber": 10,
+            "fat": 3.6,
+            "protein": 10,
+            "energy_kcal": 372
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [
+        "Carrefour Frisco's exact-barcode page reports salt 2.0 g/100 g while Torimpex and other exact-barcode sources report 1.6 g; requested macros match."
+      ],
+      "missing_fields": [],
+      "notes": "Quantity missing in input; exact-barcode source establishes 400 g. Flakes are listed as product, not prepared porridge."
+    },
+    {
+      "code": "5902172000701",
+      "name": "Cukier Puder",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/kupiec-cukier-puder/137",
+          "source_type": "retailer",
+          "identity_evidence": "The page identifies Kupiec powdered sugar, EAN 5902172000701, 400 g package, and nutrition values per 100 g.",
+          "matched_barcode": "5902172000701",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 99.8,
+            "fiber": 0,
+            "fat": 0,
+            "protein": 0,
+            "energy_kcal": 399
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [
+        "Existing export has 399 kcal and 99.8 g carbs, matching the source, but has null protein; source explicitly reports 0 g protein/100 g."
+      ],
+      "missing_fields": [],
+      "notes": "Existing exported values agree where present."
+    }
+  ]
+}

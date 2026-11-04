@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-11-04",
+  "method": "two_gpt_6_luna_low_research_agents",
+  "firebase_gemini_api_calls": 0,
+  "catalog_modified": false,
+  "sample_limitations": "Eight selected Mlekovita records; success rate cannot be extrapolated to all brands or missing records.",
+  "counts": {
+    "reviewed": 8,
+    "candidate": 7,
+    "hold": 1
+  },
+  "records": [
+    {
+      "code": "5900512110554",
+      "name": "Ser Morski Mlekovita",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://mlekovita.com.pl/produkt/ser-morski-kawalki-350-g-64",
+          "identity_evidence": "Official Mlekovita page identifies Ser Morski, 350 g, but lists EAN 5900512130309, not target EAN 5900512110554.",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 0,
+            "fiber": null,
+            "fat": 25,
+            "protein": 24,
+            "energy_kcal": 321
+          },
+          "notes": "Current manufacturer listing reports 0 g carbohydrate, 25 g fat, 24 g protein and 321 kcal per 100 g. Macro/energy figures match existing catalog values, but this is another EAN/package variant; identity is not exact."
+        }
+      ],
+      "conflicts": [
+        "Target EAN is not evidenced by the manufacturer page; the cited page has EAN 5900512130309."
+      ],
+      "missing_fields": [
+        "fiber"
+      ]
+    },
+    {
+      "code": "5900512300481",
+      "name": "Deserowa Śmietanka Polska 30% Mlekovita 330ml",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://mlekovita.com.pl/produkt/smietanka-uht-polska-30-tluszczu-330-ml-508",
+          "identity_evidence": "Official Mlekovita page lists Śmietanka Polska 30% UHT, 330 ml, and exact EAN 5900512300481.",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 3.2,
+            "fiber": null,
+            "fat": 30,
+            "protein": 2.3,
+            "energy_kcal": 292
+          },
+          "notes": "Official manufacturer nutrition panel says per 100 g: 3.2 g carbohydrate, 30 g fat, 2.3 g protein, 292 kcal. Fiber is not reported."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ]
+    },
+    {
+      "code": "5900512350011",
+      "name": "Śmietana 12% Mlekovita 200g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://mlekovita.com.pl/produkt/smietana-polska-gesta-12-200-g-61",
+          "identity_evidence": "Official Mlekovita page lists Śmietana Polska 12%, 200 g, and exact EAN 5900512350011.",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 4,
+            "fiber": null,
+            "fat": 12,
+            "protein": 2.8,
+            "energy_kcal": 135
+          },
+          "notes": "Official manufacturer nutrition panel reports per 100 g: 4.0 g carbohydrate, 12 g fat, 2.8 g protein, 135 kcal. Fiber is not reported."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ]
+    },
+    {
+      "code": "5900512350219",
+      "name": "Mleko zsiadłe Mlekovita 370g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://mlekovita.com.pl/produkt/mleko-zsiadle-polskie-370-g-132",
+          "identity_evidence": "Official Mlekovita page lists Mleko zsiadłe Polskie, 370 g, and exact EAN 5900512350219.",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 4.8,
+            "fiber": null,
+            "fat": 2,
+            "protein": 3.3,
+            "energy_kcal": 50
+          },
+          "notes": "Official manufacturer nutrition panel reports per 100 g: 4.8 g carbohydrate, 2.0 g fat, 3.3 g protein, 50 kcal. Fiber is not reported."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ]
+    },
+    {
+      "code": "5900512901008",
+      "name": "Wypasiony serek truskawkowy Mlekovita 100 g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://mlekovita.com.pl/produkt/wypasiony-serek-truskawkowy-831",
+          "identity_evidence": "Manufacturer page names Wypasiony serek truskawkowy, states 100 g, and lists unit EAN 5900512901008.",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 17,
+            "fiber": null,
+            "fat": 5.0,
+            "protein": 6.9,
+            "energy_kcal": 141
+          },
+          "notes": "Manufacturer's current page; strawberry variant. Fiber is not reported."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ]
+    },
+    {
+      "code": "5900512904733",
+      "name": "Kefir naturalny bez laktozy Mlekovita",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://mlekovita.com.pl/produkt/kefir-naturalny-bez-laktozy-970",
+          "identity_evidence": "Manufacturer page names Kefir naturalny bez laktozy and lists unit EAN 5900512904733; the unit package is 1 kg.",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 4.8,
+            "fiber": null,
+            "fat": 2.0,
+            "protein": 3.5,
+            "energy_kcal": 51
+          },
+          "notes": "Manufacturer page reports nutrition per 100 g and a separate portion of 250 g. Values here use the 100 g basis."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ]
+    },
+    {
+      "code": "5900512904740",
+      "name": "Jogurt Polski Mlekovita 1 kg (truskawka)",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://mlekovita.com.pl/produkt/jogurt-polski-truskawka-964",
+          "identity_evidence": "Manufacturer page names Jogurt Polski truskawka, states a 1 kg unit package, and lists unit EAN 5900512904740.",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 11,
+            "fiber": null,
+            "fat": 3.1,
+            "protein": 3.0,
+            "energy_kcal": 84
+          },
+          "notes": "EAN resolves to the strawberry variant. Source gives nutrition per 100 g and separately per 250 g; values here use 100 g."
+        }
+      ],
+      "conflicts": [
+        "The supplied record label did not specify strawberry; exact EAN identifies the strawberry variant."
+      ],
+      "missing_fields": [
+        "fiber"
+      ]
+    },
+    {
+      "code": "5900512983707",
+      "name": "Przysmak Góralski mini Mlekovita 160 g",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://mlekovita.com.pl/produkt/miniprzysmak-goralski-160-g-638",
+          "identity_evidence": "Manufacturer page names Przysmak Góralski mini, states the 160 g unit package, and lists unit EAN 5900512983707.",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 2.0,
+            "fiber": null,
+            "fat": 19,
+            "protein": 25,
+            "energy_kcal": 279
+          },
+          "notes": "Manufacturer source reports 279 kcal; other indexed retailer listings for this EAN report 278 kcal or 279 kcal, so this proposal follows the manufacturer. Fiber is not reported there."
+        }
+      ],
+      "conflicts": [
+        "Retailer listings indexed for the same EAN report energy as 278 kcal or 279 kcal per 100 g; manufacturer page reports 279 kcal."
+      ],
+      "missing_fields": [
+        "fiber"
+      ]
+    }
+  ],
+  "review_status": "proposals_only_not_import_approved",
+  "rights_review": "Public manufacturer evidence recorded; bulk reuse permission not established."
+}

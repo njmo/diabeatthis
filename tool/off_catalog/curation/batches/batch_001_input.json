@@ -1,0 +1,109 @@
+{
+  "batch_id": "batch_001",
+  "records": [
+    {
+      "source_id": "5900531001604",
+      "name": "Piatnica smietana 18%",
+      "brand": "Piątnica",
+      "quantity": "1 kg",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900531001710",
+      "name": "TWOJ SMAK CMETANKOVIY",
+      "brand": "Piątnica",
+      "quantity": "135 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900531004629",
+      "name": "Skyr wiśniowy",
+      "brand": "Piątnica,OSM Piątnica",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": 11.0,
+        "fiber": null,
+        "fat": null,
+        "protein": 9.60000038146973,
+        "energy_kcal": 82.0
+      }
+    },
+    {
+      "source_id": "5900531004803",
+      "name": "Skyr wiśnia z kawałkami czekolady",
+      "brand": "Piątnica",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197015489",
+      "name": "Polskie smaki",
+      "brand": "Bakoma",
+      "quantity": "120g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197016097",
+      "name": "jogurt z brzoskwinia i gruszka oraz zbożami, ziarnami słonecznika i dyni",
+      "brand": "bakoma",
+      "quantity": "300 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197016592",
+      "name": "Jogurt naturalny",
+      "brand": "Bakoma",
+      "quantity": "350 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197022746",
+      "name": "Bakoma Jogurt Naturalny Bez Laktozy 400g",
+      "brand": "Bakoma",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    }
+  ]
+}

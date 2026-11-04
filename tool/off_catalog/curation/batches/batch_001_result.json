@@ -1,0 +1,185 @@
+{
+  "batch_id": "batch_001",
+  "reviewed_at": "2026-11-04",
+  "records": [
+    {
+      "code": "5900531001604",
+      "name": "Piatnica smietana 18%",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://strefamistrzowsmaku.piatnica.pl/wp-content/uploads/2023/08/KATALOG_HoReCa_2023.08.04.pdf",
+          "source_type": "manufacturer",
+          "identity_evidence": "Manufacturer catalog names Śmietana 18%, 1 kg, and gives unit-pack EAN 5900531001604.",
+          "matched_barcode": "5900531001604",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 4.8, "fiber": null, "fat": 18, "protein": 2.5, "energy_kcal": 191},
+          "notes": "Catalog labels carbohydrate as 4.8 g and separately includes 3.6 g sugars; fat 18 g; protein 2.5 g; energy 790 kJ / 191 kcal per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": ""
+    },
+    {
+      "code": "5900531001710",
+      "name": "TWOJ SMAK CMETANKOVIY",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://e-spar.com.pl/towar/piatnica-twoj-smak-serek-smietankowy-z-ziolami-135-g/290065",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer identifies EAN 5900531001710 as Piątnica Twój Smak cream cheese with herbs, 135 g.",
+          "matched_barcode": "5900531001710",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 3, "fiber": null, "fat": 23, "protein": 6, "energy_kcal": 243},
+          "notes": "Nutrition is explicitly per 100 g. Export name appears to refer to the same Twój Smak product family but does not specify flavor; the exact code resolves to herb flavor."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": "Hold for review because source name is truncated/ambiguous against the exact EAN match."
+    },
+    {
+      "code": "5900531004629",
+      "name": "Skyr wiśniowy",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://e-spar.com.pl/towar/jogurt-skyr-z-wisniami-piatnica-150g/298719",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer identifies Piątnica cherry Skyr, 150 g, with barcode 5900531004629.",
+          "matched_barcode": "5900531004629",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 11, "fiber": null, "fat": 0, "protein": 9.6, "energy_kcal": 82},
+          "notes": "Retailer nutrition table lists values per 100 g, including 11 g carbohydrate, 0 g fat, 9.6 g protein and 82 kcal."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": "Exported carbohydrate, protein and energy agree with the source."
+    },
+    {
+      "code": "5900531004803",
+      "name": "Skyr wiśnia z kawałkami czekolady",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": ["carbs", "fiber", "fat", "protein", "energy_kcal"],
+      "notes": "Search did not find a source establishing this exact barcode and nutrition basis. Similar Piątnica cherry-chocolate Skyr codes were excluded."
+    },
+    {
+      "code": "5900197015489",
+      "name": "Polskie smaki",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://bakoma.pl/assets/partners-catalogues/BAKOMA_Katalog_2020.pdf",
+          "source_type": "manufacturer",
+          "identity_evidence": "Bakoma's 2020 catalog lists EAN 5900197015489 within the Polskie Smaki z Musem range, flavor brzoskwinia, 120 g.",
+          "matched_barcode": "5900197015489",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {"carbs": null, "fiber": null, "fat": null, "protein": null, "energy_kcal": null},
+          "notes": "Manufacturer catalog establishes identity and pack size but provides no nutrition panel."
+        },
+        {
+          "url": "https://www.sklepblisko.pl/product-pl-999-Bakoma-Polskie-Smaki-Jogurt-kremowy-z-musem-brzoskwiniowym-120-g.html",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer lists barcode 5900197015489 for Bakoma Polskie Smaki peach mousse creamy yogurt, 120 g.",
+          "matched_barcode": "5900197015489",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 14.4, "fiber": null, "fat": 5.2, "protein": 2.3, "energy_kcal": 114},
+          "notes": "Retailer nutrition is stated per 100 g. Export only says Polskie smaki, so flavor identity requires review."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": "Hold because the export name omits the peach flavor specified by the exact EAN sources."
+    },
+    {
+      "code": "5900197016097",
+      "name": "jogurt z brzoskwinia i gruszka oraz zbożami, ziarnami słonecznika i dyni",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://leclerckatowice24.pl/p/1898/28471/bakoma-7-zboz-men-jogurt-z-brzoskwinia-gruszka-i-zbozami-300-g",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer lists exact EAN 5900197016097 and product name matching the exported peach-pear yogurt with grains, sunflower and pumpkin seeds, 300 g.",
+          "matched_barcode": "5900197016097",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 15.2, "fiber": null, "fat": 2.7, "protein": 3.5, "energy_kcal": 100},
+          "notes": "Values are explicitly per 100 g product."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": ""
+    },
+    {
+      "code": "5900197016592",
+      "name": "Jogurt naturalny",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://sklepkupiec.pl/serki-jogurty-desery/1977-bakoma-jogurt-naturalny-350-g.html",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer lists exact index/EAN 5900197016592 for Bakoma natural yogurt, 350 g.",
+          "matched_barcode": "5900197016592",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 7.6, "fiber": null, "fat": 0, "protein": 5, "energy_kcal": 50},
+          "notes": "Table states values per 100 g yogurt."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": ""
+    },
+    {
+      "code": "5900197022746",
+      "name": "Bakoma Jogurt Naturalny Bez Laktozy 400g",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://bakoma.pl/assets/partners-catalogues/Bakoma_Katalog_2021.pdf",
+          "source_type": "manufacturer",
+          "identity_evidence": "Bakoma's catalog associates EAN 5900197022746 with natural lactose-free drinking yogurt, 400 g.",
+          "matched_barcode": "5900197022746",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {"carbs": null, "fiber": null, "fat": null, "protein": null, "energy_kcal": null},
+          "notes": "Manufacturer catalog confirms identity and 400 g pack size but gives no nutrition."
+        },
+        {
+          "url": "https://www.frisco.pl/pid%2C116869/n%2Cbakoma-jogurt-naturalny-bez-laktozy/stn%2Cproduct",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer lists exact EAN 5900197022746 for Bakoma lactose-free natural yogurt and provides nutrition per 100 g.",
+          "matched_barcode": "5900197022746",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 5.1, "fiber": null, "fat": 2, "protein": 3.4, "energy_kcal": 52},
+          "notes": "Retailer current pack description says 370 g and nutrition per 100 g, while Bakoma catalog and export identify 400 g; values may reflect a revised pack/formula."
+        },
+        {
+          "url": "https://sklepkupiec.pl/serki-jogurty-desery/27625-bakoma-jogurt-naturalny-bez-laktozy-370-g.html",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer lists exact EAN 5900197022746 for lactose-free natural drinking yogurt, 370 g, and nutrition per 100 g.",
+          "matched_barcode": "5900197022746",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 5, "fiber": null, "fat": 2, "protein": 3.3, "energy_kcal": 51},
+          "notes": "This source's exact-code nutrition differs slightly from Frisco's values."
+        }
+      ],
+      "conflicts": ["Same EAN appears with 400 g in Bakoma's 2021 catalog and 370 g in current retailer listings.", "Exact-code retailer nutrition differs: 5.0 g carbohydrate, 3.3 g protein, 51 kcal versus 5.1 g carbohydrate, 3.4 g protein, 52 kcal per 100 g."],
+      "missing_fields": ["fiber"],
+      "notes": "Hold for resolution of pack size and conflicting nutrition values."
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "batch_id": "batch_005",
+  "reviewed_at": "2026-11-04",
+  "records": [
+    {
+      "code": "5900049000212",
+      "name": "Mąka poznańska",
+      "status": "candidate",
+      "sources": [{
+        "url": "https://leclerc.com.pl/lubella-maka-poznanska-puszysta-typ-500",
+        "source_type": "retailer",
+        "identity_evidence": "Exact EAN 5900049000212 identifies Lubella Poznań-style wheat flour type 500, 1 kg; page specifies nutrition per 100 g.",
+        "matched_barcode": "5900049000212",
+        "basis_amount": 100,
+        "basis_unit": "g",
+        "nutrition": {"carbs": 72, "fiber": 3.3, "fat": 1.2, "protein": 11, "energy_kcal": 349},
+        "notes": ""
+      }],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Input quantity was blank; exact-code listing establishes a 1 kg pack. Values describe dry flour."
+    },
+    {
+      "code": "5900049812563",
+      "name": "Paluszki z sezamem",
+      "status": "candidate",
+      "sources": [{
+        "url": "https://leclerc.com.pl/lubella-paluszki-z-sezamem-1",
+        "source_type": "retailer",
+        "identity_evidence": "Exact EAN 5900049812563 identifies Lubella sesame breadsticks in a 220 g pack; page states values per 100 g product.",
+        "matched_barcode": "5900049812563",
+        "basis_amount": 100,
+        "basis_unit": "g",
+        "nutrition": {"carbs": 69, "fiber": 4.8, "fat": 9.5, "protein": 12, "energy_kcal": 419},
+        "notes": ""
+      }],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Values are for breadsticks as sold."
+    },
+    {
+      "code": "5900049815120",
+      "name": "Mini kółka",
+      "status": "hold",
+      "sources": [{
+        "url": "https://www.carrefour.pl/artykuly-spozywcze/sypkie-i-produkty-zbozowe/makaron/makaron-lubella-400g-mini-kolka",
+        "source_type": "retailer",
+        "identity_evidence": "Carrefour identifies Lubella mini ring pasta, exact EAN 5900049815120 and 400 g pack, but provides no nutrition panel.",
+        "matched_barcode": "5900049815120",
+        "basis_amount": null,
+        "basis_unit": null,
+        "nutrition": {"carbs": null, "fiber": null, "fat": null, "protein": null, "energy_kcal": null},
+        "notes": ""
+      }],
+      "conflicts": [],
+      "missing_fields": ["nutrition basis", "carbohydrates", "fiber", "fat", "protein", "energy_kcal"],
+      "notes": "Exact identity is supported, but no complete nutrition panel was located."
+    },
+    {
+      "code": "5900049822425",
+      "name": "Łazanki z kapustą i pieczarkami",
+      "status": "hold",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": ["exact barcode product source", "nutrition basis", "carbohydrates", "fiber", "fat", "protein", "energy_kcal"],
+      "notes": "Exact-code searches did not establish the product and its nutrition. No similar pasta meal was substituted."
+    },
+    {
+      "code": "5900085001235",
+      "name": "Kwasek cytrynowy",
+      "status": "hold",
+      "sources": [{
+        "url": "https://leclerc.com.pl/winiary-kwasek-cytrynowy",
+        "source_type": "retailer",
+        "identity_evidence": "Exact EAN 5900085001235 identifies Winiary citric acid in a 50 g sachet; page does not provide nutrition values.",
+        "matched_barcode": "5900085001235",
+        "basis_amount": null,
+        "basis_unit": null,
+        "nutrition": {"carbs": null, "fiber": null, "fat": null, "protein": null, "energy_kcal": null},
+        "notes": ""
+      }],
+      "conflicts": [],
+      "missing_fields": ["nutrition basis", "carbohydrates", "fiber", "fat", "protein", "energy_kcal"],
+      "notes": "Identity verified, nutrition panel unavailable."
+    },
+    {
+      "code": "5900085003437",
+      "name": "Cukier waniliowy",
+      "status": "candidate",
+      "sources": [{
+        "url": "https://sklep.uchowanca.pl/pl/p/Winiary-Cukier-Wanilinowy-16-g/10603",
+        "source_type": "retailer",
+        "identity_evidence": "Exact product code 5900085003437 identifies Winiary vanillin sugar in a 16 g sachet; explicit nutrition basis is 100 g.",
+        "matched_barcode": "5900085003437",
+        "basis_amount": 100,
+        "basis_unit": "g",
+        "nutrition": {"carbs": 99.3, "fiber": 0, "fat": 0, "protein": 0, "energy_kcal": 397},
+        "notes": ""
+      }],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": "Values describe dry sachet contents."
+    },
+    {
+      "code": "5900085010763",
+      "name": "Rosół wołowy",
+      "status": "hold",
+      "sources": [{
+        "url": "https://leclerc.com.pl/winiary-rosol-wolowy-6-kostek/731",
+        "source_type": "retailer",
+        "identity_evidence": "Exact EAN 5900085010763 identifies Winiary beef stock cubes, 60 g pack; nutrition is reported only per 100 ml prepared broth/base, not per dry product.",
+        "matched_barcode": "5900085010763",
+        "basis_amount": 100,
+        "basis_unit": "ml",
+        "nutrition": {"carbs": 0.4, "fiber": 0, "fat": 0.4, "protein": 0.2, "energy_kcal": 6},
+        "notes": "Preparation-specific values: 100 ml broth prepared from a cube (or 100 ml soup base); not dry cube nutrition. Kept as reference only."
+      }],
+      "conflicts": [],
+      "missing_fields": ["dry-product nutrition basis", "dry-product carbohydrates", "dry-product fiber", "dry-product fat", "dry-product protein", "dry-product energy_kcal"],
+      "notes": "Hold: available nutrition is explicitly for prepared liquid, not the dry stock cube."
+    },
+    {
+      "code": "5900085011586",
+      "name": "Spaghetti po bolońsku",
+      "status": "hold",
+      "sources": [{
+        "url": "https://zakupy.auchan.pl/products/pomys%C5%82-na-makaron-spaghetti-po-bolo%C5%84sku-winiary-44-g/00169108",
+        "source_type": "retailer",
+        "identity_evidence": "Exact EAN 5900085011586 identifies Winiary Pomysł na spaghetti po bolońsku, 44 g seasoning mix; nutrition is stated only for the prepared dish per 100 g.",
+        "matched_barcode": "5900085011586",
+        "basis_amount": 100,
+        "basis_unit": "g",
+        "nutrition": {"carbs": 26.2, "fiber": 1.3, "fat": 8.1, "protein": 11.7, "energy_kcal": 227},
+        "notes": "Preparation-specific panel: per 100 g prepared dish with pasta, meat and other recipe ingredients. Not nutrition for the dry 44 g mix."
+      }],
+      "conflicts": [],
+      "missing_fields": ["dry-product nutrition basis", "dry-product carbohydrates", "dry-product fiber", "dry-product fat", "dry-product protein", "dry-product energy_kcal"],
+      "notes": "Hold: prepared-dish nutrition cannot be applied to the dry seasoning sachet."
+    }
+  ]
+}

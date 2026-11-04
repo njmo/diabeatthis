@@ -1,0 +1,1892 @@
+{
+  "batch_id": "batch_011",
+  "reviewed_at": "2026-11-04",
+  "records": [
+    {
+      "code": "4902452311139",
+      "name": "fromage frais - cookie",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900531009013",
+      "name": "Bio śmietana 18%",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.espolem.pl/plock/towar/piatnica-sm-18-bio-200g-pj/278280",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer page identifies Piątnica Bio cream 18% and exact EAN 5900531009013; nutrition explicitly per 100 g.",
+          "matched_barcode": "5900531009013",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 4,
+            "fiber": null,
+            "fat": 18,
+            "protein": 2.9,
+            "energy_kcal": 190
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "6900332001710",
+      "name": "Serek śmietankowy z ziołami",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5000750000126",
+      "name": "Mleko Łaciate 2,0%",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901630000123",
+      "name": "Śmietana rolmlecz 18%",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://b2b.intermlecz.pl/rolmlecz-smietana-wiejska-200g-18-12",
+          "source_type": "retailer",
+          "identity_evidence": "B2B product page identifies Rolmlecz sour cream 18%, 200 g and exact EAN 5901630000123; nutrition per 100 g.",
+          "matched_barcode": "5901630000123",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 4,
+            "fiber": null,
+            "fat": 18,
+            "protein": 2.7,
+            "energy_kcal": 189
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "Reported energy is 780 kJ / 189 kcal per 100 g."
+    },
+    {
+      "code": "10189231",
+      "name": "Gołąbki w sosie pomidorowym",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching product page found in consulted results."
+    },
+    {
+      "code": "5900397012042",
+      "name": "Konfitura z Jagód",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/lowicz-konfitura-extra-z-jagod-o-obnizonej-zawartosci-cukrow/112",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer page identifies Łowicz product and exact EAN 5900397012042; nutrition panel is stated per 100 g.",
+          "matched_barcode": "5900397012042",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 40,
+            "fiber": null,
+            "fat": null,
+            "protein": 0.5,
+            "energy_kcal": 170
+          },
+          "notes": "Fat is reported as <0.5 g/100 g and cannot be represented as an exact numeric value."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber",
+        "fat"
+      ],
+      "notes": "Core macro fat is reported as a less-than bound; retained for review."
+    },
+    {
+      "code": "5900397734623",
+      "name": "Dżem truskawkowy",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/lowicz-xxl-dzem-truskawkowy-o-obnizonej-zawartosci-cukrow",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer page identifies Łowicz product and exact EAN 5900397734623; nutrition panel is stated per 100 g.",
+          "matched_barcode": "5900397734623",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 35,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": 142
+          },
+          "notes": "Fat is reported as <0.5 g/100 g and cannot be represented as an exact numeric value."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber",
+        "fat",
+        "protein"
+      ],
+      "notes": "Core macro fat is reported as a less-than bound; retained for review."
+    },
+    {
+      "code": "5900397744189",
+      "name": "Truskawka kaszubska",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching product nutrition page found in consulted results."
+    },
+    {
+      "code": "5900397745872",
+      "name": "Food supplement in raspberry flavoured syrup",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching product nutrition page found in consulted results."
+    },
+    {
+      "code": "5900397745933",
+      "name": "Syrop czarny bez łowicz",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching product nutrition page found in consulted results."
+    },
+    {
+      "code": "5900397756182",
+      "name": "Dżem wiśniowy z nutą coki",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching product nutrition page found in consulted results."
+    },
+    {
+      "code": "5900397757363",
+      "name": "Dżem truskawka",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/lowicz-dzem-truskawka/702",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer page identifies Łowicz product and exact EAN 5900397757363; nutrition panel is stated per 100 g.",
+          "matched_barcode": "5900397757363",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 4.7,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": 28
+          },
+          "notes": "Fat is reported as <0.5 g/100 g and cannot be represented as an exact numeric value."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber",
+        "fat",
+        "protein"
+      ],
+      "notes": "Core macro fat is reported as a less-than bound; retained for review."
+    },
+    {
+      "code": "5900397757394",
+      "name": "Dżem wiśnia",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/lowicz-dzem-wisnia/700",
+          "source_type": "retailer",
+          "identity_evidence": "Page identifies Łowicz cherry jam with exact barcode 5900397757394; nutrition explicitly stated per 100 g.",
+          "matched_barcode": "5900397757394",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 5.3,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": 28
+          },
+          "notes": "Fat and protein are reported as <0.5 g/100 g; they are not exact numeric values."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber",
+        "fat",
+        "protein"
+      ],
+      "notes": "Core macros include less-than bounds."
+    },
+    {
+      "code": "5900397757424",
+      "name": "Dżem czarna i czerwoną porzeczka",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/lowicz-dzem-czarna-i-czerwona-porzeczka",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer page identifies Łowicz product and exact EAN 5900397757424; nutrition panel is stated per 100 g.",
+          "matched_barcode": "5900397757424",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 4.1,
+            "fiber": null,
+            "fat": null,
+            "protein": 0.6,
+            "energy_kcal": 29
+          },
+          "notes": "Fat is reported as <0.5 g/100 g and cannot be represented as an exact numeric value."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber",
+        "fat"
+      ],
+      "notes": "Core macro fat is reported as a less-than bound; retained for review."
+    },
+    {
+      "code": "59085300",
+      "name": "Dżem łowicz malinowy podróżny",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://www.kaufland.pl/product/523571311/",
+          "source_type": "retailer",
+          "identity_evidence": "Page identifies Łowicz raspberry jam single portion with exact barcode 59085300; nutrition explicitly stated per 100 g.",
+          "matched_barcode": "59085300",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 36,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": 139
+          },
+          "notes": "Fat and protein reported as <0.5 g; cannot store as exact numeric values."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber",
+        "fat",
+        "protein"
+      ],
+      "notes": "Core macros include less-than bounds."
+    },
+    {
+      "code": "59097204",
+      "name": "pasta warzywna",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://leclerc.rzeszow.pl/lowicz-pasta-warzywna-baklazan-suszone-pomidory-80-g",
+          "source_type": "retailer",
+          "identity_evidence": "Page identifies Łowicz vegetable paste with aubergine and dried tomatoes with exact barcode 59097204; nutrition explicitly stated per 100 g.",
+          "matched_barcode": "59097204",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 11,
+            "fiber": 4.2,
+            "fat": 6.7,
+            "protein": 2.6,
+            "energy_kcal": 126
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "code": "6900495008540",
+      "name": "Dżem brzoskwiniowy",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching product page found in consulted results."
+    },
+    {
+      "code": "2802105003607",
+      "name": "Boczek Klasyczny",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "2878129003541",
+      "name": "Boczek klasyczny wędzony",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900244020411",
+      "name": "Konserwa Krakus-wieprzowina",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://zapuszkowani.eu/sklep/konserwy/miesne/konserwa-krakus-300g-wieprzowina-bez-konserwantow/",
+          "source_type": "retailer",
+          "identity_evidence": "Page identifies Krakus pork preserve with exact barcode 5900244020411; nutrition explicitly stated per 100 g.",
+          "matched_barcode": "5900244020411",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 0.5,
+            "fiber": null,
+            "fat": 13,
+            "protein": 18,
+            "energy_kcal": 191
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900397738058",
+      "name": "Ogórki korniszony z chili",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://zakupywgodzine.pl/products/krakus-ogorki-korniszony-5900397738058",
+          "source_type": "retailer",
+          "identity_evidence": "Page identifies Krakus gherkins with chili with exact barcode 5900397738058; nutrition explicitly stated per 100 g.",
+          "matched_barcode": "5900397738058",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Identity and EAN verified; no nutrition panel located."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact identity located but nutrition data unavailable in consulted source."
+    },
+    {
+      "code": "5900397757523",
+      "name": "Bulion warzywny",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901784161404",
+      "name": "Kabanosy drobiowo-wieprzowe",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900437013800",
+      "name": "Krem do karpatki",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900437027487",
+      "name": "Kisiel smak jagoda",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://apps.auchan.pl/feeds/798348/0",
+          "source_type": "retailer",
+          "identity_evidence": "Auchan page gives exact EAN 5900437027487 for Słodka Chwila blueberry kisiel; nutrition is only for prepared product.",
+          "matched_barcode": "5900437027487",
+          "basis_amount": null,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": "Nutrition basis is prepared product, so values were not transferred."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Prepared-only nutrition available; no dry-product values used."
+    },
+    {
+      "code": "5900437071305",
+      "name": "Żelfix 3:1",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900437071503",
+      "name": "Żelfix 2:1",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900437072111",
+      "name": "Żelatyna w listkach",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://sklep.wszystkiegoslodkiego.pl/artykuly-spozywcze/dodatki-zelujace/32-zelatyna-w-listkach-dr-oetkera",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer page identifies Dr. Oetker leaf gelatin and EAN 5900437072111; values not extractable from search result.",
+          "matched_barcode": "5900437072111",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Identity found but complete nutrition panel could not be verified."
+    },
+    {
+      "code": "59030324",
+      "name": "Waniliowy aromat",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc.com.pl/dr-oetker-aromat-waniliowy",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer identifies Dr. Oetker vanilla flavor 9 ml with exact EAN 59030324; no usable nutrition panel located.",
+          "matched_barcode": "59030324",
+          "basis_amount": null,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact product identity found but nutrition panel not available in the consulted page."
+    },
+    {
+      "code": "59030348",
+      "name": "Arakowy Aromat",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://leclerc-sklep.agmb.pl/produkt/dr-oetker-aromat-arakowy-9-ml-59030348",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer identifies Dr. Oetker arak flavor 9 ml with exact EAN 59030348; no usable nutrition panel located.",
+          "matched_barcode": "59030348",
+          "basis_amount": null,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": null,
+            "fiber": null,
+            "fat": null,
+            "protein": null,
+            "energy_kcal": null
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact product identity found but nutrition panel not available in the consulted page."
+    },
+    {
+      "code": "5901588400068",
+      "name": "Ptasie mleczko piernikowe",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901588400358",
+      "name": "Ptasie mleczko waniliowo czekoladowe",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901588400570",
+      "name": "Ptasie Mleczko Orzech Laskowy",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://goodsframe.com/produkt/e-wedel-ptasie-mleczko-orzech-laskowy-w-czekoladzie-mlecznej-340g/",
+          "source_type": "retailer",
+          "identity_evidence": "Product page identifies E. Wedel Ptasie Mleczko hazelnut and exact EAN 5901588400570; page states nutrition per 100 g.",
+          "matched_barcode": "5901588400570",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 57,
+            "fiber": 1.6,
+            "fat": 23,
+            "protein": 3.6,
+            "energy_kcal": 454
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "code": "5901588400730",
+      "name": "Chrrrup",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901588401232",
+      "name": "Mieszanka wedlowska",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901588401928",
+      "name": "jabłko mięta czekolada",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "59094425",
+      "name": "Bajeczny",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "0966330047637",
+      "name": "activia probiotyki",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900643035627",
+      "name": "Ale Pitny",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900643044308",
+      "name": "Gratka do picia 280g",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900643047361",
+      "name": "Fantasia z gwiazdkami w czekoladzie",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://sklep.spolemkielce.pl/produkt/krem-fantasia-gwiazdki-w-czekoladzie-106-g/",
+          "source_type": "retailer",
+          "identity_evidence": "Store page identifies Danone Fantasia with stars and exact barcode 5900643047361; full nutrition per 100 g.",
+          "matched_barcode": "5900643047361",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 16,
+            "fiber": null,
+            "fat": 8.3,
+            "protein": 3.3,
+            "energy_kcal": 152
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900643048382",
+      "name": "Danio Serek Homogenizowany",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://uk.foodplus.eu/pl/p/Serek-Danio-Bananowy-130g-Danone/25301",
+          "source_type": "retailer",
+          "identity_evidence": "FoodPlus page identifies Danio banana cheese 130 g and product code 5900643048382; nutrition explicitly per 100 g.",
+          "matched_barcode": "5900643048382",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 13.1,
+            "fiber": null,
+            "fat": 2.9,
+            "protein": 5.3,
+            "energy_kcal": 101
+          },
+          "notes": "",
+          "agent_reported_nutrition": {
+            "carbs": 13.1,
+            "fiber": 0,
+            "fat": 2.9,
+            "protein": 5.3,
+            "energy_kcal": 101
+          }
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "",
+      "root_review": [
+        "Removed fiber value not supported by the retrieved source text."
+      ]
+    },
+    {
+      "code": "5900643049174",
+      "name": "ale pitny",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900643049198",
+      "name": "Ale pitny Danone",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.sklepblisko.pl/product-pl-23384-Danone-Ale-Pitny-Produkt-mleczny-smak-truskawka-banan-270-g.html",
+          "source_type": "retailer",
+          "identity_evidence": "Product page identifies Danone Ale Pitny strawberry-banana and exact barcode 5900643049198; nutrition panel explicitly per 100 g.",
+          "matched_barcode": "5900643049198",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 13.5,
+            "fiber": null,
+            "fat": 0.8,
+            "protein": 1.6,
+            "energy_kcal": 68
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900643050323",
+      "name": "Ale pitny truskawka poziomka",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900643050385",
+      "name": "Ale Pitny Jogurt Borówkoey",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://b2b.intermlecz.pl/danone-ale-pitny-300g-jagoda-borowka",
+          "source_type": "retailer",
+          "identity_evidence": "Product page identifies Danone Ale Pitny blueberry and exact barcode 5900643050385; nutrition panel explicitly per 100 g.",
+          "matched_barcode": "5900643050385",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 12.4,
+            "fiber": 0.1,
+            "fat": 0.8,
+            "protein": 1.6,
+            "energy_kcal": 64
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "code": "5900643050606",
+      "name": "Danio Jogurt Mango",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900643050620",
+      "name": "Danio truskawka pitny",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "59023944",
+      "name": "Actimel wieloowoc",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://b2b.intermlecz.pl/danone-actimel-4x100g-wieloowoc-6",
+          "source_type": "retailer",
+          "identity_evidence": "Page identifies Danone Actimel multifruit with exact barcode 59023944; nutrition explicitly stated per 100 g.",
+          "matched_barcode": "59023944",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 12.4,
+            "fiber": null,
+            "fat": 1.5,
+            "protein": 2.6,
+            "energy_kcal": 77
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "59030133",
+      "name": "Fantasia z mleczną czekoladą",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "59084358",
+      "name": "Fantasia z malinami",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "59088073",
+      "name": "danone",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "59094487",
+      "name": "Fantasia wiśniowa",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "6281022120349",
+      "name": "Alsafi fresh milk",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "4904191000350",
+      "name": "Tymianek suszony",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135000055",
+      "name": "Przyprawa do mięsa mielonego",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135000178",
+      "name": "Cynamon mielony",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135000239",
+      "name": "Zioła prowansalskie suszone",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135000420",
+      "name": "Ziele angielskie całe",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135000604",
+      "name": "Bazylia suszona",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135000635",
+      "name": "Gałka muszkatołowa mielona",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135000871",
+      "name": "sół  kamienna",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135016469",
+      "name": "Sól peklująca",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135026376",
+      "name": "Przyprawa do piernika, ciast i deserów",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135030670",
+      "name": "Przyprawa do ogórków konserwowych ( koper itp.)",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135031912",
+      "name": "Papryka wędzona",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135032285",
+      "name": "Cynamon cały",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135035590",
+      "name": "Cynamon mielony",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135041423",
+      "name": "Czosnek niedźwiedzi suszony",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135044592",
+      "name": "Ser grill",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5901135054157",
+      "name": "Chili w płatkach",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900477000693",
+      "name": "Groszek Zielony",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900477000853",
+      "name": "Warzywa na patelnię z przyprawą włoską",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900477015260",
+      "name": "Warzywa na patelnie z kaszą pęczak i szpinakiem",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900477018957",
+      "name": "Bigos ze słodkiej kapusty z kiełbasą",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://stolicazakupow.pl/produkt/hortex-bigos-ze-slodkiej-kapusty-z-kielbasa-600-g/",
+          "source_type": "retailer",
+          "identity_evidence": "Page identifies Hortex bigos with sausage with exact barcode 5900477018957; nutrition explicitly stated per 100 g.",
+          "matched_barcode": "5900477018957",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 4.4,
+            "fiber": null,
+            "fat": 2.9,
+            "protein": 3.8,
+            "energy_kcal": 63
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900477021537",
+      "name": "Lody wowoc",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900477021971",
+      "name": "Warzywa z batatem",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900500000560",
+      "name": "Ananas kaktus",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900500001130",
+      "name": "Napój wieloosobowy jabłko-malina-limonka",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900500025600",
+      "name": "sok jabłkowy",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900500031472",
+      "name": "Sok pomid 300ml",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900500033230",
+      "name": "Pomar.mango",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://deligro.pl/napoje/niegazowane/owocowe/napoj-pomarancza-mango-500-ml-hortex-1509",
+          "source_type": "retailer",
+          "identity_evidence": "Page identifies Hortex orange mango drink with exact barcode 5900500033230; nutrition explicitly stated per 100 ml.",
+          "matched_barcode": "5900500033230",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 4.9,
+            "fiber": null,
+            "fat": 0,
+            "protein": 0.1,
+            "energy_kcal": 20
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [
+        "Source uses an ambiguous 100g/ml heading; physical basis requires independent confirmation."
+      ],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": "",
+      "root_review": [
+        "Source uses an ambiguous 100g/ml heading; physical basis requires independent confirmation."
+      ]
+    },
+    {
+      "code": "5900500035265",
+      "name": "Multivitam juice",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900500040689",
+      "name": "Cytryna limonka",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://torimpex.pl/produkt/hortex-napoj-cytryna-limonka-1-l/",
+          "source_type": "retailer",
+          "identity_evidence": "Page identifies Hortex lemon lime drink with exact barcode 5900500040689; nutrition explicitly stated per 100 ml.",
+          "matched_barcode": "5900500040689",
+          "basis_amount": 100,
+          "basis_unit": "ml",
+          "nutrition": {
+            "carbs": 4.8,
+            "fiber": null,
+            "fat": 0,
+            "protein": 0.1,
+            "energy_kcal": 20
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900500043284",
+      "name": "Vitaminka odporność jabłko marchwe mango",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900500048234",
+      "name": "Napój owocowy jabłko-truskawka",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900500048593",
+      "name": "sok 100% Jabłko",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5903895633740",
+      "name": "Tuńczyk z kuskusem perłowym i suszonymi pomidorami",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "19001025",
+      "name": "TRUFLE",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900102020898",
+      "name": "Tofflairs",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900102021192",
+      "name": "Czekolada",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900102025329",
+      "name": "Marzipan in chocolate",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900102025756",
+      "name": "Raczki wawel",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://uk.foodplus.eu/en_GB/p/Raczki-Caramels-with-Nut-and-Cocoa-Filling-with-Rum-Aroma-105g-Wawel/25110",
+          "source_type": "retailer",
+          "identity_evidence": "Page identifies Wawel Raczki caramels with exact barcode 5900102025756; nutrition explicitly stated per 100 g.",
+          "matched_barcode": "5900102025756",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 79,
+            "fiber": 0,
+            "fat": 10,
+            "protein": 3,
+            "energy_kcal": 424
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "code": "5900102025848",
+      "name": "Fresch fruit kwaśne",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900102027064",
+      "name": "CoCoa",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://sklep.uchowanca.pl/pl/p/Wawel-Kakao-o-obnizonej-zawartosci-tluszczu-150-g/42190",
+          "source_type": "retailer",
+          "identity_evidence": "Page identifies Wawel reduced-fat cocoa with exact barcode 5900102027064; nutrition explicitly stated per 100 g.",
+          "matched_barcode": "5900102027064",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 14,
+            "fiber": 33,
+            "fat": 10,
+            "protein": 27,
+            "energy_kcal": 320
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [],
+      "notes": ""
+    },
+    {
+      "code": "5900102410842",
+      "name": "Mieszanka krakowska",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900512983707",
+      "name": "mini Przysmak Góralski",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://mlekovita.com.pl/produkt/miniprzysmak-goralski-160-g-638",
+          "source_type": "manufacturer",
+          "identity_evidence": "Page identifies Mlekovita mini Przysmak Góralski with exact barcode 5900512983707; nutrition explicitly stated per 100 g.",
+          "matched_barcode": "5900512983707",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {
+            "carbs": 2,
+            "fiber": null,
+            "fat": 19,
+            "protein": 25,
+            "energy_kcal": 279
+          },
+          "notes": ""
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": [
+        "fiber"
+      ],
+      "notes": ""
+    },
+    {
+      "code": "5900531004582",
+      "name": "Skyr",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    },
+    {
+      "code": "5900562001246",
+      "name": "Wołowina w sosie własnym",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": [
+        "carbs",
+        "fiber",
+        "fat",
+        "protein",
+        "energy_kcal"
+      ],
+      "notes": "Exact barcode search attempted; no reliable matching source with usable product nutrition was found in consulted results."
+    }
+  ]
+}

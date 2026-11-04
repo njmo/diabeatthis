@@ -1,0 +1,24 @@
+{
+  "source_products": 841,
+  "products_with_core_macros": 659,
+  "products_without_barcode": 382,
+  "automatic_matching": {
+    "outside_configured_manufacturers": 9405,
+    "exception": 30,
+    "source_backed_proposal": 3
+  },
+  "agent_exceptions": {
+    "proposed_match": 16,
+    "unresolved": 14
+  },
+  "tests_passed": 41,
+  "firebase_writes": 0,
+  "ai_api_calls": 0,
+  "notes": [
+    "Manufacturer profiles are source records, not a count of repaired OFF entries.",
+    "Agents researched only local catalog exceptions.",
+    "All profiles and semantic matches remain proposals before publication."
+  ],
+  "local_matching_seconds": 0.578,
+  "cached_replay_network_requests": 0
+}

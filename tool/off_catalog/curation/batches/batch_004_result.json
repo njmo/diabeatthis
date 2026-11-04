@@ -1,0 +1,164 @@
+{
+  "batch_id": "batch_004",
+  "reviewed_at": "2026-11-04",
+  "records": [
+    {
+      "code": "5900531004841",
+      "name": "Skyr czekoladowo-kokosowy",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": ["carbs", "fiber", "fat", "protein", "energy_kcal"],
+      "notes": "Searches did not establish the exact barcode and nutrition basis; no values inferred from similar Skyr products."
+    },
+    {
+      "code": "5900531004896",
+      "name": "Skyr z ananasem i maliną",
+      "status": "not_found",
+      "sources": [],
+      "conflicts": [],
+      "missing_fields": ["carbs", "fiber", "fat", "protein", "energy_kcal"],
+      "notes": "Searches did not establish the exact barcode and nutrition basis; no values inferred from similar Skyr products."
+    },
+    {
+      "code": "5900531006012",
+      "name": "Twój smak.Serek aksamitny",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.espolem.pl/towar/piatnica-twoj-smak-serek-smietankowy-aksamitny-ziolowy-135-g/278700",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer identifies the exact barcode 5900531006012 as Piątnica Twój Smak velvet herb cream cheese, 135 g.",
+          "matched_barcode": "5900531006012",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 3, "fiber": null, "fat": 23, "protein": 6, "energy_kcal": 243},
+          "notes": "Retailer table explicitly states per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": ""
+    },
+    {
+      "code": "5900531008023",
+      "name": "Yogurt",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://strefamistrzowsmaku.piatnica.pl/wp-content/uploads/2025/08/OSM-Piatnica-Broszura-Catering-2025-web.pdf",
+          "source_type": "manufacturer",
+          "identity_evidence": "Manufacturer catalog maps EAN 5900531008023 to Piątnica 100 g strawberry yogurt; fruit-yogurt nutritional profile marked with an asterisk is per 100 g.",
+          "matched_barcode": "5900531008023",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 13, "fiber": null, "fat": 1.6, "protein": 3.2, "energy_kcal": 79},
+          "notes": "The source groups fruit flavors and provides one common fruit-yogurt profile. Export name only says 'Yogurt', without flavor or packaging detail."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": "Hold because the export name is too generic to confirm it represents the catalog's strawberry 100 g SKU."
+    },
+    {
+      "code": "5900197023125",
+      "name": "Jogurt Bio z truskawkami",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://www.frisco.pl/pid%2C101159/n%2Cbakoma-jogurt-bio-truskawka-pitny/stn%2Cproduct",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer lists exact EAN 5900197023125 for Bakoma BIO strawberry drinking yogurt, 230 g.",
+          "matched_barcode": "5900197023125",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 13.5, "fiber": null, "fat": 1.8, "protein": 2.4, "energy_kcal": 81},
+          "notes": "Retailer nutrition panel is per 100 g."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": ""
+    },
+    {
+      "code": "5900197024580",
+      "name": "Men protein",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://bakoma.pl/assets/Bakoma_Products_Catalogue.pdf",
+          "source_type": "manufacturer",
+          "identity_evidence": "Bakoma product catalog lists EAN 5900197024580 as the banana variant of MEN BAR 50 g, a high-protein bar.",
+          "matched_barcode": "5900197024580",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {"carbs": null, "fiber": null, "fat": null, "protein": null, "energy_kcal": null},
+          "notes": "Catalog confirms the code is a banana protein bar; its category/name conflicts with the export's ambiguous 'Men protein'. No nutrition panel available in the catalog."
+        },
+        {
+          "url": "https://www.bee.pl/bakoma-men-pro-baton-wysokobialkowy-bananowy-60-g_p1364628.html",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer lists exact EAN 5900197024580 for Bakoma Men Pro banana protein bar, 60 g.",
+          "matched_barcode": "5900197024580",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {"carbs": null, "fiber": null, "fat": null, "protein": null, "energy_kcal": null},
+          "notes": "Retailer identifies the item and pack size but provides no nutrition values in the result."
+        }
+      ],
+      "conflicts": ["Bakoma catalog labels the EAN 5900197024580 as a 50 g MEN BAR; retailer labels it as a 60 g MEN Pro banana bar."],
+      "missing_fields": ["carbs", "fiber", "fat", "protein", "energy_kcal"],
+      "notes": "Hold for resolving product-category and pack-size differences."
+    },
+    {
+      "code": "5900197027130",
+      "name": "Bakoma Jogurt Bio z bananem",
+      "status": "candidate",
+      "sources": [
+        {
+          "url": "https://e-spar.com.pl/towar/bakoma-jogurt-bio-z-bananem-140-g/291508",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer identifies exact EAN 5900197027130 as Bakoma BIO banana yogurt, 140 g, with nutrition per 100 g yogurt.",
+          "matched_barcode": "5900197027130",
+          "basis_amount": 100,
+          "basis_unit": "g",
+          "nutrition": {"carbs": 13.5, "fiber": null, "fat": 2.5, "protein": 3.5, "energy_kcal": 91},
+          "notes": "Values are expressly stated per 100 g yogurt."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["fiber"],
+      "notes": ""
+    },
+    {
+      "code": "5900197027734",
+      "name": "Bakoma Ave Vege Ananas 150g",
+      "status": "hold",
+      "sources": [
+        {
+          "url": "https://bakoma.pl/assets/partners-catalogues/Bakoma_Katalog_2021.pdf",
+          "source_type": "manufacturer",
+          "identity_evidence": "Bakoma catalog identifies EAN 5900197027734 as AVE VEGE pineapple, a 150 g coconut plant-based product with yogurt bacteria.",
+          "matched_barcode": "5900197027734",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {"carbs": null, "fiber": null, "fat": null, "protein": null, "energy_kcal": null},
+          "notes": "Catalog gives a fat range of 5.8–6.1% for the range, but no full nutrition panel or unambiguous per-100-g value; no values transcribed."
+        },
+        {
+          "url": "https://www.frisco.pl/pid%2C129197/n%2Cbakoma-ave-vege-jogurt-ananas/stn%2Cproduct",
+          "source_type": "retailer",
+          "identity_evidence": "Retailer lists exact EAN 5900197027734 for Bakoma AVE VEGE pineapple, 150 g.",
+          "matched_barcode": "5900197027734",
+          "basis_amount": null,
+          "basis_unit": null,
+          "nutrition": {"carbs": null, "fiber": null, "fat": null, "protein": null, "energy_kcal": null},
+          "notes": "Retailer confirms code and product but no nutrition values were provided."
+        }
+      ],
+      "conflicts": [],
+      "missing_fields": ["carbs", "fiber", "fat", "protein", "energy_kcal"],
+      "notes": "Identity confirmed; no complete nutrition data with an explicit per-100-g or per-100-ml basis found."
+    }
+  ]
+}

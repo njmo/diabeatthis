@@ -1,0 +1,109 @@
+{
+  "batch_id": "batch_004",
+  "records": [
+    {
+      "source_id": "5900531004841",
+      "name": "Skyr czekoladowo-kokosowy",
+      "brand": "Piątnica",
+      "quantity": "150g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900531004896",
+      "name": "Skyr z ananasem i maliną",
+      "brand": "Piątnica",
+      "quantity": "150",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900531006012",
+      "name": "Twój smak.Serek aksamitny",
+      "brand": "Piątnica",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900531008023",
+      "name": "Yogurt",
+      "brand": "Piątnica",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197023125",
+      "name": "Jogurt Bio z truskawkami",
+      "brand": "Bakoma",
+      "quantity": "230 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197024580",
+      "name": "Men protein",
+      "brand": "Bakoma",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197027130",
+      "name": "Bakoma Jogurt Bio z bananem",
+      "brand": "Bakoma",
+      "quantity": "140 g",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    },
+    {
+      "source_id": "5900197027734",
+      "name": "Bakoma Ave Vege Ananas 150g",
+      "brand": "Bakoma",
+      "quantity": "",
+      "nutrition_as_exported": {
+        "carbs": null,
+        "fiber": null,
+        "fat": null,
+        "protein": null,
+        "energy_kcal": null
+      }
+    }
+  ]
+}
