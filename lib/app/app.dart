@@ -12,6 +12,7 @@ import '../common/l10n/application_language.dart';
 import '../common/l10n/language.dart';
 import '../common/theme/application_theme_data.dart';
 import '../common/theme/application_theme_mode_controller.dart';
+import '../common/widgets/application_backdrop.dart';
 import '../core/data/provider/initial_configuration_provider.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
 import '../core/logger/logger.dart';
@@ -158,6 +159,8 @@ class _MyAppState extends ConsumerState<MyApp>
         .maybeWhen(data: (language) => language, orElse: () => null);
 
     return MaterialApp.router(
+      builder: (context, child) =>
+          ApplicationBackdrop(child: child ?? const SizedBox.shrink()),
       locale: selectedLanguage?.locale,
       onGenerateTitle: (context) => context.lang.appTitle,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

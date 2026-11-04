@@ -43,7 +43,7 @@ class SwipeableCards extends StatelessWidget {
                 sliver: SliverPersistentHeader(
                   pinned: true,
                   delegate: DetailTabsHeader(
-                    color: Theme.of(context).scaffoldBackgroundColor,
+                    color: Theme.of(context).colorScheme.surfaceContainerLow,
                     child: DetailTabs(
                       controller: controller,
                       labels: labels,

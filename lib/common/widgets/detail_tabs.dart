@@ -16,24 +16,31 @@ class DetailTabs extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final themed = theme.tabBarTheme.indicator != null;
+    final canScroll =
+        scrollable || (themed && (labels.length == 1 || labels.length >= 3));
     return TabBar(
       controller: controller,
-      isScrollable: scrollable,
-      tabAlignment: scrollable ? TabAlignment.start : TabAlignment.fill,
+      isScrollable: canScroll,
+      tabAlignment: canScroll ? TabAlignment.start : TabAlignment.fill,
       labelColor: colors.primary,
       labelStyle: theme.textTheme.labelLarge?.copyWith(
         fontWeight: FontWeight.w700,
       ),
       unselectedLabelColor: colors.onSurfaceVariant,
-      indicatorSize: TabBarIndicatorSize.tab,
+      indicatorSize: theme.tabBarTheme.indicatorSize ?? TabBarIndicatorSize.tab,
       splashBorderRadius: BorderRadius.circular(18),
-      labelPadding: EdgeInsets.symmetric(horizontal: scrollable ? 16 : 8),
-      indicator: BoxDecoration(
-        color: colors.primary.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      indicatorPadding: const EdgeInsets.symmetric(vertical: 4),
-      dividerColor: Colors.transparent,
+      labelPadding: EdgeInsets.symmetric(horizontal: canScroll ? 16 : 8),
+      indicator:
+          theme.tabBarTheme.indicator ??
+          BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.13),
+            borderRadius: BorderRadius.circular(18),
+          ),
+      indicatorPadding: themed
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(vertical: 4),
+      dividerColor: theme.tabBarTheme.dividerColor ?? Colors.transparent,
       tabs: [for (final label in labels) Tab(text: label)],
     );
   }

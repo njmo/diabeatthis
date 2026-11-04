@@ -15,14 +15,16 @@ class SectionSurface extends StatelessWidget {
     margin: EdgeInsets.zero,
     elevation: 0,
     color: Theme.of(context).colorScheme.surfaceContainerLowest,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20),
-      side: BorderSide(
-        color: Theme.of(
-          context,
-        ).colorScheme.outlineVariant.withValues(alpha: 0.45),
-      ),
-    ),
+    shape:
+        Theme.of(context).cardTheme.shape ??
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: Theme.of(
+              context,
+            ).colorScheme.outlineVariant.withValues(alpha: 0.45),
+          ),
+        ),
     child: Padding(padding: padding, child: child),
   );
 }
