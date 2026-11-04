@@ -5,11 +5,15 @@ class LocalLlmRequest {
   final String prompt;
   final List<String> imagePaths;
   final Duration? timeout;
+  final int? maxOutputTokens;
+  final Map<String, Object?>? responseJsonSchema;
 
   const LocalLlmRequest({
     required this.prompt,
     this.imagePaths = const [],
     this.timeout,
+    this.maxOutputTokens,
+    this.responseJsonSchema,
   });
 
   bool get hasImages => imagePaths.isNotEmpty;

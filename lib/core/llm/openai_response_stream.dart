@@ -7,7 +7,9 @@ import 'openai_request_exception.dart';
 
 /// Reads Responses API SSE events and accepts only a completed text response.
 class OpenAiResponseStream {
-  const OpenAiResponseStream();
+  const OpenAiResponseStream({this.onRawEvent});
+
+  final void Function(String payload)? onRawEvent;
 
   Future<String> read(
     Stream<List<int>> stream, {
@@ -53,6 +55,7 @@ class OpenAiResponseStream {
   String? _readEvent(List<String> data, StringBuffer deltas) {
     if (data.isEmpty) return null;
     final payload = data.join('\n');
+    onRawEvent?.call(payload);
     if (payload == '[DONE]') return null;
     final event = jsonDecode(payload);
     if (event is! Map<String, dynamic>) {
@@ -68,7 +71,12 @@ class OpenAiResponseStream {
             response['status'] != 'completed') {
           throw const FormatException('Invalid completion event');
         }
-        final text = _outputText(response);
+        // Some streamed completions omit output already delivered as deltas.
+        // Only recover for an explicitly empty output, never a refusal.
+        final output = response['output'];
+        final text = output is List && output.isEmpty
+            ? deltas.toString()
+            : _outputText(response);
         if (text.trim().isEmpty) {
           throw const LlmRequestException(
             failure: LlmRequestFailure.unavailable,

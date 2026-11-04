@@ -59,7 +59,17 @@ class FirebaseAiLlmClient implements LocalLlmClient {
 
   Future<LocalLlmResponse> _generate(LocalLlmRequest request) async {
     final images = await imageLoader.loadAll(request.imagePaths);
-    final text = await gateway.generate(
+    var effectiveGateway =
+        request.maxOutputTokens == null ||
+            request.maxOutputTokens == gateway.maxOutputTokens
+        ? gateway
+        : gateway.withOutputTokenLimit(request.maxOutputTokens!);
+    if (request.responseJsonSchema != null) {
+      effectiveGateway = effectiveGateway.withResponseJsonSchema(
+        request.responseJsonSchema!,
+      );
+    }
+    final text = await effectiveGateway.generate(
       modelName: modelName,
       prompt: request.prompt,
       images: images,
@@ -114,16 +124,34 @@ LlmRequestFailure _firebaseFailureMessage(String text, {String code = ''}) {
 class FirebaseAiGenerateContentGateway {
   final int maxOutputTokens;
   final int? thinkingBudget;
+  final Map<String, Object?>? responseJsonSchema;
 
   const FirebaseAiGenerateContentGateway({
     this.maxOutputTokens = 2048,
     this.thinkingBudget,
+    this.responseJsonSchema,
   });
+
+  FirebaseAiGenerateContentGateway withOutputTokenLimit(int limit) =>
+      FirebaseAiGenerateContentGateway(
+        maxOutputTokens: limit,
+        thinkingBudget: thinkingBudget,
+        responseJsonSchema: responseJsonSchema,
+      );
+
+  FirebaseAiGenerateContentGateway withResponseJsonSchema(
+    Map<String, Object?> schema,
+  ) => FirebaseAiGenerateContentGateway(
+    maxOutputTokens: maxOutputTokens,
+    thinkingBudget: thinkingBudget,
+    responseJsonSchema: schema,
+  );
 
   GenerationConfig get generationConfig => GenerationConfig(
     maxOutputTokens: maxOutputTokens,
     temperature: 0.1,
     responseMimeType: 'application/json',
+    responseJsonSchema: responseJsonSchema,
     thinkingConfig: thinkingBudget == null
         ? null
         : ThinkingConfig.withThinkingBudget(thinkingBudget),

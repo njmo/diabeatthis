@@ -7,10 +7,16 @@ import 'ai_configuration.dart';
 /// Captures one settings snapshot, including while preferences are still loading.
 /// A request never falls back to another provider if loading or authentication fails.
 class ConfiguredAiClient implements LocalLlmClient, ModelIdentifiedLlmClient {
-  ConfiguredAiClient({required this.configuration, required this.createClient});
+  ConfiguredAiClient({
+    required this.configuration,
+    required this.createClient,
+    this.createClientForRequest,
+  });
 
   final Future<AiConfiguration> configuration;
   final LocalLlmClient Function(AiConfiguration) createClient;
+  final LocalLlmClient Function(AiConfiguration, LocalLlmRequest)?
+  createClientForRequest;
   String? _modelId;
 
   @override
@@ -29,11 +35,16 @@ class ConfiguredAiClient implements LocalLlmClient, ModelIdentifiedLlmClient {
         throw TimeoutException('AI configuration timed out.');
       }
       _modelId = settings.model;
-      return await createClient(settings).generate(
+      final client =
+          createClientForRequest?.call(settings, request) ??
+          createClient(settings);
+      return await client.generate(
         LocalLlmRequest(
           prompt: request.prompt,
           imagePaths: request.imagePaths,
           timeout: remaining,
+          maxOutputTokens: request.maxOutputTokens,
+          responseJsonSchema: request.responseJsonSchema,
         ),
       );
     } on TimeoutException {

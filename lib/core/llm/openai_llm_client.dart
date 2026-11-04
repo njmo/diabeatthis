@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../../common/ai/ai_response_diagnostics.dart';
 import 'llm_output_limit_exception.dart';
 import 'local_llm_client.dart';
 import 'openai_request_exception.dart';
@@ -76,6 +77,13 @@ class OpenAiLlmClient implements LocalLlmClient {
     http.Client transport,
     Completer<void> abort,
   ) async {
+    final diagnosticId = DateTime.now().microsecondsSinceEpoch.toString();
+    void diagnostic(String stage, String payload) => printAiResponseDiagnostic(
+      tag: 'OpenAiTransport',
+      requestId: diagnosticId,
+      stage: stage,
+      response: payload,
+    );
     final token = (await accessToken()).trim();
     if (token.isEmpty) throw openAiRequestException(statusCode: 401);
     final images = await imageLoader.loadAll(request.imagePaths);
@@ -95,7 +103,8 @@ class OpenAiLlmClient implements LocalLlmClient {
       'model': modelName,
       'store': false,
       'stream': true,
-      if (!useChatGptPlan) 'max_output_tokens': maxOutputTokens,
+      if (!useChatGptPlan)
+        'max_output_tokens': request.maxOutputTokens ?? maxOutputTokens,
       'input': [
         {
           'role': 'user',
@@ -111,15 +120,33 @@ class OpenAiLlmClient implements LocalLlmClient {
         },
       ],
     });
+    diagnostic(
+      'request',
+      jsonEncode({
+        'model': modelName,
+        'imageCount': images.length,
+        'useChatGptPlan': useChatGptPlan,
+        'maxOutputTokens': useChatGptPlan
+            ? null
+            : request.maxOutputTokens ?? maxOutputTokens,
+      }),
+    );
     final response = await transport.send(httpRequest);
+    diagnostic(
+      'http',
+      jsonEncode({
+        'status': response.statusCode,
+        'requestId': response.headers['x-request-id'],
+        'contentType': response.headers['content-type'],
+      }),
+    );
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      // Cancel rather than retaining provider error bodies containing user data.
-      await response.stream.listen((_) {}).cancel();
+      final body = await response.stream.bytesToString();
+      diagnostic('http_error', body);
       throw openAiRequestException(statusCode: response.statusCode);
     }
-    return const OpenAiResponseStream().read(
-      response.stream,
-      abortTrigger: abort.future,
-    );
+    return OpenAiResponseStream(
+      onRawEvent: (payload) => diagnostic('sse', payload),
+    ).read(response.stream, abortTrigger: abort.future);
   }
 }

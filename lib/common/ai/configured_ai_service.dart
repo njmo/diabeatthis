@@ -16,25 +16,33 @@ class ConfiguredAiService implements AiService {
     String? apiKey,
   }) {
     for (final purpose in AiAnalysisPurpose.values) {
+      LocalLlmClient create(
+        AiConfiguration settings, {
+        int? outputTokenLimit,
+      }) => factory.create(
+        settings,
+        apiKey: apiKey,
+        maxOutputTokens:
+            outputTokenLimit ??
+            switch (purpose) {
+              AiAnalysisPurpose.analysis => 8192,
+              AiAnalysisPurpose.photo => 2048,
+              AiAnalysisPurpose.iconSuggestion =>
+                settings.provider == AiProviderKind.firebase ? 64 : 2048,
+              AiAnalysisPurpose.connectionTest => 512,
+            },
+        thinkingBudget: switch (purpose) {
+          AiAnalysisPurpose.analysis => 2048,
+          AiAnalysisPurpose.photo => null,
+          AiAnalysisPurpose.iconSuggestion ||
+          AiAnalysisPurpose.connectionTest => 0,
+        },
+      );
       _clients[purpose] = ConfiguredAiClient(
         configuration: configuration,
-        createClient: (settings) => factory.create(
-          settings,
-          apiKey: apiKey,
-          maxOutputTokens: switch (purpose) {
-            AiAnalysisPurpose.analysis => 8192,
-            AiAnalysisPurpose.photo => 2048,
-            AiAnalysisPurpose.iconSuggestion =>
-              settings.provider == AiProviderKind.firebase ? 64 : 2048,
-            AiAnalysisPurpose.connectionTest => 512,
-          },
-          thinkingBudget: switch (purpose) {
-            AiAnalysisPurpose.analysis => 2048,
-            AiAnalysisPurpose.photo => null,
-            AiAnalysisPurpose.iconSuggestion ||
-            AiAnalysisPurpose.connectionTest => 0,
-          },
-        ),
+        createClient: create,
+        createClientForRequest: (settings, request) =>
+            create(settings, outputTokenLimit: request.maxOutputTokens),
       );
     }
     _images = ConfiguredAiImageClient(
