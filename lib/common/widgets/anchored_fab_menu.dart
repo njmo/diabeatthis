@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
@@ -24,6 +26,7 @@ class AnchoredFabMenu extends HookWidget {
     final dark = theme.brightness == Brightness.dark;
     final controller = useMemoized(OverlayPortalController.new);
     final link = useMemoized(LayerLink.new);
+    final anchorKey = useMemoized(GlobalKey.new);
     useEffect(() {
       var active = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -37,50 +40,74 @@ class AnchoredFabMenu extends HookWidget {
       return () => active = false;
     }, [open]);
     return CompositedTransformTarget(
+      key: anchorKey,
       link: link,
       child: OverlayPortal(
         controller: controller,
-        overlayChildBuilder: (context) => Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onDismiss,
-                child: const ColoredBox(color: Colors.black26),
+        overlayChildBuilder: (context) {
+          final overlay =
+              Overlay.of(context).context.findRenderObject() as RenderBox?;
+          final screenWidth =
+              overlay?.size.width ?? MediaQuery.sizeOf(context).width;
+          final margin = math.min(16.0, screenWidth / 2);
+          final width = menuWidth
+              .clamp(0, math.max(0.0, screenWidth - margin * 2))
+              .toDouble();
+          final anchor =
+              anchorKey.currentContext?.findRenderObject() as RenderBox?;
+          final center =
+              anchor
+                  ?.localToGlobal(
+                    Offset(anchor.size.width / 2, 0),
+                    ancestor: overlay,
+                  )
+                  .dx ??
+              screenWidth / 2;
+          final left = (center - width / 2).clamp(
+            margin,
+            screenWidth - width - margin,
+          );
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onDismiss,
+                  child: const ColoredBox(color: Colors.black26),
+                ),
               ),
-            ),
-            CompositedTransformFollower(
-              link: link,
-              showWhenUnlinked: false,
-              targetAnchor: Alignment.topCenter,
-              followerAnchor: Alignment.bottomCenter,
-              offset: const Offset(0, -16),
-              child: Material(
-                color: Theme.of(context).colorScheme.surfaceContainerLowest,
-                elevation: 8,
-                borderRadius: BorderRadius.circular(16),
-                clipBehavior: Clip.antiAlias,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: menuWidth
-                        .clamp(0, MediaQuery.sizeOf(context).width - 32)
-                        .toDouble(),
-                    maxHeight: MediaQuery.sizeOf(context).height * 0.65,
-                  ),
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: actions,
+              CompositedTransformFollower(
+                link: link,
+                showWhenUnlinked: false,
+                targetAnchor: Alignment.topCenter,
+                followerAnchor: Alignment.bottomCenter,
+                offset: Offset(left + width / 2 - center, -16),
+                child: Material(
+                  color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                  elevation: 8,
+                  borderRadius: BorderRadius.circular(16),
+                  clipBehavior: Clip.antiAlias,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: width,
+                      maxWidth: width,
+                      maxHeight: MediaQuery.sizeOf(context).height * 0.65,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: actions,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
         child: SizedBox(
           width: 56,
           height: 56,

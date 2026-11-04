@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
+import 'sheet_content_height_request.dart';
 import 'sheet_height_request.dart';
 
 /// Keeps a scaffold's footer above the keyboard inside a bounded modal sheet.
@@ -18,33 +19,61 @@ class KeyboardAwareSheetFrame extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final requestedHeight = useState(heightFactor);
+    final naturalHeights = useState(<SheetContentSection, double>{});
     final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
-    return NotificationListener<SheetHeightRequest>(
+    return NotificationListener<SheetContentHeightRequest>(
       onNotification: (request) {
-        requestedHeight.value = request.factor.clamp(0.3, 0.95);
+        if (naturalHeights.value[request.section] != request.height) {
+          naturalHeights.value = {
+            ...naturalHeights.value,
+            request.section: request.height,
+          };
+        }
         return true;
       },
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return AnimatedPadding(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            padding: EdgeInsets.only(bottom: keyboardHeight),
-            child: AnimatedContainer(
+      child: NotificationListener<SheetHeightRequest>(
+        onNotification: (request) {
+          requestedHeight.value = request.factor.clamp(0.3, 0.95);
+          return true;
+        },
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return AnimatedPadding(
               duration: const Duration(milliseconds: 180),
               curve: Curves.easeOut,
-              height: math.max(
-                0,
-                constraints.maxHeight * requestedHeight.value - keyboardHeight,
+              padding: EdgeInsets.only(bottom: keyboardHeight),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                height: math.max(
+                  0,
+                  math.min(
+                    constraints.maxHeight * requestedHeight.value -
+                        keyboardHeight,
+                    naturalHeights.value.containsKey(SheetContentSection.body)
+                        ? kToolbarHeight +
+                              naturalHeights.value.values.fold(
+                                0.0,
+                                (sum, value) => sum + value,
+                              ) +
+                              ((naturalHeights.value[SheetContentSection
+                                              .footer] ??
+                                          0) ==
+                                      0
+                                  ? MediaQuery.paddingOf(context).bottom
+                                  : 0)
+                        : double.infinity,
+                  ),
+                ),
+                child: MediaQuery.removeViewInsets(
+                  context: context,
+                  removeBottom: true,
+                  child: child,
+                ),
               ),
-              child: MediaQuery.removeViewInsets(
-                context: context,
-                removeBottom: true,
-                child: child,
-              ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
