@@ -8,6 +8,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/anchored_fab_menu.dart';
 import '../../../../common/widgets/fab_action_option.dart';
 import '../../../manual_events/presentation/widgets/manual_event_sheet.dart';
+import '../../../meal_photo/presentation/widgets/meal_photo_action.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 
 class ParentDashboardFAB extends HookConsumerWidget {
@@ -38,6 +39,12 @@ class ParentDashboardFAB extends HookConsumerWidget {
             onTap: () {
               open.value = false;
             },
+          ),
+          const SizedBox(height: 8),
+          MealPhotoAction(
+            tile: true,
+            horizontal: true,
+            onOpening: () => open.value = false,
           ),
           const SizedBox(height: 8),
           FabActionOption(

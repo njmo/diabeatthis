@@ -6,6 +6,7 @@ import '../../features/activity/presentation/screens/activity_log_page.dart';
 import '../../features/activity/presentation/screens/activity_page.dart';
 import '../../features/dashboard/presentation/screens/dashboard_page.dart';
 import '../../features/ingredients/presentation/screens/ingredient_page.dart';
+import '../../features/meal_photo/presentation/screens/meal_photo_page.dart';
 import '../../features/meal_summary/presentation/screens/meal_summary_page.dart';
 import '../../features/meal_template/presentation/screens/add_meal_template_page.dart';
 import '../../features/meals/presentation/screens/add_meal_page.dart';
@@ -37,6 +38,11 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: SettingsRoute.page, path: '/settings'),
     CustomRoute(
       page: AddMealRoute.page,
+      customRouteBuilder: formBottomSheetRoute,
+      opaque: false,
+    ),
+    CustomRoute(
+      page: MealPhotoRoute.page,
       customRouteBuilder: formBottomSheetRoute,
       opaque: false,
     ),

@@ -8,8 +8,12 @@ import '../widgets/meal_status_dialog_result.dart';
 Future<MealStatusDialogResult?> showMealStatusDialog({
   required BuildContext context,
   required Meal meal,
+  bool startImmediately = false,
 }) {
-  final dialog = MealStatusDialog(meal: meal);
+  final dialog = MealStatusDialog(
+    meal: meal,
+    startImmediately: startImmediately,
+  );
   if (dialog.getStep() == MealDialogStep.choose) {
     return showModalBottomSheet<MealStatusDialogResult>(
       context: context,

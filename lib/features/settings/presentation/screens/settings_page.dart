@@ -26,6 +26,7 @@ import '../widgets/data_source_settings_section.dart';
 import '../widgets/database_settings_section.dart';
 import '../widgets/meal_advisor_settings_section.dart';
 import '../widgets/nightscout_settings_section.dart';
+import '../widgets/residence_country_setting.dart';
 import '../widgets/settings_section_card.dart';
 
 @RoutePage()
@@ -116,6 +117,8 @@ class SettingsPage extends HookConsumerWidget with Logging {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const ResidenceCountrySetting(),
+                    const SizedBox(height: 16),
                     DataSourceSettingsSection(
                       onChanged: (config) {
                         selectedDataSourceConfig.value = config;

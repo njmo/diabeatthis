@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/manual_meal_decision.dart';
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../common/widgets/ai_text_dialog.dart';
 import '../../../../common/widgets/manual_meal_decision_dialog.dart';
 import '../../../../common/widgets/meal_start/meal_advice_unavailable.dart';
@@ -25,7 +26,12 @@ import 'meal_status_dialog_result.dart';
 
 class MealStatusDialog extends HookConsumerWidget with Logging {
   final Meal meal;
-  const MealStatusDialog({required this.meal, super.key});
+  const MealStatusDialog({
+    required this.meal,
+    this.startImmediately = false,
+    super.key,
+  });
+  final bool startImmediately;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,6 +40,15 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
     final c = ref.read(
       mealDialogControllerProvider(meal.id, getStep()).notifier,
     );
+
+    useEffect(() {
+      if (startImmediately && getStep() == MealDialogStep.choose) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) c.chooseEat();
+        });
+      }
+      return null;
+    }, [meal.id, startImmediately]);
 
     Future<void> chooseManual() async {
       if (s.isPreparingAdvice) c.cancelAdvicePreparation();
@@ -325,7 +340,7 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
           s.advice.decision != null &&
           shouldCreateAapsSuggestionForMealStatus(
             s.advice.decision!.acceptedStatus,
-            extendedCarbsGrams: s.extendedCarbsGrams.ceil(),
+            extendedCarbsGrams: s.extendedCarbsGrams.ceilMacro(),
           );
       Future<void> close() async {
         saving.value = true;

@@ -15,6 +15,7 @@ import '../../../activity/data/providers/activity_provider.dart';
 import '../../../activity/data/services/save_activity_action.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_sheet.dart';
 import '../../../manual_events/presentation/widgets/manual_event_sheet.dart';
+import '../../../meal_photo/presentation/widgets/meal_photo_action.dart';
 import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_activation_guard_provider.dart';
@@ -155,6 +156,12 @@ class DashboardFAB extends HookConsumerWidget with Logging {
                 },
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          MealPhotoAction(
+            tile: true,
+            horizontal: true,
+            onOpening: () => open.value = false,
           ),
           const SizedBox(height: 8),
           FabActionOption(
