@@ -15,6 +15,10 @@ class Version36IngredientDatabase extends DatabaseImpl {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
+      // This later-added trigger references the icon column absent in v36.
+      await customStatement(
+        'DROP TRIGGER IF EXISTS ingredient_catalog_facts_immutable',
+      );
       await customStatement(
         'ALTER TABLE ingredient DROP COLUMN icon_asset_path',
       );
@@ -32,6 +36,13 @@ void main() {
       addTearDown(() => directory.delete(recursive: true));
       final file = File('${directory.path}/database.sqlite');
       final old = Version36IngredientDatabase(NativeDatabase(file));
+      final oldColumns = await old
+          .customSelect('PRAGMA table_info(ingredient)')
+          .get();
+      expect(
+        oldColumns.map((row) => row.read<String>('name')),
+        isNot(contains('icon_asset_path')),
+      );
       await old.customStatement(
         "INSERT INTO ingredient(name, carbs_per_100g, fat_per_100g, fiber_per_100g, protein_per_100g, nutrition_confidence, is_reference) VALUES ('Burger', 20, 10, 1, 10, 0.5, 1)",
       );
