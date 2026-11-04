@@ -3444,5 +3444,8 @@
   "@copiedMealIngredientCount": {"placeholders": {"count": {"type": "int"}}},
   "activityHistoryShort": "History",
   "mealCompositionTitle": "Meal ingredients",
-  "copiedMealMissingConversion": "This older meal has no recorded portion weight. Confirm it to load and copy the ingredients."
+  "copiedMealMissingConversion": "This older meal has no recorded portion weight. Confirm it to load and copy the ingredients.",
+  "mealPhotoContextHintTitle": "A better suggestion with more context",
+  "mealPhotoContextHintMessage": "Add ingredients, or a photo of the restaurant menu and the dish number or name. This helps AI estimate nutrition more accurately.",
+  "mealPhotoContextHintAction": "Add ingredients or menu"
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/context_hint_card.dart';
 import '../../../../common/widgets/form_task_timeline_item.dart';
 import '../../domain/models/meal_photo_input.dart';
 import '../models/meal_photo_capture_task.dart';
@@ -121,6 +122,20 @@ class MealPhotoCaptureStep extends HookWidget {
                 selectedTask.value = MealPhotoCaptureTask.evidence,
           ),
         ),
+        if (plate.value != null &&
+            categorySelected &&
+            !hasEvidence &&
+            active != MealPhotoCaptureTask.evidence) ...[
+          ContextHintCard(
+            title: context.lang.mealPhotoContextHintTitle,
+            message: context.lang.mealPhotoContextHintMessage,
+            actionLabel: context.lang.mealPhotoContextHintAction,
+            onAction: busy.value
+                ? null
+                : () => selectedTask.value = MealPhotoCaptureTask.evidence,
+          ),
+          const SizedBox(height: 16),
+        ],
         FilledButton(
           onPressed: busy.value || plate.value == null || !categorySelected
               ? null

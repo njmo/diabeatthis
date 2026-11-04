@@ -3901,5 +3901,8 @@
   "@copiedMealIngredientCount": {"placeholders": {"count": {"type": "int"}}},
   "activityHistoryShort": "Historia",
   "mealCompositionTitle": "Skład posiłku",
-  "copiedMealMissingConversion": "W tym starszym posiłku nie zapisano gramatury porcji. Potwierdź ją, aby wczytać i skopiować składniki."
+  "copiedMealMissingConversion": "W tym starszym posiłku nie zapisano gramatury porcji. Potwierdź ją, aby wczytać i skopiować składniki.",
+  "mealPhotoContextHintTitle": "Lepsza propozycja z dodatkowym kontekstem",
+  "mealPhotoContextHintMessage": "Dodaj skład lub zdjęcie menu restauracji i wskaż numer albo nazwę dania. Pomoże to AI dokładniej oszacować makro.",
+  "mealPhotoContextHintAction": "Dodaj skład lub menu"
 }
