@@ -21,6 +21,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../helpers/localized_material_app.dart';
+import '../../../../helpers/regression/catalog_interface_overrides.dart';
 
 const sheetApple = IngredientDraft.existing(
   id: 41,
@@ -47,6 +48,7 @@ void main() {
     result = null;
     container = ProviderContainer(
       overrides: [
+        ...catalogSearchInterfaceOverrides(),
         ingredientIconClientProvider.overrideWithValue(SheetIconClient()),
         ingredientsByQueryProvider(
           '',

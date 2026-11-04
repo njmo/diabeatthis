@@ -2,6 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/router/app_router.dart';
+import '../../../../common/ingredient_catalog/widgets/ingredient_origin_badge.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/detail_tabs.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
@@ -91,12 +93,36 @@ class IngredientPageViewState extends ConsumerState<IngredientPage>
               TextButton.icon(
                 onPressed: current.isSaving
                     ? null
+                    : current.data.isCatalogMirror
+                    ? () async {
+                        try {
+                          final id = await controller
+                              .createEditableCatalogCopy();
+                          if (context.mounted) {
+                            context.router.push(
+                              IngredientRoute(ingredientId: id),
+                            );
+                          }
+                        } catch (_) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(context.lang.catalogSelectFailed),
+                              ),
+                            );
+                          }
+                        }
+                      }
                     : () {
                         tabs.index = 0;
                         controller.startEditing();
                       },
                 icon: const Icon(Icons.edit_outlined, size: 18),
-                label: Text(context.lang.ingredientEditAction),
+                label: Text(
+                  current.data.isCatalogMirror
+                      ? context.lang.catalogCreateEditableCopy
+                      : context.lang.ingredientEditAction,
+                ),
               ),
           ],
         ),
@@ -123,13 +149,14 @@ class IngredientPageViewState extends ConsumerState<IngredientPage>
                         onIconSelected: controller.onIconSelected,
                       ),
                       const SizedBox(height: 16),
-                      IngredientPortionsSection(
-                        portions: s.data.portions,
-                        onEdit: !s.data.ingredient.isReference && !s.isSaving
-                            ? (portion) =>
-                                  _editPortionAmount(context, ref, portion)
-                            : null,
-                      ),
+                      if (!s.data.ingredient.isReference)
+                        IngredientPortionsSection(
+                          portions: s.data.portions,
+                          onEdit: !s.data.ingredient.isReference && !s.isSaving
+                              ? (portion) =>
+                                    _editPortionAmount(context, ref, portion)
+                              : null,
+                        ),
                     ],
                   ),
                 ),
@@ -166,9 +193,17 @@ class IngredientPageViewState extends ConsumerState<IngredientPage>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (s.data.origin != null) ...[
+                          IngredientOriginBadge(origin: s.data.origin!),
+                          const SizedBox(height: 16),
+                        ],
+                        if (!s.data.confidenceIsAssessed) ...[
+                          Text(context.lang.catalogUnassessedConfidence),
+                          const SizedBox(height: 8),
+                        ],
                         IngredientNutritionCard(ingredient: s.data.ingredient),
                         const SizedBox(height: 16),
-                        IngredientPortionsSection(portions: s.data.portions),
+                          IngredientPortionsSection(portions: s.data.portions),
                       ],
                     ),
                   ),

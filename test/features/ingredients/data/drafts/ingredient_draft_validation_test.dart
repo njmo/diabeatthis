@@ -31,15 +31,15 @@ void main() {
       expect(ingredient.validateMacroRanges, returnsNormally);
     });
 
-    test('rejects non-UE ingredient when net carbs would be zero', () {
+    test('allows non-UE ingredient when total carbs equal fiber', () {
       final ingredient = _ingredient(
         carbsPer100g: 5,
         fiberPer100g: 5,
         carbsLabelMode: CarbsLabelMode.nonEu,
       );
 
-      expect(ingredient.hasValidMacroRanges, false);
-      expect(ingredient.validateMacroRanges, throwsArgumentError);
+      expect(ingredient.hasValidMacroRanges, true);
+      expect(ingredient.validateMacroRanges, returnsNormally);
     });
 
     test('rejects non-UE ingredient when net carbs would be negative', () {

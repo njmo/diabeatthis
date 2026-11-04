@@ -1,0 +1,59 @@
+import 'ingredient.drift';
+
+CREATE TABLE ingredient_origin (
+  ingredient_id INTEGER NOT NULL PRIMARY KEY REFERENCES ingredient(id) ON DELETE CASCADE,
+  source TEXT NOT NULL CHECK (source IN ('local', 'firebase')),
+  source_id TEXT NOT NULL CHECK (length(trim(source_id)) > 0),
+  source_revision TEXT,
+  english_name TEXT,
+  display_language_code TEXT,
+  source_snapshot_json TEXT,
+  creation_method TEXT NOT NULL DEFAULT 'user' CHECK (creation_method IN ('user', 'catalog_mirror', 'catalog_copy', 'photo_reference')),
+  reference_scope TEXT CHECK (reference_scope IN ('component', 'whole_plate')),
+  provenance_json TEXT,
+  copied_from_json TEXT,
+  confidence_origin TEXT NOT NULL DEFAULT 'user_assessed'
+    CHECK (confidence_origin IN ('user_assessed', 'unassessed')),
+  CHECK ((source = 'local' AND source_id = CAST(ingredient_id AS TEXT)) OR source = 'firebase'),
+  CHECK ((source = 'firebase' AND creation_method = 'catalog_mirror' AND source_revision IS NOT NULL AND source_snapshot_json IS NOT NULL)
+    OR (source = 'local' AND creation_method IN ('user', 'catalog_copy', 'photo_reference'))),
+  CHECK (creation_method <> 'catalog_copy' OR copied_from_json IS NOT NULL),
+  CHECK (creation_method <> 'photo_reference' OR (reference_scope IS NOT NULL AND provenance_json IS NOT NULL)),
+  UNIQUE (source, source_id)
+);
+
+CREATE TRIGGER ingredient_origin_default_local
+AFTER INSERT ON ingredient
+BEGIN
+  INSERT INTO ingredient_origin(ingredient_id, source, source_id, confidence_origin)
+  VALUES (NEW.id, 'local', CAST(NEW.id AS TEXT), 'user_assessed');
+END;
+
+CREATE TRIGGER ingredient_origin_protect_finalized
+BEFORE UPDATE OF ingredient_id, source, source_id, source_revision, english_name,
+ display_language_code, source_snapshot_json, creation_method, reference_scope,
+ provenance_json, copied_from_json ON ingredient_origin
+WHEN OLD.creation_method <> 'user'
+BEGIN
+  SELECT RAISE(ABORT, 'Finalized ingredient origin is immutable');
+END;
+
+CREATE TRIGGER ingredient_origin_protect_delete
+BEFORE DELETE ON ingredient_origin
+WHEN EXISTS (SELECT 1 FROM ingredient WHERE id = OLD.ingredient_id)
+BEGIN
+  SELECT RAISE(ABORT, 'Ingredient origin can only be deleted with its ingredient');
+END;
+
+CREATE TRIGGER ingredient_catalog_facts_immutable
+BEFORE UPDATE OF name, icon_asset_path, carbs_per_100g, fat_per_100g, fiber_per_100g,
+ protein_per_100g, carbs_label_mode, brand, barcode, is_reference ON ingredient
+WHEN EXISTS (SELECT 1 FROM ingredient_origin WHERE ingredient_id = OLD.id AND source = 'firebase')
+AND (OLD.name IS NOT NEW.name OR OLD.icon_asset_path IS NOT NEW.icon_asset_path
+ OR OLD.carbs_per_100g IS NOT NEW.carbs_per_100g OR OLD.fat_per_100g IS NOT NEW.fat_per_100g
+ OR OLD.fiber_per_100g IS NOT NEW.fiber_per_100g OR OLD.protein_per_100g IS NOT NEW.protein_per_100g
+ OR OLD.carbs_label_mode IS NOT NEW.carbs_label_mode OR OLD.brand IS NOT NEW.brand
+ OR OLD.barcode IS NOT NEW.barcode OR OLD.is_reference IS NOT NEW.is_reference)
+BEGIN
+ SELECT RAISE(ABORT, 'Catalog facts are immutable; create a local copy to edit');
+END;

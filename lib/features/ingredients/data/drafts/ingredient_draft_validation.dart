@@ -10,12 +10,12 @@ extension IngredientDraftValidation on IngredientDraft {
   bool get hasEnergyMacros =>
       carbsPer100g > 0 || fatPer100g > 0 || proteinPer100g > 0;
 
-  bool get hasPositiveNonEuNetCarbs {
+  bool get hasValidNonEuNetCarbs {
     if (carbsLabelMode != CarbsLabelMode.nonEu) {
       return true;
     }
     final fiber = isReference ? 0.0 : fiberPer100g;
-    return carbsPer100g - fiber > 0;
+    return carbsPer100g.isFinite && fiber.isFinite && carbsPer100g >= fiber;
   }
 
   bool get hasValidMacroRanges {
@@ -28,7 +28,7 @@ extension IngredientDraftValidation on IngredientDraft {
         fiber <= maxMacroPer100g &&
         proteinPer100g >= 0 &&
         proteinPer100g <= maxMacroPer100g &&
-        hasPositiveNonEuNetCarbs;
+        hasValidNonEuNetCarbs;
   }
 
   bool get hasValidBarcode {
@@ -48,6 +48,14 @@ extension IngredientDraftValidation on IngredientDraft {
   }
 
   void validateMacroRanges() {
+    if ([
+      carbsPer100g,
+      fatPer100g,
+      fiberPer100g,
+      proteinPer100g,
+    ].any((value) => !value.isFinite)) {
+      throw ArgumentError('Ingredient macros must be finite');
+    }
     if (carbsPer100g < 0 ||
         fatPer100g < 0 ||
         fiberPer100g < 0 ||
@@ -60,8 +68,8 @@ extension IngredientDraftValidation on IngredientDraft {
         proteinPer100g > maxMacroPer100g) {
       throw ArgumentError('Ingredient macros cannot exceed 100g per 100g');
     }
-    if (!hasPositiveNonEuNetCarbs) {
-      throw ArgumentError(lang.uiForNonEULabelsCarbohydratesMustBeGreaterThan);
+    if (!hasValidNonEuNetCarbs) {
+      throw ArgumentError(lang.mealPhotoInvalidFiber);
     }
   }
 

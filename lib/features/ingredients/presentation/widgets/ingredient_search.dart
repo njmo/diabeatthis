@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/ingredient_catalog/widgets/ingredient_catalog_results.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/camera_search_icon.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
@@ -16,6 +17,7 @@ import '../../data/providers/ingredient_provider.dart';
 import '../../data/providers/ingredient_search_query_provider.dart';
 import '../controllers/ingredient_barcode_lookup_controller.dart';
 import '../controllers/ingredient_barcode_scan_feedback_controller.dart';
+import '../controllers/ingredient_catalog_selection_controller.dart';
 import '../controllers/ingredient_lookup_actions_controller.dart';
 import '../controllers/ingredient_photo_search_controller.dart';
 import '../services/ingredient_photo_camera.dart';
@@ -50,7 +52,7 @@ class IngredientSearch extends HookConsumerWidget {
               photoSearchCandidatesKey,
             ),
           )
-        : ref.watch(ingredientsByQueryProvider(query));
+        : const AsyncData<List<domain.Ingredient>>([]);
     final hasNoPhotoSearchMatches =
         isPhotoSearchActive &&
         ingredients.hasValue &&
@@ -150,45 +152,76 @@ class IngredientSearch extends HookConsumerWidget {
             ),
             const SizedBox(height: 8),
           ],
-          if (ingredients.isLoading) const LinearProgressIndicator(),
-          if (ingredients.hasError)
-            Text(lang.ingredientLoadError(ingredients.error.toString())),
-          if (ingredients.hasValue && ingredients.value!.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Text(lang.ingredientSearchEmpty),
+          if (!isPhotoSearchActive)
+            SizedBox(
+              height: (MediaQuery.sizeOf(context).height * 0.42).clamp(
+                200.0,
+                440.0,
+              ),
+              child: IngredientCatalogResults(
+                query: query,
+                selectedLocalId: selectedIngredient.map(
+                  draft: (_) => null,
+                  existing: (item) => item.id,
+                ),
+                onSelected: (item) async {
+                  final selected = await ref
+                      .read(ingredientCatalogSelectionControllerProvider)
+                      .select(
+                        item,
+                        languageCode: Localizations.localeOf(
+                          context,
+                        ).languageCode,
+                      );
+                  if (ref.context.mounted &&
+                      ref.read(ingredientSearchQueryProvider) == query) {
+                    draft.overrideDraft(selected);
+                  }
+                },
+              ),
             ),
-          SizedBox(
-            height: (MediaQuery.sizeOf(context).height * 0.42).clamp(
-              200.0,
-              440.0,
+          if (isPhotoSearchActive) ...[
+            if (ingredients.isLoading) const LinearProgressIndicator(),
+            if (ingredients.hasError)
+              Text(lang.ingredientLoadError(ingredients.error.toString())),
+            if (ingredients.hasValue && ingredients.value!.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Text(lang.ingredientSearchEmpty),
+              ),
+            SizedBox(
+              height: (MediaQuery.sizeOf(context).height * 0.42).clamp(
+                200.0,
+                440.0,
+              ),
+              child: ListView.separated(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                itemBuilder: (context, index) {
+                  final ingredient = ingredients.asData?.value[index];
+                  if (ingredient == null) {
+                    return SizedBox.shrink();
+                  }
+                  final selected = selectedIngredient.matchesSearchResult(
+                    ingredient,
+                  );
+                  return IngredientSearchTile(
+                    name: ingredient.name,
+                    brand: ingredient.brand,
+                    kcalPer100g: ingredient.kcalPer100g,
+                    iconAssetPath: ingredient.iconAssetPath,
+                    isReference: ingredient.isReference,
+                    selected: selected,
+                    onTap: () {
+                      draft.overrideDraft(ingredient.toDraft());
+                    },
+                  );
+                },
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemCount: ingredients.asData?.value.length ?? 0,
+              ),
             ),
-            child: ListView.separated(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              itemBuilder: (context, index) {
-                final ingredient = ingredients.asData?.value[index];
-                if (ingredient == null) {
-                  return SizedBox.shrink();
-                }
-                final selected = selectedIngredient.matchesSearchResult(
-                  ingredient,
-                );
-                return IngredientSearchTile(
-                  name: ingredient.name,
-                  brand: ingredient.brand,
-                  kcalPer100g: ingredient.kcalPer100g,
-                  iconAssetPath: ingredient.iconAssetPath,
-                  isReference: ingredient.isReference,
-                  selected: selected,
-                  onTap: () {
-                    draft.overrideDraft(ingredient.toDraft());
-                  },
-                );
-              },
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemCount: ingredients.asData?.value.length ?? 0,
-            ),
-          ),
+          ],
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'tables/ingredient.drift';
+import 'tables/ingredient_origin.drift';
 import 'tables/portion.drift';
 import 'tables/ingredient_portions.drift';
 import 'tables/meal_ingredients.drift';

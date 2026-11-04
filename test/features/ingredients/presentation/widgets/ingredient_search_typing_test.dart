@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../helpers/localized_material_app.dart';
+import '../../../../helpers/regression/catalog_interface_overrides.dart';
 
 void main() {
   testWidgets('typing a search query does not display a selection error', (
@@ -13,6 +14,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          ...catalogSearchInterfaceOverrides(),
           ingredientsByQueryProvider('').overrideWith((_) async => []),
           ingredientsByQueryProvider('twix').overrideWith((_) async => []),
         ],

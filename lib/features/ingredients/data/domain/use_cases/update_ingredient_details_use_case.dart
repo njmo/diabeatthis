@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../common/ingredient_catalog/ingredient_catalog_providers.dart';
+import '../../../../../common/ingredient_catalog/ingredient_identity.dart';
 import '../../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../../core/drift/database_impl.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
@@ -19,7 +21,10 @@ class UpdateIngredientDetailsUseCase {
 
   UpdateIngredientDetailsUseCase({required this.ref});
 
-  Future<void> call(IngredientDraft ingredient) async {
+  Future<void> call(
+    IngredientDraft ingredient, {
+    bool nutritionConfidenceAssessed = false,
+  }) async {
     final existing = ingredient.map(
       existing: (value) => value,
       draft: (_) =>
@@ -32,6 +37,13 @@ class UpdateIngredientDetailsUseCase {
     }
 
     final db = ref.read(databaseProvider);
+    final origins = ref.read(ingredientOriginRepositoryProvider);
+    final origin = await origins.read(existing.id);
+    if (origin?.identity.source == IngredientSource.firebase) {
+      throw StateError(
+        'Catalog ingredients require an independent local copy before editing',
+      );
+    }
     final saved = await db.ingredientDao.getIngredientById(existing.id);
     final savedLabelMode = CarbsLabelModeX.fromStorage(saved.carbsLabelMode);
     final barcode = existing.isReference ? null : existing.normalizedBarcode;
@@ -60,6 +72,10 @@ class UpdateIngredientDetailsUseCase {
         brand: existing.brand,
         barcode: barcode,
       );
+      if (nutritionConfidenceAssessed ||
+          saved.nutritionConfidence != existing.nutritionConfidence) {
+        await origins.markConfidenceAssessed(existing.id);
+      }
       if (existing.iconAssetPath != null &&
           existing.iconAssetPath != saved.iconAssetPath) {
         await (db.update(

@@ -17,6 +17,7 @@ import 'dao/portion_dao.dart';
 import 'dao/quick_low_treatment_item_dao.dart';
 import 'database.dart';
 import 'migrations/migrate_activity_summary.dart';
+import 'migrations/migrate_ingredient_origin.dart';
 import 'migrations/migrate_meal_add_on_bolus_context.dart';
 import 'migrations/migrate_meal_completion_decision.dart';
 import 'migrations/migrate_meal_consumption_confirmation.dart';
@@ -72,7 +73,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 45;
+  int get schemaVersion => 46;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -94,16 +95,38 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
   /// values. Live inserts capture the current mapping; backup restoration must not.
   Future<void> withRecordedPortionConversionsPreserved(
     Future<void> Function() restore,
-  ) => transaction(() async {
-    await customStatement(
-      'DROP TRIGGER IF EXISTS meal_ingredients_capture_portion',
-    );
-    try {
-      await restore();
-    } finally {
-      await Migrator(this).createTrigger(mealIngredientsCapturePortion);
-    }
-  });
+  ) => withRecordedFactsPreserved(restore);
+
+  Future<void> withRecordedFactsPreserved(Future<void> Function() restore) =>
+      transaction(() async {
+        await customStatement(
+          'DROP TRIGGER IF EXISTS meal_ingredients_capture_portion',
+        );
+        await customStatement(
+          'DROP TRIGGER IF EXISTS ingredient_origin_default_local',
+        );
+        await customStatement(
+          'DROP TRIGGER IF EXISTS ingredient_origin_protect_finalized',
+        );
+        await customStatement(
+          'DROP TRIGGER IF EXISTS ingredient_origin_protect_delete',
+        );
+        try {
+          await restore();
+          await customStatement(backfillLocalIngredientOrigins);
+          final violations = await customSelect(
+            'PRAGMA foreign_key_check',
+          ).get();
+          if (violations.isNotEmpty) {
+            throw StateError('Backup contains invalid database references');
+          }
+        } finally {
+          await Migrator(this).createTrigger(ingredientOriginDefaultLocal);
+          await Migrator(this).createTrigger(ingredientOriginProtectFinalized);
+          await Migrator(this).createTrigger(ingredientOriginProtectDelete);
+          await Migrator(this).createTrigger(mealIngredientsCapturePortion);
+        }
+      });
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -320,6 +343,9 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
           'DROP TRIGGER IF EXISTS meal_ingredients_summary_set_updated_at',
         );
         await m.createTrigger(mealIngredientsSummarySetUpdatedAt);
+      }
+      if (from < 46) {
+        await migrateIngredientOrigin(this);
       }
     },
     beforeOpen: (details) async {

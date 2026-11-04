@@ -21,6 +21,7 @@ class DatabaseBackupService {
 
   static const Set<String> coreTableNames = {
     'ingredient',
+    'ingredient_origin',
     'portion',
     'ingredient_portions',
     'activity',
@@ -140,7 +141,7 @@ class DatabaseBackupService {
     var rowCount = 0;
     try {
       await _withForeignKeysDisabled(
-        () => _db.withRecordedPortionConversionsPreserved(() async {
+        () => _db.withRecordedFactsPreserved(() async {
           await _clearForImport();
 
           for (final tableName in _tableNamesForScope(scope)) {

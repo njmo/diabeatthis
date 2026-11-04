@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../helpers/localized_material_app.dart';
+import '../../../../helpers/regression/catalog_interface_overrides.dart';
 
 void main() {
   testWidgets(
@@ -31,6 +32,7 @@ void main() {
       );
       final container = ProviderContainer(
         overrides: [
+          ...catalogSearchInterfaceOverrides(),
           ingredientsByQueryProvider(
             '',
           ).overrideWith((_) async => [ingredient]),

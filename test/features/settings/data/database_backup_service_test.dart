@@ -36,8 +36,9 @@ void main() {
     final result = await DatabaseBackupService(targetDb).importFromJson(backup);
 
     expect(result.scope, DatabaseBackupScope.core);
-    expect(result.rowCount, 6);
+    expect(result.rowCount, 7);
     expect(await _countRows(targetDb, 'ingredient'), 1);
+    expect(await _countRows(targetDb, 'ingredient_origin'), 1);
     expect(await _countRows(targetDb, 'portion'), 1);
     expect(await _countRows(targetDb, 'ingredient_portions'), 1);
     expect(await _countRows(targetDb, 'activity'), 1);

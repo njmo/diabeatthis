@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/ingredient_catalog/ingredient_catalog_providers.dart';
 import 'package:diabeatthis/core/domain/model/carbs_label_mode.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
@@ -5,6 +6,7 @@ import 'package:diabeatthis/features/ingredients/data/domain/use_cases/load_ingr
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/regression/catalog_interface_overrides.dart';
 import '../../helpers/regression/scripted_ingredient_details_database.dart';
 import '../../helpers/regression/scripted_ingredient_details_ingredient_dao.dart';
 import '../../helpers/regression/scripted_ingredient_details_meal_dao.dart';
@@ -93,6 +95,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              ingredientOriginRepositoryProvider.overrideWithValue(
+                const ExistingLocalIngredientOriginRepository(),
+              ),
               databaseProvider.overrideWithValue(
                 ScriptedIngredientDetailsDatabase(
                   ScriptedIngredientDetailsIngredientDao(ingredients, history),
@@ -234,6 +239,9 @@ void main() {
         );
         final container = ProviderContainer(
           overrides: [
+            ingredientOriginRepositoryProvider.overrideWithValue(
+              const ExistingLocalIngredientOriginRepository(),
+            ),
             databaseProvider.overrideWithValue(
               ScriptedIngredientDetailsDatabase(
                 ScriptedIngredientDetailsIngredientDao(ingredient, history),

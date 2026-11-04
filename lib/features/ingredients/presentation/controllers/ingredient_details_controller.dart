@@ -6,6 +6,7 @@ import '../../../../common/storage/local_image_edit_session.dart';
 import '../../../../common/storage/local_image_store_provider.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
+import '../../data/domain/use_cases/copy_catalog_ingredient_use_case.dart';
 import '../../data/domain/use_cases/load_ingredient_details_use_case.dart';
 import '../../data/domain/use_cases/update_ingredient_details_use_case.dart';
 import '../../data/mappers/ingredient_details_mapper.dart';
@@ -33,9 +34,25 @@ class IngredientDetailsControllerNotifier
     return IngredientPageState(data: data);
   }
 
+  Future<int> createEditableCatalogCopy() async {
+    final current = state.requireValue;
+    if (current.isSaving || !current.data.isCatalogMirror) {
+      throw StateError('Catalog copy unavailable');
+    }
+    state = AsyncData(current.copyWith(isSaving: true));
+    try {
+      return await ref.read(copyCatalogIngredientUseCaseProvider)(ingredientId);
+    } finally {
+      if (ref.mounted) state = AsyncData(current.copyWith(isSaving: false));
+    }
+  }
+
   void startEditing() {
     final current = state.asData?.value;
-    if (current == null || current.isSaving || current.isEditing) {
+    if (current == null ||
+        current.isSaving ||
+        current.isEditing ||
+        current.data.isCatalogMirror) {
       return;
     }
 
@@ -94,9 +111,12 @@ class IngredientDetailsControllerNotifier
       final updateUseCase = ref.read(updateIngredientDetailsUseCaseProvider);
       final images = _imageSession;
       if (images == null) {
-        await updateUseCase.call(ingredient);
+        await updateUseCase.call(ingredient, nutritionConfidenceAssessed: true);
       } else {
-        await images.save(() => updateUseCase.call(ingredient));
+        await images.save(
+          () =>
+              updateUseCase.call(ingredient, nutritionConfidenceAssessed: true),
+        );
         await images.cleanup();
       }
       if (!ref.mounted) return;

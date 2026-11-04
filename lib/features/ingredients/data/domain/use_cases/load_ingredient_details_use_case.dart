@@ -1,5 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../common/ingredient_catalog/ingredient_catalog_providers.dart';
+import '../../../../../common/ingredient_catalog/ingredient_identity.dart';
+import '../../../../../common/nutrition/catalog_nutrition_confidence.dart';
 import '../../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
@@ -60,6 +63,9 @@ class LoadIngredientDetailsUseCase {
     final carbsLabelMode = CarbsLabelModeX.fromStorage(
       ingredient.carbsLabelMode,
     );
+    final origin = await ref
+        .read(ingredientOriginRepositoryProvider)
+        .read(ingredientId);
     final ingredientData = Ingredient(
       id: ingredient.id,
       name: ingredient.name,
@@ -67,7 +73,10 @@ class LoadIngredientDetailsUseCase {
       fatPer100g: ingredient.fatPer100g,
       fiberPer100g: ingredient.fiberPer100g,
       proteinPer100g: ingredient.proteinPer100g,
-      nutritionConfidence: ingredient.nutritionConfidence,
+      nutritionConfidence: catalogNutritionConfidence(
+        ingredient.nutritionConfidence,
+        assessed: origin?.nutritionConfidenceAssessed ?? true,
+      ),
       isReference: ingredient.isReference == 1,
       carbsLabelMode: carbsLabelMode,
       netKcalPer100g: ingredient.netKcalPer100g,
@@ -81,6 +90,9 @@ class LoadIngredientDetailsUseCase {
     );
 
     return IngredientDetailsData(
+      origin: origin,
+      isCatalogMirror: origin?.identity.source == IngredientSource.firebase,
+      confidenceIsAssessed: origin?.nutritionConfidenceAssessed ?? true,
       ingredient: ingredientData,
       portions: portionsData,
       usages: ingredientUsage,

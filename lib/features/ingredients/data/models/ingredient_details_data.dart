@@ -1,3 +1,4 @@
+import '../../../../common/ingredient_catalog/ingredient_origin_repository.dart';
 import '../../../../core/domain/model/carbs_label_mode.dart';
 import 'ingredient_history_entry_data.dart';
 import 'ingredient_portion_data.dart';
@@ -48,12 +49,18 @@ class IngredientDetailsData {
   List<IngredientPortionData> portions;
   List<IngredientUsageData> usages;
   List<IngredientHistoryEntryData> history;
+  final IngredientOriginSnapshot? origin;
+  final bool isCatalogMirror;
+  final bool confidenceIsAssessed;
 
   IngredientDetailsData({
     required this.ingredient,
     required this.portions,
     required this.usages,
     required this.history,
+    this.origin,
+    this.isCatalogMirror = false,
+    this.confidenceIsAssessed = true,
   });
 
   IngredientDetailsData copyWith({
@@ -67,6 +74,9 @@ class IngredientDetailsData {
       portions: portions ?? this.portions,
       usages: usages ?? this.usages,
       history: history ?? this.history,
+      origin: origin,
+      isCatalogMirror: isCatalogMirror,
+      confidenceIsAssessed: confidenceIsAssessed,
     );
   }
 }
