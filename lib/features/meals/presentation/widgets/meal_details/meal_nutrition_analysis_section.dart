@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../../../app/router/app_router.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/nutrition/meal_nutrition_totals.dart';
+import '../../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../dashboard/presentation/widgets/nutrient_summary_chart.dart';
 import '../../../data/models/meal_details_data.dart';
 import '../../../data/providers/meal_ingredients_list_provider.dart';
@@ -31,11 +32,11 @@ class MealNutritionAnalysisSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final nutrition = details.preferredNutritionTotals;
     final macros = Macronutrients(
-      carbsTotal: (nutrition?.totalCarbsG ?? 0).ceil(),
-      fatTotal: (nutrition?.totalFatG ?? 0).ceil(),
-      fiberTotal: (nutrition?.totalFiberG ?? 0).ceil(),
-      proteinTotal: (nutrition?.totalProteinG ?? 0).ceil(),
-      netCarbsTotal: (nutrition?.totalNetCarbsG ?? 0).ceil(),
+      carbsTotal: (nutrition?.totalCarbsG ?? 0).ceilMacro(),
+      fatTotal: (nutrition?.totalFatG ?? 0).ceilMacro(),
+      fiberTotal: (nutrition?.totalFiberG ?? 0).ceilMacro(),
+      proteinTotal: (nutrition?.totalProteinG ?? 0).ceilMacro(),
+      netCarbsTotal: (nutrition?.totalNetCarbsG ?? 0).ceilMacro(),
     );
 
     return Column(

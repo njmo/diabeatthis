@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
 import '../controllers/meal_summary_controller.dart';
 import '../models/meal_summary_item_draft.dart';
@@ -77,7 +78,7 @@ class MealSummaryItemRow extends ConsumerWidget {
                       ),
                       label: Text(
                         lang.mealSummaryCarbsChip(
-                          _formatSigned(carbDelta.ceil()),
+                          _formatSigned(carbDelta.ceilMacro()),
                         ),
                       ),
                     ),

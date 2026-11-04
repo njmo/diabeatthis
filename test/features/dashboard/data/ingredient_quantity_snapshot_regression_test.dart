@@ -107,8 +107,14 @@ void main() {
           snapshot.totalCaloriesKcal,
           closeTo(example.expectedGrams * 3.3, 0.000001),
         );
-        expect(snapshot.carbWeightedEffectiveConfidence, 0.375);
-        expect(snapshot.wbtWeightedEffectiveConfidence, 0.375);
+        expect(
+          snapshot.carbWeightedEffectiveConfidence,
+          closeTo(0.6123724356957945, 1e-12),
+        );
+        expect(
+          snapshot.wbtWeightedEffectiveConfidence,
+          closeTo(0.6123724356957945, 1e-12),
+        );
         expect(
           ConfidenceLevelX.fromDouble01(
             snapshot.carbWeightedEffectiveConfidence!,

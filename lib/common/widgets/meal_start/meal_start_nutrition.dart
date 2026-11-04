@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../l10n/language.dart';
+import '../../nutrition/stable_macro_ceil.dart';
 import '../nutrition_summary_metric.dart';
 import '../responsive_metric_list.dart';
 import 'meal_start_schedule.dart';
@@ -34,13 +35,15 @@ class MealStartNutrition extends StatelessWidget {
           children: [
             NutritionSummaryMetric(
               label: context.lang.mealCarbsLabel,
-              value: context.lang.mealStartGrams(carbsGrams.ceil()),
+              value: context.lang.mealStartGrams(carbsGrams.ceilMacro()),
               icon: Icons.grass_rounded,
               color: colors.primary,
             ),
             NutritionSummaryMetric(
               label: context.lang.mealStartEcarbsLabel,
-              value: context.lang.mealStartGrams(extendedCarbsGrams.ceil()),
+              value: context.lang.mealStartGrams(
+                extendedCarbsGrams.ceilMacro(),
+              ),
               icon: Icons.history_rounded,
               color: colors.primary,
             ),
@@ -52,7 +55,7 @@ class MealStartNutrition extends StatelessWidget {
         ] else if (extendedCarbsGrams > 0) ...[
           const SizedBox(height: 10),
           MealStartSchedule(
-            grams: extendedCarbsGrams.ceil(),
+            grams: extendedCarbsGrams.ceilMacro(),
             settings: scheduleSettings,
           ),
         ],

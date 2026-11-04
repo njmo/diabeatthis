@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_activation_guard.dart';
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/drift/providers/database_provider.dart';
@@ -23,8 +24,8 @@ class MealAddOnMultiplierResult {
   final double addedNetCarbs;
   final double totalNetCarbs;
 
-  int get roundedAddedNetCarbs => addedNetCarbs.ceil();
-  int get roundedTotalNetCarbs => totalNetCarbs.ceil();
+  int get roundedAddedNetCarbs => addedNetCarbs.ceilMacro();
+  int get roundedTotalNetCarbs => totalNetCarbs.ceilMacro();
 }
 
 class ApplyMealAddOnMultiplierUseCase with Logging {
@@ -82,7 +83,7 @@ class ApplyMealAddOnMultiplierUseCase with Logging {
         await db.ingredientDao.totalsForMealConsumed(mealId),
       );
       return MealAddOnMultiplierResult(
-        addedNetCarbs: total - before,
+        addedNetCarbs: stableMacroDifference(total, before),
         totalNetCarbs: total,
       );
     });

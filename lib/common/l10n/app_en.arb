@@ -3108,6 +3108,24 @@
   "ingredientOriginCloud": "Downloaded from the cloud",
   "ingredientOriginLocal": "Created locally",
   "ingredientOriginCloudCopy": "Editable copy from the cloud",
+  "mealWeightedConfidenceTitle": "Overall meal confidence",
+  "mealWeightedConfidenceExplanation": "For each ingredient, nutrition and amount confidence are combined using their geometric mean. Meal confidence is the average of these results weighted by the ingredient masses recorded in the meal.",
+  "mealWeightedConfidenceUnavailable": "Complete data is unavailable to calculate meal confidence.",
+  "mealIngredientConfidenceSummary": "Ingredient data: {nutrition} · Amount: {quantity} · Combined: {combined}",
+  "confidenceNotAvailable": "Not assessed",
+  "@mealIngredientConfidenceSummary": {
+    "placeholders": {
+      "nutrition": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "String"
+      },
+      "combined": {
+        "type": "String"
+      }
+    }
+  },
   "catalogOtherResults": "Other results",
   "catalogSelectedProduct": "Selected"
 }

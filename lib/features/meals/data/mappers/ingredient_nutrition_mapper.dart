@@ -13,9 +13,13 @@ class IngredientNutritionMapper {
     required IngredientData ingredient,
     required List<IngredientStatusHistoryData> history,
     required DateTime reference,
+    double? confidenceOverride,
   }) {
     if (reference.isBefore(date(ingredient.createdAt))) {
-      return (nutrition: current(ingredient), historicalUnavailable: true);
+      return (
+        nutrition: current(ingredient, confidenceOverride: confidenceOverride),
+        historicalUnavailable: true,
+      );
     }
     // History contains the state BEFORE each edit. The first later edit
     // therefore holds the values that applied at the requested instant.
@@ -42,7 +46,8 @@ class IngredientNutritionMapper {
           carbsLabelMode: CarbsLabelModeX.fromStorage(
             ingredient.carbsLabelMode,
           ),
-          nutritionConfidence: selected.nutritionConfidence,
+          nutritionConfidence:
+              confidenceOverride ?? selected.nutritionConfidence,
           effectiveAt:
               null, // The edit timestamp ends this state; it does not start it.
         ),
@@ -50,18 +55,24 @@ class IngredientNutritionMapper {
       );
     }
 
-    final currentNutrition = current(ingredient);
+    final currentNutrition = current(
+      ingredient,
+      confidenceOverride: confidenceOverride,
+    );
     return (nutrition: currentNutrition, historicalUnavailable: false);
   }
 
-  IngredientNutritionData current(IngredientData ingredient) {
+  IngredientNutritionData current(
+    IngredientData ingredient, {
+    double? confidenceOverride,
+  }) {
     return IngredientNutritionData(
       carbsPer100g: ingredient.carbsPer100g,
       fatPer100g: ingredient.fatPer100g,
       fiberPer100g: ingredient.fiberPer100g,
       proteinPer100g: ingredient.proteinPer100g,
       carbsLabelMode: CarbsLabelModeX.fromStorage(ingredient.carbsLabelMode),
-      nutritionConfidence: ingredient.nutritionConfidence,
+      nutritionConfidence: confidenceOverride ?? ingredient.nutritionConfidence,
       effectiveAt: date(ingredient.updatedAt),
     );
   }

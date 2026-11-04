@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../models/meal_summary_draft.dart';
 import '../utils/meal_completion_shortfall.dart';
 import '../utils/meal_summary_carbs_delta.dart';
@@ -51,7 +52,7 @@ class MealCompletionCarbsHint extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.lang.mealCompletionActualCarbs(actual.ceil())),
+            Text(context.lang.mealCompletionActualCarbs(actual.ceilMacro())),
             if (delta != 0) ...[
               const SizedBox(height: 4),
               Text(

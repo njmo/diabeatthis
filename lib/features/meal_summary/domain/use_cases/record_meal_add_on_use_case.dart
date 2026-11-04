@@ -11,6 +11,7 @@ import '../../../../common/meal/meal_add_on_bolus_progress.dart';
 import '../../../../common/meal/meal_bolus_coverage.dart';
 import '../../../../common/meal/meal_completion_timing.dart';
 import '../../../../common/meal/meal_extended_carbs.dart';
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/drift/database_impl.dart' show MealCompanion;
@@ -104,8 +105,11 @@ class RecordMealAddOnUseCase {
       final totals = await db.ingredientDao.totalsForMealConsumed(meal.id);
       final totalExtendedCarbs = mealExtendedCarbsFromMacros(totals);
       final requestedCarbs = math
-          .max(0, (totals?.netCarbsGrams ?? 0) - coverage.carbs)
-          .ceil();
+          .max(
+            0,
+            stableMacroDifference(totals?.netCarbsGrams ?? 0, coverage.carbs),
+          )
+          .ceilMacro();
       final requestedExtendedCarbs = deferExtendedCarbs
           ? 0
           : math.max(0, totalExtendedCarbs - previousExtendedCarbs);

@@ -70,7 +70,7 @@ void main() {
       expect(proportions.fatGrams, closeTo(0.6, 0.001));
       expect(find.text('153 kcal'), findsOneWidget);
       expect(find.text('Łączna pewność'), findsOneWidget);
-      expect(find.text('Średnia (38%)'), findsOneWidget);
+      expect(find.text('Średnia (61%)'), findsOneWidget);
       expect(find.byType(ConfidenceSlider), findsNothing);
       expect(tester.takeException(), isNull);
     },
@@ -108,7 +108,7 @@ void main() {
       expect(find.text('540 kcal'), findsOneWidget);
       expect(find.textContaining('100 g'), findsNothing);
       expect(find.text('150 g'), findsNothing);
-      expect(find.text('Średnia (38%)'), findsOneWidget);
+      expect(find.text('Średnia (61%)'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

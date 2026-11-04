@@ -18,6 +18,11 @@ CREATE TABLE meal_ingredients (
   amount REAL NOT NULL DEFAULT 0,
   quantity_confidence REAL NOT NULL CHECK (quantity_confidence >= 0 AND quantity_confidence <= 1),
 
+  nutrition_confidence_override REAL CHECK (
+    nutrition_confidence_override IS NULL OR
+    (nutrition_confidence_override >= 0 AND nutrition_confidence_override <= 1)
+  ),
+
   entry_type TEXT NOT NULL DEFAULT 'planned' CHECK (entry_type IN ('planned', 'extra')),
   consumed_amount REAL,
   consumed_confidence REAL CHECK (consumed_confidence >= 0 AND consumed_confidence <= 1),
@@ -49,7 +54,9 @@ FOR EACH ROW
 WHEN NEW.updated_at = OLD.updated_at AND (
   NEW.meal_id IS NOT OLD.meal_id OR NEW.ingredient_id IS NOT OLD.ingredient_id OR
   NEW.portion_id IS NOT OLD.portion_id OR NEW.amount IS NOT OLD.amount OR
-  NEW.quantity_confidence IS NOT OLD.quantity_confidence OR NEW.entry_type IS NOT OLD.entry_type OR
+  NEW.quantity_confidence IS NOT OLD.quantity_confidence OR
+  NEW.nutrition_confidence_override IS NOT OLD.nutrition_confidence_override OR
+  NEW.entry_type IS NOT OLD.entry_type OR
   NEW.consumed_amount IS NOT OLD.consumed_amount OR NEW.consumed_confidence IS NOT OLD.consumed_confidence OR
   NEW.is_synced IS NOT OLD.is_synced OR NEW.created_at IS NOT OLD.created_at OR
   NEW.prep_method IS NOT OLD.prep_method OR NEW.notes IS NOT OLD.notes OR

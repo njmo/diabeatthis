@@ -40,7 +40,9 @@ class MealSnapshotController with Logging {
 
     for (final mealIngredient in mealIngredients) {
       final itemQuantityConfidence = mealIngredient.quantityConfidence;
-      final nutritionConfidence = mealIngredient.ingredient.nutritionConfidence;
+      final nutritionConfidence =
+          mealIngredient.nutritionConfidenceOverride ??
+          mealIngredient.ingredient.nutritionConfidence;
       final effectiveConfidence = combineIngredientConfidence(
         nutritionConfidence: nutritionConfidence,
         quantityConfidence: itemQuantityConfidence,
@@ -147,7 +149,9 @@ class MealSnapshotController with Logging {
           ? consumedConfidence
           : mealIngredient.quantityConfidence * consumedConfidence;
       consumedIngredientsCount++;
-      final nutritionConfidence = mealIngredient.ingredient.nutritionConfidence;
+      final nutritionConfidence =
+          mealIngredient.nutritionConfidenceOverride ??
+          mealIngredient.ingredient.nutritionConfidence;
       final effectiveConfidence = combineIngredientConfidence(
         nutritionConfidence: nutritionConfidence,
         quantityConfidence: itemQuantityConfidence,

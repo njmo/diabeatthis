@@ -3565,6 +3565,24 @@
   "ingredientOriginCloud": "Pobrano z chmury",
   "ingredientOriginLocal": "Utworzono lokalnie",
   "ingredientOriginCloudCopy": "Edytowalna kopia z chmury",
+  "mealWeightedConfidenceTitle": "Pewność całego posiłku",
+  "mealWeightedConfidenceExplanation": "Dla każdego składnika łączymy pewność danych i ilości średnią geometryczną. Pewność posiłku to średnia tych wyników ważona masą składników zapisaną w posiłku.",
+  "mealWeightedConfidenceUnavailable": "Brak pełnych danych do obliczenia pewności posiłku.",
+  "mealIngredientConfidenceSummary": "Dane składnika: {nutrition} · Ilość: {quantity} · Łącznie: {combined}",
+  "confidenceNotAvailable": "Brak oceny",
+  "@mealIngredientConfidenceSummary": {
+    "placeholders": {
+      "nutrition": {
+        "type": "String"
+      },
+      "quantity": {
+        "type": "String"
+      },
+      "combined": {
+        "type": "String"
+      }
+    }
+  },
   "catalogOtherResults": "Pozostałe wyniki",
   "catalogSelectedProduct": "Wybrany"
 }

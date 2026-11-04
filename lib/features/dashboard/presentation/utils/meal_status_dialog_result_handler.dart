@@ -5,6 +5,7 @@ import '../../../../common/meal/meal_add_on_bolus_context.dart';
 import '../../../../common/meal/meal_extended_carbs.dart';
 import '../../../../common/meal/open_meal_add_on_editor.dart';
 import '../../../../common/meal/open_meal_completion.dart';
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../common/platform/aaps_suggestion_prompt.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/meal_status_flow.dart';
@@ -126,7 +127,7 @@ Future<AapsBolusSuggestionNotificationEvent?> _aapsSuggestionNotificationEvent(
       consumedExtendedCarbs = pending.requestedExtendedCarbs;
     } else if (persisted?.consumptionConfirmedEndedAt != null) {
       final totals = await db.ingredientDao.totalsForMealConsumed(meal.id);
-      consumedCarbs = (totals?.netCarbsGrams ?? 0).ceil();
+      consumedCarbs = (totals?.netCarbsGrams ?? 0).ceilMacro();
       consumedExtendedCarbs = mealExtendedCarbsFromMacros(totals);
     }
   }
@@ -180,14 +181,14 @@ Future<int> _carbsForAaps(WidgetRef ref, Meal meal, String status) async {
     final consumedSummary = await db.ingredientDao.totalsForMealConsumed(
       meal.id,
     );
-    final consumedCarbs = (consumedSummary?.netCarbsGrams ?? 0).ceil();
+    final consumedCarbs = (consumedSummary?.netCarbsGrams ?? 0).ceilMacro();
     if (consumedCarbs > 0) {
       return consumedCarbs;
     }
   }
 
   final summary = await db.ingredientDao.totalsForMeal(meal.id);
-  return (summary?.netCarbsGrams ?? 0).ceil();
+  return (summary?.netCarbsGrams ?? 0).ceilMacro();
 }
 
 Future<void> handleMealAddOnChoice({

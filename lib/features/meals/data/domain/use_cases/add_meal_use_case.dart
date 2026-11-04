@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../common/l10n/language.dart';
 import '../../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../../core/domain/model/meal.dart';
+import '../../../../../core/drift/database_impl.dart'
+    show MealIngredientsCompanion;
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/logger/logger.dart';
 import '../../../../ingredients/data/drafts/ingredient_draft.dart';
@@ -28,7 +31,7 @@ class AddMealUseCase with Logging {
 
   const AddMealUseCase({required this.ref});
 
-  Future<Meal> call(MealDraft draft) async {
+  Future<Meal> call(MealDraft draft, {bool suggestMissingIcons = true}) async {
     await _validateMealDraft(draft);
 
     final db = ref.read(databaseProvider);
@@ -81,22 +84,29 @@ class AddMealUseCase with Logging {
           );
         }
 
-        await db.insertMealIngredient(
-          meal.id,
-          ingredient.id,
-          portion?.id,
-          mealIngredient.amount,
-          null,
-          mealIngredient.quantityConfidence,
-          null,
-        );
+        await db
+            .into(db.mealIngredients)
+            .insert(
+              MealIngredientsCompanion.insert(
+                mealId: meal.id,
+                ingredientId: ingredient.id,
+                portionId: Value(portion?.id),
+                amount: Value(mealIngredient.amount),
+                quantityConfidence: mealIngredient.quantityConfidence,
+                nutritionConfidenceOverride: Value(
+                  mealIngredient.nutritionConfidenceOverride,
+                ),
+              ),
+            );
         logI('Added meal ingredient');
       }
 
       return meal;
     });
     for (final ingredient in savedIngredients.values) {
-      if (ingredient.iconAssetPath == null && ref.mounted) {
+      if (suggestMissingIcons &&
+          ingredient.iconAssetPath == null &&
+          ref.mounted) {
         try {
           final currentIcons = ref.read(ingredientIconServiceProvider);
           unawaited(
@@ -123,6 +133,13 @@ class AddMealUseCase with Logging {
 
     for (final mealIngredient in draft.mealIngredients) {
       mealIngredient.ingredient.validateMacroRanges();
+      final confidence = mealIngredient.nutritionConfidenceOverride;
+      if (confidence != null &&
+          (!confidence.isFinite || confidence < 0 || confidence > 1)) {
+        throw ArgumentError(
+          'Meal nutrition confidence must be between zero and one',
+        );
+      }
       if (!mealIngredient.ingredient.hasEnergyMacros) {
         throw ArgumentError(lang.ingredientEnergyMacrosRequired);
       }

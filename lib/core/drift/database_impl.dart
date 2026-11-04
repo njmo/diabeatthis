@@ -21,6 +21,7 @@ import 'migrations/migrate_ingredient_origin.dart';
 import 'migrations/migrate_meal_add_on_bolus_context.dart';
 import 'migrations/migrate_meal_completion_decision.dart';
 import 'migrations/migrate_meal_consumption_confirmation.dart';
+import 'migrations/migrate_meal_nutrition_confidence.dart';
 import 'migrations/migrate_optional_activity_duration.dart';
 import 'migrations/migrate_stress_events.dart';
 import 'migrations/migrate_temp_target_operations.dart';
@@ -73,7 +74,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 46;
+  int get schemaVersion => 47;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -346,6 +347,9 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       }
       if (from < 46) {
         await migrateIngredientOrigin(this);
+      }
+      if (from < 47) {
+        await migrateMealNutritionConfidence(this);
       }
     },
     beforeOpen: (details) async {

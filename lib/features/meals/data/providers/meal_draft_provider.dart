@@ -69,6 +69,9 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
 
   void setIngredient(IngredientDraft ingredient) => state = state.copyWith(
     ingredient: ingredient,
+    nutritionConfidenceOverride: state.ingredient == ingredient
+        ? state.nutritionConfidenceOverride
+        : null,
     recordedGramsPerAmount: null,
   );
   void setIngredientPortion(PortionSelection portion) => state = state.copyWith(

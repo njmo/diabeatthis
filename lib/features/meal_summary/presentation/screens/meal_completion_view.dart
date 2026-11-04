@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_completion_timing.dart';
 import '../../../../common/meal/meal_display_name.dart';
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../common/widgets/date_time_boundary_builder.dart';
 import '../../../../common/widgets/meal_completion/meal_completion_choice_sheet.dart';
 import '../../../../common/widgets/meal_completion/meal_completion_save_button.dart';
@@ -414,7 +415,7 @@ class MealCompletionViewState extends ConsumerState<MealCompletionView> {
     final action = await showDialog<MealShortfallAction>(
       context: context,
       builder: (_) => MealShortfallReviewDialog(
-        actualCarbs: calculateMealSummaryConsumedCarbs(draft).ceil(),
+        actualCarbs: calculateMealSummaryConsumedCarbs(draft).ceilMacro(),
         missingCarbs: mealCompletionShortfallCarbs(
           draft,
           coveredNetCarbs: details.coveredNetCarbs,

@@ -113,16 +113,21 @@ class MealDetailsDataMapper {
     final consumedReference = consumedSnapshot == null
         ? date(mealIngredient.createdAt)
         : date(consumedSnapshot.calculatedAt ?? consumedSnapshot.createdAt);
-    final currentNutrition = nutritionMapper.current(ingredient);
+    final currentNutrition = nutritionMapper.current(
+      ingredient,
+      confidenceOverride: mealIngredient.nutritionConfidenceOverride,
+    );
     final plannedVersion = nutritionMapper.at(
       ingredient: ingredient,
       history: history,
       reference: plannedReference,
+      confidenceOverride: mealIngredient.nutritionConfidenceOverride,
     );
     final consumedVersion = nutritionMapper.at(
       ingredient: ingredient,
       history: history,
       reference: consumedReference,
+      confidenceOverride: mealIngredient.nutritionConfidenceOverride,
     );
     return MealIngredientDetailsData(
       mealIngredientId: mealIngredient.id,

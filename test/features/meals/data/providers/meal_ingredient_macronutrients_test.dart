@@ -38,6 +38,7 @@ void main() {
           fiberTotal: 5,
           proteinTotal: 14,
           netCarbsTotal: 54,
+          extendedCarbsFromRawTotals: 30,
         ),
       );
     },

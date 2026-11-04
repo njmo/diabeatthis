@@ -12,6 +12,7 @@ import '../../../../common/meal/meal_completion_timing.dart';
 import '../../../../common/meal/meal_extended_carbs.dart';
 import '../../../../common/notifications/meal_completion_notification_cleanup.dart';
 import '../../../../common/notifications/meal_notification_cancellation.dart';
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
@@ -122,8 +123,14 @@ class FinalizeMealSummaryUseCase with Logging {
         await snapshotController.saveConsumedSnapshot(draft.mealId);
         final totals = await db.ingredientDao.totalsForMealConsumed(meal.id);
         final remainingCarbs = math
-            .max(0, (totals?.netCarbsGrams ?? 0) - coverage!.carbs)
-            .ceil();
+            .max(
+              0,
+              stableMacroDifference(
+                totals?.netCarbsGrams ?? 0,
+                coverage!.carbs,
+              ),
+            )
+            .ceilMacro();
         requiresBolus = mealCompletionRequiresDelivery(
           remainingCarbs: remainingCarbs,
           hasRecordedBolus: coverage.hasRecordedBolus,

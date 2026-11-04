@@ -1,3 +1,4 @@
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import 'extended_carbs_schedule_settings.dart';
 
 class WbtExtendedCarbsSuggestion {
@@ -48,9 +49,11 @@ class WbtExtendedCarbsCalculator {
   }
 
   WbtExtendedCarbsSuggestion calculateFromKcal(double kcal) {
-    final normalizedKcal = kcal < 0 ? 0.0 : kcal;
+    final normalizedKcal = stableMacroValue(kcal < 0 ? 0.0 : kcal);
     final wbt = normalizedKcal / kcalPerWbt;
-    final grams = wbt > minSuggestedWbt ? (wbt * carbsGramsPerWbt).ceil() : 0;
+    final grams = wbt > minSuggestedWbt
+        ? (wbt * carbsGramsPerWbt).ceilMacro()
+        : 0;
 
     return WbtExtendedCarbsSuggestion(
       kcal: normalizedKcal,

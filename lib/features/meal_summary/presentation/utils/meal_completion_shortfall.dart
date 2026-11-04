@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../models/meal_summary_draft.dart';
 import 'meal_completion_aaps_carbs.dart';
 import 'meal_summary_aaps_suggestion.dart';
@@ -30,8 +31,10 @@ double mealCompletionShortfallCarbs(
       ? -calculateMealSummaryCarbsDelta(draft).total
       // AAPS receives whole grams rounded up. A fully eaten 49.1 g meal
       // therefore matches its confirmed 50 g request without a shortfall.
-      : coveredNetCarbs -
-            calculateMealSummaryConsumedCarbs(draft).ceilToDouble(),
+      : stableMacroDifference(
+          coveredNetCarbs,
+          calculateMealSummaryConsumedCarbs(draft).ceilMacro(),
+        ),
 );
 
 /// Automatic suggestions never include a negative carbohydrate correction.

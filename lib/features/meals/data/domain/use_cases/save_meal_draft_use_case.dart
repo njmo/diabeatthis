@@ -18,6 +18,7 @@ class SaveMealDraftUseCase {
     required bool automaticName,
     required AppLocalizations language,
     RetrospectiveMealTiming? retrospective,
+    bool suggestMissingIcons = true,
   }) async {
     if (draft.category == null) {
       throw ArgumentError(language.mealCategoryRequired);
@@ -32,7 +33,9 @@ class SaveMealDraftUseCase {
       );
     }
     return retrospective == null
-        ? ref.read(addMealUseCaseProvider).call(prepared)
+        ? ref
+              .read(addMealUseCaseProvider)
+              .call(prepared, suggestMissingIcons: suggestMissingIcons)
         : LogRetrospectiveMealUseCase(ref).call(prepared, retrospective);
   }
 }

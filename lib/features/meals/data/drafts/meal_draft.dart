@@ -16,6 +16,7 @@ abstract class MealIngredientsDraft with _$MealIngredientsDraft {
     required IngredientPortionDraft ingredientPortion,
     required double amount,
     required double quantityConfidence,
+    double? nutritionConfidenceOverride,
     required String entryType,
     required double? consumedAmount,
     required double? consumedConfidence,

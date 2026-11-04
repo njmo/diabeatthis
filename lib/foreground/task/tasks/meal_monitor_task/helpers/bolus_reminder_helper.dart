@@ -3,6 +3,7 @@ import 'dart:async';
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../../common/meal/meal_extended_carbs.dart';
 import '../../../../../common/notifications/meal_notification_cancellation.dart';
+import '../../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/domain/model/meal_macro_summary.dart';
@@ -56,7 +57,7 @@ class BolusReminderHelper with Logging {
         ? await runtimeContext.container.refresh(consumedProvider.future)
         : null;
     final carbs = resolveConsumed
-        ? _netCarbs(consumedMacros).ceil()
+        ? _netCarbs(consumedMacros).ceilMacro()
         : consumed && meal.carbs != null
         ? meal.carbs!
         : await resolveMealNetCarbs(runtimeContext, meal);
@@ -98,7 +99,7 @@ class BolusReminderHelper with Logging {
     // In-memory callers may already supply an explicitly accepted amount.
     // Persisted meals omit it and resolve their latest consumed rows below.
     if (mealCarbs != null && mealCarbs > 0) {
-      return mealCarbs.ceil();
+      return mealCarbs.ceilMacro();
     }
 
     final summary = consumed
@@ -108,7 +109,7 @@ class BolusReminderHelper with Logging {
         : await runtimeContext.container.read(
             mealMacronutrientsSummaryProvider(meal.id).future,
           );
-    return _netCarbs(summary).ceil();
+    return _netCarbs(summary).ceilMacro();
   }
 
   Future<int> resolveAddOnNetCarbs(
@@ -121,12 +122,14 @@ class BolusReminderHelper with Logging {
     final consumedSummary = await runtimeContext.container.read(
       mealMacronutrientsConsumedSummaryProvider(mealId).future,
     );
-    final addOnNetCarbs =
-        _netCarbs(consumedSummary) - _netCarbs(plannedSummary);
+    final addOnNetCarbs = stableMacroDifference(
+      _netCarbs(consumedSummary),
+      _netCarbs(plannedSummary),
+    );
     if (addOnNetCarbs <= 0) {
       return 0;
     }
-    return addOnNetCarbs.ceil();
+    return addOnNetCarbs.ceilMacro();
   }
 
   Future<bool> remindUntilBolusRecorded(

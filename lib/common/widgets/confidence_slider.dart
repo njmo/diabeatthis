@@ -4,11 +4,13 @@ import '../l10n/language.dart';
 import '../nutrition/confidence_level.dart';
 
 extension ConfidenceLevelLabelX on ConfidenceLevel {
-  String get label => switch (this) {
-    ConfidenceLevel.low => lang.confidenceLow,
-    ConfidenceLevel.medium => lang.confidenceMedium,
-    ConfidenceLevel.high => lang.confidenceHigh,
-    ConfidenceLevel.certain => lang.confidenceCertain,
+  String get label => labelFor(lang);
+
+  String labelFor(AppLocalizations localizations) => switch (this) {
+    ConfidenceLevel.low => localizations.confidenceLow,
+    ConfidenceLevel.medium => localizations.confidenceMedium,
+    ConfidenceLevel.high => localizations.confidenceHigh,
+    ConfidenceLevel.certain => localizations.confidenceCertain,
   };
 }
 

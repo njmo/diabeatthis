@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
@@ -48,6 +49,8 @@ Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMeal(
           ),
           amount: mealIngredient.amount,
           quantityConfidence: mealIngredient.quantityConfidence,
+          nutritionConfidenceOverride:
+              mealIngredient.nutritionConfidenceOverride,
           entryType: mealIngredient.entryType,
           consumedAmount: mealIngredient.consumedAmount,
           consumedConfidence: mealIngredient.consumedConfidence,
@@ -88,6 +91,7 @@ Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMeal(
         ingredientPortion: ingredientPortion,
         amount: mealIngredient.amount,
         quantityConfidence: mealIngredient.quantityConfidence,
+        nutritionConfidenceOverride: mealIngredient.nutritionConfidenceOverride,
         entryType: mealIngredient.entryType,
         consumedAmount: mealIngredient.consumedAmount,
         consumedConfidence: mealIngredient.consumedConfidence,
@@ -122,17 +126,19 @@ abstract class Macronutrients with _$Macronutrients {
     required int fiberTotal,
     required int proteinTotal,
     required int netCarbsTotal,
+    int? extendedCarbsFromRawTotals,
   }) = _Macronutrients;
 }
 
 extension MacronutrientsExtendedCarbs on Macronutrients {
   int get extendedCarbsTotal {
-    return const WbtExtendedCarbsCalculator()
-        .calculateFromMacros(
-          fatGrams: fatTotal.toDouble(),
-          proteinGrams: proteinTotal.toDouble(),
-        )
-        .grams;
+    return extendedCarbsFromRawTotals ??
+        const WbtExtendedCarbsCalculator()
+            .calculateFromMacros(
+              fatGrams: fatTotal.toDouble(),
+              proteinGrams: proteinTotal.toDouble(),
+            )
+            .grams;
   }
 }
 
@@ -166,10 +172,13 @@ Future<Macronutrients> calculateMealIngredientsMacronutrients(
   }
 
   return Macronutrients(
-    carbsTotal: carbsTotal.ceil(),
-    fatTotal: fatTotal.ceil(),
-    fiberTotal: fiberTotal.ceil(),
-    proteinTotal: proteinTotal.ceil(),
-    netCarbsTotal: netCarbsTotal.ceil(),
+    carbsTotal: carbsTotal.ceilMacro(),
+    fatTotal: fatTotal.ceilMacro(),
+    fiberTotal: fiberTotal.ceilMacro(),
+    proteinTotal: proteinTotal.ceilMacro(),
+    netCarbsTotal: netCarbsTotal.ceilMacro(),
+    extendedCarbsFromRawTotals: const WbtExtendedCarbsCalculator()
+        .calculateFromMacros(fatGrams: fatTotal, proteinGrams: proteinTotal)
+        .grams,
   );
 }

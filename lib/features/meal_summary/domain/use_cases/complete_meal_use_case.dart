@@ -13,6 +13,7 @@ import '../../../../common/meal/meal_completion_decision.dart';
 import '../../../../common/meal/meal_completion_timing.dart';
 import '../../../../common/meal/meal_extended_carbs.dart';
 import '../../../../common/notifications/meal_completion_notification_cleanup.dart';
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/drift/database_impl.dart' show MealCompanion;
@@ -161,15 +162,18 @@ class CompleteMealUseCase {
           consumedCarbs: consumedCarbs,
           proposedCorrectionCarbs: math.min(
             0,
-            (consumedCarbs - reportedCarbs).ceil(),
+            (stableMacroDifference(consumedCarbs, reportedCarbs)).ceilMacro(),
           ),
         );
         await (db.update(db.meal)..where((row) => row.id.equals(meal.id)))
             .write(MealCompanion(completionDecision: Value(decision.encode())));
       }
       final remainingCarbs = math
-          .max(0, (totals?.netCarbsGrams ?? 0) - coverage.carbs)
-          .ceil();
+          .max(
+            0,
+            stableMacroDifference(totals?.netCarbsGrams ?? 0, coverage.carbs),
+          )
+          .ceilMacro();
       final totalExtendedCarbs = mealExtendedCarbsFromMacros(totals);
       final extendedCarbsDelta = math.max(
         0,
@@ -234,7 +238,7 @@ class CompleteMealUseCase {
       return MealCompletionResult(
         meal: meal.toDomain(),
         requiresBolus: requiresBolus,
-        consumedCarbs: (totals?.netCarbsGrams ?? 0).ceil(),
+        consumedCarbs: (totals?.netCarbsGrams ?? 0).ceilMacro(),
         consumedExtendedCarbs: totalExtendedCarbs,
         aapsCarbs: MealSummaryAapsCarbs(
           carbs: requiresBolus || coverage.hasRecordedBolus

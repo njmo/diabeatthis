@@ -1,12 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
+import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/meal_ingredients_list_provider.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
@@ -134,10 +136,13 @@ Future<Macronutrients> calculatedTemplateMacronutrients(Ref ref) async {
   }
 
   return Macronutrients(
-    carbsTotal: carbsTotal.ceil(),
-    fatTotal: fatTotal.ceil(),
-    fiberTotal: fiberTotal.ceil(),
-    proteinTotal: proteinTotal.ceil(),
-    netCarbsTotal: netCarbsTotal.ceil(),
+    carbsTotal: carbsTotal.ceilMacro(),
+    fatTotal: fatTotal.ceilMacro(),
+    fiberTotal: fiberTotal.ceilMacro(),
+    proteinTotal: proteinTotal.ceilMacro(),
+    netCarbsTotal: netCarbsTotal.ceilMacro(),
+    extendedCarbsFromRawTotals: const WbtExtendedCarbsCalculator()
+        .calculateFromMacros(fatGrams: fatTotal, proteinGrams: proteinTotal)
+        .grams,
   );
 }

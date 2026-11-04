@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../common/widgets/macronutrient_proportions.dart';
 import '../../../../common/widgets/nutrition_metric_tile.dart';
 import '../../../../common/widgets/responsive_metric_list.dart';
@@ -38,7 +39,9 @@ class MealIngredientReviewNutrition extends StatelessWidget {
               label: lang.mealCarbsLabel,
               accentColor: Colors.blue,
               emphasized: true,
-              value: totalGrams == null ? '–' : '${nutrition.carbs.ceil()} g',
+              value: totalGrams == null
+                  ? '–'
+                  : '${nutrition.carbs.ceilMacro()} g',
             ),
             NutritionMetricTile(
               icon: Icons.schedule_outlined,

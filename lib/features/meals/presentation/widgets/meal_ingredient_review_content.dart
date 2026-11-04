@@ -35,7 +35,9 @@ class MealIngredientReviewContent extends ConsumerWidget {
       gramsPerPortion: gramsPerPortion,
     );
     final combinedConfidence = combineIngredientConfidence(
-      nutritionConfidence: draft.ingredient.nutritionConfidence,
+      nutritionConfidence:
+          draft.nutritionConfidenceOverride ??
+          draft.ingredient.nutritionConfidence,
       quantityConfidence: draft.quantityConfidence,
     );
     final confidenceLevel = ConfidenceLevelX.fromDouble01(combinedConfidence);

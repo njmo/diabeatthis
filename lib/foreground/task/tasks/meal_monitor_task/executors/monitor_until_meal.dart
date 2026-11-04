@@ -3,6 +3,7 @@ import 'package:clock/clock.dart';
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../../common/monitoring/is_temporary_target_active.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
+import '../../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../../core/domain/model/device_status.dart';
 import '../../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
@@ -455,7 +456,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     logI("Meal advice: ${advice.decision.toString()}");
                     nextExecutor = DetectFinishedEatingExecutor(
                       shouldBolus: true,
-                      grams: mealStatus.netCarbsGrams.ceil(),
+                      grams: mealStatus.netCarbsGrams.ceilMacro(),
                     );
                     break;
                   case MealDecision.bolusAndEatNow:
@@ -525,7 +526,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 minutes: mealAdvice.wait?.recommendedMinutes ?? 0,
                 activityDoseSuggestion: mealAdvice.activityDoseSuggestion,
                 decision: mealAdvice.decision!,
-                carbs: mealStatus.netCarbsGrams.ceil(),
+                carbs: mealStatus.netCarbsGrams.ceilMacro(),
                 extendedCarbs:
                     mealAdvice.decision == MealDecision.eatNowBolusLater
                     ? 0

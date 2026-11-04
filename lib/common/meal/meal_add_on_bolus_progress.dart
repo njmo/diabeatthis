@@ -7,6 +7,7 @@ import '../../core/data_sources/local_mirror/mappers/bolus_wizard_drift_mapper.d
 import '../../core/domain/model/bolus_wizard.dart' as domain;
 import '../../core/drift/database_impl.dart';
 import '../../core/drift/helpers/validate_wizard_identity.dart';
+import '../nutrition/stable_macro_ceil.dart';
 import 'meal_add_on_bolus_context.dart';
 import 'meal_bolus_coverage.dart';
 import 'meal_calculator_submission.dart';
@@ -91,8 +92,8 @@ Future<MealAddOnBolusContext?> acceptMealAddOnBolus(
   final coveredCarbs = coverage.carbs + canonical.carbs;
   final totals = await db.ingredientDao.totalsForMealConsumed(mealId);
   final requestedCarbs = math
-      .max(0, (totals?.netCarbsGrams ?? 0) - coveredCarbs)
-      .ceil();
+      .max(0, stableMacroDifference(totals?.netCarbsGrams ?? 0, coveredCarbs))
+      .ceilMacro();
   final updated = current.copyWith(
     coveredCarbs: coveredCarbs,
     requestedCarbs: requestedCarbs,
@@ -142,8 +143,11 @@ Future<MealAddOnBolusContext?> reconcileMealAddOnBolusProgress(
       final coverage = await readMealBolusCoverage(db, mealId);
       final totals = await db.ingredientDao.totalsForMealConsumed(mealId);
       final remaining = math
-          .max(0, (totals?.netCarbsGrams ?? 0) - coverage.carbs)
-          .ceil();
+          .max(
+            0,
+            stableMacroDifference(totals?.netCarbsGrams ?? 0, coverage.carbs),
+          )
+          .ceilMacro();
       context = MealAddOnBolusContext(
         originalStatus: meal.status,
         eatingStartedAt: start,
@@ -192,8 +196,8 @@ Future<MealAddOnBolusContext?> reconcileMealAddOnBolusProgress(
   final coverage = await readMealBolusCoverage(db, mealId, context: pending);
   final totals = await db.ingredientDao.totalsForMealConsumed(mealId);
   final remaining = math
-      .max(0, (totals?.netCarbsGrams ?? 0) - coverage.carbs)
-      .ceil();
+      .max(0, stableMacroDifference(totals?.netCarbsGrams ?? 0, coverage.carbs))
+      .ceilMacro();
   final updated = pending.copyWith(
     coveredCarbs: coverage.carbs,
     requestedCarbs: remaining,
