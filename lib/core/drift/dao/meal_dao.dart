@@ -309,6 +309,40 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     });
   }
 
+  /// Uses the same recorded eating time and legacy fallback as MealDetailsData.
+  Future<List<MealData>> getCompletedMealsByRecordedTime(
+    DateTime start,
+    DateTime end,
+  ) {
+    final startedStatuses = mealStatusesStartingEating
+        .map((status) => "'$status'")
+        .join(',');
+    final time = CustomExpression<int>(
+      'COALESCE((SELECT MIN(created_at) FROM meal_status_history '
+      'WHERE meal_id = meal.id AND status IN ($startedStatuses)), '
+      'meal.summarized_at, meal.planned_at)',
+    );
+    return (select(db.meal)
+          ..where(
+            (meal) =>
+                meal.purpose.equals('meal') &
+                meal.status.isIn([
+                  'eaten',
+                  'eaten-extra',
+                  'eaten-bolused',
+                  'summarized',
+                ]),
+          )
+          ..where(
+            (_) => time.isBetweenValues(
+              start.millisecondsSinceEpoch,
+              end.millisecondsSinceEpoch,
+            ),
+          )
+          ..orderBy([(_) => OrderingTerm.asc(time)]))
+        .get();
+  }
+
   Future<List<MealData>> getMealsBetween(
     DateTime start,
     DateTime end, {

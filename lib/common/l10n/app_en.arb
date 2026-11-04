@@ -3265,6 +3265,74 @@
   "mealPhotoNewIngredient": "New",
   "mealPhotoNewIngredientHint": "Saving will create a new ingredient record in the database.",
   "mealMacroCarbsTotal": "carbs",
+  "activityTabSummary": "Summary",
+  "activityTabBefore": "Before activity",
+  "activityTabCourse": "Timeline",
+  "activityTabAfter": "After activity",
+  "activityEndGlucose": "Glucose at finish",
+  "activityGlucoseDelta": "Change during activity",
+  "activityTrainingChart": "Glucose during activity",
+  "activityCorrectionsDuring": "Corrections during activity",
+  "activityCorrectionsAfter": "Corrections after activity",
+  "activityCorrectionHint": "Count and sum of recorded corrections. This source does not distinguish manual and automatic deliveries here.",
+  "activityLastMeal": "Last recorded meal",
+  "activityNoMealWindow": "No recorded eaten meal in the previous 3 hours.",
+  "activityBeforeOffset": "{minutes} min before start",
+  "@activityBeforeOffset": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "activityTargetAtStart": "140 mg/dl target at start",
+  "activityTargetBefore": "140 mg/dl target before start",
+  "activityTargetPresent": "Recorded",
+  "activityTargetAbsent": "Not found in fetched records",
+  "activityTargetHint": "Recorded 140 mg/dl targets are checked in the 30 min before start. The value alone does not confirm activity mode. A missing record does not confirm there was no target.",
+  "activityRecordedSettings": "Recorded settings",
+  "activitySettingsHint": "Settings saved with the activity; they do not confirm the dose actually delivered.",
+  "activityPostWindow": "Observation up to 3 hours after finish. Statistics use available readings; later events can also affect glucose.",
+  "activityFirstRise": "First sustained rise after activity",
+  "activityRiseAfter": "{minutes} min after finish",
+  "@activityRiseAfter": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "activityNoRise": "Not detected in the available window",
+  "activityMissingData": "No data",
+  "activityRiseMethod": "Rise uses the same method as meals: at least 10 min of sustained increase, averaging ≥1.5 mg/dl/min, without gaps over 6 min. This describes readings and does not establish an activity effect.",
+  "activityReadingTime": "Reading at {time}",
+  "@activityReadingTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activitySummaryCoverage": "Reading coverage during activity: {percent}%",
+  "@activitySummaryCoverage": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "activityAfterAverage": "Average after activity",
+  "activityRecordedTreats": "Recorded extra carbs",
+  "activityPreviousSessions": "Previous activities of this type",
+  "activityDuringEvents": "Events during activity",
+  "activityAfterEvents": "Events after activity",
+  "activityNoEvents": "No recorded events in this period.",
+  "activityStaleStatus": "No current IOB/COB reading (within 15 min before start).",
+  "activityRecordedTargets": "Recorded temporary targets",
+  "activityOpenMeal": "View meal",
+  "activityRecordedCorrections": "Recorded corrections",
+  "activityFirstLow": "First reading below 70 mg/dl",
+  "activityNoLowRecorded": "Not found in available readings",
   "mealCompletionUnavailableTitle": "Meal cannot be completed right now",
   "mealCompletionMissingConversion": "This meal is missing a recorded portion-to-grams conversion. You can accept the current conversion or enter the portion weight used for this meal. Completion stays blocked until confirmation. You can also view its saved data.",
   "mealCompletionViewRecordedMeal": "View saved meal",
@@ -3284,5 +3352,86 @@
   "mealConversionGramsPerPortion": "Grams per portion",
   "mealConversionInvalidWeight": "Enter a weight greater than zero.",
   "mealConversionConfirm": "Confirm conversion",
-  "mealConversionSaveFailed": "Could not save conversions. The data may have changed. Close this panel and try again."
+  "mealConversionSaveFailed": "Could not save conversions. The data may have changed. Close this panel and try again.",
+  "activityCollectedReadings": "Collected readings: {count}",
+  "@activityCollectedReadings": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "activityMeasurementCoverage": "Activity time covered by readings: {percent}%",
+  "@activityMeasurementCoverage": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "activityRecordedTreatCount": "Recorded events: {count}",
+  "@activityRecordedTreatCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "activityEndReadingUnavailable": "No recent reading at finish. Last during activity: {value} mg/dl at {time}.",
+  "@activityEndReadingUnavailable": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activityObservationWindow": "Post-activity observation",
+  "activityAfterMeals": "Food after activity",
+  "activityMealAfterOffset": "{minutes} min after activity",
+  "@activityMealAfterOffset": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "activityRecordedCarbEntries": "Recorded carbohydrates (source entries)",
+  "activityNoAfterMealRecords": "No recorded meals or carbohydrates in this window.",
+  "activityPostEndReadingTime": "Post-activity reading at {time}",
+  "@activityPostEndReadingTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activityPostEndReadingExplanation": "The activity ended at {end}. There is no reading at the exact finish time. The actual reading at {time}, taken {delay} after activity (up to 10 min), is shown as the closest available finish context. It is not an estimate at the finish time. The chart extends to this reading; mean, range and coverage still use only the activity window.",
+  "@activityPostEndReadingExplanation": {
+    "placeholders": {
+      "end": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "delay": {
+        "type": "String"
+      }
+    }
+  },
+  "activityDeltaToPostReading": "Change to post-activity reading",
+  "activityPostEndChartArea": "Post-activity reading",
+  "activityExtendedChartExplanation": "Dashed line: activity finish at {time}. The shaded section shows the time after activity up to the displayed reading.",
+  "@activityExtendedChartExplanation": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activityIntensityNotRecorded": "Not recorded",
+  "activityHistoryShort": "History"
 }

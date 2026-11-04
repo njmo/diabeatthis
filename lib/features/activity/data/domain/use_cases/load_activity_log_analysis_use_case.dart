@@ -4,6 +4,10 @@ import '../../../../../core/data_sources/providers/source_repository_providers.d
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/domain/model/stress_event_treatment.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
+import '../../../../../core/drift/database_impl.dart' show MealData;
+import '../../../../../core/drift/providers/database_provider.dart';
+import '../../../../meals/data/domain/use_cases/load_meal_details_use_case.dart';
+import '../../../../meals/data/models/meal_details_data.dart';
 import '../../models/activity_log_analysis_data.dart';
 import '../../models/activity_log_details_data.dart';
 
@@ -19,16 +23,21 @@ class LoadActivityLogAnalysisUseCase {
 
   const LoadActivityLogAnalysisUseCase({required this.ref});
 
-  Future<ActivityLogAnalysisData?> call(ActivityLogDetailsData log) async {
+  Future<ActivityLogAnalysisData?> call(
+    ActivityLogDetailsData log, {
+    bool includeContext = false,
+  }) async {
     final activityEnd = log.endedAt;
     if (activityEnd == null) {
       return null;
     }
 
     final chartStart = log.startedAt.subtract(const Duration(minutes: 30));
-    final chartEnd = activityEnd.add(const Duration(minutes: 30));
+    final chartEnd = activityEnd.add(
+      includeContext ? const Duration(hours: 3) : const Duration(minutes: 30),
+    );
     final treatmentFetchStart = chartStart.subtract(const Duration(hours: 4));
-    final preMealStart = log.startedAt.subtract(const Duration(hours: 1));
+    final preMealStart = log.startedAt.subtract(const Duration(hours: 3));
 
     final glucoseRepository = await ref.read(
       glucoseHistoryRepositoryProvider.future,
@@ -82,6 +91,45 @@ class LoadActivityLogAnalysisUseCase {
       return _isBetween(createdAt, preMealStart, log.startedAt);
     }).toList();
 
+    final previousMeals = !includeContext
+        ? <MealData>[]
+        : await ref
+              .read(databaseProvider)
+              .mealDao
+              .getCompletedMealsByRecordedTime(preMealStart, log.startedAt);
+    final latestMeal = previousMeals.lastOrNull;
+    final lastMeal = latestMeal == null
+        ? null
+        : await ref.read(loadMealDetailsUseCaseProvider).call(latestMeal.id);
+
+    final postActivityMeals = <MealDetailsData>[];
+    if (includeContext) {
+      final meals = await ref
+          .read(databaseProvider)
+          .mealDao
+          .getCompletedMealsByRecordedTime(activityEnd, chartEnd);
+      for (final meal in meals) {
+        if (!const {
+          'eaten',
+          'eaten-extra',
+          'eaten-bolused',
+          'summarized',
+        }.contains(meal.status)) {
+          continue;
+        }
+        final details = await ref
+            .read(loadMealDetailsUseCaseProvider)
+            .call(meal.id);
+        if (details.analysisTime.isAfter(activityEnd) &&
+            !details.analysisTime.isAfter(chartEnd)) {
+          postActivityMeals.add(details);
+        }
+      }
+      postActivityMeals.sort(
+        (a, b) => a.analysisTime.compareTo(b.analysisTime),
+      );
+    }
+
     return ActivityLogAnalysisData(
       chartStart: chartStart,
       chartEnd: chartEnd,
@@ -93,6 +141,8 @@ class LoadActivityLogAnalysisUseCase {
       activityTargets: activityTargets,
       preActivityMeals: preActivityMeals,
       deviceStatusAtStart: deviceStatusAtStart,
+      lastMeal: lastMeal,
+      postActivityMeals: postActivityMeals,
     );
   }
 

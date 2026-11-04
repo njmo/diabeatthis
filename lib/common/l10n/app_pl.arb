@@ -3722,6 +3722,74 @@
   "mealPhotoNewIngredient": "Nowy",
   "mealPhotoNewIngredientHint": "Przy zapisie powstanie nowy wpis składnika w bazie.",
   "mealMacroCarbsTotal": "carbs",
+  "activityTabSummary": "Podsumowanie",
+  "activityTabBefore": "Przed aktywnością",
+  "activityTabCourse": "Przebieg",
+  "activityTabAfter": "Po aktywności",
+  "activityEndGlucose": "Cukier na końcu",
+  "activityGlucoseDelta": "Zmiana podczas treningu",
+  "activityTrainingChart": "Glikemia podczas treningu",
+  "activityCorrectionsDuring": "Korekty w trakcie",
+  "activityCorrectionsAfter": "Korekty po treningu",
+  "activityCorrectionHint": "Liczba i suma zapisanych korekt. Źródło nie rozróżnia tu podań ręcznych i automatycznych.",
+  "activityLastMeal": "Ostatni zapisany posiłek",
+  "activityNoMealWindow": "Brak zapisanego zjedzonego posiłku w ostatnich 3 godzinach.",
+  "activityBeforeOffset": "{minutes} min przed startem",
+  "@activityBeforeOffset": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "activityTargetAtStart": "Cel 140 mg/dl na starcie",
+  "activityTargetBefore": "Cel 140 mg/dl przed startem",
+  "activityTargetPresent": "Zapisany",
+  "activityTargetAbsent": "Brak w pobranych zapisach",
+  "activityTargetHint": "Sprawdzamy zapisane cele 140 mg/dl w oknie 30 min przed startem. Sama wartość celu nie potwierdza trybu aktywności. Brak zapisu nie potwierdza braku celu.",
+  "activityRecordedSettings": "Zapisane ustawienia",
+  "activitySettingsHint": "Ustawienia zapisane przy aktywności; nie potwierdzają faktycznie podanej dawki.",
+  "activityPostWindow": "Obserwacja do 3 godzin po zakończeniu. Statystyki dotyczą dostępnych pomiarów; późniejsze zdarzenia też mogą wpływać na glikemię.",
+  "activityFirstRise": "Pierwszy utrzymany wzrost glikemii",
+  "activityRiseAfter": "{minutes} min po zakończeniu",
+  "@activityRiseAfter": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "activityNoRise": "Nie wykryto wzrostu spełniającego kryteria",
+  "activityMissingData": "Brak danych",
+  "activityRiseMethod": "Wzrost wyznaczamy jak w posiłku: co najmniej 10 min utrzymanego wzrostu, średnio ≥1,5 mg/dl/min, bez luk ponad 6 min. To opis pomiarów, nie potwierdzenie wpływu treningu.",
+  "activityReadingTime": "Pomiar o {time}",
+  "@activityReadingTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activitySummaryCoverage": "Dostępność pomiarów w trakcie: {percent}%",
+  "@activitySummaryCoverage": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "activityAfterAverage": "Średnia po treningu",
+  "activityRecordedTreats": "Zapisane dostodzenia",
+  "activityPreviousSessions": "Poprzednie aktywności tego typu",
+  "activityDuringEvents": "Zdarzenia podczas treningu",
+  "activityAfterEvents": "Zdarzenia po treningu",
+  "activityNoEvents": "Brak zapisanych zdarzeń w tym okresie.",
+  "activityStaleStatus": "Brak aktualnego odczytu IOB/COB (maks. 15 min przed startem).",
+  "activityRecordedTargets": "Zapisane cele tymczasowe",
+  "activityOpenMeal": "Zobacz posiłek",
+  "activityRecordedCorrections": "Zapisane korekty",
+  "activityFirstLow": "Pierwszy pomiar poniżej 70 mg/dl",
+  "activityNoLowRecorded": "Nie znaleziono w dostępnych pomiarach",
   "mealCompletionUnavailableTitle": "Nie można teraz podsumować posiłku",
   "mealCompletionMissingConversion": "W tym posiłku brakuje zapisanego przelicznika porcji na gramy. Możesz zaakceptować obecny przelicznik lub podać gramaturę porcji z tego posiłku. Do czasu potwierdzenia podsumowanie pozostanie zablokowane. Możesz też obejrzeć zachowane dane.",
   "mealCompletionViewRecordedMeal": "Zobacz zapisany posiłek",
@@ -3741,5 +3809,86 @@
   "mealConversionGramsPerPortion": "Gramy na jedną porcję",
   "mealConversionInvalidWeight": "Wpisz liczbę gramów większą od zera.",
   "mealConversionConfirm": "Potwierdź przelicznik",
-  "mealConversionSaveFailed": "Nie udało się zapisać przeliczników. Dane mogły się zmienić. Zamknij ten panel i spróbuj ponownie."
+  "mealConversionSaveFailed": "Nie udało się zapisać przeliczników. Dane mogły się zmienić. Zamknij ten panel i spróbuj ponownie.",
+  "activityCollectedReadings": "Liczba zebranych pomiarów: {count}",
+  "@activityCollectedReadings": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "activityMeasurementCoverage": "Pokrycie czasu treningu pomiarami: {percent}%",
+  "@activityMeasurementCoverage": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "activityRecordedTreatCount": "Liczba zapisanych zdarzeń: {count}",
+  "@activityRecordedTreatCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "activityEndReadingUnavailable": "Brak świeżego pomiaru na koniec. Ostatni w trakcie: {value} mg/dl o {time}.",
+  "@activityEndReadingUnavailable": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activityObservationWindow": "Obserwacja po treningu",
+  "activityAfterMeals": "Jedzenie po treningu",
+  "activityMealAfterOffset": "{minutes} min po treningu",
+  "@activityMealAfterOffset": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "activityRecordedCarbEntries": "Zapisane węglowodany (wpisy źródłowe)",
+  "activityNoAfterMealRecords": "Brak zapisanych posiłków i węglowodanów w tym oknie.",
+  "activityPostEndReadingTime": "Odczyt po treningu o {time}",
+  "@activityPostEndReadingTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activityPostEndReadingExplanation": "Trening zakończył się o {end}. Brak pomiaru dokładnie w chwili zakończenia. Pokazujemy rzeczywisty odczyt z {time}, wykonany {delay} po treningu (maks. 10 min), jako najbliższy dostępny odczyt końcowy. Nie jest to wyliczona wartość z chwili zakończenia. Wykres został wydłużony do tego pomiaru; średnia, zakres i pokrycie nadal dotyczą wyłącznie treningu.",
+  "@activityPostEndReadingExplanation": {
+    "placeholders": {
+      "end": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "delay": {
+        "type": "String"
+      }
+    }
+  },
+  "activityDeltaToPostReading": "Zmiana do odczytu po treningu",
+  "activityPostEndChartArea": "Odczyt po zakończeniu",
+  "activityExtendedChartExplanation": "Przerywana linia: koniec treningu o {time}. Zacieniony fragment pokazuje czas po treningu do użytego odczytu.",
+  "@activityExtendedChartExplanation": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "activityIntensityNotRecorded": "Nie podano",
+  "activityHistoryShort": "Historia"
 }

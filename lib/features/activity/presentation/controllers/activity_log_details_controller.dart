@@ -16,7 +16,7 @@ part 'activity_log_details_controller.g.dart';
 class ActivityLogDetailsControllerNotifier
     extends _$ActivityLogDetailsControllerNotifier {
   @override
-  Future<ActivityLogPageState> build(int activityLogId) async {
+  Future<ActivityLogPageState> build(int activityLogId, {bool includeContext = false}) async {
     ref.watch(stressEventsProvider);
     final detailsUseCase = ref.read(loadActivityLogDetailsUseCaseProvider);
     final data = await detailsUseCase.call(activityLogId);
@@ -30,7 +30,7 @@ class ActivityLogDetailsControllerNotifier
 
     final analysisUseCase = ref.read(loadActivityLogAnalysisUseCaseProvider);
     try {
-      final analysis = await analysisUseCase.call(data);
+      final analysis = await analysisUseCase.call(data, includeContext: includeContext);
 
       return ActivityLogPageState(
         data: data,
@@ -64,7 +64,7 @@ class ActivityLogDetailsControllerNotifier
     );
     if (!ref.mounted) return;
     ref.invalidate(dayContextForDateProvider);
-    ref.invalidateSelf();
+    ref.invalidate(activityLogDetailsControllerProvider);
   }
 
   Future<void> updateCompletedEntry({
@@ -84,7 +84,7 @@ class ActivityLogDetailsControllerNotifier
     );
     if (!ref.mounted) return;
     ref.invalidate(dayContextForDateProvider);
-    ref.invalidateSelf();
+    ref.invalidate(activityLogDetailsControllerProvider);
   }
 
   void selectTimestamp(DateTime timestamp) {

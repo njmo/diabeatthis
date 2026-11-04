@@ -1,9 +1,11 @@
+import '../../../../common/history/recorded_immediate_carbohydrates.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/temporary_target.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../../core/domain/model/treatment_base.dart';
+import '../../../meals/data/models/meal_details_data.dart';
 
 class ActivityLogAnalysisData {
   static const int activityTargetTop = 140;
@@ -18,6 +20,8 @@ class ActivityLogAnalysisData {
   final List<TemporaryTarget> activityTargets;
   final List<Meal> preActivityMeals;
   final DeviceStatus? deviceStatusAtStart;
+  final MealDetailsData? lastMeal;
+  final List<MealDetailsData> postActivityMeals;
 
   const ActivityLogAnalysisData({
     required this.chartStart,
@@ -30,6 +34,8 @@ class ActivityLogAnalysisData {
     required this.activityTargets,
     required this.preActivityMeals,
     required this.deviceStatusAtStart,
+    this.lastMeal,
+    this.postActivityMeals = const [],
   });
 
   int? get glucoseAtStart => _nearestGlucose(activityStart)?.sgv;
@@ -60,7 +66,7 @@ class ActivityLogAnalysisData {
   }
 
   List<Treat> get treatsDuringActivity {
-    return chartTreatments.whereType<Treat>().where((treat) {
+    return recordedImmediateCarbohydrates(chartTreatments).where((treat) {
       final createdAt = treat.createdAt;
       return _isBetween(createdAt, activityStart, activityEnd);
     }).toList();

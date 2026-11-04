@@ -23,11 +23,12 @@ class ActivityAnalysisCharts extends StatelessWidget {
   Widget build(BuildContext context) {
     return TimelineAnalysisCharts(
       chartStart: analysis.chartStart,
-      chartEnd: analysis.chartEnd,
+      chartEnd: analysis.activityEnd.add(const Duration(minutes: 30)),
       focusTimestamp: analysis.activityStart,
+      fitToWidth: true,
       selectedTimestamp: selectedTimestamp,
-      glucoseReadings: analysis.glucoseReadings,
-      deviceStatuses: analysis.deviceStatuses,
+      glucoseReadings: analysis.glucoseReadings.where((g) => !g.date.isBefore(analysis.chartStart) && !g.date.isAfter(analysis.activityEnd.add(const Duration(minutes: 30)))).toList(),
+      deviceStatuses: analysis.deviceStatuses.where((s) => !s.date.isBefore(analysis.chartStart) && !s.date.isAfter(analysis.activityEnd.add(const Duration(minutes: 30)))).toList(),
       events: _activityEvents(context, analysis),
       ranges: _activityRanges(context, analysis),
       onTimestampSelected: onTimestampSelected,
