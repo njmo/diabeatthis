@@ -2,9 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/meal/recorded_meal_conversion_unavailable.dart';
 import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../core/domain/model/meal_macro_summary.dart';
-import '../../../../core/domain/model/net_carbs_calculator.dart';
 import '../../../../core/drift/mappers/ingredient_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
@@ -12,8 +12,10 @@ import '../../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../../../portions/data/mappers/portion_draft_mapper.dart';
+import '../domain/use_cases/calculate_meal_draft_nutrition_use_case.dart';
 import '../domain/use_cases/resolve_meal_ingredient_grams_use_case.dart';
 import '../drafts/meal_draft.dart';
+import 'meal_draft_macro_summary_provider.dart';
 import 'meal_draft_provider.dart';
 
 part 'meal_ingredients_list_provider.g.dart';
@@ -60,7 +62,7 @@ Future<List<MealIngredientsDraft>> getMealIngredientsDraftForMeal(
     }
     if (mealIngredient.portionId != null &&
         mealIngredient.gramsPerPortionUsed == null) {
-      throw StateError('The recorded meal portion conversion is unavailable');
+      throw RecordedMealConversionUnavailable();
     }
     IngredientPortionDraft ingredientPortion;
     final portionId = mealIngredient.portionId;
@@ -144,41 +146,33 @@ extension MacronutrientsExtendedCarbs on Macronutrients {
 
 @riverpod
 Future<Macronutrients> calculatedMacronutrients(Ref ref) async {
-  final ingredients = ref.watch(mealDraftIngredientsProvider);
-  return calculateMealIngredientsMacronutrients(ref, ingredients);
+  return macronutrientsFromSummary(
+    await ref.watch(mealDraftMacroSummaryProvider.future),
+  );
 }
 
 Future<Macronutrients> calculateMealIngredientsMacronutrients(
   Ref ref,
   List<MealIngredientsDraft> ingredients,
 ) async {
-  var carbsTotal = 0.0;
-  var fatTotal = 0.0;
-  var fiberTotal = 0.0;
-  var proteinTotal = 0.0;
-  var netCarbsTotal = 0.0;
-
-  for (final mi in ingredients) {
-    final grams = await ResolveMealIngredientGramsUseCase(ref).call(mi);
-    carbsTotal += (mi.ingredient.carbsPer100g * grams / 100);
-    fatTotal += (mi.ingredient.fatPer100g * grams / 100);
-    fiberTotal += (mi.ingredient.fiberPer100g * grams / 100);
-    proteinTotal += (mi.ingredient.proteinPer100g * grams / 100);
-    netCarbsTotal += calculateNetCarbs(
-      carbs: mi.ingredient.carbsPer100g * grams / 100,
-      fiber: mi.ingredient.fiberPer100g * grams / 100,
-      labelMode: mi.ingredient.carbsLabelMode,
-    );
-  }
-
-  return Macronutrients(
-    carbsTotal: carbsTotal.ceilMacro(),
-    fatTotal: fatTotal.ceilMacro(),
-    fiberTotal: fiberTotal.ceilMacro(),
-    proteinTotal: proteinTotal.ceilMacro(),
-    netCarbsTotal: netCarbsTotal.ceilMacro(),
-    extendedCarbsFromRawTotals: const WbtExtendedCarbsCalculator()
-        .calculateFromMacros(fatGrams: fatTotal, proteinGrams: proteinTotal)
-        .grams,
+  return macronutrientsFromSummary(
+    await CalculateMealDraftNutritionUseCase(
+      resolveGrams: ResolveMealIngredientGramsUseCase(ref).call,
+    )(ingredients),
   );
 }
+
+Macronutrients macronutrientsFromSummary(MealMacroSummary summary) =>
+    Macronutrients(
+      carbsTotal: summary.carbsGrams.ceilMacro(),
+      fatTotal: summary.fatGrams.ceilMacro(),
+      fiberTotal: summary.fiberGrams.ceilMacro(),
+      proteinTotal: summary.proteinGrams.ceilMacro(),
+      netCarbsTotal: summary.netCarbsGrams.ceilMacro(),
+      extendedCarbsFromRawTotals: const WbtExtendedCarbsCalculator()
+          .calculateFromMacros(
+            fatGrams: summary.fatGrams,
+            proteinGrams: summary.proteinGrams,
+          )
+          .grams,
+    );

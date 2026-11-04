@@ -79,11 +79,10 @@ Future<MealBolusCoverage> readMealBolusCoverage(
                   row.snapshotType.equals('consumed'),
             ))
             .getSingleOrNull();
-    final planned = await db.ingredientDao.totalsForMeal(mealId);
     statusBaselineCarbs =
         context?.statusCoveredCarbs ??
         snapshot?.totalNetCarbsG ??
-        planned?.netCarbsGrams ??
+        (await db.ingredientDao.totalsForMeal(mealId))?.netCarbsGrams ??
         0;
     linkedCarbs += statusBaselineCarbs;
   }

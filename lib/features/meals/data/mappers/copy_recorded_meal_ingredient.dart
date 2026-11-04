@@ -1,3 +1,4 @@
+import '../../../../common/meal/recorded_meal_conversion_unavailable.dart';
 import '../../../ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../portions/data/drafts/portion_draft.dart';
 import '../drafts/meal_draft.dart';
@@ -17,7 +18,7 @@ MealIngredientsDraft copyRecordedMealIngredient(MealIngredientsDraft item) {
         draft: (_) => item.ingredientPortion.amount,
       );
   if (!factor.isFinite || factor <= 0) {
-    throw StateError('The recorded meal portion conversion is unavailable');
+    throw RecordedMealConversionUnavailable();
   }
   return item.copyWith(
     mealIngredientId: null,

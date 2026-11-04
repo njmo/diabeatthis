@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_display_name.dart';
+import '../../../../common/widgets/meal_completion/meal_completion_load_error.dart';
 import '../../../../common/widgets/meal_completion/meal_eating_finish_time_step.dart';
 import '../../../../core/domain/model/meal_status_flow.dart';
 import '../providers/meal_completion_context_provider.dart';
@@ -49,14 +50,22 @@ class MealCompletionEntryState extends ConsumerState<MealCompletionEntry> {
                 body: const Center(child: CircularProgressIndicator()),
               ),
         error: (error, _) => widget.compactChoice
-            ? Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text(context.lang.mealSummaryLoadError(error)),
+            ? MealCompletionLoadError(
+                error: error,
+                mealId: widget.mealId,
+                inSheet: true,
+                onRetry: () => ref.invalidate(
+                  mealCompletionContextProvider(widget.mealId),
+                ),
               )
             : Scaffold(
                 appBar: AppBar(title: Text(context.lang.mealEatingFinishTitle)),
-                body: Center(
-                  child: Text(context.lang.mealSummaryLoadError(error)),
+                body: MealCompletionLoadError(
+                  error: error,
+                  mealId: widget.mealId,
+                  onRetry: () => ref.invalidate(
+                    mealCompletionContextProvider(widget.mealId),
+                  ),
                 ),
               ),
         data: (details) {

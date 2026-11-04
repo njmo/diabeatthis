@@ -1,4 +1,6 @@
 import 'package:drift/drift.dart';
+
+import '../../../common/meal/recorded_meal_conversion_unavailable.dart';
 import '../../domain/model/meal_macro_summary.dart';
 import '../database_impl.dart';
 
@@ -188,7 +190,7 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
       readsFrom: {db.mealIngredients, db.ingredient},
     ).getSingleOrNull();
     if (unknown != null) {
-      throw StateError('The recorded meal portion conversion is unavailable');
+      throw RecordedMealConversionUnavailable();
     }
   }
 

@@ -8,6 +8,7 @@ import '../../../../common/meal/meal_display_name.dart';
 import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../common/widgets/date_time_boundary_builder.dart';
 import '../../../../common/widgets/meal_completion/meal_completion_choice_sheet.dart';
+import '../../../../common/widgets/meal_completion/meal_completion_load_error.dart';
 import '../../../../common/widgets/meal_completion/meal_completion_save_button.dart';
 import '../../../../common/widgets/meal_completion/meal_shortfall_review_dialog.dart';
 import '../../../../core/logger/logger.dart';
@@ -65,6 +66,17 @@ class MealCompletionViewState extends ConsumerState<MealCompletionView> {
     if (widget.startAdjusted) choice = MealCompletionPortionChoice.adjusted;
   }
 
+  Widget loadError(Object failure, {bool inSheet = false}) =>
+      MealCompletionLoadError(
+        error: failure,
+        mealId: widget.mealId,
+        inSheet: inSheet,
+        onRetry: () {
+          ref.invalidate(mealSummaryControllerProvider(widget.mealId));
+          ref.invalidate(mealCompletionContextProvider(widget.mealId));
+        },
+      );
+
   @override
   Widget build(BuildContext context) {
     final data = ref.watch(mealSummaryControllerProvider(widget.mealId));
@@ -78,10 +90,7 @@ class MealCompletionViewState extends ConsumerState<MealCompletionView> {
             child: Center(child: CircularProgressIndicator()),
           ),
         ),
-        error: (failure, _) => Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text(context.lang.mealSummaryLoadError(failure)),
-        ),
+        error: (failure, _) => loadError(failure, inSheet: true),
         data: (_) => completion.when(
           loading: () => const Padding(
             padding: EdgeInsets.all(32),
@@ -90,10 +99,7 @@ class MealCompletionViewState extends ConsumerState<MealCompletionView> {
               child: Center(child: CircularProgressIndicator()),
             ),
           ),
-          error: (failure, _) => Padding(
-            padding: const EdgeInsets.all(20),
-            child: Text(context.lang.mealSummaryLoadError(failure)),
-          ),
+          error: (failure, _) => loadError(failure, inSheet: true),
           data: (details) {
             initializeTiming(details);
             return MealCompletionChoiceSheet(
@@ -119,12 +125,10 @@ class MealCompletionViewState extends ConsumerState<MealCompletionView> {
         appBar: AppBar(title: Text(context.lang.mealCompletionTitle)),
         body: data.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) =>
-              Center(child: Text(context.lang.mealSummaryLoadError(e))),
+          error: (e, _) => loadError(e),
           data: (draft) => completion.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) =>
-                Center(child: Text(context.lang.mealSummaryLoadError(e))),
+            error: (e, _) => loadError(e),
             data: (details) {
               initializeTiming(details);
               final amountsValid = mealCompletionAmountsValid(

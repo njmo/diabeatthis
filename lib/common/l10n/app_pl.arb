@@ -3721,5 +3721,25 @@
   "mealNetCarbsLabel": "Węglowodany netto",
   "mealPhotoNewIngredient": "Nowy",
   "mealPhotoNewIngredientHint": "Przy zapisie powstanie nowy wpis składnika w bazie.",
-  "mealMacroCarbsTotal": "carbs"
+  "mealMacroCarbsTotal": "carbs",
+  "mealCompletionUnavailableTitle": "Nie można teraz podsumować posiłku",
+  "mealCompletionMissingConversion": "W tym posiłku brakuje zapisanego przelicznika porcji na gramy. Możesz zaakceptować obecny przelicznik lub podać gramaturę porcji z tego posiłku. Do czasu potwierdzenia podsumowanie pozostanie zablokowane. Możesz też obejrzeć zachowane dane.",
+  "mealCompletionViewRecordedMeal": "Zobacz zapisany posiłek",
+  "mealCompletionRetryLoad": "Spróbuj ponownie",
+  "mealConversionRepairAction": "Uzupełnij przeliczniki porcji",
+  "mealConversionReviewTitle": "Ile gramów miała jedna porcja?",
+  "mealConversionReviewExplanation": "Stary wpis nie ma zapisanego przelicznika. Zaakceptuj obecną wartość albo wpisz gramaturę z tego posiłku. Zapiszemy ją wyłącznie dla tego wpisu; definicja porcji pozostanie bez zmian. Zmiany zapiszemy po potwierdzeniu wszystkich brakujących przeliczników.",
+  "mealConversionCurrentSuggestion": "Obecny przelicznik: {grams} g na porcję (propozycja do potwierdzenia).",
+  "@mealConversionCurrentSuggestion": {
+    "placeholders": {
+      "grams": {
+        "type": "String"
+      }
+    }
+  },
+  "mealConversionNoSuggestion": "Brak obecnego przelicznika. Wpisz liczbę gramów na jedną porcję.",
+  "mealConversionGramsPerPortion": "Gramy na jedną porcję",
+  "mealConversionInvalidWeight": "Wpisz liczbę gramów większą od zera.",
+  "mealConversionConfirm": "Potwierdź przelicznik",
+  "mealConversionSaveFailed": "Nie udało się zapisać przeliczników. Dane mogły się zmienić. Zamknij ten panel i spróbuj ponownie."
 }

@@ -3264,5 +3264,25 @@
   "mealNetCarbsLabel": "Net carbohydrates",
   "mealPhotoNewIngredient": "New",
   "mealPhotoNewIngredientHint": "Saving will create a new ingredient record in the database.",
-  "mealMacroCarbsTotal": "carbs"
+  "mealMacroCarbsTotal": "carbs",
+  "mealCompletionUnavailableTitle": "Meal cannot be completed right now",
+  "mealCompletionMissingConversion": "This meal is missing a recorded portion-to-grams conversion. You can accept the current conversion or enter the portion weight used for this meal. Completion stays blocked until confirmation. You can also view its saved data.",
+  "mealCompletionViewRecordedMeal": "View saved meal",
+  "mealCompletionRetryLoad": "Try again",
+  "mealConversionRepairAction": "Review portion conversions",
+  "mealConversionReviewTitle": "How many grams were in one portion?",
+  "mealConversionReviewExplanation": "This old entry has no recorded conversion. Accept the current value or enter the weight used for this meal. It will be saved only for this entry; the portion definition will stay unchanged. Changes are saved after all missing conversions are confirmed.",
+  "mealConversionCurrentSuggestion": "Current conversion: {grams} g per portion (suggestion to confirm).",
+  "@mealConversionCurrentSuggestion": {
+    "placeholders": {
+      "grams": {
+        "type": "String"
+      }
+    }
+  },
+  "mealConversionNoSuggestion": "No current conversion is available. Enter the grams in one portion.",
+  "mealConversionGramsPerPortion": "Grams per portion",
+  "mealConversionInvalidWeight": "Enter a weight greater than zero.",
+  "mealConversionConfirm": "Confirm conversion",
+  "mealConversionSaveFailed": "Could not save conversions. The data may have changed. Close this panel and try again."
 }
