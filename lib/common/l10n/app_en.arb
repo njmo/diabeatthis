@@ -2422,7 +2422,7 @@
   "settingsAiTitle": "AI",
   "settingsAiSubtitle": "Choose providers for analyses and images.",
   "settingsAiProviderLabel": "AI provider",
-  "settingsAiFirebaseProvider": "DiabeatThis AI (Firebase/Gemini)",
+  "settingsAiFirebaseProvider": "DiaBeatThis",
   "settingsAiOpenAiProvider": "OpenAI — own API key",
   "settingsAiChatGptProvider": "ChatGPT — own subscription",
   "settingsAiFirebaseDescription": "AI provided by DiabeatThis.",
@@ -3710,7 +3710,7 @@
   "settingsCountryManual": "Selected country: {country}",
   "settingsCountryUnknown": "The device does not provide a country. You can set it manually.",
   "settingsCountryUseSystem": "Use device region",
-  "setupAiLiveDescription": "These are the same AI settings used by the app. Choose a provider and save the settings to continue.",
+  "setupAiLiveDescription": "Choose an AI provider. Continue will check the connection and save your settings.",
   "setupLiveConfigurationNotice": "AI settings, Google sign-in and system permissions are real. Pairing, messaging and new feature settings remain simulated.",
   "setupLiveConfigurationFinished": "Saved AI settings and granted permissions are retained. Other demo choices do not start pairing or messaging.",
   "setupGoogleSignIn": "Sign in with Google",
@@ -3746,7 +3746,7 @@
   "setupChooseAccountFirst": "Sign in with Google or choose to continue without signing in. Caregiver mode requires Google.",
   "setupStepRole": "Role",
   "setupWelcomeTitle": "Welcome to DiaBeatThis",
-  "setupWelcomeDescription": "Sign in with Google or continue with local features. Choose who will use this phone in the next step.",
+  "setupWelcomeDescription": "Enter your user name or sign in with Google. You will choose your role in the next step.",
   "chatGptSignInFailedAt": "ChatGPT sign-in did not complete. Step: {stage}. {reason}",
   "chatGptSignInCredentials": "reading local credentials",
   "chatGptSignInDiscovery": "connecting to the sign-in service",
@@ -3765,5 +3765,25 @@
         "type": "String"
       }
     }
-  }
+  },
+  "setupGoogleSignedInAs": "Signed in as {name}",
+  "@setupGoogleSignedInAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setupWelcomeSignedInDescription": "Your account is connected. Next, choose who you are setting up the app for.",
+  "setupEnterName": "What is your name?",
+  "setupAlternativeOr": "or",
+  "setupEnterUserName": "Enter your user name",
+  "setupCaregiverSignInFirst": "Sign in with Google on Start to choose this role.",
+  "setupFamilySignInFirst": "Requires Google sign-in on Start.",
+  "setupRequirementHealthMonitoring": "Physical activity — health monitors",
+  "setupHealthMonitoringWhy": "Android requires this access to run our health monitoring service in the background. The app does not use it to count steps.",
+  "settingsMonitoringStartFailed": "Could not start monitoring. Check permissions in Access and try again.",
+  "settingsAiChatGptVerified": "ChatGPT account verified",
+  "settingsAiChatGptReturnToApp": "Return to the app",
+  "settingsAiChatGptReturning": "Response received. Returning to the app to finish verification."
 }

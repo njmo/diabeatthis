@@ -10,60 +10,69 @@ class SetupModeChoice extends StatelessWidget {
     required this.mode,
     required this.selected,
     required this.onSelected,
+    this.disabledReason,
   });
   final SetupDeviceMode mode;
   final bool selected;
-  final VoidCallback onSelected;
+  final VoidCallback? onSelected;
+  final String? disabledReason;
   @override
   Widget build(BuildContext context) {
     final patient = mode == SetupDeviceMode.patient;
     final colors = Theme.of(context).colorScheme;
-    return Semantics(
-      selected: selected,
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(
-            color: selected ? colors.primary : colors.outlineVariant,
-            width: selected ? 2 : 1,
+    return Opacity(
+      opacity: onSelected == null ? .45 : 1,
+      child: Semantics(
+        enabled: onSelected != null,
+        selected: selected,
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(
+              color: selected ? colors.primary : colors.outlineVariant,
+              width: selected ? 2 : 1,
+            ),
           ),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: onSelected,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                SetupIconBubble(
-                  icon: patient ? Icons.person_outline : Icons.favorite_outline,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        patient
-                            ? context.lang.setupPatientMode
-                            : context.lang.setupCaregiverMode,
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      Text(
-                        patient
-                            ? context.lang.setupPatientModeDescription
-                            : context.lang.setupCaregiverModeDescription,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: onSelected,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  SetupIconBubble(
+                    icon: patient
+                        ? Icons.person_outline
+                        : Icons.favorite_outline,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  selected ? Icons.check_circle : Icons.circle_outlined,
-                  color: selected ? colors.primary : colors.outline,
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          patient
+                              ? context.lang.setupPatientMode
+                              : context.lang.setupCaregiverMode,
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        Text(
+                          disabledReason ??
+                              (patient
+                                  ? context.lang.setupPatientModeDescription
+                                  : context.lang.setupCaregiverModeDescription),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    selected ? Icons.check_circle : Icons.circle_outlined,
+                    color: selected ? colors.primary : colors.outline,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

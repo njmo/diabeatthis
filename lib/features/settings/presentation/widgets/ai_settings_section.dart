@@ -2,12 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/ai/ai_settings_controller.dart';
+import '../../../../common/forms/form_submission_controller.dart';
 import '../../../../common/l10n/language.dart';
 import 'ai_provider_settings_form.dart';
 import 'settings_section_card.dart';
 
 class AiSettingsSection extends ConsumerWidget {
-  const AiSettingsSection({super.key, this.onChanged, this.onSaved});
+  const AiSettingsSection({
+    super.key,
+    this.onChanged,
+    this.onSaved,
+    this.submissionController,
+    this.wizardMode = false,
+  });
+  final FormSubmissionController? submissionController;
+  final bool wizardMode;
   final VoidCallback? onChanged;
   final VoidCallback? onSaved;
 
@@ -27,6 +36,10 @@ class AiSettingsSection extends ConsumerWidget {
               initialConfiguration: configuration,
               onChanged: onChanged,
               onSaved: onSaved,
+              submissionController: submissionController,
+              showActions: !wizardMode,
+              hideFirebaseModel: wizardMode,
+              connectChatGptOnSelection: wizardMode,
             ),
           ),
     ],

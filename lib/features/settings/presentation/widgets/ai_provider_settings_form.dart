@@ -7,6 +7,7 @@ import '../../../../common/ai/ai_model_option.dart';
 import '../../../../common/ai/ai_provider_capabilities.dart';
 import '../../../../common/ai/ai_provider_kind.dart';
 import '../../../../common/ai/ai_settings_controller.dart';
+import '../../../../common/forms/form_submission_controller.dart';
 import '../../../../common/l10n/language.dart';
 import 'ai_api_key_fields.dart';
 import 'ai_author_funded_notice.dart';
@@ -24,11 +25,19 @@ class AiProviderSettingsForm extends HookConsumerWidget {
     required this.initialConfiguration,
     this.onChanged,
     this.onSaved,
+    this.submissionController,
+    this.showActions = true,
+    this.hideFirebaseModel = false,
+    this.connectChatGptOnSelection = false,
   });
 
   final AiConfiguration initialConfiguration;
   final VoidCallback? onChanged;
   final VoidCallback? onSaved;
+  final FormSubmissionController? submissionController;
+  final bool showActions;
+  final bool hideFirebaseModel;
+  final bool connectChatGptOnSelection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -169,6 +178,49 @@ class AiProviderSettingsForm extends HookConsumerWidget {
               hasSavedKey.value == true);
     }
 
+    Future<bool> submitForStep() async {
+      if (busy.value || !ready || !validate()) return false;
+      error.value = null;
+      success.value = null;
+      busy.value = true;
+      final configuration = draft.value;
+      final key = configuration.requiresApiKey ? apiKey.text.trim() : null;
+      try {
+        await controller.testConnection(configuration, apiKey: key);
+        if (!context.mounted) return false;
+        await controller.save(configuration, apiKey: key);
+        if (!context.mounted) return false;
+        apiKey.clear();
+        onSaved?.call();
+        return true;
+      } catch (failure) {
+        if (context.mounted) error.value = failure;
+        return false;
+      } finally {
+        if (context.mounted) busy.value = false;
+      }
+    }
+
+    useEffect(
+      () {
+        final submission = submissionController;
+        submission?.attach(
+          submitForStep,
+          ready: ready && !busy.value && modelValid && keyValid,
+        );
+        return () => submission?.detach(submitForStep);
+      },
+      [
+        submissionController,
+        draft.value,
+        ready,
+        busy.value,
+        modelValid,
+        keyValid,
+        apiKey.text,
+      ],
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -181,6 +233,13 @@ class AiProviderSettingsForm extends HookConsumerWidget {
             draft.value = draft.value
                 .copyWith(provider: value)
                 .normalizeImageGeneration();
+            if (value == AiProviderKind.chatGpt && connectChatGptOnSelection) {
+              runAction(
+                controller.connectChatGpt,
+                AiSettingsFeedbackKind.verified,
+                refreshCredentials: true,
+              );
+            }
           },
         ),
         const SizedBox(height: 12),
@@ -217,7 +276,9 @@ class AiProviderSettingsForm extends HookConsumerWidget {
             enabled: !busy.value,
             onConnect: () => runAction(
               controller.connectChatGpt,
-              AiSettingsFeedbackKind.connected,
+              connectChatGptOnSelection
+                  ? AiSettingsFeedbackKind.verified
+                  : AiSettingsFeedbackKind.connected,
               refreshCredentials: true,
             ),
             onDisconnect: () => runAction(
@@ -239,7 +300,8 @@ class AiProviderSettingsForm extends HookConsumerWidget {
               credentialRevision.value++;
             },
           ),
-        if (provider != AiProviderKind.chatGpt)
+        if (provider != AiProviderKind.chatGpt &&
+            !(hideFirebaseModel && provider == AiProviderKind.firebase))
           AiModelField(
             key: ValueKey(provider),
             value: draft.value.model,
@@ -281,41 +343,44 @@ class AiProviderSettingsForm extends HookConsumerWidget {
           ),
         ],
         const SizedBox(height: 16),
-        AiSettingsActions(
-          busy: busy.value,
-          enabled: ready,
-          onSave: () {
-            FocusScope.of(context).unfocus();
-            if (!validate()) return;
-            runAction(
-              () async {
-                await controller.save(
+        if (showActions)
+          AiSettingsActions(
+            busy: busy.value,
+            enabled: ready,
+            onSave: () {
+              FocusScope.of(context).unfocus();
+              if (!validate()) return;
+              runAction(
+                () async {
+                  await controller.save(
+                    draft.value,
+                    apiKey: draft.value.requiresApiKey
+                        ? apiKey.text.trim()
+                        : null,
+                  );
+                  if (context.mounted) {
+                    apiKey.clear();
+                    onSaved?.call();
+                  }
+                },
+                AiSettingsFeedbackKind.saved,
+                refreshCredentials: true,
+              );
+            },
+            onTest: () {
+              FocusScope.of(context).unfocus();
+              if (!validate()) return;
+              runAction(
+                () => controller.testConnection(
                   draft.value,
                   apiKey: draft.value.requiresApiKey
                       ? apiKey.text.trim()
                       : null,
-                );
-                if (context.mounted) {
-                  apiKey.clear();
-                  onSaved?.call();
-                }
-              },
-              AiSettingsFeedbackKind.saved,
-              refreshCredentials: true,
-            );
-          },
-          onTest: () {
-            FocusScope.of(context).unfocus();
-            if (!validate()) return;
-            runAction(
-              () => controller.testConnection(
-                draft.value,
-                apiKey: draft.value.requiresApiKey ? apiKey.text.trim() : null,
-              ),
-              AiSettingsFeedbackKind.tested,
-            );
-          },
-        ),
+                ),
+                AiSettingsFeedbackKind.tested,
+              );
+            },
+          ),
         AiSettingsFeedback(success: success.value, error: error.value),
       ],
     );

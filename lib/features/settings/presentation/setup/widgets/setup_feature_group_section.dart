@@ -14,11 +14,13 @@ class SetupFeatureGroupSection extends StatelessWidget {
     required this.mode,
     required this.selected,
     required this.onChanged,
+    this.unavailable = const {},
   });
   final SetupFeatureGroup group;
   final List<SetupFeature> features;
   final SetupDeviceMode mode;
   final Set<SetupFeatureId> selected;
+  final Set<SetupFeatureId> unavailable;
   final void Function(SetupFeatureId, bool) onChanged;
 
   @override
@@ -41,8 +43,11 @@ class SetupFeatureGroupSection extends StatelessWidget {
                   SetupFeatureTile(
                     feature: feature,
                     mode: mode,
+                    enabled: !unavailable.contains(feature.id),
                     selected:
-                        feature.alwaysEnabled || selected.contains(feature.id),
+                        !unavailable.contains(feature.id) &&
+                        (feature.alwaysEnabled ||
+                            selected.contains(feature.id)),
                     onChanged: (value) => onChanged(feature.id, value),
                   ),
               ],

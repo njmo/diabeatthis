@@ -12,6 +12,7 @@ import '../../../../common/family/use_cases/create_family_invitation_use_case.da
 import '../../../../common/family/use_cases/disconnect_family_member_use_case.dart';
 import '../../../../common/family/use_cases/simulate_family_pairing_use_case.dart';
 import '../../../../common/family/use_cases/watch_family_members_use_case.dart';
+import '../../../../common/forms/form_submission_controller.dart';
 import '../../../../common/setup/domain/collect_setup_configuration_fields_use_case.dart';
 import '../../../../common/setup/domain/collect_setup_requirements_use_case.dart';
 import '../../../../common/setup/domain/get_available_setup_features_use_case.dart';
@@ -37,6 +38,8 @@ class SetupWizardController extends ChangeNotifier {
     this.permissions,
   }) : familyRepository = familyRepository ?? DemoFamilyPairingRepository(),
        ownsFamilyRepository = familyRepository == null {
+    aiSubmission.addListener(changed);
+    state.requireGoogleForFamily = authentication != null;
     if (authentication != null) {
       try {
         accountSubscription = authentication!.watchAccount().listen(
@@ -54,11 +57,13 @@ class SetupWizardController extends ChangeNotifier {
       }
     }
   }
+  final FormSubmissionController aiSubmission = FormSubmissionController();
   final GoogleAuthenticationRepository? authentication;
   final SetupPermissionGateway? permissions;
   StreamSubscription<GoogleAccount?>? accountSubscription;
   final permissionRevisions = <SetupRequirement, int>{};
   String? nameBeforeGoogle;
+  bool restorePatientFamilyAfterSignIn = false;
 
   void applyGoogleAccount(GoogleAccount? account) {
     if (disposed) return;
@@ -78,6 +83,13 @@ class SetupWizardController extends ChangeNotifier {
       (familyRepository as DemoFamilyPairingRepository).reset();
     }
     if (account != null) {
+      if (restorePatientFamilyAfterSignIn) {
+        state.selectedByMode[SetupDeviceMode.patient]!.add(
+          SetupFeatureId.familyChat,
+        );
+        restorePatientFamilyAfterSignIn = false;
+        configurationRevision++;
+      }
       if (state.googleAccount == null) nameBeforeGoogle = state.name;
       state.name = account.label.isNotEmpty ? account.label : state.name;
       state.accountChoice = SetupAccountChoice.google;
@@ -87,6 +99,13 @@ class SetupWizardController extends ChangeNotifier {
     }
     state.googleAccount = account;
     state.signedIn = account != null;
+    if (account == null &&
+        authentication != null &&
+        state.mode == SetupDeviceMode.caregiver) {
+      state.mode = SetupDeviceMode.patient;
+      state.moduleIndex = 0;
+      configurationRevision++;
+    }
     state.familyMembers = const [];
     state.pairingInvitation = null;
     state.paired = false;
@@ -152,6 +171,11 @@ class SetupWizardController extends ChangeNotifier {
       state.signingIn = false;
     }
     state.accountChoice = SetupAccountChoice.local;
+    restorePatientFamilyAfterSignIn =
+        restorePatientFamilyAfterSignIn ||
+        state.selectedByMode[SetupDeviceMode.patient]!.contains(
+          SetupFeatureId.familyChat,
+        );
     state.selectedByMode[SetupDeviceMode.patient]!.remove(
       SetupFeatureId.familyChat,
     );
@@ -185,6 +209,7 @@ class SetupWizardController extends ChangeNotifier {
     for (final requirement in requirements.keys.toList()) {
       if (![
         SetupRequirement.notifications,
+        SetupRequirement.healthMonitoring,
         SetupRequirement.camera,
         SetupRequirement.backgroundExecution,
         SetupRequirement.exactAlarms,
@@ -265,6 +290,8 @@ class SetupWizardController extends ChangeNotifier {
   @override
   void dispose() {
     disposed = true;
+    aiSubmission.removeListener(changed);
+    aiSubmission.dispose();
     unawaited(accountSubscription?.cancel());
     unawaited(familySubscription?.cancel());
     if (ownsFamilyRepository &&
@@ -320,7 +347,8 @@ class SetupWizardController extends ChangeNotifier {
   List<SetupFeature> get selected => available
       .where(
         (feature) =>
-            feature.alwaysEnabled || state.selected.contains(feature.id),
+            (feature.alwaysEnabled || state.selected.contains(feature.id)) &&
+            canEnableFeature(feature.id),
       )
       .toList();
   Map<SetupRequirement, Set<SetupFeatureId>> get requirements =>
@@ -373,10 +401,23 @@ class SetupWizardController extends ChangeNotifier {
       : modules[state.moduleIndex.clamp(0, modules.length - 1)];
 
   void changed() {
-    notifyListeners();
+    if (!disposed) notifyListeners();
   }
 
+  bool canUseMode(SetupDeviceMode mode) =>
+      mode == SetupDeviceMode.patient ||
+      authentication == null ||
+      state.signedIn;
+  bool canEnableFeature(SetupFeatureId id) =>
+      authentication == null ||
+      state.signedIn ||
+      !available
+          .firstWhere((feature) => feature.id == id)
+          .requirements
+          .contains(SetupRequirement.googleAccount);
+
   void setMode(SetupDeviceMode mode) {
+    if (!canUseMode(mode)) return;
     if (disposed || state.signingIn) return;
     if (state.mode == mode) return;
     configurationRevision++;
@@ -408,6 +449,11 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   void select(SetupFeatureId id, bool enabled) {
+    if (enabled && !canEnableFeature(id)) return;
+    if (id == SetupFeatureId.familyChat &&
+        state.mode == SetupDeviceMode.patient) {
+      restorePatientFamilyAfterSignIn = false;
+    }
     if (available.any((feature) => feature.id == id && feature.alwaysEnabled)) {
       return;
     }
@@ -517,6 +563,7 @@ class SetupWizardController extends ChangeNotifier {
         (requirement) =>
             [
               SetupRequirement.notifications,
+              SetupRequirement.healthMonitoring,
               SetupRequirement.camera,
               SetupRequirement.backgroundExecution,
               SetupRequirement.exactAlarms,
@@ -538,20 +585,24 @@ class SetupWizardController extends ChangeNotifier {
     state.moduleValidationFailed = false;
     changed();
     try {
-      final valid = await const ValidateSetupModuleUseCase()(
-        requiredFields: requiredConfiguration.keys.where(
-          (field) => field.module == current,
-        ),
-        values: {
-          SetupConfigurationField.nightscoutUrl: state.nightscoutUrl,
-          SetupConfigurationField.nightscoutToken: state.nightscoutToken,
-        },
-        validateNightscout: current == SetupModule.nightscout,
-        requiresWrite: requiredConfiguration.containsKey(
-          SetupConfigurationField.nightscoutToken,
-        ),
-        checkConnection: checkNightscoutConnection,
-      );
+      final submittingAi = current == SetupModule.ai && aiSubmission.isAttached;
+      final valid =
+          current == SetupModule.ai && (authentication != null || submittingAi)
+          ? await aiSubmission.submit()
+          : await const ValidateSetupModuleUseCase()(
+              requiredFields: requiredConfiguration.keys.where(
+                (field) => field.module == current,
+              ),
+              values: {
+                SetupConfigurationField.nightscoutUrl: state.nightscoutUrl,
+                SetupConfigurationField.nightscoutToken: state.nightscoutToken,
+              },
+              validateNightscout: current == SetupModule.nightscout,
+              requiresWrite: requiredConfiguration.containsKey(
+                SetupConfigurationField.nightscoutToken,
+              ),
+              checkConnection: checkNightscoutConnection,
+            );
       if (disposed ||
           session != pairingSession ||
           revision != configurationRevision ||
@@ -563,7 +614,9 @@ class SetupWizardController extends ChangeNotifier {
         state.moduleValidationFailed = true;
         return false;
       }
-      if (current == SetupModule.nightscout) state.configured.add(current);
+      if (current == SetupModule.nightscout || submittingAi) {
+        state.configured.add(current);
+      }
       return next();
     } catch (_) {
       if (!disposed &&

@@ -77,11 +77,17 @@ void main() {
         find.textContaining('koszty pokrywa autor aplikacji'),
         findsOneWidget,
       );
-      await tester.ensureVisible(find.text('Zapisz ustawienia AI'));
-      await tester.tap(find.text('Zapisz ustawienia AI'));
+      expect(find.text('Zapisz ustawienia AI'), findsNothing);
+      expect(find.widgetWithText(TextField, 'Model AI'), findsNothing);
+      expect(await controller.aiSubmission.submit(), isTrue);
       await tester.pumpAndSettle();
+      expect(ai.tests, 1);
       expect(ai.saves, 1);
       expect(controller.moduleReady(SetupModule.ai), isTrue);
+      tester.widget<DropdownButton<AiProviderKind>>(provider).onChanged!(
+        AiProviderKind.openAi,
+      );
+      await tester.pumpAndSettle();
       await tester.enterText(
         find.widgetWithText(TextField, 'Model AI'),
         'changed-model',

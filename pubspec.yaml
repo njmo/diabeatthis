@@ -118,6 +118,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/icons/auth/
     - assets/images/meals/
     - assets/icons/food/
     - assets/icons/wicked_food/

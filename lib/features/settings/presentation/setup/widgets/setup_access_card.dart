@@ -45,6 +45,8 @@ class SetupAccessCard extends StatelessWidget {
         SetupRequirement.notifications => context.lang.setupNotificationsWhy,
         SetupRequirement.backgroundExecution => context.lang.setupBackgroundWhy,
         SetupRequirement.exactAlarms => context.lang.setupExactAlarmsWhy,
+        SetupRequirement.healthMonitoring =>
+          context.lang.setupHealthMonitoringWhy,
         _ => context.lang.setupCameraWhy,
       }, style: Theme.of(context).textTheme.bodySmall),
       if (denied)

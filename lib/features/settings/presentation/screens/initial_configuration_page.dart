@@ -8,6 +8,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/setup/domain/setup_feature_option.dart';
 import '../../../../common/setup/platform/native_setup_permission_gateway.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
+import '../../application/validate_setup_nightscout_use_case.dart';
 import '../controllers/initial_configuration_controller.dart';
 import '../setup/setup_wizard.dart';
 import '../setup/setup_wizard_state.dart';
@@ -40,6 +41,7 @@ class InitialConfigurationPage extends ConsumerWidget {
           familyContext: FamilyManagementContext.initialSetup,
           authentication: ref.read(googleAuthenticationRepositoryProvider),
           permissions: const NativeSetupPermissionGateway(),
+          checkNightscoutConnection: ref.read(validateSetupNightscoutProvider),
           availability: sources,
           saving: draft.isSaving,
           saveError: draft.submitError,

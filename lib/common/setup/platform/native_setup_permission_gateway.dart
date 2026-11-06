@@ -12,6 +12,9 @@ class NativeSetupPermissionGateway implements SetupPermissionGateway {
   @override
   Future<bool> check(SetupRequirement requirement) async =>
       switch (requirement) {
+        SetupRequirement.healthMonitoring =>
+          !Platform.isAndroid ||
+              (await Permission.activityRecognition.status).isGranted,
         SetupRequirement.notifications =>
           (await Permission.notification.status).isGranted,
         SetupRequirement.camera => (await Permission.camera.status).isGranted,
@@ -27,9 +30,12 @@ class NativeSetupPermissionGateway implements SetupPermissionGateway {
   Future<bool> request(SetupRequirement requirement) async {
     if (await check(requirement)) return true;
     if (requirement == SetupRequirement.notifications ||
-        requirement == SetupRequirement.camera) {
+        requirement == SetupRequirement.camera ||
+        requirement == SetupRequirement.healthMonitoring) {
       final permission = requirement == SetupRequirement.notifications
           ? Permission.notification
+          : requirement == SetupRequirement.healthMonitoring
+          ? Permission.activityRecognition
           : Permission.camera;
       if ((await permission.status).isPermanentlyDenied) {
         await openAppSettings();
@@ -37,6 +43,8 @@ class NativeSetupPermissionGateway implements SetupPermissionGateway {
       }
     }
     switch (requirement) {
+      case SetupRequirement.healthMonitoring:
+        if (Platform.isAndroid) await Permission.activityRecognition.request();
       case SetupRequirement.notifications:
         await Permission.notification.request();
       case SetupRequirement.camera:

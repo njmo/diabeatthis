@@ -14,9 +14,11 @@ import '../../../core/data_sources/config/data_source_config.dart';
 import '../../../core/data_sources/config/data_source_config_sync_payload.dart';
 import '../../../core/data_sources/config/data_source_option_availability.dart';
 import '../../../core/data_sources/config/helpers/data_source_config_storer.dart';
+import '../../../core/data_sources/nightscout/nightscout_connection_verification.dart';
 import '../../../core/data_sources/nightscout/nightscout_storage_keys.dart';
 import '../../../core/data_sources/nightscout/providers/nightscout_connection_check_provider.dart';
 import '../../../core/data_sources/receiver/providers/data_receiver_activation_controller_provider.dart';
+import '../../../foreground/service/monitoring_startup_exception.dart';
 import '../data/settings_storage_keys.dart';
 
 part 'apply_initial_configuration_use_case.g.dart';
@@ -43,7 +45,10 @@ class ApplyInitialConfigurationUseCase {
     );
     availability.ensureConfigAvailable(config);
 
-    if (config.usesCloud) {
+    if (config.usesCloud &&
+        !_ref
+            .read(nightscoutConnectionVerificationProvider)
+            .matches(url: nightscoutUrl, token: nightscoutToken)) {
       await _ref.read(nightscoutConnectionCheckProvider)(
         url: nightscoutUrl,
         token: nightscoutToken,
@@ -61,7 +66,6 @@ class ApplyInitialConfigurationUseCase {
         prefs.setString(nightscoutTokenKey, nightscoutToken.trim()),
       prefs.setString(childNameKey, childName.trim()),
       prefs.setString(applicationLanguageCodeKey, language.code),
-      prefs.setBool(initialConfigurationDoneKey, true),
     ]);
     setLanguageStringsFromCode(language.code);
     await _ref
@@ -72,8 +76,18 @@ class ApplyInitialConfigurationUseCase {
 
     _ref.invalidate(sharedPrefsProvider);
 
-    await _startForegroundIfEnabled();
+    try {
+      await _startForegroundIfEnabled();
+    } catch (error) {
+      throw MonitoringStartupException(error);
+    }
+    if (!_ref.mounted) return;
     _sendStartupSync(config);
+    if (!await prefs.setBool(initialConfigurationDoneKey, true)) {
+      throw StateError('Initial configuration completion was not saved.');
+    }
+    _ref.invalidate(initialConfigurationDoneProvider);
+    _ref.invalidate(sharedPrefsProvider);
   }
 
   Future<void> _startForegroundIfEnabled() async {
@@ -82,14 +96,13 @@ class ApplyInitialConfigurationUseCase {
 
     final foregroundBridge = _ref.read(appForegroundBridgeProvider);
     final isServiceRunning = await foregroundBridge.isServiceRunning();
-    if (isServiceRunning) {
-      throw StateError(
-        'Foreground service is already running before initial configuration',
-      );
-    }
-
     final taskState = _ref.read(foregroundTaskStateProvider.notifier);
-    await foregroundBridge.startMonitoring();
+    taskState.setAlive(false);
+    if (isServiceRunning) {
+      await foregroundBridge.restartService();
+    } else {
+      await foregroundBridge.startMonitoring();
+    }
     await taskState.waitForStartupMessage();
   }
 

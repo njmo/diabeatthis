@@ -55,7 +55,7 @@ class ChatGptLoopbackCallback {
       request.response.headers.contentType = ContentType.html;
       request.response.headers.set(
         'Content-Security-Policy',
-        ChatGptCallbackPage.contentSecurityPolicy,
+        callbackPage.responseSecurityPolicy,
       );
       request.response.headers.set('X-Content-Type-Options', 'nosniff');
       request.response.write(callbackPage.html);

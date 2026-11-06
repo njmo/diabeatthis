@@ -33,6 +33,10 @@ class SetupFeaturesStep extends StatelessWidget {
                 .toList(),
             mode: controller.state.mode,
             selected: controller.state.selected,
+            unavailable: controller.available
+                .where((feature) => !controller.canEnableFeature(feature.id))
+                .map((feature) => feature.id)
+                .toSet(),
             onChanged: controller.select,
           ),
       const SizedBox(height: 16),

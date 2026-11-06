@@ -20,6 +20,8 @@ class SetupAiModule extends StatelessWidget {
       ),
       const SizedBox(height: 16),
       AiSettingsSection(
+        submissionController: controller.aiSubmission,
+        wizardMode: true,
         onChanged: () => controller.invalidateModule(SetupModule.ai),
         onSaved: () => controller.completeModule(SetupModule.ai),
       ),

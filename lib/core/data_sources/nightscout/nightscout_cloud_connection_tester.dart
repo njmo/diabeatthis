@@ -23,6 +23,6 @@ class NightscoutCloudConnectionTester {
   final NightscoutRepositoryImpl _repository;
 
   Future<void> testConnection() async {
-    await _repository.fetchStatus();
+    await _repository.fetchStatus().timeout(const Duration(seconds: 15));
   }
 }

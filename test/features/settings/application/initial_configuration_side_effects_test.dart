@@ -7,6 +7,7 @@ import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_option_availability.dart';
+import 'package:diabeatthis/core/data_sources/nightscout/nightscout_connection_verification.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/nightscout_storage_keys.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_connection_check_provider.dart';
 import 'package:diabeatthis/core/data_sources/receiver/data_receiver_activation_controller.dart';
@@ -173,4 +174,46 @@ void main() {
       },
     );
   }
+  test(
+    'final save reuses a fresh successful setup check for the same credentials',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPrefsProvider.overrideWith((ref) async => prefs),
+          dataSourceOptionAvailabilityProvider.overrideWith(
+            (ref) async => const DataSourceOptionAvailability.none(),
+          ),
+          nightscoutConnectionCheckProvider.overrideWithValue(
+            ({required String url, required String token}) async =>
+                throw StateError('Unexpected duplicate connection test'),
+          ),
+          dataReceiverActivationControllerProvider.overrideWithValue(
+            DataReceiverActivationController(
+              xdripReceiverController: RecordingDataReceiverController(),
+              aapsReceiverController: RecordingDataReceiverController(),
+            ),
+          ),
+          monitorServiceEnabledProvider.overrideWith((ref) => false),
+          appEventRouterProvider.overrideWithValue(
+            RecordingSettingsEventRouter(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      container
+          .read(nightscoutConnectionVerificationProvider)
+          .remember(url: 'https://example.test', token: 'token');
+      await container.read(applyInitialConfigurationUseCaseProvider)(
+        config: const DataSourceConfig.defaults(),
+        nightscoutUrl: 'https://example.test',
+        nightscoutToken: 'token',
+        childName: 'Child',
+        language: applicationLanguageByCode('en'),
+      );
+      expect(prefs.getBool(initialConfigurationDoneKey), isTrue);
+      expect(prefs.getString(nightscoutUrlKey), 'https://example.test');
+    },
+  );
 }

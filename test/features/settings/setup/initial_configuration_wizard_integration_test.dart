@@ -64,12 +64,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      expect(find.byType(ProfileNameField), findsOneWidget);
       await tester.ensureVisible(find.text('Continue without signing in'));
       await tester.tap(find.text('Continue without signing in'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Continue'));
-      await tester.pumpAndSettle();
-      expect(find.byType(ProfileNameField), findsOneWidget);
+      expect(find.byType(ProfileNameField), findsNothing);
       final wizard = tester.state<SetupWizardViewState>(
         find.byType(SetupWizard),
       );
@@ -128,12 +127,12 @@ void main() {
       final wizard = tester.state<SetupWizardViewState>(
         find.byType(SetupWizard),
       );
-      wizard.controller.setMode(SetupDeviceMode.caregiver);
       auth.result = const GoogleAccount(
         uid: 'parent',
         displayName: 'Test Parent',
       );
       await wizard.controller.signInGoogle();
+      wizard.controller.setMode(SetupDeviceMode.caregiver);
       await tester.pumpAndSettle();
       expect(find.byType(ProfileNameField), findsNothing);
       expect(wizard.controller.state.name, 'Test Parent');

@@ -2862,7 +2862,7 @@
   "settingsAiTitle": "AI",
   "settingsAiSubtitle": "Wybierz dostawców analiz i obrazów.",
   "settingsAiProviderLabel": "Dostawca AI",
-  "settingsAiFirebaseProvider": "DiabeatThis AI (Firebase/Gemini)",
+  "settingsAiFirebaseProvider": "DiaBeatThis",
   "settingsAiOpenAiProvider": "OpenAI — własny klucz API",
   "settingsAiChatGptProvider": "ChatGPT — własna subskrypcja",
   "settingsAiFirebaseDescription": "AI udostępniane przez DiabeatThis.",
@@ -4167,7 +4167,7 @@
   "settingsCountryManual": "Wybrany kraj: {country}",
   "settingsCountryUnknown": "Urządzenie nie udostępnia kraju. Możesz ustawić go ręcznie.",
   "settingsCountryUseSystem": "Użyj regionu urządzenia",
-  "setupAiLiveDescription": "To te same ustawienia AI co w aplikacji. Wybierz dostawcę i zapisz ustawienia, aby przejść dalej.",
+  "setupAiLiveDescription": "Wybierz dostawcę AI. Po kliknięciu Dalej sprawdzimy połączenie i zapiszemy ustawienia.",
   "setupLiveConfigurationNotice": "Ustawienia AI, logowanie Google i zgody systemowe są rzeczywiste. Parowanie, komunikator i nowe ustawienia funkcji pozostają demonstracyjne.",
   "setupLiveConfigurationFinished": "Zapisane ustawienia AI i przyznane zgody pozostają zachowane. Pozostałe demonstracyjne wybory nie uruchamiają parowania ani komunikatora.",
   "setupGoogleSignIn": "Zaloguj przez Google",
@@ -4203,7 +4203,7 @@
   "setupChooseAccountFirst": "Zaloguj się przez Google albo wybierz kontynuację bez logowania. Tryb opiekuna wymaga Google.",
   "setupStepRole": "Rola",
   "setupWelcomeTitle": "Witaj w DiaBeatThis",
-  "setupWelcomeDescription": "Zaloguj się przez Google lub korzystaj z funkcji lokalnych. W następnym kroku wybierzesz, kto będzie korzystać z telefonu.",
+  "setupWelcomeDescription": "Podaj nazwę użytkownika lub zaloguj się przez Google. W następnym kroku wybierzesz rolę.",
   "chatGptSignInFailedAt": "Nie ukończono logowania ChatGPT. Etap: {stage}. {reason}",
   "chatGptSignInCredentials": "odczyt zapisanych danych logowania",
   "chatGptSignInDiscovery": "połączenie z usługą logowania",
@@ -4222,5 +4222,25 @@
         "type": "String"
       }
     }
-  }
+  },
+  "setupGoogleSignedInAs": "Zalogowano jako {name}",
+  "@setupGoogleSignedInAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setupWelcomeSignedInDescription": "Konto jest połączone. W kolejnym kroku wybierzesz, dla kogo konfigurujesz aplikację.",
+  "setupEnterName": "Jak masz na imię?",
+  "setupAlternativeOr": "lub",
+  "setupEnterUserName": "Podaj nazwę użytkownika",
+  "setupCaregiverSignInFirst": "Zaloguj się przez Google na Starcie, aby wybrać tę rolę.",
+  "setupFamilySignInFirst": "Wymaga logowania Google na Starcie.",
+  "setupRequirementHealthMonitoring": "Aktywność fizyczna — monitory zdrowia",
+  "setupHealthMonitoringWhy": "Android wymaga tego dostępu do uruchomienia naszej usługi monitorowania zdrowia w tle. Aplikacja nie używa go do liczenia kroków.",
+  "settingsMonitoringStartFailed": "Nie udało się uruchomić monitorów. Sprawdź uprawnienia w kroku Dostęp i spróbuj ponownie.",
+  "settingsAiChatGptVerified": "Zweryfikowano konto ChatGPT",
+  "settingsAiChatGptReturnToApp": "Wróć do aplikacji",
+  "settingsAiChatGptReturning": "Odpowiedź odebrana. Wracamy do aplikacji, aby zakończyć weryfikację."
 }

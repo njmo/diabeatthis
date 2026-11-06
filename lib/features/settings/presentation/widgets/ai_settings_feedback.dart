@@ -12,6 +12,7 @@ enum AiSettingsFeedbackKind {
   saved,
   tested,
   connected,
+  verified,
   disconnected,
   keyRemoved,
 }
@@ -34,6 +35,8 @@ class AiSettingsFeedback extends StatelessWidget {
         : switch (success) {
             AiSettingsFeedbackKind.saved => context.lang.settingsAiSaved,
             AiSettingsFeedbackKind.tested => context.lang.settingsAiTestPassed,
+            AiSettingsFeedbackKind.verified =>
+              context.lang.settingsAiChatGptVerified,
             AiSettingsFeedbackKind.connected =>
               context.lang.settingsAiChatGptConnected,
             AiSettingsFeedbackKind.disconnected =>

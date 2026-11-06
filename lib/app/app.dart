@@ -78,12 +78,11 @@ class _MyAppState extends ConsumerState<MyApp>
             try {
               await _foregroundBridge.startMonitoring();
               await taskState.waitForStartupMessage();
+              logI('Foreground task is alive, requesting data sync');
+              sendSyncCommand();
             } catch (e, st) {
               logW('Foreground alive wait timed out: $e\n$st');
             }
-
-            logI('Foreground task is alive, requesting data sync');
-            sendSyncCommand();
           } else {
             logI(
               "Not starting foreground service, initial configuration is not done",

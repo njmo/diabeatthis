@@ -12,6 +12,7 @@ import '../../../../core/data_sources/config/data_source_option_availability.dar
 import '../../../../core/data_sources/nightscout/nightscout_storage_keys.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../../foreground/service/monitoring_startup_exception.dart';
 import '../../application/apply_initial_configuration_use_case.dart';
 import '../../data/models/initial_configuration_state.dart';
 
@@ -116,7 +117,9 @@ class InitialConfigurationController extends _$InitialConfigurationController
     } catch (e, st) {
       logE('Initial configuration failed', error: e, stackTrace: st);
       _setSubmitError(
-        current.config.usesCloud
+        e is MonitoringStartupException
+            ? messages.settingsMonitoringStartFailed
+            : current.config.usesCloud
             ? messages.settingsConnectionError
             : messages.settingsInitialSaveError,
       );

@@ -4,9 +4,11 @@ import '../../../../common/auth/google_authentication_repository.dart';
 import '../../../../common/family/family_management_context.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/l10n/resolve_application_locale.dart';
+import '../../../../common/setup/domain/setup_account_choice.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
 import '../../../../common/setup/domain/setup_permission_gateway.dart';
 import '../../../../common/setup/domain/setup_step.dart';
+import '../../../../common/setup/domain/validate_setup_module_use_case.dart';
 import '../../../../common/widgets/form_step_header.dart';
 import '../../../../common/widgets/show_localized_dialog.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
@@ -38,6 +40,7 @@ class SetupWizard extends StatefulWidget {
     this.saveError,
     this.authentication,
     this.permissions,
+    this.checkNightscoutConnection,
   });
   final SetupWizardState initialState;
   final DataSourceOptionAvailability availability;
@@ -47,6 +50,7 @@ class SetupWizard extends StatefulWidget {
   final String? saveError;
   final GoogleAuthenticationRepository? authentication;
   final SetupPermissionGateway? permissions;
+  final SetupConnectionValidator? checkNightscoutConnection;
 
   @override
   State<SetupWizard> createState() => SetupWizardViewState();
@@ -59,6 +63,7 @@ class SetupWizardViewState extends State<SetupWizard>
     familyContext: widget.familyContext,
     authentication: widget.authentication,
     permissions: widget.permissions,
+    checkNightscoutConnection: widget.checkNightscoutConnection,
   );
   bool allowExit = false;
   @override
@@ -133,6 +138,16 @@ class SetupWizardViewState extends State<SetupWizard>
 
   Future<void> next(BuildContext context) async {
     FocusScope.of(context).unfocus();
+    if (controller.state.currentStep == SetupStep.start &&
+        controller.authentication != null &&
+        !controller.state.signedIn) {
+      await controller.continueWithoutGoogle();
+      if (!context.mounted ||
+          controller.state.signInFailed ||
+          controller.state.accountChoice != SetupAccountChoice.local) {
+        return;
+      }
+    }
     final incompleteConfiguration =
         controller.incompleteRequiredConfigurationModule;
     if (controller.state.currentStep == SetupStep.summary &&
@@ -205,13 +220,11 @@ class SetupWizardViewState extends State<SetupWizard>
 
   Widget contentForStep(BuildContext context) =>
       switch (controller.state.currentStep) {
-        SetupStep.start => SetupStartStep(controller: controller),
-        SetupStep.role => SetupRoleStep(
+        SetupStep.start => SetupStartStep(
           controller: controller,
-          enableProfilePhoto:
-              widget.onSavePatient != null &&
-              controller.state.mode == SetupDeviceMode.patient,
+          enableProfilePhoto: widget.onSavePatient != null,
         ),
+        SetupStep.role => SetupRoleStep(controller: controller),
         SetupStep.features => SetupFeaturesStep(controller: controller),
         SetupStep.access => SetupAccessStep(controller: controller),
         SetupStep.configuration => switch (controller.module) {
@@ -274,9 +287,7 @@ class SetupWizardViewState extends State<SetupWizard>
       child: Scaffold(
         appBar: AppBar(
           actions: [
-            if (state.currentStep == SetupStep.start &&
-                !SetupLanguageControl.needsFallbackChoice(controller))
-              SetupLanguageControl(controller: controller, compact: true),
+            SetupLanguageControl(controller: controller),
             if (widget.onSavePatient == null && Navigator.of(context).canPop())
               IconButton(
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
@@ -339,12 +350,22 @@ class SetupWizardViewState extends State<SetupWizard>
         ),
         bottomNavigationBar: SetupWizardActions(
           saving: busy,
-          onNext: () => next(context),
+          onNext:
+              inModule &&
+                  controller.module == SetupModule.ai &&
+                  !controller.aiSubmission.isReady
+              ? null
+              : () => next(context),
           onPreviousFeature: inModule && state.moduleIndex > 0 ? back : null,
           onSkip: inModule && (controller.module?.canSkip ?? false)
               ? () => skip(context)
               : null,
-          label: state.currentStep == SetupStep.summary
+          label:
+              state.currentStep == SetupStep.start &&
+                  controller.authentication != null &&
+                  !state.signedIn
+              ? context.lang.setupContinueWithoutGoogle
+              : state.currentStep == SetupStep.summary
               ? (savePatient
                     ? context.lang.setupPatientSave
                     : context.lang.setupFinishPreview)

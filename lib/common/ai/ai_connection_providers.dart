@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/language.dart';
@@ -17,7 +18,13 @@ final chatGptAuthServiceProvider = Provider<ChatGptAuthService>((ref) {
     credentials: ref.watch(aiCredentialStoreProvider),
     callbackPage: () => ChatGptCallbackPage(
       title: lang.settingsAiChatGptCallbackTitle,
-      message: lang.settingsAiChatGptCallbackMessage,
+      message: !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+          ? lang.settingsAiChatGptReturning
+          : lang.settingsAiChatGptCallbackMessage,
+      returnToAppLabel:
+          !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+          ? lang.settingsAiChatGptReturnToApp
+          : null,
     ),
   );
   ref.onDispose(service.dispose);

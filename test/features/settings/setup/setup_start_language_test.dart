@@ -1,10 +1,10 @@
 import 'package:diabeatthis/common/l10n/application_language.dart';
+import 'package:diabeatthis/common/l10n/application_language_picker.dart';
 import 'package:diabeatthis/common/setup/domain/setup_step.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_option_availability.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_state.dart';
-import 'package:diabeatthis/features/settings/presentation/widgets/application_language_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -23,9 +23,6 @@ void main() {
     ) async {
       tester.binding.platformDispatcher.localesTestValue = locales;
       addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
-      final fallback = !locales.any(
-        (locale) => ['pl', 'en'].contains(locale.languageCode),
-      );
       final polish = locales.any((locale) => locale.languageCode == 'pl');
       final auth = SetupGoogleAuthenticationTestRepository();
       addTearDown(auth.dispose);
@@ -50,20 +47,29 @@ void main() {
         find.text(polish ? 'Witaj w DiaBeatThis' : 'Welcome to DiaBeatThis'),
         findsOneWidget,
       );
+      expect(find.byIcon(Icons.language), findsOneWidget);
+      expect(find.byType(ApplicationLanguagePicker), findsNothing);
+      await tester.tap(find.byIcon(Icons.language));
+      await tester.pumpAndSettle();
+      final picker = find.byType(ApplicationLanguagePicker);
+      expect(picker, findsOneWidget);
       expect(
-        find.byType(ApplicationLanguageSelector),
-        fallback ? findsOneWidget : findsNothing,
+        find.descendant(of: picker, matching: find.byType(ListTile)),
+        findsNWidgets(2),
       );
-      if (fallback) {
-        expect(
-          tester.getTopLeft(find.byType(ApplicationLanguageSelector)).dy,
-          lessThan(tester.getTopLeft(find.text('Sign in with Google')).dy),
-        );
-      } else {
-        await tester.tap(find.byIcon(Icons.language));
-        await tester.pumpAndSettle();
-        expect(find.byType(ApplicationLanguageSelector), findsOneWidget);
-      }
+      expect(
+        find.descendant(
+          of: picker,
+          matching: find.text(polish ? 'Systemowy' : 'System'),
+        ),
+        findsNothing,
+      );
+      final selected = tester
+          .widgetList<ListTile>(
+            find.descendant(of: picker, matching: find.byType(ListTile)),
+          )
+          .singleWhere((tile) => tile.selected);
+      expect((selected.title! as Text).data, polish ? 'Polski' : 'English');
       expect(
         draft.language.code,
         'system',

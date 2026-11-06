@@ -12,6 +12,7 @@ import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_co
 import 'package:diabeatthis/core/data_sources/receiver/data_receiver_activation_controller.dart';
 import 'package:diabeatthis/core/data_sources/receiver/providers/data_receiver_activation_controller_provider.dart';
 import 'package:diabeatthis/features/settings/application/apply_initial_configuration_use_case.dart';
+import 'package:diabeatthis/foreground/service/monitoring_startup_exception.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -100,7 +101,7 @@ void main() {
       // Let service startup finish so assertions exercise the readiness wait.
       await Future<void>.delayed(Duration.zero);
 
-      expect(prefs.getBool(initialConfigurationDoneKey), isTrue);
+      expect(prefs.getBool(initialConfigurationDoneKey), isNot(true));
       expect(aaps.calls, [DataReceiverCall.enabled]);
       expect(bridge.calls, ['isRunning', 'start']);
       expect(router.events, isEmpty);
@@ -110,6 +111,7 @@ void main() {
       await operation;
 
       expect(completed, isTrue);
+      expect(prefs.getBool(initialConfigurationDoneKey), isTrue);
       expect(router.events, [
         const ExecuteCommandEvent.syncSettings(
           data: {
@@ -128,14 +130,19 @@ void main() {
   );
 
   test(
-    'running patient service prevents a duplicate initial start and startup sync',
+    'retry with a running patient service restarts and awaits readiness',
     () async {
       bridge.running = true;
 
-      await expectLater(configure(), throwsStateError);
-
-      expect(bridge.calls, ['isRunning']);
+      final operation = configure();
+      await bridge.started.future;
+      await Future<void>.delayed(Duration.zero);
+      expect(bridge.calls, ['isRunning', 'restart']);
       expect(router.events, isEmpty);
+      container.read(foregroundTaskStateProvider.notifier).setAlive(true);
+      await operation;
+      expect(prefs.getBool(initialConfigurationDoneKey), isTrue);
+      expect(router.events, hasLength(2));
     },
   );
 
@@ -145,11 +152,21 @@ void main() {
       final failure = StateError('Service unavailable');
       bridge.startError = failure;
 
-      await expectLater(configure(), throwsA(same(failure)));
+      await expectLater(
+        configure(),
+        throwsA(
+          isA<MonitoringStartupException>().having(
+            (error) => error.cause,
+            'cause',
+            same(failure),
+          ),
+        ),
+      );
 
       expect(bridge.calls, ['isRunning', 'start']);
       expect(router.events, isEmpty);
       expect(container.read(foregroundTaskStateProvider).alive, isFalse);
+      expect(prefs.getBool(initialConfigurationDoneKey), isNot(true));
     },
   );
 }

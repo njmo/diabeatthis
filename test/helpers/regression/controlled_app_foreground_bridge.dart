@@ -44,6 +44,10 @@ class ControlledAppForegroundBridge implements AppForegroundBridge {
       throw StateError('Unexpected communication port initialization');
 
   @override
-  Future<void> restartService() async =>
-      throw StateError('Unexpected service restart');
+  Future<void> restartService() async {
+    calls.add('restart');
+    if (!started.isCompleted) started.complete();
+    if (startError case final error?) throw error;
+    running = true;
+  }
 }

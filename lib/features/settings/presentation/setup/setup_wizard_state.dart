@@ -34,7 +34,10 @@ class SetupWizardState {
   int moduleIndex = 0;
 
   /// Family communication and the future data mirror share one feature switch.
-  bool get shareData => selected.contains(SetupFeatureId.familyChat);
+  bool get shareData =>
+      selected.contains(SetupFeatureId.familyChat) &&
+      (!requireGoogleForFamily || signedIn);
+  bool requireGoogleForFamily = false;
   SetupAccountChoice accountChoice = SetupAccountChoice.undecided;
   GoogleAccount? googleAccount;
   bool signingIn = false;

@@ -147,6 +147,8 @@ void main() {
       ]) {
         await controller.grant(requirement);
       }
+      expect(await controller.validateAndNext(), isFalse);
+      await controller.grant(SetupRequirement.healthMonitoring);
       expect(await controller.validateAndNext(), isTrue);
       expect(state.currentStep, SetupStep.configuration);
     },

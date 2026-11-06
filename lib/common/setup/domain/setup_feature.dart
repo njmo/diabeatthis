@@ -25,6 +25,7 @@ enum SetupFeatureId {
 enum SetupRequirement {
   notifications,
   backgroundExecution,
+  healthMonitoring,
   exactAlarms,
   camera,
   googleAccount,

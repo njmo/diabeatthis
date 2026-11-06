@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:diabeatthis/common/auth/google_account.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
 import 'package:diabeatthis/common/setup/domain/setup_permission_gateway.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_controller.dart';
@@ -46,6 +47,7 @@ void main() {
       expect(controller.state.mode, SetupDeviceMode.patient);
       auth.logout.complete();
       await selecting;
+      auth.accounts.add(const GoogleAccount(uid: 'a', displayName: 'Parent'));
       controller.setMode(SetupDeviceMode.caregiver);
       expect(controller.state.mode, SetupDeviceMode.caregiver);
     },

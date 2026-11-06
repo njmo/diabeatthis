@@ -39,11 +39,10 @@ void main() {
       expect(controller.state.accountChoice, SetupAccountChoice.local);
       expect(controller.state.shareData, isFalse);
       expect(await controller.validateAndNext(), isTrue);
+      expect(controller.canUseMode(SetupDeviceMode.caregiver), isFalse);
       controller.setMode(SetupDeviceMode.caregiver);
-      controller.goTo(SetupStep.role.index);
-      await controller.continueWithoutGoogle();
+      expect(controller.state.mode, SetupDeviceMode.patient);
       expect(controller.state.accountChoice, SetupAccountChoice.local);
-      expect(await controller.validateAndNext(), isFalse);
     },
   );
   test(
@@ -87,7 +86,7 @@ void main() {
     },
   );
   testWidgets(
-    'start offers Google or local mode and does not ask for a name when signed in',
+    'Start offers a local name or Google and Role does not repeat identity',
     (tester) async {
       final auth = SetupGoogleAuthenticationTestRepository()
         ..result = const GoogleAccount(
@@ -108,25 +107,22 @@ void main() {
       );
       expect(find.text('Zaloguj przez Google'), findsOneWidget);
       expect(find.text('Kontynuuj bez logowania'), findsOneWidget);
-      expect(find.byType(TextFormField), findsNothing);
+      expect(find.byType(TextFormField), findsOneWidget);
       await tester.ensureVisible(find.text('Zaloguj przez Google'));
       await tester.tap(find.text('Zaloguj przez Google'));
       await tester.pumpAndSettle();
-      expect(find.text('Alex Morgan'), findsOneWidget);
+      expect(find.text('Zalogowano jako Alex Morgan'), findsOneWidget);
       expect(find.byType(ProfileAvatar), findsOneWidget);
       expect(find.byType(TextFormField), findsNothing);
       expect(draft.name, 'Alex Morgan');
-      await tester.ensureVisible(find.text('Wyloguj'));
-      await tester.tap(find.text('Wyloguj'));
+      await tester.ensureVisible(find.byTooltip('Wyloguj'));
+      await tester.tap(find.byTooltip('Wyloguj'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Kontynuuj bez logowania'));
       await tester.tap(find.text('Kontynuuj bez logowania'));
       await tester.pumpAndSettle();
-      expect(find.byType(TextFormField), findsNothing);
-      await tester.tap(find.text('Dalej'));
-      await tester.pumpAndSettle();
       expect(draft.currentStep, SetupStep.role);
-      expect(find.byType(TextFormField), findsOneWidget);
+      expect(find.byType(TextFormField), findsNothing);
       expect(draft.accountChoice, SetupAccountChoice.local);
       expect(tester.takeException(), isNull);
     },

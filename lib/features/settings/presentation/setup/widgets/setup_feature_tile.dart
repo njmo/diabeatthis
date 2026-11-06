@@ -15,11 +15,13 @@ class SetupFeatureTile extends StatelessWidget {
     required this.feature,
     required this.selected,
     required this.onChanged,
+    this.enabled = true,
     this.mode = SetupDeviceMode.patient,
   });
   final SetupFeature feature;
   final SetupDeviceMode mode;
   final bool selected;
+  final bool enabled;
   final ValueChanged<bool> onChanged;
   @override
   Widget build(BuildContext context) {
@@ -60,6 +62,11 @@ class SetupFeatureTile extends StatelessWidget {
                   context.lang.featureDescription(feature.id, mode: mode),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                if (!enabled)
+                  Text(
+                    context.lang.setupFamilySignInFirst,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 if (feature.options.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -103,7 +110,10 @@ class SetupFeatureTile extends StatelessWidget {
                       child: Icon(Icons.check_circle_outline),
                     ),
                   )
-                : Switch(value: selected, onChanged: onChanged),
+                : Switch(
+                    value: selected,
+                    onChanged: enabled ? onChanged : null,
+                  ),
           ),
         ],
       ),

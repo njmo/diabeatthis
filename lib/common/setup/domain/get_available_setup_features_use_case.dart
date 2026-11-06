@@ -81,6 +81,7 @@ class GetAvailableSetupFeaturesUseCase {
         SetupRequirement.notifications,
         SetupRequirement.exactAlarms,
         SetupRequirement.backgroundExecution,
+        SetupRequirement.healthMonitoring,
         SetupRequirement.dataSource,
       },
     ),
@@ -103,6 +104,7 @@ class GetAvailableSetupFeaturesUseCase {
         SetupRequirement.notifications,
         SetupRequirement.exactAlarms,
         SetupRequirement.backgroundExecution,
+        SetupRequirement.healthMonitoring,
         SetupRequirement.dataSource,
       },
     ),
@@ -116,6 +118,7 @@ class GetAvailableSetupFeaturesUseCase {
       requirements: {
         SetupRequirement.notifications,
         SetupRequirement.backgroundExecution,
+        SetupRequirement.healthMonitoring,
       },
       options: [
         SetupFeatureOption(

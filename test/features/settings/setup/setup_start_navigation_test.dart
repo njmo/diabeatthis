@@ -21,8 +21,11 @@ void main() {
         authentication: auth,
       );
       addTearDown(controller.dispose);
+      auth.accounts.add(const GoogleAccount(uid: 'a', displayName: 'Parent'));
       controller.setMode(SetupDeviceMode.caregiver);
+      expect(controller.state.mode, SetupDeviceMode.caregiver);
       await controller.continueWithoutGoogle();
+      expect(controller.state.mode, SetupDeviceMode.patient);
       expect(
         controller.state.selectedByMode[SetupDeviceMode.caregiver],
         contains(SetupFeatureId.familyChat),
@@ -33,8 +36,9 @@ void main() {
       );
       expect(await controller.validateAndNext(), isTrue);
       expect(controller.state.currentStep, SetupStep.role);
-      expect(await controller.validateAndNext(), isFalse);
-      controller.setMode(SetupDeviceMode.patient);
+      expect(controller.canUseMode(SetupDeviceMode.caregiver), isFalse);
+      controller.setMode(SetupDeviceMode.caregiver);
+      expect(controller.state.mode, SetupDeviceMode.patient);
       expect(controller.state.accountChoice, SetupAccountChoice.local);
       expect(controller.state.shareData, isFalse);
       expect(await controller.validateAndNext(), isTrue);

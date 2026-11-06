@@ -6,6 +6,15 @@ class SetupAiSettingsTestController extends AiSettingsController {
   SetupAiSettingsTestController({this.configuration = const AiConfiguration()});
   AiConfiguration configuration;
   int saves = 0;
+  int tests = 0;
+  @override
+  Future<void> testConnection(
+    AiConfiguration configuration, {
+    String? apiKey,
+  }) async {
+    tests++;
+  }
+
   @override
   Future<AiConfiguration> build() async => configuration;
   @override
