@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/family_sync/presentation/family_planning_entry.dart';
+
 import '../../../dashboard/presentation/widgets/dashboard_greeting.dart';
 import '../../../dashboard/presentation/widgets/dashboard_user_menu.dart';
 import 'caregiver_data_error_notice.dart';
@@ -19,6 +21,7 @@ class CaregiverDashboard extends StatelessWidget {
         children: const [
           CaregiverDataErrorNotice(),
           CaregiverNightscoutPanel(),
+          FamilyPlanningEntry(),
         ],
       ),
     ),

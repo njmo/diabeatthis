@@ -4,6 +4,7 @@ import '../../l10n/language.dart';
 
 String familySyncIntegrationLabel(BuildContext context, String kind) =>
     switch (kind) {
+      'workflowLocks' => context.lang.familyPlanMonitoring,
       'ingredients' => context.lang.familySyncIngredients,
       'ingredientHistory' => context.lang.familySyncIngredientHistory,
       'portions' => context.lang.familySyncPortions,

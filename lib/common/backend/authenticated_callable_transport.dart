@@ -11,8 +11,11 @@ class CallableIdentity {
 }
 
 class CallableFailure implements Exception {
-  const CallableFailure(this.code);
+  const CallableFailure(this.code, {this.rejectionCode});
   final String code;
+
+  /// Whitelisted definitive server refusal; absent for ambiguous transport errors.
+  final String? rejectionCode;
 }
 
 /// Authenticated calls never accept an identity, family or recipient override.
@@ -28,6 +31,10 @@ class AuthenticatedCallableTransport {
   final Future<CallableIdentity> Function() identity;
   final String? Function() currentUid;
   static const functions = {
+    'claimFamilyPlan',
+    'submitFamilyPlan',
+    'fetchFamilyPlans',
+    'acknowledgeFamilyPlan',
     'registerFamilyMirror',
     'publishFamilyMirror',
     'fetchFamilyMirror',
@@ -83,7 +90,21 @@ class AuthenticatedCallableTransport {
       }
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode != 200 || body['error'] != null) {
-        throw const CallableFailure('unavailable');
+        const rejections = {
+          'INVALID_ARGUMENT': 'invalid-argument',
+          'PERMISSION_DENIED': 'permission-denied',
+          'FAILED_PRECONDITION': 'failed-precondition',
+          'ALREADY_EXISTS': 'already-exists',
+          'NOT_FOUND': 'not-found',
+        };
+        final error = body['error'];
+        final rejection =
+            response.statusCode >= 400 &&
+                response.statusCode < 500 &&
+                error is Map
+            ? rejections[error['status']]
+            : null;
+        throw CallableFailure('unavailable', rejectionCode: rejection);
       }
       return Map<String, dynamic>.from(body['result'] as Map);
     } on CallableFailure {

@@ -39,6 +39,19 @@ class FamilyMirrorOutbox {
     }
     return row.read<String>('source_id');
   });
+
+  /// A batch and its journal gate must share the same SQLite snapshot.
+  Future<List<FamilyMirrorRecord>> publishable({
+    int limit = 25,
+  }) => db.transaction(() async {
+    final unbound = await db
+        .customSelect(
+          "SELECT operation_id FROM family_plan_journal WHERE outcome='applied' AND acknowledged=0 AND result_bound=0 LIMIT 1",
+        )
+        .get();
+    if (unbound.isNotEmpty) return <FamilyMirrorRecord>[];
+    return pending(limit: limit);
+  });
   Future<List<FamilyMirrorRecord>> pending({int limit = 25}) async {
     final rows = await db
         .customSelect(

@@ -264,5 +264,19 @@
       "nutrition_confidence",
       "created_at"
     ]
+  },
+  "workflowLocks": {
+    "table": "family_workflow_lock",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "kind",
+      "entity_id",
+      "phase",
+      "active",
+      "updated_at"
+    ]
   }
 }

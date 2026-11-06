@@ -46,3 +46,17 @@ Post-deployment checks confirmed all six functions are ACTIVE, all six reject un
 The caregiver's child-row Disconnect action resolves to the authenticated caregiver's membership, including for the sole caregiver. Explicit `self`, the caller UID and the caller's own family child UID are supported for compatibility with the previously installed client. Foreign family identifiers remain rejected, and the child's account and data are preserved. Leaving as the sole caregiver cancels open or pending invitations; re-pairing requires a fresh invitation. The corrected `disconnectFamilyMember` and `getFamilyStatus` functions have been deployed after explicit approval.
 
 The compact themed QR is automatically revealed after expansion. An actual emulator-generated code was decoded successfully by the system barcode detector. Approval uses one explicit action alongside the Google identity. The emulator test application was updated while retaining its data; no update was installed on the physical caregiver phone.
+
+
+## Selective mirror and caregiver plans
+
+The source additionally exports registerFamilyMirror, publishFamilyMirror, fetchFamilyMirror, submitFamilyPlan, fetchFamilyPlans, claimFamilyPlan and acknowledgeFamilyPlan. These seven endpoints and the metadata-only read exceptions for familyMirrorSignals/familyPlanSignals were deployed on 6 November 2026 after explicit approval. All document content stays callable-only, with verified Google, App Check and server-derived family authorization.
+
+Plan proposals use per-record locks, bounded typed payloads/aggregate versions and a durable child journal before canonical publication and final ACK. Claim authorization permits only a bounded in-flight lease; claim tokens remain stable for journal recovery. Pending operations are capped at 50 per child, and submissions/reads/claims/ACKs have server-side budgets. No caregiver endpoint accepts execution states or arbitrary notification recipients. See the implementation plan for acceptance gates and limitations.
+
+
+### Planning deployment record — 6 November 2026
+
+Explicitly approved deployment to diabeatthis-e634c created all seven mirror/planning endpoints, updated the existing six family endpoints from the reviewed codebase, and released the reviewed Firestore rules. All thirteen family functions and both existing catalog functions report ACTIVE in europe-west1. All seven new endpoints reject unauthenticated callable requests with HTTP 401; submitFamilyPlan also rejects forged authentication/App Check credentials with HTTP 401. Unauthenticated direct reads of mirror entities, plan documents and plan metadata return HTTP 403. These checks were read-only and created no family/plan data. A positive two-device acceptance test remains required.
+
+The ARM64 Android profile APK built successfully. No application was installed on either device. Start acceptance testing with family sync enabled on the child and Family plans open on the caregiver.

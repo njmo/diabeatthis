@@ -5,12 +5,15 @@ const {getAuth} = require('firebase-admin/auth');
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {requireGoogle, profile, FamilyError} = require('./common/security.cjs');
 const {createFamilyService} = require('./common/family_service.cjs');
+const {createPlanService} = require('./common/plan_service.cjs');
 const {createMirrorService} = require('./common/mirror_service.cjs');
 initializeApp();
 const auth = getAuth();
 const mirror = createMirrorService({store: getFirestore()});
-const service = {...createFamilyService({store: getFirestore(), auth}), registerMirror: mirror.register, publishMirror: mirror.publish, fetchMirror: mirror.fetch};
+const plans = createPlanService({store: getFirestore()});
+const service = {claimPlan:plans.claim,submitPlan:plans.submit,fetchPlans:plans.fetch,acknowledgePlan:plans.acknowledge,...createFamilyService({store: getFirestore(), auth}), registerMirror: mirror.register, publishMirror: mirror.publish, fetchMirror: mirror.fetch};
 for (const [name, operation] of Object.entries({
+  claimFamilyPlan:'claimPlan', submitFamilyPlan:'submitPlan', fetchFamilyPlans:'fetchPlans', acknowledgeFamilyPlan:'acknowledgePlan',
   registerFamilyMirror: 'registerMirror', publishFamilyMirror: 'publishMirror', fetchFamilyMirror: 'fetchMirror',
   createFamilyInvite: 'createInvite', requestFamilyJoin: 'requestJoin', decideFamilyJoin: 'decide',
   getFamilyStatus: 'status', disconnectFamilyMember: 'disconnect', finalizeFamilySetup: 'finalize',

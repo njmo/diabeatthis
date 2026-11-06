@@ -1,3 +1,4 @@
+import '../../../../common/family_sync/family_workflow_guard.dart';
 import '../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../common/monitoring/meal_monitoring_status.dart';
 import '../../../../core/domain/model/meal.dart';
@@ -30,6 +31,9 @@ class MealMonitorContext {
           );
     if (status == _lastPublishedStatus) return;
     _lastPublishedStatus = status;
+    context.container
+        .read(familyWorkflowGuardProvider)
+        .record('meal', status.mealId, phase.name);
     context.emitEvent(MealMonitoringStatusChanged(status));
   }
 

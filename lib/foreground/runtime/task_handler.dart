@@ -9,11 +9,14 @@ import '../../app/router/observers/riverpod_debug_observer.dart';
 import '../../common/app_mode/application_device_mode.dart';
 import '../../common/events/data/task/task_state_synchronization_payload.dart';
 import '../../common/family_sync/family_mirror_background_runtime.dart';
+import '../../common/family_sync/family_plan_background_runtime.dart';
+import '../../common/family_sync/family_workflow_guard.dart';
 import '../../common/family_sync/request_family_mirror_sync.dart';
 import '../../common/l10n/application_language.dart';
 import '../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
 import '../../core/drift/providers/database_provider.dart';
 import '../../core/logger/logger.dart';
+import '../../features/activity/data/services/activity_schedule_service.dart';
 import '../collector/device_status_collector.dart';
 import '../collector/foreground_collector.dart';
 import '../collector/glucose_collector.dart';
@@ -41,6 +44,7 @@ class MyTaskHandler extends TaskHandler with Logging {
 
   ProviderContainer? _container;
   FamilyMirrorBackgroundRuntime? _familyMirror;
+  FamilyPlanBackgroundRuntime? _familyPlans;
   ExternalEventHandler? _externalEventHandler;
   WorkflowScheduler? _taskScheduler;
   List<ForegroundCollector>? _collectors;
@@ -89,6 +93,16 @@ class MyTaskHandler extends TaskHandler with Logging {
     _familyMirror = FamilyMirrorBackgroundRuntime(
       _container!.read(databaseProvider),
     )..start();
+    final workflowGuard = _container!.read(familyWorkflowGuardProvider)
+      ..attach(_container!.read(databaseProvider));
+    _familyPlans = FamilyPlanBackgroundRuntime(
+      _container!.read(databaseProvider),
+      _familyMirror!,
+      workflowGuard: workflowGuard,
+      cancelConfirmation: (id) => _container!
+          .read(activityScheduleServiceProvider)
+          .cancelConfirmation!(id),
+    )..start();
 
     final tasks = [
       ServiceStatusUpdaterTask(),
@@ -121,6 +135,8 @@ class MyTaskHandler extends TaskHandler with Logging {
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
+    _familyPlans?.dispose();
+    _familyPlans = null;
     _familyMirror?.dispose();
     _familyMirror = null;
     _isStopping = true;
@@ -147,6 +163,7 @@ class MyTaskHandler extends TaskHandler with Logging {
     if (_isStopping) return;
     if (data == familyMirrorSyncRequest) {
       _familyMirror?.requestSync();
+      unawaited(_familyPlans?.tick());
       return;
     }
     final handler = _externalEventHandler;

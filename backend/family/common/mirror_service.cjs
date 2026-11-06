@@ -39,10 +39,13 @@ function createMirrorService({store}) {
   async function register(uid, data) {
     exact(data, ['sourceId']); source(data.sourceId); await rate(uid, 'register', 20);
     return store.runTransaction(async tx => {
-      await familyContext(store, tx, uid, true);
+      const context=await familyContext(store, tx, uid, true);
       const existing = (await tx.get(root(uid))).data();
       if (existing && existing.sourceId !== data.sourceId) fail('failed-precondition');
-      if (!existing) tx.set(root(uid), {sourceId: data.sourceId, sequence: 0});
+      if (!existing) {
+        tx.set(root(uid), {sourceId: data.sourceId, sequence: 0});
+        for(const memberUid of context.family.memberUids) tx.set(store.doc(`familyMirrorSignals/${memberUid}`),{ownerUid:uid,sourceId:data.sourceId,sequence:0});
+      }
       return {sourceId: data.sourceId};
     });
   }

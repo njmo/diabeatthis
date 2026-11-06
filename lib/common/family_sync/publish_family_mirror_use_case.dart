@@ -33,6 +33,14 @@ class PublishFamilyMirrorUseCase {
     if (!await permitted()) return 0;
     // No callable, rate-limit write or identity loading for an empty queue.
     if ((await outbox.pending(limit: 1)).isEmpty) return 0;
+    // A newly allocated record must be locked to its pending caregiver plan
+    // before any independent mirror worker can make it visible to others.
+    final unbound = await outbox.db
+        .customSelect(
+          "SELECT operation_id FROM family_plan_journal WHERE outcome='applied' AND acknowledged=0 AND result_bound=0 LIMIT 1",
+        )
+        .get();
+    if (unbound.isNotEmpty) return 0;
     final source = await outbox.sourceForOwner(uid);
     await transport.call(
       'registerFamilyMirror',
@@ -46,7 +54,7 @@ class PublishFamilyMirrorUseCase {
     for (var batch = 0; batch < 10; batch++) {
       if (currentUid() != uid) throw const CallableFailure('unauthenticated');
       if (!await permitted()) break;
-      final pending = await outbox.pending();
+      final pending = await outbox.publishable();
       if (pending.isEmpty) break;
       final records = <FamilyMirrorRecord>[];
       for (final record in pending) {

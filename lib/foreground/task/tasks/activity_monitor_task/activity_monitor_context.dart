@@ -1,3 +1,4 @@
+import '../../../../common/family_sync/family_workflow_guard.dart';
 import '../../../../common/monitoring/activity_duration_source.dart';
 import '../../../../common/monitoring/activity_monitoring_phase.dart';
 import '../../../../common/monitoring/activity_monitoring_status.dart';
@@ -18,6 +19,9 @@ class ActivityMonitorContext {
           );
     if (status == _lastPublishedStatus) return;
     _lastPublishedStatus = status;
+    context.container
+        .read(familyWorkflowGuardProvider)
+        .record('activity', status.activityLogId, phase.name);
     context.emitEvent(ActivityMonitoringStatusChanged(status));
   }
 

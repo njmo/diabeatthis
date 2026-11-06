@@ -244,4 +244,10 @@ const familyMirrorIntegrations = <FamilyMirrorIntegration>[
       'notes',
     ],
   ),
+  FamilyMirrorIntegration(
+    'workflowLocks',
+    'family_workflow_lock',
+    ['id'],
+    ['id', 'kind', 'entity_id', 'phase', 'active', 'updated_at'],
+  ),
 ];
