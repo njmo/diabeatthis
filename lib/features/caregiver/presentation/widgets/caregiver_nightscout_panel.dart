@@ -50,13 +50,6 @@ class CaregiverNightscoutPanel extends ConsumerWidget {
                   hasIob: device.hasIob,
                   hasCob: device.hasCob,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  context.lang.caregiverDeviceReadingAge(
-                    formatAgo(now.difference(device.date)),
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
               ],
               if (target != null &&
                   target.isValid &&

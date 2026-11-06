@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../common/auth/google_authentication_repository.dart';
 import '../../../../common/family/family_management_context.dart';
+import '../../../../common/family/family_pairing_repository.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/l10n/resolve_application_locale.dart';
 import '../../../../common/setup/domain/setup_account_choice.dart';
@@ -36,6 +37,7 @@ class SetupWizard extends StatefulWidget {
     required this.availability,
     this.onSavePatient,
     this.onSaveCaregiver,
+    this.familyRepository,
     this.familyContext = FamilyManagementContext.settings,
     this.saving = false,
     this.saveError,
@@ -48,6 +50,7 @@ class SetupWizard extends StatefulWidget {
   final Future<bool> Function(SetupWizardState draft)? onSavePatient;
   final Future<bool> Function(SetupWizardState draft)? onSaveCaregiver;
   final FamilyManagementContext familyContext;
+  final FamilyPairingRepository? familyRepository;
   final bool saving;
   final String? saveError;
   final GoogleAuthenticationRepository? authentication;
@@ -62,6 +65,7 @@ class SetupWizardViewState extends State<SetupWizard>
     with WidgetsBindingObserver {
   late final controller = SetupWizardController(
     widget.initialState,
+    familyRepository: widget.familyRepository,
     familyContext: widget.familyContext,
     authentication: widget.authentication,
     permissions: widget.permissions,

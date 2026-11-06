@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/family/presentation/secure_family_panel.dart';
+import '../../../../../common/family/secure_family_repository.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
 import '../../widgets/google_account_card.dart';
@@ -35,7 +37,15 @@ class SetupFamilyModule extends StatelessWidget {
       ),
       if (controller.state.signedIn) ...[
         const SizedBox(height: 16),
-        SetupFamilyPairingPanel(controller: controller),
+        if (controller.familyRepository
+            case final SecureFamilyRepository repository)
+          SecureFamilyPanel(
+            key: ValueKey(controller.state.googleAccount?.uid),
+            repository: repository,
+            mode: controller.state.mode,
+          )
+        else
+          SetupFamilyPairingPanel(controller: controller),
       ],
     ],
   );

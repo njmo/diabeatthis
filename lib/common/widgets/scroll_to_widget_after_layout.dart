@@ -2,7 +2,10 @@ import 'package:flutter/widgets.dart';
 
 /// Reveals a newly expanded section after its final size is laid out.
 /// The returned callback cancels a pending reveal if the selection changes.
-VoidCallback scrollToWidgetAfterLayout(GlobalKey target) {
+VoidCallback scrollToWidgetAfterLayout(
+  GlobalKey target, {
+  Duration duration = const Duration(milliseconds: 250),
+}) {
   var cancelled = false;
   WidgetsBinding.instance.addPostFrameCallback((_) {
     final context = target.currentContext;
@@ -10,7 +13,7 @@ VoidCallback scrollToWidgetAfterLayout(GlobalKey target) {
     Scrollable.ensureVisible(
       context,
       alignment: 0,
-      duration: const Duration(milliseconds: 250),
+      duration: duration,
       curve: Curves.easeOutCubic,
     );
   });

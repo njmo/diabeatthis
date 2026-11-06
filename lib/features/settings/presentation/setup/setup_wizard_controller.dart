@@ -8,6 +8,7 @@ import '../../../../common/family/demo_family_pairing_repository.dart';
 import '../../../../common/family/family_management_context.dart';
 import '../../../../common/family/family_pairing_member.dart';
 import '../../../../common/family/family_pairing_repository.dart';
+import '../../../../common/family/secure_family_repository.dart';
 import '../../../../common/family/use_cases/create_family_invitation_use_case.dart';
 import '../../../../common/family/use_cases/disconnect_family_member_use_case.dart';
 import '../../../../common/family/use_cases/simulate_family_pairing_use_case.dart';
@@ -308,6 +309,8 @@ class SetupWizardController extends ChangeNotifier {
       );
 
   Future<void> generatePairingInvitation() async {
+    // Live invitations are created only by the explicit action in SecureFamilyPanel.
+    if (familyRepository is SecureFamilyRepository) return;
     if (!state.signedIn || state.generatingInvitation || disposed) return;
     final session = pairingSession, request = ++invitationRequest;
     final mode = state.mode;

@@ -3701,7 +3701,7 @@
   "setupFeatureGroupAssistance": "AI assistance",
   "setupCapabilitiesTitle": "What you can do",
   "setupCapabilitiesDescription": "Explore the app. Built-in features remain enabled, while switches control optional features. The information button opens details and a wiki guide.",
-  "setupCaregiverCapabilitiesNotice": "The Nightscout overview works after connecting. Family features, planning for the child and messaging remain demonstrations.",
+  "setupCaregiverCapabilitiesNotice": "The Nightscout overview works after connecting. Family account pairing is available; shared planning and messaging remain demonstrations.",
   "settingsAiAuthorFundedNotice": "DiaBeatThis AI is temporarily free for users. The service is billed by usage (pay-as-you-use), and the app author currently covers the costs.",
   "settingsAiAdvisorUnavailable": "Temporarily disabled. Enabling AI-assisted Meal Advisor is currently unavailable.",
   "settingsCountryRegionDescription": "The region helps recognize local dishes. The device region is used by default; you can change it.",
@@ -3711,7 +3711,7 @@
   "settingsCountryUnknown": "The device does not provide a country. You can set it manually.",
   "settingsCountryUseSystem": "Use device region",
   "setupAiLiveDescription": "Choose an AI provider. Continue will check the connection and save your settings.",
-  "setupLiveConfigurationNotice": "AI, Nightscout, device mode, Google sign-in and system permissions are real. Pairing, messaging and new feature settings remain demonstrations.",
+  "setupLiveConfigurationNotice": "AI, Nightscout, device mode, Google sign-in, permissions and family pairing are real in app setup. Messaging, data sharing and other new feature settings remain demonstrations.",
   "setupLiveConfigurationFinished": "Saved AI settings and granted permissions are retained. Other demo choices do not start pairing or messaging.",
   "setupGoogleSignIn": "Sign in with Google",
   "setupGoogleSignOut": "Sign out",
@@ -3735,7 +3735,7 @@
       }
     }
   },
-  "setupFamilyLiveDescription": "Sign in with Google. Pairing and the linked-account list remain simulated for now.",
+  "setupFamilyLiveDescription": "Pair Google accounts using a one-time QR code and explicit approval. Messaging and data sharing will follow in a later update.",
   "settingsAiAuthorFundedTitle": "Temporarily free",
   "setupGoogleUnavailablePlatform": "Google sign-in is available on Android in this version.",
   "setupPermissionsIncomplete": "Grant the required permissions or turn off optional features that need them.",
@@ -3823,5 +3823,26 @@
       }
     }
   },
-  "caregiverNightscoutReadOnly": "Read-only data. The app does not upload carbohydrates or temporary targets."
+  "caregiverNightscoutReadOnly": "Read-only data. The app does not upload carbohydrates or temporary targets.",
+  "familyManagementTitle": "Family",
+  "familySettingsDescription": "Pair accounts and manage family access.",
+  "familyGoogleRequired": "Sign in with Google in Settings to manage your family.",
+  "familySecureExplanation": "Scanning requests access only. Check the Google account before approval. Additional caregivers need approval from an existing managing caregiver.",
+  "familyApprovalTitle": "Approve this caregiver?",
+  "familyApprovalExplanation": "Approve only an account you recognize. This account will join your family and become a managing caregiver.",
+  "familyApprove": "Approve",
+  "familyReject": "Reject",
+  "familyOperationFailed": "Could not verify family access. Check your connection and try again.",
+  "familyQrExpiration": "Single-use code, valid for 5 minutes. Keep it private.",
+  "familyWaitingApproval": "Request sent. Wait for approval on the child’s phone or by an existing managing caregiver.",
+  "familyConnected": "Account connected",
+  "familyDisconnectTitle": "Disconnect account?",
+  "familyDisconnectExplanation": "This account will lose access to this family. Previously viewed data cannot be removed remotely.",
+  "familyDisconnect": "Disconnect",
+  "familyLeave": "Leave family",
+  "familyCameraFailed": "Could not open the camera. Check camera permission in your phone settings.",
+  "familyRequestEnded": "This request is no longer active. Ask for a new code and scan again.",
+  "familyLeaveTitle": "Disconnect your account?",
+  "familyLeaveExplanation": "Your caregiver account will lose access to this family. The child’s account and data will remain unchanged.",
+  "caregiverDataRefreshFailed": "Could not refresh Nightscout data. The app will retry automatically."
 }

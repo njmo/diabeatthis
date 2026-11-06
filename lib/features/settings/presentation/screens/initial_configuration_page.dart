@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/auth/google_authentication_providers.dart';
 import '../../../../common/family/family_management_context.dart';
+import '../../../../common/family/family_providers.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/setup/domain/setup_feature_option.dart';
 import '../../../../common/setup/platform/native_setup_permission_gateway.dart';
@@ -38,6 +39,7 @@ class InitialConfigurationPage extends ConsumerWidget {
           ),
         ),
         data: (sources) => SetupWizard(
+          familyRepository: ref.watch(secureFamilyRepositoryProvider),
           familyContext: FamilyManagementContext.initialSetup,
           authentication: ref.read(googleAuthenticationRepositoryProvider),
           permissions: const NativeSetupPermissionGateway(),

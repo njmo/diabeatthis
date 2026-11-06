@@ -4158,7 +4158,7 @@
   "setupFeatureGroupAssistance": "Pomoc AI",
   "setupCapabilitiesTitle": "Co potrafi aplikacja",
   "setupCapabilitiesDescription": "Poznaj możliwości aplikacji. Funkcje bazowe pozostają włączone, a przełączniki sterują opcjami dodatkowymi. Przycisk informacji otwiera opis i poradnik wiki.",
-  "setupCaregiverCapabilitiesNotice": "Podgląd Nightscout działa po skonfigurowaniu połączenia. Funkcje rodzinne, planowanie dla dziecka i komunikator pozostają demonstracyjne.",
+  "setupCaregiverCapabilitiesNotice": "Podgląd Nightscout działa po połączeniu. Parowanie kont rodziny jest dostępne; wspólne planowanie i komunikator pozostają demonstracją.",
   "settingsAiAuthorFundedNotice": "DiaBeatThis AI jest tymczasowo bezpłatne dla użytkownika. Usługa jest rozliczana według użycia (pay-as-you-use), a koszty pokrywa autor aplikacji.",
   "settingsAiAdvisorUnavailable": "Tymczasowo wyłączone. Włączenie Meal Advisor wspomaganego AI jest obecnie niedostępne.",
   "settingsCountryRegionDescription": "Region pomaga rozpoznawać lokalne potrawy. Domyślnie używamy regionu urządzenia; możesz go zmienić.",
@@ -4168,7 +4168,7 @@
   "settingsCountryUnknown": "Urządzenie nie udostępnia kraju. Możesz ustawić go ręcznie.",
   "settingsCountryUseSystem": "Użyj regionu urządzenia",
   "setupAiLiveDescription": "Wybierz dostawcę AI. Po kliknięciu Dalej sprawdzimy połączenie i zapiszemy ustawienia.",
-  "setupLiveConfigurationNotice": "Ustawienia AI, Nightscout, tryb urządzenia, Google i zgody systemowe są rzeczywiste. Parowanie, komunikator i nowe ustawienia funkcji pozostają demonstracyjne.",
+  "setupLiveConfigurationNotice": "AI, Nightscout, tryb urządzenia, logowanie Google, uprawnienia i parowanie rodziny działają w konfiguracji aplikacji. Komunikator, udostępnianie danych i inne nowe ustawienia funkcji pozostają demonstracją.",
   "setupLiveConfigurationFinished": "Zapisane ustawienia AI i przyznane zgody pozostają zachowane. Pozostałe demonstracyjne wybory nie uruchamiają parowania ani komunikatora.",
   "setupGoogleSignIn": "Zaloguj przez Google",
   "setupGoogleSignOut": "Wyloguj",
@@ -4192,7 +4192,7 @@
       }
     }
   },
-  "setupFamilyLiveDescription": "Zaloguj się przez Google. Parowanie i lista powiązanych kont pozostają na razie demonstracyjne.",
+  "setupFamilyLiveDescription": "Połącz konta Google jednorazowym kodem QR i jawnym zatwierdzeniem. Komunikator i udostępnianie danych pojawią się w kolejnej aktualizacji.",
   "settingsAiAuthorFundedTitle": "Tymczasowo bezpłatne",
   "setupGoogleUnavailablePlatform": "Logowanie Google jest w tej wersji dostępne na Androidzie.",
   "setupPermissionsIncomplete": "Przyznaj wymagane zgody lub wyłącz opcjonalne funkcje, które ich potrzebują.",
@@ -4280,5 +4280,26 @@
       }
     }
   },
-  "caregiverNightscoutReadOnly": "Tylko podgląd danych. Aplikacja nie wysyła węglowodanów ani celów tymczasowych."
+  "caregiverNightscoutReadOnly": "Tylko podgląd danych. Aplikacja nie wysyła węglowodanów ani celów tymczasowych.",
+  "familyManagementTitle": "Rodzina",
+  "familySettingsDescription": "Połącz konta i zarządzaj dostępem rodziny.",
+  "familyGoogleRequired": "Zaloguj się przez Google w ustawieniach, aby zarządzać rodziną.",
+  "familySecureExplanation": "Skanowanie wysyła tylko prośbę o dostęp. Przed zatwierdzeniem sprawdź konto Google. Kolejnych opiekunów zatwierdza istniejący opiekun zarządzający.",
+  "familyApprovalTitle": "Zatwierdzić tego opiekuna?",
+  "familyApprovalExplanation": "Zatwierdź tylko konto, które rozpoznajesz. To konto dołączy do rodziny i zostanie opiekunem zarządzającym.",
+  "familyApprove": "Zatwierdź",
+  "familyReject": "Odrzuć",
+  "familyOperationFailed": "Nie udało się zweryfikować dostępu do rodziny. Sprawdź połączenie i spróbuj ponownie.",
+  "familyQrExpiration": "Kod jednorazowy, ważny 5 minut. Nie udostępniaj go innym osobom.",
+  "familyWaitingApproval": "Prośba wysłana. Poczekaj na zatwierdzenie na telefonie dziecka lub przez istniejącego opiekuna zarządzającego.",
+  "familyConnected": "Konto połączone",
+  "familyDisconnectTitle": "Odłączyć konto?",
+  "familyDisconnectExplanation": "Konto straci dostęp do tej rodziny. Nie można zdalnie usunąć wcześniej wyświetlonych danych.",
+  "familyDisconnect": "Odłącz",
+  "familyLeave": "Opuść rodzinę",
+  "familyCameraFailed": "Nie udało się otworzyć aparatu. Sprawdź uprawnienie aparatu w ustawieniach telefonu.",
+  "familyRequestEnded": "Ta prośba jest już nieaktywna. Poproś o nowy kod i zeskanuj go ponownie.",
+  "familyLeaveTitle": "Odłączyć Twoje konto?",
+  "familyLeaveExplanation": "Twoje konto opiekuna straci dostęp do tej rodziny. Konto i dane dziecka pozostaną zachowane.",
+  "caregiverDataRefreshFailed": "Nie udało się odświeżyć danych Nightscout. Aplikacja automatycznie ponowi próbę."
 }
