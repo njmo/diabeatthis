@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../../common/auth/google_account.dart';
+import '../../../../common/auth/google_authentication_repository.dart';
 import '../../../../common/family/demo_family_pairing_repository.dart';
 import '../../../../common/family/family_management_context.dart';
 import '../../../../common/family/family_pairing_member.dart';
@@ -13,24 +15,197 @@ import '../../../../common/family/use_cases/watch_family_members_use_case.dart';
 import '../../../../common/setup/domain/collect_setup_configuration_fields_use_case.dart';
 import '../../../../common/setup/domain/collect_setup_requirements_use_case.dart';
 import '../../../../common/setup/domain/get_available_setup_features_use_case.dart';
+import '../../../../common/setup/domain/setup_account_choice.dart';
 import '../../../../common/setup/domain/setup_configuration_field.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
 import '../../../../common/setup/domain/setup_feature_option.dart';
+import '../../../../common/setup/domain/setup_permission_gateway.dart';
 import '../../../../common/setup/domain/setup_step.dart';
 import '../../../../common/setup/domain/validate_setup_configuration_use_case.dart';
 import '../../../../common/setup/domain/validate_setup_module_use_case.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import 'setup_wizard_state.dart';
 
-/// Session-only demo choices. Never starts services or writes preferences.
+/// Coordinates setup choices with optional live account and permission adapters.
 class SetupWizardController extends ChangeNotifier {
   SetupWizardController(
     this.state, {
     FamilyPairingRepository? familyRepository,
     this.familyContext = FamilyManagementContext.settings,
     this.checkNightscoutConnection,
+    this.authentication,
+    this.permissions,
   }) : familyRepository = familyRepository ?? DemoFamilyPairingRepository(),
-       ownsFamilyRepository = familyRepository == null;
+       ownsFamilyRepository = familyRepository == null {
+    if (authentication != null) {
+      try {
+        accountSubscription = authentication!.watchAccount().listen(
+          applyGoogleAccount,
+          onError: (Object error) {
+            if (!disposed) {
+              applyGoogleAccount(null);
+              state.signInFailed = true;
+              changed();
+            }
+          },
+        );
+      } catch (_) {
+        state.signInFailed = true;
+      }
+    }
+  }
+  final GoogleAuthenticationRepository? authentication;
+  final SetupPermissionGateway? permissions;
+  StreamSubscription<GoogleAccount?>? accountSubscription;
+  final permissionRevisions = <SetupRequirement, int>{};
+  String? nameBeforeGoogle;
+
+  void applyGoogleAccount(GoogleAccount? account) {
+    if (disposed) return;
+    if (state.googleAccount?.uid == account?.uid &&
+        state.signedIn == (account != null)) {
+      if (account != null) {
+        state.googleAccount = account;
+        if (account.label.isNotEmpty) state.name = account.label;
+        changed();
+      }
+      return;
+    }
+    pairingSession++;
+    unawaited(familySubscription?.cancel());
+    familySubscription = null;
+    if (familyRepository is DemoFamilyPairingRepository) {
+      (familyRepository as DemoFamilyPairingRepository).reset();
+    }
+    if (account != null) {
+      if (state.googleAccount == null) nameBeforeGoogle = state.name;
+      state.name = account.label.isNotEmpty ? account.label : state.name;
+      state.accountChoice = SetupAccountChoice.google;
+    } else {
+      if (nameBeforeGoogle != null) state.name = nameBeforeGoogle!;
+      state.accountChoice = SetupAccountChoice.undecided;
+    }
+    state.googleAccount = account;
+    state.signedIn = account != null;
+    state.familyMembers = const [];
+    state.pairingInvitation = null;
+    state.paired = false;
+    state.generatingInvitation = false;
+    state.invitationFailed = false;
+    state.disconnectingMembers.clear();
+    state.configured.remove(SetupModule.family);
+    if (account != null) {
+      refreshFamilyMembers();
+      unawaited(generatePairingInvitation());
+    }
+    changed();
+  }
+
+  Future<void> signInGoogle() async {
+    if (authentication == null) {
+      simulateSignIn();
+      return;
+    }
+    if (disposed || state.signingIn) return;
+    state.signingIn = true;
+    state.signInFailed = false;
+    changed();
+    final session = pairingSession;
+    try {
+      final account = await authentication!.signIn();
+      if (!disposed && account != null && session == pairingSession) {
+        applyGoogleAccount(account);
+      }
+    } catch (_) {
+      if (!disposed) state.signInFailed = true;
+    } finally {
+      if (!disposed) {
+        state.signingIn = false;
+        changed();
+      }
+    }
+  }
+
+  Future<void> continueWithoutGoogle() async {
+    if (disposed || state.signingIn || state.mode != SetupDeviceMode.patient) {
+      return;
+    }
+    if (authentication != null) {
+      state.signingIn = true;
+      state.signInFailed = false;
+      changed();
+      try {
+        await authentication!.signOut();
+      } catch (_) {
+        if (!disposed) {
+          state.signingIn = false;
+          state.signInFailed = true;
+          changed();
+        }
+        return;
+      }
+      if (disposed) return;
+      applyGoogleAccount(null);
+      state.signingIn = false;
+    }
+    state.accountChoice = SetupAccountChoice.local;
+    state.selected.remove(SetupFeatureId.familyChat);
+    state.configured.remove(SetupModule.family);
+    changed();
+  }
+
+  Future<void> signOutGoogle() async {
+    if (disposed || authentication == null || state.signingIn) return;
+    state.signingIn = true;
+    state.signInFailed = false;
+    changed();
+    final uid = state.googleAccount?.uid;
+    try {
+      await authentication!.signOut();
+      if (!disposed && state.googleAccount?.uid == uid) {
+        applyGoogleAccount(null);
+      }
+    } catch (_) {
+      if (!disposed) state.signInFailed = true;
+    } finally {
+      if (!disposed) {
+        state.signingIn = false;
+        changed();
+      }
+    }
+  }
+
+  Future<void> refreshPermissions() async {
+    if (permissions == null || disposed) return;
+    for (final requirement in requirements.keys.toList()) {
+      if (![
+        SetupRequirement.notifications,
+        SetupRequirement.camera,
+        SetupRequirement.backgroundExecution,
+        SetupRequirement.exactAlarms,
+      ].contains(requirement)) {
+        continue;
+      }
+      if (state.requestingPermissions.contains(requirement)) continue;
+      final revision = (permissionRevisions[requirement] ?? 0) + 1;
+      permissionRevisions[requirement] = revision;
+      try {
+        final granted = await permissions!.check(requirement);
+        if (disposed) return;
+        if (revision != (permissionRevisions[requirement] ?? 0)) continue;
+        if (granted) {
+          state.granted.add(requirement);
+          state.deniedPermissions.remove(requirement);
+        } else {
+          state.granted.remove(requirement);
+        }
+      } catch (_) {
+        if (disposed) return;
+      }
+    }
+    if (!disposed) changed();
+  }
+
   final FamilyPairingRepository familyRepository;
   final SetupConnectionValidator? checkNightscoutConnection;
   bool isValidating = false;
@@ -85,6 +260,7 @@ class SetupWizardController extends ChangeNotifier {
   @override
   void dispose() {
     disposed = true;
+    unawaited(accountSubscription?.cancel());
     unawaited(familySubscription?.cancel());
     if (ownsFamilyRepository &&
         familyRepository is DemoFamilyPairingRepository) {
@@ -196,16 +372,20 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   void setMode(SetupDeviceMode mode) {
+    if (disposed || state.signingIn) return;
     if (state.mode == mode) return;
     configurationRevision++;
     state.moduleValidationFailed = false;
     state.attemptedModules.clear();
+    state.accountChoice = state.googleAccount == null
+        ? SetupAccountChoice.undecided
+        : SetupAccountChoice.google;
     state.mode = mode;
     state.moduleIndex = 0;
     pairingSession++;
     unawaited(familySubscription?.cancel());
     familySubscription = null;
-    state.signedIn = false;
+    state.signedIn = authentication != null && state.googleAccount != null;
     state.paired = false;
     state.pairingInvitation = null;
     state.familyMembers = const [];
@@ -215,6 +395,10 @@ class SetupWizardController extends ChangeNotifier {
     state.disconnectingMembers.clear();
     state.disconnectFailed = false;
     state.configured.remove(SetupModule.family);
+    if (state.signedIn) {
+      refreshFamilyMembers();
+      unawaited(generatePairingInvitation());
+    }
     changed();
   }
 
@@ -309,6 +493,30 @@ class SetupWizardController extends ChangeNotifier {
 
   Future<bool> validateAndNext() async {
     if (disposed || isValidating) return false;
+    if (state.currentStep == SetupStep.start &&
+        authentication != null &&
+        !state.signedIn &&
+        (state.mode == SetupDeviceMode.caregiver ||
+            state.accountChoice != SetupAccountChoice.local)) {
+      return false;
+    }
+    if (state.currentStep == SetupStep.access && permissions != null) {
+      await refreshPermissions();
+      if (disposed) return false;
+      final missing = requirements.keys.where(
+        (requirement) =>
+            [
+              SetupRequirement.notifications,
+              SetupRequirement.camera,
+              SetupRequirement.backgroundExecution,
+              SetupRequirement.exactAlarms,
+            ].contains(requirement) &&
+            !state.granted.contains(requirement),
+      );
+      if (missing.isNotEmpty || state.requestingPermissions.isNotEmpty) {
+        return false;
+      }
+    }
     final current = module;
     if (state.currentStep != SetupStep.configuration || current == null) {
       return next();
@@ -360,13 +568,43 @@ class SetupWizardController extends ChangeNotifier {
     }
   }
 
-  void grant(SetupRequirement requirement) {
-    state.granted.add(requirement);
+  Future<void> grant(SetupRequirement requirement) async {
+    if (disposed || state.requestingPermissions.contains(requirement)) return;
+    if (permissions == null) {
+      state.granted.add(requirement);
+      changed();
+      return;
+    }
+    permissionRevisions[requirement] =
+        (permissionRevisions[requirement] ?? 0) + 1;
+    state.requestingPermissions.add(requirement);
+    state.deniedPermissions.remove(requirement);
     changed();
+    try {
+      final granted = await permissions!.request(requirement);
+      if (!disposed) {
+        if (granted) {
+          state.granted.add(requirement);
+        } else {
+          state.granted.remove(requirement);
+          state.deniedPermissions.add(requirement);
+        }
+      }
+    } catch (_) {
+      if (!disposed) {
+        state.granted.remove(requirement);
+        state.deniedPermissions.add(requirement);
+      }
+    } finally {
+      if (!disposed) {
+        state.requestingPermissions.remove(requirement);
+        changed();
+      }
+    }
   }
 
   void simulateSignIn() {
-    if (state.signedIn || disposed) return;
+    if (state.signedIn || disposed || authentication != null) return;
     state.signedIn = true;
     pairingSession++;
     refreshFamilyMembers();
@@ -430,8 +668,17 @@ class SetupWizardController extends ChangeNotifier {
     simulateFamilyPairing(state.mode);
   }
 
-  void simulateModule(SetupModule module) {
-    if (!configurationComplete(module)) return;
+  void invalidateModule(SetupModule module) {
+    if (disposed) return;
+    configurationRevision++;
+    state.configured.remove(module);
+    changed();
+  }
+
+  void simulateModule(SetupModule module) => completeModule(module);
+
+  void completeModule(SetupModule module) {
+    if (disposed || !configurationComplete(module)) return;
     state.configured.add(module);
     changed();
   }

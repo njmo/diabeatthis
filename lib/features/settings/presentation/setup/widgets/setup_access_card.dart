@@ -13,29 +13,45 @@ class SetupAccessCard extends StatelessWidget {
     required this.features,
     required this.granted,
     required this.onGrant,
+    this.busy = false,
+    this.denied = false,
   });
   final SetupRequirement requirement;
   final Set<SetupFeatureId> features;
   final bool granted;
+  final bool busy;
+  final bool denied;
   final VoidCallback onGrant;
   @override
   Widget build(BuildContext context) => SettingsSectionCard(
     icon: setupRequirementIcon(requirement),
     title: context.lang.requirementName(requirement),
     trailing: OutlinedButton.icon(
-      onPressed: granted ? null : onGrant,
-      icon: Icon(
-        granted ? Icons.check : Icons.add_moderator_outlined,
-        size: 18,
-      ),
+      onPressed: granted || busy ? null : onGrant,
+      icon: busy
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(
+              granted ? Icons.check : Icons.add_moderator_outlined,
+              size: 18,
+            ),
       label: Text(context.lang.setupConsent),
     ),
     children: [
       Text(switch (requirement) {
         SetupRequirement.notifications => context.lang.setupNotificationsWhy,
         SetupRequirement.backgroundExecution => context.lang.setupBackgroundWhy,
+        SetupRequirement.exactAlarms => context.lang.setupExactAlarmsWhy,
         _ => context.lang.setupCameraWhy,
       }, style: Theme.of(context).textTheme.bodySmall),
+      if (denied)
+        Text(
+          context.lang.setupPermissionNotGranted,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       SetupFeatureChips(features: features),
     ],
   );

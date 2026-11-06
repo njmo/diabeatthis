@@ -7,7 +7,6 @@ import '../../../common/l10n/application_language.dart';
 import '../../../common/notifications/android_notification_delivery.dart';
 import '../base/notifications_controller.dart';
 import '../bootstrap/local_notifications_bootstrap.dart' as bootstrap;
-
 import '../domain/models/hash_notification_id_factory.dart';
 import '../domain/models/notification_event.dart';
 import '../domain/models/notification_event_type.dart';
@@ -26,7 +25,6 @@ class LocalNotificationsController implements NotificationsController {
   Future<void> init() async {
     await initializeLanguageStringsFromPreferences();
     await bootstrap.init(_plugin);
-    await bootstrap.requestPermissions(_plugin);
 
     await _handleLaunchNotification();
   }

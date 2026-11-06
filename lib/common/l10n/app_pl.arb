@@ -4158,5 +4158,47 @@
   "setupFeatureGroupAssistance": "Pomoc AI",
   "setupCapabilitiesTitle": "Co potrafi aplikacja",
   "setupCapabilitiesDescription": "Poznaj możliwości aplikacji. Funkcje bazowe pozostają włączone, a przełączniki sterują opcjami dodatkowymi. Przycisk informacji otwiera opis i poradnik wiki.",
-  "setupCaregiverCapabilitiesNotice": "Funkcje opiekuna dotyczą danych dziecka po powiązaniu kont. Składniki i stany wykonania pozostają do podglądu. Ten konfigurator jest demonstracyjny i nie uruchamia jeszcze połączenia z dzieckiem."
+  "setupCaregiverCapabilitiesNotice": "Funkcje opiekuna dotyczą danych dziecka po powiązaniu kont. Składniki i stany wykonania pozostają do podglądu. Ten konfigurator jest demonstracyjny i nie uruchamia jeszcze połączenia z dzieckiem.",
+  "settingsAiAuthorFundedNotice": "DiaBeatThis AI jest tymczasowo bezpłatne dla użytkownika. Usługa jest rozliczana według użycia (pay-as-you-use), a koszty pokrywa autor aplikacji.",
+  "settingsAiAdvisorUnavailable": "Tymczasowo wyłączone. Włączenie Meal Advisor wspomaganego AI jest obecnie niedostępne.",
+  "settingsCountryRegionDescription": "Region pomaga rozpoznawać lokalne potrawy. Domyślnie używamy regionu urządzenia; możesz go zmienić.",
+  "settingsCountryChange": "Zmień",
+  "settingsCountryAutomatic": "Automatycznie z regionu urządzenia: {country}",
+  "settingsCountryManual": "Wybrany kraj: {country}",
+  "settingsCountryUnknown": "Urządzenie nie udostępnia kraju. Możesz ustawić go ręcznie.",
+  "settingsCountryUseSystem": "Użyj regionu urządzenia",
+  "setupAiLiveDescription": "To te same ustawienia AI co w aplikacji. Wybierz dostawcę i zapisz ustawienia, aby przejść dalej.",
+  "setupLiveConfigurationNotice": "Ustawienia AI, logowanie Google i zgody systemowe są rzeczywiste. Parowanie, komunikator i nowe ustawienia funkcji pozostają demonstracyjne.",
+  "setupLiveConfigurationFinished": "Zapisane ustawienia AI i przyznane zgody pozostają zachowane. Pozostałe demonstracyjne wybory nie uruchamiają parowania ani komunikatora.",
+  "setupGoogleSignIn": "Zaloguj przez Google",
+  "setupGoogleSignOut": "Wyloguj",
+  "setupGoogleConnected": "Zalogowano przez Google",
+  "setupGoogleSignInFailed": "Nie udało się obsłużyć konta Google. Sprawdź połączenie i spróbuj ponownie.",
+  "setupRequirementExactAlarms": "Dokładne przypomnienia",
+  "setupExactAlarmsWhy": "Pozwalają dostarczać zaplanowane przypomnienia o posiłkach i aktywnościach o wyznaczonej godzinie.",
+  "setupPermissionNotGranted": "Nie przyznano dostępu. Możesz ponowić próbę lub zmienić zgodę w ustawieniach urządzenia.",
+  "setupPermissionsLiveNotice": "Przyciski proszą o rzeczywiste zgody systemowe. Po powrocie z ustawień telefonu stan dostępu odświeży się automatycznie.",
+  "@settingsCountryAutomatic": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "@settingsCountryManual": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "setupFamilyLiveDescription": "Zaloguj się przez Google. Parowanie i lista powiązanych kont pozostają na razie demonstracyjne.",
+  "settingsAiAuthorFundedTitle": "Tymczasowo bezpłatne",
+  "setupGoogleUnavailablePlatform": "Logowanie Google jest w tej wersji dostępne na Androidzie.",
+  "setupPermissionsIncomplete": "Przyznaj wymagane zgody lub wyłącz opcjonalne funkcje, które ich potrzebują.",
+  "setupGoogleProfilePhoto": "Zdjęcie profilu Google",
+  "setupContinueWithoutGoogle": "Kontynuuj bez logowania",
+  "setupCaregiverGoogleRequired": "Tryb opiekuna wymaga konta Google, aby powiązać je z kontem dziecka. Imię, nazwisko i zdjęcie pobierzemy z Google.",
+  "setupLocalAccountDescription": "Bez logowania korzystasz z lokalnych funkcji aplikacji. Konto Google jest potrzebne do udostępniania danych rodzinie; możesz dodać je później.",
+  "setupChooseAccountFirst": "Zaloguj się przez Google albo wybierz kontynuację bez logowania. Tryb opiekuna wymaga Google."
 }

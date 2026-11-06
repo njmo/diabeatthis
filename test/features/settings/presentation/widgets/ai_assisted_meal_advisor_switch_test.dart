@@ -16,7 +16,10 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPrefsProvider.overrideWith((ref) async => prefs)],
+        overrides: [
+          sharedPrefsProvider.overrideWith((ref) async => prefs),
+          aiAssistedMealAdvisorAvailableProvider.overrideWithValue(true),
+        ],
         child: localizedMaterialApp(
           home: const Scaffold(body: AiAssistedMealAdvisorSwitch()),
         ),

@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "1018488815956-gn4pbcd8fujks2shlqtj2pf5dufikear.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "pl.diabeatthis.app",
+            "certificate_hash": "d58399e2e1367cc26c9be2c193cd89535c3b0066"
+          }
+        },
+        {
+          "client_id": "1018488815956-jid7r0t9is85kchodfsg1mminrrfqr2g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "pl.diabeatthis.app",
+            "certificate_hash": "9d5a620bf473b5ccf8c7e7cf9f994e6589e8c317"
+          }
+        },
+        {
           "client_id": "1018488815956-bp0gq7bm2voc5j9tmvms5u8mvptaj9kd.apps.googleusercontent.com",
           "client_type": 3
         }

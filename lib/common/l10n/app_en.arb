@@ -3701,5 +3701,47 @@
   "setupFeatureGroupAssistance": "AI assistance",
   "setupCapabilitiesTitle": "What you can do",
   "setupCapabilitiesDescription": "Explore the app. Built-in features remain enabled, while switches control optional features. The information button opens details and a wiki guide.",
-  "setupCaregiverCapabilitiesNotice": "Caregiver features use the child’s data after pairing. Ingredients and execution states remain read-only. This wizard is a preview and does not yet connect to the child."
+  "setupCaregiverCapabilitiesNotice": "Caregiver features use the child’s data after pairing. Ingredients and execution states remain read-only. This wizard is a preview and does not yet connect to the child.",
+  "settingsAiAuthorFundedNotice": "DiaBeatThis AI is temporarily free for users. The service is billed by usage (pay-as-you-use), and the app author currently covers the costs.",
+  "settingsAiAdvisorUnavailable": "Temporarily disabled. Enabling AI-assisted Meal Advisor is currently unavailable.",
+  "settingsCountryRegionDescription": "The region helps recognize local dishes. The device region is used by default; you can change it.",
+  "settingsCountryChange": "Change",
+  "settingsCountryAutomatic": "Automatically from the device region: {country}",
+  "settingsCountryManual": "Selected country: {country}",
+  "settingsCountryUnknown": "The device does not provide a country. You can set it manually.",
+  "settingsCountryUseSystem": "Use device region",
+  "setupAiLiveDescription": "These are the same AI settings used by the app. Choose a provider and save the settings to continue.",
+  "setupLiveConfigurationNotice": "AI settings, Google sign-in and system permissions are real. Pairing, messaging and new feature settings remain simulated.",
+  "setupLiveConfigurationFinished": "Saved AI settings and granted permissions are retained. Other demo choices do not start pairing or messaging.",
+  "setupGoogleSignIn": "Sign in with Google",
+  "setupGoogleSignOut": "Sign out",
+  "setupGoogleConnected": "Signed in with Google",
+  "setupGoogleSignInFailed": "Could not update the Google account. Check your connection and try again.",
+  "setupRequirementExactAlarms": "Exact reminders",
+  "setupExactAlarmsWhy": "Allow scheduled meal and activity reminders to arrive at the planned time.",
+  "setupPermissionNotGranted": "Access was not granted. You can retry or update the permission in device settings.",
+  "setupPermissionsLiveNotice": "These buttons request real system permissions. Permission status refreshes automatically when you return from device settings.",
+  "@settingsCountryAutomatic": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "@settingsCountryManual": {
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+  "setupFamilyLiveDescription": "Sign in with Google. Pairing and the linked-account list remain simulated for now.",
+  "settingsAiAuthorFundedTitle": "Temporarily free",
+  "setupGoogleUnavailablePlatform": "Google sign-in is available on Android in this version.",
+  "setupPermissionsIncomplete": "Grant the required permissions or turn off optional features that need them.",
+  "setupGoogleProfilePhoto": "Google profile photo",
+  "setupContinueWithoutGoogle": "Continue without signing in",
+  "setupCaregiverGoogleRequired": "Caregiver mode requires a Google account to link with the child’s account. Your name and profile photo will come from Google.",
+  "setupLocalAccountDescription": "Without signing in, you can use local app features. A Google account is needed for family sharing and can be added later.",
+  "setupChooseAccountFirst": "Sign in with Google or choose to continue without signing in. Caregiver mode requires Google."
 }

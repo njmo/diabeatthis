@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../auth/google_authentication_providers.dart';
 import '../l10n/language.dart';
 import '../profile/profile_photo_controller.dart';
 import 'profile_avatar.dart';
@@ -13,6 +14,17 @@ class ProfilePhotoPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final account = ref.watch(googleAccountProvider).asData?.value;
+    if (account != null) {
+      return Tooltip(
+        message: context.lang.setupGoogleProfilePhoto,
+        child: ProfileAvatar(
+          name: account.label,
+          photoUrl: account.photoUrl,
+          size: 48,
+        ),
+      );
+    }
     final photo = ref.watch(profilePhotoControllerProvider);
     final path = photo.asData?.value;
 

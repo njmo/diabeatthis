@@ -30,11 +30,17 @@ class SetupAccessStep extends StatelessWidget {
               requirement: entry.key,
               features: entry.value,
               granted: controller.state.granted.contains(entry.key),
+              busy: controller.state.requestingPermissions.contains(entry.key),
+              denied: controller.state.deniedPermissions.contains(entry.key),
               onGrant: () => controller.grant(entry.key),
             ),
           ),
         if (permissions.isEmpty) Text(context.lang.setupNoRequirements),
-        SetupNotice(text: context.lang.setupDemoNotice),
+        SetupNotice(
+          text: controller.permissions == null
+              ? context.lang.setupDemoNotice
+              : context.lang.setupPermissionsLiveNotice,
+        ),
       ],
     );
   }

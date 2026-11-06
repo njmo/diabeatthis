@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/setup/domain/setup_account_choice.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
 import '../../../../../common/widgets/profile_name_field.dart';
 import '../../widgets/application_language_selector.dart';
 import '../setup_wizard_controller.dart';
+import '../widgets/setup_account_choice_panel.dart';
 import '../widgets/setup_icon_bubble.dart';
 import '../widgets/setup_step_heading.dart';
 
@@ -34,33 +36,39 @@ class SetupBasicsStep extends StatelessWidget {
             onSelected: () => controller.setMode(mode),
           ),
         ),
+      if (controller.authentication != null)
+        SetupAccountChoicePanel(controller: controller),
       Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              if (enableProfilePhoto)
-                ProfileNameField(
-                  initialValue: controller.state.name,
-                  label: context.lang.settingsUserNameLabel,
-                  onChanged: (value) {
-                    controller.state.name = value;
-                    controller.changed();
-                  },
-                )
-              else
-                TextFormField(
-                  initialValue: controller.state.name,
-                  decoration: InputDecoration(
-                    labelText: context.lang.settingsUserNameLabel,
+              if (controller.authentication == null ||
+                  controller.state.accountChoice ==
+                      SetupAccountChoice.local) ...[
+                if (enableProfilePhoto)
+                  ProfileNameField(
+                    initialValue: controller.state.name,
+                    label: context.lang.settingsUserNameLabel,
+                    onChanged: (value) {
+                      controller.state.name = value;
+                      controller.changed();
+                    },
+                  )
+                else
+                  TextFormField(
+                    initialValue: controller.state.name,
+                    decoration: InputDecoration(
+                      labelText: context.lang.settingsUserNameLabel,
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    onChanged: (value) {
+                      controller.state.name = value;
+                      controller.changed();
+                    },
                   ),
-                  textCapitalization: TextCapitalization.words,
-                  onChanged: (value) {
-                    controller.state.name = value;
-                    controller.changed();
-                  },
-                ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
               ApplicationLanguageSelector(
                 value: controller.state.language,
                 onChanged: (value) {

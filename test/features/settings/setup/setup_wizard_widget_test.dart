@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/ai/ai_settings_controller.dart';
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
 import 'package:diabeatthis/common/setup/domain/setup_step.dart';
@@ -10,9 +11,11 @@ import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_st
 import 'package:diabeatthis/features/settings/presentation/setup/widgets/setup_feature_help_sheet.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/widgets/setup_feature_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/localized_material_app.dart';
+import '../../../helpers/regression/setup_ai_settings_controller.dart';
 
 SetupWizardState setupDraft() => SetupWizardState(
   config: const DataSourceConfig.defaults(),
@@ -30,10 +33,17 @@ void main() {
         ..step = SetupStep.configuration.index
         ..moduleIndex = 3;
       await tester.pumpWidget(
-        localizedMaterialApp(
-          home: SetupWizard(
-            initialState: draft,
-            availability: const DataSourceOptionAvailability.none(),
+        ProviderScope(
+          overrides: [
+            aiSettingsControllerProvider.overrideWith(
+              SetupAiSettingsTestController.new,
+            ),
+          ],
+          child: localizedMaterialApp(
+            home: SetupWizard(
+              initialState: draft,
+              availability: const DataSourceOptionAvailability.none(),
+            ),
           ),
         ),
       );

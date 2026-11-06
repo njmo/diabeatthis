@@ -7,7 +7,9 @@ import 'ai_provider_settings_form.dart';
 import 'settings_section_card.dart';
 
 class AiSettingsSection extends ConsumerWidget {
-  const AiSettingsSection({super.key});
+  const AiSettingsSection({super.key, this.onChanged, this.onSaved});
+  final VoidCallback? onChanged;
+  final VoidCallback? onSaved;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => SettingsSectionCard(
@@ -21,8 +23,11 @@ class AiSettingsSection extends ConsumerWidget {
             skipLoadingOnReload: true,
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (_, _) => Text(context.lang.settingsAiLoadFailed),
-            data: (configuration) =>
-                AiProviderSettingsForm(initialConfiguration: configuration),
+            data: (configuration) => AiProviderSettingsForm(
+              initialConfiguration: configuration,
+              onChanged: onChanged,
+              onSaved: onSaved,
+            ),
           ),
     ],
   );

@@ -1,6 +1,8 @@
+import '../../../../common/auth/google_account.dart';
 import '../../../../common/family/family_pairing_invitation.dart';
 import '../../../../common/family/family_pairing_member.dart';
 import '../../../../common/l10n/application_language.dart';
+import '../../../../common/setup/domain/setup_account_choice.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
 import '../../../../common/setup/domain/setup_feature_option.dart';
 import '../../../../common/setup/domain/setup_step.dart';
@@ -13,7 +15,10 @@ class SetupWizardState {
     required this.name,
     required this.nightscoutUrl,
     required this.nightscoutToken,
-  });
+    Set<SetupFeatureOptionId> initialOptions = const {},
+  }) {
+    enabledOptionsByMode[SetupDeviceMode.patient]!.addAll(initialOptions);
+  }
 
   DataSourceConfig config;
   ApplicationLanguage language;
@@ -30,6 +35,12 @@ class SetupWizardState {
 
   /// Family communication and the future data mirror share one feature switch.
   bool get shareData => selected.contains(SetupFeatureId.familyChat);
+  SetupAccountChoice accountChoice = SetupAccountChoice.undecided;
+  GoogleAccount? googleAccount;
+  bool signingIn = false;
+  bool signInFailed = false;
+  final requestingPermissions = <SetupRequirement>{};
+  final deniedPermissions = <SetupRequirement>{};
   bool signedIn = false;
   bool paired = false;
   FamilyPairingInvitation? pairingInvitation;
@@ -39,7 +50,6 @@ class SetupWizardState {
   bool familyMembersFailed = false;
   final disconnectingMembers = <String>{};
   bool disconnectFailed = false;
-  String aiProvider = 'firebase';
   final selectedByMode = <SetupDeviceMode, Set<SetupFeatureId>>{
     SetupDeviceMode.patient: {
       SetupFeatureId.mealMonitor,
@@ -49,6 +59,8 @@ class SetupWizardState {
       SetupFeatureId.familyChat,
     },
     SetupDeviceMode.caregiver: {
+      SetupFeatureId.aiAssistance,
+      SetupFeatureId.mealPhoto,
       SetupFeatureId.familyChat,
       SetupFeatureId.childOverview,
     },

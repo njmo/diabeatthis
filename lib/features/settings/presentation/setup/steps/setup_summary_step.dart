@@ -121,7 +121,7 @@ class SetupSummaryStep extends StatelessWidget {
         icon: Icons.storage_outlined,
       ),
       const SizedBox(height: 12),
-      SetupNotice(text: context.lang.setupDemoNotice),
+      SetupNotice(text: context.lang.setupLiveConfigurationNotice),
       if (canSavePatient)
         Padding(
           padding: const EdgeInsets.only(top: 12),

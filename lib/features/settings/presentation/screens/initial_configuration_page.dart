@@ -2,8 +2,11 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/auth/google_authentication_providers.dart';
 import '../../../../common/family/family_management_context.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/setup/domain/setup_feature_option.dart';
+import '../../../../common/setup/platform/native_setup_permission_gateway.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
 import '../controllers/initial_configuration_controller.dart';
 import '../setup/setup_wizard.dart';
@@ -35,6 +38,8 @@ class InitialConfigurationPage extends ConsumerWidget {
         ),
         data: (sources) => SetupWizard(
           familyContext: FamilyManagementContext.initialSetup,
+          authentication: ref.read(googleAuthenticationRepositoryProvider),
+          permissions: const NativeSetupPermissionGateway(),
           availability: sources,
           saving: draft.isSaving,
           saveError: draft.submitError,
@@ -44,6 +49,12 @@ class InitialConfigurationPage extends ConsumerWidget {
             name: draft.userName,
             nightscoutUrl: draft.nightscoutUrl,
             nightscoutToken: draft.nightscoutToken,
+            initialOptions: {
+              if (draft.tempTargetsEnabled)
+                SetupFeatureOptionId.activityTempTargetUpload,
+              if (draft.lowTreatmentsEnabled)
+                SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
+            },
           ),
           onSavePatient: (value) async {
             final controller = ref.read(

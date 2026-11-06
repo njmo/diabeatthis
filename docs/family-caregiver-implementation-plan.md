@@ -247,6 +247,15 @@ Implemented on 2026-11-06:
 - Session-local language changes apply immediately, including overlays and the device-language option, without changing saved application language in preview. Actual save errors use the language of the submitted draft.
 - Terra high-reasoning review findings were addressed. Validation: 102 targeted tests passed, analysis of changed Dart files passed, and debug APK builds succeeded. Widget rendering and narrow/large-text layouts were checked; installation on the available emulator was prevented by insufficient storage. This increment is UI scaffolding, not completion of Stage 1 runtime separation or the family pilot.
 
+### Stage 1 live-services increment
+
+- Initial setup starts with device role and an explicit Google / local account choice. Local patient use remains offline-capable; caregiver mode requires Google. A manual name is shown only for local use. Google identity supplies the full display name and HTTPS profile photo, with initials when the image is unavailable. Signing out restores the local profile.
+- Google authentication is real on Android and shared with Settings. Android OAuth configuration includes the current development signing fingerprints. Other platforms show an unavailable state until their Firebase/native configuration is supplied. Test actual supervised-account consent on a device before rollout. QR pairing, family memberships, sharing and caregiver completion remain demonstrations; authentication alone does not enable a cloud mirror or messaging.
+- The Settings preview entry is removed. AI configuration reuses the real Settings form and saved provider configuration. DiaBeatThis AI explains that access is temporarily free to users and that the author pays usage-based costs. AI-assisted Meal Advisor is temporarily unavailable and cannot be enabled, including through an older saved opt-in.
+- Feature selections start enabled, including AI/photo in caregiver mode. Existing upload preferences seed monitor tuning; this increment does not silently enable or persist new upload options.
+- Startup no longer requests notification, battery exemption or exact-alarm access. The Access step checks existing grants and requests them only after an explicit action. Missing required access blocks progression. Returning from system settings refreshes status. Native notification initialization also disables automatic Apple permission prompts.
+- Residence context uses an explicit saved override or the device's ISO country code. A language alone is not treated as a country. The Settings card supports changing and restoring the device default; locale changes refresh the derived value. Photo analysis treats this as a weak regional hint, not verified residence or restaurant identity.
+
 ### Stage 2 — Google authentication and care-group lifecycle
 
 Deliver optional family activation in patient settings, required Google login for family functions in both modes, initial management bootstrap, QR pairing, additional caregiver invitations, roster, approval/revocation, and access rules. Keep Google login out of the offline local patient prerequisite path.

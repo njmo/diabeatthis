@@ -9,6 +9,7 @@ class AiAssistedMealAdvisorSwitch extends HookConsumerWidget {
   const AiAssistedMealAdvisorSwitch({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final available = ref.watch(aiAssistedMealAdvisorAvailableProvider);
     final enabled = ref.watch(aiAssistedMealAdvisorEnabledProvider);
     final saving = useState(false);
     final failed = useState(false);
@@ -18,9 +19,13 @@ class AiAssistedMealAdvisorSwitch extends HookConsumerWidget {
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(context.lang.settingsAiAssistedMealAdvisorTitle),
-          subtitle: Text(context.lang.settingsAiAssistedMealAdvisorSubtitle),
+          subtitle: Text(
+            available
+                ? context.lang.settingsAiAssistedMealAdvisorSubtitle
+                : context.lang.settingsAiAdvisorUnavailable,
+          ),
           value: enabled,
-          onChanged: saving.value
+          onChanged: saving.value || !available
               ? null
               : (value) async {
                   saving.value = true;

@@ -78,6 +78,15 @@ class DemoFamilyPairingRepository
     channels[mode]!.add(List.unmodifiable(current));
   }
 
+  void reset() {
+    members.clear();
+    invitations.clear();
+    completedInvitations.clear();
+    for (final channel in channels.values) {
+      if (!channel.isClosed) channel.add(const []);
+    }
+  }
+
   void dispose() {
     for (final channel in channels.values) {
       unawaited(channel.close());

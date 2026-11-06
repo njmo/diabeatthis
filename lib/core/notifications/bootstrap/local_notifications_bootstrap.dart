@@ -24,9 +24,9 @@ Future<void> init(FlutterLocalNotificationsPlugin plugin) async {
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
 
   final iosInit = DarwinInitializationSettings(
-    requestAlertPermission: true,
-    requestBadgePermission: true,
-    requestSoundPermission: true,
+    requestAlertPermission: false,
+    requestBadgePermission: false,
+    requestSoundPermission: false,
     notificationCategories: DarwinNotificationCategoryMapper().mapDefinitions(
       NotificationDefinitionCatalogImpl().all,
     ),

@@ -71,7 +71,7 @@ void main() {
           controller.select(SetupFeatureId.childOverview, false);
           expect(
             controller.modules,
-            isEmpty,
+            [SetupModule.ai],
             reason:
                 'Descriptive capabilities must not activate a family connection',
           );

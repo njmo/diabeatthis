@@ -11,7 +11,10 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       ProviderContainer open() => ProviderContainer(
-        overrides: [sharedPrefsProvider.overrideWith((ref) async => prefs)],
+        overrides: [
+          sharedPrefsProvider.overrideWith((ref) async => prefs),
+          aiAssistedMealAdvisorAvailableProvider.overrideWithValue(true),
+        ],
       );
       final container = open();
       addTearDown(container.dispose);

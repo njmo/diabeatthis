@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/auth/google_authentication_repository.dart';
 import '../../../../common/family/family_management_context.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/l10n/resolve_application_locale.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
+import '../../../../common/setup/domain/setup_permission_gateway.dart';
 import '../../../../common/setup/domain/setup_step.dart';
 import '../../../../common/widgets/form_step_header.dart';
 import '../../../../common/widgets/show_localized_dialog.dart';
@@ -33,6 +35,8 @@ class SetupWizard extends StatefulWidget {
     this.familyContext = FamilyManagementContext.settings,
     this.saving = false,
     this.saveError,
+    this.authentication,
+    this.permissions,
   });
   final SetupWizardState initialState;
   final DataSourceOptionAvailability availability;
@@ -40,19 +44,37 @@ class SetupWizard extends StatefulWidget {
   final FamilyManagementContext familyContext;
   final bool saving;
   final String? saveError;
+  final GoogleAuthenticationRepository? authentication;
+  final SetupPermissionGateway? permissions;
 
   @override
   State<SetupWizard> createState() => SetupWizardViewState();
 }
 
-class SetupWizardViewState extends State<SetupWizard> {
+class SetupWizardViewState extends State<SetupWizard>
+    with WidgetsBindingObserver {
   late final controller = SetupWizardController(
     widget.initialState,
     familyContext: widget.familyContext,
+    authentication: widget.authentication,
+    permissions: widget.permissions,
   );
   bool allowExit = false;
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    controller.refreshPermissions();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) controller.refreshPermissions();
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     controller.dispose();
     super.dispose();
   }
@@ -142,7 +164,7 @@ class SetupWizardViewState extends State<SetupWizard> {
           context: context,
           builder: (context) => AlertDialog(
             title: Text(context.lang.setupPreviewFinished),
-            content: Text(context.lang.setupPreviewFinishedDescription),
+            content: Text(context.lang.setupLiveConfigurationFinished),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -159,9 +181,13 @@ class SetupWizardViewState extends State<SetupWizard> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            controller.missingConfiguration.any(
-                  (field) => field.module == controller.module,
-                )
+            controller.state.currentStep == SetupStep.start
+                ? context.lang.setupChooseAccountFirst
+                : controller.state.currentStep == SetupStep.access
+                ? context.lang.setupPermissionsIncomplete
+                : controller.missingConfiguration.any(
+                    (field) => field.module == controller.module,
+                  )
                 ? context.lang.setupRequiredFieldsMissing(
                     controller.missingConfiguration
                         .where((field) => field.module == controller.module)
@@ -284,7 +310,9 @@ class SetupWizardViewState extends State<SetupWizard> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (state.step == 0) ...[
-                        SetupNotice(text: context.lang.setupDemoNotice),
+                        SetupNotice(
+                          text: context.lang.setupLiveConfigurationNotice,
+                        ),
                         const SizedBox(height: 16),
                       ],
                       contentForStep(context),

@@ -3,14 +3,24 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 class ProfileAvatar extends StatelessWidget {
-  const ProfileAvatar({super.key, this.photoPath, this.name, this.size = 40});
+  const ProfileAvatar({
+    super.key,
+    this.photoPath,
+    this.photoUrl,
+    this.name,
+    this.size = 40,
+  });
 
   final String? photoPath;
+  final String? photoUrl;
   final String? name;
   final double size;
 
   @override
   Widget build(BuildContext context) {
+    final remote = Uri.tryParse(photoUrl ?? '');
+    final hasRemotePhoto =
+        remote != null && remote.scheme == 'https' && remote.host.isNotEmpty;
     final colors = Theme.of(context).colorScheme;
     final words =
         name
@@ -45,7 +55,15 @@ class ProfileAvatar extends StatelessWidget {
           dimension: size,
           child: ColoredBox(
             color: colors.primaryContainer,
-            child: photoPath == null
+            child: hasRemotePhoto
+                ? Image.network(
+                    photoUrl!,
+                    fit: BoxFit.cover,
+                    cacheWidth: (size * MediaQuery.devicePixelRatioOf(context))
+                        .round(),
+                    errorBuilder: (_, _, _) => fallback,
+                  )
+                : photoPath == null
                 ? fallback
                 : Image.file(
                     File(photoPath!),

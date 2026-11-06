@@ -79,6 +79,7 @@ class GetAvailableSetupFeaturesUseCase {
       modes: {SetupDeviceMode.patient},
       requirements: {
         SetupRequirement.notifications,
+        SetupRequirement.exactAlarms,
         SetupRequirement.backgroundExecution,
         SetupRequirement.dataSource,
       },
@@ -100,6 +101,7 @@ class GetAvailableSetupFeaturesUseCase {
       modes: {SetupDeviceMode.patient},
       requirements: {
         SetupRequirement.notifications,
+        SetupRequirement.exactAlarms,
         SetupRequirement.backgroundExecution,
         SetupRequirement.dataSource,
       },

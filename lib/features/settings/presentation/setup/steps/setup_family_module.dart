@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
-import '../../widgets/settings_section_card.dart';
+import '../../widgets/google_account_card.dart';
 import '../setup_wizard_controller.dart';
 import '../widgets/setup_family_pairing_panel.dart';
 import '../widgets/setup_step_heading.dart';
@@ -18,21 +18,20 @@ class SetupFamilyModule extends StatelessWidget {
         title: controller.state.mode == SetupDeviceMode.patient
             ? context.lang.setupInviteTitle
             : context.lang.setupPairTitle,
-        description: context.lang.setupFamilyDescription,
+        description: controller.authentication == null
+            ? context.lang.setupFamilyDescription
+            : context.lang.setupFamilyLiveDescription,
       ),
       const SizedBox(height: 16),
-      SettingsSectionCard(
-        icon: Icons.account_circle_outlined,
-        title: context.lang.setupRequirementGoogle,
-        children: [
-          if (controller.state.signedIn)
-            Text(context.lang.setupSignedIn)
-          else
-            FilledButton.tonal(
-              onPressed: controller.simulateSignIn,
-              child: Text(context.lang.setupSimulateSignIn),
-            ),
-        ],
+      GoogleAccountCard(
+        account: controller.state.googleAccount,
+        signedIn: controller.state.signedIn,
+        busy: controller.state.signingIn,
+        failed: controller.state.signInFailed,
+        supported: controller.authentication?.isSupported ?? true,
+        demo: controller.authentication == null,
+        onSignIn: controller.signInGoogle,
+        onSignOut: controller.signOutGoogle,
       ),
       if (controller.state.signedIn) ...[
         const SizedBox(height: 16),

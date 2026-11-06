@@ -119,6 +119,7 @@ extension SetupLabels on AppLocalizations {
     SetupRequirement.notifications => setupRequirementNotifications,
     SetupRequirement.backgroundExecution => setupRequirementBackground,
     SetupRequirement.camera => setupRequirementCamera,
+    SetupRequirement.exactAlarms => setupRequirementExactAlarms,
     SetupRequirement.googleAccount => setupRequirementGoogle,
     SetupRequirement.familyPairing => setupRequirementPairing,
     SetupRequirement.internet => setupRequirementInternet,
@@ -184,6 +185,7 @@ IconData setupRequirementIcon(SetupRequirement requirement) =>
       SetupRequirement.backgroundExecution =>
         Icons.battery_charging_full_outlined,
       SetupRequirement.camera => Icons.camera_alt_outlined,
+      SetupRequirement.exactAlarms => Icons.alarm,
       SetupRequirement.googleAccount => Icons.account_circle_outlined,
       SetupRequirement.familyPairing => Icons.qr_code_scanner,
       SetupRequirement.internet => Icons.wifi,
@@ -195,4 +197,5 @@ bool isSetupSystemRequirement(SetupRequirement requirement) => {
   SetupRequirement.notifications,
   SetupRequirement.backgroundExecution,
   SetupRequirement.camera,
+  SetupRequirement.exactAlarms,
 }.contains(requirement);

@@ -7,6 +7,7 @@ class SettingsSectionCard extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.trailing,
+    this.leading,
     required this.children,
   });
 
@@ -14,6 +15,7 @@ class SettingsSectionCard extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final Widget? leading;
   final List<Widget> children;
 
   @override
@@ -40,18 +42,19 @@ class SettingsSectionCard extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            icon,
-                            color: colorScheme.onPrimaryContainer,
-                          ),
-                        ),
+                        leading ??
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                icon,
+                                color: colorScheme.onPrimaryContainer,
+                              ),
+                            ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(

@@ -105,7 +105,7 @@ void main() {
         ),
         isFalse,
       );
-      expect(controller.modules, [SetupModule.family]);
+      expect(controller.modules, [SetupModule.family, SetupModule.ai]);
       controller.select(SetupFeatureId.childOverview, false);
       controller.setMode(SetupDeviceMode.patient);
       expect(

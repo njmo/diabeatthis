@@ -8,8 +8,9 @@ A plate photo is required; the description and menu image are optional context.
 A referenced menu position must be unambiguous before estimation can continue.
 Clarification questions and displayed names use the application's language;
 USDA-style descriptions and fallback search queries remain English.
-An explicitly configured country of residence is a weak regional hint, not a
-confirmed restaurant location. Visible evidence and user descriptions take priority.
+The country context uses an explicit override first, otherwise the device locale region
+(not the application language or GPS). It remains a weak regional hint, not verified
+residence or a confirmed restaurant location. Visible evidence and user descriptions take priority.
 
 The default preview represents the whole plate. Catalog lookup starts only when
 the user chooses to divide it into ingredients; it does not call the model again.

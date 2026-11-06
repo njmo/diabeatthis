@@ -1,3 +1,5 @@
+import 'package:diabeatthis/common/auth/google_account.dart';
+import 'package:diabeatthis/common/auth/google_authentication_providers.dart';
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
@@ -17,6 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../helpers/localized_material_app.dart';
 import '../../../helpers/regression/scripted_initial_configuration_use_case.dart';
 import '../../../helpers/regression/scripted_read.dart';
+import '../../../helpers/regression/setup_live_services.dart';
 
 void main() {
   const local = DataSourceConfig(
@@ -30,6 +33,8 @@ void main() {
   testWidgets(
     'initial wizard preserves profile photo entry and delegates the patient draft to the existing save use case',
     (tester) async {
+      final auth = SetupGoogleAuthenticationTestRepository();
+      addTearDown(auth.dispose);
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final writes = ScriptedRead<void>('patient wizard save', [
@@ -42,6 +47,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            googleAuthenticationRepositoryProvider.overrideWithValue(auth),
             sharedPrefsProvider.overrideWith((ref) async => prefs),
             dataSourceConfigProvider.overrideWith((ref) async => local),
             dataSourceOptionAvailabilityProvider.overrideWith(
@@ -57,6 +63,9 @@ void main() {
           child: localizedMaterialApp(home: const InitialConfigurationPage()),
         ),
       );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Continue without signing in'));
+      await tester.tap(find.text('Continue without signing in'));
       await tester.pumpAndSettle();
       expect(find.byType(ProfileNameField), findsOneWidget);
       final wizard = tester.state<SetupWizardViewState>(
@@ -86,6 +95,8 @@ void main() {
   testWidgets(
     'first-run caregiver completion returns to mode choice without patient writes',
     (tester) async {
+      final auth = SetupGoogleAuthenticationTestRepository();
+      addTearDown(auth.dispose);
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final writes = ScriptedRead<void>(
@@ -95,6 +106,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            googleAuthenticationRepositoryProvider.overrideWithValue(auth),
             sharedPrefsProvider.overrideWith((ref) async => prefs),
             dataSourceConfigProvider.overrideWith((ref) async => local),
             dataSourceOptionAvailabilityProvider.overrideWith(
@@ -115,6 +127,14 @@ void main() {
         find.byType(SetupWizard),
       );
       wizard.controller.setMode(SetupDeviceMode.caregiver);
+      auth.result = const GoogleAccount(
+        uid: 'parent',
+        displayName: 'Test Parent',
+      );
+      await wizard.controller.signInGoogle();
+      await tester.pumpAndSettle();
+      expect(find.byType(ProfileNameField), findsNothing);
+      expect(wizard.controller.state.name, 'Test Parent');
       wizard.controller.goTo(SetupStep.summary.index);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Finish preview'));

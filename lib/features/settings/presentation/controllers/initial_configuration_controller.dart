@@ -5,9 +5,11 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/l10n/resolve_application_locale.dart';
 import '../../../../common/notifier_provider/simple_provider.dart';
 import '../../../../common/platform/external_app_installation_checker.dart';
+import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
+import '../../../../core/data_sources/nightscout/nightscout_storage_keys.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../../../../core/logger/logger.dart';
 import '../../application/apply_initial_configuration_use_case.dart';
@@ -32,6 +34,7 @@ class InitialConfigurationController extends _$InitialConfigurationController
     final nightscoutUrl = await ref.read(nightscoutUrlProvider.future);
     final nightscoutToken = await ref.read(nightscoutTokenProvider.future);
     final userName = await ref.read(nameProvider.future);
+    final prefs = await ref.read(sharedPrefsProvider.future);
 
     return InitialConfigurationState(
       config: config,
@@ -39,6 +42,12 @@ class InitialConfigurationController extends _$InitialConfigurationController
       nightscoutUrl: nightscoutUrl,
       nightscoutToken: nightscoutToken,
       userName: userName,
+      tempTargetsEnabled:
+          prefs.getBool(nightscoutTempTargetsEnabledKey) == true &&
+          nightscoutToken.trim().isNotEmpty,
+      lowTreatmentsEnabled:
+          prefs.getBool(nightscoutLowTreatmentsEnabledKey) == true &&
+          nightscoutToken.trim().isNotEmpty,
     );
   }
 

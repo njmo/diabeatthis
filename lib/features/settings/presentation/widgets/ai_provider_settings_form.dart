@@ -9,6 +9,7 @@ import '../../../../common/ai/ai_provider_kind.dart';
 import '../../../../common/ai/ai_settings_controller.dart';
 import '../../../../common/l10n/language.dart';
 import 'ai_api_key_fields.dart';
+import 'ai_author_funded_notice.dart';
 import 'ai_chat_gpt_connection.dart';
 import 'ai_chat_gpt_model_selector.dart';
 import 'ai_image_provider_selector.dart';
@@ -18,9 +19,16 @@ import 'ai_settings_actions.dart';
 import 'ai_settings_feedback.dart';
 
 class AiProviderSettingsForm extends HookConsumerWidget {
-  const AiProviderSettingsForm({super.key, required this.initialConfiguration});
+  const AiProviderSettingsForm({
+    super.key,
+    required this.initialConfiguration,
+    this.onChanged,
+    this.onSaved,
+  });
 
   final AiConfiguration initialConfiguration;
+  final VoidCallback? onChanged;
+  final VoidCallback? onSaved;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,6 +48,7 @@ class AiProviderSettingsForm extends HookConsumerWidget {
     final provider = draft.value.provider;
 
     void clearFeedback() {
+      onChanged?.call();
       error.value = null;
       success.value = null;
     }
@@ -176,7 +185,14 @@ class AiProviderSettingsForm extends HookConsumerWidget {
         ),
         const SizedBox(height: 12),
         if (provider == AiProviderKind.firebase)
-          Text(context.lang.settingsAiFirebaseDescription),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(context.lang.settingsAiFirebaseDescription),
+              const SizedBox(height: 8),
+              const AiAuthorFundedNotice(),
+            ],
+          ),
         if (draft.value.requiresApiKey)
           AiApiKeyFields(
             controller: apiKey,
@@ -279,7 +295,10 @@ class AiProviderSettingsForm extends HookConsumerWidget {
                       ? apiKey.text.trim()
                       : null,
                 );
-                if (context.mounted) apiKey.clear();
+                if (context.mounted) {
+                  apiKey.clear();
+                  onSaved?.call();
+                }
               },
               AiSettingsFeedbackKind.saved,
               refreshCredentials: true,

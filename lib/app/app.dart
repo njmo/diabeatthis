@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../common/events/data/app/execute_command_event.dart';
 import '../common/events/data/app/lifecycle_state_event.dart';
@@ -10,6 +9,7 @@ import '../common/events/data/app/sync_data_key.dart';
 import '../common/events/data/app_event_data.dart';
 import '../common/l10n/application_language.dart';
 import '../common/l10n/language.dart';
+import '../common/location/residence_country_provider.dart';
 import '../common/theme/application_theme_data.dart';
 import '../common/theme/application_theme_mode_controller.dart';
 import '../common/widgets/application_backdrop.dart';
@@ -49,12 +49,6 @@ class _MyAppState extends ConsumerState<MyApp>
     }
   }
 
-  Future<void> prepareApp() async {
-    await Permission.activityRecognition.request();
-    await Permission.ignoreBatteryOptimizations.request();
-    await Permission.notification.request();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -67,7 +61,6 @@ class _MyAppState extends ConsumerState<MyApp>
     _taskEventHandler = TaskEventHandler(ref);
 
     Future.microtask(() async {
-      await prepareApp();
       await ref.read(notificationsControllerUiProvider).init();
       await _foregroundBridge.init();
 
@@ -140,6 +133,7 @@ class _MyAppState extends ConsumerState<MyApp>
     ref.read(appLifecycleProvider.notifier).setState(state);
     logI('sending ${state.toString()}');
     if (state == AppLifecycleState.resumed) {
+      ref.invalidate(deviceCountryLocalesProvider);
       _taskEventHandler?.retryPendingUiActions();
       logI("App resumed, requesting data sync");
       sendSyncCommand();
@@ -149,6 +143,11 @@ class _MyAppState extends ConsumerState<MyApp>
       state: state.index,
     );
     appEventRouter.send(payload);
+  }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    ref.invalidate(deviceCountryLocalesProvider);
   }
 
   @override
@@ -168,8 +167,8 @@ class _MyAppState extends ConsumerState<MyApp>
       routerConfig: router.config(
         navigatorObservers: () => [AutoRouteDebugObserver()],
       ),
-      theme: applicationThemeData(),
-      darkTheme: applicationThemeData(brightness: Brightness.dark),
+      theme: ref.watch(applicationLightThemeProvider),
+      darkTheme: ref.watch(applicationDarkThemeProvider),
       themeMode:
           ref.watch(applicationThemeModeControllerProvider).asData?.value ??
           ThemeMode.system,

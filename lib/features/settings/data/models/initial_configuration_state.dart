@@ -10,6 +10,8 @@ class InitialConfigurationState {
     required this.userName,
     this.isSaving = false,
     this.submitError,
+    this.tempTargetsEnabled = false,
+    this.lowTreatmentsEnabled = false,
   });
 
   final DataSourceConfig config;
@@ -17,6 +19,8 @@ class InitialConfigurationState {
   final String nightscoutUrl;
   final String nightscoutToken;
   final String userName;
+  final bool tempTargetsEnabled;
+  final bool lowTreatmentsEnabled;
   final bool isSaving;
   final String? submitError;
 
@@ -37,6 +41,8 @@ class InitialConfigurationState {
       nightscoutToken: nightscoutToken ?? this.nightscoutToken,
       userName: userName ?? this.userName,
       isSaving: isSaving ?? this.isSaving,
+      tempTargetsEnabled: tempTargetsEnabled,
+      lowTreatmentsEnabled: lowTreatmentsEnabled,
       submitError: clearSubmitError ? null : submitError ?? this.submitError,
     );
   }
