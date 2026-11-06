@@ -1,3 +1,5 @@
+import '../../../../common/family/family_pairing_invitation.dart';
+import '../../../../common/family/family_pairing_member.dart';
 import '../../../../common/l10n/application_language.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
@@ -22,6 +24,11 @@ class SetupWizardState {
   bool shareData = true;
   bool signedIn = false;
   bool paired = false;
+  FamilyPairingInvitation? pairingInvitation;
+  List<FamilyPairingMember> familyMembers = const [];
+  bool generatingInvitation = false;
+  bool invitationFailed = false;
+  bool familyMembersFailed = false;
   String aiProvider = 'firebase';
   final selectedByMode = <SetupDeviceMode, Set<SetupFeatureId>>{
     SetupDeviceMode.patient: {

@@ -4029,5 +4029,15 @@
         "type": "int"
       }
     }
-  }
+  },
+  "setupPairingCodeTitle": "Zaproszenie do parowania",
+  "setupGeneratePairingCode": "Wygeneruj nowy kod",
+  "setupLinkedAccounts": "Połączone konta",
+  "setupLinkedAccountsSource": "Dane demonstracyjne ze źródła parowania. Docelowo lista będzie odczytywana z Firebase.",
+  "setupMemberCaregiver": "Opiekun",
+  "setupMemberChild": "Dziecko",
+  "setupFamilyDataFailed": "Nie udało się odświeżyć danych parowania. Spróbuj wygenerować nowy kod.",
+  "setupMemberManagingCaregiver": "Opiekun zarządzający",
+  "setupFamilyMembersFailed": "Nie udało się potwierdzić powiązanych kont. Odśwież listę, aby potwierdzić parowanie.",
+  "setupRefreshFamilyMembers": "Odśwież listę kont"
 }

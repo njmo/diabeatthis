@@ -3572,5 +3572,15 @@
         "type": "int"
       }
     }
-  }
+  },
+  "setupPairingCodeTitle": "Pairing invitation",
+  "setupGeneratePairingCode": "Generate a new code",
+  "setupLinkedAccounts": "Linked accounts",
+  "setupLinkedAccountsSource": "Demo records from the pairing data source. The final version will read this list from Firebase.",
+  "setupMemberCaregiver": "Caregiver",
+  "setupMemberChild": "Child",
+  "setupFamilyDataFailed": "Could not refresh pairing data. Try generating a new code.",
+  "setupMemberManagingCaregiver": "Managing caregiver",
+  "setupFamilyMembersFailed": "Could not verify the linked accounts. Refresh the list to confirm pairing.",
+  "setupRefreshFamilyMembers": "Refresh linked accounts"
 }
