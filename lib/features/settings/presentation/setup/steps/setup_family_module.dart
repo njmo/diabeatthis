@@ -5,7 +5,6 @@ import '../../../../../common/setup/domain/setup_feature.dart';
 import '../../widgets/settings_section_card.dart';
 import '../setup_wizard_controller.dart';
 import '../widgets/setup_family_pairing_panel.dart';
-import '../widgets/setup_notice.dart';
 import '../widgets/setup_step_heading.dart';
 
 class SetupFamilyModule extends StatelessWidget {
@@ -39,8 +38,6 @@ class SetupFamilyModule extends StatelessWidget {
         const SizedBox(height: 16),
         SetupFamilyPairingPanel(controller: controller),
       ],
-      const SizedBox(height: 16),
-      SetupNotice(text: context.lang.setupCaregiverProtection),
     ],
   );
 }

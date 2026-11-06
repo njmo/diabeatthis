@@ -4044,5 +4044,21 @@
   "setupAddChild": "Dodaj dziecko",
   "setupScanChildTitle": "Zeskanuj kod dziecka",
   "setupScanChildDemo": "Skieruj aparat na kod na telefonie dziecka. To demonstracyjny skaner: nie uruchamia aparatu. Użyj przycisku poniżej, aby zasymulować zeskanowanie i połączenie.",
-  "setupConsent": "Zgadzam się"
+  "setupConsent": "Zgadzam się",
+  "setupCaregiversTitle": "Opiekunowie",
+  "setupChildrenTitle": "Dzieci",
+  "setupDisconnectMember": "Odłącz {name}",
+  "@setupDisconnectMember": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setupDisconnectDescription": "Usunąć powiązanie z tym kontem? Aby połączyć je ponownie, potrzebne będzie nowe parowanie.",
+  "setupDisconnectCancel": "Anuluj",
+  "setupDisconnectConfirm": "Odłącz",
+  "setupDisconnecting": "Odłączanie konta",
+  "setupDisconnectFailed": "Nie udało się odłączyć konta. Spróbuj ponownie.",
+  "setupInitialCaregiverProtection": "Kolejnych opiekunów będzie można dodać w ustawieniach. Teraz możesz odłączyć omyłkowo dodane konto. Po pierwszej konfiguracji dziecko nie może samodzielnie usunąć rodzica."
 }

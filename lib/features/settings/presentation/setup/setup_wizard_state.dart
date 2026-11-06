@@ -29,6 +29,8 @@ class SetupWizardState {
   bool generatingInvitation = false;
   bool invitationFailed = false;
   bool familyMembersFailed = false;
+  final disconnectingMembers = <String>{};
+  bool disconnectFailed = false;
   String aiProvider = 'firebase';
   final selectedByMode = <SetupDeviceMode, Set<SetupFeatureId>>{
     SetupDeviceMode.patient: {

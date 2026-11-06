@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/family/family_management_context.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
 import '../controllers/initial_configuration_controller.dart';
@@ -33,6 +34,7 @@ class InitialConfigurationPage extends ConsumerWidget {
           ),
         ),
         data: (sources) => SetupWizard(
+          familyContext: FamilyManagementContext.initialSetup,
           availability: sources,
           saving: draft.isSaving,
           saveError: draft.submitError,

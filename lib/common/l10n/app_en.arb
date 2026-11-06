@@ -3587,5 +3587,21 @@
   "setupAddChild": "Add child",
   "setupScanChildTitle": "Scan your child’s code",
   "setupScanChildDemo": "Point the camera at the code on your child’s phone. This demo scanner does not open the camera. Use the button below to simulate scanning and connecting.",
-  "setupConsent": "I agree"
+  "setupConsent": "I agree",
+  "setupCaregiversTitle": "Caregivers",
+  "setupChildrenTitle": "Children",
+  "setupDisconnectMember": "Disconnect {name}",
+  "@setupDisconnectMember": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setupDisconnectDescription": "Remove the link to this account? Connecting again will require new pairing.",
+  "setupDisconnectCancel": "Cancel",
+  "setupDisconnectConfirm": "Disconnect",
+  "setupDisconnecting": "Disconnecting account",
+  "setupDisconnectFailed": "Could not disconnect this account. Try again.",
+  "setupInitialCaregiverProtection": "More caregivers can be added in settings. You can disconnect an account added by mistake now. After initial setup, a child cannot remove a parent independently."
 }

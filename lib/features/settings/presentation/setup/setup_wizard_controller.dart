@@ -3,9 +3,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../../common/family/demo_family_pairing_repository.dart';
+import '../../../../common/family/family_management_context.dart';
 import '../../../../common/family/family_pairing_member.dart';
 import '../../../../common/family/family_pairing_repository.dart';
-
+import '../../../../common/family/use_cases/create_family_invitation_use_case.dart';
+import '../../../../common/family/use_cases/disconnect_family_member_use_case.dart';
+import '../../../../common/family/use_cases/simulate_family_pairing_use_case.dart';
+import '../../../../common/family/use_cases/watch_family_members_use_case.dart';
 import '../../../../common/setup/domain/collect_setup_requirements_use_case.dart';
 import '../../../../common/setup/domain/get_available_setup_features_use_case.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
@@ -14,11 +18,54 @@ import 'setup_wizard_state.dart';
 
 /// Session-only demo choices. Never starts services or writes preferences.
 class SetupWizardController extends ChangeNotifier {
-  SetupWizardController(this.state, {FamilyPairingRepository? familyRepository})
-    : familyRepository = familyRepository ?? DemoFamilyPairingRepository(),
-      ownsFamilyRepository = familyRepository == null;
+  SetupWizardController(
+    this.state, {
+    FamilyPairingRepository? familyRepository,
+    this.familyContext = FamilyManagementContext.settings,
+  }) : familyRepository = familyRepository ?? DemoFamilyPairingRepository(),
+       ownsFamilyRepository = familyRepository == null;
   final FamilyPairingRepository familyRepository;
   final bool ownsFamilyRepository;
+  final FamilyManagementContext familyContext;
+  late final createFamilyInvitation = CreateFamilyInvitationUseCase(
+    familyRepository,
+  );
+  late final watchFamilyMembers = WatchFamilyMembersUseCase(familyRepository);
+  late final disconnectFamilyMember = DisconnectFamilyMemberUseCase(
+    familyRepository,
+  );
+  late final simulateFamilyPairing = SimulateFamilyPairingUseCase(
+    familyRepository,
+  );
+  bool get canDisconnectFamily =>
+      state.signedIn &&
+      !state.familyMembersFailed &&
+      disconnectFamilyMember.canDisconnect(state.mode, familyContext);
+
+  Future<void> disconnectMember(String memberId) async {
+    if (disposed ||
+        !canDisconnectFamily ||
+        state.disconnectingMembers.contains(memberId) ||
+        !state.familyMembers.any((member) => member.id == memberId)) {
+      return;
+    }
+    final session = pairingSession;
+    final mode = state.mode;
+    state.disconnectingMembers.add(memberId);
+    state.disconnectFailed = false;
+    changed();
+    try {
+      await disconnectFamilyMember(mode, memberId, familyContext);
+    } catch (_) {
+      if (!disposed && session == pairingSession) state.disconnectFailed = true;
+    } finally {
+      if (!disposed && session == pairingSession) {
+        state.disconnectingMembers.remove(memberId);
+        changed();
+      }
+    }
+  }
+
   StreamSubscription<List<FamilyPairingMember>>? familySubscription;
   bool disposed = false;
   int pairingSession = 0;
@@ -50,7 +97,7 @@ class SetupWizardController extends ChangeNotifier {
     state.invitationFailed = false;
     changed();
     try {
-      final invitation = await familyRepository.createInvitation(mode);
+      final invitation = await createFamilyInvitation(mode);
       if (disposed ||
           session != pairingSession ||
           request != invitationRequest) {
@@ -114,6 +161,8 @@ class SetupWizardController extends ChangeNotifier {
     state.generatingInvitation = false;
     state.invitationFailed = false;
     state.familyMembersFailed = false;
+    state.disconnectingMembers.clear();
+    state.disconnectFailed = false;
     state.configured.remove(SetupModule.family);
     changed();
   }
@@ -210,28 +259,30 @@ class SetupWizardController extends ChangeNotifier {
     }
 
     try {
-      familySubscription = familyRepository
-          .watchMembers(state.mode)
-          .listen(
-            (members) {
-              if (disposed ||
-                  session != pairingSession ||
-                  request != membershipRequest) {
-                return;
-              }
-              state.familyMembers = List.unmodifiable(members);
-              state.paired = members.isNotEmpty;
-              state.familyMembersFailed = false;
-              if (state.paired) {
-                state.configured.add(SetupModule.family);
-              } else {
-                state.configured.remove(SetupModule.family);
-              }
-              changed();
-            },
-            onError: (Object error) => failed(),
-            onDone: failed,
-          );
+      familySubscription = watchFamilyMembers(state.mode).listen(
+        (members) {
+          if (disposed ||
+              session != pairingSession ||
+              request != membershipRequest) {
+            return;
+          }
+          final invitationWasUsed = invitationUsed;
+          state.familyMembers = List.unmodifiable(members);
+          if (invitationWasUsed && !invitationUsed) {
+            state.pairingInvitation = null;
+          }
+          state.paired = members.isNotEmpty;
+          state.familyMembersFailed = false;
+          if (state.paired) {
+            state.configured.add(SetupModule.family);
+          } else {
+            state.configured.remove(SetupModule.family);
+          }
+          changed();
+        },
+        onError: (Object error) => failed(),
+        onDone: failed,
+      );
     } catch (_) {
       failed();
     }
@@ -240,10 +291,7 @@ class SetupWizardController extends ChangeNotifier {
 
   void simulatePairing() {
     if (!state.signedIn || disposed) return;
-    final repository = familyRepository;
-    if (repository is DemoFamilyPairingRepository) {
-      repository.simulatePairing(state.mode);
-    }
+    simulateFamilyPairing(state.mode);
   }
 
   void simulateModule(SetupModule module) {

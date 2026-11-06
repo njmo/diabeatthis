@@ -23,81 +23,67 @@ class SetupPairingInvitationCard extends StatelessWidget {
     final compact = phase == SetupPairingPhase.compact;
     final success = phase == SetupPairingPhase.success;
     final motionDisabled = MediaQuery.disableAnimationsOf(context);
-    final addLabel = state.mode == SetupDeviceMode.patient
-        ? context.lang.setupAddCaregiver
-        : context.lang.setupAddChild;
-    final content = Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (compact)
-              FilledButton.icon(
-                onPressed: controller.generatePairingInvitation,
-                icon: const Icon(Icons.person_add_alt),
-                label: Text(addLabel),
-              )
-            else ...[
-              Text(
-                scanning
-                    ? context.lang.setupScanChildTitle
-                    : context.lang.setupPairingCodeTitle,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 16),
-              AnimatedSwitcher(
-                duration: motionDisabled
-                    ? Duration.zero
-                    : const Duration(milliseconds: 180),
-                child: success
-                    ? const SetupPairingSuccess(
-                        key: ValueKey('pairing-success'),
-                      )
-                    : state.generatingInvitation
-                    ? const Center(
-                        key: ValueKey('pairing-loading'),
-                        child: CircularProgressIndicator(),
-                      )
-                    : state.pairingInvitation != null
-                    ? SetupPairingCodePreview(
-                        key: ValueKey(state.pairingInvitation!.id),
-                        scanning: scanning,
-                        code: state.pairingInvitation!.code,
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              if (!success &&
-                  !state.generatingInvitation &&
-                  (state.pairingInvitation == null || state.invitationFailed))
-                FilledButton.icon(
-                  onPressed: controller.generatePairingInvitation,
-                  icon: const Icon(Icons.person_add_alt),
-                  label: Text(addLabel),
-                ),
-              if (!success &&
-                  state.pairingInvitation != null &&
-                  !controller.invitationUsed)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: FilledButton.tonal(
-                    onPressed: state.generatingInvitation
-                        ? null
-                        : controller.simulatePairing,
-                    child: Text(context.lang.setupSimulatePair),
-                  ),
-                ),
-            ],
-            if (state.invitationFailed)
+    if (state.pairingInvitation == null &&
+        !state.generatingInvitation &&
+        !state.invitationFailed) {
+      return const SizedBox.shrink();
+    }
+    final content = Padding(
+      padding: compact
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (!compact) ...[
+            Text(
+              scanning
+                  ? context.lang.setupScanChildTitle
+                  : context.lang.setupPairingCodeTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+            AnimatedSwitcher(
+              duration: motionDisabled
+                  ? Duration.zero
+                  : const Duration(milliseconds: 180),
+              child: success
+                  ? const SetupPairingSuccess(key: ValueKey('pairing-success'))
+                  : state.generatingInvitation
+                  ? const Center(
+                      key: ValueKey('pairing-loading'),
+                      child: CircularProgressIndicator(),
+                    )
+                  : state.pairingInvitation != null
+                  ? SetupPairingCodePreview(
+                      key: ValueKey(state.pairingInvitation!.id),
+                      scanning: scanning,
+                      code: state.pairingInvitation!.code,
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            if (!success &&
+                state.pairingInvitation != null &&
+                !controller.invitationUsed)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  context.lang.setupFamilyDataFailed,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                padding: const EdgeInsets.only(top: 16),
+                child: FilledButton.tonal(
+                  onPressed: state.generatingInvitation
+                      ? null
+                      : controller.simulatePairing,
+                  child: Text(context.lang.setupSimulatePair),
                 ),
               ),
           ],
-        ),
+          if (state.invitationFailed)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                context.lang.setupFamilyDataFailed,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+        ],
       ),
     );
     if (motionDisabled) return content;

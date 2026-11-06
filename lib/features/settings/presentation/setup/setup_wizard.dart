@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/family/family_management_context.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/l10n/resolve_application_locale.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
@@ -27,12 +28,14 @@ class SetupWizard extends StatefulWidget {
     required this.initialState,
     required this.availability,
     this.onSavePatient,
+    this.familyContext = FamilyManagementContext.settings,
     this.saving = false,
     this.saveError,
   });
   final SetupWizardState initialState;
   final DataSourceOptionAvailability availability;
   final Future<bool> Function(SetupWizardState draft)? onSavePatient;
+  final FamilyManagementContext familyContext;
   final bool saving;
   final String? saveError;
 
@@ -41,7 +44,10 @@ class SetupWizard extends StatefulWidget {
 }
 
 class SetupWizardViewState extends State<SetupWizard> {
-  late final controller = SetupWizardController(widget.initialState);
+  late final controller = SetupWizardController(
+    widget.initialState,
+    familyContext: widget.familyContext,
+  );
   bool allowExit = false;
   @override
   void dispose() {

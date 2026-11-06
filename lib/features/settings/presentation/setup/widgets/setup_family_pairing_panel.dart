@@ -2,8 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../../../common/family/family_management_context.dart';
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/setup/domain/setup_feature.dart';
+import '../../widgets/settings_section_card.dart';
 import '../setup_wizard_controller.dart';
+import 'confirm_family_disconnect.dart';
 import 'setup_family_members_list.dart';
 import 'setup_notice.dart';
 import 'setup_pairing_invitation_card.dart';
@@ -147,8 +151,23 @@ class SetupFamilyPairingPanelState extends State<SetupFamilyPairingPanel> {
     final members = widget.controller.state.familyMembers
         .where((member) => visibleMembers.contains(member.id))
         .toList();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final controller = widget.controller;
+    final patient = controller.state.mode == SetupDeviceMode.patient;
+    return SettingsSectionCard(
+      icon: Icons.people_outline,
+      title: patient
+          ? context.lang.setupCaregiversTitle
+          : context.lang.setupChildrenTitle,
+      trailing: OutlinedButton.icon(
+        onPressed:
+            controller.state.generatingInvitation || pendingInvitation != null
+            ? null
+            : controller.generatePairingInvitation,
+        icon: const Icon(Icons.person_add_alt, size: 18),
+        label: Text(
+          patient ? context.lang.setupAddCaregiver : context.lang.setupAddChild,
+        ),
+      ),
       children: [
         SetupPairingInvitationCard(controller: widget.controller, phase: phase),
         if (widget.controller.state.familyMembersFailed) ...[
@@ -162,11 +181,40 @@ class SetupFamilyPairingPanelState extends State<SetupFamilyPairingPanel> {
             child: Text(context.lang.setupRefreshFamilyMembers),
           ),
         ],
+        const SizedBox(height: 12),
+        SetupNotice(
+          text: controller.familyContext == FamilyManagementContext.initialSetup
+              ? context.lang.setupInitialCaregiverProtection
+              : context.lang.setupCaregiverProtection,
+        ),
+        if (controller.state.disconnectFailed) ...[
+          const SizedBox(height: 12),
+          SetupNotice(
+            text: context.lang.setupDisconnectFailed,
+            icon: Icons.error_outline,
+          ),
+        ],
         if (members.isNotEmpty) ...[
           const SizedBox(height: 16),
           SetupFamilyMembersList(
             members: members,
             animatedMemberIds: animatedMembers,
+            disconnectingMembers: controller.state.disconnectingMembers,
+            onDisconnect: controller.canDisconnectFamily
+                ? (member) async {
+                    final session = controller.pairingSession;
+                    final confirmed = await confirmFamilyDisconnect(
+                      context,
+                      member,
+                    );
+                    if (confirmed &&
+                        mounted &&
+                        controller == widget.controller &&
+                        session == controller.pairingSession) {
+                      await controller.disconnectMember(member.id);
+                    }
+                  }
+                : null,
           ),
         ],
       ],
