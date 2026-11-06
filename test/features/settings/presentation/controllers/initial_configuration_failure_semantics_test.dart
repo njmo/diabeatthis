@@ -47,7 +47,13 @@ void main() {
         };
         final writes = ScriptedRead<void>('apply', [
           (
-            arguments: [config, 'https://example.test', 'token', 'Child', 'pl'],
+            arguments: [
+              config,
+              'https://example.test',
+              'token',
+              'Child',
+              'system',
+            ],
             respond: () => throw error,
           ),
         ]);

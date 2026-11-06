@@ -116,11 +116,11 @@ void main() {
       wizard.controller.setMode(SetupDeviceMode.caregiver);
       wizard.controller.goTo(5);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Zakończ podgląd'));
+      await tester.tap(find.text('Finish preview'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Rozumiem'));
+      await tester.tap(find.text('Got it'));
       await tester.pumpAndSettle();
-      expect(find.text('Dla kogo jest ten telefon?'), findsOneWidget);
+      expect(find.text('Who uses this phone?'), findsOneWidget);
       expect(prefs.getKeys(), isEmpty);
       writes.verifyComplete();
       expect(tester.takeException(), isNull);

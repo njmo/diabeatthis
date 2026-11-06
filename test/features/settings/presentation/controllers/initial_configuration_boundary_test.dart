@@ -86,10 +86,10 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       final writes = ScriptedRead<void>('apply configuration', [
         (
-          arguments: [local, '', '', 'Child', 'pl'],
+          arguments: [local, '', '', 'Child', 'system'],
           respond: () => throw StateError('Mocked save error'),
         ),
-        (arguments: [local, 'retry', '', 'Child', 'pl'], respond: () {}),
+        (arguments: [local, 'retry', '', 'Child', 'system'], respond: () {}),
       ]);
       final container = ProviderContainer(
         overrides: [

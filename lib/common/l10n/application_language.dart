@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/data/provider/shared_prefs_provider.dart';
+import 'application_language_defaults.dart';
 import 'application_language_storage_keys.dart';
 import 'language.dart';
 
@@ -38,14 +39,14 @@ extension ApplicationLanguageLabel on ApplicationLanguage {
 ApplicationLanguage applicationLanguageByCode(String? code) {
   if (code == null) {
     return supportedApplicationLanguages.firstWhere(
-      (language) => language.code == 'pl',
+      (language) => language.code == defaultApplicationLanguageCode,
     );
   }
 
   return supportedApplicationLanguages.firstWhere(
     (language) => language.code == code,
     orElse: () => supportedApplicationLanguages.firstWhere(
-      (language) => language.code == 'pl',
+      (language) => language.code == defaultApplicationLanguageCode,
     ),
   );
 }

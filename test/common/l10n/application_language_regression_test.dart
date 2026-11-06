@@ -24,7 +24,7 @@ void main() {
         );
         expect(
           language.code,
-          stored == null || stored == 'unknown' ? 'pl' : stored,
+          stored == null || stored == 'unknown' ? 'system' : stored,
         );
         expect(prefs.writes, isEmpty);
       },
