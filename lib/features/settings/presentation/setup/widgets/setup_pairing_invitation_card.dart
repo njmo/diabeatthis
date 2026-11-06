@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
 import '../setup_wizard_controller.dart';
+import 'setup_pairing_code_preview.dart';
 import 'setup_pairing_phase.dart';
 import 'setup_pairing_success.dart';
 
@@ -18,6 +19,7 @@ class SetupPairingInvitationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = controller.state;
+    final scanning = state.mode == SetupDeviceMode.caregiver;
     final compact = phase == SetupPairingPhase.compact;
     final success = phase == SetupPairingPhase.success;
     final motionDisabled = MediaQuery.disableAnimationsOf(context);
@@ -38,7 +40,9 @@ class SetupPairingInvitationCard extends StatelessWidget {
               )
             else ...[
               Text(
-                context.lang.setupPairingCodeTitle,
+                scanning
+                    ? context.lang.setupScanChildTitle
+                    : context.lang.setupPairingCodeTitle,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 16),
@@ -56,26 +60,10 @@ class SetupPairingInvitationCard extends StatelessWidget {
                         child: CircularProgressIndicator(),
                       )
                     : state.pairingInvitation != null
-                    ? Column(
+                    ? SetupPairingCodePreview(
                         key: ValueKey(state.pairingInvitation!.id),
-                        children: [
-                          Icon(
-                            Icons.qr_code_2,
-                            size: 120,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            state.pairingInvitation!.code,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          Text(
-                            context.lang.setupQrDemo,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
+                        scanning: scanning,
+                        code: state.pairingInvitation!.code,
                       )
                     : const SizedBox.shrink(),
               ),
