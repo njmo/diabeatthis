@@ -27,7 +27,9 @@ class SetupFeaturesStep extends StatelessWidget {
               for (final feature in controller.available)
                 SetupFeatureTile(
                   feature: feature,
-                  selected: controller.state.selected.contains(feature.id),
+                  selected:
+                      feature.alwaysEnabled ||
+                      controller.state.selected.contains(feature.id),
                   onChanged: (value) => controller.select(feature.id, value),
                 ),
             ],

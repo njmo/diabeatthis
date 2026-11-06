@@ -15,8 +15,14 @@ class NightscoutConnectionFields extends StatelessWidget {
     this.urlRequired = true,
     this.tokenRequired = false,
     this.enabled = true,
+    this.urlLabel,
+    this.tokenLabel,
+    this.tokenRequiredError,
   });
 
+  final String? urlLabel;
+  final String? tokenLabel;
+  final String? tokenRequiredError;
   final bool urlRequired;
   final bool tokenRequired;
   final bool enabled;
@@ -37,7 +43,7 @@ class NightscoutConnectionFields extends StatelessWidget {
           initialValue: urlController == null ? initialUrl : null,
           controller: urlController,
           decoration: InputDecoration(
-            labelText: context.lang.settingsNightscoutUrlLabel,
+            labelText: urlLabel ?? context.lang.settingsNightscoutUrlLabel,
             hintText: context.lang.settingsNightscoutUrlHint,
           ),
           keyboardType: TextInputType.url,
@@ -52,14 +58,15 @@ class NightscoutConnectionFields extends StatelessWidget {
           initialValue: tokenController == null ? initialToken : null,
           controller: tokenController,
           decoration: InputDecoration(
-            labelText: context.lang.settingsNightscoutTokenLabel,
+            labelText: tokenLabel ?? context.lang.settingsNightscoutTokenLabel,
             hintText: context.lang.settingsNightscoutTokenHint,
           ),
           autocorrect: false,
           enableSuggestions: false,
           obscureText: true,
           validator: (value) => tokenRequired && (value?.trim().isEmpty ?? true)
-              ? context.lang.settingsTempTargetsTokenRequired
+              ? tokenRequiredError ??
+                    context.lang.settingsTempTargetsTokenRequired
               : null,
           onSaved: onTokenSaved,
           onChanged: onChanged,

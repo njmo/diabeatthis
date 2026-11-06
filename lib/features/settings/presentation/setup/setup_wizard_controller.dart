@@ -10,9 +10,13 @@ import '../../../../common/family/use_cases/create_family_invitation_use_case.da
 import '../../../../common/family/use_cases/disconnect_family_member_use_case.dart';
 import '../../../../common/family/use_cases/simulate_family_pairing_use_case.dart';
 import '../../../../common/family/use_cases/watch_family_members_use_case.dart';
+import '../../../../common/setup/domain/collect_setup_configuration_fields_use_case.dart';
 import '../../../../common/setup/domain/collect_setup_requirements_use_case.dart';
 import '../../../../common/setup/domain/get_available_setup_features_use_case.dart';
+import '../../../../common/setup/domain/setup_configuration_field.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
+import '../../../../common/setup/domain/setup_feature_option.dart';
+import '../../../../common/setup/domain/validate_setup_configuration_use_case.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import 'setup_wizard_state.dart';
 
@@ -127,16 +131,51 @@ class SetupWizardController extends ChangeNotifier {
     SetupPersonConfiguration(mode: state.mode),
   );
   List<SetupFeature> get selected => available
-      .where((feature) => state.selected.contains(feature.id))
+      .where(
+        (feature) =>
+            feature.alwaysEnabled || state.selected.contains(feature.id),
+      )
       .toList();
   Map<SetupRequirement, Set<SetupFeatureId>> get requirements =>
       const CollectSetupRequirementsUseCase()(selected);
+  Map<SetupConfigurationField, Set<SetupFeatureId>> get requiredConfiguration =>
+      const CollectSetupConfigurationFieldsUseCase()(
+        selected,
+        enabledOptions: state.enabledOptions,
+      );
+  Set<SetupConfigurationField> get missingConfiguration =>
+      const ValidateSetupConfigurationUseCase()(
+        requiredFields: requiredConfiguration.keys,
+        values: {
+          SetupConfigurationField.nightscoutUrl: state.nightscoutUrl,
+          SetupConfigurationField.nightscoutToken: state.nightscoutToken,
+        },
+      );
+  bool configurationComplete(SetupModule module) =>
+      !missingConfiguration.any((field) => field.module == module);
+  bool moduleReady(SetupModule module) =>
+      state.configured.contains(module) && configurationComplete(module);
+  SetupModule? get incompleteRequiredConfigurationModule {
+    for (final field in requiredConfiguration.keys) {
+      if (!moduleReady(field.module)) return field.module;
+    }
+    return null;
+  }
+
   List<SetupModule> get modules => [
     if (requirements.containsKey(SetupRequirement.familyPairing))
       SetupModule.family,
     if (requirements.containsKey(SetupRequirement.aiConfiguration))
       SetupModule.ai,
-    if (state.mode == SetupDeviceMode.patient && state.config.usesCloud)
+    ...selected
+        .map((feature) => feature.configurationModule)
+        .whereType<SetupModule>()
+        .toSet(),
+    if (state.mode == SetupDeviceMode.patient &&
+        (state.config.usesCloud ||
+            requiredConfiguration.keys.any(
+              (field) => field.module == SetupModule.nightscout,
+            )))
       SetupModule.nightscout,
   ];
   SetupModule? get module => modules.isEmpty
@@ -168,12 +207,36 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   void select(SetupFeatureId id, bool enabled) {
+    if (available.any((feature) => feature.id == id && feature.alwaysEnabled)) {
+      return;
+    }
     if (enabled) {
       state.selected.add(id);
     } else {
       state.selected.remove(id);
     }
+    state.configured.removeWhere((module) => !configurationComplete(module));
     state.moduleIndex = 0;
+    changed();
+  }
+
+  void selectOption(SetupFeatureOptionId id, bool enabled) {
+    if (!selected.any(
+      (feature) => feature.options.any((option) => option.id == id),
+    )) {
+      return;
+    }
+    if (enabled) {
+      state.enabledOptions.add(id);
+    } else {
+      state.enabledOptions.remove(id);
+    }
+    for (final feature in selected.where(
+      (feature) => feature.options.any((option) => option.id == id),
+    )) {
+      state.configured.remove(feature.configurationModule);
+    }
+    state.configured.removeWhere((module) => !configurationComplete(module));
     changed();
   }
 
@@ -210,9 +273,7 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   bool next() {
-    if (state.step == 4 &&
-        module != null &&
-        !state.configured.contains(module)) {
+    if (state.step == 4 && module != null && !moduleReady(module!)) {
       return false;
     }
     if (state.step == 4 && state.moduleIndex + 1 < modules.length) {
@@ -295,6 +356,7 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   void simulateModule(SetupModule module) {
+    if (!configurationComplete(module)) return;
     state.configured.add(module);
     changed();
   }
@@ -314,8 +376,22 @@ class SetupWizardController extends ChangeNotifier {
           SetupFeatureId.mealPhoto,
           SetupFeatureId.aiAssistance,
         });
+      case SetupModule.activity:
+        state.selected.remove(SetupFeatureId.activityMonitor);
+      case SetupModule.lowTreatment:
+        return; // Core low treatment monitoring cannot be disabled.
       case SetupModule.nightscout:
-        return; // Real patient sources cannot be silently rewritten.
+        if (state.config.usesCloud) return;
+        for (final feature in selected) {
+          for (final option in feature.options) {
+            if (option.requiredConfiguration.any(
+              (field) => field.module == SetupModule.nightscout,
+            )) {
+              state.enabledOptions.remove(option.id);
+            }
+          }
+        }
+        state.configured.remove(SetupModule.nightscout);
     }
     if (state.moduleIndex >= modules.length) {
       state.step = 5;

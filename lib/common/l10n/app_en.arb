@@ -3603,5 +3603,49 @@
   "setupDisconnectConfirm": "Disconnect",
   "setupDisconnecting": "Disconnecting account",
   "setupDisconnectFailed": "Could not disconnect this account. Try again.",
-  "setupInitialCaregiverProtection": "More caregivers can be added in settings. You can disconnect an account added by mistake now. After initial setup, a child cannot remove a parent independently."
+  "setupInitialCaregiverProtection": "More caregivers can be added in settings. You can disconnect an account added by mistake now. After initial setup, a child cannot remove a parent independently.",
+  "setupFeatureCarbUploadName": "Carbohydrate uploads",
+  "setupFeatureCarbUploadDescription": "Save carbohydrates to Nightscout. Requires a token with write access.",
+  "setupFeatureTargetUploadName": "Temporary target uploads",
+  "setupFeatureTargetUploadDescription": "Save temporary targets to Nightscout. Requires a token with write access.",
+  "setupFieldNightscoutUrl": "Nightscout URL",
+  "setupFieldNightscoutToken": "Nightscout token",
+  "setupRequiredFieldLabel": "{field} *",
+  "setupRequiredByFeatures": "{field} — required by features:",
+  "setupRequiredFieldsMissing": "Complete the required fields: {fields}.",
+  "setupNightscoutWriteTokenRequired": "The selected upload features require a Nightscout token with write access.",
+  "@setupRequiredFieldLabel": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "@setupRequiredByFeatures": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "@setupRequiredFieldsMissing": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "setupFeatureLowTreatmentName": "Low treatment monitor",
+  "setupFeatureLowTreatmentDescription": "Core low treatment handling, AAPS reminders and background records.",
+  "setupFeatureLowTreatmentDetails": "The low treatment monitor is always enabled on the child device.\nRequires background execution and notifications.\nIts configuration can optionally enable carbohydrate recording to Nightscout.",
+  "setupAlwaysEnabled": "Always enabled",
+  "setupFeatureOptions": "Feature options",
+  "setupTuneFeatureDescription": "Tune this feature before configuring the Nightscout connection.",
+  "setupTuneFeatureDemo": "These options are simulated. Uploads are off by default; enabling them requires a URL and token in the following Nightscout step. This does not change current application settings.",
+  "setupConfirmFeatureOptions": "Confirm options",
+  "setupSkipNightscoutOptions": "Disable the upload options that require Nightscout? Local activity monitoring and low treatment functionality will remain available.",
+  "setupNightscoutSessionOnly": "With local data sources, these credentials are used only in this demo and will not be saved. Upload options are not persisted yet either.",
+  "setupTuneAvailable": "Options available in this feature’s configuration",
+  "setupModuleActivity": "Activity",
+  "setupModuleLowTreatment": "Low treatment"
 }

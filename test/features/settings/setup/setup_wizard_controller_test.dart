@@ -27,6 +27,8 @@ void main() {
       expect(controller.modules, [
         SetupModule.family,
         SetupModule.ai,
+        SetupModule.activity,
+        SetupModule.lowTreatment,
         SetupModule.nightscout,
       ]);
       expect(controller.next(), isFalse);
@@ -40,6 +42,10 @@ void main() {
       expect(controller.state.paired, isTrue);
       controller.next();
       controller.simulateModule(SetupModule.ai);
+      controller.next();
+      controller.simulateModule(SetupModule.activity);
+      controller.next();
+      controller.simulateModule(SetupModule.lowTreatment);
       controller.next();
       controller.simulateModule(SetupModule.nightscout);
       controller.next();
@@ -66,7 +72,7 @@ void main() {
         controller.state.selected,
         isNot(contains(SetupFeatureId.aiAssistance)),
       );
-      expect(controller.module, SetupModule.nightscout);
+      expect(controller.module, SetupModule.activity);
       expect(controller.state.step, 4);
     },
   );
@@ -77,6 +83,10 @@ void main() {
       controller.goTo(4);
       controller.skipModule();
       controller.skipModule();
+      controller.skipModule();
+      expect(controller.module, SetupModule.lowTreatment);
+      controller.simulateModule(SetupModule.lowTreatment);
+      controller.next();
       expect(controller.module, SetupModule.nightscout);
       controller.skipModule();
       expect(controller.module, SetupModule.nightscout);

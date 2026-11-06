@@ -4,6 +4,7 @@ import '../../../../../common/l10n/language.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
 import '../../../../../common/widgets/scrollable_chip_rail.dart';
 import '../setup_labels.dart';
+import 'setup_configuration_field_chip.dart';
 import 'setup_feature_help_sheet.dart';
 import 'setup_icon_bubble.dart';
 import 'setup_requirement_chip.dart';
@@ -54,7 +55,16 @@ class SetupFeatureTile extends StatelessWidget {
                   context.lang.featureDescription(feature.id),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-                if (permissions.isEmpty)
+                if (feature.options.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      context.lang.setupTuneAvailable,
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ),
+                if (permissions.isEmpty &&
+                    feature.requiredConfiguration.isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
@@ -64,19 +74,27 @@ class SetupFeatureTile extends StatelessWidget {
                   )
                 else
                   ScrollableChipRail(
-                    children: permissions
-                        .map(
-                          (requirement) =>
-                              SetupRequirementChip(requirement: requirement),
-                        )
-                        .toList(),
+                    children: [
+                      for (final requirement in permissions)
+                        SetupRequirementChip(requirement: requirement),
+                      for (final field in feature.requiredConfiguration)
+                        SetupConfigurationFieldChip(field: field),
+                    ],
                   ),
               ],
             ),
           ),
           Semantics(
             label: context.lang.featureName(feature.id),
-            child: Switch(value: selected, onChanged: onChanged),
+            child: feature.alwaysEnabled
+                ? Tooltip(
+                    message: context.lang.setupAlwaysEnabled,
+                    child: const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Icon(Icons.check_circle_outline),
+                    ),
+                  )
+                : Switch(value: selected, onChanged: onChanged),
           ),
         ],
       ),

@@ -4060,5 +4060,49 @@
   "setupDisconnectConfirm": "Odłącz",
   "setupDisconnecting": "Odłączanie konta",
   "setupDisconnectFailed": "Nie udało się odłączyć konta. Spróbuj ponownie.",
-  "setupInitialCaregiverProtection": "Kolejnych opiekunów będzie można dodać w ustawieniach. Teraz możesz odłączyć omyłkowo dodane konto. Po pierwszej konfiguracji dziecko nie może samodzielnie usunąć rodzica."
+  "setupInitialCaregiverProtection": "Kolejnych opiekunów będzie można dodać w ustawieniach. Teraz możesz odłączyć omyłkowo dodane konto. Po pierwszej konfiguracji dziecko nie może samodzielnie usunąć rodzica.",
+  "setupFeatureCarbUploadName": "Wysyłanie węglowodanów",
+  "setupFeatureCarbUploadDescription": "Zapisywanie węglowodanów w Nightscout. Wymaga tokenu z prawem zapisu.",
+  "setupFeatureTargetUploadName": "Wysyłanie temp targetów",
+  "setupFeatureTargetUploadDescription": "Zapisywanie celów tymczasowych w Nightscout. Wymaga tokenu z prawem zapisu.",
+  "setupFieldNightscoutUrl": "Adres Nightscout",
+  "setupFieldNightscoutToken": "Token Nightscout",
+  "setupRequiredFieldLabel": "{field} *",
+  "setupRequiredByFeatures": "{field} — wymagane przez funkcje:",
+  "setupRequiredFieldsMissing": "Uzupełnij wymagane pola: {fields}.",
+  "setupNightscoutWriteTokenRequired": "Wybrane funkcje wysyłania wymagają tokenu Nightscout z prawem zapisu.",
+  "@setupRequiredFieldLabel": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "@setupRequiredByFeatures": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "@setupRequiredFieldsMissing": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "setupFeatureLowTreatmentName": "Monitor dosładzania",
+  "setupFeatureLowTreatmentDescription": "Stała obsługa dosładzania, przypomnień AAPS i zapisów w tle.",
+  "setupFeatureLowTreatmentDetails": "Monitor dosładzania jest zawsze włączony na telefonie dziecka.\nWymaga pracy w tle i powiadomień.\nW jego konfiguracji można opcjonalnie włączyć zapis węglowodanów do Nightscout.",
+  "setupAlwaysEnabled": "Zawsze włączone",
+  "setupFeatureOptions": "Opcje funkcji",
+  "setupTuneFeatureDescription": "Dostosuj opcje tej funkcji przed konfiguracją połączenia z Nightscout.",
+  "setupTuneFeatureDemo": "Opcje są demonstracyjne. Wysyłanie jest domyślnie wyłączone; jego włączenie wymaga adresu i tokenu w następnym kroku Nightscout. Nie zmienia to aktualnych ustawień aplikacji.",
+  "setupConfirmFeatureOptions": "Zatwierdź opcje",
+  "setupSkipNightscoutOptions": "Wyłączyć opcje wysyłania wymagające Nightscout? Lokalne działanie monitora aktywności i dosładzania pozostanie dostępne.",
+  "setupNightscoutSessionOnly": "Przy lokalnych źródłach wpisane tu dane służą wyłącznie tej demonstracji i nie zostaną zapisane. Opcje wysyłania także nie są jeszcze zapisywane.",
+  "setupTuneAvailable": "Opcje dostępne w konfiguracji tej funkcji",
+  "setupModuleActivity": "Aktywność",
+  "setupModuleLowTreatment": "Dosładzanie"
 }

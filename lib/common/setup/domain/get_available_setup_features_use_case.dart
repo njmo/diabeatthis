@@ -1,4 +1,6 @@
+import 'setup_configuration_field.dart';
 import 'setup_feature.dart';
+import 'setup_feature_option.dart';
 
 class GetAvailableSetupFeaturesUseCase {
   const GetAvailableSetupFeaturesUseCase();
@@ -15,6 +17,16 @@ class GetAvailableSetupFeaturesUseCase {
     ),
     SetupFeature(
       id: SetupFeatureId.activityMonitor,
+      configurationModule: SetupModule.activity,
+      options: [
+        SetupFeatureOption(
+          id: SetupFeatureOptionId.activityTempTargetUpload,
+          requiredConfiguration: {
+            SetupConfigurationField.nightscoutUrl,
+            SetupConfigurationField.nightscoutToken,
+          },
+        ),
+      ],
       modes: {SetupDeviceMode.patient},
       requirements: {
         SetupRequirement.notifications,
@@ -57,6 +69,25 @@ class GetAvailableSetupFeaturesUseCase {
         SetupRequirement.familyPairing,
         SetupRequirement.internet,
       },
+    ),
+    SetupFeature(
+      id: SetupFeatureId.lowTreatment,
+      alwaysEnabled: true,
+      configurationModule: SetupModule.lowTreatment,
+      modes: {SetupDeviceMode.patient},
+      requirements: {
+        SetupRequirement.notifications,
+        SetupRequirement.backgroundExecution,
+      },
+      options: [
+        SetupFeatureOption(
+          id: SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
+          requiredConfiguration: {
+            SetupConfigurationField.nightscoutUrl,
+            SetupConfigurationField.nightscoutToken,
+          },
+        ),
+      ],
     ),
   ];
 

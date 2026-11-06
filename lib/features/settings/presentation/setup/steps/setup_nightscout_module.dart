@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/setup/domain/setup_configuration_field.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
 import '../../widgets/nightscout_connection_fields.dart';
 import '../../widgets/settings_section_card.dart';
 import '../setup_wizard_controller.dart';
+import '../widgets/setup_configuration_requirements.dart';
+import '../widgets/setup_notice.dart';
 import '../widgets/setup_step_heading.dart';
 
 class SetupNightscoutModule extends StatefulWidget {
@@ -42,10 +45,33 @@ class SetupNightscoutModuleState extends State<SetupNightscoutModule> {
         icon: Icons.cloud_outlined,
         title: 'Nightscout',
         children: [
+          SetupConfigurationRequirements(
+            controller: widget.controller,
+            module: SetupModule.nightscout,
+          ),
+          if (!widget.controller.state.config.usesCloud) ...[
+            SetupNotice(text: context.lang.setupNightscoutSessionOnly),
+            const SizedBox(height: 12),
+          ],
           Form(
             key: formKey,
             child: NightscoutConnectionFields(
               urlController: url,
+              urlLabel: context.lang.setupRequiredFieldLabel(
+                context.lang.settingsNightscoutUrlLabel,
+              ),
+              tokenRequired: widget.controller.requiredConfiguration
+                  .containsKey(SetupConfigurationField.nightscoutToken),
+              tokenLabel:
+                  widget.controller.requiredConfiguration.containsKey(
+                    SetupConfigurationField.nightscoutToken,
+                  )
+                  ? context.lang.setupRequiredFieldLabel(
+                      context.lang.settingsNightscoutTokenLabel,
+                    )
+                  : null,
+              tokenRequiredError:
+                  context.lang.setupNightscoutWriteTokenRequired,
               tokenController: token,
               onChanged: (_) =>
                   widget.controller.setNightscout(url.text, token.text),
@@ -60,9 +86,7 @@ class SetupNightscoutModuleState extends State<SetupNightscoutModule> {
             },
             icon: const Icon(Icons.cloud_done_outlined),
             label: Text(
-              widget.controller.state.configured.contains(
-                    SetupModule.nightscout,
-                  )
+              widget.controller.moduleReady(SetupModule.nightscout)
                   ? context.lang.setupChecked
                   : context.lang.setupSimulateCheck,
             ),

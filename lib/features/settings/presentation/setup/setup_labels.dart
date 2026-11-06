@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/setup/domain/setup_configuration_field.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
+import '../../../../common/setup/domain/setup_feature_option.dart';
 
 extension SetupLabels on AppLocalizations {
   String featureName(SetupFeatureId id) => switch (id) {
@@ -11,6 +13,7 @@ extension SetupLabels on AppLocalizations {
     SetupFeatureId.aiAssistance => setupFeatureAiName,
     SetupFeatureId.familyChat => setupFeatureFamilyName,
     SetupFeatureId.childOverview => setupFeatureOverviewName,
+    SetupFeatureId.lowTreatment => setupFeatureLowTreatmentName,
   };
   String featureDescription(SetupFeatureId id) => switch (id) {
     SetupFeatureId.mealMonitor => setupFeatureMealDescription,
@@ -19,6 +22,7 @@ extension SetupLabels on AppLocalizations {
     SetupFeatureId.aiAssistance => setupFeatureAiDescription,
     SetupFeatureId.familyChat => setupFeatureFamilyDescription,
     SetupFeatureId.childOverview => setupFeatureOverviewDescription,
+    SetupFeatureId.lowTreatment => setupFeatureLowTreatmentDescription,
   };
   String featureDetails(SetupFeatureId id) => switch (id) {
     SetupFeatureId.mealMonitor => setupFeatureMealDetails,
@@ -27,6 +31,7 @@ extension SetupLabels on AppLocalizations {
     SetupFeatureId.aiAssistance => setupFeatureAiDetails,
     SetupFeatureId.familyChat => setupFeatureFamilyDetails,
     SetupFeatureId.childOverview => setupFeatureOverviewDetails,
+    SetupFeatureId.lowTreatment => setupFeatureLowTreatmentDetails,
   };
   String requirementName(SetupRequirement requirement) => switch (requirement) {
     SetupRequirement.notifications => setupRequirementNotifications,
@@ -38,9 +43,28 @@ extension SetupLabels on AppLocalizations {
     SetupRequirement.aiConfiguration => setupRequirementAi,
     SetupRequirement.dataSource => setupRequirementData,
   };
+  String optionName(SetupFeatureOptionId id) => switch (id) {
+    SetupFeatureOptionId.lowTreatmentCarbohydrateUpload =>
+      setupFeatureCarbUploadName,
+    SetupFeatureOptionId.activityTempTargetUpload =>
+      setupFeatureTargetUploadName,
+  };
+  String optionDescription(SetupFeatureOptionId id) => switch (id) {
+    SetupFeatureOptionId.lowTreatmentCarbohydrateUpload =>
+      setupFeatureCarbUploadDescription,
+    SetupFeatureOptionId.activityTempTargetUpload =>
+      setupFeatureTargetUploadDescription,
+  };
+  String configurationFieldName(SetupConfigurationField field) =>
+      switch (field) {
+        SetupConfigurationField.nightscoutUrl => setupFieldNightscoutUrl,
+        SetupConfigurationField.nightscoutToken => setupFieldNightscoutToken,
+      };
   String moduleName(SetupModule? module) => switch (module) {
     SetupModule.family => setupModuleFamily,
     SetupModule.ai => setupModuleAi,
+    SetupModule.activity => setupModuleActivity,
+    SetupModule.lowTreatment => setupModuleLowTreatment,
     SetupModule.nightscout => setupModuleNightscout,
     null => setupStepConfiguration,
   };
@@ -53,6 +77,7 @@ IconData setupFeatureIcon(SetupFeatureId id) => switch (id) {
   SetupFeatureId.aiAssistance => Icons.auto_awesome_outlined,
   SetupFeatureId.familyChat => Icons.forum_outlined,
   SetupFeatureId.childOverview => Icons.calendar_month_outlined,
+  SetupFeatureId.lowTreatment => Icons.emergency_outlined,
 };
 
 IconData setupRequirementIcon(SetupRequirement requirement) =>

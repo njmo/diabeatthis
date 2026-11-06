@@ -15,6 +15,7 @@ import 'steps/setup_ai_module.dart';
 import 'steps/setup_basics_step.dart';
 import 'steps/setup_data_step.dart';
 import 'steps/setup_family_module.dart';
+import 'steps/setup_feature_options_module.dart';
 import 'steps/setup_features_step.dart';
 import 'steps/setup_nightscout_module.dart';
 import 'steps/setup_summary_step.dart';
@@ -71,7 +72,8 @@ class SetupWizardViewState extends State<SetupWizard> {
   }
 
   Future<void> skip(BuildContext context) async {
-    if (controller.module == SetupModule.nightscout) {
+    if (controller.module == SetupModule.nightscout &&
+        controller.state.config.usesCloud) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.lang.setupNightscoutCannotSkip)),
       );
@@ -82,7 +84,11 @@ class SetupWizardViewState extends State<SetupWizard> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.lang.setupSkipTitle),
-        content: Text(context.lang.setupSkipDescription),
+        content: Text(
+          controller.module == SetupModule.nightscout
+              ? context.lang.setupSkipNightscoutOptions
+              : context.lang.setupSkipDescription,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -100,6 +106,28 @@ class SetupWizardViewState extends State<SetupWizard> {
 
   Future<void> next(BuildContext context) async {
     FocusScope.of(context).unfocus();
+    final incompleteConfiguration =
+        controller.incompleteRequiredConfigurationModule;
+    if (controller.state.step == 5 && incompleteConfiguration != null) {
+      controller.state.moduleIndex = controller.modules.indexOf(
+        incompleteConfiguration,
+      );
+      controller.goTo(4);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            controller.missingConfiguration.isEmpty
+                ? context.lang.setupModuleIncomplete
+                : context.lang.setupRequiredFieldsMissing(
+                    controller.missingConfiguration
+                        .map(context.lang.configurationFieldName)
+                        .join(', '),
+                  ),
+          ),
+        ),
+      );
+      return;
+    }
     if (controller.state.step == 5) {
       if (widget.onSavePatient != null &&
           controller.state.mode == SetupDeviceMode.patient) {
@@ -124,7 +152,20 @@ class SetupWizardViewState extends State<SetupWizard> {
     }
     if (!controller.next() && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.lang.setupModuleIncomplete)),
+        SnackBar(
+          content: Text(
+            controller.missingConfiguration.any(
+                  (field) => field.module == controller.module,
+                )
+                ? context.lang.setupRequiredFieldsMissing(
+                    controller.missingConfiguration
+                        .where((field) => field.module == controller.module)
+                        .map(context.lang.configurationFieldName)
+                        .join(', '),
+                  )
+                : context.lang.setupModuleIncomplete,
+          ),
+        ),
       );
     }
   }
@@ -146,6 +187,8 @@ class SetupWizardViewState extends State<SetupWizard> {
         4 => switch (controller.module) {
           SetupModule.family => SetupFamilyModule(controller: controller),
           SetupModule.ai => SetupAiModule(controller: controller),
+          SetupModule.activity || SetupModule.lowTreatment =>
+            SetupFeatureOptionsModule(controller: controller),
           SetupModule.nightscout => SetupNightscoutModule(
             controller: controller,
           ),
@@ -259,7 +302,9 @@ class SetupWizardViewState extends State<SetupWizard> {
           saving: widget.saving,
           onNext: () => next(context),
           onPreviousFeature: inModule && state.moduleIndex > 0 ? back : null,
-          onSkip: inModule ? () => skip(context) : null,
+          onSkip: inModule && controller.module != SetupModule.lowTreatment
+              ? () => skip(context)
+              : null,
           label: state.step == 5
               ? (savePatient
                     ? context.lang.setupPatientSave

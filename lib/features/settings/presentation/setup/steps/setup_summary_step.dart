@@ -17,6 +17,18 @@ class SetupSummaryStep extends StatelessWidget {
   final bool canSavePatient;
 
   bool ready(SetupFeature feature) {
+    if (feature.configurationModule != null &&
+        !controller.moduleReady(feature.configurationModule!)) {
+      return false;
+    }
+    if (controller.requiredConfiguration.entries.any(
+      (entry) =>
+          entry.value.contains(feature.id) &&
+          (controller.missingConfiguration.contains(entry.key) ||
+              !controller.moduleReady(entry.key.module)),
+    )) {
+      return false;
+    }
     for (final requirement in feature.requirements) {
       if (isSetupSystemRequirement(requirement) &&
           !controller.state.granted.contains(requirement)) {

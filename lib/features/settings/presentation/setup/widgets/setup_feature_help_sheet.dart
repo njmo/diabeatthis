@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
 import '../setup_labels.dart';
+import 'setup_configuration_field_chip.dart';
+import 'setup_feature_option_info.dart';
 import 'setup_icon_bubble.dart';
 import 'setup_requirement_chip.dart';
 
@@ -62,7 +64,7 @@ class SetupFeatureHelpSheet extends StatelessWidget {
                   ),
                 ],
               ),
-              if (wikiPage == null)
+              if (wikiPage == null && feature.id != SetupFeatureId.lowTreatment)
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
@@ -98,13 +100,22 @@ class SetupFeatureHelpSheet extends StatelessWidget {
               Wrap(
                 spacing: 6,
                 runSpacing: 4,
-                children: feature.requirements
-                    .map(
-                      (requirement) =>
-                          SetupRequirementChip(requirement: requirement),
-                    )
-                    .toList(),
+                children: [
+                  for (final requirement in feature.requirements)
+                    SetupRequirementChip(requirement: requirement),
+                  for (final field in feature.requiredConfiguration)
+                    SetupConfigurationFieldChip(field: field),
+                ],
               ),
+              if (feature.options.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  context.lang.setupFeatureOptions,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                for (final option in feature.options)
+                  SetupFeatureOptionInfo(option: option),
+              ],
               const SizedBox(height: 16),
               if (wikiPage != null)
                 OutlinedButton.icon(

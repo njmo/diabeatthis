@@ -1,3 +1,6 @@
+import 'setup_configuration_field.dart';
+import 'setup_feature_option.dart';
+
 enum SetupDeviceMode { patient, caregiver }
 
 enum SetupFeatureId {
@@ -7,6 +10,7 @@ enum SetupFeatureId {
   aiAssistance,
   familyChat,
   childOverview,
+  lowTreatment,
 }
 
 enum SetupRequirement {
@@ -20,7 +24,7 @@ enum SetupRequirement {
   dataSource,
 }
 
-enum SetupModule { family, ai, nightscout }
+enum SetupModule { family, ai, activity, lowTreatment, nightscout }
 
 class SetupPersonConfiguration {
   const SetupPersonConfiguration({required this.mode});
@@ -32,8 +36,16 @@ class SetupFeature {
     required this.id,
     required this.modes,
     required this.requirements,
+    this.requiredConfiguration = const {},
+    this.options = const [],
+    this.alwaysEnabled = false,
+    this.configurationModule,
   });
   final SetupFeatureId id;
   final Set<SetupDeviceMode> modes;
   final Set<SetupRequirement> requirements;
+  final Set<SetupConfigurationField> requiredConfiguration;
+  final List<SetupFeatureOption> options;
+  final bool alwaysEnabled;
+  final SetupModule? configurationModule;
 }

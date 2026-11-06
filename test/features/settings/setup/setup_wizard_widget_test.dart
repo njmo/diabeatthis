@@ -37,7 +37,7 @@ void main() {
         tester.widget<FormStepHeader>(find.byType(FormStepHeader)).labels,
         ['Start', 'Funkcje', 'Dane', 'Dostęp', 'Rodzina', 'Gotowe'],
       );
-      expect(find.text('Konfiguracja funkcji 1/3'), findsOneWidget);
+      expect(find.text('Konfiguracja funkcji 1/5'), findsOneWidget);
       await tester.tap(find.text('Symuluj logowanie Google'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Symuluj parowanie'));
@@ -45,14 +45,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Dalej'));
       await tester.pumpAndSettle();
-      expect(find.text('Konfiguracja funkcji 2/3'), findsOneWidget);
+      expect(find.text('Konfiguracja funkcji 2/5'), findsOneWidget);
       expect(
         tester.widget<FormStepHeader>(find.byType(FormStepHeader)).labels[4],
         'AI',
       );
       await tester.tap(find.text('Poprzednia funkcja'));
       await tester.pumpAndSettle();
-      expect(find.text('Konfiguracja funkcji 1/3'), findsOneWidget);
+      expect(find.text('Konfiguracja funkcji 1/5'), findsOneWidget);
       expect(draft.paired, isTrue);
       expect(tester.takeException(), isNull);
     },
@@ -206,6 +206,7 @@ void main() {
       tester.binding.platformDispatcher.localeTestValue = const Locale('en');
       addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
       final draft = setupDraft()
+        ..mode = SetupDeviceMode.caregiver
         ..step = 4
         ..language = applicationLanguageByCode('system')
         ..config = const DataSourceConfig(
