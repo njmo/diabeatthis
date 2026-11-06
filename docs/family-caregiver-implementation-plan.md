@@ -1,6 +1,6 @@
 # Family caregiver implementation plan
 
-Status: implementation started with patient startup regression coverage; application behavior is unchanged.
+Status: patient startup regression baseline committed; step-based setup UI implemented with explicit session-only simulations for new features. Caregiver runtime and cloud integration remain pending.
 Date: 2026-11-06.
 
 ## Purpose and agreed scope
@@ -218,6 +218,19 @@ Progress on 2026-11-06:
 Deliver initial-configuration mode choice, persisted mode, separate caregiver onboarding/navigation, and explicit patient/caregiver runtime composition. Preserve existing configured installations as patient mode through migration. Start with no live mode toggle.
 
 Gate: caregiver starts/resumes without patient monitoring, AAPS execution paths, patient permission prompts, or persistent foreground service. Boot/update entry points cannot start patient monitoring in caregiver mode. Existing patient behavior remains operational.
+
+### Stage 1 UI increment — Full-screen setup with simulated new features
+
+Implemented on 2026-11-06:
+
+- Six fixed progress markers: basics, features, data, access, per-feature configuration, summary. Marker 5 changes its caption (Family / AI / NS); the header shows the current configuration count and supports previous-feature navigation. Marker 6 stays visible.
+- Reusable feature catalog and requirement aggregation in `common/setup/domain`, filtered by a person/device-mode model. Shared requirements preserve their dependent feature IDs.
+- Full-screen initial setup and a separate settings preview entry that uses the same wizard. Mode/feature selections, permission grants, AI checks, Google sign-in, QR pairing, and Firebase sharing are explicitly simulated and kept in session memory.
+- Horizontal dependency/permission chip rails with overflow controls; feature information bottom sheets with requirements and links to maintained Wiki pages where available.
+- Existing initial patient save delegates to the original use case for name, language, sources, and Nightscout credentials. Profile photo selection remains available in actual patient initialization and saves independently as before. Simulated feature selections are not persisted and do not toggle running monitors.
+- Settings preview does not write configuration, request permissions, contact AI, authenticate, pair accounts, or start/stop services. Completing a caregiver demo never invokes the patient save path; initial setup returns to mode choice, while a settings preview returns to settings.
+- Session-local language changes apply immediately, including overlays and the device-language option, without changing saved application language in preview. Actual save errors use the language of the submitted draft.
+- Terra high-reasoning review findings were addressed. Validation: 102 targeted tests passed, analysis of changed Dart files passed, and debug APK builds succeeded. Widget rendering and narrow/large-text layouts were checked; installation on the available emulator was prevented by insufficient storage. This increment is UI scaffolding, not completion of Stage 1 runtime separation or the family pilot.
 
 ### Stage 2 — Google authentication and care-group lifecycle
 

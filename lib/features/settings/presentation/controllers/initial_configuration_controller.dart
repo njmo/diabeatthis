@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../common/l10n/application_language.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/l10n/resolve_application_locale.dart';
 import '../../../../common/notifier_provider/simple_provider.dart';
 import '../../../../common/platform/external_app_installation_checker.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
@@ -82,6 +83,9 @@ class InitialConfigurationController extends _$InitialConfigurationController
     if (current == null || current.isSaving) return false;
 
     _setSaving();
+    final messages = lookupAppLocalizations(
+      resolveApplicationLocale(current.language),
+    );
 
     try {
       await _applyInitialConfigurationUseCase(
@@ -98,22 +102,25 @@ class InitialConfigurationController extends _$InitialConfigurationController
         error: e,
         stackTrace: st,
       );
-      _setSubmitError(_unavailableSourceMessage(e));
+      _setSubmitError(_unavailableSourceMessage(e, messages));
       return false;
     } catch (e, st) {
       logE('Initial configuration failed', error: e, stackTrace: st);
       _setSubmitError(
         current.config.usesCloud
-            ? lang.settingsConnectionError
-            : lang.settingsInitialSaveError,
+            ? messages.settingsConnectionError
+            : messages.settingsInitialSaveError,
       );
       return false;
     }
   }
 
-  String _unavailableSourceMessage(DataSourceConfigUnavailableException error) {
+  String _unavailableSourceMessage(
+    DataSourceConfigUnavailableException error,
+    AppLocalizations messages,
+  ) {
     final appNames = error.missingApps.map(_externalDataAppName).join(', ');
-    return lang.settingsMissingAppsSaveError(appNames);
+    return messages.settingsMissingAppsSaveError(appNames);
   }
 
   String _externalDataAppName(ExternalDataApp app) {

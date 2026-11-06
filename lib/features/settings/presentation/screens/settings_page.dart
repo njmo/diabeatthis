@@ -19,6 +19,7 @@ import '../../../../core/logger/logger.dart';
 import '../../data/models/nightscout_settings_draft.dart';
 import '../../data/settings_storage_keys.dart';
 import '../controllers/nightscout_settings_controller.dart';
+import '../setup/widgets/setup_preview_settings_entry.dart';
 import '../widgets/ai_settings_section.dart';
 import '../widgets/application_language_selector.dart';
 import '../widgets/application_theme_settings_section.dart';
@@ -117,6 +118,8 @@ class SettingsPage extends HookConsumerWidget with Logging {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const SetupPreviewSettingsEntry(),
+                    const SizedBox(height: 16),
                     const ResidenceCountrySetting(),
                     const SizedBox(height: 16),
                     DataSourceSettingsSection(
