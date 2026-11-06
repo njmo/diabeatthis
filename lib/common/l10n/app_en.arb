@@ -3746,5 +3746,24 @@
   "setupChooseAccountFirst": "Sign in with Google or choose to continue without signing in. Caregiver mode requires Google.",
   "setupStepRole": "Role",
   "setupWelcomeTitle": "Welcome to DiaBeatThis",
-  "setupWelcomeDescription": "Sign in with Google or continue with local features. Choose who will use this phone in the next step."
+  "setupWelcomeDescription": "Sign in with Google or continue with local features. Choose who will use this phone in the next step.",
+  "chatGptSignInFailedAt": "ChatGPT sign-in did not complete. Step: {stage}. {reason}",
+  "chatGptSignInCredentials": "reading local credentials",
+  "chatGptSignInDiscovery": "connecting to the sign-in service",
+  "chatGptSignInBrowser": "opening the browser",
+  "chatGptSignInCallback": "receiving sign-in approval",
+  "chatGptSignInExchange": "exchanging the sign-in code",
+  "chatGptSignInVerification": "verifying account identity",
+  "chatGptSignInPermissions": "checking ChatGPT plan permissions",
+  "chatGptSignInStorage": "saving the secure session",
+  "@chatGptSignInFailedAt": {
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  }
 }

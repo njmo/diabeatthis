@@ -4203,5 +4203,24 @@
   "setupChooseAccountFirst": "Zaloguj się przez Google albo wybierz kontynuację bez logowania. Tryb opiekuna wymaga Google.",
   "setupStepRole": "Rola",
   "setupWelcomeTitle": "Witaj w DiaBeatThis",
-  "setupWelcomeDescription": "Zaloguj się przez Google lub korzystaj z funkcji lokalnych. W następnym kroku wybierzesz, kto będzie korzystać z telefonu."
+  "setupWelcomeDescription": "Zaloguj się przez Google lub korzystaj z funkcji lokalnych. W następnym kroku wybierzesz, kto będzie korzystać z telefonu.",
+  "chatGptSignInFailedAt": "Nie ukończono logowania ChatGPT. Etap: {stage}. {reason}",
+  "chatGptSignInCredentials": "odczyt zapisanych danych logowania",
+  "chatGptSignInDiscovery": "połączenie z usługą logowania",
+  "chatGptSignInBrowser": "otwarcie przeglądarki",
+  "chatGptSignInCallback": "odbiór zgody na logowanie",
+  "chatGptSignInExchange": "wymiana kodu logowania",
+  "chatGptSignInVerification": "weryfikacja tożsamości konta",
+  "chatGptSignInPermissions": "sprawdzenie zgody na użycie planu ChatGPT",
+  "chatGptSignInStorage": "bezpieczny zapis sesji",
+  "@chatGptSignInFailedAt": {
+    "placeholders": {
+      "stage": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  }
 }

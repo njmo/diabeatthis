@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/llm/local_llm_client.dart';
+import '../../../core/logger/logger.dart';
 import '../ai_credential_store.dart';
 import 'chat_gpt_auth_exception.dart';
 import 'chat_gpt_auth_gateway.dart';
@@ -12,6 +13,8 @@ import 'chat_gpt_identity_verifier.dart';
 import 'chat_gpt_loopback_callback.dart';
 import 'chat_gpt_oauth_transaction.dart';
 import 'chat_gpt_session.dart';
+import 'chat_gpt_sign_in_exception.dart';
+import 'chat_gpt_sign_in_stage.dart';
 
 class ChatGptAuthService {
   ChatGptAuthService({
@@ -62,9 +65,12 @@ class ChatGptAuthService {
   Future<void> _signIn() async {
     final generation = ++_generation;
     ChatGptLoopbackCallback? callback;
+    var stage = ChatGptSignInStage.credentials;
     try {
       final previous = await _load();
+      stage = ChatGptSignInStage.discovery;
       final discovery = await gateway.discovery();
+      stage = ChatGptSignInStage.credentials;
       var host = await credentials.read(hostKey);
       if (host == null) {
         host = ChatGptOAuthTransaction.newHostId();
@@ -72,6 +78,7 @@ class ChatGptAuthService {
       }
       _requireCurrent(generation);
       final transaction = ChatGptOAuthTransaction();
+      stage = ChatGptSignInStage.browser;
       callback = await ChatGptLoopbackCallback.start(
         transaction.state,
         page: callbackPage?.call(),
@@ -103,6 +110,7 @@ class ChatGptAuthService {
       if (!await openBrowser(authorization).timeout(signInTimeout)) {
         throw chatGptAuthorizationFailure();
       }
+      stage = ChatGptSignInStage.callback;
       final uri = await pending;
       for (final key in ['state', 'code', 'client_id', 'error']) {
         if ((uri.queryParametersAll[key]?.length ?? 0) > 1) {
@@ -124,6 +132,7 @@ class ChatGptAuthService {
         throw chatGptAuthorizationFailure();
       }
       _requireCurrent(generation);
+      stage = ChatGptSignInStage.exchange;
       final response = await gateway.token(discovery, {
         'grant_type': 'authorization_code',
         'client_id': clientId,
@@ -132,6 +141,7 @@ class ChatGptAuthService {
         'redirect_uri': redirect,
         'resource': ChatGptAuthGateway.resource,
       });
+      stage = ChatGptSignInStage.verification;
       final id = response['id_token'];
       if (id is! String) throw chatGptAuthorizationFailure();
       final subject = await identityVerifier.verify(
@@ -142,22 +152,26 @@ class ChatGptAuthService {
         nonce: transaction.nonce,
         expectedSubject: previous?.subject,
       );
+      stage = ChatGptSignInStage.permissions;
       final session = ChatGptSession.fromTokenResponse(
         clientId: clientId,
         subject: subject,
         response: response,
         now: now(),
       );
+      stage = ChatGptSignInStage.storage;
       await _save(generation, session);
-    } on LlmRequestException {
-      rethrow;
-    } on TimeoutException {
-      throw const LlmRequestException(
-        failure: LlmRequestFailure.timeout,
-        message: 'ChatGPT sign-in timed out.',
+    } catch (error) {
+      final failure = error is LlmRequestException
+          ? error.failure
+          : error is TimeoutException
+          ? LlmRequestFailure.timeout
+          : LlmRequestFailure.unavailable;
+      Log.w(
+        'ChatGptAuth',
+        'Sign-in failed: stage=${stage.name}, category=${failure.name}',
       );
-    } catch (_) {
-      throw chatGptAuthorizationFailure();
+      throw ChatGptSignInException(stage: stage, failure: failure);
     } finally {
       await callback?.close();
       if (identical(_callback, callback)) _callback = null;
