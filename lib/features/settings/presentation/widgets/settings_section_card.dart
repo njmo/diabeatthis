@@ -6,12 +6,14 @@ class SettingsSectionCard extends StatelessWidget {
     required this.icon,
     required this.title,
     this.subtitle,
+    this.trailing,
     required this.children,
   });
 
   final IconData icon;
   final String title;
   final String? subtitle;
+  final Widget? trailing;
   final List<Widget> children;
 
   @override
@@ -27,37 +29,61 @@ class SettingsSectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, color: colorScheme.onPrimaryContainer),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: theme.textTheme.titleMedium),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final inline =
+                    constraints.maxWidth >= 280 &&
+                    MediaQuery.textScalerOf(context).scale(16) <= 20;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            icon,
+                            color: colorScheme.onPrimaryContainer,
                           ),
                         ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(title, style: theme.textTheme.titleMedium),
+                              if (subtitle != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  subtitle!,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        if (trailing != null && inline) ...[
+                          const SizedBox(width: 8),
+                          trailing!,
+                        ],
                       ],
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                    if (trailing != null && !inline)
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: trailing!,
+                      ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 16),
             ...children,

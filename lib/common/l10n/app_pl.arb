@@ -4043,5 +4043,6 @@
   "setupAddCaregiver": "Dodaj opiekuna",
   "setupAddChild": "Dodaj dziecko",
   "setupScanChildTitle": "Zeskanuj kod dziecka",
-  "setupScanChildDemo": "Skieruj aparat na kod na telefonie dziecka. To demonstracyjny skaner: nie uruchamia aparatu. Użyj przycisku poniżej, aby zasymulować zeskanowanie i połączenie."
+  "setupScanChildDemo": "Skieruj aparat na kod na telefonie dziecka. To demonstracyjny skaner: nie uruchamia aparatu. Użyj przycisku poniżej, aby zasymulować zeskanowanie i połączenie.",
+  "setupConsent": "Zgadzam się"
 }

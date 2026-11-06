@@ -3586,5 +3586,6 @@
   "setupAddCaregiver": "Add caregiver",
   "setupAddChild": "Add child",
   "setupScanChildTitle": "Scan your child’s code",
-  "setupScanChildDemo": "Point the camera at the code on your child’s phone. This demo scanner does not open the camera. Use the button below to simulate scanning and connecting."
+  "setupScanChildDemo": "Point the camera at the code on your child’s phone. This demo scanner does not open the camera. Use the button below to simulate scanning and connecting.",
+  "setupConsent": "I agree"
 }
