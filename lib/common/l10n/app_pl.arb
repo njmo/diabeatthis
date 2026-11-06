@@ -4200,5 +4200,8 @@
   "setupContinueWithoutGoogle": "Kontynuuj bez logowania",
   "setupCaregiverGoogleRequired": "Tryb opiekuna wymaga konta Google, aby powiązać je z kontem dziecka. Imię, nazwisko i zdjęcie pobierzemy z Google.",
   "setupLocalAccountDescription": "Bez logowania korzystasz z lokalnych funkcji aplikacji. Konto Google jest potrzebne do udostępniania danych rodzinie; możesz dodać je później.",
-  "setupChooseAccountFirst": "Zaloguj się przez Google albo wybierz kontynuację bez logowania. Tryb opiekuna wymaga Google."
+  "setupChooseAccountFirst": "Zaloguj się przez Google albo wybierz kontynuację bez logowania. Tryb opiekuna wymaga Google.",
+  "setupStepRole": "Rola",
+  "setupWelcomeTitle": "Witaj w DiaBeatThis",
+  "setupWelcomeDescription": "Zaloguj się przez Google lub korzystaj z funkcji lokalnych. W następnym kroku wybierzesz, kto będzie korzystać z telefonu."
 }

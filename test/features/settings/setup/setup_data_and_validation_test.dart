@@ -223,6 +223,7 @@ void main() {
       final header = tester.widget<FormStepHeader>(find.byType(FormStepHeader));
       expect(header.labels, [
         'Start',
+        'Rola',
         'Funkcje',
         'Dostęp',
         'Konfiguracja',

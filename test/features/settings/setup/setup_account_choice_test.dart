@@ -40,9 +40,9 @@ void main() {
       expect(controller.state.shareData, isFalse);
       expect(await controller.validateAndNext(), isTrue);
       controller.setMode(SetupDeviceMode.caregiver);
-      controller.goTo(SetupStep.start.index);
+      controller.goTo(SetupStep.role.index);
       await controller.continueWithoutGoogle();
-      expect(controller.state.accountChoice, SetupAccountChoice.undecided);
+      expect(controller.state.accountChoice, SetupAccountChoice.local);
       expect(await controller.validateAndNext(), isFalse);
     },
   );
@@ -122,6 +122,10 @@ void main() {
       await tester.ensureVisible(find.text('Kontynuuj bez logowania'));
       await tester.tap(find.text('Kontynuuj bez logowania'));
       await tester.pumpAndSettle();
+      expect(find.byType(TextFormField), findsNothing);
+      await tester.tap(find.text('Dalej'));
+      await tester.pumpAndSettle();
+      expect(draft.currentStep, SetupStep.role);
       expect(find.byType(TextFormField), findsOneWidget);
       expect(draft.accountChoice, SetupAccountChoice.local);
       expect(tester.takeException(), isNull);

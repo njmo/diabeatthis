@@ -127,7 +127,10 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   Future<void> continueWithoutGoogle() async {
-    if (disposed || state.signingIn || state.mode != SetupDeviceMode.patient) {
+    if (disposed ||
+        state.signingIn ||
+        (state.mode != SetupDeviceMode.patient &&
+            state.currentStep != SetupStep.start)) {
       return;
     }
     if (authentication != null) {
@@ -149,7 +152,9 @@ class SetupWizardController extends ChangeNotifier {
       state.signingIn = false;
     }
     state.accountChoice = SetupAccountChoice.local;
-    state.selected.remove(SetupFeatureId.familyChat);
+    state.selectedByMode[SetupDeviceMode.patient]!.remove(
+      SetupFeatureId.familyChat,
+    );
     state.configured.remove(SetupModule.family);
     changed();
   }
@@ -377,9 +382,9 @@ class SetupWizardController extends ChangeNotifier {
     configurationRevision++;
     state.moduleValidationFailed = false;
     state.attemptedModules.clear();
-    state.accountChoice = state.googleAccount == null
-        ? SetupAccountChoice.undecided
-        : SetupAccountChoice.google;
+    if (state.googleAccount != null) {
+      state.accountChoice = SetupAccountChoice.google;
+    }
     state.mode = mode;
     state.moduleIndex = 0;
     pairingSession++;
@@ -463,6 +468,7 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   void back() {
+    if (state.signingIn || disposed) return;
     if (state.currentStep == SetupStep.summary) {
       state.step = SetupStep.configuration.index;
       state.moduleIndex = modules.isEmpty ? 0 : modules.length - 1;
@@ -476,6 +482,7 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   bool next() {
+    if (state.signingIn || disposed) return false;
     if (state.currentStep == SetupStep.configuration &&
         module != null &&
         !moduleReady(module!)) {
@@ -492,13 +499,16 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   Future<bool> validateAndNext() async {
-    if (disposed || isValidating) return false;
-    if (state.currentStep == SetupStep.start &&
-        authentication != null &&
-        !state.signedIn &&
-        (state.mode == SetupDeviceMode.caregiver ||
-            state.accountChoice != SetupAccountChoice.local)) {
-      return false;
+    if (disposed || isValidating || state.signingIn) return false;
+    if (authentication != null && !state.signedIn) {
+      if (state.currentStep == SetupStep.start &&
+          state.accountChoice != SetupAccountChoice.local) {
+        return false;
+      }
+      if (state.currentStep == SetupStep.role &&
+          state.mode == SetupDeviceMode.caregiver) {
+        return false;
+      }
     }
     if (state.currentStep == SetupStep.access && permissions != null) {
       await refreshPermissions();

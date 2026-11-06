@@ -27,7 +27,7 @@ SetupWizardState setupDraft() => SetupWizardState(
 
 void main() {
   testWidgets(
-    'five markers remain visible while fourth label and module count change',
+    'six markers remain visible while fifth label and module count change',
     (tester) async {
       final draft = setupDraft()
         ..step = SetupStep.configuration.index
@@ -49,7 +49,7 @@ void main() {
       );
       expect(
         tester.widget<FormStepHeader>(find.byType(FormStepHeader)).labels,
-        ['Start', 'Funkcje', 'Dostęp', 'Rodzina', 'Gotowe'],
+        ['Start', 'Rola', 'Funkcje', 'Dostęp', 'Rodzina', 'Gotowe'],
       );
       expect(find.text('Konfiguracja funkcji 4/6'), findsOneWidget);
       await tester.tap(find.text('Symuluj logowanie Google'));
@@ -61,7 +61,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Konfiguracja funkcji 5/6'), findsOneWidget);
       expect(
-        tester.widget<FormStepHeader>(find.byType(FormStepHeader)).labels[3],
+        tester.widget<FormStepHeader>(find.byType(FormStepHeader)).labels[4],
         'AI',
       );
       await tester.tap(find.text('Poprzednia funkcja'));
@@ -101,7 +101,7 @@ void main() {
   testWidgets('feature information opens independently of its switch', (
     tester,
   ) async {
-    final draft = setupDraft()..step = 1;
+    final draft = setupDraft()..step = SetupStep.features.index;
     draft.selected.remove(SetupFeatureId.mealMonitor);
     await tester.pumpWidget(
       localizedMaterialApp(
@@ -173,7 +173,7 @@ void main() {
   testWidgets(
     'session language changes the wizard and help without persisting preferences',
     (tester) async {
-      final draft = setupDraft()..step = 1;
+      final draft = setupDraft()..step = SetupStep.features.index;
       await tester.pumpWidget(
         localizedMaterialApp(
           home: SetupWizard(

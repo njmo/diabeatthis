@@ -6,8 +6,13 @@ import '../../widgets/google_account_card.dart';
 import '../setup_wizard_controller.dart';
 
 class SetupAccountChoicePanel extends StatelessWidget {
-  const SetupAccountChoicePanel({super.key, required this.controller});
+  const SetupAccountChoicePanel({
+    super.key,
+    required this.controller,
+    this.allowLocalChoice = true,
+  });
   final SetupWizardController controller;
+  final bool allowLocalChoice;
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 16),
@@ -24,8 +29,7 @@ class SetupAccountChoicePanel extends StatelessWidget {
           onSignOut: controller.signOutGoogle,
         ),
         const SizedBox(height: 8),
-        if (!controller.state.signedIn &&
-            controller.state.mode == SetupDeviceMode.patient)
+        if (!controller.state.signedIn && allowLocalChoice)
           OutlinedButton.icon(
             onPressed: controller.state.signingIn
                 ? null
@@ -34,7 +38,8 @@ class SetupAccountChoicePanel extends StatelessWidget {
             label: Text(context.lang.setupContinueWithoutGoogle),
           ),
         Text(
-          controller.state.mode == SetupDeviceMode.caregiver
+          !allowLocalChoice &&
+                  controller.state.mode == SetupDeviceMode.caregiver
               ? context.lang.setupCaregiverGoogleRequired
               : context.lang.setupLocalAccountDescription,
           style: Theme.of(context).textTheme.bodySmall,

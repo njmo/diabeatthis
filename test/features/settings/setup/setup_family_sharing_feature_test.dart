@@ -61,7 +61,7 @@ void main() {
   testWidgets(
     'family sharing lives in Features with independent help and is absent from Data',
     (tester) async {
-      final draft = familySharingDraft()..step = 1;
+      final draft = familySharingDraft()..step = SetupStep.features.index;
       await tester.pumpWidget(
         localizedMaterialApp(
           home: SetupWizard(

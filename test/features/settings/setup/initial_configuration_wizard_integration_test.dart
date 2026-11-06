@@ -67,6 +67,8 @@ void main() {
       await tester.ensureVisible(find.text('Continue without signing in'));
       await tester.tap(find.text('Continue without signing in'));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
       expect(find.byType(ProfileNameField), findsOneWidget);
       final wizard = tester.state<SetupWizardViewState>(
         find.byType(SetupWizard),
@@ -93,7 +95,7 @@ void main() {
   );
 
   testWidgets(
-    'first-run caregiver completion returns to mode choice without patient writes',
+    'first-run caregiver completion returns to Start without patient writes',
     (tester) async {
       final auth = SetupGoogleAuthenticationTestRepository();
       addTearDown(auth.dispose);
@@ -141,7 +143,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Got it'));
       await tester.pumpAndSettle();
-      expect(find.text('Who uses this phone?'), findsOneWidget);
+      expect(find.text('Welcome to DiaBeatThis'), findsOneWidget);
       expect(prefs.getKeys(), isEmpty);
       writes.verifyComplete();
       expect(tester.takeException(), isNull);

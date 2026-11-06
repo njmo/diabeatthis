@@ -1,1 +1,1 @@
-enum SetupStep { start, features, access, configuration, summary }
+enum SetupStep { start, role, features, access, configuration, summary }

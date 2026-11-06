@@ -3743,5 +3743,8 @@
   "setupContinueWithoutGoogle": "Continue without signing in",
   "setupCaregiverGoogleRequired": "Caregiver mode requires a Google account to link with the child’s account. Your name and profile photo will come from Google.",
   "setupLocalAccountDescription": "Without signing in, you can use local app features. A Google account is needed for family sharing and can be added later.",
-  "setupChooseAccountFirst": "Sign in with Google or choose to continue without signing in. Caregiver mode requires Google."
+  "setupChooseAccountFirst": "Sign in with Google or choose to continue without signing in. Caregiver mode requires Google.",
+  "setupStepRole": "Role",
+  "setupWelcomeTitle": "Welcome to DiaBeatThis",
+  "setupWelcomeDescription": "Sign in with Google or continue with local features. Choose who will use this phone in the next step."
 }

@@ -15,14 +15,15 @@ import 'setup_wizard_controller.dart';
 import 'setup_wizard_state.dart';
 import 'steps/setup_access_step.dart';
 import 'steps/setup_ai_module.dart';
-import 'steps/setup_basics_step.dart';
 import 'steps/setup_data_module.dart';
 import 'steps/setup_family_module.dart';
 import 'steps/setup_feature_options_module.dart';
 import 'steps/setup_features_step.dart';
 import 'steps/setup_nightscout_module.dart';
+import 'steps/setup_role_step.dart';
+import 'steps/setup_start_step.dart';
 import 'steps/setup_summary_step.dart';
-import 'widgets/setup_notice.dart';
+import 'widgets/setup_language_control.dart';
 import 'widgets/setup_step_heading.dart';
 import 'widgets/setup_wizard_actions.dart';
 
@@ -181,7 +182,8 @@ class SetupWizardViewState extends State<SetupWizard>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            controller.state.currentStep == SetupStep.start
+            (controller.state.currentStep == SetupStep.start ||
+                    controller.state.currentStep == SetupStep.role)
                 ? context.lang.setupChooseAccountFirst
                 : controller.state.currentStep == SetupStep.access
                 ? context.lang.setupPermissionsIncomplete
@@ -203,7 +205,8 @@ class SetupWizardViewState extends State<SetupWizard>
 
   Widget contentForStep(BuildContext context) =>
       switch (controller.state.currentStep) {
-        SetupStep.start => SetupBasicsStep(
+        SetupStep.start => SetupStartStep(controller: controller),
+        SetupStep.role => SetupRoleStep(
           controller: controller,
           enableProfilePhoto:
               widget.onSavePatient != null &&
@@ -241,7 +244,10 @@ class SetupWizardViewState extends State<SetupWizard>
     animation: controller,
     builder: (context, _) => Localizations.override(
       context: context,
-      locale: resolveApplicationLocale(controller.state.language),
+      locale: resolveApplicationLocale(
+        controller.state.language,
+        systemLocales: WidgetsBinding.instance.platformDispatcher.locales,
+      ),
       child: Builder(builder: buildWizard),
     ),
   );
@@ -251,7 +257,7 @@ class SetupWizardViewState extends State<SetupWizard>
     final inModule =
         state.currentStep == SetupStep.configuration &&
         controller.module != null;
-    final busy = widget.saving || controller.isValidating;
+    final busy = widget.saving || controller.isValidating || state.signingIn;
     final savePatient =
         widget.onSavePatient != null && state.mode == SetupDeviceMode.patient;
     final header = inModule
@@ -268,6 +274,9 @@ class SetupWizardViewState extends State<SetupWizard>
       child: Scaffold(
         appBar: AppBar(
           actions: [
+            if (state.currentStep == SetupStep.start &&
+                !SetupLanguageControl.needsFallbackChoice(controller))
+              SetupLanguageControl(controller: controller, compact: true),
             if (widget.onSavePatient == null && Navigator.of(context).canPop())
               IconButton(
                 tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
@@ -292,6 +301,7 @@ class SetupWizardViewState extends State<SetupWizard>
                 child: FormStepHeader(
                   labels: [
                     context.lang.setupStepStart,
+                    context.lang.setupStepRole,
                     context.lang.setupStepFeatures,
                     context.lang.setupStepAccess,
                     inModule
@@ -309,12 +319,6 @@ class SetupWizardViewState extends State<SetupWizard>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (state.step == 0) ...[
-                        SetupNotice(
-                          text: context.lang.setupLiveConfigurationNotice,
-                        ),
-                        const SizedBox(height: 16),
-                      ],
                       contentForStep(context),
                       if (widget.saveError != null)
                         Padding(
