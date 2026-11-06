@@ -370,7 +370,6 @@ class SetupWizardController extends ChangeNotifier {
           SetupFeatureId.familyChat,
           SetupFeatureId.childOverview,
         });
-        state.shareData = false;
       case SetupModule.ai:
         state.selected.removeAll({
           SetupFeatureId.mealPhoto,

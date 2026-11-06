@@ -11,7 +11,7 @@ extension SetupLabels on AppLocalizations {
     SetupFeatureId.activityMonitor => setupFeatureActivityName,
     SetupFeatureId.mealPhoto => setupFeaturePhotoName,
     SetupFeatureId.aiAssistance => setupFeatureAiName,
-    SetupFeatureId.familyChat => setupFeatureFamilyName,
+    SetupFeatureId.familyChat => setupFamilySharing,
     SetupFeatureId.childOverview => setupFeatureOverviewName,
     SetupFeatureId.lowTreatment => setupFeatureLowTreatmentName,
   };
@@ -20,7 +20,7 @@ extension SetupLabels on AppLocalizations {
     SetupFeatureId.activityMonitor => setupFeatureActivityDescription,
     SetupFeatureId.mealPhoto => setupFeaturePhotoDescription,
     SetupFeatureId.aiAssistance => setupFeatureAiDescription,
-    SetupFeatureId.familyChat => setupFeatureFamilyDescription,
+    SetupFeatureId.familyChat => setupFamilySharingFeatureDescription,
     SetupFeatureId.childOverview => setupFeatureOverviewDescription,
     SetupFeatureId.lowTreatment => setupFeatureLowTreatmentDescription,
   };
@@ -29,7 +29,7 @@ extension SetupLabels on AppLocalizations {
     SetupFeatureId.activityMonitor => setupFeatureActivityDetails,
     SetupFeatureId.mealPhoto => setupFeaturePhotoDetails,
     SetupFeatureId.aiAssistance => setupFeatureAiDetails,
-    SetupFeatureId.familyChat => setupFeatureFamilyDetails,
+    SetupFeatureId.familyChat => setupFamilySharingFeatureDetails,
     SetupFeatureId.childOverview => setupFeatureOverviewDetails,
     SetupFeatureId.lowTreatment => setupFeatureLowTreatmentDetails,
   };

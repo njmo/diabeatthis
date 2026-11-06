@@ -4104,5 +4104,7 @@
   "setupNightscoutSessionOnly": "Przy lokalnych źródłach wpisane tu dane służą wyłącznie tej demonstracji i nie zostaną zapisane. Opcje wysyłania także nie są jeszcze zapisywane.",
   "setupTuneAvailable": "Opcje dostępne w konfiguracji tej funkcji",
   "setupModuleActivity": "Aktywność",
-  "setupModuleLowTreatment": "Dosładzanie"
+  "setupModuleLowTreatment": "Dosładzanie",
+  "setupFamilySharingFeatureDescription": "Komunikator rodzinny oraz synchronizacja danych dziecka z Firebase.",
+  "setupFamilySharingFeatureDetails": "Jedna funkcja łączy komunikator dziecko–opiekun i udostępnianie danych powiązanym kontom.\nPo jej włączeniu nowe i zmienione składniki dziecka będą automatycznie synchronizowane z Firebase, podobnie jak zmiany posiłków i aktywności.\nSkładniki edytuje wyłącznie dziecko; opiekun otrzymuje ich podgląd.\nWymaga logowania Google i sparowania kont.\nBez internetu dziecko nadal korzysta z danych lokalnych; synchronizacja oczekuje na połączenie.\nTen konfigurator jest demonstracyjny: nie uruchamia jeszcze synchronizacji ani komunikatora."
 }

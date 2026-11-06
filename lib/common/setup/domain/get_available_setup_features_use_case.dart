@@ -51,6 +51,7 @@ class GetAvailableSetupFeaturesUseCase {
         SetupRequirement.internet,
       },
     ),
+    // One family feature combines communication with the planned data mirror.
     SetupFeature(
       id: SetupFeatureId.familyChat,
       modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},

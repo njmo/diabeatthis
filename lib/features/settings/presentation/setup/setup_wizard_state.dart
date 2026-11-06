@@ -22,7 +22,9 @@ class SetupWizardState {
   SetupDeviceMode mode = SetupDeviceMode.patient;
   int step = 0;
   int moduleIndex = 0;
-  bool shareData = true;
+
+  /// Family communication and the future data mirror share one feature switch.
+  bool get shareData => selected.contains(SetupFeatureId.familyChat);
   bool signedIn = false;
   bool paired = false;
   FamilyPairingInvitation? pairingInvitation;

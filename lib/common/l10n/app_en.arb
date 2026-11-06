@@ -3647,5 +3647,7 @@
   "setupNightscoutSessionOnly": "With local data sources, these credentials are used only in this demo and will not be saved. Upload options are not persisted yet either.",
   "setupTuneAvailable": "Options available in this feature’s configuration",
   "setupModuleActivity": "Activity",
-  "setupModuleLowTreatment": "Low treatment"
+  "setupModuleLowTreatment": "Low treatment",
+  "setupFamilySharingFeatureDescription": "Family messaging and synchronization of the child’s data with Firebase.",
+  "setupFamilySharingFeatureDetails": "One feature combines child–caregiver messaging with sharing data with linked accounts.\nWhen enabled, new and updated child ingredients will automatically sync to Firebase, along with meal and activity changes.\nOnly the child edits ingredients; caregivers have read-only access.\nRequires Google sign-in and account pairing.\nWithout internet, the child continues using local data; synchronization waits for connectivity.\nThis wizard is a preview: it does not yet start synchronization or messaging."
 }
