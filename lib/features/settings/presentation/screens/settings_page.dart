@@ -11,6 +11,7 @@ import '../../../../common/app_mode/application_device_mode_loading.dart';
 import '../../../../common/events/data/app/dump_logs_event.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../common/family/presentation/family_settings_section.dart';
+import '../../../../common/family_sync/presentation/family_sync_settings_section.dart';
 import '../../../../common/l10n/application_language.dart';
 import '../../../../common/l10n/application_language_storage_keys.dart';
 import '../../../../common/l10n/language.dart';
@@ -129,6 +130,8 @@ class SettingsPage extends HookConsumerWidget with Logging {
                     const GoogleAccountSettingsSection(),
                     const SizedBox(height: 16),
                     const FamilySettingsSection(),
+                    const SizedBox(height: 16),
+                    const FamilySyncSettingsSection(),
                     const SizedBox(height: 16),
                     const ResidenceCountrySetting(),
                     const SizedBox(height: 16),

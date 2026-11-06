@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/app_mode/application_device_mode.dart';
 import '../../../../common/app_mode/application_device_mode_loading.dart';
+import '../../../../common/family_sync/presentation/family_mirror_status_banner.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/compact_category_selector.dart';
 import '../../../../core/data/provider/parent_controller_provider.dart';
@@ -95,28 +96,35 @@ class DashboardPage extends HookConsumerWidget {
           : const DashboardFAB(),
       body: SafeArea(
         bottom: false,
-        child: destination.value == 1
-            ? const TodayPage()
-            : isCollection
-            ? CollectionContent(
-                history: destination.value == 2,
-                selectedIndex: category.value,
-              )
-            : Builder(
-                builder: (context) => SingleChildScrollView(
-                  padding: EdgeInsets.only(
-                    bottom: 32 + MediaQuery.paddingOf(context).bottom,
-                  ),
-                  child: Column(
-                    children: [
-                      NightscoutPanel(),
-                      const DashboardStatusCard(),
-                      const SizedBox(height: 8),
-                      MealListToday(),
-                    ],
-                  ),
-                ),
-              ),
+        child: Column(
+          children: [
+            const FamilyMirrorStatusBanner(),
+            Expanded(
+              child: destination.value == 1
+                  ? const TodayPage()
+                  : isCollection
+                  ? CollectionContent(
+                      history: destination.value == 2,
+                      selectedIndex: category.value,
+                    )
+                  : Builder(
+                      builder: (context) => SingleChildScrollView(
+                        padding: EdgeInsets.only(
+                          bottom: 32 + MediaQuery.paddingOf(context).bottom,
+                        ),
+                        child: Column(
+                          children: [
+                            NightscoutPanel(),
+                            const DashboardStatusCard(),
+                            const SizedBox(height: 8),
+                            MealListToday(),
+                          ],
+                        ),
+                      ),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

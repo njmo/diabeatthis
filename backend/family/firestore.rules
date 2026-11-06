@@ -1,6 +1,14 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /familyMirrorSignals/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider == 'google.com'
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/familyAccounts/$(uid));
+      allow list, write: if false;
+    }
+    match /userMirrors/{document=**} { allow read, write: if false; }
     // Family data is accessible only through authenticated, authorized callables.
     // No wildcard read/write permission may be added around these namespaces.
     match /families/{document=**} { allow read, write: if false; }

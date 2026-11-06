@@ -28,6 +28,9 @@ class AuthenticatedCallableTransport {
   final Future<CallableIdentity> Function() identity;
   final String? Function() currentUid;
   static const functions = {
+    'registerFamilyMirror',
+    'publishFamilyMirror',
+    'fetchFamilyMirror',
     'createFamilyInvite',
     'requestFamilyJoin',
     'decideFamilyJoin',
@@ -37,17 +40,28 @@ class AuthenticatedCallableTransport {
   };
   Future<Map<String, dynamic>> call(
     String function,
-    Map<String, Object?> data,
-  ) async {
+    Map<String, Object?> data, {
+    String? expectedUid,
+    Future<bool> Function()? allowRequest,
+  }) async {
     if (!functions.contains(function)) {
       throw const CallableFailure('invalid-argument');
     }
+    final initiatingUid = expectedUid ?? currentUid();
+    if (initiatingUid == null) throw const CallableFailure('unauthenticated');
     try {
       final account = await identity().timeout(const Duration(seconds: 15));
-      if (account.uid != currentUid() ||
+      if (account.uid != initiatingUid ||
+          account.uid != currentUid() ||
           account.idToken.isEmpty ||
           account.appCheckToken.isEmpty ||
           projectId.isEmpty) {
+        throw const CallableFailure('unauthenticated');
+      }
+      if (allowRequest != null && !await allowRequest()) {
+        throw const CallableFailure('cancelled');
+      }
+      if (currentUid() != initiatingUid) {
         throw const CallableFailure('unauthenticated');
       }
       final response = await client

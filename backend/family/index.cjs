@@ -5,10 +5,13 @@ const {getAuth} = require('firebase-admin/auth');
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {requireGoogle, profile, FamilyError} = require('./common/security.cjs');
 const {createFamilyService} = require('./common/family_service.cjs');
+const {createMirrorService} = require('./common/mirror_service.cjs');
 initializeApp();
 const auth = getAuth();
-const service = createFamilyService({store: getFirestore(), auth});
+const mirror = createMirrorService({store: getFirestore()});
+const service = {...createFamilyService({store: getFirestore(), auth}), registerMirror: mirror.register, publishMirror: mirror.publish, fetchMirror: mirror.fetch};
 for (const [name, operation] of Object.entries({
+  registerFamilyMirror: 'registerMirror', publishFamilyMirror: 'publishMirror', fetchFamilyMirror: 'fetchMirror',
   createFamilyInvite: 'createInvite', requestFamilyJoin: 'requestJoin', decideFamilyJoin: 'decide',
   getFamilyStatus: 'status', disconnectFamilyMember: 'disconnect', finalizeFamilySetup: 'finalize',
 })) {

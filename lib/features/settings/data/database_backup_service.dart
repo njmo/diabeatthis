@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -6,6 +7,7 @@ import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../common/family_sync/request_family_mirror_sync.dart';
 import '../../../common/storage/local_image_backup.dart';
 import '../../../common/storage/local_image_store.dart';
 import '../../../core/drift/database_impl.dart';
@@ -13,9 +15,14 @@ import 'database_backup_result.dart';
 import 'database_backup_scope.dart';
 
 class DatabaseBackupService {
-  DatabaseBackupService(this._db, {this.imageStore = const LocalImageStore()});
+  DatabaseBackupService(
+    this._db, {
+    this.imageStore = const LocalImageStore(),
+    this.onImportCommitted,
+  });
 
   final LocalImageStore imageStore;
+  final FutureOr<void> Function()? onImportCommitted;
 
   static const int formatVersion = 1;
 
@@ -157,6 +164,12 @@ class DatabaseBackupService {
       await imageBackup.removeImages(restoredImages.values);
       rethrow;
     }
+
+    // Networking must never turn a committed local import into a failure.
+    try {
+      await requestFamilyMirrorSync(_db);
+      await onImportCommitted?.call();
+    } catch (_) {}
 
     return DatabaseBackupResult(
       scope: scope,

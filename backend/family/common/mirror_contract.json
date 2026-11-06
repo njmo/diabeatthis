@@ -1,0 +1,268 @@
+{
+  "ingredients": {
+    "table": "ingredient",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "name",
+      "icon_asset_path",
+      "carbs_per_100g",
+      "fat_per_100g",
+      "fiber_per_100g",
+      "protein_per_100g",
+      "carbs_label_mode",
+      "ig",
+      "nutrition_confidence",
+      "brand",
+      "barcode",
+      "is_reference",
+      "created_at",
+      "updated_at"
+    ]
+  },
+  "portions": {
+    "table": "portion",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "name",
+      "unit_hint"
+    ]
+  },
+  "ingredientPortions": {
+    "table": "ingredient_portions",
+    "keys": [
+      "ingredient_id",
+      "portion_id"
+    ],
+    "columns": [
+      "ingredient_id",
+      "portion_id",
+      "grams_per_portion"
+    ]
+  },
+  "ingredientOrigins": {
+    "table": "ingredient_origin",
+    "keys": [
+      "ingredient_id"
+    ],
+    "columns": [
+      "ingredient_id",
+      "source",
+      "source_id",
+      "source_revision",
+      "english_name",
+      "display_language_code",
+      "creation_method",
+      "reference_scope",
+      "confidence_origin"
+    ]
+  },
+  "meals": {
+    "table": "meal",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "name",
+      "category",
+      "planned_at",
+      "summarized_at",
+      "consumption_confirmed_ended_at",
+      "purpose",
+      "status",
+      "meal_template_id",
+      "based_on_meal_id",
+      "notes",
+      "created_at",
+      "updated_at"
+    ]
+  },
+  "mealIngredients": {
+    "table": "meal_ingredients",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "meal_id",
+      "ingredient_id",
+      "portion_id",
+      "grams_per_portion_used",
+      "amount",
+      "quantity_confidence",
+      "nutrition_confidence_override",
+      "entry_type",
+      "consumed_amount",
+      "consumed_confidence",
+      "created_at",
+      "updated_at",
+      "prep_method",
+      "notes"
+    ]
+  },
+  "mealHistory": {
+    "table": "meal_status_history",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "meal_id",
+      "status",
+      "created_at"
+    ]
+  },
+  "mealSnapshots": {
+    "table": "meal_snapshot",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "meal_id",
+      "snapshot_type",
+      "total_grams",
+      "total_carbs_g",
+      "total_fiber_g",
+      "total_net_carbs_g",
+      "total_fat_g",
+      "total_protein_g",
+      "total_calories_kcal",
+      "ingredients_count",
+      "avg_quantity_confidence",
+      "min_quantity_confidence",
+      "carb_weighted_quantity_confidence",
+      "wbt_weighted_quantity_confidence",
+      "carb_weighted_nutrition_confidence",
+      "wbt_weighted_nutrition_confidence",
+      "carb_weighted_effective_confidence",
+      "wbt_weighted_effective_confidence",
+      "calculated_at",
+      "created_at",
+      "updated_at"
+    ]
+  },
+  "activities": {
+    "table": "activity",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "name",
+      "percentage_pre",
+      "percentage_post",
+      "duration_minutes",
+      "created_at"
+    ]
+  },
+  "activitySchedules": {
+    "table": "activity_schedule",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "activity_id",
+      "weekdays",
+      "start_minute",
+      "duration_minutes",
+      "confirmation_mode",
+      "previous_day_minute",
+      "valid_from",
+      "valid_until",
+      "enabled"
+    ]
+  },
+  "activityOccurrences": {
+    "table": "activity_occurrence",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "schedule_id",
+      "activity_id",
+      "started_at",
+      "duration_minutes",
+      "action_at",
+      "confirmation_mode",
+      "status",
+      "asked_at",
+      "target_requested_at",
+      "activity_log_id"
+    ]
+  },
+  "activityLogs": {
+    "table": "activity_log",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "activity_id",
+      "started_at",
+      "ended_at",
+      "intensity",
+      "notes",
+      "summarized_at",
+      "summary_dismissed_at",
+      "created_at",
+      "updated_at"
+    ]
+  },
+  "mealTemplates": {
+    "table": "meal_template",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "name",
+      "notes",
+      "created_at",
+      "updated_at",
+      "is_favorite",
+      "created_from_meal_id"
+    ]
+  },
+  "mealTemplateIngredients": {
+    "table": "meal_template_ingredients",
+    "keys": [
+      "meal_template_id",
+      "ingredient_id"
+    ],
+    "columns": [
+      "meal_template_id",
+      "ingredient_id",
+      "portion_id",
+      "default_amount",
+      "is_optional",
+      "quantity_confidence",
+      "prep_method",
+      "notes"
+    ]
+  },
+  "ingredientHistory": {
+    "table": "ingredient_status_history",
+    "keys": [
+      "id"
+    ],
+    "columns": [
+      "id",
+      "ingredient_id",
+      "carbs_per_100g",
+      "fat_per_100g",
+      "fiber_per_100g",
+      "protein_per_100g",
+      "nutrition_confidence",
+      "created_at"
+    ]
+  }
+}

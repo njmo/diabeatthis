@@ -8,8 +8,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/router/observers/riverpod_debug_observer.dart';
 import '../../common/app_mode/application_device_mode.dart';
 import '../../common/events/data/task/task_state_synchronization_payload.dart';
+import '../../common/family_sync/family_mirror_background_runtime.dart';
+import '../../common/family_sync/request_family_mirror_sync.dart';
 import '../../common/l10n/application_language.dart';
 import '../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
+import '../../core/drift/providers/database_provider.dart';
 import '../../core/logger/logger.dart';
 import '../collector/device_status_collector.dart';
 import '../collector/foreground_collector.dart';
@@ -37,6 +40,7 @@ class MyTaskHandler extends TaskHandler with Logging {
   bool _isStopping = false;
 
   ProviderContainer? _container;
+  FamilyMirrorBackgroundRuntime? _familyMirror;
   ExternalEventHandler? _externalEventHandler;
   WorkflowScheduler? _taskScheduler;
   List<ForegroundCollector>? _collectors;
@@ -82,6 +86,10 @@ class MyTaskHandler extends TaskHandler with Logging {
       runtimeContext,
     );
 
+    _familyMirror = FamilyMirrorBackgroundRuntime(
+      _container!.read(databaseProvider),
+    )..start();
+
     final tasks = [
       ServiceStatusUpdaterTask(),
       MealMonitorTask(),
@@ -113,6 +121,8 @@ class MyTaskHandler extends TaskHandler with Logging {
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
+    _familyMirror?.dispose();
+    _familyMirror = null;
     _isStopping = true;
     try {
       await _externalEventHandler?.flushPendingTreatments();
@@ -135,6 +145,10 @@ class MyTaskHandler extends TaskHandler with Logging {
   @override
   void onReceiveData(Object data) {
     if (_isStopping) return;
+    if (data == familyMirrorSyncRequest) {
+      _familyMirror?.requestSync();
+      return;
+    }
     final handler = _externalEventHandler;
     if (handler == null) {
       logI('External event handler is not ready, queueing data');

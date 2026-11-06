@@ -16,6 +16,7 @@ import 'dao/meal_wizard_link_dao.dart';
 import 'dao/portion_dao.dart';
 import 'dao/quick_low_treatment_item_dao.dart';
 import 'database.dart';
+import 'family_sync/install_family_mirror_schema.dart';
 import 'migrations/migrate_activity_summary.dart';
 import 'migrations/migrate_ingredient_origin.dart';
 import 'migrations/migrate_meal_add_on_bolus_context.dart';
@@ -74,7 +75,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 47;
+  int get schemaVersion => 48;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -363,6 +364,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
         'DROP TRIGGER IF EXISTS ingredient_portions_any_change_marks_unsynced',
       );
       await customStatement(createIngredientPortionsUnsyncedTrigger);
+      await installFamilyMirrorSchema(this);
     },
   );
 

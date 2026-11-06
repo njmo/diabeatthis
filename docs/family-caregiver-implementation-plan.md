@@ -372,3 +372,66 @@ The real QR is compact (168 logical pixels), uses high-contrast dark teal module
 Disconnect on the child row of a caregiver's phone unlinks the authenticated caregiver. The backend supports both explicit `self` and the previous client payload containing the family's child UID, always resolving the deletion to the caller's membership. A child cannot remove a caregiver, and foreign-family identifiers remain rejected. Leaving as the last caregiver cancels pending invitations and preserves the child and family data; re-pairing requires a fresh invitation.
 
 The caregiver dashboard also omits the separate pump-status age caption while retaining IOB/COB and the glucose-reading age. Visible-app automatic polling and lifecycle handling remain unchanged.
+
+## Data synchronization integration deliveries
+
+The following deliveries implement synchronization incrementally. The child's local database remains authoritative for execution. Every caregiver can submit plans; caregivers use Firebase rather than writing patient domain tables on their phones. There is no implicit restoration of active patient workflows from the cloud.
+
+| Delivery | Scope | Acceptance gate |
+| --- | --- | --- |
+| S1 | Durable local capture, source ownership, upload receipts and integration status list | Offline edits/deletions survive restart; acknowledging an old revision cannot clear a newer edit; a different Google account cannot upload the old database. |
+| S2 | Owner-scoped cloud projections for ingredients, portions/conversions and ingredient origin | Initial full export includes previously saved rows; only family members can fetch; only the child publishes; two caregivers see the same child data. |
+| S3 | Meal rows, ingredients, recorded nutrition summaries and state history | A portion/ingredient change and each recorded state reach the caregiver without triggering child execution; stale uploads and deletions are handled. |
+| S4 | Activity definitions, recurring schedules, daily occurrences and execution logs | One-off plans, daily confirmation, rescheduling and execution history are represented separately; local scheduling continues offline. |
+| S5 | Transactional caregiver-operation inbox and per-record cloud locks | Concurrent caregivers cannot edit the same pending record. Child-offline edits reject stale proposals. A local commit and operation journal are atomic, and retries never repeat the effect. |
+| S6 | Caregiver meal planning and read-only execution timeline | Parent creates a meal, child automatically imports a valid plan, then parent sees eating/completed states from the child. Parent cannot submit execution states. |
+| S7 | Caregiver activity planning, daily attendance confirmation and upcoming-start changes | Every caregiver can mark a future activity as happening, add a one-off plan or move an eligible future occurrence. Running/completed sessions cannot be altered remotely. |
+| S8 | Conflict comparison and explicit retry | Show the caregiver's base, proposed values and current child values; retry creates a new operation against the latest version, retaining the rejected attempt in history. |
+
+### Operation acknowledgement and race contract
+
+- Each caregiver operation has an immutable ID, authenticated author, target, expected source/version, before-snapshot and proposed values. Operations are separate from confirmed child projections.
+- Cloud creation atomically checks family membership and reserves the target's pending-operation lock. Other caregivers cannot mutate that target until the child responds. Unrelated records remain editable.
+- The child handles remote actions through its existing domain use cases, not unrestricted Firebase patches. The same transaction validates the latest local version, applies an eligible plan and records operation idempotency/result. Merely downloading a request never marks it synced.
+- Successful local application produces a durable acknowledgement. Only when Firebase accepts this acknowledgement is the operation marked synced/applied. Loss of acknowledgement delivery keeps it unconfirmed; replay must not apply it twice.
+- Conflict rejection includes the child's current canonical state. Firebase records rejection and canonical data before releasing the lock. The child's data is never rolled back. Parent UI drops any proposal overlay and shows the child's state.
+- Rejected and applied are distinct terminal outcomes. A rejected operation is not falsely marked applied/synced. Its explicit terminal acknowledgement releases the lock, otherwise a conflict would deadlock the target indefinitely.
+- Comparison retains base/proposal/current versions. Retry requires review and confirmation, gets a fresh operation ID and expected current version, and never silently overwrites child or another caregiver changes.
+- Aggregate versions must cover meal ingredients/portions and other dependent rows, not just the root meal timestamp. Capture of standalone tables alone is not sufficient to enable remote plan edits.
+
+### Initial implementation boundaries
+
+The capture registry covers fifteen projections: ingredients, ingredient nutrition history, portions, ingredient conversions/origin, meals, meal ingredients, meal history/nutrition summaries, activity definitions/schedules/occurrences/logs, and meal templates with ingredients. Raw AI responses, photos, credentials, therapy transport queues and notification tokens are excluded. This is a read-model mirror rather than a full database backup.
+
+Local capture uses dedicated revision/acknowledgement bookkeeping and does not rely on the broken legacy `is_synced` triggers. Schema version 48 installs capture triggers for both UI and foreground database writers. The first export seeds all existing rows regardless of old flags; domain writes and capture roll back together. Networking is opt-in via Family synchronization settings. The foreground sender retries independently of monitoring, and source ownership prevents automatically rebinding an existing patient database to another Google account. Caregiver projections remain cloud-backed and are not imported into patient execution tables.
+
+S5–S8 must remain unavailable until the operation journal, aggregate conflict version and rejection/lock-release gates pass. Do not expose a plan-writing screen backed only by raw mirror documents.
+
+### Import synchronization and patient status
+
+- A successful local restore requests mirror publication only after its SQLite transaction commits. Failed imports roll back their outbox changes and do not request publication. Imported legacy `is_synced` flags never acknowledge a cloud revision.
+- The wake-up request is durable; a best-effort foreground signal starts publication immediately when the child worker is available. Otherwise the existing 15-second worker/startup pass resumes it. Disabled family synchronization never authorizes networking.
+- Backup size is independent of upload size. Publication uses at most 25 records and a bounded encoded request per batch; retries preserve unacknowledged revisions. A roughly 10 MB import is covered by a local integration test, not a guarantee for arbitrary backup sizes or device memory limits.
+- The patient dashboard shows active publication, locally saved pending changes, retryable failure, or blocked records. “Synced” appears briefly only after actual acknowledgements and an empty pending queue. The activity lease is renewed before network requests and expires after a stopped worker.
+- Local import atomicity does not provide an atomic cloud dataset switch. Current read-only integration diagnostics can observe intermediate batch counts. Before using imported projections for caregiver planning, add dataset-generation staging/publication or explicitly enforce incomplete-dataset handling; do not treat partial projections as a complete snapshot.
+
+
+### Selective sharing and historical-analysis audit
+
+Family sharing is a selective domain projection, not a 1:1 phone backup. Add a projection only for a concrete caregiver workflow; the registry and backend allowlist must change together.
+
+| Data | Current mirror | Reason / future gate |
+| --- | --- | --- |
+| Ingredient nutrition history | Included | Historical meal detail uses the pre-edit nutritional values via IngredientNutritionMapper. Current ingredient values alone cannot reproduce these details. This is not a full edit audit of names/brands/barcodes. |
+| Meal status history and planned/consumed nutrition snapshots | Included | Preserve execution timeline and recorded totals; caregivers must not recompute accepted totals from today's ingredient values. |
+| Activity schedules, occurrences and execution logs | Included | Represent planned and actual activity separately. The current database has no separate full activity-edit audit trail. |
+| Low-treatment meals and their ingredient amounts | Included through meals/mealIngredients | Preserve recorded intake. Rich analysis additionally needs an explicit low-treatment context/review projection; this increment does not claim complete analysis parity. |
+| Low-treatment context and review associations | Deferred | Required for reasons, meal/activity associations and avoiding duplicate timeline events before enabling caregiver outcome analysis. Never import delivery/handoff queues as domain facts. |
+| Meal completion decisions and wizard associations | Deferred | Assess a typed, read-only projection before detailed analysis; avoid copying local event IDs, command context or transport state wholesale. |
+| Accepted day summaries and accepted meal/day AI results | Deferred | Separate saved-analysis sharing from re-running analysis; use a versioned bounded projection rather than arbitrary JSON blobs. No automatic paid AI execution on caregiver refresh. |
+| Glucose, treatment events and device status | Not duplicated in Firebase | Future visible-screen analysis can fetch the relevant time window from the child's explicitly configured Nightscout source. Missing/stale history must be shown, never replaced with another child's/source's cache. |
+| Photos, raw AI/catalog JSON, credentials, notification tokens and therapy transport queues | Excluded | Outside the family read model. Any later media sharing needs a separate opt-in storage/retention design. |
+
+Before enabling caregiver analysis: complete referenced-domain coverage, source identity and time-window validation, explicit missing-data states, and complete-dataset handling after multi-batch imports. Do not run patient workflows, monitoring or AI automatically on the caregiver phone.
+
+Cost controls: an empty/quarantined-only upload queue performs no mirror callable or token initialization. Only changed record revisions are uploaded; repeated edits coalesce until publication. The metadata listener and visible diagnostics still have read/callable overhead; optimize and measure those before wider rollout. Imports remain proportional to record count, and only child-local ingredients are projected, not the complete central catalog. Identical local catalog copies still occupy per-child documents; evaluate shared references before large rollout. Set project budgets/alerts and measure reads/writes/functions/egress in a pilot; alerts are not a hard spending cap. No projection is a promise of unlimited free retention.
