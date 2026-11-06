@@ -3641,7 +3641,7 @@
   "setupAlwaysEnabled": "Always enabled",
   "setupFeatureOptions": "Feature options",
   "setupTuneFeatureDescription": "Tune this feature before configuring the Nightscout connection.",
-  "setupTuneFeatureDemo": "These options are simulated. Uploads are off by default; enabling them requires a URL and token in the following Nightscout step. This does not change current application settings.",
+  "setupTuneFeatureDemo": "These options are simulated. Uploads are off by default; enabling them requires a URL and token in the final Nightscout step. This does not change current application settings.",
   "setupConfirmFeatureOptions": "Confirm options",
   "setupSkipNightscoutOptions": "Disable the upload options that require Nightscout? Local activity monitoring and low treatment functionality will remain available.",
   "setupNightscoutSessionOnly": "With local data sources, these credentials are used only in this demo and will not be saved. Upload options are not persisted yet either.",
@@ -3649,5 +3649,12 @@
   "setupModuleActivity": "Activity",
   "setupModuleLowTreatment": "Low treatment",
   "setupFamilySharingFeatureDescription": "Family messaging and synchronization of the child’s data with Firebase.",
-  "setupFamilySharingFeatureDetails": "One feature combines child–caregiver messaging with sharing data with linked accounts.\nWhen enabled, new and updated child ingredients will automatically sync to Firebase, along with meal and activity changes.\nOnly the child edits ingredients; caregivers have read-only access.\nRequires Google sign-in and account pairing.\nWithout internet, the child continues using local data; synchronization waits for connectivity.\nThis wizard is a preview: it does not yet start synchronization or messaging."
+  "setupFamilySharingFeatureDetails": "One feature combines child–caregiver messaging with sharing data with linked accounts.\nWhen enabled, new and updated child ingredients will automatically sync to Firebase, along with meal and activity changes.\nOnly the child edits ingredients; caregivers have read-only access.\nRequires Google sign-in and account pairing.\nWithout internet, the child continues using local data; synchronization waits for connectivity.\nThis wizard is a preview: it does not yet start synchronization or messaging.",
+  "setupFeatureDataMealsName": "Data and meals",
+  "setupFeatureDataMealsDescription": "Core data handling and meal creation. Always enabled.",
+  "setupFeatureDataMealsDetails": "Data handling and meal creation are core child-device functions and cannot be disabled.\nData sources are the first configuration module.\nAAPS data can be received through Nightscout. Connection and optional write permissions are checked in the final Nightscout step.\nLocal meals and ingredients remain available offline.",
+  "setupModuleData": "Data sources",
+  "setupConfigurationStepLabel": "Configuration",
+  "setupConfigured": "Configured",
+  "setupNightscoutValidationFailed": "Could not finish checking Nightscout. Complete the required fields or try again."
 }

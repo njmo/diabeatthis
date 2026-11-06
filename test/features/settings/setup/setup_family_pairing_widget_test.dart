@@ -1,5 +1,6 @@
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
+import 'package:diabeatthis/common/setup/domain/setup_step.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_option_availability.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard.dart';
@@ -23,8 +24,9 @@ void main() {
                 nightscoutUrl: '',
                 nightscoutToken: '',
               )
-              ..step = 4
-              ..mode = mode;
+              ..step = SetupStep.configuration.index
+              ..mode = mode
+              ..moduleIndex = mode == SetupDeviceMode.patient ? 3 : 0;
         await tester.pumpWidget(
           localizedMaterialApp(
             home: SetupWizard(

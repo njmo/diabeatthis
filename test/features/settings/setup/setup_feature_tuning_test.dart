@@ -1,6 +1,7 @@
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature_option.dart';
+import 'package:diabeatthis/common/setup/domain/setup_step.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_option_availability.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard.dart';
@@ -27,7 +28,7 @@ SetupWizardState featureTuningDraft() =>
         nightscoutToken: '',
       )
       ..selected.clear()
-      ..step = 4;
+      ..step = SetupStep.configuration.index;
 
 void main() {
   test(
@@ -37,8 +38,11 @@ void main() {
       addTearDown(controller.dispose);
       controller.select(SetupFeatureId.lowTreatment, false);
       controller.skipModule();
-      expect(controller.selected.single.id, SetupFeatureId.lowTreatment);
-      expect(controller.module, SetupModule.lowTreatment);
+      expect(
+        controller.selected.map((feature) => feature.id),
+        containsAll([SetupFeatureId.dataAndMeals, SetupFeatureId.lowTreatment]),
+      );
+      expect(controller.module, SetupModule.data);
       expect(controller.requirements[SetupRequirement.backgroundExecution], {
         SetupFeatureId.lowTreatment,
       });
@@ -97,7 +101,8 @@ void main() {
     'activity and low treatment tuning precede Nightscout and retain choices',
     (tester) async {
       final draft = featureTuningDraft()
-        ..selected.add(SetupFeatureId.activityMonitor);
+        ..selected.add(SetupFeatureId.activityMonitor)
+        ..moduleIndex = 1;
       await tester.pumpWidget(
         localizedMaterialApp(
           home: SetupWizard(
@@ -116,20 +121,17 @@ void main() {
         SetupFeatureOptionId.activityTempTargetUpload,
       });
       expect(wizard.controller.modules, [
+        SetupModule.data,
         SetupModule.activity,
         SetupModule.lowTreatment,
         SetupModule.nightscout,
       ]);
-      await tester.ensureVisible(find.text('Zatwierdź opcje'));
-      await tester.tap(find.text('Zatwierdź opcje'));
-      await tester.pumpAndSettle();
+      expect(find.text('Zatwierdź opcje'), findsNothing);
       await tester.tap(find.text('Dalej'));
       await tester.pumpAndSettle();
       expect(wizard.controller.module, SetupModule.lowTreatment);
       expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
-      await tester.ensureVisible(find.text('Zatwierdź opcje'));
-      await tester.tap(find.text('Zatwierdź opcje'));
-      await tester.pumpAndSettle();
+      expect(find.text('Zatwierdź opcje'), findsNothing);
       await tester.tap(find.text('Dalej'));
       await tester.pumpAndSettle();
       expect(wizard.controller.module, SetupModule.nightscout);

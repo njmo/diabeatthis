@@ -3,6 +3,7 @@ import '../../../../common/family/family_pairing_member.dart';
 import '../../../../common/l10n/application_language.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
 import '../../../../common/setup/domain/setup_feature_option.dart';
+import '../../../../common/setup/domain/setup_step.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 
 class SetupWizardState {
@@ -21,6 +22,10 @@ class SetupWizardState {
   String nightscoutToken;
   SetupDeviceMode mode = SetupDeviceMode.patient;
   int step = 0;
+  SetupStep get currentStep =>
+      SetupStep.values[step.clamp(0, SetupStep.values.length - 1)];
+  final attemptedModules = <SetupModule>{};
+  bool moduleValidationFailed = false;
   int moduleIndex = 0;
 
   /// Family communication and the future data mirror share one feature switch.

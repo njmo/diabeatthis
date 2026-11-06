@@ -7,6 +7,7 @@ import '../../../../common/setup/domain/setup_feature_option.dart';
 
 extension SetupLabels on AppLocalizations {
   String featureName(SetupFeatureId id) => switch (id) {
+    SetupFeatureId.dataAndMeals => setupFeatureDataMealsName,
     SetupFeatureId.mealMonitor => setupFeatureMealName,
     SetupFeatureId.activityMonitor => setupFeatureActivityName,
     SetupFeatureId.mealPhoto => setupFeaturePhotoName,
@@ -16,6 +17,7 @@ extension SetupLabels on AppLocalizations {
     SetupFeatureId.lowTreatment => setupFeatureLowTreatmentName,
   };
   String featureDescription(SetupFeatureId id) => switch (id) {
+    SetupFeatureId.dataAndMeals => setupFeatureDataMealsDescription,
     SetupFeatureId.mealMonitor => setupFeatureMealDescription,
     SetupFeatureId.activityMonitor => setupFeatureActivityDescription,
     SetupFeatureId.mealPhoto => setupFeaturePhotoDescription,
@@ -25,6 +27,7 @@ extension SetupLabels on AppLocalizations {
     SetupFeatureId.lowTreatment => setupFeatureLowTreatmentDescription,
   };
   String featureDetails(SetupFeatureId id) => switch (id) {
+    SetupFeatureId.dataAndMeals => setupFeatureDataMealsDetails,
     SetupFeatureId.mealMonitor => setupFeatureMealDetails,
     SetupFeatureId.activityMonitor => setupFeatureActivityDetails,
     SetupFeatureId.mealPhoto => setupFeaturePhotoDetails,
@@ -61,6 +64,7 @@ extension SetupLabels on AppLocalizations {
         SetupConfigurationField.nightscoutToken => setupFieldNightscoutToken,
       };
   String moduleName(SetupModule? module) => switch (module) {
+    SetupModule.data => setupModuleData,
     SetupModule.family => setupModuleFamily,
     SetupModule.ai => setupModuleAi,
     SetupModule.activity => setupModuleActivity,
@@ -71,6 +75,7 @@ extension SetupLabels on AppLocalizations {
 }
 
 IconData setupFeatureIcon(SetupFeatureId id) => switch (id) {
+  SetupFeatureId.dataAndMeals => Icons.storage_outlined,
   SetupFeatureId.mealMonitor => Icons.restaurant_outlined,
   SetupFeatureId.activityMonitor => Icons.directions_bike_outlined,
   SetupFeatureId.mealPhoto => Icons.camera_alt_outlined,

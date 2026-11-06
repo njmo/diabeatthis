@@ -4,6 +4,7 @@ import '../../../../common/family/family_management_context.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/l10n/resolve_application_locale.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
+import '../../../../common/setup/domain/setup_step.dart';
 import '../../../../common/widgets/form_step_header.dart';
 import '../../../../common/widgets/show_localized_dialog.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
@@ -13,7 +14,7 @@ import 'setup_wizard_state.dart';
 import 'steps/setup_access_step.dart';
 import 'steps/setup_ai_module.dart';
 import 'steps/setup_basics_step.dart';
-import 'steps/setup_data_step.dart';
+import 'steps/setup_data_module.dart';
 import 'steps/setup_family_module.dart';
 import 'steps/setup_feature_options_module.dart';
 import 'steps/setup_features_step.dart';
@@ -77,7 +78,10 @@ class SetupWizardViewState extends State<SetupWizard> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.lang.setupNightscoutCannotSkip)),
       );
-      controller.goTo(2);
+      controller.state.moduleIndex = controller.modules.indexOf(
+        SetupModule.data,
+      );
+      controller.goTo(SetupStep.configuration.index);
       return;
     }
     final confirmed = await showLocalizedDialog<bool>(
@@ -108,11 +112,12 @@ class SetupWizardViewState extends State<SetupWizard> {
     FocusScope.of(context).unfocus();
     final incompleteConfiguration =
         controller.incompleteRequiredConfigurationModule;
-    if (controller.state.step == 5 && incompleteConfiguration != null) {
+    if (controller.state.currentStep == SetupStep.summary &&
+        incompleteConfiguration != null) {
       controller.state.moduleIndex = controller.modules.indexOf(
         incompleteConfiguration,
       );
-      controller.goTo(4);
+      controller.goTo(SetupStep.configuration.index);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -128,7 +133,7 @@ class SetupWizardViewState extends State<SetupWizard> {
       );
       return;
     }
-    if (controller.state.step == 5) {
+    if (controller.state.currentStep == SetupStep.summary) {
       if (widget.onSavePatient != null &&
           controller.state.mode == SetupDeviceMode.patient) {
         await widget.onSavePatient!(controller.state);
@@ -150,7 +155,7 @@ class SetupWizardViewState extends State<SetupWizard> {
       }
       return;
     }
-    if (!controller.next() && mounted) {
+    if (!await controller.validateAndNext() && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -171,20 +176,20 @@ class SetupWizardViewState extends State<SetupWizard> {
   }
 
   Widget contentForStep(BuildContext context) =>
-      switch (controller.state.step) {
-        0 => SetupBasicsStep(
+      switch (controller.state.currentStep) {
+        SetupStep.start => SetupBasicsStep(
           controller: controller,
           enableProfilePhoto:
               widget.onSavePatient != null &&
               controller.state.mode == SetupDeviceMode.patient,
         ),
-        1 => SetupFeaturesStep(controller: controller),
-        2 => SetupDataStep(
-          controller: controller,
-          availability: widget.availability,
-        ),
-        3 => SetupAccessStep(controller: controller),
-        4 => switch (controller.module) {
+        SetupStep.features => SetupFeaturesStep(controller: controller),
+        SetupStep.access => SetupAccessStep(controller: controller),
+        SetupStep.configuration => switch (controller.module) {
+          SetupModule.data => SetupDataModule(
+            controller: controller,
+            availability: widget.availability,
+          ),
           SetupModule.family => SetupFamilyModule(controller: controller),
           SetupModule.ai => SetupAiModule(controller: controller),
           SetupModule.activity || SetupModule.lowTreatment =>
@@ -197,7 +202,7 @@ class SetupWizardViewState extends State<SetupWizard> {
             description: context.lang.setupSummaryDescription,
           ),
         },
-        _ => SetupSummaryStep(
+        SetupStep.summary => SetupSummaryStep(
           controller: controller,
           canSavePatient:
               widget.onSavePatient != null &&
@@ -217,7 +222,10 @@ class SetupWizardViewState extends State<SetupWizard> {
 
   Widget buildWizard(BuildContext context) {
     final state = controller.state;
-    final inModule = state.step == 4 && controller.module != null;
+    final inModule =
+        state.currentStep == SetupStep.configuration &&
+        controller.module != null;
+    final busy = widget.saving || controller.isValidating;
     final savePatient =
         widget.onSavePatient != null && state.mode == SetupDeviceMode.patient;
     final header = inModule
@@ -227,9 +235,9 @@ class SetupWizardViewState extends State<SetupWizard> {
           )
         : context.lang.setupTitle;
     return PopScope(
-      canPop: allowExit || (state.step == 0 && !widget.saving),
+      canPop: allowExit || (state.step == 0 && !busy),
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && !widget.saving) back();
+        if (!didPop && !busy) back();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -245,7 +253,7 @@ class SetupWizardViewState extends State<SetupWizard> {
           leading: state.step > 0
               ? IconButton(
                   tooltip: context.lang.setupBack,
-                  onPressed: widget.saving ? null : back,
+                  onPressed: busy ? null : back,
                   icon: const Icon(Icons.arrow_back),
                 )
               : null,
@@ -259,11 +267,10 @@ class SetupWizardViewState extends State<SetupWizard> {
                   labels: [
                     context.lang.setupStepStart,
                     context.lang.setupStepFeatures,
-                    context.lang.setupStepData,
                     context.lang.setupStepAccess,
-                    state.step >= 4
+                    inModule
                         ? context.lang.moduleName(controller.module)
-                        : context.lang.setupStepConfiguration,
+                        : context.lang.setupConfigurationStepLabel,
                     context.lang.setupStepDone,
                   ],
                   currentStep: state.step,
@@ -299,13 +306,13 @@ class SetupWizardViewState extends State<SetupWizard> {
           ),
         ),
         bottomNavigationBar: SetupWizardActions(
-          saving: widget.saving,
+          saving: busy,
           onNext: () => next(context),
           onPreviousFeature: inModule && state.moduleIndex > 0 ? back : null,
-          onSkip: inModule && controller.module != SetupModule.lowTreatment
+          onSkip: inModule && (controller.module?.canSkip ?? false)
               ? () => skip(context)
               : null,
-          label: state.step == 5
+          label: state.currentStep == SetupStep.summary
               ? (savePatient
                     ? context.lang.setupPatientSave
                     : context.lang.setupFinishPreview)

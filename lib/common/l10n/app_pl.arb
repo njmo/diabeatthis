@@ -4098,7 +4098,7 @@
   "setupAlwaysEnabled": "Zawsze włączone",
   "setupFeatureOptions": "Opcje funkcji",
   "setupTuneFeatureDescription": "Dostosuj opcje tej funkcji przed konfiguracją połączenia z Nightscout.",
-  "setupTuneFeatureDemo": "Opcje są demonstracyjne. Wysyłanie jest domyślnie wyłączone; jego włączenie wymaga adresu i tokenu w następnym kroku Nightscout. Nie zmienia to aktualnych ustawień aplikacji.",
+  "setupTuneFeatureDemo": "Opcje są demonstracyjne. Wysyłanie jest domyślnie wyłączone; jego włączenie wymaga adresu i tokenu w końcowym kroku Nightscout. Nie zmienia to aktualnych ustawień aplikacji.",
   "setupConfirmFeatureOptions": "Zatwierdź opcje",
   "setupSkipNightscoutOptions": "Wyłączyć opcje wysyłania wymagające Nightscout? Lokalne działanie monitora aktywności i dosładzania pozostanie dostępne.",
   "setupNightscoutSessionOnly": "Przy lokalnych źródłach wpisane tu dane służą wyłącznie tej demonstracji i nie zostaną zapisane. Opcje wysyłania także nie są jeszcze zapisywane.",
@@ -4106,5 +4106,12 @@
   "setupModuleActivity": "Aktywność",
   "setupModuleLowTreatment": "Dosładzanie",
   "setupFamilySharingFeatureDescription": "Komunikator rodzinny oraz synchronizacja danych dziecka z Firebase.",
-  "setupFamilySharingFeatureDetails": "Jedna funkcja łączy komunikator dziecko–opiekun i udostępnianie danych powiązanym kontom.\nPo jej włączeniu nowe i zmienione składniki dziecka będą automatycznie synchronizowane z Firebase, podobnie jak zmiany posiłków i aktywności.\nSkładniki edytuje wyłącznie dziecko; opiekun otrzymuje ich podgląd.\nWymaga logowania Google i sparowania kont.\nBez internetu dziecko nadal korzysta z danych lokalnych; synchronizacja oczekuje na połączenie.\nTen konfigurator jest demonstracyjny: nie uruchamia jeszcze synchronizacji ani komunikatora."
+  "setupFamilySharingFeatureDetails": "Jedna funkcja łączy komunikator dziecko–opiekun i udostępnianie danych powiązanym kontom.\nPo jej włączeniu nowe i zmienione składniki dziecka będą automatycznie synchronizowane z Firebase, podobnie jak zmiany posiłków i aktywności.\nSkładniki edytuje wyłącznie dziecko; opiekun otrzymuje ich podgląd.\nWymaga logowania Google i sparowania kont.\nBez internetu dziecko nadal korzysta z danych lokalnych; synchronizacja oczekuje na połączenie.\nTen konfigurator jest demonstracyjny: nie uruchamia jeszcze synchronizacji ani komunikatora.",
+  "setupFeatureDataMealsName": "Dane i posiłki",
+  "setupFeatureDataMealsDescription": "Podstawowa obsługa danych i tworzenie posiłków. Zawsze włączone.",
+  "setupFeatureDataMealsDetails": "Dane i tworzenie posiłków są podstawowymi funkcjami telefonu dziecka i nie można ich wyłączyć.\nŹródła danych wybierasz jako pierwszą konfigurację.\nDane AAPS można odbierać przez Nightscout. Połączenie i opcjonalne uprawnienia zapisu są sprawdzane w ostatnim kroku Nightscout.\nLokalne posiłki i składniki pozostają dostępne bez internetu.",
+  "setupModuleData": "Źródła danych",
+  "setupConfigurationStepLabel": "Konfiguracja",
+  "setupConfigured": "Skonfigurowane",
+  "setupNightscoutValidationFailed": "Nie udało się zakończyć sprawdzania Nightscout. Uzupełnij wymagane pola lub spróbuj ponownie."
 }

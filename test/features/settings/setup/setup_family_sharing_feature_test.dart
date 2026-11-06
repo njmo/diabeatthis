@@ -1,5 +1,6 @@
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
+import 'package:diabeatthis/common/setup/domain/setup_step.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_option_availability.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard.dart';
@@ -41,7 +42,10 @@ void main() {
           SetupRequirement.notifications,
         ]),
       );
-      controller.goTo(4);
+      controller.goTo(SetupStep.configuration.index);
+      controller.state.moduleIndex = controller.modules.indexOf(
+        SetupModule.family,
+      );
       controller.skipModule();
       expect(controller.state.shareData, isFalse);
       expect(
@@ -114,7 +118,8 @@ void main() {
       final wizard = tester.state<SetupWizardViewState>(
         find.byType(SetupWizard),
       );
-      wizard.controller.goTo(2);
+      wizard.controller.state.moduleIndex = 0;
+      wizard.controller.goTo(SetupStep.configuration.index);
       await tester.pumpAndSettle();
       expect(find.text('Udostępnianie danych rodzinie'), findsNothing);
       expect(tester.takeException(), isNull);

@@ -1,5 +1,6 @@
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
+import 'package:diabeatthis/common/setup/domain/setup_step.dart';
 import 'package:diabeatthis/common/widgets/form_step_header.dart';
 import 'package:diabeatthis/common/widgets/scrollable_chip_rail.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
@@ -7,6 +8,7 @@ import 'package:diabeatthis/core/data_sources/config/data_source_option_availabi
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_state.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/widgets/setup_feature_help_sheet.dart';
+import 'package:diabeatthis/features/settings/presentation/setup/widgets/setup_feature_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -22,9 +24,11 @@ SetupWizardState setupDraft() => SetupWizardState(
 
 void main() {
   testWidgets(
-    'six markers remain visible while fifth label and module count change',
+    'five markers remain visible while fourth label and module count change',
     (tester) async {
-      final draft = setupDraft()..step = 4;
+      final draft = setupDraft()
+        ..step = SetupStep.configuration.index
+        ..moduleIndex = 3;
       await tester.pumpWidget(
         localizedMaterialApp(
           home: SetupWizard(
@@ -35,9 +39,9 @@ void main() {
       );
       expect(
         tester.widget<FormStepHeader>(find.byType(FormStepHeader)).labels,
-        ['Start', 'Funkcje', 'Dane', 'Dostęp', 'Rodzina', 'Gotowe'],
+        ['Start', 'Funkcje', 'Dostęp', 'Rodzina', 'Gotowe'],
       );
-      expect(find.text('Konfiguracja funkcji 1/5'), findsOneWidget);
+      expect(find.text('Konfiguracja funkcji 4/6'), findsOneWidget);
       await tester.tap(find.text('Symuluj logowanie Google'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Symuluj parowanie'));
@@ -45,14 +49,14 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Dalej'));
       await tester.pumpAndSettle();
-      expect(find.text('Konfiguracja funkcji 2/5'), findsOneWidget);
+      expect(find.text('Konfiguracja funkcji 5/6'), findsOneWidget);
       expect(
-        tester.widget<FormStepHeader>(find.byType(FormStepHeader)).labels[4],
+        tester.widget<FormStepHeader>(find.byType(FormStepHeader)).labels[3],
         'AI',
       );
       await tester.tap(find.text('Poprzednia funkcja'));
       await tester.pumpAndSettle();
-      expect(find.text('Konfiguracja funkcji 1/5'), findsOneWidget);
+      expect(find.text('Konfiguracja funkcji 4/6'), findsOneWidget);
       expect(draft.paired, isTrue);
       expect(tester.takeException(), isNull);
     },
@@ -64,7 +68,7 @@ void main() {
       var writes = 0;
       final draft = setupDraft()
         ..mode = SetupDeviceMode.caregiver
-        ..step = 5;
+        ..step = SetupStep.summary.index;
       await tester.pumpWidget(
         localizedMaterialApp(
           home: SetupWizard(
@@ -97,7 +101,23 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.byTooltip('Informacje o funkcji').first);
+    await tester.ensureVisible(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is SetupFeatureTile &&
+            widget.feature.id == SetupFeatureId.mealMonitor,
+      ),
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byWidgetPredicate(
+          (widget) =>
+              widget is SetupFeatureTile &&
+              widget.feature.id == SetupFeatureId.mealMonitor,
+        ),
+        matching: find.byTooltip('Informacje o funkcji'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.byType(SetupFeatureHelpSheet), findsOneWidget);
     expect(find.text('Czytaj w GitHub Wiki'), findsOneWidget);
@@ -159,7 +179,23 @@ void main() {
       state.controller.changed();
       await tester.pumpAndSettle();
       expect(find.text('Choose what helps you'), findsOneWidget);
-      await tester.tap(find.byTooltip('About this feature').first);
+      await tester.ensureVisible(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SetupFeatureTile &&
+              widget.feature.id == SetupFeatureId.mealMonitor,
+        ),
+      );
+      await tester.tap(
+        find.descendant(
+          of: find.byWidgetPredicate(
+            (widget) =>
+                widget is SetupFeatureTile &&
+                widget.feature.id == SetupFeatureId.mealMonitor,
+          ),
+          matching: find.byTooltip('About this feature'),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('What it needs'), findsOneWidget);
       expect(find.text('Read in GitHub Wiki'), findsOneWidget);
@@ -178,7 +214,10 @@ void main() {
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => SetupWizard(
-                    initialState: setupDraft()..step = 5,
+                    initialState: setupDraft()
+                      ..step = SetupStep.summary.index
+                      ..nightscoutUrl = 'https://example.com'
+                      ..configured.add(SetupModule.nightscout),
                     availability: const DataSourceOptionAvailability.none(),
                   ),
                 ),
@@ -207,7 +246,7 @@ void main() {
       addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
       final draft = setupDraft()
         ..mode = SetupDeviceMode.caregiver
-        ..step = 4
+        ..step = SetupStep.configuration.index
         ..language = applicationLanguageByCode('system')
         ..config = const DataSourceConfig(
           bgSource: BgSource.aaps,
@@ -232,7 +271,7 @@ void main() {
     },
   );
 
-  for (final step in [0, 1, 2, 4, 5]) {
+  for (final step in [0, 1, 2, 3, 4]) {
     testWidgets('step $step fits a narrow display with larger text', (
       tester,
     ) async {
@@ -267,7 +306,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final draft = setupDraft()..step = 3;
+    final draft = setupDraft()..step = SetupStep.access.index;
     await tester.pumpWidget(
       localizedMaterialApp(
         home: MediaQuery(

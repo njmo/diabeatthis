@@ -64,7 +64,7 @@ class SetupFeatureHelpSheet extends StatelessWidget {
                   ),
                 ],
               ),
-              if (wikiPage == null && feature.id != SetupFeatureId.lowTreatment)
+              if (wikiPage == null && !feature.alwaysEnabled)
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(

@@ -16,7 +16,9 @@ import '../../../../common/setup/domain/get_available_setup_features_use_case.da
 import '../../../../common/setup/domain/setup_configuration_field.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
 import '../../../../common/setup/domain/setup_feature_option.dart';
+import '../../../../common/setup/domain/setup_step.dart';
 import '../../../../common/setup/domain/validate_setup_configuration_use_case.dart';
+import '../../../../common/setup/domain/validate_setup_module_use_case.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import 'setup_wizard_state.dart';
 
@@ -26,9 +28,13 @@ class SetupWizardController extends ChangeNotifier {
     this.state, {
     FamilyPairingRepository? familyRepository,
     this.familyContext = FamilyManagementContext.settings,
+    this.checkNightscoutConnection,
   }) : familyRepository = familyRepository ?? DemoFamilyPairingRepository(),
        ownsFamilyRepository = familyRepository == null;
   final FamilyPairingRepository familyRepository;
+  final SetupConnectionValidator? checkNightscoutConnection;
+  bool isValidating = false;
+  int configurationRevision = 0;
   final bool ownsFamilyRepository;
   final FamilyManagementContext familyContext;
   late final createFamilyInvitation = CreateFamilyInvitationUseCase(
@@ -142,6 +148,8 @@ class SetupWizardController extends ChangeNotifier {
       const CollectSetupConfigurationFieldsUseCase()(
         selected,
         enabledOptions: state.enabledOptions,
+        usesCloudData:
+            state.mode == SetupDeviceMode.patient && state.config.usesCloud,
       );
   Set<SetupConfigurationField> get missingConfiguration =>
       const ValidateSetupConfigurationUseCase()(
@@ -154,7 +162,8 @@ class SetupWizardController extends ChangeNotifier {
   bool configurationComplete(SetupModule module) =>
       !missingConfiguration.any((field) => field.module == module);
   bool moduleReady(SetupModule module) =>
-      state.configured.contains(module) && configurationComplete(module);
+      (!module.requiresConfirmation || state.configured.contains(module)) &&
+      configurationComplete(module);
   SetupModule? get incompleteRequiredConfigurationModule {
     for (final field in requiredConfiguration.keys) {
       if (!moduleReady(field.module)) return field.module;
@@ -163,14 +172,14 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   List<SetupModule> get modules => [
-    if (requirements.containsKey(SetupRequirement.familyPairing))
-      SetupModule.family,
-    if (requirements.containsKey(SetupRequirement.aiConfiguration))
-      SetupModule.ai,
     ...selected
         .map((feature) => feature.configurationModule)
         .whereType<SetupModule>()
         .toSet(),
+    if (requirements.containsKey(SetupRequirement.familyPairing))
+      SetupModule.family,
+    if (requirements.containsKey(SetupRequirement.aiConfiguration))
+      SetupModule.ai,
     if (state.mode == SetupDeviceMode.patient &&
         (state.config.usesCloud ||
             requiredConfiguration.keys.any(
@@ -188,6 +197,9 @@ class SetupWizardController extends ChangeNotifier {
 
   void setMode(SetupDeviceMode mode) {
     if (state.mode == mode) return;
+    configurationRevision++;
+    state.moduleValidationFailed = false;
+    state.attemptedModules.clear();
     state.mode = mode;
     state.moduleIndex = 0;
     pairingSession++;
@@ -210,6 +222,7 @@ class SetupWizardController extends ChangeNotifier {
     if (available.any((feature) => feature.id == id && feature.alwaysEnabled)) {
       return;
     }
+    configurationRevision++;
     if (enabled) {
       state.selected.add(id);
     } else {
@@ -226,6 +239,7 @@ class SetupWizardController extends ChangeNotifier {
     )) {
       return;
     }
+    configurationRevision++;
     if (enabled) {
       state.enabledOptions.add(id);
     } else {
@@ -242,29 +256,34 @@ class SetupWizardController extends ChangeNotifier {
 
   void setConfig(DataSourceConfig config) {
     if (config == state.config) return;
+    configurationRevision++;
     state.config = config;
     state.configured.remove(SetupModule.nightscout);
+    state.moduleValidationFailed = false;
     state.moduleIndex = 0;
     changed();
   }
 
   void setNightscout(String url, String token) {
+    configurationRevision++;
     state.nightscoutUrl = url;
     state.nightscoutToken = token;
+    state.moduleValidationFailed = false;
     state.configured.remove(SetupModule.nightscout);
     changed();
   }
 
   void goTo(int step) {
-    state.step = step.clamp(0, 5);
+    state.step = step.clamp(0, SetupStep.values.length - 1);
     changed();
   }
 
   void back() {
-    if (state.step == 5) {
-      state.step = 4;
+    if (state.currentStep == SetupStep.summary) {
+      state.step = SetupStep.configuration.index;
       state.moduleIndex = modules.isEmpty ? 0 : modules.length - 1;
-    } else if (state.step == 4 && state.moduleIndex > 0) {
+    } else if (state.currentStep == SetupStep.configuration &&
+        state.moduleIndex > 0) {
       state.moduleIndex--;
     } else if (state.step > 0) {
       state.step--;
@@ -273,16 +292,72 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   bool next() {
-    if (state.step == 4 && module != null && !moduleReady(module!)) {
+    if (state.currentStep == SetupStep.configuration &&
+        module != null &&
+        !moduleReady(module!)) {
       return false;
     }
-    if (state.step == 4 && state.moduleIndex + 1 < modules.length) {
+    if (state.currentStep == SetupStep.configuration &&
+        state.moduleIndex + 1 < modules.length) {
       state.moduleIndex++;
-    } else if (state.step < 5) {
+    } else if (state.step < SetupStep.summary.index) {
       state.step++;
     }
     changed();
     return true;
+  }
+
+  Future<bool> validateAndNext() async {
+    if (disposed || isValidating) return false;
+    final current = module;
+    if (state.currentStep != SetupStep.configuration || current == null) {
+      return next();
+    }
+    final revision = configurationRevision;
+    final session = pairingSession;
+    isValidating = true;
+    state.attemptedModules.add(current);
+    state.moduleValidationFailed = false;
+    changed();
+    try {
+      final valid = await const ValidateSetupModuleUseCase()(
+        requiredFields: requiredConfiguration.keys.where(
+          (field) => field.module == current,
+        ),
+        values: {
+          SetupConfigurationField.nightscoutUrl: state.nightscoutUrl,
+          SetupConfigurationField.nightscoutToken: state.nightscoutToken,
+        },
+        validateNightscout: current == SetupModule.nightscout,
+        requiresWrite: requiredConfiguration.containsKey(
+          SetupConfigurationField.nightscoutToken,
+        ),
+        checkConnection: checkNightscoutConnection,
+      );
+      if (disposed ||
+          session != pairingSession ||
+          revision != configurationRevision ||
+          module != current ||
+          state.currentStep != SetupStep.configuration) {
+        return false;
+      }
+      if (!valid) {
+        state.moduleValidationFailed = true;
+        return false;
+      }
+      if (current == SetupModule.nightscout) state.configured.add(current);
+      return next();
+    } catch (_) {
+      if (!disposed &&
+          session == pairingSession &&
+          revision == configurationRevision) {
+        state.moduleValidationFailed = true;
+      }
+      return false;
+    } finally {
+      isValidating = false;
+      if (!disposed) changed();
+    }
   }
 
   void grant(SetupRequirement requirement) {
@@ -364,7 +439,10 @@ class SetupWizardController extends ChangeNotifier {
   void skipModule() {
     final current = module;
     if (current == null) return;
+    if (!current.canSkip) return;
     switch (current) {
+      case SetupModule.data:
+        return;
       case SetupModule.family:
         state.selected.removeAll({
           SetupFeatureId.familyChat,
@@ -393,7 +471,7 @@ class SetupWizardController extends ChangeNotifier {
         state.configured.remove(SetupModule.nightscout);
     }
     if (state.moduleIndex >= modules.length) {
-      state.step = 5;
+      state.step = SetupStep.summary.index;
       state.moduleIndex = 0;
     }
     changed();

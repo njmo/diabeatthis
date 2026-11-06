@@ -36,16 +36,6 @@ class SetupFeatureOptionsModule extends StatelessWidget {
               ),
             const SizedBox(height: 12),
             SetupNotice(text: context.lang.setupTuneFeatureDemo),
-            const SizedBox(height: 16),
-            FilledButton.tonalIcon(
-              onPressed: () => controller.simulateModule(controller.module!),
-              icon: const Icon(Icons.check),
-              label: Text(
-                controller.moduleReady(controller.module!)
-                    ? context.lang.setupChecked
-                    : context.lang.setupConfirmFeatureOptions,
-              ),
-            ),
           ],
         ),
       ],

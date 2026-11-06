@@ -2,6 +2,7 @@ import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/setup/domain/setup_configuration_field.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature_option.dart';
+import 'package:diabeatthis/common/setup/domain/setup_step.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_option_availability.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard.dart';
@@ -35,7 +36,8 @@ void main() {
     test(
       '$feature adds Nightscout in local mode and blocks progression without token',
       () {
-        final state = requiredConfigurationDraft()..step = 4;
+        final state = requiredConfigurationDraft()
+          ..step = SetupStep.configuration.index;
         final controller = SetupWizardController(state);
         addTearDown(controller.dispose);
         controller.select(feature, true);
@@ -74,11 +76,11 @@ void main() {
     'Nightscout marks token required, validates it and then allows continuation',
     (tester) async {
       final draft = requiredConfigurationDraft()
-        ..step = 4
+        ..step = SetupStep.configuration.index
         ..enabledOptions.add(
           SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
         )
-        ..moduleIndex = 1;
+        ..moduleIndex = 2;
       await tester.pumpWidget(
         localizedMaterialApp(
           home: SetupWizard(
@@ -92,8 +94,7 @@ void main() {
       );
       expect(fields.tokenRequired, isTrue);
       expect(fields.tokenLabel, endsWith('*'));
-      await tester.ensureVisible(find.text('Symuluj sprawdzenie dostępności'));
-      await tester.tap(find.text('Symuluj sprawdzenie dostępności'));
+      await tester.tap(find.text('Dalej'));
       await tester.pumpAndSettle();
       expect(
         find.text(
@@ -103,12 +104,9 @@ void main() {
       );
       expect(draft.configured, isNot(contains(SetupModule.nightscout)));
       await tester.enterText(find.byType(TextFormField).last, 'token');
-      await tester.ensureVisible(find.text('Symuluj sprawdzenie dostępności'));
-      await tester.tap(find.text('Symuluj sprawdzenie dostępności'));
-      await tester.pumpAndSettle();
       await tester.tap(find.text('Dalej'));
       await tester.pumpAndSettle();
-      expect(draft.step, 5);
+      expect(draft.step, SetupStep.summary.index);
       expect(tester.takeException(), isNull);
     },
   );
@@ -117,7 +115,7 @@ void main() {
     (tester) async {
       var writes = 0;
       final draft = requiredConfigurationDraft()
-        ..step = 5
+        ..step = SetupStep.summary.index
         ..selected.add(SetupFeatureId.activityMonitor)
         ..enabledOptions.add(SetupFeatureOptionId.activityTempTargetUpload);
       await tester.pumpWidget(
@@ -138,7 +136,7 @@ void main() {
       await wizard.next(tester.element(find.byType(SetupWizard)));
       await tester.pumpAndSettle();
       expect(writes, 0);
-      expect(draft.step, 4);
+      expect(draft.step, SetupStep.configuration.index);
       expect(wizard.controller.module, SetupModule.nightscout);
       expect(tester.takeException(), isNull);
     },
@@ -146,8 +144,8 @@ void main() {
   testWidgets('read-only Nightscout retains optional token', (tester) async {
     final draft = requiredConfigurationDraft()
       ..config = const DataSourceConfig.defaults()
-      ..step = 4
-      ..moduleIndex = 1;
+      ..step = SetupStep.configuration.index
+      ..moduleIndex = 2;
     await tester.pumpWidget(
       localizedMaterialApp(
         home: SetupWizard(

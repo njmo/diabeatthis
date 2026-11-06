@@ -9,11 +9,13 @@ class CollectSetupConfigurationFieldsUseCase {
   Map<SetupConfigurationField, Set<SetupFeatureId>> call(
     Iterable<SetupFeature> features, {
     Set<SetupFeatureOptionId> enabledOptions = const {},
+    bool usesCloudData = false,
   }) {
     final result = <SetupConfigurationField, Set<SetupFeatureId>>{};
     for (final feature in features) {
       final required = {
         ...feature.requiredConfiguration,
+        if (usesCloudData) ...feature.requiredCloudConfiguration,
         for (final option in feature.options.where(
           (option) => enabledOptions.contains(option.id),
         ))

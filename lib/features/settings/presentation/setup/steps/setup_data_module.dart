@@ -10,8 +10,8 @@ import '../widgets/setup_feature_chips.dart';
 import '../widgets/setup_notice.dart';
 import '../widgets/setup_step_heading.dart';
 
-class SetupDataStep extends StatelessWidget {
-  const SetupDataStep({
+class SetupDataModule extends StatelessWidget {
+  const SetupDataModule({
     super.key,
     required this.controller,
     required this.availability,
@@ -46,11 +46,13 @@ class SetupDataStep extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               SetupFeatureChips(
-                features: controller.state.selected.where(
-                  (id) =>
-                      id == SetupFeatureId.mealMonitor ||
-                      id == SetupFeatureId.activityMonitor,
-                ),
+                features: controller.selected
+                    .where(
+                      (feature) => feature.requirements.contains(
+                        SetupRequirement.dataSource,
+                      ),
+                    )
+                    .map((feature) => feature.id),
               ),
             ],
           ),

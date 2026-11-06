@@ -45,18 +45,29 @@ class SetupNightscoutModuleState extends State<SetupNightscoutModule> {
         icon: Icons.cloud_outlined,
         title: 'Nightscout',
         children: [
-          SetupConfigurationRequirements(
-            controller: widget.controller,
-            module: SetupModule.nightscout,
-          ),
           if (!widget.controller.state.config.usesCloud) ...[
             SetupNotice(text: context.lang.setupNightscoutSessionOnly),
             const SizedBox(height: 12),
           ],
           Form(
             key: formKey,
+            autovalidateMode:
+                widget.controller.state.attemptedModules.contains(
+                  SetupModule.nightscout,
+                )
+                ? AutovalidateMode.always
+                : AutovalidateMode.disabled,
             child: NightscoutConnectionFields(
               urlController: url,
+              enabled: !widget.controller.isValidating,
+              urlSupporting: SetupConfigurationRequirements(
+                controller: widget.controller,
+                field: SetupConfigurationField.nightscoutUrl,
+              ),
+              tokenSupporting: SetupConfigurationRequirements(
+                controller: widget.controller,
+                field: SetupConfigurationField.nightscoutToken,
+              ),
               urlLabel: context.lang.setupRequiredFieldLabel(
                 context.lang.settingsNightscoutUrlLabel,
               ),
@@ -77,20 +88,13 @@ class SetupNightscoutModuleState extends State<SetupNightscoutModule> {
                   widget.controller.setNightscout(url.text, token.text),
             ),
           ),
-          const SizedBox(height: 16),
-          FilledButton.tonalIcon(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                widget.controller.simulateModule(SetupModule.nightscout);
-              }
-            },
-            icon: const Icon(Icons.cloud_done_outlined),
-            label: Text(
-              widget.controller.moduleReady(SetupModule.nightscout)
-                  ? context.lang.setupChecked
-                  : context.lang.setupSimulateCheck,
+          if (widget.controller.state.moduleValidationFailed) ...[
+            const SizedBox(height: 12),
+            SetupNotice(
+              text: context.lang.setupNightscoutValidationFailed,
+              icon: Icons.error_outline,
             ),
-          ),
+          ],
         ],
       ),
     ],

@@ -7,6 +7,14 @@ class GetAvailableSetupFeaturesUseCase {
 
   static const catalog = [
     SetupFeature(
+      id: SetupFeatureId.dataAndMeals,
+      modes: {SetupDeviceMode.patient},
+      requirements: {SetupRequirement.dataSource},
+      alwaysEnabled: true,
+      configurationModule: SetupModule.data,
+      requiredCloudConfiguration: {SetupConfigurationField.nightscoutUrl},
+    ),
+    SetupFeature(
       id: SetupFeatureId.mealMonitor,
       modes: {SetupDeviceMode.patient},
       requirements: {
@@ -35,23 +43,24 @@ class GetAvailableSetupFeaturesUseCase {
       },
     ),
     SetupFeature(
-      id: SetupFeatureId.mealPhoto,
-      modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
+      id: SetupFeatureId.lowTreatment,
+      alwaysEnabled: true,
+      configurationModule: SetupModule.lowTreatment,
+      modes: {SetupDeviceMode.patient},
       requirements: {
-        SetupRequirement.camera,
-        SetupRequirement.aiConfiguration,
-        SetupRequirement.internet,
+        SetupRequirement.notifications,
+        SetupRequirement.backgroundExecution,
       },
+      options: [
+        SetupFeatureOption(
+          id: SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
+          requiredConfiguration: {
+            SetupConfigurationField.nightscoutUrl,
+            SetupConfigurationField.nightscoutToken,
+          },
+        ),
+      ],
     ),
-    SetupFeature(
-      id: SetupFeatureId.aiAssistance,
-      modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
-      requirements: {
-        SetupRequirement.aiConfiguration,
-        SetupRequirement.internet,
-      },
-    ),
-    // One family feature combines communication with the planned data mirror.
     SetupFeature(
       id: SetupFeatureId.familyChat,
       modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
@@ -72,23 +81,21 @@ class GetAvailableSetupFeaturesUseCase {
       },
     ),
     SetupFeature(
-      id: SetupFeatureId.lowTreatment,
-      alwaysEnabled: true,
-      configurationModule: SetupModule.lowTreatment,
-      modes: {SetupDeviceMode.patient},
+      id: SetupFeatureId.aiAssistance,
+      modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
       requirements: {
-        SetupRequirement.notifications,
-        SetupRequirement.backgroundExecution,
+        SetupRequirement.aiConfiguration,
+        SetupRequirement.internet,
       },
-      options: [
-        SetupFeatureOption(
-          id: SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
-          requiredConfiguration: {
-            SetupConfigurationField.nightscoutUrl,
-            SetupConfigurationField.nightscoutToken,
-          },
-        ),
-      ],
+    ),
+    SetupFeature(
+      id: SetupFeatureId.mealPhoto,
+      modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
+      requirements: {
+        SetupRequirement.camera,
+        SetupRequirement.aiConfiguration,
+        SetupRequirement.internet,
+      },
     ),
   ];
 

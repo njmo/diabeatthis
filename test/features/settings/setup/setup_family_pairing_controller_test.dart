@@ -2,6 +2,7 @@ import 'package:diabeatthis/common/family/family_pairing_invitation.dart';
 import 'package:diabeatthis/common/family/family_pairing_member.dart';
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
+import 'package:diabeatthis/common/setup/domain/setup_step.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_controller.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_state.dart';
@@ -9,13 +10,16 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/regression/controlled_family_pairing_repository.dart';
 
-SetupWizardState familyDraft() => SetupWizardState(
-  config: const DataSourceConfig.defaults(),
-  language: applicationLanguageByCode('pl'),
-  name: 'Child',
-  nightscoutUrl: '',
-  nightscoutToken: '',
-)..step = 4;
+SetupWizardState familyDraft() =>
+    SetupWizardState(
+        config: const DataSourceConfig.defaults(),
+        language: applicationLanguageByCode('pl'),
+        name: 'Child',
+        nightscoutUrl: '',
+        nightscoutToken: '',
+      )
+      ..step = SetupStep.configuration.index
+      ..moduleIndex = 3;
 const member = FamilyPairingMember(
   id: 'guardian',
   displayName: 'Backend guardian',

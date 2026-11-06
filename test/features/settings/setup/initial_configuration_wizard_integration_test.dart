@@ -1,6 +1,7 @@
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
+import 'package:diabeatthis/common/setup/domain/setup_step.dart';
 import 'package:diabeatthis/common/widgets/profile_name_field.dart';
 import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
@@ -63,7 +64,7 @@ void main() {
       );
       wizard.controller.state.name = ' New child ';
       wizard.controller.state.language = applicationLanguageByCode('en');
-      wizard.controller.goTo(5);
+      wizard.controller.goTo(SetupStep.summary.index);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save patient configuration'));
       await tester.pumpAndSettle();
@@ -114,7 +115,7 @@ void main() {
         find.byType(SetupWizard),
       );
       wizard.controller.setMode(SetupDeviceMode.caregiver);
-      wizard.controller.goTo(5);
+      wizard.controller.goTo(SetupStep.summary.index);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Finish preview'));
       await tester.pumpAndSettle();

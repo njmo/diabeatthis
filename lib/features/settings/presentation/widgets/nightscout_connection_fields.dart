@@ -18,8 +18,12 @@ class NightscoutConnectionFields extends StatelessWidget {
     this.urlLabel,
     this.tokenLabel,
     this.tokenRequiredError,
+    this.urlSupporting,
+    this.tokenSupporting,
   });
 
+  final Widget? urlSupporting;
+  final Widget? tokenSupporting;
   final String? urlLabel;
   final String? tokenLabel;
   final String? tokenRequiredError;
@@ -52,6 +56,10 @@ class NightscoutConnectionFields extends StatelessWidget {
           onSaved: onUrlSaved,
           onChanged: onChanged,
         ),
+        if (urlSupporting != null) ...[
+          const SizedBox(height: 8),
+          urlSupporting!,
+        ],
         const SizedBox(height: 16),
         TextFormField(
           enabled: enabled,
@@ -71,6 +79,10 @@ class NightscoutConnectionFields extends StatelessWidget {
           onSaved: onTokenSaved,
           onChanged: onChanged,
         ),
+        if (tokenSupporting != null) ...[
+          const SizedBox(height: 8),
+          tokenSupporting!,
+        ],
       ],
     );
   }

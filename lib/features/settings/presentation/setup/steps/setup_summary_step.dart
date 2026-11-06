@@ -96,7 +96,7 @@ class SetupSummaryStep extends StatelessWidget {
                       Flexible(
                         child: Text(
                           ready(feature)
-                              ? context.lang.setupReady
+                              ? context.lang.setupConfigured
                               : context.lang.setupNeedsSetup,
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
