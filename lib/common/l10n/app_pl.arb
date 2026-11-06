@@ -4039,5 +4039,7 @@
   "setupFamilyDataFailed": "Nie udało się odświeżyć danych parowania. Spróbuj wygenerować nowy kod.",
   "setupMemberManagingCaregiver": "Opiekun zarządzający",
   "setupFamilyMembersFailed": "Nie udało się potwierdzić powiązanych kont. Odśwież listę, aby potwierdzić parowanie.",
-  "setupRefreshFamilyMembers": "Odśwież listę kont"
+  "setupRefreshFamilyMembers": "Odśwież listę kont",
+  "setupAddCaregiver": "Dodaj opiekuna",
+  "setupAddChild": "Dodaj dziecko"
 }

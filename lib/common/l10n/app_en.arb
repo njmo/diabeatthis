@@ -3582,5 +3582,7 @@
   "setupFamilyDataFailed": "Could not refresh pairing data. Try generating a new code.",
   "setupMemberManagingCaregiver": "Managing caregiver",
   "setupFamilyMembersFailed": "Could not verify the linked accounts. Refresh the list to confirm pairing.",
-  "setupRefreshFamilyMembers": "Refresh linked accounts"
+  "setupRefreshFamilyMembers": "Refresh linked accounts",
+  "setupAddCaregiver": "Add caregiver",
+  "setupAddChild": "Add child"
 }

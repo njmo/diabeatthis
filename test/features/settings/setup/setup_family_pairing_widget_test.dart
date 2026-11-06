@@ -39,6 +39,8 @@ void main() {
         expect(find.byType(SetupFamilyMembersList), findsNothing);
         await tester.ensureVisible(find.text('Symuluj parowanie'));
         await tester.tap(find.text('Symuluj parowanie'));
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pump(const Duration(milliseconds: 240));
         await tester.pumpAndSettle();
         expect(find.byType(SetupFamilyMembersList), findsOneWidget);
         expect(
@@ -53,8 +55,20 @@ void main() {
             tester.getTopLeft(find.byType(SetupPairingInvitationCard)).dy,
           ),
         );
-        await tester.ensureVisible(find.text('Wygeneruj nowy kod'));
-        await tester.tap(find.text('Wygeneruj nowy kod'));
+        await tester.ensureVisible(
+          find.text(
+            mode == SetupDeviceMode.patient
+                ? 'Dodaj opiekuna'
+                : 'Dodaj dziecko',
+          ),
+        );
+        await tester.tap(
+          find.text(
+            mode == SetupDeviceMode.patient
+                ? 'Dodaj opiekuna'
+                : 'Dodaj dziecko',
+          ),
+        );
         await tester.pumpAndSettle();
         expect(draft.pairingInvitation!.id, isNot(firstId));
         expect(draft.familyMembers, hasLength(1));

@@ -4,9 +4,8 @@ import '../../../../../common/l10n/language.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
 import '../../widgets/settings_section_card.dart';
 import '../setup_wizard_controller.dart';
-import '../widgets/setup_family_members_list.dart';
+import '../widgets/setup_family_pairing_panel.dart';
 import '../widgets/setup_notice.dart';
-import '../widgets/setup_pairing_invitation_card.dart';
 import '../widgets/setup_step_heading.dart';
 
 class SetupFamilyModule extends StatelessWidget {
@@ -38,22 +37,7 @@ class SetupFamilyModule extends StatelessWidget {
       ),
       if (controller.state.signedIn) ...[
         const SizedBox(height: 16),
-        SetupPairingInvitationCard(controller: controller),
-        if (controller.state.familyMembersFailed) ...[
-          const SizedBox(height: 16),
-          SetupNotice(
-            text: context.lang.setupFamilyMembersFailed,
-            icon: Icons.sync_problem,
-          ),
-          TextButton(
-            onPressed: controller.refreshFamilyMembers,
-            child: Text(context.lang.setupRefreshFamilyMembers),
-          ),
-        ],
-        if (controller.state.familyMembers.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          SetupFamilyMembersList(members: controller.state.familyMembers),
-        ],
+        SetupFamilyPairingPanel(controller: controller),
       ],
       const SizedBox(height: 16),
       SetupNotice(text: context.lang.setupCaregiverProtection),
