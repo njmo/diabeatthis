@@ -178,7 +178,7 @@ void main() {
       draft.language = applicationLanguageByCode('en');
       state.controller.changed();
       await tester.pumpAndSettle();
-      expect(find.text('Choose what helps you'), findsOneWidget);
+      expect(find.text('What you can do'), findsOneWidget);
       await tester.ensureVisible(
         find.byWidgetPredicate(
           (widget) =>

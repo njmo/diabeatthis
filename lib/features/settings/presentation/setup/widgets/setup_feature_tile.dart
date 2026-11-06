@@ -15,8 +15,10 @@ class SetupFeatureTile extends StatelessWidget {
     required this.feature,
     required this.selected,
     required this.onChanged,
+    this.mode = SetupDeviceMode.patient,
   });
   final SetupFeature feature;
+  final SetupDeviceMode mode;
   final bool selected;
   final ValueChanged<bool> onChanged;
   @override
@@ -39,20 +41,23 @@ class SetupFeatureTile extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        context.lang.featureName(feature.id),
+                        context.lang.featureName(feature.id, mode: mode),
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                     ),
                     IconButton(
                       tooltip: context.lang.setupFeatureInfo,
-                      onPressed: () =>
-                          SetupFeatureHelpSheet.show(context, feature),
+                      onPressed: () => SetupFeatureHelpSheet.show(
+                        context,
+                        feature,
+                        mode: mode,
+                      ),
                       icon: const Icon(Icons.info_outline, size: 19),
                     ),
                   ],
                 ),
                 Text(
-                  context.lang.featureDescription(feature.id),
+                  context.lang.featureDescription(feature.id, mode: mode),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 if (feature.options.isNotEmpty)
@@ -64,7 +69,8 @@ class SetupFeatureTile extends StatelessWidget {
                     ),
                   ),
                 if (permissions.isEmpty &&
-                    feature.requiredConfiguration.isEmpty)
+                    feature.requiredConfiguration.isEmpty &&
+                    !feature.alwaysEnabled)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Text(
@@ -72,7 +78,8 @@ class SetupFeatureTile extends StatelessWidget {
                       style: Theme.of(context).textTheme.labelSmall,
                     ),
                   )
-                else
+                else if (permissions.isNotEmpty ||
+                    feature.requiredConfiguration.isNotEmpty)
                   ScrollableChipRail(
                     children: [
                       for (final requirement in permissions)
@@ -85,7 +92,9 @@ class SetupFeatureTile extends StatelessWidget {
             ),
           ),
           Semantics(
-            label: context.lang.featureName(feature.id),
+            enabled: feature.alwaysEnabled ? false : null,
+            toggled: feature.alwaysEnabled ? true : null,
+            label: context.lang.featureName(feature.id, mode: mode),
             child: feature.alwaysEnabled
                 ? Tooltip(
                     message: context.lang.setupAlwaysEnabled,

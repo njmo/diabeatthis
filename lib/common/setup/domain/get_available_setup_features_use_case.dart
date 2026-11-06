@@ -1,5 +1,6 @@
 import 'setup_configuration_field.dart';
 import 'setup_feature.dart';
+import 'setup_feature_group.dart';
 import 'setup_feature_option.dart';
 
 class GetAvailableSetupFeaturesUseCase {
@@ -8,6 +9,7 @@ class GetAvailableSetupFeaturesUseCase {
   static const catalog = [
     SetupFeature(
       id: SetupFeatureId.dataAndMeals,
+      wikiPage: 'First-setup',
       modes: {SetupDeviceMode.patient},
       requirements: {SetupRequirement.dataSource},
       alwaysEnabled: true,
@@ -15,7 +17,65 @@ class GetAvailableSetupFeaturesUseCase {
       requiredCloudConfiguration: {SetupConfigurationField.nightscoutUrl},
     ),
     SetupFeature(
+      id: SetupFeatureId.mealPlanning,
+      modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
+      requirements: {},
+      alwaysEnabled: true,
+      group: SetupFeatureGroup.everyday,
+      wikiPage: 'Meals',
+    ),
+    SetupFeature(
+      id: SetupFeatureId.activityPlanning,
+      modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
+      requirements: {},
+      alwaysEnabled: true,
+      group: SetupFeatureGroup.everyday,
+      wikiPage: 'Activity',
+    ),
+    SetupFeature(
+      id: SetupFeatureId.lowTreatmentRecording,
+      modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
+      requirements: {},
+      alwaysEnabled: true,
+      group: SetupFeatureGroup.everyday,
+      wikiPage: 'Low-treatments',
+    ),
+    SetupFeature(
+      id: SetupFeatureId.ingredientLibrary,
+      modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
+      requirements: {},
+      alwaysEnabled: true,
+      group: SetupFeatureGroup.everyday,
+      wikiPage: 'Ingredients',
+    ),
+    SetupFeature(
+      id: SetupFeatureId.mealHistory,
+      modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
+      requirements: {},
+      alwaysEnabled: true,
+      group: SetupFeatureGroup.history,
+      wikiPage: 'Meals',
+    ),
+    SetupFeature(
+      id: SetupFeatureId.mealAnalysis,
+      modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
+      requirements: {},
+      alwaysEnabled: true,
+      group: SetupFeatureGroup.history,
+      wikiPage: 'Meals',
+    ),
+    SetupFeature(
+      id: SetupFeatureId.dayOverview,
+      modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
+      requirements: {},
+      alwaysEnabled: true,
+      group: SetupFeatureGroup.history,
+      wikiPage: 'Day-overview',
+    ),
+    SetupFeature(
       id: SetupFeatureId.mealMonitor,
+      wikiPage: 'Meals',
+      group: SetupFeatureGroup.monitoring,
       modes: {SetupDeviceMode.patient},
       requirements: {
         SetupRequirement.notifications,
@@ -25,6 +85,8 @@ class GetAvailableSetupFeaturesUseCase {
     ),
     SetupFeature(
       id: SetupFeatureId.activityMonitor,
+      wikiPage: 'Activity',
+      group: SetupFeatureGroup.monitoring,
       configurationModule: SetupModule.activity,
       options: [
         SetupFeatureOption(
@@ -44,6 +106,8 @@ class GetAvailableSetupFeaturesUseCase {
     ),
     SetupFeature(
       id: SetupFeatureId.lowTreatment,
+      wikiPage: 'Low-treatments',
+      group: SetupFeatureGroup.monitoring,
       alwaysEnabled: true,
       configurationModule: SetupModule.lowTreatment,
       modes: {SetupDeviceMode.patient},
@@ -63,6 +127,7 @@ class GetAvailableSetupFeaturesUseCase {
     ),
     SetupFeature(
       id: SetupFeatureId.familyChat,
+      group: SetupFeatureGroup.family,
       modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
       requirements: {
         SetupRequirement.notifications,
@@ -73,6 +138,7 @@ class GetAvailableSetupFeaturesUseCase {
     ),
     SetupFeature(
       id: SetupFeatureId.childOverview,
+      group: SetupFeatureGroup.family,
       modes: {SetupDeviceMode.caregiver},
       requirements: {
         SetupRequirement.googleAccount,
@@ -82,6 +148,8 @@ class GetAvailableSetupFeaturesUseCase {
     ),
     SetupFeature(
       id: SetupFeatureId.aiAssistance,
+      wikiPage: 'AI',
+      group: SetupFeatureGroup.assistance,
       modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
       requirements: {
         SetupRequirement.aiConfiguration,
@@ -90,6 +158,8 @@ class GetAvailableSetupFeaturesUseCase {
     ),
     SetupFeature(
       id: SetupFeatureId.mealPhoto,
+      wikiPage: 'AI',
+      group: SetupFeatureGroup.assistance,
       modes: {SetupDeviceMode.patient, SetupDeviceMode.caregiver},
       requirements: {
         SetupRequirement.camera,

@@ -82,7 +82,12 @@ class SetupSummaryStep extends StatelessWidget {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(context.lang.featureName(feature.id)),
+                        child: Text(
+                          context.lang.featureName(
+                            feature.id,
+                            mode: controller.state.mode,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Icon(

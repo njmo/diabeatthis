@@ -10,30 +10,33 @@ import 'setup_icon_bubble.dart';
 import 'setup_requirement_chip.dart';
 
 class SetupFeatureHelpSheet extends StatelessWidget {
-  const SetupFeatureHelpSheet({super.key, required this.feature});
+  const SetupFeatureHelpSheet({
+    super.key,
+    required this.feature,
+    this.mode = SetupDeviceMode.patient,
+  });
   final SetupFeature feature;
+  final SetupDeviceMode mode;
 
-  static Future<void> show(BuildContext context, SetupFeature feature) =>
-      showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        showDragHandle: true,
-        builder: (sheetContext) => Localizations.override(
-          context: sheetContext,
-          locale: Localizations.localeOf(context),
-          child: SetupFeatureHelpSheet(feature: feature),
-        ),
-      );
+  static Future<void> show(
+    BuildContext context,
+    SetupFeature feature, {
+    SetupDeviceMode mode = SetupDeviceMode.patient,
+  }) => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (sheetContext) => Localizations.override(
+      context: sheetContext,
+      locale: Localizations.localeOf(context),
+      child: SetupFeatureHelpSheet(feature: feature, mode: mode),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
-    final wikiPage = switch (feature.id) {
-      SetupFeatureId.mealMonitor => 'Meals',
-      SetupFeatureId.activityMonitor => 'Activity',
-      SetupFeatureId.mealPhoto || SetupFeatureId.aiAssistance => 'AI',
-      _ => null,
-    };
+    final wikiPage = feature.wikiPage;
     return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * .85,
@@ -51,7 +54,7 @@ class SetupFeatureHelpSheet extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      context.lang.featureName(feature.id),
+                      context.lang.featureName(feature.id, mode: mode),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
@@ -76,7 +79,9 @@ class SetupFeatureHelpSheet extends StatelessWidget {
                 ),
               const SizedBox(height: 16),
               for (final detail
-                  in context.lang.featureDetails(feature.id).split('\n'))
+                  in context.lang
+                      .featureDetails(feature.id, mode: mode)
+                      .split('\n'))
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
@@ -92,21 +97,24 @@ class SetupFeatureHelpSheet extends StatelessWidget {
                     ],
                   ),
                 ),
-              Text(
-                context.lang.setupRequires,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  for (final requirement in feature.requirements)
-                    SetupRequirementChip(requirement: requirement),
-                  for (final field in feature.requiredConfiguration)
-                    SetupConfigurationFieldChip(field: field),
-                ],
-              ),
+              if (feature.requirements.isNotEmpty ||
+                  feature.requiredConfiguration.isNotEmpty) ...[
+                Text(
+                  context.lang.setupRequires,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    for (final requirement in feature.requirements)
+                      SetupRequirementChip(requirement: requirement),
+                    for (final field in feature.requiredConfiguration)
+                      SetupConfigurationFieldChip(field: field),
+                  ],
+                ),
+              ],
               if (feature.options.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Text(

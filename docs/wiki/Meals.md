@@ -24,6 +24,17 @@ Przy kopiowaniu sprawdź ilości, składniki i czas. W historii oraz analizie mo
 przeglądać przebieg glukozy i dostępne zdarzenia wokół posiłku.
 Podobny posiłek nie gwarantuje takiej samej reakcji glukozy.
 
+## Analiza posiłku
+
+W szczegółach zapisanego posiłku przeglądaj glikemię i dostępne zdarzenia
+wokół jedzenia. Zestawiaj je z czasem posiłku oraz rzeczywiście zjedzoną ilością.
+Podgląd wykresu i historii jest funkcją podstawową; analiza z pomocą AI jest
+oddzielną opcją opisaną w [poradniku AI](AI).
+
+W planowanym trybie opiekuna historia i analiza dotyczą udostępnionych danych
+dziecka. Opiekun może przygotowywać plany, ale nie zmienia stanów wykonania
+posiłku. Nowy konfigurator pokazuje te możliwości w trybie demonstracyjnym.
+
 ## Oczekiwany rezultat
 
 Plan, przebieg i podsumowanie posiłku są zapisane. Jeśli aplikacja nadal czeka

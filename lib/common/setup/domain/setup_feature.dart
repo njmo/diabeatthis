@@ -1,10 +1,18 @@
 import 'setup_configuration_field.dart';
+import 'setup_feature_group.dart';
 import 'setup_feature_option.dart';
 
 enum SetupDeviceMode { patient, caregiver }
 
 enum SetupFeatureId {
   dataAndMeals,
+  mealPlanning,
+  activityPlanning,
+  lowTreatmentRecording,
+  ingredientLibrary,
+  mealHistory,
+  mealAnalysis,
+  dayOverview,
   mealMonitor,
   activityMonitor,
   mealPhoto,
@@ -53,6 +61,8 @@ class SetupFeature {
     this.options = const [],
     this.alwaysEnabled = false,
     this.configurationModule,
+    this.group = SetupFeatureGroup.everyday,
+    this.wikiPage,
   });
   final SetupFeatureId id;
   final Set<SetupDeviceMode> modes;
@@ -62,4 +72,6 @@ class SetupFeature {
   final List<SetupFeatureOption> options;
   final bool alwaysEnabled;
   final SetupModule? configurationModule;
+  final SetupFeatureGroup group;
+  final String? wikiPage;
 }

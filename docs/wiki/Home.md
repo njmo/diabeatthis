@@ -15,6 +15,9 @@ po stronie użytkownika i AAPS. Aplikacja nie podaje insuliny automatycznie.
 
 - [Posiłki, porcje, dokładki i historia](Meals).
 - [Planowanie aktywności i przypomnienia](Activity).
+- [Składniki i własne porcje](Ingredients).
+- [Dosładzanie i monitor dosładzania](Low-treatments).
+- [Podsumowanie dnia](Day-overview).
 - [Funkcje AI i sprawdzanie wyników](AI).
 - [Najczęstsze problemy](Troubleshooting).
 
