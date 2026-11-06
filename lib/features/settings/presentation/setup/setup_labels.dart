@@ -12,6 +12,7 @@ extension SetupLabels on AppLocalizations {
     SetupDeviceMode mode = SetupDeviceMode.patient,
   }) => switch (id) {
     SetupFeatureId.dataAndMeals => setupFeatureDataMealsName,
+    SetupFeatureId.nightscoutOverview => setupFeatureNightscoutOverviewName,
     SetupFeatureId.mealPlanning => setupCapabilityMealPlanningName,
     SetupFeatureId.activityPlanning => setupCapabilityActivityPlanningName,
     SetupFeatureId.lowTreatmentRecording =>
@@ -38,6 +39,8 @@ extension SetupLabels on AppLocalizations {
     SetupDeviceMode mode = SetupDeviceMode.patient,
   }) => switch (id) {
     SetupFeatureId.dataAndMeals => setupFeatureDataMealsDescription,
+    SetupFeatureId.nightscoutOverview =>
+      setupFeatureNightscoutOverviewDescription,
     SetupFeatureId.mealPlanning =>
       mode == SetupDeviceMode.caregiver
           ? setupCapabilityMealPlanningCaregiverDescription
@@ -79,6 +82,7 @@ extension SetupLabels on AppLocalizations {
     SetupDeviceMode mode = SetupDeviceMode.patient,
   }) => switch (id) {
     SetupFeatureId.dataAndMeals => setupFeatureDataMealsDetails,
+    SetupFeatureId.nightscoutOverview => setupFeatureNightscoutOverviewDetails,
     SetupFeatureId.mealPlanning =>
       mode == SetupDeviceMode.caregiver
           ? setupCapabilityMealPlanningCaregiverDetails
@@ -164,6 +168,7 @@ extension SetupLabels on AppLocalizations {
 
 IconData setupFeatureIcon(SetupFeatureId id) => switch (id) {
   SetupFeatureId.dataAndMeals => Icons.storage_outlined,
+  SetupFeatureId.nightscoutOverview => Icons.cloud_outlined,
   SetupFeatureId.mealPlanning => Icons.restaurant_menu,
   SetupFeatureId.activityPlanning => Icons.event_available,
   SetupFeatureId.lowTreatmentRecording => Icons.local_dining,

@@ -9,6 +9,7 @@ import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_option_availability.dart';
+import 'package:diabeatthis/features/settings/application/apply_caregiver_configuration_use_case.dart';
 import 'package:diabeatthis/features/settings/application/apply_initial_configuration_use_case.dart';
 import 'package:diabeatthis/features/settings/presentation/screens/initial_configuration_page.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard.dart';
@@ -17,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/localized_material_app.dart';
+import '../../../helpers/regression/scripted_caregiver_configuration_use_case.dart';
 import '../../../helpers/regression/scripted_initial_configuration_use_case.dart';
 import '../../../helpers/regression/scripted_read.dart';
 import '../../../helpers/regression/setup_live_services.dart';
@@ -94,7 +96,7 @@ void main() {
   );
 
   testWidgets(
-    'first-run caregiver completion returns to Start without patient writes',
+    'caregiver completion delegates its own save without patient writes',
     (tester) async {
       final auth = SetupGoogleAuthenticationTestRepository();
       addTearDown(auth.dispose);
@@ -104,9 +106,19 @@ void main() {
         'patient save must not run for caregiver',
         [],
       );
+      final caregiverWrites = ScriptedRead<void>('caregiver save', [
+        (
+          arguments: ['https://example.test', '', 'Test Parent', 'en'],
+          respond: () => throw StateError('Keep wizard open'),
+        ),
+      ]);
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            applyCaregiverConfigurationProvider.overrideWith(
+              (ref) =>
+                  ScriptedCaregiverConfigurationUseCase(ref, caregiverWrites),
+            ),
             googleAuthenticationRepositoryProvider.overrideWithValue(auth),
             sharedPrefsProvider.overrideWith((ref) async => prefs),
             dataSourceConfigProvider.overrideWith((ref) async => local),
@@ -136,13 +148,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(ProfileNameField), findsNothing);
       expect(wizard.controller.state.name, 'Test Parent');
+      wizard.controller.state.language = applicationLanguageByCode('en');
+      wizard.controller.state.nightscoutUrl = 'https://example.test';
+      wizard.controller.state.configured.add(SetupModule.nightscout);
       wizard.controller.goTo(SetupStep.summary.index);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Finish preview'));
+      await tester.tap(find.text('Save caregiver configuration'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Got it'));
-      await tester.pumpAndSettle();
-      expect(find.text('Welcome to DiaBeatThis'), findsOneWidget);
+      caregiverWrites.verifyComplete();
+      expect(wizard.controller.state.mode, SetupDeviceMode.caregiver);
+      expect(find.text('Save caregiver configuration'), findsOneWidget);
       expect(prefs.getKeys(), isEmpty);
       writes.verifyComplete();
       expect(tester.takeException(), isNull);

@@ -13,6 +13,7 @@ import '../../../../core/data_sources/nightscout/nightscout_storage_keys.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_url_provider.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../../foreground/service/monitoring_startup_exception.dart';
+import '../../application/apply_caregiver_configuration_use_case.dart';
 import '../../application/apply_initial_configuration_use_case.dart';
 import '../../data/models/initial_configuration_state.dart';
 
@@ -122,6 +123,32 @@ class InitialConfigurationController extends _$InitialConfigurationController
             : current.config.usesCloud
             ? messages.settingsConnectionError
             : messages.settingsInitialSaveError,
+      );
+      return false;
+    }
+  }
+
+  Future<bool> submitCaregiver({
+    required String url,
+    required String token,
+  }) async {
+    final current = _currentState;
+    if (current == null || current.isSaving) return false;
+    _setSaving();
+    try {
+      await ref.read(applyCaregiverConfigurationProvider)(
+        url: url,
+        token: token,
+        userName: current.userName,
+        language: current.language,
+      );
+      return true;
+    } catch (error) {
+      logW('Caregiver setup failed (${error.runtimeType})');
+      _setSubmitError(
+        lookupAppLocalizations(
+          resolveApplicationLocale(current.language),
+        ).settingsCaregiverSaveFailed,
       );
       return false;
     }

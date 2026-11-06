@@ -230,6 +230,7 @@ class NightscoutRepositoryImpl with Logging implements NightscoutRepository {
     final data = await service.fetchNightscoutData(url);
 
     return (data as List)
+        .where((e) => e['type'] == null || e['type'] == 'sgv')
         .map((e) => GlucoseDto.fromJson(e).toDomain())
         .toList();
   }

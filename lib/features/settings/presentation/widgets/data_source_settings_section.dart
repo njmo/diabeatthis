@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/providers/app_event_router_provider.dart';
 import '../../../../app/providers/app_foreground_bridge_provider.dart';
 import '../../../../app/providers/foreground_task_state_provider.dart';
+import '../../../../common/app_mode/application_device_mode.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/platform/external_app_installation_checker.dart';
@@ -96,7 +97,10 @@ class DataSourceSettingsSection extends ConsumerWidget with Logging {
     DataSourceConfig next,
   ) async {
     if (!_foregroundSourcesChanged(previous, next)) return;
-    if (!ref.read(monitorServiceEnabledProvider)) return;
+    await ref.read(applicationDeviceModeProvider.future);
+    if (!ref.context.mounted || !ref.read(monitorServiceEnabledProvider)) {
+      return;
+    }
 
     final foregroundBridge = ref.read(appForegroundBridgeProvider);
     final taskState = ref.read(foregroundTaskStateProvider.notifier);

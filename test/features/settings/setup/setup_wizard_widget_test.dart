@@ -78,6 +78,8 @@ void main() {
       var writes = 0;
       final draft = setupDraft()
         ..mode = SetupDeviceMode.caregiver
+        ..nightscoutUrl = 'https://example.test'
+        ..configured.add(SetupModule.nightscout)
         ..step = SetupStep.summary.index;
       await tester.pumpWidget(
         localizedMaterialApp(
@@ -250,7 +252,7 @@ void main() {
   });
 
   testWidgets(
-    'system language uses the device locale including an empty configuration step',
+    'system language uses the device locale for required caregiver Nightscout',
     (tester) async {
       tester.binding.platformDispatcher.localeTestValue = const Locale('en');
       addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
@@ -275,7 +277,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('No additional configuration needed'), findsOneWidget);
+      expect(find.text('Connect to Nightscout'), findsOneWidget);
       expect(find.text('Continue'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },

@@ -19,6 +19,12 @@ class DataReceiverActivationController {
 
   final List<DataReceiverRegistration> _receivers;
 
+  Future<void> disableAll() async {
+    for (final receiver in _receivers) {
+      await receiver.controller.setDisabled();
+    }
+  }
+
   Future<void> enableConfiguredReceivers(DataSourceConfig config) async {
     for (final receiver in _receivers) {
       if (receiver.source.isActive(config)) {

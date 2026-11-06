@@ -6,6 +6,7 @@ enum SetupDeviceMode { patient, caregiver }
 
 enum SetupFeatureId {
   dataAndMeals,
+  nightscoutOverview,
   mealPlanning,
   activityPlanning,
   lowTreatmentRecording,

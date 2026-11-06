@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/app_mode/application_device_mode.dart';
+import '../../../../common/app_mode/application_device_mode_loading.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/compact_category_selector.dart';
 import '../../../../core/data/provider/parent_controller_provider.dart';
+import '../../../caregiver/presentation/widgets/caregiver_dashboard.dart';
 import '../../../day_analysis/presentation/widgets/today_page.dart';
 import '../../../management/presentation/widgets/collection_content.dart';
 import '../../../meals/presentation/widgets/meal_list_today.dart';
@@ -29,6 +32,14 @@ class DashboardPage extends HookConsumerWidget {
     final isCollection = destination.value >= 2;
     final category = destination.value == 2 ? historyCategory : catalogCategory;
     final parentModeEnabled = ref.watch(parentModeProvider);
+
+    final mode = ref.watch(applicationDeviceModeProvider);
+    if (mode.isLoading || mode.hasError || mode.asData == null) {
+      return const ApplicationDeviceModeLoading();
+    }
+    if (mode.asData?.value == ApplicationDeviceMode.caregiver) {
+      return const CaregiverDashboard();
+    }
 
     return Scaffold(
       extendBody: true,

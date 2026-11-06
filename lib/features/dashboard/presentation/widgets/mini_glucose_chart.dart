@@ -10,11 +10,14 @@ import '../../data/providers/blood_sugar_readings_list_provider.dart';
 import 'glucose_chart_scale.dart';
 
 class MiniGlucoseChart extends ConsumerWidget {
-  const MiniGlucoseChart({super.key});
+  const MiniGlucoseChart({super.key, this.readings});
+  final List<Glucose>? readings;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final glucose = ref.watch(bloodSugarReadingsListProvider);
+    final glucose = readings == null
+        ? ref.watch(bloodSugarReadingsListProvider)
+        : AsyncData<List<Glucose>>(readings!);
 
     return glucose.when(
       data: (glucose) {

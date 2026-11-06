@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../core/domain/model/glucose.dart';
 import 'mini_glucose_chart.dart';
 
 class DashboardGlucoseReading extends StatelessWidget {
@@ -11,12 +12,14 @@ class DashboardGlucoseReading extends StatelessWidget {
     required this.color,
     required this.trendIcon,
     this.change,
+    this.readings,
   });
 
   final int? value;
   final Color color;
   final IconData? trendIcon;
   final String? change;
+  final List<Glucose>? readings;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -53,7 +56,11 @@ class DashboardGlucoseReading extends StatelessWidget {
           ],
         ),
       ),
-      const SizedBox(height: 94, width: 296, child: MiniGlucoseChart()),
+      SizedBox(
+        height: 94,
+        width: 296,
+        child: MiniGlucoseChart(readings: readings),
+      ),
       const SizedBox(height: 12),
     ],
   );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers/app_event_router_provider.dart';
 import '../../../app/providers/app_foreground_bridge_provider.dart';
 import '../../../app/providers/foreground_task_state_provider.dart';
+import '../../../common/app_mode/application_device_mode.dart';
 import '../../../common/events/data/app/execute_command_event.dart';
 import '../../../common/events/data/app/sync_data_key.dart';
 import '../../../common/identifiers/create_uuid.dart';
@@ -34,6 +35,12 @@ class SaveNightscoutSettingsUseCase with Logging {
     final validator = _ref.read(nightscoutTokenValidatorProvider);
     final prefs = await prefsFuture;
     final config = await configFuture;
+    final caregiver =
+        await _ref.read(applicationDeviceModeProvider.future) ==
+        ApplicationDeviceMode.caregiver;
+    if (caregiver && (draft.tempTargetsEnabled || draft.lowTreatmentsEnabled)) {
+      throw StateError('Caregiver Nightscout access is read-only.');
+    }
     if (!_ref.mounted) return;
 
     final url = draft.url.trim();
@@ -111,6 +118,7 @@ class SaveNightscoutSettingsUseCase with Logging {
       _ref.invalidate(nightscoutTokenProvider);
     }
 
+    if (caregiver) return;
     if ((tempTargetsChanged || lowTreatmentsChanged) && !connectionChanged) {
       _ref
           .read(appEventRouterProvider)
@@ -142,7 +150,8 @@ class SaveNightscoutSettingsUseCase with Logging {
   }
 
   Future<void> _restartMonitoringIfEnabled() async {
-    if (!_ref.read(monitorServiceEnabledProvider)) return;
+    await _ref.read(applicationDeviceModeProvider.future);
+    if (!_ref.mounted || !_ref.read(monitorServiceEnabledProvider)) return;
 
     final foregroundBridge = _ref.read(appForegroundBridgeProvider);
     final taskState = _ref.read(foregroundTaskStateProvider.notifier);

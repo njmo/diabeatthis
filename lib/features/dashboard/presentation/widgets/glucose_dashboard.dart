@@ -7,7 +7,8 @@ import '../../data/utils/nightscout_utils.dart';
 import 'dashboard_glucose_reading.dart';
 
 class GlucoseDashboard extends ConsumerWidget {
-  const GlucoseDashboard({super.key, required this.glucose});
+  const GlucoseDashboard({super.key, required this.glucose, this.readings});
+  final List<Glucose>? readings;
 
   final Glucose glucose;
 
@@ -24,6 +25,7 @@ class GlucoseDashboard extends ConsumerWidget {
     return RepaintBoundary(
       child: DashboardGlucoseReading(
         value: glucose.sgv,
+        readings: readings,
         color: bgColor,
         trendIcon: trendIcon,
       ),

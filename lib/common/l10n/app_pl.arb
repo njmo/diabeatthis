@@ -3958,7 +3958,7 @@
   "setupUnderstood": "Rozumiem",
   "setupPlanned": "Planowana funkcja",
   "setupLocalWorks": "Planowanie posiłków i aktywności, składniki oraz historia pozostają dostępne lokalnie bez internetu.",
-  "setupCaregiverOffline": "Pobrane wcześniej dane pozostają dostępne z czasem aktualizacji. Nowe dane wymagają połączenia.",
+  "setupCaregiverOffline": "Podczas sesji aplikacji zachowujemy ostatnio pobrane dane z czasem aktualizacji. Nowe dane wymagają połączenia.",
   "setupDataTitle": "Dane pod Twoją kontrolą",
   "setupDataDescription": "Wybierz źródła i synchronizację. Dane pacjenta zawsze zapisują się najpierw na tym telefonie.",
   "setupChipsExplanation": "Chipy pokazują wybrane funkcje korzystające z ustawienia.",
@@ -4158,7 +4158,7 @@
   "setupFeatureGroupAssistance": "Pomoc AI",
   "setupCapabilitiesTitle": "Co potrafi aplikacja",
   "setupCapabilitiesDescription": "Poznaj możliwości aplikacji. Funkcje bazowe pozostają włączone, a przełączniki sterują opcjami dodatkowymi. Przycisk informacji otwiera opis i poradnik wiki.",
-  "setupCaregiverCapabilitiesNotice": "Funkcje opiekuna dotyczą danych dziecka po powiązaniu kont. Składniki i stany wykonania pozostają do podglądu. Ten konfigurator jest demonstracyjny i nie uruchamia jeszcze połączenia z dzieckiem.",
+  "setupCaregiverCapabilitiesNotice": "Podgląd Nightscout działa po skonfigurowaniu połączenia. Funkcje rodzinne, planowanie dla dziecka i komunikator pozostają demonstracyjne.",
   "settingsAiAuthorFundedNotice": "DiaBeatThis AI jest tymczasowo bezpłatne dla użytkownika. Usługa jest rozliczana według użycia (pay-as-you-use), a koszty pokrywa autor aplikacji.",
   "settingsAiAdvisorUnavailable": "Tymczasowo wyłączone. Włączenie Meal Advisor wspomaganego AI jest obecnie niedostępne.",
   "settingsCountryRegionDescription": "Region pomaga rozpoznawać lokalne potrawy. Domyślnie używamy regionu urządzenia; możesz go zmienić.",
@@ -4168,7 +4168,7 @@
   "settingsCountryUnknown": "Urządzenie nie udostępnia kraju. Możesz ustawić go ręcznie.",
   "settingsCountryUseSystem": "Użyj regionu urządzenia",
   "setupAiLiveDescription": "Wybierz dostawcę AI. Po kliknięciu Dalej sprawdzimy połączenie i zapiszemy ustawienia.",
-  "setupLiveConfigurationNotice": "Ustawienia AI, logowanie Google i zgody systemowe są rzeczywiste. Parowanie, komunikator i nowe ustawienia funkcji pozostają demonstracyjne.",
+  "setupLiveConfigurationNotice": "Ustawienia AI, Nightscout, tryb urządzenia, Google i zgody systemowe są rzeczywiste. Parowanie, komunikator i nowe ustawienia funkcji pozostają demonstracyjne.",
   "setupLiveConfigurationFinished": "Zapisane ustawienia AI i przyznane zgody pozostają zachowane. Pozostałe demonstracyjne wybory nie uruchamiają parowania ani komunikatora.",
   "setupGoogleSignIn": "Zaloguj przez Google",
   "setupGoogleSignOut": "Wyloguj",
@@ -4242,5 +4242,43 @@
   "settingsMonitoringStartFailed": "Nie udało się uruchomić monitorów. Sprawdź uprawnienia w kroku Dostęp i spróbuj ponownie.",
   "settingsAiChatGptVerified": "Zweryfikowano konto ChatGPT",
   "settingsAiChatGptReturnToApp": "Wróć do aplikacji",
-  "settingsAiChatGptReturning": "Odpowiedź odebrana. Wracamy do aplikacji, aby zakończyć weryfikację."
+  "settingsAiChatGptReturning": "Odpowiedź odebrana. Wracamy do aplikacji, aby zakończyć weryfikację.",
+  "setupFeatureNightscoutOverviewName": "Podgląd Nightscout",
+  "setupFeatureNightscoutOverviewDescription": "Glukoza i stan pompy dziecka z Nightscout. Dane odświeżają się, gdy aplikacja jest otwarta.",
+  "setupFeatureNightscoutOverviewDetails": "Podgląd tylko do odczytu. Po wejściu i podczas korzystania z aplikacji pobieramy aktualne dane z Nightscout. Odświeżanie zatrzymuje się w tle; ostatnie dane pozostają widoczne przy braku internetu.",
+  "setupCaregiverSave": "Zapisz konfigurację opiekuna",
+  "settingsCaregiverSaveFailed": "Nie udało się zapisać konfiguracji opiekuna. Sprawdź konto Google i połączenie Nightscout.",
+  "caregiverRefreshing": "Odświeżanie danych…",
+  "caregiverVisibleRefresh": "Automatyczne odświeżanie podczas korzystania z aplikacji.",
+  "caregiverLastRefresh": "Ostatnie pobranie: {time}",
+  "caregiverRefreshFailed": "Nie udało się pobrać wszystkich danych. Pokazujemy ostatnie dostępne odczyty.",
+  "caregiverRefreshNow": "Odśwież dane",
+  "@caregiverLastRefresh": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "caregiverDeviceReadingAge": "Stan pompy: {age}",
+  "caregiverTargetRange": "Cel tymczasowy: {lower}–{upper} mg/dl",
+  "deviceModeLoadFailed": "Nie udało się odczytać trybu aplikacji. Spróbuj ponownie.",
+  "@caregiverDeviceReadingAge": {
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "@caregiverTargetRange": {
+    "placeholders": {
+      "lower": {
+        "type": "String"
+      },
+      "upper": {
+        "type": "String"
+      }
+    }
+  },
+  "caregiverNightscoutReadOnly": "Tylko podgląd danych. Aplikacja nie wysyła węglowodanów ani celów tymczasowych."
 }

@@ -6,6 +6,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/router/observers/riverpod_debug_observer.dart';
+import '../../common/app_mode/application_device_mode.dart';
 import '../../common/events/data/task/task_state_synchronization_payload.dart';
 import '../../common/l10n/application_language.dart';
 import '../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
@@ -45,6 +46,13 @@ class MyTaskHandler extends TaskHandler with Logging {
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     logI('onStart(starter: $starter)');
     _isStopping = false;
+    final deviceMode = await loadApplicationDeviceMode();
+    if (_isStopping) return;
+    if (deviceMode == ApplicationDeviceMode.caregiver) {
+      _isStopping = true;
+      await FlutterForegroundTask.stopService();
+      return;
+    }
 
     _container = ProviderContainer(
       observers: [if (kDebugMode) RiverpodDebugObserver(env: 'fg')],

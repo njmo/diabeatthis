@@ -58,6 +58,21 @@ class InitialConfigurationPage extends ConsumerWidget {
                 SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
             },
           ),
+          onSaveCaregiver: (value) async {
+            final controller = ref.read(
+              initialConfigurationControllerProvider.notifier,
+            );
+            controller.setUserName(value.name);
+            controller.setLanguage(value.language);
+            final saved = await controller.submitCaregiver(
+              url: value.nightscoutUrl,
+              token: value.nightscoutToken,
+            );
+            if (saved && context.mounted) {
+              context.router.replace(NamedRoute('DashboardRoute'));
+            }
+            return saved;
+          },
           onSavePatient: (value) async {
             final controller = ref.read(
               initialConfigurationControllerProvider.notifier,

@@ -45,7 +45,12 @@ class SetupNightscoutModuleState extends State<SetupNightscoutModule> {
         icon: Icons.cloud_outlined,
         title: 'Nightscout',
         children: [
-          if (!widget.controller.state.config.usesCloud) ...[
+          if (widget.controller.state.mode == SetupDeviceMode.caregiver) ...[
+            SetupNotice(text: context.lang.caregiverNightscoutReadOnly),
+            const SizedBox(height: 12),
+          ],
+          if (widget.controller.state.mode == SetupDeviceMode.patient &&
+              !widget.controller.state.config.usesCloud) ...[
             SetupNotice(text: context.lang.setupNightscoutSessionOnly),
             const SizedBox(height: 12),
           ],

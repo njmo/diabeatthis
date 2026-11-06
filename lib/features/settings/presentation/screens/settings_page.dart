@@ -6,6 +6,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../app/providers/app_event_router_provider.dart';
+import '../../../../common/app_mode/application_device_mode.dart';
+import '../../../../common/app_mode/application_device_mode_loading.dart';
 import '../../../../common/events/data/app/dump_logs_event.dart';
 import '../../../../common/events/data/app/execute_command_event.dart';
 import '../../../../common/l10n/application_language.dart';
@@ -37,6 +39,8 @@ class SettingsPage extends HookConsumerWidget with Logging {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final prefsAsync = ref.watch(sharedPrefsProvider);
+    final deviceMode = ref.watch(applicationDeviceModeProvider);
+    final caregiver = deviceMode.value == ApplicationDeviceMode.caregiver;
 
     final formKey = useMemoized(GlobalKey<FormState>.new);
     final urlController = useTextEditingController();
@@ -50,6 +54,9 @@ class SettingsPage extends HookConsumerWidget with Logging {
     final saveState = ref.watch(nightscoutSettingsControllerProvider);
     final selectedDataSourceConfig = useState<DataSourceConfig?>(null);
 
+    if (deviceMode.hasError || deviceMode.value == null) {
+      return const ApplicationDeviceModeLoading();
+    }
     return prefsAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -122,11 +129,12 @@ class SettingsPage extends HookConsumerWidget with Logging {
                     const SizedBox(height: 16),
                     const ResidenceCountrySetting(),
                     const SizedBox(height: 16),
-                    DataSourceSettingsSection(
-                      onChanged: (config) {
-                        selectedDataSourceConfig.value = config;
-                      },
-                    ),
+                    if (!caregiver)
+                      DataSourceSettingsSection(
+                        onChanged: (config) {
+                          selectedDataSourceConfig.value = config;
+                        },
+                      ),
                     const SizedBox(height: 16),
                     const ApplicationThemeSettingsSection(),
                     const SizedBox(height: 16),
@@ -153,16 +161,18 @@ class SettingsPage extends HookConsumerWidget with Logging {
                                           .notifier,
                                     )
                                     .setLanguage(value);
-                                ref
-                                    .read(appEventRouterProvider)
-                                    .send(
-                                      ExecuteCommandEvent.syncSettings(
-                                        data: {
-                                          applicationLanguageCodeKey:
-                                              value.code,
-                                        },
-                                      ),
-                                    );
+                                if (!caregiver) {
+                                  ref
+                                      .read(appEventRouterProvider)
+                                      .send(
+                                        ExecuteCommandEvent.syncSettings(
+                                          data: {
+                                            applicationLanguageCodeKey:
+                                                value.code,
+                                          },
+                                        ),
+                                      );
+                                }
                               } catch (e, st) {
                                 logE(
                                   'Language settings save failed',
@@ -182,6 +192,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
                     ),
                     const SizedBox(height: 16),
                     NightscoutSettingsSection(
+                      readOnly: caregiver,
                       urlController: urlController,
                       tokenController: tokenController,
                       childNameController: childNameController,
@@ -240,6 +251,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
                               onPressed: () {
                                 final nowString = clock.now().toIso8601String();
                                 final fileName = 'logs-$nowString-fg.txt';
+                                if (caregiver) return;
                                 final payload = DumpLogsEvent.saveToFile(
                                   name: fileName,
                                 );
@@ -253,7 +265,7 @@ class SettingsPage extends HookConsumerWidget with Logging {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const MealAdvisorSettingsSection(),
+                    if (!caregiver) const MealAdvisorSettingsSection(),
                     const SizedBox(height: 16),
                     const AiSettingsSection(),
                     const SizedBox(height: 16),

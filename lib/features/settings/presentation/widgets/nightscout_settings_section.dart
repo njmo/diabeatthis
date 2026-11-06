@@ -21,6 +21,7 @@ class NightscoutSettingsSection extends StatelessWidget {
     required this.onTempTargetsChanged,
     required this.onSave,
     this.lowTreatmentsEnabled = false,
+    this.readOnly = false,
     this.onLowTreatmentsChanged,
   });
 
@@ -29,6 +30,7 @@ class NightscoutSettingsSection extends StatelessWidget {
   final TextEditingController childNameController;
   final bool tempTargetsEnabled;
   final bool lowTreatmentsEnabled;
+  final bool readOnly;
   final ValueChanged<bool>? onLowTreatmentsChanged;
   final bool urlRequired;
   final NightscoutSettingsSaveState saveState;
@@ -54,7 +56,9 @@ class NightscoutSettingsSection extends StatelessWidget {
     return SettingsSectionCard(
       icon: Icons.cloud_outlined,
       title: 'Nightscout',
-      subtitle: context.lang.settingsNightscoutSubtitle,
+      subtitle: readOnly
+          ? context.lang.caregiverNightscoutReadOnly
+          : context.lang.settingsNightscoutSubtitle,
       children: [
         NightscoutConnectionFields(
           enabled: !saveState.isSaving,
@@ -64,13 +68,14 @@ class NightscoutSettingsSection extends StatelessWidget {
           tokenRequired: tempTargetsEnabled || lowTreatmentsEnabled,
           onChanged: (_) => onChanged(),
         ),
-        TempTargetSettingsSwitch(
-          enabled: !saveState.isSaving,
-          value: tempTargetsEnabled,
-          hasToken: tokenController.text.trim().isNotEmpty,
-          onChanged: onTempTargetsChanged,
-        ),
-        if (onLowTreatmentsChanged != null)
+        if (!readOnly)
+          TempTargetSettingsSwitch(
+            enabled: !saveState.isSaving,
+            value: tempTargetsEnabled,
+            hasToken: tokenController.text.trim().isNotEmpty,
+            onChanged: onTempTargetsChanged,
+          ),
+        if (!readOnly && onLowTreatmentsChanged != null)
           LowTreatmentUploadSettingsSwitch(
             enabled: !saveState.isSaving,
             value: lowTreatmentsEnabled,

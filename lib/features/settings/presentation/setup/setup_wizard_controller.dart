@@ -389,13 +389,16 @@ class SetupWizardController extends ChangeNotifier {
       SetupModule.family,
     if (requirements.containsKey(SetupRequirement.aiConfiguration))
       SetupModule.ai,
-    if (state.mode == SetupDeviceMode.patient &&
-        (state.config.usesCloud ||
-            requiredConfiguration.keys.any(
-              (field) => field.module == SetupModule.nightscout,
-            )))
+    if ((state.mode == SetupDeviceMode.patient && state.config.usesCloud) ||
+        requiredConfiguration.keys.any(
+          (field) => field.module == SetupModule.nightscout,
+        ))
       SetupModule.nightscout,
   ];
+  bool get canSkipCurrentModule =>
+      (module?.canSkip ?? false) &&
+      !(module == SetupModule.nightscout &&
+          (state.mode == SetupDeviceMode.caregiver || state.config.usesCloud));
   SetupModule? get module => modules.isEmpty
       ? null
       : modules[state.moduleIndex.clamp(0, modules.length - 1)];
@@ -748,8 +751,7 @@ class SetupWizardController extends ChangeNotifier {
 
   void skipModule() {
     final current = module;
-    if (current == null) return;
-    if (!current.canSkip) return;
+    if (current == null || !canSkipCurrentModule) return;
     switch (current) {
       case SetupModule.data:
         return;

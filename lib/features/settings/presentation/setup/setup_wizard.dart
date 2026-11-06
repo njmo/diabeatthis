@@ -35,6 +35,7 @@ class SetupWizard extends StatefulWidget {
     required this.initialState,
     required this.availability,
     this.onSavePatient,
+    this.onSaveCaregiver,
     this.familyContext = FamilyManagementContext.settings,
     this.saving = false,
     this.saveError,
@@ -45,6 +46,7 @@ class SetupWizard extends StatefulWidget {
   final SetupWizardState initialState;
   final DataSourceOptionAvailability availability;
   final Future<bool> Function(SetupWizardState draft)? onSavePatient;
+  final Future<bool> Function(SetupWizardState draft)? onSaveCaregiver;
   final FamilyManagementContext familyContext;
   final bool saving;
   final String? saveError;
@@ -175,6 +177,9 @@ class SetupWizardViewState extends State<SetupWizard>
       if (widget.onSavePatient != null &&
           controller.state.mode == SetupDeviceMode.patient) {
         await widget.onSavePatient!(controller.state);
+      } else if (widget.onSaveCaregiver != null &&
+          controller.state.mode == SetupDeviceMode.caregiver) {
+        await widget.onSaveCaregiver!(controller.state);
       } else {
         await showLocalizedDialog<void>(
           context: context,
@@ -357,7 +362,7 @@ class SetupWizardViewState extends State<SetupWizard>
               ? null
               : () => next(context),
           onPreviousFeature: inModule && state.moduleIndex > 0 ? back : null,
-          onSkip: inModule && (controller.module?.canSkip ?? false)
+          onSkip: inModule && controller.canSkipCurrentModule
               ? () => skip(context)
               : null,
           label:
@@ -368,6 +373,8 @@ class SetupWizardViewState extends State<SetupWizard>
               : state.currentStep == SetupStep.summary
               ? (savePatient
                     ? context.lang.setupPatientSave
+                    : widget.onSaveCaregiver != null
+                    ? context.lang.setupCaregiverSave
                     : context.lang.setupFinishPreview)
               : context.lang.setupNext,
         ),

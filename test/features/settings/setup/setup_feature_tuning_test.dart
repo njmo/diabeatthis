@@ -1,4 +1,5 @@
 import 'package:diabeatthis/common/l10n/application_language.dart';
+import 'package:diabeatthis/common/setup/domain/setup_configuration_field.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature_option.dart';
 import 'package:diabeatthis/common/setup/domain/setup_step.dart';
@@ -89,7 +90,13 @@ void main() {
     expect(controller.requiredConfiguration, isEmpty);
     controller.setMode(SetupDeviceMode.caregiver);
     expect(controller.state.enabledOptions, isEmpty);
-    expect(controller.requiredConfiguration, isEmpty);
+    expect(controller.requiredConfiguration.keys, [
+      SetupConfigurationField.nightscoutUrl,
+    ]);
+    expect(
+      controller.requiredConfiguration[SetupConfigurationField.nightscoutUrl],
+      {SetupFeatureId.nightscoutOverview},
+    );
     expect(
       controller.selected.any(
         (feature) => feature.id == SetupFeatureId.lowTreatment,

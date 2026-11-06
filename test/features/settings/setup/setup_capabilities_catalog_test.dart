@@ -66,12 +66,12 @@ void main() {
             ),
             isFalse,
           );
-          expect(controller.modules, isNot(contains(SetupModule.nightscout)));
+          expect(controller.modules, contains(SetupModule.nightscout));
           controller.select(SetupFeatureId.familyChat, false);
           controller.select(SetupFeatureId.childOverview, false);
           expect(
             controller.modules,
-            [SetupModule.ai],
+            [SetupModule.ai, SetupModule.nightscout],
             reason:
                 'Descriptive capabilities must not activate a family connection',
           );

@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../app/providers/app_event_router_provider.dart';
 import '../../../app/providers/app_foreground_bridge_provider.dart';
 import '../../../app/providers/foreground_task_state_provider.dart';
+import '../../../common/app_mode/application_device_mode.dart';
 import '../../../common/events/data/app/execute_command_event.dart';
 import '../../../common/events/data/app/sync_data_key.dart';
 import '../../../common/l10n/application_language.dart';
@@ -59,6 +60,12 @@ class ApplyInitialConfigurationUseCase {
     final dataSourceConfigStorer = DataSourceConfigStorer(prefs);
 
     await dataSourceConfigStorer.save(config);
+    if (!await prefs.setString(
+      applicationDeviceModeKey,
+      ApplicationDeviceMode.patient.name,
+    )) {
+      throw StateError('Patient mode was not saved.');
+    }
     await Future.wait([
       if (config.usesCloud)
         prefs.setString(nightscoutUrlKey, nightscoutUrl.trim()),
@@ -91,6 +98,9 @@ class ApplyInitialConfigurationUseCase {
   }
 
   Future<void> _startForegroundIfEnabled() async {
+    _ref.invalidate(applicationDeviceModeProvider);
+    await _ref.read(applicationDeviceModeProvider.future);
+    if (!_ref.mounted) return;
     final enabled = _ref.read(monitorServiceEnabledProvider);
     if (!enabled) return;
 

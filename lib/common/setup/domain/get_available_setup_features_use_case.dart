@@ -8,6 +8,13 @@ class GetAvailableSetupFeaturesUseCase {
 
   static const catalog = [
     SetupFeature(
+      id: SetupFeatureId.nightscoutOverview,
+      modes: {SetupDeviceMode.caregiver},
+      requirements: {SetupRequirement.internet, SetupRequirement.dataSource},
+      requiredConfiguration: {SetupConfigurationField.nightscoutUrl},
+      alwaysEnabled: true,
+    ),
+    SetupFeature(
       id: SetupFeatureId.dataAndMeals,
       wikiPage: 'First-setup',
       modes: {SetupDeviceMode.patient},

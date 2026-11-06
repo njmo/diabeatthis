@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../common/app_mode/application_device_mode.dart';
 import '../../common/l10n/language.dart';
 import '../../core/logger/logger.dart';
 import '../bootstrap/foreground_plugin_init.dart';
@@ -18,6 +19,10 @@ class ForegroundServiceController with Logging {
   }
 
   Future<void> startMonitoring() async {
+    if (Platform.isAndroid &&
+        await loadApplicationDeviceMode() == ApplicationDeviceMode.caregiver) {
+      throw StateError('Patient foreground is disabled in caregiver mode.');
+    }
     if (await isRunning()) return;
     if (Platform.isAndroid &&
         !(await Permission.activityRecognition.status).isGranted) {
@@ -35,6 +40,10 @@ class ForegroundServiceController with Logging {
   }
 
   Future<void> restartMonitoring() async {
+    if (Platform.isAndroid &&
+        await loadApplicationDeviceMode() == ApplicationDeviceMode.caregiver) {
+      throw StateError('Patient foreground is disabled in caregiver mode.');
+    }
     logI("Restarting monitor task");
     final result = await FlutterForegroundTask.restartService();
     if (result is ServiceRequestFailure) throw result.error;
@@ -42,6 +51,7 @@ class ForegroundServiceController with Logging {
   }
 
   Future<void> stop() async {
-    await FlutterForegroundTask.stopService();
+    final result = await FlutterForegroundTask.stopService();
+    if (result is ServiceRequestFailure) throw result.error;
   }
 }

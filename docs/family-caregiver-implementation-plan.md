@@ -342,3 +342,11 @@ Existing regression tests remain intact unless the user explicitly approves a st
 - [FCM encryption](https://firebase.google.com/docs/cloud-messaging/encryption)
 - [Cloud Functions setup and billing prerequisites](https://firebase.google.com/docs/functions/get-started)
 - [Firestore pricing](https://firebase.google.com/docs/firestore/pricing)
+
+## Caregiver Nightscout increment (November 2026)
+
+Caregiver setup now saves a persistent device mode and requires a validated, read-only Nightscout connection. Google sign-in remains required. Patient devices without a saved mode retain their existing behavior. Family pairing, messaging, and shared planning remain demonstrations.
+
+The caregiver dashboard fetches glucose entries, pump status, and the current temporary target when opened or resumed, then polls 30 seconds after each completed refresh. Manual refresh is available. Polling stops when the application leaves the foreground; pending results from an obsolete session or connection are ignored. The last successful values survive temporary failures within the current application session, with freshness and failure indicators. Successful empty responses clear obsolete values.
+
+Caregiver snapshots are isolated from patient caches and scoped to the configured Nightscout connection. Glucose comes from CGM entries rather than pump-status glucose. The caregiver interface exposes no therapy commands or upload switches. Saving caregiver mode disables patient receivers and stops an existing patient service. Application bootstrap, native service start/restart, and automatic service recovery also guard against launching patient monitoring in caregiver mode. No foreground service is needed for this visible-app refresh.
