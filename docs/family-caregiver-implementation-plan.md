@@ -471,3 +471,8 @@ Validation note for this increment: the broad meal suite reports 29 failures als
 
 
 Deployment outcome: all thirteen family endpoints and both catalog endpoints were confirmed ACTIVE after the approved release. The seven new callable endpoints reject anonymous access (401); a forged credential check is also rejected (401), and direct mirror/plan/metadata document reads reject anonymous access (403). No test plan/family records were created in production, and no device installation was performed.
+
+
+### Shared caregiver dashboard navigation
+
+The caregiver shell reuses the patient's Home/Day/History/Catalog bottom bar, header, category selector and centered action-menu styling. A single embedded family-planning controller survives tab switches, avoiding duplicate listeners and refresh loops. Home shows Nightscout and current child records; Day filters family records by date; History separates meals and activities; Catalog exposes child ingredient details/Firebase catalog browsing and activity definitions read-only. The center action menu contains only caregiver meal/activity proposals. Saved/AI day analysis sharing remains deferred, and no patient execution controls or foreground service are enabled on the caregiver.

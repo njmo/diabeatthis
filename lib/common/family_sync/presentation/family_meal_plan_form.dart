@@ -3,13 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../ingredient_catalog/ingredient_catalog_providers.dart';
 import '../../ingredient_catalog/ingredient_identity.dart';
-import '../../ingredient_catalog/ingredient_search_item.dart';
-import '../../ingredient_catalog/unified_ingredient_search_use_case.dart';
-import '../../ingredient_catalog/widgets/ingredient_catalog_picker.dart';
 import '../../l10n/language.dart';
 import '../../meal/meal_category.dart';
-import '../family_ingredient_search_repository.dart';
 import 'family_plan_time_field.dart';
+import 'show_family_ingredient_picker.dart';
 
 class FamilyMealPlanForm extends ConsumerStatefulWidget {
   const FamilyMealPlanForm({
@@ -99,20 +96,10 @@ class FamilyMealPlanFormState extends ConsumerState<FamilyMealPlanForm> {
 
   Future<void> addIngredient() async {
     final catalog = ref.read(catalogRepositoryProvider);
-    final selected = await showModalBottomSheet<IngredientSearchItem>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => ProviderScope(
-        overrides: [
-          unifiedIngredientSearchUseCaseProvider.overrideWithValue(
-            UnifiedIngredientSearchUseCase(
-              local: FamilyIngredientSearchRepository(widget.rows),
-              catalog: catalog,
-            ),
-          ),
-        ],
-        child: const IngredientCatalogPicker(searchOnly: true),
-      ),
+    final selected = await showFamilyIngredientPicker(
+      context,
+      rows: widget.rows,
+      catalog: catalog,
     );
     if (selected == null || !mounted) return;
     setState(() => busy = true);
