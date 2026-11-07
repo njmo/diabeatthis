@@ -57,21 +57,23 @@ void main() {
                 ],
               };
             case 'acknowledgeFamilyPlan':
-              if (data['outcome'] == 'prepared')
+              if (data['outcome'] == 'prepared') {
                 return http.Response(
                   jsonEncode({
                     'result': {'id': plan['id'], 'status': 'pending'},
                   }),
                   200,
                 );
+              }
               expect(published.keys, contains('meals/1'));
               expect(
                 published.keys.any((key) => key.startsWith('mealIngredients/')),
                 true,
               );
               ackAttempts++;
-              if (ackAttempts == 1)
+              if (ackAttempts == 1) {
                 return http.Response('{"error":{"status":"UNAVAILABLE"}}', 503);
+              }
               acknowledged = true;
               result = {'id': plan['id'], 'status': 'applied'};
             default:

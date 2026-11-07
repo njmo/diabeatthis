@@ -91,13 +91,14 @@ void main() {
       final transport = AuthenticatedCallableTransport(
         client: MockClient((request) async {
           final data = (jsonDecode(request.body) as Map)['data'] as Map;
-          if (request.url.path.endsWith('registerFamilyMirror'))
+          if (request.url.path.endsWith('registerFamilyMirror')) {
             return http.Response(
               jsonEncode({
                 'result': {'sourceId': data['sourceId']},
               }),
               200,
             );
+          }
           uploads++;
           pendingBody = data;
           started.complete();
@@ -136,13 +137,14 @@ void main() {
       final transport = AuthenticatedCallableTransport(
         client: MockClient((request) async {
           final data = (jsonDecode(request.body) as Map)['data'] as Map;
-          if (request.url.path.endsWith('registerFamilyMirror'))
+          if (request.url.path.endsWith('registerFamilyMirror')) {
             return http.Response(
               jsonEncode({
                 'result': {'sourceId': data['sourceId']},
               }),
               200,
             );
+          }
           uploads++;
           expect(utf8.encode(request.body).length, lessThanOrEqualTo(240000));
           return mirrorReceipt(data);

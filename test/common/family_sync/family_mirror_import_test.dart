@@ -7,8 +7,8 @@ import 'package:diabeatthis/core/drift/family_sync/family_mirror_outbox.dart';
 import 'package:diabeatthis/features/settings/data/database_backup_scope.dart';
 import 'package:diabeatthis/features/settings/data/database_backup_service.dart';
 import 'package:drift/native.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

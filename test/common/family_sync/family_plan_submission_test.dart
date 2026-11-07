@@ -24,8 +24,9 @@ void main() {
           Object response;
           if (request.url.path.endsWith('submitFamilyPlan')) {
             received.add(data);
-            if (++attempts == 1)
+            if (++attempts == 1) {
               return http.Response('{"error":{"status":"UNAVAILABLE"}}', 503);
+            }
             response = {'id': data['id'], 'status': 'pending'};
           } else if (request.url.path.endsWith('fetchFamilyMirror')) {
             response = {
