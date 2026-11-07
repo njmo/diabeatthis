@@ -17,6 +17,7 @@ import '../family_planning_controller.dart';
 import '../family_planning_view.dart';
 import 'family_activity_log_card.dart';
 import 'family_activity_plan_form.dart';
+import 'family_collections_body.dart';
 import 'family_ingredient_catalog_section.dart';
 import 'family_meal_plan_form.dart';
 import 'family_plan_request_card.dart';
@@ -331,6 +332,68 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
         });
       }
     });
+    if ([
+      FamilyPlanningView.meals,
+      FamilyPlanningView.activities,
+      FamilyPlanningView.ingredients,
+      FamilyPlanningView.activityCatalog,
+    ].contains(widget.view)) {
+      final collection = SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            if (widget.header != null) widget.header!,
+            if (controller.busy) const LinearProgressIndicator(),
+            if (controller.failed)
+              Text(
+                context.lang.familyPlanFailed,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            if (!widget.embedded)
+              Wrap(
+                spacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: enabled ? () => edit('createMeal') : null,
+                    icon: const Icon(Icons.restaurant_outlined),
+                    label: Text(context.lang.familyPlanMeal),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: enabled ? () => edit('planActivity') : null,
+                    icon: const Icon(Icons.directions_run),
+                    label: Text(context.lang.familyPlanActivity),
+                  ),
+                ],
+              ),
+            Expanded(
+              child:
+                  controller.source == null &&
+                      !controller.busy &&
+                      !controller.failed
+                  ? Center(child: Text(context.lang.familyPlanWaitingForChild))
+                  : FamilyCollectionsBody(
+                      key: ValueKey((
+                        controller.uid,
+                        controller.owner,
+                        controller.source,
+                      )),
+                      family: controller,
+                      view: widget.view,
+                      enabled: enabled,
+                      edit: edit,
+                      mealValues: mealValues,
+                    ),
+            ),
+          ],
+        ),
+      );
+      return widget.embedded
+          ? collection
+          : Scaffold(
+              appBar: AppBar(title: Text(context.lang.familyPlanTitle)),
+              body: collection,
+            );
+    }
     final content = SafeArea(
       bottom: !widget.embedded,
       child: RefreshIndicator(

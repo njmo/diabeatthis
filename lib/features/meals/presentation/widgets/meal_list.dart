@@ -6,6 +6,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_category.dart';
+import '../../../../common/presentation/collections/controllers/meals_controller.dart';
+import '../../../../common/presentation/collections/models/collection_state.dart';
 import '../../../../common/widgets/add_meal_icon.dart';
 import '../../../../common/widgets/delete_confirmation_dialog.dart';
 import '../../../../common/widgets/meal_category_field.dart';
@@ -70,31 +72,36 @@ class MealList extends HookConsumerWidget {
             ),
           ),
           Expanded(
-            child: MealListContent(
-              meals: mealsState.value ?? const [],
-              isInitialLoading:
-                  mealsState.isLoading && (mealsState.value?.isEmpty ?? true),
-              isLoadingMore:
-                  mealsState.isLoading &&
-                  (mealsState.value?.isNotEmpty ?? false),
-              hasMore:
-                  (mealsState.value?.length ?? 0) == listState.visibleLimit,
-              hasError: mealsState.hasError,
-              onLoadMore: controller.loadNextPage,
-              onRetry: () {
-                ref.invalidate(
-                  mealListWindowProvider(
-                    category: category.value?.name,
-                    filter: listState.filter,
-                    limit: listState.visibleLimit,
-                  ),
-                );
-              },
-              onMealTap: openMealDetails,
-              onMealDelete: (meal) => _confirmAndDeleteMeal(
-                context: context,
-                controller: controller,
-                meal: meal,
+            child: MealListContent.controlled(
+              controller: PatientMealsController(
+                state: CollectionState(
+                  items: mealsState.value ?? const [],
+                  loading:
+                      mealsState.isLoading &&
+                      (mealsState.value?.isEmpty ?? true),
+                  loadingMore:
+                      mealsState.isLoading &&
+                      (mealsState.value?.isNotEmpty ?? false),
+                  hasMore:
+                      (mealsState.value?.length ?? 0) == listState.visibleLimit,
+                  failed: mealsState.hasError,
+                ),
+                onLoadMore: controller.loadNextPage,
+                onRetry: () {
+                  ref.invalidate(
+                    mealListWindowProvider(
+                      category: category.value?.name,
+                      filter: listState.filter,
+                      limit: listState.visibleLimit,
+                    ),
+                  );
+                },
+                open: openMealDetails,
+                delete: (meal) => _confirmAndDeleteMeal(
+                  context: context,
+                  controller: controller,
+                  meal: meal,
+                ),
               ),
             ),
           ),

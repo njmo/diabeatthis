@@ -12,7 +12,14 @@ import 'meal_detail_formatters.dart';
 class MealPreviewHeader extends StatelessWidget {
   final MealPageState state;
 
-  const MealPreviewHeader({super.key, required this.state});
+  const MealPreviewHeader({
+    super.key,
+    required this.state,
+    this.canUseLocalActions = true,
+    this.showAnalysis = true,
+  });
+  final bool showAnalysis;
+  final bool canUseLocalActions;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +27,7 @@ class MealPreviewHeader extends StatelessWidget {
     final analysis = state.analysis;
     final messages = context.lang;
     final complete = analysis?.hasFullGlucoseWindow == true;
-    final status = !details.meal.isEaten
+    final status = !showAnalysis || !details.meal.isEaten
         ? mealStatusLabel(details.meal.status)
         : analysis == null
         ? messages.mealNoAnalysisData
@@ -43,7 +50,8 @@ class MealPreviewHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (MealCategory.fromStorage(details.meal.category) == null)
+          if (canUseLocalActions &&
+              MealCategory.fromStorage(details.meal.category) == null)
             MealCategoryEditButton(mealId: details.meal.id, assign: true),
           if (state.analysisError != null && details.meal.isEaten)
             Text(state.analysisError!),

@@ -11,7 +11,12 @@ import 'show_family_ingredient_picker.dart';
 
 /// Read-only catalog: selection never writes patient data on the caregiver.
 class FamilyIngredientCatalogSection extends ConsumerStatefulWidget {
-  const FamilyIngredientCatalogSection({super.key, required this.rows});
+  const FamilyIngredientCatalogSection({
+    super.key,
+    required this.rows,
+    this.searchOnly = false,
+  });
+  final bool searchOnly;
   final List<Map<String, dynamic>> rows;
   @override
   ConsumerState<FamilyIngredientCatalogSection> createState() =>
@@ -82,7 +87,10 @@ class FamilyIngredientCatalogSectionState
       ),
       if (failed) Text(context.lang.familyPlanFailed),
       for (final row in widget.rows.where(
-        (r) => r['kind'] == 'ingredients' && r['deleted'] != true,
+        (r) =>
+            !widget.searchOnly &&
+            r['kind'] == 'ingredients' &&
+            r['deleted'] != true,
       ))
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),

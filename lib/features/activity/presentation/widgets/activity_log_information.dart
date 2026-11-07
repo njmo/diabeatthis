@@ -10,7 +10,12 @@ import '../utils/activity_log_formatters.dart';
 
 class ActivityLogInformation extends StatelessWidget {
   final ActivityLogDetailsData log;
-  const ActivityLogInformation({super.key, required this.log});
+  const ActivityLogInformation({
+    super.key,
+    required this.log,
+    this.showRecordedSettings = true,
+  });
+  final bool showRecordedSettings;
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -37,30 +42,32 @@ class ActivityLogInformation extends StatelessWidget {
               label: context.lang.activityDurationLabel,
               value: formatActivityDuration(context.lang, log.duration),
             ),
-            DetailInfoRow(
-              icon: Icons.schedule,
-              label: context.lang.activityPlannedDurationLabel,
-              value: formatActivityMinutes(context.lang, log.durationMinutes),
-            ),
+            if (showRecordedSettings)
+              DetailInfoRow(
+                icon: Icons.schedule,
+                label: context.lang.activityPlannedDurationLabel,
+                value: formatActivityMinutes(context.lang, log.durationMinutes),
+              ),
           ],
         ),
         const SizedBox(height: 12),
-        DetailMetricSection(
-          title: context.lang.activityRecordedSettings,
-          icon: Icons.vaccines_rounded,
-          metrics: [
-            DetailMetricTile(
-              icon: Icons.schedule,
-              label: context.lang.activityPreMealSensitivityLabel,
-              value: context.lang.activityDosePercent(log.percentagePre),
-            ),
-            DetailMetricTile(
-              icon: Icons.sports_score,
-              label: context.lang.activityAfterWorkoutLabel,
-              value: context.lang.activityDosePercent(log.percentagePost),
-            ),
-          ],
-        ),
+        if (showRecordedSettings)
+          DetailMetricSection(
+            title: context.lang.activityRecordedSettings,
+            icon: Icons.vaccines_rounded,
+            metrics: [
+              DetailMetricTile(
+                icon: Icons.schedule,
+                label: context.lang.activityPreMealSensitivityLabel,
+                value: context.lang.activityDosePercent(log.percentagePre),
+              ),
+              DetailMetricTile(
+                icon: Icons.sports_score,
+                label: context.lang.activityAfterWorkoutLabel,
+                value: context.lang.activityDosePercent(log.percentagePost),
+              ),
+            ],
+          ),
         const SizedBox(height: 12),
         DetailSectionCard(
           title: context.lang.activityDetailsTitle,

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/details/activity_log_preview_controller.dart';
 import '../../../../common/widgets/detail_identity_header.dart';
 import '../../../../common/widgets/detail_metadata_row.dart';
 import '../../../../common/widgets/swipeable_cards.dart';
@@ -25,10 +26,22 @@ class ActivityLogBody extends HookWidget {
     super.key,
     required this.state,
     required this.onTimestampSelected,
+    this.presentation,
   });
+  final ActivityLogPreviewController? presentation;
+  ActivityLogBody.controlled({
+    super.key,
+    required ActivityLogPreviewController controller,
+    required this.onTimestampSelected,
+  }) : state = controller.state,
+       presentation = controller;
+
   @override
   Widget build(BuildContext context) {
-    final controller = useTabController(initialLength: 5);
+    final source = presentation ?? PatientActivityLogPreviewController(state);
+    final controller = useTabController(
+      initialLength: source.showAnalysis ? 5 : 1,
+    );
     final log = state.data;
     final lang = context.lang;
     final date = DateFormat(
@@ -51,13 +64,15 @@ class ActivityLogBody extends HookWidget {
       showPageControls: false,
       header: DetailIdentityHeader(
         title: log.activityName,
-        titleAction: TextButton.icon(
-          icon: const Icon(Icons.history_rounded),
-          label: Text(lang.activityHistoryShort),
-          onPressed: () => context.router.push(
-            routes.ActivityRoute(activityId: log.activityId),
-          ),
-        ),
+        titleAction: !source.canUseLocalActions
+            ? null
+            : TextButton.icon(
+                icon: const Icon(Icons.history_rounded),
+                label: Text(lang.activityHistoryShort),
+                onPressed: () => context.router.push(
+                  routes.ActivityRoute(activityId: log.activityId),
+                ),
+              ),
         status: log.isActive ? lang.activityActive : lang.activityFinished,
         dateLabel: date,
         dateIcon: Icons.calendar_today_outlined,
@@ -79,35 +94,44 @@ class ActivityLogBody extends HookWidget {
         ),
       ),
       labels: [
-        lang.activityTabSummary,
-        lang.activityTabBefore,
-        lang.activityTabCourse,
-        lang.activityTabAfter,
+        if (source.showAnalysis) ...[
+          lang.activityTabSummary,
+          lang.activityTabBefore,
+          lang.activityTabCourse,
+          lang.activityTabAfter,
+        ],
         lang.activityDetailsTitle,
       ],
       children: [
-        analysisTab(
-          () => ActivityGlucoseOverview(
-            analysis: state.analysis.value!,
-            log: log,
+        if (source.showAnalysis) ...[
+          analysisTab(
+            () => ActivityGlucoseOverview(
+              analysis: state.analysis.value!,
+              log: log,
+            ),
           ),
-        ),
-        analysisTab(
-          () =>
-              ActivityBeforeSection(analysis: state.analysis.value!, log: log),
-        ),
-        analysisTab(
-          () => ActivityLogAnalysisSection(
-            analysis: state.analysis.value!,
-            lowTreatments: state.lowTreatments,
-            selectedTimestamp: state.selectedTimestamp,
-            onTimestampSelected: onTimestampSelected,
+          analysisTab(
+            () => ActivityBeforeSection(
+              analysis: state.analysis.value!,
+              log: log,
+            ),
           ),
+          analysisTab(
+            () => ActivityLogAnalysisSection(
+              analysis: state.analysis.value!,
+              lowTreatments: state.lowTreatments,
+              selectedTimestamp: state.selectedTimestamp,
+              onTimestampSelected: onTimestampSelected,
+            ),
+          ),
+          analysisTab(
+            () => ActivityAfterSection(analysis: state.analysis.value!),
+          ),
+        ],
+        ActivityLogInformation(
+          log: log,
+          showRecordedSettings: source.showRecordedSettings,
         ),
-        analysisTab(
-          () => ActivityAfterSection(analysis: state.analysis.value!),
-        ),
-        ActivityLogInformation(log: log),
       ],
     );
   }

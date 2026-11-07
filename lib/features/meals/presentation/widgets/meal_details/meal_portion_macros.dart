@@ -4,7 +4,12 @@ import '../../../../../common/nutrition/meal_nutrition_totals.dart';
 import '../../../../../common/widgets/meal_macro_summary.dart';
 
 class MealPortionMacros extends StatelessWidget {
-  const MealPortionMacros({super.key, required this.nutrition});
+  const MealPortionMacros({
+    super.key,
+    required this.nutrition,
+    this.showWeight = true,
+  });
+  final bool showWeight;
   final MealNutritionTotals nutrition;
 
   @override
@@ -14,6 +19,6 @@ class MealPortionMacros extends StatelessWidget {
     fat: nutrition.totalFatG,
     fiber: nutrition.totalFiberG,
     calories: nutrition.totalCaloriesKcal,
-    weightGrams: nutrition.totalGrams,
+    weightGrams: showWeight ? nutrition.totalGrams : null,
   );
 }

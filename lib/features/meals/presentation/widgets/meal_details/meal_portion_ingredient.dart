@@ -12,9 +12,11 @@ class MealPortionIngredient extends StatelessWidget {
     super.key,
     required this.ingredient,
     required this.hasConsumedSnapshot,
+    this.canUseLocalActions = true,
   });
   final MealIngredientDetailsData ingredient;
   final bool hasConsumedSnapshot;
+  final bool canUseLocalActions;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +30,14 @@ class MealPortionIngredient extends StatelessWidget {
         reported &&
         !ingredient.isExtra &&
         ingredient.consumedTotalGrams > ingredient.plannedTotalGrams + 0.05;
+    final displayedAmount = ingredient.isReference
+        ? lang.mealReferencePortions(
+            reported ? ingredient.consumedAmount! : ingredient.plannedAmount,
+          )
+        : '${number.format(amount)} g';
+    final plannedLabel = ingredient.isReference
+        ? lang.mealReferencePortions(ingredient.plannedAmount)
+        : '${number.format(ingredient.plannedTotalGrams)} g';
     final colors = Theme.of(context).colorScheme;
     return ListTile(
       contentPadding: EdgeInsets.zero,
@@ -42,8 +52,8 @@ class MealPortionIngredient extends StatelessWidget {
             !ingredient.recordedWeightAvailable
                 ? lang.amountMissingPortionWeight
                 : reported
-                ? lang.mealConsumedInline('${number.format(amount)} g')
-                : lang.mealPlanInline('${number.format(amount)} g'),
+                ? lang.mealConsumedInline(displayedAmount)
+                : lang.mealPlanInline(displayedAmount),
           ),
           IngredientConfidenceSummary(
             nutritionConfidence: hasConsumedSnapshot
@@ -67,7 +77,7 @@ class MealPortionIngredient extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-          if (increased)
+          if (increased && !ingredient.isReference)
             Text(
               lang.mealPortionExtraGrams(
                 number.format(
@@ -83,17 +93,15 @@ class MealPortionIngredient extends StatelessWidget {
               !ingredient.isExtra &&
               number.format(ingredient.plannedTotalGrams) !=
                   number.format(ingredient.consumedTotalGrams))
-            Text(
-              lang.mealPlanInline(
-                '${number.format(ingredient.plannedTotalGrams)} g',
-              ),
-            ),
+            Text(lang.mealPlanInline(plannedLabel)),
         ],
       ),
-      onTap: () => context.router.push(
-        IngredientRoute(ingredientId: ingredient.ingredientId),
-      ),
-      trailing: const Icon(Icons.chevron_right),
+      onTap: !canUseLocalActions
+          ? null
+          : () => context.router.push(
+              IngredientRoute(ingredientId: ingredient.ingredientId),
+            ),
+      trailing: canUseLocalActions ? const Icon(Icons.chevron_right) : null,
     );
   }
 }

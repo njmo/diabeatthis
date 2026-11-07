@@ -18,8 +18,10 @@ class MealPortionOverview extends StatelessWidget {
     super.key,
     required this.details,
     this.showHeader = true,
+    this.canUseLocalActions = true,
   });
   final bool showHeader;
+  final bool canUseLocalActions;
   final MealDetailsData details;
 
   @override
@@ -32,6 +34,7 @@ class MealPortionOverview extends StatelessWidget {
     final consumed = summary.consumed;
     final nutrition = summary.nutrition;
     final equal = summary.equal;
+    final showWeight = !details.ingredients.any((item) => item.isReference);
     final status = switch (summary.status) {
       MealPortionStatus.planned => lang.mealReviewPlanned,
       MealPortionStatus.unconfirmed => lang.mealPortionUnconfirmed,
@@ -49,10 +52,15 @@ class MealPortionOverview extends StatelessWidget {
         children: [
           if (nutrition != null) ...[
             if (planned != null && consumed != null && !equal)
-              MealMacroComparison(planned: planned, consumed: consumed)
+              MealMacroComparison(
+                planned: planned,
+                consumed: consumed,
+                showWeight: showWeight,
+              )
             else
-              MealPortionMacros(nutrition: nutrition),
-            if (planned != null &&
+              MealPortionMacros(nutrition: nutrition, showWeight: showWeight),
+            if (showWeight &&
+                planned != null &&
                 consumed != null &&
                 number.format(planned.totalGrams) !=
                     number.format(consumed.totalGrams))
@@ -75,6 +83,7 @@ class MealPortionOverview extends StatelessWidget {
             MealPortionIngredient(
               ingredient: ingredient,
               hasConsumedSnapshot: consumed != null,
+              canUseLocalActions: canUseLocalActions,
             ),
           if (summary.extras.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -88,6 +97,7 @@ class MealPortionOverview extends StatelessWidget {
               MealPortionIngredient(
                 ingredient: ingredient,
                 hasConsumedSnapshot: consumed != null,
+                canUseLocalActions: canUseLocalActions,
               ),
           ],
         ],

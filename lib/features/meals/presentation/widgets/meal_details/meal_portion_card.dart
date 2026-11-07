@@ -8,11 +8,16 @@ class MealPortionCard extends StatelessWidget {
     super.key,
     required this.details,
     this.showHeader = true,
+    this.canUseLocalActions = true,
   });
   final bool showHeader;
+  final bool canUseLocalActions;
   final MealDetailsData details;
 
   @override
-  Widget build(BuildContext context) =>
-      MealPortionOverview(details: details, showHeader: showHeader);
+  Widget build(BuildContext context) => MealPortionOverview(
+    details: details,
+    showHeader: showHeader,
+    canUseLocalActions: canUseLocalActions,
+  );
 }

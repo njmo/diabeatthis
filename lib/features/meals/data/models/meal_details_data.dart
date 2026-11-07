@@ -406,6 +406,7 @@ class MealAdvisorDecisionData {
 
 class MealIngredientDetailsData {
   final int mealIngredientId;
+  final bool isReference;
   final int ingredientId;
   final String ingredientName;
   final String entryType;
@@ -435,6 +436,7 @@ class MealIngredientDetailsData {
 
   const MealIngredientDetailsData({
     required this.mealIngredientId,
+    this.isReference = false,
     required this.ingredientId,
     required this.ingredientName,
     required this.entryType,

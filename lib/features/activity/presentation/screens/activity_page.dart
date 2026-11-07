@@ -6,7 +6,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../data/drafts/activity_draft.dart';
 import '../../data/providers/activity_provider.dart';
-import '../widgets/activity_details_card.dart';
 import '../widgets/activity_edit_form.dart';
 import '../widgets/activity_log_list.dart';
 import '../widgets/activity_schedules_section.dart';
@@ -100,28 +99,7 @@ class ActivityPage extends HookConsumerWidget {
               ],
             );
           }
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: ActivityDetailsCard(
-                  name: activity.name,
-                  percentagePre: activity.percentagePre,
-                  percentagePost: activity.percentagePost,
-                  durationMinutes: activity.durationMinutes,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Text(
-                  context.lang.activityLogsTitle,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ),
-              Expanded(child: ActivityLogList(activityId: activity.id)),
-            ],
-          );
+          return ActivityLogList(activityId: activity.id, definition: activity);
         },
       ),
     );

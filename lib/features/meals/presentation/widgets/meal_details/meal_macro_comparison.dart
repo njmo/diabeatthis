@@ -12,7 +12,9 @@ class MealMacroComparison extends StatelessWidget {
     super.key,
     required this.planned,
     required this.consumed,
+    this.showWeight = true,
   });
+  final bool showWeight;
   final MealNutritionTotals planned;
   final MealNutritionTotals consumed;
 
@@ -45,7 +47,7 @@ class MealMacroComparison extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MealPortionMacros(nutrition: consumed),
+        MealPortionMacros(nutrition: consumed, showWeight: showWeight),
         for (final (label, plan, actual, unit) in rows)
           if (!mealPortionAmountsMatch(plan, actual))
             Padding(

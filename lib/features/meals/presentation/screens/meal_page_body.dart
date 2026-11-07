@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/details/meal_preview_controller.dart';
 import '../../../../common/widgets/swipeable_cards.dart';
 import '../../data/models/meal_start_context_data.dart';
 import '../controllers/meal_details_controller.dart';
@@ -18,19 +19,30 @@ import '../widgets/meal_details/meal_outcome_section.dart';
 import '../widgets/meal_details/meal_portion_card.dart';
 import '../widgets/meal_details/meal_preview_actions.dart';
 import '../widgets/meal_details/meal_preview_header.dart';
+import '../widgets/meal_details/meal_saved_information_card.dart';
 import '../widgets/meal_details/planned_meal_preview.dart';
 import '../widgets/meal_details/similar_meals_section.dart';
 
 class MealPageBody extends HookConsumerWidget {
   final MealPageState state;
-  const MealPageBody({super.key, required this.state});
+  const MealPageBody({super.key, required this.state, this.presentation});
+  final MealPreviewController? presentation;
+  MealPageBody.controlled({
+    super.key,
+    required MealPreviewController controller,
+  }) : state = controller.state,
+       presentation = controller;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final source = presentation ?? PatientMealPreviewController(state);
+    final canUseLocalActions = source.canUseLocalActions;
     final chartKey = useMemoized(() => GlobalKey());
     final details = state.details;
     final complete =
-        state.analysis?.hasFullGlucoseWindow == true && details.meal.isEaten;
+        source.showAnalysis &&
+        state.analysis?.hasFullGlucoseWindow == true &&
+        details.meal.isEaten;
     final chart = MealChartsSection(
       key: chartKey,
       details: details,
@@ -40,13 +52,42 @@ class MealPageBody extends HookConsumerWidget {
       advanced: true,
     );
     final controller = useTabController(
-      initialLength: complete ? 6 : 3,
+      initialLength: !source.showAnalysis
+          ? 2
+          : complete
+          ? 6
+          : 3,
       keys: [details.meal.id, complete],
     );
     if (details.meal.status == 'planned') {
-      return PlannedMealPreview(state: state);
+      return PlannedMealPreview(
+        state: state,
+        canUseLocalActions: canUseLocalActions,
+      );
     }
     final lang = context.lang;
+    if (!source.showAnalysis) {
+      return SwipeableCards(
+        key: ValueKey(('shared-meal', details.meal.id)),
+        controller: controller,
+        showPageControls: false,
+        header: MealPreviewHeader(
+          state: state,
+          canUseLocalActions: canUseLocalActions,
+          showAnalysis: source.showAnalysis,
+        ),
+        labels: [lang.mealPortionCardTitle, lang.mealApplicationContextTitle],
+        children: [
+          MealPortionCard(
+            details: details,
+            showHeader: false,
+            canUseLocalActions: canUseLocalActions,
+          ),
+          MealSavedInformationCard(state: state),
+        ],
+      );
+    }
+
     final overview = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

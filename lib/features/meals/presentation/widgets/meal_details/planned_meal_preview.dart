@@ -9,7 +9,12 @@ import 'meal_preview_header.dart';
 
 /// A planned meal keeps only its portion tab, without review or action panels.
 class PlannedMealPreview extends HookWidget {
-  const PlannedMealPreview({super.key, required this.state});
+  const PlannedMealPreview({
+    super.key,
+    required this.state,
+    this.canUseLocalActions = true,
+  });
+  final bool canUseLocalActions;
   final MealPageState state;
 
   @override
@@ -22,9 +27,18 @@ class PlannedMealPreview extends HookWidget {
       key: ValueKey(('planned-meal', state.details.meal.id)),
       controller: controller,
       showPageControls: false,
-      header: MealPreviewHeader(state: state),
+      header: MealPreviewHeader(
+        state: state,
+        canUseLocalActions: canUseLocalActions,
+      ),
       labels: [context.lang.mealPortionCardTitle],
-      children: [MealPortionCard(details: state.details, showHeader: false)],
+      children: [
+        MealPortionCard(
+          details: state.details,
+          showHeader: false,
+          canUseLocalActions: canUseLocalActions,
+        ),
+      ],
     );
   }
 }
