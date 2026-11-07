@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/localized_material_app.dart';
 import '../../../../helpers/meal_flow_test_fixture.dart';
+import '../../../../helpers/patient_application_mode.dart';
 
 void main() {
   testWidgets('eating duration is required', (tester) async {
@@ -37,7 +38,9 @@ void main() {
     (tester) async {
       await tester.binding.setSurfaceSize(const Size(390, 600));
       addTearDown(() => tester.binding.setSurfaceSize(null));
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [patientApplicationModeOverride],
+      );
       addTearDown(container.dispose);
       final subscription = container.listen(mealDraftProvider, (_, _) {});
       addTearDown(subscription.close);

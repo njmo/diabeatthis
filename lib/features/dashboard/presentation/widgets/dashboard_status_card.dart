@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/presentation/dashboard/dashboard_card_padding.dart';
 import '../../../../common/temporary_targets/is_activity_temp_target_linked.dart';
 import '../../../../common/temporary_targets/temp_target_policy.dart';
 import '../../../activity/common/controllers/activity_actions_controller.dart';
@@ -51,10 +52,7 @@ class DashboardStatusCard extends ConsumerWidget {
     return Column(
       children: [
         for (var i = 0; i < cards.length; i++) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: cards[i],
-          ),
+          DashboardCardPadding(child: cards[i]),
           if (i < cards.length - 1) const SizedBox(height: 8),
         ],
       ],

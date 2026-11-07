@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/planning/meal_form_actions.dart';
 import '../../../../../common/widgets/sheet_choice_tile.dart';
 import '../../../data/model/copied_meal_type.dart';
+import '../../../data/providers/meal_draft_provider.dart';
 import '../../../data/providers/meal_ingredients_list_provider.dart';
 import '../add_ingredient_to_meal_draft.dart';
 import '../copied_meal_source_card.dart';
@@ -26,7 +28,9 @@ class MealCompositionStep extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final actions = ref.watch(mealFormActionsProvider);
     final ingredients = ref.watch(mealDraftIngredientsProvider);
+    final hint = actions.hint(context, ref.watch(mealDraftProvider));
     final hasIngredients = ingredients.isNotEmpty;
     Future<void> copy() async {
       final selected = await picker(context);
@@ -59,6 +63,7 @@ class MealCompositionStep extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (hint != null) Text(hint),
         if (retrospective) ...[
           const SizedBox(height: 8),
           Text(context.lang.mealRetrospectiveFullPortionNote),
@@ -90,7 +95,7 @@ class MealCompositionStep extends ConsumerWidget {
             icon: const Icon(Icons.add),
             label: Text(context.lang.mealCompositionAddIngredient),
           ),
-          if (source == null)
+          if (actions.canCopy && source == null)
             TextButton.icon(
               onPressed: isCopying ? null : copy,
               icon: const Icon(Icons.content_copy_rounded),
@@ -104,12 +109,13 @@ class MealCompositionStep extends ConsumerWidget {
                 ? null
                 : () => addIngredientToMealDraft(context, ref),
           ),
-          const SizedBox(height: 12),
-          SheetChoiceTile(
-            icon: Icons.history_rounded,
-            title: context.lang.mealCompositionUsePrevious,
-            onTap: isCopying ? null : copy,
-          ),
+          if (actions.canCopy) const SizedBox(height: 12),
+          if (actions.canCopy)
+            SheetChoiceTile(
+              icon: Icons.history_rounded,
+              title: context.lang.mealCompositionUsePrevious,
+              onTap: isCopying ? null : copy,
+            ),
         ],
       ],
     );

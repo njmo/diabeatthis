@@ -10,6 +10,7 @@ class MealPlannedTimeField extends FormField<DateTime> {
     super.key,
     required ValueChanged<DateTime> onChanged,
     bool retrospective = false,
+    int planningHorizonDays = 5,
     bool showTimeLabel = true,
     DateTime? initialDate,
     DateTime? calculatorDate,
@@ -69,7 +70,7 @@ class MealPlannedTimeField extends FormField<DateTime> {
                        : now.subtract(const Duration(days: 1));
                    final lastDate = retrospective
                        ? now
-                       : now.add(const Duration(days: 5));
+                       : now.add(Duration(days: planningHorizonDays));
                    final initialDate =
                        selected == null ||
                            selected.isBefore(firstDate) ||

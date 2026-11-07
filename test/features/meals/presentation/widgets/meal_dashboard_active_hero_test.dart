@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/meal/meal_progress_plan.dart';
 import 'package:diabeatthis/common/widgets/meal_progress/active_meal_progress_card.dart';
 import 'package:diabeatthis/common/widgets/meal_progress/meal_interruption_dialog.dart';
@@ -17,6 +18,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../helpers/localized_material_app.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   final now = DateTime(2026, 11, 1, 12);
   const summaryStatuses = ['eaten', 'eaten-extra', 'eaten-bolused'];
   const activeStatuses = [

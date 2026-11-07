@@ -1,8 +1,12 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/widgets/meal_progress/meal_wait_progress.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   testWidgets('expired waiting stays empty and explicitly elapsed', (
     tester,
   ) async {

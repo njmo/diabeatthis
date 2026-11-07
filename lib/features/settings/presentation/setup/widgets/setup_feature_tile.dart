@@ -16,12 +16,14 @@ class SetupFeatureTile extends StatelessWidget {
     required this.selected,
     required this.onChanged,
     this.enabled = true,
+    this.locked = false,
     this.mode = SetupDeviceMode.patient,
   });
   final SetupFeature feature;
   final SetupDeviceMode mode;
   final bool selected;
   final bool enabled;
+  final bool locked;
   final ValueChanged<bool> onChanged;
   @override
   Widget build(BuildContext context) {
@@ -62,6 +64,11 @@ class SetupFeatureTile extends StatelessWidget {
                   context.lang.featureDescription(feature.id, mode: mode),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                if (locked)
+                  Text(
+                    context.lang.setupFamilyDisconnectBeforeDisable,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 if (!enabled)
                   Text(
                     context.lang.setupFamilySignInFirst,
@@ -112,7 +119,7 @@ class SetupFeatureTile extends StatelessWidget {
                   )
                 : Switch(
                     value: selected,
-                    onChanged: enabled ? onChanged : null,
+                    onChanged: enabled && !locked ? onChanged : null,
                   ),
           ),
         ],

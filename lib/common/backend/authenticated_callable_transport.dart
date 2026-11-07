@@ -92,6 +92,7 @@ class AuthenticatedCallableTransport {
       if (response.statusCode != 200 || body['error'] != null) {
         const rejections = {
           'INVALID_ARGUMENT': 'invalid-argument',
+          'UNAUTHENTICATED': 'unauthenticated',
           'PERMISSION_DENIED': 'permission-denied',
           'FAILED_PRECONDITION': 'failed-precondition',
           'ALREADY_EXISTS': 'already-exists',

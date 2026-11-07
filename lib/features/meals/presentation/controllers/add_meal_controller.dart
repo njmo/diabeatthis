@@ -1,10 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/planning/planning_repository_provider.dart';
 import '../../../../core/domain/model/meal.dart';
-import '../../data/domain/use_cases/add_meal_use_case.dart';
-import '../../data/domain/use_cases/log_retrospective_meal_use_case.dart';
-import '../../data/domain/use_cases/save_meal_draft_use_case.dart';
 import '../../data/drafts/meal_draft.dart';
 import '../../data/models/retrospective_meal_timing.dart';
 import '../../data/providers/meal_draft_provider.dart';
@@ -25,9 +23,9 @@ class AddMealControllerNotifier extends _$AddMealControllerNotifier {
     RetrospectiveMealTiming? retrospective,
   }) async {
     return _persist(
-      () => retrospective == null
-          ? ref.read(addMealUseCaseProvider).call(draft)
-          : LogRetrospectiveMealUseCase(ref).call(draft, retrospective),
+      () async => (await ref
+          .read(planningRepositoryProvider)
+          .insertMeal(draft, retrospective: retrospective))!,
     );
   }
 
@@ -40,12 +38,14 @@ class AddMealControllerNotifier extends _$AddMealControllerNotifier {
         .read(mealDraftProvider.notifier)
         .usesAutomaticName;
     return _persist(
-      () => SaveMealDraftUseCase(ref).call(
-        draft,
-        automaticName: automaticName,
-        language: language,
-        retrospective: retrospective,
-      ),
+      () async => (await ref
+          .read(planningRepositoryProvider)
+          .saveMeal(
+            draft,
+            automaticName: automaticName,
+            language: language,
+            retrospective: retrospective,
+          ))!,
     );
   }
 

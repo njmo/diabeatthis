@@ -1,4 +1,5 @@
 import 'package:clock/clock.dart';
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/meal/meal_add_on_bolus_context.dart';
 import 'package:diabeatthis/common/meal/meal_add_on_bolus_progress.dart';
 import 'package:diabeatthis/common/widgets/amount_entry_dialog.dart';
@@ -24,6 +25,9 @@ import '../../../meal_summary/domain/use_cases/record_meal_add_on_use_case_test.
     show addOnDraft, seedAddOnMeal;
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   test(
     'an older accepted calculator does not hide a new eCarbs-only instruction',
     () {

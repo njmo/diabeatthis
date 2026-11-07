@@ -4,8 +4,11 @@ import '../../drafts/meal_draft.dart';
 import 'resolve_meal_ingredient_grams_use_case.dart';
 
 class FindDominantMealIngredientsUseCase {
-  const FindDominantMealIngredientsUseCase(this.ref);
-  final Ref ref;
+  const FindDominantMealIngredientsUseCase(this.ref) : resolveGrams = null;
+  const FindDominantMealIngredientsUseCase.withResolver(this.resolveGrams)
+    : ref = null;
+  final Ref? ref;
+  final Future<double> Function(MealIngredientsDraft)? resolveGrams;
 
   Future<List<String>> call(List<MealIngredientsDraft> ingredients) async {
     final weighted = <({String name, double grams, int index})>[];
@@ -13,9 +16,10 @@ class FindDominantMealIngredientsUseCase {
       final ingredient = ingredients[index];
       final name = ingredient.ingredient.name.trim();
       if (name.isEmpty || ingredient.amount <= 0) continue;
-      final grams = await ResolveMealIngredientGramsUseCase(
-        ref,
-      ).call(ingredient);
+      final grams =
+          await (resolveGrams ?? ResolveMealIngredientGramsUseCase(ref!).call)(
+            ingredient,
+          );
       weighted.add((
         name: name,
         grams: grams.isFinite && grams > 0 ? grams : 0,

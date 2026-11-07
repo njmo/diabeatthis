@@ -12,6 +12,8 @@ import '../controllers/meals_controller.dart';
 class MealListContent extends StatelessWidget {
   final List<domain.Meal> meals;
   final List<Widget> header;
+  final String? Function(BuildContext, domain.Meal)? statusLabelFor;
+  final VoidCallback? Function(domain.Meal)? retryFor;
   final bool isInitialLoading;
   final bool isLoadingMore;
   final bool hasMore;
@@ -25,6 +27,8 @@ class MealListContent extends StatelessWidget {
     super.key,
     required this.meals,
     this.header = const [],
+    this.statusLabelFor,
+    this.retryFor,
     required this.isInitialLoading,
     required this.isLoadingMore,
     required this.hasMore,
@@ -39,6 +43,8 @@ class MealListContent extends StatelessWidget {
     super.key,
     required MealsController controller,
     this.header = const [],
+    this.statusLabelFor,
+    this.retryFor,
   }) : meals = controller.state.items,
        isInitialLoading = controller.state.loading,
        isLoadingMore = controller.state.loadingMore,
@@ -103,7 +109,12 @@ class MealListContent extends StatelessWidget {
             itemBuilder: (context, mealIndex) {
               final meal = group.items[mealIndex];
               if (onMealDelete == null) {
-                return MealCard(meal: meal, onTap: () => onMealTap(meal));
+                return MealCard(
+                  meal: meal,
+                  onTap: () => onMealTap(meal),
+                  statusLabel: statusLabelFor?.call(context, meal),
+                  onRetry: retryFor?.call(meal),
+                );
               }
               return MealListItem(
                 meal: meal,

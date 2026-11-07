@@ -1,17 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
 import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/activity.dart';
+import '../../../../core/drift/database_impl.dart' show ActivityScheduleData;
 import '../../data/services/activity_schedule_service.dart';
 import 'activity_schedule_card.dart';
 import 'activity_schedule_sheet.dart';
 
 class ActivitySchedulesSection extends ConsumerWidget {
-  const ActivitySchedulesSection({super.key, required this.activity});
+  const ActivitySchedulesSection({super.key, required this.activity})
+    : rules = null,
+      onAdd = null,
+      changeEnabled = null,
+      canChangeEnabled = null;
   final Activity activity;
+  const ActivitySchedulesSection.controlled({
+    super.key,
+    required this.activity,
+    required this.rules,
+    required this.onAdd,
+    this.changeEnabled,
+    this.canChangeEnabled,
+  });
+  final List<ActivityScheduleData>? rules;
+  final VoidCallback? onAdd;
+  final Future<void> Function(ActivityScheduleData, bool)? changeEnabled;
+  final bool Function(ActivityScheduleData)? canChangeEnabled;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final schedules = ref.watch(activitySchedulesProvider);
+    final schedules = rules == null
+        ? ref.watch(activitySchedulesProvider)
+        : AsyncData(rules!);
     Future<void> perform(Future<void> Function() action) async {
       try {
         await action();
@@ -43,21 +63,31 @@ class ActivitySchedulesSection extends ConsumerWidget {
                   (rule) => ActivityScheduleCard(
                     rule: rule,
                     name: activity.name,
-                    onEnabled: (value) => perform(
-                      () => ref
-                          .read(activityScheduleServiceProvider)
-                          .setEnabled(rule, value),
-                    ),
-                    onEdit: () => showActivityScheduleSheet(
-                      context,
-                      activity,
-                      rule: rule,
-                    ),
-                    onDelete: () => perform(
-                      () => ref
-                          .read(activityScheduleServiceProvider)
-                          .removeSchedule(rule.id),
-                    ),
+                    onEnabled: this.rules != null
+                        ? (changeEnabled == null ||
+                                  canChangeEnabled?.call(rule) == false
+                              ? null
+                              : (value) =>
+                                    perform(() => changeEnabled!(rule, value)))
+                        : (value) => perform(
+                            () => ref
+                                .read(activityScheduleServiceProvider)
+                                .setEnabled(rule, value),
+                          ),
+                    onEdit: this.rules != null
+                        ? null
+                        : () => showActivityScheduleSheet(
+                            context,
+                            activity,
+                            rule: rule,
+                          ),
+                    onDelete: this.rules != null
+                        ? null
+                        : () => perform(
+                            () => ref
+                                .read(activityScheduleServiceProvider)
+                                .removeSchedule(rule.id),
+                          ),
                   ),
                 )
                 .toList(),
@@ -66,7 +96,8 @@ class ActivitySchedulesSection extends ConsumerWidget {
         OutlinedButton.icon(
           icon: const Icon(Icons.add),
           label: Text(context.lang.activityScheduleAdd),
-          onPressed: () => showActivityScheduleSheet(context, activity),
+          onPressed:
+              onAdd ?? () => showActivityScheduleSheet(context, activity),
         ),
       ],
     );

@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/widgets/confidence_slider.dart';
 import 'package:diabeatthis/common/widgets/macronutrient_proportions.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
@@ -11,6 +12,9 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../../helpers/localized_material_app.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   const ingredient = IngredientDraft.existing(
     id: 41,
     name: 'Apple',

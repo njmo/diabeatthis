@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/meal_flow_test_fixture.dart';
+import '../../../../helpers/patient_application_mode.dart';
 
 void main() {
   test(
@@ -16,7 +17,10 @@ void main() {
     () async {
       final db = DatabaseImpl(NativeDatabase.memory());
       final container = ProviderContainer(
-        overrides: [databaseProvider.overrideWithValue(db)],
+        overrides: [
+          patientApplicationModeOverride,
+          databaseProvider.overrideWithValue(db),
+        ],
       );
       addTearDown(() async {
         container.dispose();

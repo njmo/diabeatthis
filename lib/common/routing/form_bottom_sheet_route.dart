@@ -9,8 +9,29 @@ Route<T> formBottomSheetRoute<T>(
   Widget child,
   AutoRoutePage<T> page,
 ) {
+  return createFormBottomSheetRoute<T>(context, child, settings: page);
+}
+
+Future<T?> showFormBottomSheet<T>(
+  BuildContext context,
+  Widget child, {
+  double? initialContentHeight,
+}) => Navigator.of(context).push<T>(
+  createFormBottomSheetRoute<T>(
+    context,
+    child,
+    initialContentHeight: initialContentHeight,
+  ),
+);
+
+Route<T> createFormBottomSheetRoute<T>(
+  BuildContext context,
+  Widget child, {
+  RouteSettings? settings,
+  double? initialContentHeight,
+}) {
   return ModalBottomSheetRoute<T>(
-    settings: page,
+    settings: settings,
     isScrollControlled: true,
     useSafeArea: true,
     // The form owns back navigation and saving; gestures must not bypass them.
@@ -22,6 +43,9 @@ Route<T> formBottomSheetRoute<T>(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
     clipBehavior: Clip.antiAlias,
-    builder: (_) => KeyboardAwareSheetFrame(child: child),
+    builder: (_) => KeyboardAwareSheetFrame(
+      initialContentHeight: initialContentHeight,
+      child: child,
+    ),
   );
 }

@@ -5,6 +5,7 @@ import '../../../../../common/l10n/language.dart';
 import '../../../../../common/widgets/meal_macro_summary.dart';
 import '../../../../../common/widgets/section_surface.dart';
 import '../../../data/providers/meal_draft_nutrition_totals_provider.dart';
+import '../../../data/providers/meal_draft_provider.dart';
 
 class MealReviewNutrition extends ConsumerWidget {
   const MealReviewNutrition({super.key});
@@ -30,7 +31,13 @@ class MealReviewNutrition extends ConsumerWidget {
                 fat: nutrition.totalFatG,
                 fiber: nutrition.totalFiberG,
                 calories: nutrition.totalCaloriesKcal,
-                weightGrams: nutrition.totalGrams,
+                weightGrams:
+                    ref
+                        .watch(mealDraftProvider)
+                        .mealIngredients
+                        .any((item) => item.ingredient.isReference)
+                    ? null
+                    : nutrition.totalGrams,
               ),
             ],
           ),

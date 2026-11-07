@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/widgets/meal_progress/active_meal_progress_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,6 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../../helpers/localized_material_app.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   testWidgets('eating has explicit actions instead of a generic details menu', (
     tester,
   ) async {

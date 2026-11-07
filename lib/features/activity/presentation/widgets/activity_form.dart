@@ -7,7 +7,15 @@ import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/providers/activity_provider.dart';
 
 class ActivityForm extends HookConsumerWidget {
-  const ActivityForm({super.key, this.formKey, this.trailing = const []});
+  const ActivityForm({
+    super.key,
+    this.formKey,
+    this.trailing = const [],
+    this.maximumDuration,
+    this.autovalidateMode = AutovalidateMode.always,
+  });
+  final int? maximumDuration;
+  final AutovalidateMode autovalidateMode;
   final GlobalKey<FormState>? formKey;
   final List<Widget> trailing;
 
@@ -20,7 +28,7 @@ class ActivityForm extends HookConsumerWidget {
     final hasPlannedDuration = activityDraft.hasPlannedDuration();
     return Form(
       key: effectiveFormKey,
-      autovalidateMode: AutovalidateMode.always,
+      autovalidateMode: autovalidateMode,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,6 +80,12 @@ class ActivityForm extends HookConsumerWidget {
                     final duration = int.tryParse(value?.trim() ?? '');
                     if (duration == null || duration <= 0) {
                       return context.lang.activityDurationRequired;
+                    }
+                    if (maximumDuration != null &&
+                        duration > maximumDuration!) {
+                      return context.lang.planningDurationTooLong(
+                        maximumDuration!,
+                      );
                     }
                     return null;
                   },

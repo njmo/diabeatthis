@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../core/domain/model/carbs_label_mode.dart';
 import '../../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../../core/drift/database_impl.dart';
 import '../../../../../core/drift/mappers/ingredient_drift_mapper.dart';
@@ -35,7 +36,16 @@ class FindMatchingIngredientForScanResultUseCase with Logging {
     required this.matcher,
   });
 
-  Future<domain.Ingredient?> call(IngredientScanResult result) async {
+  Future<domain.Ingredient?> call(IngredientScanResult result) =>
+      find(result, persistBarcode: true);
+
+  Future<domain.Ingredient?> callReadOnly(IngredientScanResult result) =>
+      find(result, persistBarcode: false);
+
+  Future<domain.Ingredient?> find(
+    IngredientScanResult result, {
+    required bool persistBarcode,
+  }) async {
     final barcode = _barcodeValidator.normalizeValidBarcode(
       result.barcode ?? '',
     );
@@ -56,6 +66,27 @@ class FindMatchingIngredientForScanResultUseCase with Logging {
       brand: result.brand,
       limit: 20,
     );
+    if (!persistBarcode) {
+      final nutrition = result.nutritionPer100g;
+      if (!(nutrition?.hasCompleteMacros ?? false)) return null;
+      String normalized(String? value) => value?.trim().toLowerCase() ?? '';
+      final matches = rows
+          .toDomainList()
+          .where(
+            (ingredient) =>
+                !ingredient.isReference &&
+                normalized(ingredient.name) == normalized(name) &&
+                normalized(ingredient.brand) == normalized(result.brand) &&
+                compatibleBarcode(ingredient, barcode) != null &&
+                ingredient.carbsLabelMode == CarbsLabelMode.eu &&
+                ingredient.carbsPer100g == nutrition!.carbs &&
+                ingredient.fiberPer100g == nutrition.fiber &&
+                ingredient.fatPer100g == nutrition.fat &&
+                ingredient.proteinPer100g == nutrition.protein,
+          )
+          .toList();
+      return matches.length == 1 ? matches.single : null;
+    }
     final quickMatch = matcher.findByNameAndBrand(
       candidates: rows.toDomainList(),
       name: name,
@@ -72,6 +103,16 @@ class FindMatchingIngredientForScanResultUseCase with Logging {
       brand: result.brand,
     );
     return _saveBarcodeIfMissing(fullMatch, barcode);
+  }
+
+  domain.Ingredient? compatibleBarcode(
+    domain.Ingredient? ingredient,
+    String? barcode,
+  ) {
+    final current = ingredient?.barcode?.trim();
+    return current != null && current.isNotEmpty && current != barcode
+        ? null
+        : ingredient;
   }
 
   Future<domain.Ingredient?> _saveBarcodeIfMissing(

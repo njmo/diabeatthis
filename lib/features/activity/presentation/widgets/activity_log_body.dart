@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
+import '../../../../common/activity/activity_session_state.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/presentation/details/activity_log_preview_controller.dart';
+import '../../../../common/widgets/date_time_boundary_builder.dart';
 import '../../../../common/widgets/detail_identity_header.dart';
 import '../../../../common/widgets/detail_metadata_row.dart';
 import '../../../../common/widgets/swipeable_cards.dart';
@@ -41,6 +43,7 @@ class ActivityLogBody extends HookWidget {
     final source = presentation ?? PatientActivityLogPreviewController(state);
     final controller = useTabController(
       initialLength: source.showAnalysis ? 5 : 1,
+      keys: [source.showAnalysis],
     );
     final log = state.data;
     final lang = context.lang;
@@ -49,7 +52,9 @@ class ActivityLogBody extends HookWidget {
       lang.localeName,
     ).format(log.startedAt);
     Widget analysisTab(Widget Function() builder) {
-      if (log.isActive) return Text(lang.activityAnalysisAvailableAfterFinish);
+      if (log.endedAt == null) {
+        return Text(lang.activityAnalysisAvailableAfterFinish);
+      }
       return state.analysis.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Text(lang.activityError(error)),
@@ -58,81 +63,95 @@ class ActivityLogBody extends HookWidget {
       );
     }
 
-    return SwipeableCards(
-      key: ValueKey(log.id),
-      controller: controller,
-      showPageControls: false,
-      header: DetailIdentityHeader(
-        title: log.activityName,
-        titleAction: !source.canUseLocalActions
-            ? null
-            : TextButton.icon(
-                icon: const Icon(Icons.history_rounded),
-                label: Text(lang.activityHistoryShort),
-                onPressed: () => context.router.push(
-                  routes.ActivityRoute(activityId: log.activityId),
+    return DateTimeBoundaryBuilder(
+      at: log.endedAt == null ? log.startedAt : null,
+      builder: (context, now) => SwipeableCards(
+        key: ValueKey(log.id),
+        controller: controller,
+        showPageControls: false,
+        header: DetailIdentityHeader(
+          title: log.activityName,
+          titleAction: !source.canUseLocalActions
+              ? null
+              : TextButton.icon(
+                  icon: const Icon(Icons.history_rounded),
+                  label: Text(lang.activityHistoryShort),
+                  onPressed: () => context.router.push(
+                    routes.ActivityRoute(activityId: log.activityId),
+                  ),
                 ),
-              ),
-        status: log.isActive ? lang.activityActive : lang.activityFinished,
-        dateLabel: date,
-        dateIcon: Icons.calendar_today_outlined,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DetailMetadataRow(
-              icon: Icons.timer_outlined,
-              label:
-                  '${lang.activityDurationLabel}: ${formatActivityDuration(lang, log.duration)}',
+          status: activitySessionStateLabel(
+            lang,
+            activitySessionState(
+              startedAt: log.startedAt,
+              endedAt: log.endedAt,
+              now: now,
             ),
-            const SizedBox(height: 8),
-            DetailMetadataRow(
-              icon: Icons.speed_rounded,
-              label:
-                  '${lang.activityIntensityLabel}: ${log.intensity == null ? lang.activityIntensityNotRecorded : ActivityIntensityField.label(lang, log.intensity)}',
+          ),
+          dateLabel: date,
+          dateIcon: Icons.calendar_today_outlined,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DetailMetadataRow(
+                icon: Icons.timer_outlined,
+                label:
+                    '${lang.activityDurationLabel}: ${formatActivitySessionDuration(lang, startedAt: log.startedAt, endedAt: log.endedAt, plannedMinutes: log.durationMinutes, now: now)}',
+              ),
+              const SizedBox(height: 8),
+              DetailMetadataRow(
+                icon: Icons.speed_rounded,
+                label:
+                    '${lang.activityIntensityLabel}: ${log.intensity == null ? lang.activityIntensityNotRecorded : ActivityIntensityField.label(lang, log.intensity)}',
+              ),
+            ],
+          ),
+        ),
+        labels: [
+          if (source.showAnalysis) ...[
+            lang.activityTabSummary,
+            lang.activityTabBefore,
+            lang.activityTabCourse,
+            lang.activityTabAfter,
+          ],
+          lang.activityDetailsTitle,
+        ],
+        children: [
+          if (source.showAnalysis) ...[
+            analysisTab(
+              () => ActivityGlucoseOverview(
+                analysis: state.analysis.value!,
+                log: log,
+              ),
+            ),
+            analysisTab(
+              () => ActivityBeforeSection(
+                analysis: state.analysis.value!,
+                log: log,
+                showRecordedSettings: source.showRecordedSettings,
+              ),
+            ),
+            analysisTab(
+              () => ActivityLogAnalysisSection(
+                analysis: state.analysis.value!,
+                lowTreatments: state.lowTreatments,
+                selectedTimestamp: state.selectedTimestamp,
+                onTimestampSelected: onTimestampSelected,
+              ),
+            ),
+            analysisTab(
+              () => ActivityAfterSection(
+                analysis: state.analysis.value!,
+                hasLocalMealContext: source.canUseLocalActions,
+              ),
             ),
           ],
-        ),
+          ActivityLogInformation(
+            log: log,
+            showRecordedSettings: source.showRecordedSettings,
+          ),
+        ],
       ),
-      labels: [
-        if (source.showAnalysis) ...[
-          lang.activityTabSummary,
-          lang.activityTabBefore,
-          lang.activityTabCourse,
-          lang.activityTabAfter,
-        ],
-        lang.activityDetailsTitle,
-      ],
-      children: [
-        if (source.showAnalysis) ...[
-          analysisTab(
-            () => ActivityGlucoseOverview(
-              analysis: state.analysis.value!,
-              log: log,
-            ),
-          ),
-          analysisTab(
-            () => ActivityBeforeSection(
-              analysis: state.analysis.value!,
-              log: log,
-            ),
-          ),
-          analysisTab(
-            () => ActivityLogAnalysisSection(
-              analysis: state.analysis.value!,
-              lowTreatments: state.lowTreatments,
-              selectedTimestamp: state.selectedTimestamp,
-              onTimestampSelected: onTimestampSelected,
-            ),
-          ),
-          analysisTab(
-            () => ActivityAfterSection(analysis: state.analysis.value!),
-          ),
-        ],
-        ActivityLogInformation(
-          log: log,
-          showRecordedSettings: source.showRecordedSettings,
-        ),
-      ],
     );
   }
 }

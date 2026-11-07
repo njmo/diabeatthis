@@ -30,9 +30,10 @@ ApplyInitialConfigurationUseCase applyInitialConfigurationUseCase(Ref ref) {
 }
 
 class ApplyInitialConfigurationUseCase {
-  ApplyInitialConfigurationUseCase(this._ref);
+  ApplyInitialConfigurationUseCase(this._ref, [this._beforeCompletion]);
 
   final Ref _ref;
+  final Future<void> Function()? _beforeCompletion;
 
   Future<void> call({
     required DataSourceConfig config,
@@ -90,6 +91,7 @@ class ApplyInitialConfigurationUseCase {
     }
     if (!_ref.mounted) return;
     _sendStartupSync(config);
+    await _beforeCompletion?.call();
     if (!await prefs.setBool(initialConfigurationDoneKey, true)) {
       throw StateError('Initial configuration completion was not saved.');
     }

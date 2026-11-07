@@ -22,11 +22,14 @@ class PatientActivityLogPreviewController
 
 class CaregiverActivityLogPreviewController
     implements ActivityLogPreviewController {
-  const CaregiverActivityLogPreviewController(this.state);
+  const CaregiverActivityLogPreviewController(
+    this.state, {
+    this.showAnalysis = false,
+  });
   @override
   final ActivityLogPageState state;
   @override
-  bool get showAnalysis => false;
+  final bool showAnalysis;
   // Historic dose settings and planned duration are not in the log projection.
   @override
   bool get showRecordedSettings => false;

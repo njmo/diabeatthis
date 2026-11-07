@@ -1,9 +1,14 @@
+import 'dart:ui' show Locale;
+
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/domain/model/ingredient.dart';
 import 'package:diabeatthis/core/domain/model/quick_low_treatment_item.dart';
 import 'package:diabeatthis/features/low_treatment/presentation/formatters/quick_low_treatment_item_formatter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
   test('formats reference quick item amount as reference portions', () {
     const item = QuickLowTreatmentItem(
       id: 1,

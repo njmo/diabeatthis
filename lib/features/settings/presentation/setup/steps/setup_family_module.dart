@@ -33,8 +33,16 @@ class SetupFamilyModule extends StatelessWidget {
         supported: controller.authentication?.isSupported ?? true,
         demo: controller.authentication == null,
         onSignIn: controller.signInGoogle,
-        onSignOut: controller.signOutGoogle,
+        onSignOut: controller.familyCareLocked
+            ? null
+            : controller.signOutGoogle,
       ),
+      if (controller.familyCareLocked)
+        Text(
+          controller.familyMembershipPending
+              ? context.lang.familyLoading
+              : context.lang.setupFamilyDisconnectBeforeDisable,
+        ),
       if (controller.state.signedIn) ...[
         const SizedBox(height: 16),
         if (controller.familyRepository

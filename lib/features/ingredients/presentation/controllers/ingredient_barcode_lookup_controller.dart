@@ -22,7 +22,16 @@ class IngredientBarcodeLookupController
     return null;
   }
 
-  Future<IngredientBarcodeScanOutcome> scan(String barcode) async {
+  Future<IngredientBarcodeScanOutcome> scan(String barcode) =>
+      scanBarcode(barcode, persistMatchingBarcode: true);
+
+  Future<IngredientBarcodeScanOutcome> scanForSelection(String barcode) =>
+      scanBarcode(barcode, persistMatchingBarcode: false);
+
+  Future<IngredientBarcodeScanOutcome> scanBarcode(
+    String barcode, {
+    required bool persistMatchingBarcode,
+  }) async {
     state = const AsyncLoading();
     final findIngredientByBarcode = ref.read(
       findIngredientByBarcodeUseCaseProvider,
@@ -51,6 +60,7 @@ class IngredientBarcodeLookupController
         final matchingIngredient = await _findMatchingIngredientOrNull(
           useCase: findMatchingIngredient,
           result: result,
+          persistBarcode: persistMatchingBarcode,
         );
         if (!ref.mounted) {
           return const IngredientBarcodeScanOutcome.failed(null);
@@ -64,7 +74,8 @@ class IngredientBarcodeLookupController
         }
       }
 
-      final draft = result.hasUsableBarcodeDraftData
+      final draft =
+          (result.hasUsableBarcodeDraftData || !persistMatchingBarcode)
           ? result.toIngredientDraft()
           : null;
       final outcome = switch ((result.needsReview, draft)) {
@@ -90,9 +101,12 @@ class IngredientBarcodeLookupController
   Future<domain.Ingredient?> _findMatchingIngredientOrNull({
     required FindMatchingIngredientForScanResultUseCase useCase,
     required IngredientScanResult result,
+    required bool persistBarcode,
   }) async {
     try {
-      return await useCase.call(result);
+      return await (persistBarcode
+          ? useCase.call(result)
+          : useCase.callReadOnly(result));
     } catch (error) {
       logW(
         'Ingredient barcode local matching failed, continuing with Open Food Facts draft. error=$error',

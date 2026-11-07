@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/nutrition/ingredient_amount_calculator.dart';
+import '../../../../common/planning/meal_amount_bindings.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
 import '../../../ingredients/data/icons/ingredient_icon_provider.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -14,21 +15,33 @@ import 'ingredient_amount_portions.dart';
 import 'meal_ingredient_review_header.dart';
 
 class AmountForm extends ConsumerWidget {
-  const AmountForm({super.key, this.onEditReference});
+  const AmountForm({super.key, this.onEditReference, this.bindings});
+  final MealAmountBindings? bindings;
 
   final VoidCallback? onEditReference;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final amountNotifier = ref.read(mealIngredientAmountDraftProvider.notifier);
-    final amount = ref.watch(mealIngredientAmountDraftProvider);
-    final confidenceNotifier = ref.read(
-      mealIngredientConfidenceDraftProvider.notifier,
-    );
-    final confidence = ref.watch(mealIngredientConfidenceDraftProvider);
-    final formKey = ref.watch(mealIngredientFormKeyProvider);
-    final draft = ref.watch(mealIngredientsDraftProvider);
-    final storedPortionAmount = draft.shouldLoadStoredPortionAmount
+    final amountNotifier = bindings == null
+        ? ref.read(mealIngredientAmountDraftProvider.notifier)
+        : null;
+    final amount = bindings != null
+        ? bindings!.amount
+        : ref.watch(mealIngredientAmountDraftProvider);
+    final confidenceNotifier = bindings == null
+        ? ref.read(mealIngredientConfidenceDraftProvider.notifier)
+        : null;
+    final confidence = bindings != null
+        ? bindings!.confidence
+        : ref.watch(mealIngredientConfidenceDraftProvider);
+    final formKey = bindings != null
+        ? bindings!.formKey
+        : ref.watch(mealIngredientFormKeyProvider);
+    final draft = bindings != null
+        ? bindings!.draft
+        : ref.watch(mealIngredientsDraftProvider);
+    final storedPortionAmount =
+        bindings == null && draft.shouldLoadStoredPortionAmount
         ? ref.watch(
             gramsPerPortionProvider(
               draft.ingredient,
@@ -60,22 +73,24 @@ class AmountForm extends ConsumerWidget {
               MealIngredientReviewHeader(
                 iconAssetPath:
                     draft.ingredient.iconAssetPath ??
-                    ref
-                        .watch(
-                          ingredientIconSuggestionProvider((
-                            draft.ingredient.name,
-                            draft.ingredient.brand,
-                          )),
-                        )
-                        .asData
-                        ?.value,
+                    (bindings != null
+                        ? null
+                        : ref
+                              .watch(
+                                ingredientIconSuggestionProvider((
+                                  draft.ingredient.name,
+                                  draft.ingredient.brand,
+                                )),
+                              )
+                              .asData
+                              ?.value),
                 name: draft.ingredient.name,
                 description: draft.measureDescription(
                   gramsPerPortion: gramsPerPortion,
                   isLoading: isLoadingPortionAmount,
                 ),
               ),
-              if (!draft.ingredient.isReference) ...[
+              if (bindings == null && !draft.ingredient.isReference) ...[
                 const SizedBox(height: 16),
                 const IngredientAmountPortions(),
               ],
@@ -112,7 +127,9 @@ class AmountForm extends ConsumerWidget {
                         valueLabel: (value) =>
                             '${value.formattedAmount} ${unitLabelForAmount(value, unitLabel)}',
                         onChanged: (value) {
-                          amountNotifier.setValue(value);
+                          (bindings?.onAmount ?? amountNotifier!.setValue)(
+                            value,
+                          );
                           field.didChange(value);
                         },
                       ),
@@ -136,7 +153,8 @@ class AmountForm extends ConsumerWidget {
               ConfidenceSlider(
                 value: confidence,
                 title: context.lang.amountConfidenceTitle,
-                onChanged: confidenceNotifier.setConfidence,
+                onChanged:
+                    bindings?.onConfidence ?? confidenceNotifier!.setConfidence,
               ),
             ],
           ),

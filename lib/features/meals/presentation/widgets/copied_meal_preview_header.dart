@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/planning/meal_form_actions.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../data/model/copied_meal_type.dart';
 import 'copied_meal_history_button.dart';
 
-class CopiedMealPreviewHeader extends StatelessWidget {
+class CopiedMealPreviewHeader extends ConsumerWidget {
   const CopiedMealPreviewHeader({
     super.key,
     required this.source,
@@ -17,7 +19,7 @@ class CopiedMealPreviewHeader extends StatelessWidget {
   final VoidCallback onBack;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -63,7 +65,8 @@ class CopiedMealPreviewHeader extends StatelessWidget {
                   ),
                 ],
               ),
-              if (source is CopiedMealFromMeal)
+              if (source is CopiedMealFromMeal &&
+                  ref.watch(mealFormActionsProvider).allowLocalLookups)
                 CopiedMealHistoryButton(source: source),
             ],
           ),

@@ -14,7 +14,29 @@ List<Map<String, dynamic>> familyPlanScope(
 
   final type = plan['type'] as String;
   final values = plan['values'] as Map;
-  if (type.endsWith('Meal')) {
+  if (type == 'setActivityScheduleEnabled') {
+    final schedule = add('activitySchedules', plan['targetId']);
+    add('activities', schedule['activity_id']);
+    for (final row in rows.where(
+      (r) =>
+          r['kind'] == 'activityOccurrences' &&
+          r['deleted'] != true &&
+          (r['payload'] as Map)['schedule_id'] == plan['targetId'] &&
+          ((r['payload'] as Map)['started_at'] as int) >
+              (values['effectiveFrom'] as int),
+    )) {
+      final p = add('activityOccurrences', row['id']);
+      if (p['activity_log_id'] != null) {
+        add('activityLogs', p['activity_log_id']);
+      }
+    }
+  } else if ([
+    'createActivity',
+    'updateActivity',
+    'createActivitySchedule',
+  ].contains(type)) {
+    if (type != 'createActivity') add('activities', plan['targetId']);
+  } else if (type.endsWith('Meal')) {
     if (type == 'updateMeal') {
       add('meals', plan['targetId']);
       for (final row in rows.where(
@@ -42,8 +64,8 @@ List<Map<String, dynamic>> familyPlanScope(
         add('ingredients', item['ingredientId']);
       }
     }
-  } else if (type == 'planActivity') {
-    add('activities', values['activityId']);
+  } else if (['planActivity', 'startActivity', 'logActivity'].contains(type)) {
+    if (values['activityId'] != null) add('activities', values['activityId']);
   } else {
     final occurrence = add('activityOccurrences', plan['targetId']);
     add('activities', occurrence['activity_id']);

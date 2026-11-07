@@ -38,6 +38,7 @@
     }
   ],
   "firestore": {
-    "rules": "backend/family/firestore.rules"
+    "rules": "backend/family/firestore.rules",
+    "indexes": "backend/family/firestore.indexes.json"
   }
 }

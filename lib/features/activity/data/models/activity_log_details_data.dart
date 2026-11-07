@@ -1,3 +1,5 @@
+import '../../../../common/activity/activity_session_state.dart';
+
 class ActivityLogDetailsData {
   final int id;
   final int activityId;
@@ -33,7 +35,9 @@ class ActivityLogDetailsData {
     required this.updatedAt,
   });
 
-  bool get isActive => endedAt == null;
+  ActivitySessionState get sessionState =>
+      activitySessionState(startedAt: startedAt, endedAt: endedAt);
+  bool get isActive => sessionState == ActivitySessionState.active;
 
   Duration? get duration {
     final end = endedAt;

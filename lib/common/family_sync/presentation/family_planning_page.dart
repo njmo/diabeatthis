@@ -7,11 +7,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/drift/providers/database_provider.dart';
+import '../../../features/caregiver/presentation/widgets/caregiver_day_summary.dart';
 import '../../../features/day_analysis/presentation/widgets/day_date_selector.dart';
 import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../l10n/language.dart';
+import '../../planning/firebase_planning_repository.dart';
+import '../../planning/planning_repository_provider.dart';
+import '../../presentation/dashboard/dashboard_card_padding.dart';
+import '../../presentation/dashboard/dashboard_spacing.dart';
 import '../../presentation/widgets/activity_catalog_card.dart';
+import '../../routing/form_bottom_sheet_route.dart';
+import '../family_access_scope.dart';
 import '../family_plan_submission_store.dart';
 import '../family_planning_controller.dart';
 import '../family_planning_view.dart';
@@ -21,9 +28,11 @@ import 'family_collections_body.dart';
 import 'family_ingredient_catalog_section.dart';
 import 'family_meal_photo_page.dart';
 import 'family_meal_plan_form.dart';
-import 'family_plan_request_card.dart';
+import 'family_plan_status_card.dart';
 import 'family_planned_activity_card.dart';
 import 'family_planned_meal_card.dart';
+import 'family_record_page.dart';
+import 'family_scope_guard.dart';
 
 class FamilyPlanningPage extends ConsumerStatefulWidget {
   const FamilyPlanningPage({
@@ -31,10 +40,12 @@ class FamilyPlanningPage extends ConsumerStatefulWidget {
     this.embedded = false,
     this.view = FamilyPlanningView.all,
     this.header,
+    this.headerBuilder,
   });
   final bool embedded;
   final FamilyPlanningView view;
   final Widget? header;
+  final Widget Function(bool busy, bool failed, bool ready)? headerBuilder;
   @override
   ConsumerState<FamilyPlanningPage> createState() => FamilyPlanningPageState();
 }
@@ -50,7 +61,11 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
   Timer? retry;
   bool active = true;
   DateTime? selectedDate;
+  int daySummaryRevision = 0;
   String? listeningUid;
+  final streamHealth = <String, bool>{};
+  bool get cloudConnected =>
+      streamHealth.length == 2 && streamHealth.values.every((v) => v);
   @override
   void initState() {
     super.initState();
@@ -60,15 +75,27 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
   }
 
   void changed() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    if (controller.failed && active && retry == null) {
+      retry = Timer(const Duration(seconds: 15), () {
+        retry = null;
+        if (mounted && active) start();
+      });
+    } else if (!controller.failed) {
+      retry?.cancel();
+      retry = null;
+    }
   }
 
   void stop() {
     retry?.cancel();
+    retry = null;
     for (final subscription in subscriptions) {
       unawaited(subscription.cancel());
     }
     subscriptions.clear();
+    streamHealth.clear();
   }
 
   void start() {
@@ -80,17 +107,20 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     listeningUid = uid;
     unawaited(controller.refresh());
     if (uid == null) return;
-    retry = Timer.periodic(
-      const Duration(seconds: 60),
-      (_) => unawaited(controller.refresh()),
-    );
     for (final collection in ['familyMirrorSignals', 'familyPlanSignals']) {
+      streamHealth[collection] = false;
       subscriptions.add(
         FirebaseFirestore.instance
             .doc('$collection/$uid')
-            .snapshots()
+            .snapshots(includeMetadataChanges: true)
             .listen(
               (event) {
+                if (mounted && active && listeningUid == uid) {
+                  setState(
+                    () =>
+                        streamHealth[collection] = !event.metadata.isFromCache,
+                  );
+                }
                 if (!event.metadata.isFromCache &&
                     mounted &&
                     active &&
@@ -137,26 +167,15 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
       );
       return;
     }
-    final uid = controller.uid!,
-        source = controller.source!,
-        owner = controller.owner;
+    final scope = FamilyAccessScope(controller);
+    final uid = scope.uid!, source = scope.source!;
     final rows = controller.rows.values.toList();
-    bool current() =>
-        !controller.disposed &&
-        !controller.failed &&
-        controller.uid == uid &&
-        controller.currentUid() == uid &&
-        controller.source == source &&
-        controller.owner == owner;
-    final photo = FamilyMealPhotoPage(
-      rows: rows,
-      onSubmit: (values) async {
-        if (!current() || !controller.complete) {
-          throw StateError('Family changed');
-        }
+    final repository = FirebasePlanningRepository(
+      submit: (type, target, values) async {
+        scope.requireCurrent();
         await controller.submit(
-          type: 'createMeal',
-          targetId: null,
+          type: type,
+          targetId: target,
           values: values,
           baseRows: rows,
           expectedUid: uid,
@@ -164,18 +183,13 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
         );
       },
     );
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (_) => ListenableBuilder(
-          listenable: controller,
-          builder: (context, _) => current()
-              ? photo
-              : Scaffold(
-                  appBar: AppBar(title: Text(context.lang.mealPhotoTitle)),
-                  body: Center(child: Text(context.lang.familyPlanFailed)),
-                ),
-        ),
-      ),
+    final photo = ProviderScope(
+      overrides: [planningRepositoryProvider.overrideWithValue(repository)],
+      child: FamilyMealPhotoPage(rows: rows),
+    );
+    await showFormBottomSheet<void>(
+      context,
+      FamilyScopeGuard(scope: scope, child: photo),
     );
   }
 
@@ -192,19 +206,28 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
       return;
     }
     final rows = controller.rows.values.toList();
-    Future<void> send(Map<String, dynamic> values) => controller.submit(
-      type: type,
-      targetId: targetId,
-      values: values,
-      baseRows: rows,
-      expectedSource: source,
-      expectedUid: uid,
-    );
-    if (type == 'confirmActivity') {
+    final scope = FamilyAccessScope(controller);
+    Future<void> send(Map<String, dynamic> values, {String? operation}) async {
+      scope.requireCurrent();
+      await controller.submit(
+        type: operation ?? type,
+        targetId: targetId,
+        values: values,
+        baseRows: rows,
+        expectedSource: source,
+        expectedUid: uid,
+      );
+    }
+
+    if (type == 'confirmActivity' || type == 'skipActivity') {
       final accepted = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text(context.lang.familyPlanConfirm),
+          title: Text(
+            type == 'skipActivity'
+                ? context.lang.activityScheduleNo
+                : context.lang.familyPlanConfirm,
+          ),
           content: Text(context.lang.familyPlanPendingExplanation),
           actions: [
             TextButton(
@@ -232,22 +255,38 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
       return;
     }
     if (!mounted) return;
+    if (type.endsWith('Meal')) {
+      await showFormBottomSheet<void>(
+        context,
+        FamilyScopeGuard(
+          scope: scope,
+          child: FamilyMealPlanForm(
+            rows: rows,
+            initial: initial,
+            onSubmit: send,
+          ),
+        ),
+      );
+      return;
+    }
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(context).bottom,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (context) => FamilyScopeGuard(
+        scope: scope,
+        child: FamilyActivityPlanForm(
+          operation: type,
+          targetId: targetId,
+          rows: rows,
+          initial: initial,
+          moveOnly: type == 'moveActivity',
+          onSubmit: send,
+          onActivitySubmit: (operation, values) =>
+              send(values, operation: operation),
         ),
-        child: type.endsWith('Meal')
-            ? FamilyMealPlanForm(rows: rows, initial: initial, onSubmit: send)
-            : FamilyActivityPlanForm(
-                rows: rows,
-                initial: initial,
-                moveOnly: type == 'moveActivity',
-                onSubmit: send,
-              ),
       ),
     );
   }
@@ -276,6 +315,8 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
   bool sameDay(int timestamp, DateTime day) =>
       DateUtils.isSameDay(DateTime.fromMillisecondsSinceEpoch(timestamp), day);
   DateTime get day => selectedDate ?? DateUtils.dateOnly(DateTime.now());
+  bool get homeLayout =>
+      widget.embedded && widget.view == FamilyPlanningView.home;
   bool get showMeals => [
     FamilyPlanningView.all,
     FamilyPlanningView.home,
@@ -319,6 +360,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
       );
   List<Map<String, dynamic>> get visibleOccurrences =>
       controller.ofKind('activityOccurrences').where((row) {
+        if (widget.view == FamilyPlanningView.day) return false;
         final p = row['payload'] as Map;
         if (!['pending', 'planned'].contains(p['status'])) return false;
         final log =
@@ -360,16 +402,30 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
         ),
       );
   bool visibleRequest(Map<String, dynamic> plan) =>
-      widget.view == FamilyPlanningView.meals
-      ? (plan['type'] as String).endsWith('Meal')
-      : widget.view == FamilyPlanningView.activities
-      ? !(plan['type'] as String).endsWith('Meal')
-      : widget.view != FamilyPlanningView.home || plan['status'] == 'pending';
+      ![
+        'createActivity',
+        'updateActivity',
+        'createActivitySchedule',
+        'setActivityScheduleEnabled',
+      ].contains(plan['type']) &&
+      showFamilyPlanStatus(plan, controller.rows.values) &&
+      (widget.view == FamilyPlanningView.meals
+          ? (plan['type'] as String).endsWith('Meal')
+          : widget.view == FamilyPlanningView.activities
+          ? !(plan['type'] as String).endsWith('Meal')
+          : widget.view != FamilyPlanningView.home ||
+                plan['status'] != 'applied');
   bool get enabled =>
       controller.complete &&
       !controller.failed &&
       controller.source != null &&
       controller.uid == FirebaseAuth.instance.currentUser?.uid;
+  VoidCallback recordOpener(BuildContext context, String kind, int id) {
+    final scope = FamilyAccessScope(controller);
+    return () =>
+        FamilyRecordPage.open(context, controller, kind, id, scope: scope);
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(authenticatedFamilyTransportProvider);
@@ -392,8 +448,16 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
         bottom: false,
         child: Column(
           children: [
+            if (widget.headerBuilder != null)
+              widget.headerBuilder!(
+                controller.busy,
+                controller.failed ||
+                    controller.source != null && !cloudConnected,
+                controller.complete,
+              ),
             if (widget.header != null) widget.header!,
-            if (controller.busy) const LinearProgressIndicator(),
+            if (controller.busy && widget.headerBuilder == null)
+              const LinearProgressIndicator(),
             if (controller.failed)
               Text(
                 context.lang.familyPlanFailed,
@@ -447,15 +511,31 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     final content = SafeArea(
       bottom: !widget.embedded,
       child: RefreshIndicator(
-        onRefresh: controller.refresh,
+        onRefresh: () async {
+          if (widget.view == FamilyPlanningView.day) {
+            setState(() => daySummaryRevision++);
+          }
+          await controller.refresh();
+        },
         child: ListView(
-          padding: EdgeInsets.fromLTRB(
-            16,
-            16,
-            16,
-            widget.embedded ? 112 + MediaQuery.paddingOf(context).bottom : 16,
-          ),
+          padding: widget.embedded && widget.view == FamilyPlanningView.home
+              ? DashboardSpacing.homeScroll(context)
+              : EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  widget.embedded
+                      ? 112 + MediaQuery.paddingOf(context).bottom
+                      : 16,
+                ),
           children: [
+            if (widget.headerBuilder != null)
+              widget.headerBuilder!(
+                controller.busy,
+                controller.failed ||
+                    controller.source != null && !cloudConnected,
+                controller.complete,
+              ),
             if (widget.header != null) widget.header!,
             if (!widget.embedded)
               Text(context.lang.familyPlanPendingExplanation),
@@ -465,8 +545,16 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                 today: DateUtils.dateOnly(DateTime.now()),
                 onSelected: (date) => setState(() => selectedDate = date),
               ),
+            if (widget.view == FamilyPlanningView.day)
+              CaregiverDaySummary(
+                date: day,
+                owner: controller.owner,
+                source: controller.source,
+                revision: daySummaryRevision,
+              ),
             if (widget.view == FamilyPlanningView.ingredients)
               FamilyIngredientCatalogSection(
+                family: controller,
                 rows: controller.rows.values.toList(),
               ),
             if (widget.view == FamilyPlanningView.activityCatalog)
@@ -483,7 +571,8 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                         (row['payload'] as Map)['duration_minutes'] as int?,
                   ),
                 ),
-            if (controller.busy) const LinearProgressIndicator(),
+            if (controller.busy && widget.headerBuilder == null)
+              const LinearProgressIndicator(),
             if (controller.failed)
               Text(
                 context.lang.familyPlanFailed,
@@ -493,7 +582,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                 !controller.failed &&
                 controller.source == null)
               Text(context.lang.familyPlanWaitingForChild),
-            const SizedBox(height: 16),
+            if (!homeLayout) const SizedBox(height: 16),
             if (!widget.embedded)
               Wrap(
                 spacing: 8,
@@ -512,153 +601,223 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                 ],
               ),
             if (showMeals && visibleMeals.isNotEmpty) ...[
-              const SizedBox(height: 16),
+              if (!homeLayout) const SizedBox(height: 16),
               if (widget.view != FamilyPlanningView.home)
                 Text(
                   context.lang.familySyncMeals,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               for (final row in visibleMeals)
-                FamilyPlannedMealCard(
-                  payload: row['payload'] as Map,
-                  ingredients: controller.ofKind('ingredients'),
-                  components: controller
-                      .ofKind('mealIngredients')
-                      .where(
-                        (r) =>
-                            (r['payload'] as Map)['meal_id'] ==
-                            (row['payload'] as Map)['id'],
-                      )
-                      .toList(),
-                  snapshots: controller
-                      .ofKind('mealSnapshots')
-                      .where(
-                        (r) =>
-                            (r['payload'] as Map)['meal_id'] ==
-                            (row['payload'] as Map)['id'],
-                      )
-                      .toList(),
-                  history: controller
-                      .ofKind('mealHistory')
-                      .where(
-                        (r) =>
-                            (r['payload'] as Map)['meal_id'] ==
-                            (row['payload'] as Map)['id'],
-                      )
-                      .toList(),
-                  monitoring: controller.monitored(
-                    'meals',
-                    (row['payload'] as Map)['id'] as int,
-                  ),
-                  locked: controller.locked(
-                    'meals',
-                    (row['payload'] as Map)['id'] as int,
-                  ),
-                  onEdit:
-                      enabled &&
-                          !controller.locked(
+                DashboardCardPadding(
+                  enabled: homeLayout,
+                  child: FamilyPlannedMealCard(
+                    onOpen: recordOpener(
+                      context,
+                      'meals',
+                      (row['payload'] as Map)['id'] as int,
+                    ),
+                    onRetry: enabled
+                        ? familyPlanRetryForRecord(
+                            controller.plans,
                             'meals',
                             (row['payload'] as Map)['id'] as int,
+                            edit,
                           )
-                      ? () => edit(
-                          'updateMeal',
-                          targetId: (row['payload'] as Map)['id'] as int,
-                          initial: mealValues(row['payload'] as Map),
+                        : null,
+                    requestStatusLabel: familyPlanRecordLabel(
+                      context,
+                      controller.plans,
+                      'meals',
+                      (row['payload'] as Map)['id'] as int,
+                    ),
+                    payload: row['payload'] as Map,
+                    ingredients: controller.ofKind('ingredients'),
+                    components: controller
+                        .ofKind('mealIngredients')
+                        .where(
+                          (r) =>
+                              (r['payload'] as Map)['meal_id'] ==
+                              (row['payload'] as Map)['id'],
                         )
-                      : null,
+                        .toList(),
+                    snapshots: controller
+                        .ofKind('mealSnapshots')
+                        .where(
+                          (r) =>
+                              (r['payload'] as Map)['meal_id'] ==
+                              (row['payload'] as Map)['id'],
+                        )
+                        .toList(),
+                    history: controller
+                        .ofKind('mealHistory')
+                        .where(
+                          (r) =>
+                              (r['payload'] as Map)['meal_id'] ==
+                              (row['payload'] as Map)['id'],
+                        )
+                        .toList(),
+                    monitoring: controller.monitored(
+                      'meals',
+                      (row['payload'] as Map)['id'] as int,
+                    ),
+                    locked: controller.locked(
+                      'meals',
+                      (row['payload'] as Map)['id'] as int,
+                    ),
+                    onEdit:
+                        enabled &&
+                            !controller.locked(
+                              'meals',
+                              (row['payload'] as Map)['id'] as int,
+                            )
+                        ? () => edit(
+                            'updateMeal',
+                            targetId: (row['payload'] as Map)['id'] as int,
+                            initial: mealValues(row['payload'] as Map),
+                          )
+                        : null,
+                  ),
                 ),
             ],
             if (showActivities &&
                 (visibleOccurrences.isNotEmpty || visibleLogs.isNotEmpty)) ...[
-              const SizedBox(height: 16),
+              if (!homeLayout) const SizedBox(height: 16),
               if (widget.view != FamilyPlanningView.home)
                 Text(
-                  context.lang.familySyncActivityOccurrences,
+                  widget.view == FamilyPlanningView.day
+                      ? context.lang.activityLogsTitle
+                      : context.lang.familySyncActivityOccurrences,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               for (final row in visibleOccurrences)
-                FamilyPlannedActivityCard(
-                  payload: row['payload'] as Map,
-                  name:
-                      controller
-                          .ofKind('activities')
-                          .where(
-                            (r) =>
-                                r['id'] ==
-                                '${(row['payload'] as Map)['activity_id']}',
-                          )
-                          .map((r) => (r['payload'] as Map)['name'] as String)
-                          .firstOrNull ??
-                      context.lang.familyPlanActivity,
-                  monitoring: controller.monitored(
-                    'activityOccurrences',
-                    (row['payload'] as Map)['id'] as int,
-                  ),
-                  locked: controller.locked(
-                    'activityOccurrences',
-                    (row['payload'] as Map)['id'] as int,
-                  ),
-                  onConfirm:
-                      enabled &&
-                          !controller.locked(
+                DashboardCardPadding(
+                  enabled: homeLayout,
+                  child: FamilyPlannedActivityCard(
+                    onRetry: enabled
+                        ? familyPlanRetryForRecord(
+                            controller.plans,
                             'activityOccurrences',
                             (row['payload'] as Map)['id'] as int,
+                            edit,
                           )
-                      ? () => edit(
-                          'confirmActivity',
-                          targetId: (row['payload'] as Map)['id'] as int,
-                        )
-                      : null,
-                  onMove:
-                      enabled &&
-                          !controller.locked(
-                            'activityOccurrences',
-                            (row['payload'] as Map)['id'] as int,
+                        : null,
+                    requestStatusLabel: familyPlanRecordLabel(
+                      context,
+                      controller.plans,
+                      'activityOccurrences',
+                      (row['payload'] as Map)['id'] as int,
+                    ),
+                    payload: row['payload'] as Map,
+                    name:
+                        controller
+                            .ofKind('activities')
+                            .where(
+                              (r) =>
+                                  r['id'] ==
+                                  '${(row['payload'] as Map)['activity_id']}',
+                            )
+                            .map((r) => (r['payload'] as Map)['name'] as String)
+                            .firstOrNull ??
+                        context.lang.familyPlanActivity,
+                    monitoring: controller.monitored(
+                      'activityOccurrences',
+                      (row['payload'] as Map)['id'] as int,
+                    ),
+                    locked: controller.locked(
+                      'activityOccurrences',
+                      (row['payload'] as Map)['id'] as int,
+                    ),
+                    onConfirm:
+                        enabled &&
+                            !controller.locked(
+                              'activityOccurrences',
+                              (row['payload'] as Map)['id'] as int,
+                            )
+                        ? () => edit(
+                            'confirmActivity',
+                            targetId: (row['payload'] as Map)['id'] as int,
                           )
-                      ? () => edit(
-                          'moveActivity',
-                          targetId: (row['payload'] as Map)['id'] as int,
-                          initial: {
-                            'startedAt': (row['payload'] as Map)['started_at'],
-                          },
-                        )
-                      : null,
+                        : null,
+                    onSkip:
+                        enabled &&
+                            !controller.locked(
+                              'activityOccurrences',
+                              (row['payload'] as Map)['id'] as int,
+                            )
+                        ? () => edit(
+                            'skipActivity',
+                            targetId: (row['payload'] as Map)['id'] as int,
+                          )
+                        : null,
+                    onMove:
+                        enabled &&
+                            !controller.locked(
+                              'activityOccurrences',
+                              (row['payload'] as Map)['id'] as int,
+                            )
+                        ? () => edit(
+                            'moveActivity',
+                            targetId: (row['payload'] as Map)['id'] as int,
+                            initial: {
+                              'startedAt':
+                                  (row['payload'] as Map)['started_at'],
+                            },
+                          )
+                        : null,
+                  ),
                 ),
               for (final row in visibleLogs)
-                FamilyActivityLogCard(
-                  payload: row['payload'] as Map,
-                  name:
-                      controller
-                          .ofKind('activities')
-                          .where(
-                            (r) =>
-                                r['id'] ==
-                                '${(row['payload'] as Map)['activity_id']}',
-                          )
-                          .map((r) => (r['payload'] as Map)['name'] as String)
-                          .firstOrNull ??
-                      context.lang.familyPlanActivity,
+                DashboardCardPadding(
+                  enabled: homeLayout,
+                  child: FamilyActivityLogCard(
+                    onOpen: recordOpener(
+                      context,
+                      'activityLogs',
+                      (row['payload'] as Map)['id'] as int,
+                    ),
+                    durationMinutes:
+                        (controller
+                                    .ofKind('activities')
+                                    .where(
+                                      (r) =>
+                                          r['id'] ==
+                                          '${(row['payload'] as Map)['activity_id']}',
+                                    )
+                                    .firstOrNull?['payload']
+                                as Map?)?['duration_minutes']
+                            as int?,
+                    payload: row['payload'] as Map,
+                    name:
+                        controller
+                            .ofKind('activities')
+                            .where(
+                              (r) =>
+                                  r['id'] ==
+                                  '${(row['payload'] as Map)['activity_id']}',
+                            )
+                            .map((r) => (r['payload'] as Map)['name'] as String)
+                            .firstOrNull ??
+                        context.lang.familyPlanActivity,
+                  ),
                 ),
             ],
             if (showRequests && controller.plans.any(visibleRequest)) ...[
-              const SizedBox(height: 16),
-              if (widget.view != FamilyPlanningView.home)
-                Text(
-                  context.lang.familyPlanRequests,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+              if (!homeLayout) const SizedBox(height: 16),
               for (final plan in controller.plans.where(visibleRequest))
-                FamilyPlanRequestCard(
-                  plan: plan,
-                  onRetry: enabled
-                      ? () => edit(
-                          plan['type'] as String,
-                          targetId: plan['targetId'] as int?,
-                          initial: Map<String, dynamic>.from(
-                            plan['values'] as Map,
-                          ),
-                        )
-                      : null,
+                DashboardCardPadding(
+                  enabled: homeLayout,
+                  child: FamilyPlanStatusCard(
+                    plan: plan,
+                    onRetry: enabled
+                        ? () => edit(
+                            plan['type'] as String,
+                            targetId: plan['targetId'] as int?,
+                            initial: Map<String, dynamic>.from(
+                              plan['values'] as Map,
+                            ),
+                          )
+                        : null,
+                  ),
                 ),
             ],
           ],

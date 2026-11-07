@@ -19,42 +19,60 @@ class DashboardActivityCard extends ConsumerWidget {
     required this.activity,
     required this.now,
     this.target,
+    this.allowLocalActions = true,
+    this.waitingLabel,
+    this.trailing,
   });
   final ActivityLogSummaryData activity;
   final DateTime now;
   final TemporaryTarget? target;
+  final bool allowLocalActions;
+  final String? waitingLabel;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final planned = activity.startedAt.isAfter(now);
-    final busy = ref.watch(activityActionsControllerProvider).isLoading;
+    final busy =
+        allowLocalActions &&
+        ref.watch(activityActionsControllerProvider).isLoading;
     return ConnectedStatusCards(
       primary: StatusInfoCard(
         icon: Icons.directions_run_rounded,
         title: activity.activityName,
-        details: DashboardActivityDetails(activity: activity, now: now),
-        trailing: IconButton(
-          tooltip: planned
-              ? context.lang.dashboardCancelPlannedActivity
-              : context.lang.dashboardFinishActivityTooltip,
-          icon: Icon(
-            planned ? Icons.event_busy_rounded : Icons.stop_circle_outlined,
-          ),
-          onPressed: busy
-              ? null
-              : () => runDashboardStatusAction(
-                  context,
-                  () => ref
-                      .read(activityActionsControllerProvider.notifier)
-                      .end(activity),
-                ),
+        details: DashboardActivityDetails(
+          activity: activity,
+          now: now,
+          waitingLabel: waitingLabel,
         ),
+        trailing: allowLocalActions
+            ? IconButton(
+                tooltip: planned
+                    ? context.lang.dashboardCancelPlannedActivity
+                    : context.lang.dashboardFinishActivityTooltip,
+                icon: Icon(
+                  planned
+                      ? Icons.event_busy_rounded
+                      : Icons.stop_circle_outlined,
+                ),
+                onPressed: busy
+                    ? null
+                    : () => runDashboardStatusAction(
+                        context,
+                        () => ref
+                            .read(activityActionsControllerProvider.notifier)
+                            .end(activity),
+                      ),
+              )
+            : trailing,
       ),
       secondary: target == null
           ? null
           : StatusInfoPanel(
               icon: Icons.track_changes_rounded,
-              trailing: DashboardTargetActions(target: target!),
+              trailing: allowLocalActions
+                  ? DashboardTargetActions(target: target!)
+                  : null,
               child: ActivityTargetPreparationDetails(
                 target: target!,
                 now: now,

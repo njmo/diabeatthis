@@ -11,9 +11,14 @@ import '../../data/models/ingredient_usage_data.dart';
 import 'ingredient_section_empty.dart';
 
 class IngredientMealsSection extends StatelessWidget {
-  const IngredientMealsSection({super.key, required this.usages});
+  const IngredientMealsSection({
+    super.key,
+    required this.usages,
+    this.onOpenMeal,
+  });
 
   final List<IngredientUsageData> usages;
+  final ValueChanged<int>? onOpenMeal;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -35,8 +40,13 @@ class IngredientMealsSection extends StatelessWidget {
             padding: EdgeInsets.zero,
             child: InkWell(
               borderRadius: BorderRadius.circular(24),
-              onTap: () =>
-                  context.router.push(routes.MealRoute(mealId: meal.mealId)),
+              onTap: () {
+                if (onOpenMeal != null) {
+                  onOpenMeal!(meal.mealId);
+                } else {
+                  context.router.push(routes.MealRoute(mealId: meal.mealId));
+                }
+              },
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(

@@ -10,9 +10,11 @@ class DashboardActivityDetails extends StatelessWidget {
     super.key,
     required this.activity,
     required this.now,
+    this.waitingLabel,
   });
   final ActivityLogSummaryData activity;
   final DateTime now;
+  final String? waitingLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -40,18 +42,23 @@ class DashboardActivityDetails extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                timeline.planned
-                    ? lang.dashboardPlannedActivityTitle
-                    : lang.dashboardActivityInProgressCardTitle,
+                waitingLabel ??
+                    (timeline.planned
+                        ? lang.dashboardPlannedActivityTitle
+                        : lang.dashboardActivityInProgressCardTitle),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSecondaryContainer,
                 ),
               ),
             ),
-            Text(timing, style: theme.textTheme.bodyMedium),
+            if (waitingLabel == null)
+              Text(timing, style: theme.textTheme.bodyMedium),
           ],
         ),
-        if (!timeline.planned && duration != null && duration > 0) ...[
+        if (waitingLabel == null &&
+            !timeline.planned &&
+            duration != null &&
+            duration > 0) ...[
           const SizedBox(height: 8),
           DashboardActivityProgress(activity: activity, now: now),
         ],

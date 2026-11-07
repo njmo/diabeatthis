@@ -9,6 +9,8 @@ import 'package:diabeatthis/features/meals/presentation/controllers/copy_meal_so
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../helpers/patient_application_mode.dart';
+
 void main() {
   CopiedMealType source(int id) => CopiedMealFromMeal(
     id: id,
@@ -28,6 +30,7 @@ void main() {
           final container = ProviderContainer(
             retry: (_, _) => null,
             overrides: [
+              patientApplicationModeOverride,
               getMealIngredientsDraftForMealProvider(
                 1,
               ).overrideWith((_) => oldCompletion.future),
@@ -103,6 +106,7 @@ void main() {
     final container = ProviderContainer(
       retry: (_, _) => null,
       overrides: [
+        patientApplicationModeOverride,
         getMealIngredientsDraftForMealProvider(
           1,
         ).overrideWith((_) => oldCompletion.future),
@@ -142,6 +146,7 @@ void main() {
       final completion = Completer<List<MealIngredientsDraft>>();
       final container = ProviderContainer(
         overrides: [
+          patientApplicationModeOverride,
           getMealIngredientsDraftForMealProvider(
             1,
           ).overrideWith((_) => completion.future),
@@ -176,6 +181,7 @@ void main() {
       final container = ProviderContainer(
         retry: (_, _) => null,
         overrides: [
+          patientApplicationModeOverride,
           getMealIngredientsDraftForMealProvider(
             1,
           ).overrideWith((_) => completion.future),

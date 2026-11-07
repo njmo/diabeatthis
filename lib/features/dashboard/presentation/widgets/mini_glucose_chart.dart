@@ -12,6 +12,8 @@ import 'glucose_chart_scale.dart';
 class MiniGlucoseChart extends ConsumerWidget {
   const MiniGlucoseChart({super.key, this.readings});
   final List<Glucose>? readings;
+  static const axisWidth = 30.0;
+  static const axisGap = 8.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -50,7 +52,7 @@ class MiniGlucoseChart extends ConsumerWidget {
                 child: Row(
                   children: [
                     SizedBox(
-                      width: 30,
+                      width: axisWidth,
                       child: LayoutBuilder(
                         builder: (context, constraints) => Stack(
                           clipBehavior: Clip.none,
@@ -72,7 +74,7 @@ class MiniGlucoseChart extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: axisGap),
                     Expanded(
                       child: CustomPaint(painter: painter, size: Size.infinite),
                     ),

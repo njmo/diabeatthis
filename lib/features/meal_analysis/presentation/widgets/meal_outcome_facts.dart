@@ -8,7 +8,12 @@ import '../../domain/models/meal_outcome_context.dart';
 
 class MealOutcomeFacts extends StatelessWidget {
   final MealOutcomeContext data;
-  const MealOutcomeFacts({super.key, required this.data});
+  final bool hasLocalContext;
+  const MealOutcomeFacts({
+    super.key,
+    required this.data,
+    this.hasLocalContext = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,12 +50,12 @@ class MealOutcomeFacts extends StatelessWidget {
                 ),
                 AnalysisMetric(
                   label: lang.beforeMealLows,
-                  value: '${data.lowTreatments.length}',
+                  value: hasLocalContext ? '${data.lowTreatments.length}' : '—',
                 ),
                 AnalysisMetric(
                   icon: Icons.directions_run,
                   label: lang.mealOutcomeActivities,
-                  value: '${data.activities.length}',
+                  value: hasLocalContext ? '${data.activities.length}' : '—',
                 ),
                 AnalysisMetric(
                   icon: Icons.restaurant,

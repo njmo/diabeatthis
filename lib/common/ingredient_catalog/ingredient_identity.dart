@@ -1,4 +1,4 @@
-enum IngredientSource { local, firebase }
+enum IngredientSource { local, firebase, barcode }
 
 class IngredientIdentity {
   const IngredientIdentity({required this.source, required this.sourceId});
@@ -13,6 +13,7 @@ class IngredientIdentity {
     final source = switch (value['source']) {
       'local' => IngredientSource.local,
       'firebase' => IngredientSource.firebase,
+      'barcode' => IngredientSource.barcode,
       _ => throw const FormatException('Unsupported ingredient source'),
     };
     final id = value['sourceId'];

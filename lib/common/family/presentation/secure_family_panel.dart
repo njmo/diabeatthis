@@ -10,6 +10,7 @@ import '../family_pairing_member.dart';
 import '../family_status.dart';
 import '../secure_family_repository.dart';
 import 'family_account_avatar.dart';
+import 'family_loading_state.dart';
 import 'family_pairing_qr_card.dart';
 import 'family_pending_request_card.dart';
 import 'family_qr_scanner_page.dart';
@@ -208,6 +209,11 @@ class SecureFamilyPanelState extends State<SecureFamilyPanel> {
   Widget build(BuildContext context) => StreamBuilder<FamilyStatus>(
     stream: updates,
     builder: (context, snapshot) {
+      if (!snapshot.hasData &&
+          !snapshot.hasError &&
+          snapshot.connectionState != ConnectionState.done) {
+        return const FamilyLoadingState();
+      }
       // On an authorization/network error, no stale roster or action remains visible.
       final current = snapshot.hasError ? null : snapshot.data;
       final used =

@@ -25,11 +25,18 @@ import '../widgets/meal_details/similar_meals_section.dart';
 
 class MealPageBody extends HookConsumerWidget {
   final MealPageState state;
-  const MealPageBody({super.key, required this.state, this.presentation});
+  final Widget? historyStatistics;
+  const MealPageBody({
+    super.key,
+    required this.state,
+    this.presentation,
+    this.historyStatistics,
+  });
   final MealPreviewController? presentation;
   MealPageBody.controlled({
     super.key,
     required MealPreviewController controller,
+    this.historyStatistics,
   }) : state = controller.state,
        presentation = controller;
 
@@ -53,11 +60,11 @@ class MealPageBody extends HookConsumerWidget {
     );
     final controller = useTabController(
       initialLength: !source.showAnalysis
-          ? 2
+          ? (historyStatistics == null ? 2 : 3)
           : complete
           ? 6
           : 3,
-      keys: [details.meal.id, complete],
+      keys: [details.meal.id, complete, historyStatistics != null],
     );
     if (details.meal.status == 'planned') {
       return PlannedMealPreview(
@@ -76,8 +83,13 @@ class MealPageBody extends HookConsumerWidget {
           canUseLocalActions: canUseLocalActions,
           showAnalysis: source.showAnalysis,
         ),
-        labels: [lang.mealPortionCardTitle, lang.mealApplicationContextTitle],
+        labels: [
+          if (historyStatistics != null) lang.mealGlucoseChapter,
+          lang.mealPortionCardTitle,
+          lang.mealApplicationContextTitle,
+        ],
         children: [
+          if (historyStatistics != null) historyStatistics!,
           MealPortionCard(
             details: details,
             showHeader: false,

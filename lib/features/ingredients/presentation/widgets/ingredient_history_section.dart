@@ -12,10 +12,12 @@ class IngredientHistorySection extends StatelessWidget {
     super.key,
     required this.history,
     required this.ingredient,
+    this.showConfidence = true,
   });
 
   final List<IngredientHistoryEntryData> history;
   final Ingredient ingredient;
+  final bool showConfidence;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +35,7 @@ class IngredientHistorySection extends StatelessWidget {
           entry: entry,
           after: after,
           isReference: ingredient.isReference,
+          showConfidence: showConfidence,
         ),
       );
       after = IngredientNutritionValues.history(entry);

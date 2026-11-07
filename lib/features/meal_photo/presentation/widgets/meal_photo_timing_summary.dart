@@ -14,7 +14,11 @@ class MealPhotoTimingSummary extends StatelessWidget {
     required this.onUseNow,
     this.enabled = true,
     this.pickDate,
+    this.allowUseNow = true,
+    this.planningHorizonDays = 5,
   });
+  final bool allowUseNow;
+  final int planningHorizonDays;
   final MealPhotoTimingSelection selection;
   final DateTime now;
   final ValueChanged<DateTime> onDateSelected;
@@ -66,14 +70,16 @@ class MealPhotoTimingSummary extends StatelessWidget {
                                     now.month,
                                     now.day,
                                   ),
-                                  lastDate: now.add(const Duration(days: 5)),
+                                  lastDate: now.add(
+                                    Duration(days: planningHorizonDays),
+                                  ),
                                 ));
                         if (picked != null && context.mounted) {
                           onDateSelected(picked);
                         }
                       },
               ),
-              if (planned)
+              if (planned && allowUseNow)
                 TextButton(
                   onPressed: enabled ? onUseNow : null,
                   child: Text(context.lang.mealPhotoTimeNow),

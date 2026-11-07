@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../features/activity/presentation/utils/activity_log_formatters.dart';
 import '../../../features/activity/presentation/widgets/activity_log_meta_pill.dart';
 import '../../../features/activity/presentation/widgets/activity_log_status_chip.dart';
+import '../../activity/activity_session_state.dart';
 import '../../l10n/language.dart';
+import '../../widgets/date_time_boundary_builder.dart';
 import '../../widgets/history_entry_row.dart';
 
 class ActivityLogCard extends StatelessWidget {
@@ -10,6 +13,7 @@ class ActivityLogCard extends StatelessWidget {
   final DateTime startedAt;
   final DateTime? endedAt;
   final VoidCallback? onTap;
+  final int? durationMinutes;
 
   const ActivityLogCard({
     super.key,
@@ -17,51 +21,41 @@ class ActivityLogCard extends StatelessWidget {
     required this.startedAt,
     required this.endedAt,
     required this.onTap,
+    this.durationMinutes,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final isActive = endedAt == null;
-
-    return HistoryEntryRow(
-      name: name,
-      onTap: onTap,
-      metadata: [
-        ActivityLogStatusChip(active: isActive),
-        ActivityLogMetaPill(
-          icon: Icons.access_time,
-          text: _formatTimeRange(startedAt.toLocal(), endedAt?.toLocal()),
-        ),
-        ActivityLogMetaPill(
-          icon: Icons.timer,
-          text: _formatDuration(startedAt, endedAt),
-        ),
-      ],
-    );
-  }
-
-  static String _formatTime(DateTime date) {
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  static String _formatTimeRange(DateTime startedAt, DateTime? endedAt) {
-    final end = endedAt == null ? lang.relativeTimeNow : _formatTime(endedAt);
-    return '${_formatTime(startedAt)} - $end';
-  }
-
-  static String _formatDuration(DateTime startedAt, DateTime? endedAt) {
-    if (endedAt == null) {
-      return lang.activityInProgress;
-    }
-
-    final duration = endedAt.difference(startedAt);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    if (hours == 0) {
-      return '$minutes min';
-    }
-    return '${hours}h ${minutes.toString().padLeft(2, '0')} min';
-  }
+  Widget build(BuildContext context) => DateTimeBoundaryBuilder(
+    at: endedAt == null ? startedAt : null,
+    builder: (context, now) {
+      final state = activitySessionState(
+        startedAt: startedAt,
+        endedAt: endedAt,
+        now: now,
+      );
+      final language = context.lang;
+      final start = formatActivityLogTime(startedAt.toLocal());
+      final range = state == ActivitySessionState.planned
+          ? start
+          : '$start - ${endedAt == null ? language.relativeTimeNow : formatActivityLogTime(endedAt!.toLocal())}';
+      return HistoryEntryRow(
+        name: name,
+        onTap: onTap,
+        metadata: [
+          ActivityLogStatusChip(state: state),
+          ActivityLogMetaPill(icon: Icons.access_time, text: range),
+          ActivityLogMetaPill(
+            icon: Icons.timer,
+            text: formatActivitySessionDuration(
+              language,
+              startedAt: startedAt,
+              endedAt: endedAt,
+              plannedMinutes: durationMinutes,
+              now: now,
+            ),
+          ),
+        ],
+      );
+    },
+  );
 }

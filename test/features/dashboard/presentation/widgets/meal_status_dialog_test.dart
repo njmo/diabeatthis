@@ -1,4 +1,5 @@
 import 'package:clock/clock.dart';
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_advice_pending_notification.dart';
@@ -26,6 +27,9 @@ import '../../../../helpers/device_status_factory.dart';
 import '../../../../helpers/localized_material_app.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
   });

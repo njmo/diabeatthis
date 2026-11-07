@@ -71,6 +71,8 @@ void main() {
           ),
         ),
       );
+      updates.add(const FamilyStatus());
+      await tester.pump();
       await tester.tap(find.text('Dodaj opiekuna'));
       await tester.pumpAndSettle();
       expect(find.byType(QrImageView), findsOneWidget);
@@ -116,6 +118,8 @@ void main() {
           ),
         ),
       );
+      updates.add(const FamilyStatus());
+      await tester.pump();
       await tester.tap(find.text('Dodaj opiekuna'));
       await tester.pumpAndSettle();
       updates.add(
@@ -164,6 +168,8 @@ void main() {
           ),
         ),
       );
+      updates.add(const FamilyStatus());
+      await tester.pump();
       await tester.tap(find.text('Dodaj opiekuna'));
       await tester.pumpAndSettle();
       updates.add(

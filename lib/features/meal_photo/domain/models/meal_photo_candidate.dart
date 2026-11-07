@@ -15,7 +15,11 @@ class MealPhotoCandidate {
     this.nutritionConfidence,
     this.nutritionConfidenceAssessed = true,
     this.matchCount = 1,
+    this.barcode,
+    this.brand,
   });
+  final String? barcode;
+  final String? brand;
   final IngredientIdentity identity;
   final int matchCount;
 
@@ -30,6 +34,8 @@ class MealPhotoCandidate {
     nutritionConfidence: nutritionConfidence,
     nutritionConfidenceAssessed: nutritionConfidenceAssessed,
     matchCount: count,
+    barcode: barcode,
+    brand: brand,
   );
   final String name;
   final MealPhotoNutrition nutritionPer100g;

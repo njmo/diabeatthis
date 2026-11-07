@@ -3,6 +3,7 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../common/drift/database_open_tracker.dart';
+import '../../common/drift/mirrored_statement_table.dart';
 import 'dao/activity_dao.dart';
 import 'dao/ingredient_dao.dart';
 import 'dao/local_mirror_dao.dart';
@@ -91,6 +92,13 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
         databaseDirectory: getApplicationSupportDirectory,
       ),
     );
+  }
+
+  @override
+  Future<void> customStatement(String statement, [List<dynamic>? args]) async {
+    await super.customStatement(statement, args);
+    final table = mirroredStatementTable(statement);
+    if (table != null) notifyUpdates({TableUpdate(table)});
   }
 
   /// Restore recorded conversions verbatim, including explicitly unknown legacy

@@ -32,12 +32,21 @@ Future<void> installFamilyMirrorSchema(DatabaseImpl db) async {
     required_revisions TEXT NOT NULL, cancel_occurrence_id INTEGER, notification_cleared INTEGER NOT NULL DEFAULT 0, result_bound INTEGER NOT NULL DEFAULT 0, acknowledged INTEGER NOT NULL DEFAULT 0)''',
   );
   await db.customStatement(
+    "CREATE TABLE IF NOT EXISTS family_cloud_connection(singleton INTEGER PRIMARY KEY CHECK(singleton=1),owner_uid TEXT,state TEXT NOT NULL DEFAULT 'connecting',updated_at INTEGER NOT NULL DEFAULT 0)",
+  );
+  await db.customStatement(
+    'INSERT OR IGNORE INTO family_cloud_connection(singleton) VALUES(1)',
+  );
+  await db.customStatement(
     'CREATE TABLE IF NOT EXISTS family_plan_submissions(owner_uid TEXT PRIMARY KEY,payload TEXT NOT NULL)',
   );
   await db.customStatement('''CREATE TABLE IF NOT EXISTS family_workflow_lock (
     id INTEGER PRIMARY KEY AUTOINCREMENT,kind TEXT NOT NULL,entity_id INTEGER NOT NULL,
     phase TEXT NOT NULL,active INTEGER NOT NULL,updated_at INTEGER NOT NULL,
     UNIQUE(kind,entity_id))''');
+  await db.customStatement(
+    'CREATE TABLE IF NOT EXISTS family_plan_notification_cancellations(operation_id TEXT NOT NULL,occurrence_id INTEGER NOT NULL,cleared INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(operation_id,occurrence_id))',
+  );
   for (final integration in familyMirrorIntegrations) {
     final table = integration.table;
     String key(String prefix) => integration.keys

@@ -9,7 +9,7 @@ Future<void> ensureActivityActivationAllowed(
   required DateTime now,
 }) async {
   if (endsAt != null || startsAt.isAfter(now)) return;
-  final open = await db.activityDao.getActiveActivityLogOrNull();
+  final open = await db.activityDao.getActiveActivityLogOrNull(now: now);
   if (open != null && open.startedAt <= now.millisecondsSinceEpoch) {
     throw StateError('An activity is already in progress');
   }

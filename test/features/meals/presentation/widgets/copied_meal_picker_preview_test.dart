@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import 'package:diabeatthis/features/meals/data/model/copied_meal_type.dart';
 import 'package:diabeatthis/features/meals/data/providers/copied_meal_provider.dart';
@@ -13,6 +14,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../helpers/localized_material_app.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   final meal = CopiedMealFromMeal(
     id: 1,
     name: 'Obiad z historii',

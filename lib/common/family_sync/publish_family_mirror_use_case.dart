@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../../core/drift/family_sync/family_mirror_outbox.dart';
 import '../backend/authenticated_callable_transport.dart';
 import 'family_mirror_record.dart';
+import 'register_family_mirror.dart';
 
 class PublishFamilyMirrorUseCase {
   const PublishFamilyMirrorUseCase({
@@ -42,11 +43,11 @@ class PublishFamilyMirrorUseCase {
         .get();
     if (unbound.isNotEmpty) return 0;
     final source = await outbox.sourceForOwner(uid);
-    await transport.call(
-      'registerFamilyMirror',
-      {'sourceId': source},
-      expectedUid: uid,
-      allowRequest: permitted,
+    await registerFamilyMirror(
+      transport: transport,
+      source: source,
+      uid: uid,
+      permitted: permitted,
     );
     if (currentUid() != uid) throw const CallableFailure('unauthenticated');
     await outbox.bindOwner(uid);

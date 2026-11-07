@@ -9,6 +9,7 @@ import '../ingredient_catalog/catalog_ingredient.dart';
 import '../ingredient_catalog/ingredient_catalog_repository.dart';
 import '../ingredient_catalog/ingredient_identity.dart';
 import 'apply_family_plan_use_case.dart';
+import 'call_family_activity_protocol.dart';
 import 'family_workflow_guard.dart';
 import 'publish_family_mirror_use_case.dart';
 
@@ -90,6 +91,24 @@ class SynchronizeFamilyPlansUseCase {
           [row.read<String>('operation_id')],
         );
       }
+      final cancellations = await db
+          .customSelect(
+            'SELECT occurrence_id FROM family_plan_notification_cancellations WHERE operation_id=? AND cleared=0',
+            variables: [Variable(row.read<String>('operation_id'))],
+          )
+          .get();
+      for (final cancellation in cancellations) {
+        if (!await allowed()) return;
+        if (cancelConfirmation == null) {
+          throw StateError('Notification cancellation unavailable');
+        }
+        final id = cancellation.read<int>('occurrence_id');
+        await cancelConfirmation!(id);
+        await db.customStatement(
+          'UPDATE family_plan_notification_cancellations SET cleared=1 WHERE operation_id=? AND occurrence_id=?',
+          [row.read<String>('operation_id'), id],
+        );
+      }
       var ready = true;
       for (final required
           in jsonDecode(row.read<String>('required_revisions')) as List) {
@@ -152,11 +171,13 @@ class SynchronizeFamilyPlansUseCase {
         currentUid() == uid && await queue.enabledAt(consent);
     if (!await allowed()) return false;
     await drain(uid, source, queue, allowed);
-    final response = await transport.call(
-      'fetchFamilyPlans',
-      {},
-      expectedUid: uid,
-      allowRequest: allowed,
+    final response = await callFamilyActivityProtocol(
+      transport: transport,
+      name: 'fetchFamilyPlans',
+      activityCommandsVersion: 4,
+      data: {},
+      uid: uid,
+      permitted: allowed,
     );
     if (response['sourceId'] != source || response['ownerUid'] != uid) {
       throw StateError('Plan source changed');
@@ -189,11 +210,13 @@ class SynchronizeFamilyPlansUseCase {
             catalogIngredients[ingredient.identity.sourceId] = ingredient;
           }
         }
-        final claim = await transport.call(
-          'claimFamilyPlan',
-          {'id': plan['id'], 'sourceId': source},
-          expectedUid: uid,
-          allowRequest: allowed,
+        final claim = await callFamilyActivityProtocol(
+          transport: transport,
+          name: 'claimFamilyPlan',
+          activityCommandsVersion: 4,
+          data: {'id': plan['id'], 'sourceId': source},
+          uid: uid,
+          permitted: allowed,
         );
         if (!await allowed()) return false;
         await ApplyFamilyPlanUseCase(db, workflowGuard: workflowGuard)(
@@ -207,6 +230,14 @@ class SynchronizeFamilyPlansUseCase {
       }
     }
     await drain(uid, source, queue, allowed);
-    return retry || (response['plans'] as List).length >= 50;
+    final remaining = await db
+        .customSelect(
+          'SELECT operation_id FROM family_plan_journal WHERE owner_uid=? AND source_id=? AND acknowledged=0 LIMIT 1',
+          variables: [Variable(uid), Variable(source)],
+        )
+        .get();
+    return retry ||
+        remaining.isNotEmpty ||
+        (response['plans'] as List).length >= 50;
   }
 }

@@ -44,6 +44,7 @@ class ActivityLogsView extends StatelessWidget {
             name: item.activityName,
             startedAt: item.startedAt,
             endedAt: item.endedAt,
+            durationMinutes: item.durationMinutes,
             onTap: controller.open == null
                 ? null
                 : () => controller.open!(item),

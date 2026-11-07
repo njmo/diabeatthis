@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/localized_material_app.dart';
+import '../../../../helpers/patient_application_mode.dart';
 
 const reviewRow = MealIngredientsDraft(
   ingredient: IngredientDraft.existing(
@@ -42,7 +43,9 @@ void main() {
   test(
     'draft display uses raw nutrition and recorded physical weights',
     () async {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [patientApplicationModeOverride],
+      );
       addTearDown(container.dispose);
       container.read(mealDraftProvider.notifier).setMealIngredients([
         reviewRow,
@@ -73,7 +76,9 @@ void main() {
   testWidgets(
     'planning review reuses shared macros and updates calories and mass',
     (tester) async {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [patientApplicationModeOverride],
+      );
       addTearDown(container.dispose);
       container.read(mealDraftProvider.notifier).setMealIngredients([
         reviewRow,

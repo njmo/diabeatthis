@@ -12,9 +12,11 @@ class ActivityDefinitionView extends StatelessWidget {
     super.key,
     required this.activity,
     required this.logs,
+    this.plans,
   });
   final Activity activity;
   final ActivityLogsController logs;
+  final Widget? plans;
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -28,6 +30,14 @@ class ActivityDefinitionView extends StatelessWidget {
           durationMinutes: activity.durationMinutes,
         ),
       ),
+      if (plans != null)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 280),
+            child: SingleChildScrollView(child: plans!),
+          ),
+        ),
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         child: Text(

@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/family_sync/enable_initial_family_sharing.dart';
 import '../../../../common/l10n/application_language.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/l10n/resolve_application_locale.dart';
@@ -15,6 +16,7 @@ import '../../../../core/logger/logger.dart';
 import '../../../../foreground/service/monitoring_startup_exception.dart';
 import '../../application/apply_caregiver_configuration_use_case.dart';
 import '../../application/apply_initial_configuration_use_case.dart';
+import '../../application/apply_initial_family_configuration_provider.dart';
 import '../../data/models/initial_configuration_state.dart';
 
 part 'initial_configuration_controller.g.dart';
@@ -89,7 +91,11 @@ class InitialConfigurationController extends _$InitialConfigurationController
     });
   }
 
-  Future<bool> submit({String? nightscoutUrl, String? nightscoutToken}) async {
+  Future<bool> submit({
+    String? nightscoutUrl,
+    String? nightscoutToken,
+    bool enableFamilySharing = false,
+  }) async {
     final current = _currentState;
     if (current == null || current.isSaving) return false;
 
@@ -99,13 +105,19 @@ class InitialConfigurationController extends _$InitialConfigurationController
     );
 
     try {
-      await _applyInitialConfigurationUseCase(
+      final reconcileSharing = ref.read(reconcileInitialFamilySharingProvider);
+      await reconcileSharing(enableFamilySharing);
+      final apply = enableFamilySharing
+          ? ref.read(applyInitialFamilyConfigurationProvider)
+          : _applyInitialConfigurationUseCase;
+      await apply(
         config: current.config,
         nightscoutUrl: (nightscoutUrl ?? current.nightscoutUrl).trim(),
         nightscoutToken: (nightscoutToken ?? current.nightscoutToken).trim(),
         childName: current.userName.trim(),
         language: current.language,
       );
+      await reconcileSharing(true);
       return true;
     } on DataSourceConfigUnavailableException catch (e, st) {
       logE(
@@ -118,7 +130,9 @@ class InitialConfigurationController extends _$InitialConfigurationController
     } catch (e, st) {
       logE('Initial configuration failed', error: e, stackTrace: st);
       _setSubmitError(
-        e is MonitoringStartupException
+        e is FamilySharingSetupFailure
+            ? messages.familyOperationFailed
+            : e is MonitoringStartupException
             ? messages.settingsMonitoringStartFailed
             : current.config.usesCloud
             ? messages.settingsConnectionError

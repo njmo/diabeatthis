@@ -11,6 +11,12 @@ class MealPhotoIngredientCreationCheck {
 
   Future<bool?> call(MealPhotoReviewItem item) async {
     if (item.product case final product?) {
+      if (product.identity.source == IngredientSource.barcode) {
+        return await db.ingredientDao
+                .getIngredientByBarcode(product.identity.sourceId)
+                .getSingleOrNull() ==
+            null;
+      }
       if (product.identity.source == IngredientSource.local ||
           product.localIngredientId != null) {
         return false;

@@ -18,6 +18,7 @@ class ActivityOccurrenceView extends StatelessWidget {
     this.onMove,
     this.onHistory,
     this.onDelete,
+    this.onRetry,
   });
   final int startedAt;
   final int? durationMinutes;
@@ -30,6 +31,7 @@ class ActivityOccurrenceView extends StatelessWidget {
   final VoidCallback? onMove;
   final VoidCallback? onHistory;
   final VoidCallback? onDelete;
+  final VoidCallback? onRetry;
   @override
   Widget build(BuildContext context) {
     final future = startedAt > clock.now().millisecondsSinceEpoch;
@@ -74,6 +76,12 @@ class ActivityOccurrenceView extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             Text(label),
+            if (onRetry != null)
+              TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: Text(context.lang.familyPlanRetry),
+              ),
             if (future && status != 'skipped')
               Wrap(
                 spacing: 8,

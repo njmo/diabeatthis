@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/nutrition/confidence_level.dart';
 import 'package:diabeatthis/common/widgets/value_change_row.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
@@ -15,6 +16,9 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../../helpers/localized_material_app.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   for (final reference in [false, true]) {
     testWidgets(
       'data, edit and confidence-only history work for reference=$reference',

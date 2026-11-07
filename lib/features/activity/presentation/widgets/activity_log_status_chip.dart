@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/activity/activity_session_state.dart';
 import '../../../../common/l10n/language.dart';
+import '../utils/activity_log_formatters.dart';
 
 class ActivityLogStatusChip extends StatelessWidget {
-  final bool active;
+  final ActivitySessionState state;
 
-  const ActivityLogStatusChip({super.key, required this.active});
+  const ActivityLogStatusChip({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
+    final active = state == ActivitySessionState.active;
     final scheme = Theme.of(context).colorScheme;
     final background = active
         ? scheme.primaryContainer
@@ -24,7 +27,7 @@ class ActivityLogStatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        active ? context.lang.activityActive : context.lang.activityFinished,
+        activitySessionStateLabel(context.lang, state),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           color: foreground,
           fontWeight: FontWeight.w600,

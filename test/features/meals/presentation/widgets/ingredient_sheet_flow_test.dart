@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/domain/model/portion.dart';
 import 'package:diabeatthis/core/llm/local_llm_client.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
@@ -41,6 +42,9 @@ const sheetPiece = PortionSelection.existing(
 );
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   late ProviderContainer container;
   MealIngredientsDraft? result;
 

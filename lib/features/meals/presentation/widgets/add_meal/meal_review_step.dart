@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/planning/meal_form_actions.dart';
+import '../../../../../common/widgets/controlled_text_form_field.dart';
 import '../../../../../common/widgets/meal_category_field.dart';
 import '../../../../../common/widgets/review_section_header.dart';
 import '../../../data/model/copied_meal_type.dart';
@@ -51,6 +53,17 @@ class MealReviewStep extends ConsumerWidget {
             ),
           ),
         ),
+        const SizedBox(height: 12),
+        if (ref.watch(mealFormActionsProvider).showNotes)
+          ControlledTextFormField(
+            value: draft.notes ?? '',
+            maxLength: 2000,
+            onChanged: ref.read(mealDraftProvider.notifier).setNotes,
+            decoration: InputDecoration(
+              labelText: context.lang.familyPlanNotes,
+              border: const OutlineInputBorder(),
+            ),
+          ),
         const SizedBox(height: 12),
         MealReviewTiming(
           start: draft.plannedAt,

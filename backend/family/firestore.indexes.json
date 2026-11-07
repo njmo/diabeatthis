@@ -1,0 +1,19 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "entities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "payload.schedule_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "payload.started_at",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

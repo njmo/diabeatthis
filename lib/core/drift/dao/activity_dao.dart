@@ -1,5 +1,7 @@
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 
+import '../../../common/activity/watch_activity_start_boundary.dart';
 import '../../../common/monitoring/effective_activity_duration.dart';
 import '../database_impl.dart';
 
@@ -239,54 +241,64 @@ class ActivityDao extends DatabaseAccessor<DatabaseImpl>
     );
   }
 
-  Future<ActivityLogData?> getActiveActivityLogOrNull() {
+  Future<ActivityLogData?> getActiveActivityLogOrNull({DateTime? now}) {
     return (select(db.activityLog)
-          ..where((tbl) => tbl.endedAt.isNull())
-          ..orderBy([(tbl) => OrderingTerm.asc(tbl.startedAt)])
+          ..where(
+            (row) =>
+                row.endedAt.isNull() &
+                row.startedAt.isSmallerOrEqualValue(
+                  (now ?? clock.now()).millisecondsSinceEpoch,
+                ),
+          )
+          ..orderBy([(row) => OrderingTerm.asc(row.startedAt)])
           ..limit(1))
         .getSingleOrNull();
   }
 
-  Future<ActivityLogViewData?> getActiveActivityLogView() async {
-    final query =
-        select(db.activityLog).join([
-            innerJoin(
-              db.activity,
-              db.activity.id.equalsExp(db.activityLog.activityId),
-            ),
-            leftOuterJoin(
-              db.activityOccurrence,
-              db.activityOccurrence.activityLogId.equalsExp(db.activityLog.id),
-            ),
-          ])
-          ..where(db.activityLog.endedAt.isNull())
-          ..orderBy([OrderingTerm.asc(db.activityLog.startedAt)])
-          ..limit(1);
+  JoinedSelectStatement<HasResultSet, dynamic> openActivityLogViewsQuery() =>
+      select(db.activityLog).join([
+          innerJoin(
+            db.activity,
+            db.activity.id.equalsExp(db.activityLog.activityId),
+          ),
+          leftOuterJoin(
+            db.activityOccurrence,
+            db.activityOccurrence.activityLogId.equalsExp(db.activityLog.id),
+          ),
+        ])
+        ..where(db.activityLog.endedAt.isNull())
+        ..orderBy([OrderingTerm.asc(db.activityLog.startedAt)]);
 
+  Future<ActivityLogViewData?> getActiveActivityLogView({DateTime? now}) async {
+    final query = openActivityLogViewsQuery()
+      ..where(
+        db.activityLog.startedAt.isSmallerOrEqualValue(
+          (now ?? clock.now()).millisecondsSinceEpoch,
+        ),
+      )
+      ..limit(1);
     final row = await query.getSingleOrNull();
     return row == null ? null : _activityLogViewData(row);
   }
 
-  Stream<ActivityLogViewData?> watchActiveActivityLogView() {
-    final query =
-        select(db.activityLog).join([
-            innerJoin(
-              db.activity,
-              db.activity.id.equalsExp(db.activityLog.activityId),
-            ),
-            leftOuterJoin(
-              db.activityOccurrence,
-              db.activityOccurrence.activityLogId.equalsExp(db.activityLog.id),
-            ),
-          ])
-          ..where(db.activityLog.endedAt.isNull())
-          ..orderBy([OrderingTerm.asc(db.activityLog.startedAt)])
-          ..limit(1);
-
-    return query.watchSingleOrNull().map(
-      (row) => row == null ? null : _activityLogViewData(row),
-    );
+  Future<ActivityLogViewData?> getPendingActivityLogView() async {
+    final row = await (openActivityLogViewsQuery()..limit(1)).getSingleOrNull();
+    return row == null ? null : _activityLogViewData(row);
   }
+
+  Stream<ActivityLogViewData?> watchPendingActivityLogView() =>
+      (openActivityLogViewsQuery()..limit(1)).watchSingleOrNull().map(
+        (row) => row == null ? null : _activityLogViewData(row),
+      );
+
+  Stream<ActivityLogViewData?> watchActiveActivityLogView() =>
+      watchActivityStartBoundary(
+        source: openActivityLogViewsQuery().watch().map(
+          (rows) => rows.map(_activityLogViewData).toList(),
+        ),
+        startedAt: (row) =>
+            DateTime.fromMillisecondsSinceEpoch(row.log.startedAt),
+      );
 
   Future<ActivityLogData?> getNearestActivityLog() {
     final query = select(db.activityLog)

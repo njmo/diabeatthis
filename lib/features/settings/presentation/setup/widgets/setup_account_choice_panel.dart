@@ -24,7 +24,7 @@ class SetupAccountChoicePanel extends StatelessWidget {
         if (controller.state.googleAccount != null)
           GoogleAccountSummary(
             account: controller.state.googleAccount!,
-            onSignOut: controller.state.signingIn
+            onSignOut: controller.state.signingIn || controller.familyCareLocked
                 ? null
                 : controller.signOutGoogle,
           )
@@ -34,6 +34,12 @@ class SetupAccountChoicePanel extends StatelessWidget {
                 ? null
                 : controller.signInGoogle,
             busy: controller.state.signingIn,
+          ),
+        if (controller.familyCareLocked)
+          Text(
+            controller.familyMembershipPending
+                ? context.lang.familyLoading
+                : context.lang.setupFamilyDisconnectBeforeDisable,
           ),
         if (controller.authentication?.isSupported == false)
           Text(context.lang.setupGoogleUnavailablePlatform),

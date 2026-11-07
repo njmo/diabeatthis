@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../../common/history/bolus_wizard_grouping.dart';
+import '../../../../../common/history/nightscout_history_repositories.dart';
 import '../../../../../common/history/treatment_overlaps_window.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../core/data_sources/providers/on_demand_history_repositories_provider.dart';
@@ -42,6 +43,8 @@ class AnalyzeMealUseCase {
     MealDetailsData details, {
     bool forceCloud = false,
     DateTime? asOf,
+    NightscoutHistoryRepositories? history,
+    bool includeLocalContext = true,
   }) async {
     if (!details.meal.isEaten) {
       return null;
@@ -61,18 +64,24 @@ class AnalyzeMealUseCase {
     final eventEnd = chartEnd;
     final targetFetchStart = chartStart.subtract(const Duration(hours: 4));
 
-    final onDemand = forceCloud
+    final onDemand = forceCloud && history == null
         ? await ref.read(onDemandHistoryRepositoriesProvider.future)
         : null;
-    final glucoseRepository = onDemand != null
-        ? onDemand.glucose
-        : await ref.read(glucoseHistoryRepositoryProvider.future);
-    final treatmentRepository = onDemand != null
-        ? onDemand.treatments
-        : await ref.read(treatmentsHistoryRepositoryProvider.future);
-    final deviceStatusRepository = onDemand != null
-        ? onDemand.deviceStatuses
-        : await ref.read(deviceStatusHistoryRepositoryProvider.future);
+    final glucoseRepository = history != null
+        ? history.glucose
+        : (onDemand != null
+              ? onDemand.glucose
+              : await ref.read(glucoseHistoryRepositoryProvider.future));
+    final treatmentRepository = history != null
+        ? history.treatments
+        : (onDemand != null
+              ? onDemand.treatments
+              : await ref.read(treatmentsHistoryRepositoryProvider.future));
+    final deviceStatusRepository = history != null
+        ? history.deviceStatuses
+        : (onDemand != null
+              ? onDemand.deviceStatuses
+              : await ref.read(deviceStatusHistoryRepositoryProvider.future));
     // One treatment fetch serves the existing timeline, targets and overlapping
     // earlier eCarbs schedules. Keep the timeline's original event window.
     final treatmentHistoryStart = mealTime.subtract(const Duration(hours: 24));
@@ -97,15 +106,17 @@ class AnalyzeMealUseCase {
         .whereType<TemporaryTarget>()
         .where((target) => _overlapsChart(target, chartStart, chartEnd))
         .toList();
-    final linkedActivities = await _loadLinkedActivities(eventStart, eventEnd);
-    final linkedMeals = await _loadLinkedMeals(
-      details.meal.id,
-      eventStart,
-      eventEnd,
-    );
-    final lowTreatments = await ref
-        .read(recordedLowTreatmentRepositoryProvider)
-        .fetchBetween(eventStart, eventEnd);
+    final linkedActivities = includeLocalContext
+        ? await _loadLinkedActivities(eventStart, eventEnd)
+        : <MealLinkedActivityData>[];
+    final linkedMeals = !includeLocalContext
+        ? <MealLinkedMealData>[]
+        : await _loadLinkedMeals(details.meal.id, eventStart, eventEnd);
+    final lowTreatments = !includeLocalContext
+        ? <RecordedLowTreatment>[]
+        : await ref
+              .read(recordedLowTreatmentRepositoryProvider)
+              .fetchBetween(eventStart, eventEnd);
     final timelineEvents = _buildTimelineEvents(
       lowTreatments: lowTreatments,
       details: details,
@@ -116,9 +127,11 @@ class AnalyzeMealUseCase {
 
     List<RecordedMealContext>? subsequentMeals;
     try {
-      subsequentMeals = await MealContextLocalHistoryRepository(
-        ref.read(databaseProvider),
-      ).loadMeals(mealTime, chartEnd, details.meal.id);
+      if (includeLocalContext) {
+        subsequentMeals = await MealContextLocalHistoryRepository(
+          ref.read(databaseProvider),
+        ).loadMeals(mealTime, chartEnd, details.meal.id);
+      }
     } catch (_) {
       // Optional context must not hide the existing charts or timeline.
       subsequentMeals = null;

@@ -1,8 +1,10 @@
+import 'package:diabeatthis/common/app_mode/application_device_mode.dart';
 import 'package:diabeatthis/common/auth/google_account.dart';
 import 'package:diabeatthis/common/auth/google_authentication_providers.dart';
 import 'package:diabeatthis/common/family_sync/family_planning_view.dart';
 import 'package:diabeatthis/common/family_sync/presentation/family_planning_page.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
+import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/caregiver/data/caregiver_refresh_state.dart';
@@ -17,6 +19,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../history/day_statistics_nightscout.dart';
+
 void main() {
   testWidgets(
     'caregiver shares patient navigation while retaining family-only views and actions',
@@ -26,6 +30,12 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            applicationDeviceModeProvider.overrideWith(
+              (ref) async => ApplicationDeviceMode.caregiver,
+            ),
+            nightscoutRepositoryProvider.overrideWith(
+              (ref) async => DayStatisticsNightscout(DateTime(2026, 11, 6)),
+            ),
             databaseProvider.overrideWithValue(db),
             googleAccountProvider.overrideWith(
               (ref) => Stream.value(

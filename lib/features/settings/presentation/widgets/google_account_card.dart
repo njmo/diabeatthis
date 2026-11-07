@@ -24,7 +24,7 @@ class GoogleAccountCard extends StatelessWidget {
   final bool supported;
   final bool demo;
   final VoidCallback onSignIn;
-  final VoidCallback onSignOut;
+  final VoidCallback? onSignOut;
   @override
   Widget build(BuildContext context) => SettingsSectionCard(
     icon: Icons.account_circle_outlined,

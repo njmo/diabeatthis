@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../common/history/nightscout_history_repositories.dart';
 import '../../../../../core/data_sources/providers/source_repository_providers.dart';
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/domain/model/stress_event_treatment.dart';
@@ -26,6 +27,8 @@ class LoadActivityLogAnalysisUseCase {
   Future<ActivityLogAnalysisData?> call(
     ActivityLogDetailsData log, {
     bool includeContext = false,
+    bool includeLocalContext = true,
+    NightscoutHistoryRepositories? history,
   }) async {
     final activityEnd = log.endedAt;
     if (activityEnd == null) {
@@ -39,15 +42,15 @@ class LoadActivityLogAnalysisUseCase {
     final treatmentFetchStart = chartStart.subtract(const Duration(hours: 4));
     final preMealStart = log.startedAt.subtract(const Duration(hours: 3));
 
-    final glucoseRepository = await ref.read(
-      glucoseHistoryRepositoryProvider.future,
-    );
-    final treatmentRepository = await ref.read(
-      treatmentsHistoryRepositoryProvider.future,
-    );
-    final deviceStatusRepository = await ref.read(
-      deviceStatusHistoryRepositoryProvider.future,
-    );
+    final glucoseRepository = history != null
+        ? history.glucose
+        : await ref.read(glucoseHistoryRepositoryProvider.future);
+    final treatmentRepository = history != null
+        ? history.treatments
+        : await ref.read(treatmentsHistoryRepositoryProvider.future);
+    final deviceStatusRepository = history != null
+        ? history.deviceStatuses
+        : await ref.read(deviceStatusHistoryRepositoryProvider.future);
     final glucose = await glucoseRepository.fetchGlucoseBetween(
       chartStart,
       chartEnd,
@@ -91,7 +94,7 @@ class LoadActivityLogAnalysisUseCase {
       return _isBetween(createdAt, preMealStart, log.startedAt);
     }).toList();
 
-    final previousMeals = !includeContext
+    final previousMeals = !includeContext || !includeLocalContext
         ? <MealData>[]
         : await ref
               .read(databaseProvider)
@@ -103,7 +106,7 @@ class LoadActivityLogAnalysisUseCase {
         : await ref.read(loadMealDetailsUseCaseProvider).call(latestMeal.id);
 
     final postActivityMeals = <MealDetailsData>[];
-    if (includeContext) {
+    if (includeContext && includeLocalContext) {
       final meals = await ref
           .read(databaseProvider)
           .mealDao

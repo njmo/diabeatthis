@@ -5,19 +5,15 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/app_mode/application_device_mode.dart';
 import '../../../../common/app_mode/application_device_mode_loading.dart';
-import '../../../../common/family_sync/presentation/family_mirror_status_banner.dart';
-import '../../../../common/l10n/language.dart';
-import '../../../../common/widgets/compact_category_selector.dart';
+import '../../../../common/presentation/dashboard/dashboard_shell.dart';
+import '../../../../common/presentation/dashboard/dashboard_spacing.dart';
 import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../caregiver/presentation/widgets/caregiver_dashboard.dart';
 import '../../../day_analysis/presentation/widgets/today_page.dart';
 import '../../../management/presentation/widgets/collection_content.dart';
 import '../../../meals/presentation/widgets/meal_list_today.dart';
-import '../widgets/dashboard_bottom_bar.dart';
 import '../widgets/dashboard_fab.dart';
-import '../widgets/dashboard_greeting.dart';
 import '../widgets/dashboard_status_card.dart';
-import '../widgets/dashboard_user_menu.dart';
 import '../widgets/nightscout_dashboard.dart';
 import '../widgets/parent_dashboard_fab.dart';
 
@@ -42,63 +38,18 @@ class DashboardPage extends HookConsumerWidget {
       return const CaregiverDashboard();
     }
 
-    return Scaffold(
-      extendBody: true,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        bottom: destination.value == 0
-            ? const PreferredSize(
-                preferredSize: Size.fromHeight(8),
-                child: SizedBox(height: 8),
-              )
-            : null,
-        title: destination.value == 0
-            ? const DashboardGreeting()
-            : isCollection
-            ? Text(
-                destination.value == 2
-                    ? context.lang.dashboardHistoryTab
-                    : context.lang.dashboardCatalogTab,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              )
-            : Text(context.lang.dashboardDayTab),
-        actions: [
-          if (isCollection)
-            CompactCategorySelector(
-              labels: [
-                destination.value == 2
-                    ? context.lang.managementMealsTab
-                    : context.lang.managementIngredientsTab,
-                context.lang.managementActivitiesTab,
-              ],
-              icons: [
-                destination.value == 2
-                    ? Icons.restaurant_outlined
-                    : Icons.egg_alt_outlined,
-                Icons.directions_run,
-              ],
-              selectedIndex: category.value,
-              onSelected: (index) => category.value = index,
-            ),
-          if (destination.value == 0) const DashboardUserMenu(),
-          const SizedBox(width: 8),
-        ],
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-
-      bottomNavigationBar: DashboardBottomBar(
-        selectedIndex: destination.value,
-        onSelected: (index) => destination.value = index,
-      ),
-      floatingActionButton: parentModeEnabled
+    return DashboardShell(
+      destination: destination.value,
+      category: category.value,
+      onDestination: (value) => destination.value = value,
+      onCategory: (value) => category.value = value,
+      actions: parentModeEnabled
           ? const ParentDashboardFAB()
           : const DashboardFAB(),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            const FamilyMirrorStatusBanner(),
             Expanded(
               child: destination.value == 1
                   ? const TodayPage()
@@ -109,9 +60,7 @@ class DashboardPage extends HookConsumerWidget {
                     )
                   : Builder(
                       builder: (context) => SingleChildScrollView(
-                        padding: EdgeInsets.only(
-                          bottom: 32 + MediaQuery.paddingOf(context).bottom,
-                        ),
+                        padding: DashboardSpacing.homeScroll(context),
                         child: Column(
                           children: [
                             NightscoutPanel(),

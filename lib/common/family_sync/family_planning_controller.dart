@@ -1,10 +1,15 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
+import '../activity/activity_definition_edit_guard.dart';
+import '../activity/activity_occurrence_preparation.dart';
 import '../backend/authenticated_callable_transport.dart';
+import 'family_plan_record_kind.dart';
 import 'family_plan_scope.dart';
 import 'family_plan_submission_store.dart';
+import 'family_workflow_phase.dart';
 
 class FamilyPlanningController extends ChangeNotifier {
   FamilyPlanningController(this.transport, this.currentUid, this.submissions);
@@ -21,6 +26,8 @@ class FamilyPlanningController extends ChangeNotifier {
   bool failed = false;
   bool complete = false;
   bool disposed = false;
+  final disposal = StreamController<void>.broadcast();
+  Stream<void> get whenDisposed => disposal.stream;
   bool again = false;
   int generation = 0;
   void invalidate() {
@@ -31,20 +38,52 @@ class FamilyPlanningController extends ChangeNotifier {
       .where((row) => row['kind'] == kind && row['deleted'] != true)
       .toList();
   bool locked(String kind, int id) =>
+      (kind == 'activityOccurrences' &&
+          plans.any(
+            (p) =>
+                p['status'] == 'pending' &&
+                p['type'] == 'setActivityScheduleEnabled' &&
+                p['targetId'] ==
+                    (rows['activityOccurrences/$id']?['payload']
+                        as Map?)?['schedule_id'],
+          )) ||
       monitored(kind, id) ||
-      plans.any(
-        (p) =>
-            p['status'] == 'pending' &&
-            (p['targetId'] == id || p['resultId'] == id) &&
-            (kind == 'meals'
-                ? (p['type'] as String).endsWith('Meal')
-                : [
-                    'planActivity',
-                    'moveActivity',
-                    'confirmActivity',
-                  ].contains(p['type'])),
-      );
+      plans.any((p) => familyPlanLocksRecord(p, kind, id));
   bool monitored(String kind, int id) {
+    if (kind == 'activitySchedules') {
+      return ofKind('activityOccurrences').any((r) {
+        final p = r['payload'] as Map;
+        return p['schedule_id'] == id &&
+            (p['started_at'] as int) > DateTime.now().millisecondsSinceEpoch &&
+            monitored('activityOccurrences', p['id'] as int);
+      });
+    }
+    if (kind == 'activities') {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (ofKind('activityLogs').any((r) {
+        final p = r['payload'] as Map;
+        return p['activity_id'] == id &&
+            activityDefinitionLogBlocksEdit(
+              p['started_at'] as int,
+              p['ended_at'] as int?,
+              now,
+            );
+      })) {
+        return true;
+      }
+      if (ofKind('activityOccurrences').any((r) {
+        final p = r['payload'] as Map;
+        return p['activity_id'] == id &&
+            activityDefinitionOccurrenceBlocksEdit(
+              startedAt: p['started_at'] as int,
+              status: p['status'] as String,
+              targetRequestedAt: p['target_requested_at'] as int?,
+              now: now,
+            );
+      })) {
+        return true;
+      }
+    }
     final row = rows['$kind/$id']?['payload'] as Map?;
     final entity = kind == 'meals' ? id : row?['activity_log_id'];
     final log = rows['activityLogs/$entity']?['payload'] as Map?;
@@ -54,12 +93,22 @@ class FamilyPlanningController extends ChangeNotifier {
             log['ended_at'] != null)) {
       return true;
     }
-    if (kind == 'activityOccurrences' && row?['target_requested_at'] != null) {
+    if (kind == 'activityOccurrences' &&
+        row != null &&
+        activityOccurrencePreparationStarted(
+          startedAt: row['started_at'] as int,
+          targetRequestedAt: row['target_requested_at'] as int?,
+          now: DateTime.now().millisecondsSinceEpoch,
+        )) {
       return true;
     }
     return ofKind('workflowLocks').any((r) {
       final p = r['payload'] as Map;
       return p['active'] == 1 &&
+          familyWorkflowPhaseBlocks(
+            p['kind'] as String,
+            p['phase'] as String? ?? 'unknown',
+          ) &&
           p['kind'] == (kind == 'meals' ? 'meal' : 'activity') &&
           p['entity_id'] == entity;
     });
@@ -161,6 +210,7 @@ class FamilyPlanningController extends ChangeNotifier {
     required String expectedSource,
     required String expectedUid,
   }) async {
+    if (disposed) throw StateError('Family controller is closed');
     if (currentUid() != expectedUid ||
         uid != expectedUid ||
         source != expectedSource ||
@@ -181,22 +231,45 @@ class FamilyPlanningController extends ChangeNotifier {
     };
     plan['expected'] = familyPlanVersions(familyPlanScope(baseRows, plan));
     final reserved = await submissions.reserve(expectedUid, plan);
-    await sendReserved(expectedUid, reserved);
-    await refresh();
+    final receipt = await sendReserved(expectedUid, reserved);
+    if (!disposed &&
+        currentUid() == expectedUid &&
+        uid == expectedUid &&
+        source == expectedSource) {
+      plans = [
+        {
+          ...reserved,
+          'status': receipt['status'],
+          'createdAt': DateTime.now().millisecondsSinceEpoch,
+          'base': familyPlanScope(baseRows, reserved),
+          'canonical': <Map<String, dynamic>>[],
+          'reason': null,
+        },
+        ...plans.where((p) => p['id'] != reserved['id']),
+      ];
+      notifyListeners();
+      unawaited(refresh());
+    }
   }
 
-  Future<void> sendReserved(String account, Map<String, dynamic> plan) async {
+  Future<Map<String, dynamic>> sendReserved(
+    String account,
+    Map<String, dynamic> plan,
+  ) async {
+    if (disposed) throw StateError('Family controller is closed');
     try {
       final result = await transport.call(
         'submitFamilyPlan',
         plan,
         expectedUid: account,
+        allowRequest: () async => !disposed && currentUid() == account,
       );
       if (result['id'] != plan['id'] ||
           !['pending', 'applied', 'rejected'].contains(result['status'])) {
         throw StateError('Invalid submission receipt');
       }
       await submissions.clear(account, plan['id'] as String);
+      return result;
     } on CallableFailure catch (error) {
       if ([
         'invalid-argument',
@@ -213,6 +286,8 @@ class FamilyPlanningController extends ChangeNotifier {
   @override
   void dispose() {
     disposed = true;
+    disposal.add(null);
+    unawaited(disposal.close());
     super.dispose();
   }
 }

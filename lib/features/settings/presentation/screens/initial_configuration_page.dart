@@ -83,6 +83,7 @@ class InitialConfigurationPage extends ConsumerWidget {
             controller.setLanguage(value.language);
             controller.setDataSourceConfig(value.config);
             final saved = await controller.submit(
+              enableFamilySharing: value.shareData,
               nightscoutUrl: value.nightscoutUrl,
               nightscoutToken: value.nightscoutToken,
             );

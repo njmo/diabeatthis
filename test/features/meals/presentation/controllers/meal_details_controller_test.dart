@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:diabeatthis/common/history/insulin_bolus_summary.dart';
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/history/local_device_status_history_repository.dart';
@@ -16,10 +17,14 @@ import 'package:diabeatthis/features/meals/presentation/controllers/meal_details
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_analysis_charts.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   late DatabaseImpl db;
   late ProviderContainer container;
   late bool offline;

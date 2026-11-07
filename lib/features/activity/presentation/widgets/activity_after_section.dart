@@ -16,7 +16,12 @@ import 'activity_session_events.dart';
 
 class ActivityAfterSection extends StatelessWidget {
   final ActivityLogAnalysisData analysis;
-  const ActivityAfterSection({super.key, required this.analysis});
+  final bool hasLocalMealContext;
+  const ActivityAfterSection({
+    super.key,
+    required this.analysis,
+    this.hasLocalMealContext = true,
+  });
   @override
   Widget build(BuildContext context) {
     final lang = context.lang;
@@ -33,7 +38,10 @@ class ActivityAfterSection extends StatelessWidget {
       children: [
         ActivityObservationInfoCard(analysis: analysis),
         const SizedBox(height: 16),
-        ActivityAfterMealsCard(analysis: analysis),
+        ActivityAfterMealsCard(
+          analysis: analysis,
+          hasLocalMealContext: hasLocalMealContext,
+        ),
         const SizedBox(height: 16),
         DetailMetricSection(
           title: lang.activityTabAfter,
@@ -83,7 +91,7 @@ class ActivityAfterSection extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '${lang.activityFirstLow}: ${low == null ? lang.activityNoLowRecorded : '${low.sgv} mg/dl · ${formatActivityLogTime(low.date)}'}',
+                '${lang.activityFirstLow}: ${low == null ? (summary.after.isEmpty ? lang.activityMissingData : lang.activityNoLowRecorded) : '${low.sgv} mg/dl · ${formatActivityLogTime(low.date)}'}',
               ),
             ],
           ),

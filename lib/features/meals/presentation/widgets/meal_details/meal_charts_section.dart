@@ -26,6 +26,7 @@ class MealChartsSection extends HookConsumerWidget {
   final bool advanced;
   final bool compact;
   final bool embedded;
+  final ValueChanged<DateTime>? onTimestampSelected;
 
   const MealChartsSection({
     super.key,
@@ -36,6 +37,7 @@ class MealChartsSection extends HookConsumerWidget {
     this.advanced = false,
     this.compact = false,
     this.embedded = false,
+    this.onTimestampSelected,
   });
 
   @override
@@ -52,9 +54,16 @@ class MealChartsSection extends HookConsumerWidget {
       );
     }
     final selected = selectedTimestamp ?? data.mealTime;
-    void select(DateTime time) => ref
-        .read(mealDetailsControllerProvider(details.meal.id).notifier)
-        .selectTimestamp(time);
+    void select(DateTime time) {
+      if (onTimestampSelected != null) {
+        onTimestampSelected!(time);
+        return;
+      }
+      ref
+          .read(mealDetailsControllerProvider(details.meal.id).notifier)
+          .selectTimestamp(time);
+    }
+
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

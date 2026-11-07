@@ -114,7 +114,10 @@ class MealIngredientsDraftNotifier extends _$MealIngredientsDraftNotifier {
 
 @riverpod
 class MealDraftNotifier extends _$MealDraftNotifier with Logging {
-  bool _usesAutomaticName = true;
+  MealDraftNotifier({this.initialDraft})
+    : _usesAutomaticName = initialDraft?.name.isEmpty ?? true;
+  final MealDraft? initialDraft;
+  bool _usesAutomaticName;
   bool get usesAutomaticName => _usesAutomaticName;
 
   void applyGeneratedName(String name) {
@@ -125,7 +128,7 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
 
   @override
   MealDraft build() {
-    return _emptyDraft();
+    return initialDraft ?? _emptyDraft();
   }
 
   MealDraft _emptyDraft() {
@@ -158,6 +161,7 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
       state = state.copyWith(basedOnMealId: basedOnMealId);
   void setMealTemplateId(int? mealTemplateId) =>
       state = state.copyWith(mealTemplateId: mealTemplateId);
+  void setNotes(String notes) => state = state.copyWith(notes: notes);
   void setStatus(String status) => state = state.copyWith(status: status);
   void removeMealIngredient(MealIngredientsDraft mealIngredient) {
     final ingredients = [...state.mealIngredients];
@@ -235,6 +239,9 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
 
 extension MealIngredientsDraftIdentity on MealIngredientsDraft {
   bool isSameIngredientAs(MealIngredientsDraft other) {
+    if (catalogId != null || other.catalogId != null) {
+      return catalogId != null && catalogId == other.catalogId;
+    }
     final ingredientId = ingredient.getIngredientIdOrNull();
     final otherIngredientId = other.ingredient.getIngredientIdOrNull();
     if (ingredientId != null && otherIngredientId != null) {

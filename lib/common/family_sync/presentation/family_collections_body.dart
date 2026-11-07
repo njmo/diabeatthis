@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../features/activity/presentation/widgets/activity_definition_sheet.dart';
 import '../../l10n/language.dart';
 import '../../meal/meal_category.dart';
 import '../../presentation/collections/controllers/caregiver_activities_controller.dart';
@@ -10,14 +11,19 @@ import '../../presentation/collections/views/activities_view.dart';
 import '../../presentation/collections/views/activity_logs_view.dart';
 import '../../presentation/collections/views/ingredients_view.dart';
 import '../../presentation/collections/views/meals_view.dart';
+import '../../presentation/widgets/activity_upcoming_sessions_button.dart';
 import '../../widgets/meal_category_field.dart';
 import '../../widgets/search_text_field.dart';
+import '../family_access_scope.dart';
 import '../family_planning_controller.dart';
 import '../family_planning_view.dart';
+import 'family_activity_catalog_plan_card.dart';
+import 'family_activity_catalog_scope.dart';
 import 'family_ingredient_catalog_section.dart';
-import 'family_plan_request_card.dart';
-import 'family_planned_activity_card.dart';
+import 'family_plan_status_card.dart';
 import 'family_record_page.dart';
+import 'family_scope_guard.dart';
+import 'family_upcoming_activities.dart';
 
 typedef FamilyPlanEditor =
     Future<void> Function(
@@ -68,6 +74,7 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
   @override
   Widget build(BuildContext context) {
     final family = widget.family;
+    final access = FamilyAccessScope(family);
     final rows = family.rows.values.toList();
     final loading = family.busy && rows.isEmpty;
     void openMeal(int id) => FamilyRecordPage.open(
@@ -91,7 +98,11 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: FamilyIngredientCatalogSection(rows: rows, searchOnly: true),
+            child: FamilyIngredientCatalogSection(
+              rows: rows,
+              searchOnly: true,
+              family: family,
+            ),
           ),
           Expanded(
             child: IngredientListContent.controlled(
@@ -116,15 +127,51 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
       );
     }
     if (widget.view == FamilyPlanningView.activityCatalog) {
-      return ActivitiesView(
-        controller: CaregiverActivitiesController(
-          rows: rows,
-          loading: loading,
-          failed: family.failed,
-          onRetry: family.refresh,
-          open: (item) =>
-              FamilyRecordPage.open(context, family, 'activities', item.id),
-        ),
+      final scope = FamilyAccessScope(family);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FamilyActivityCatalogScope(
+            scope: scope,
+            child: Builder(
+              builder: (context) => Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: Text(context.lang.activityCreateTitle),
+                  onPressed: !widget.enabled
+                      ? null
+                      : () => showActivityDefinitionSheet(context),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: ActivitiesView(
+              header: [
+                for (final plan in family.plans.where(
+                  (p) =>
+                      isActivityCatalogPlan(p) &&
+                      ['pending', 'rejected'].contains(p['status']),
+                ))
+                  FamilyActivityCatalogPlanCard(scope: scope, plan: plan),
+              ],
+              controller: CaregiverActivitiesController(
+                rows: rows,
+                loading: loading,
+                failed: family.failed,
+                onRetry: family.refresh,
+                open: (item) => FamilyRecordPage.open(
+                  context,
+                  family,
+                  'activities',
+                  item.id,
+                  scope: scope,
+                ),
+              ),
+            ),
+          ),
+        ],
       );
     }
     if (widget.view == FamilyPlanningView.meals) {
@@ -148,11 +195,27 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
           ),
           Expanded(
             child: MealListContent.controlled(
+              statusLabelFor: (context, meal) => familyPlanRecordLabel(
+                context,
+                family.plans,
+                'meals',
+                meal.id,
+              ),
+              retryFor: (meal) => widget.enabled
+                  ? familyPlanRetryForRecord(
+                      family.plans,
+                      'meals',
+                      meal.id,
+                      widget.edit,
+                    )
+                  : null,
               header: [
                 for (final plan in family.plans.where(
-                  (p) => (p['type'] as String).endsWith('Meal'),
+                  (p) =>
+                      (p['type'] as String).endsWith('Meal') &&
+                      showFamilyPlanStatus(p, rows),
                 ))
-                  FamilyPlanRequestCard(
+                  FamilyPlanStatusCard(
                     plan: plan,
                     onRetry: widget.enabled
                         ? () => widget.edit(
@@ -179,11 +242,6 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
         ],
       );
     }
-    final activities = CaregiverActivitiesController(
-      rows: rows,
-      open: null,
-      onRetry: family.refresh,
-    ).state.items;
     return ActivityLogsView(
       controller: CaregiverActivityLogsController(
         rows: rows,
@@ -194,54 +252,24 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
             FamilyRecordPage.open(context, family, 'activityLogs', item.id),
       ),
       header: [
-        for (final row in family.ofKind('activityOccurrences').where((r) {
-          final p = r['payload'] as Map;
-          final log =
-              family.rows['activityLogs/${p['activity_log_id']}']?['payload']
-                  as Map?;
-          return ['pending', 'planned'].contains(p['status']) &&
-              (log == null ||
-                  (log['started_at'] as int) >
-                      DateTime.now().millisecondsSinceEpoch);
-        }))
-          FamilyPlannedActivityCard(
-            payload: row['payload'] as Map,
-            name:
-                activities
-                    .where(
-                      (a) => a.id == (row['payload'] as Map)['activity_id'],
-                    )
-                    .firstOrNull
-                    ?.name ??
-                context.lang.familyPlanActivity,
-            locked: family.locked(
-              'activityOccurrences',
-              (row['payload'] as Map)['id'] as int,
-            ),
-            monitoring: family.monitored(
-              'activityOccurrences',
-              (row['payload'] as Map)['id'] as int,
-            ),
-            onConfirm: !widget.enabled
-                ? null
-                : () => widget.edit(
-                    'confirmActivity',
-                    targetId: (row['payload'] as Map)['id'] as int,
-                  ),
-            onMove: !widget.enabled
-                ? null
-                : () => widget.edit(
-                    'moveActivity',
-                    targetId: (row['payload'] as Map)['id'] as int,
-                    initial: {
-                      'startedAt': (row['payload'] as Map)['started_at'],
-                    },
-                  ),
-          ),
+        ActivityUpcomingSessionsButton(
+          routeGuard: (child) => FamilyScopeGuard(scope: access, child: child),
+          contentBuilder: (_) =>
+              FamilyUpcomingActivities(scope: access, edit: widget.edit),
+        ),
         for (final plan in family.plans.where(
-          (p) => !(p['type'] as String).endsWith('Meal'),
+          (p) =>
+              !(p['type'] as String).endsWith('Meal') &&
+              !isUpcomingFamilyActivityPlan(p) &&
+              ![
+                'createActivity',
+                'updateActivity',
+                'createActivitySchedule',
+                'setActivityScheduleEnabled',
+              ].contains(p['type']) &&
+              showFamilyPlanStatus(p, rows),
         ))
-          FamilyPlanRequestCard(
+          FamilyPlanStatusCard(
             plan: plan,
             onRetry: widget.enabled
                 ? () => widget.edit(

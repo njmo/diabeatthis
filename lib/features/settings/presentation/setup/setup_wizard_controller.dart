@@ -147,6 +147,7 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   Future<void> continueWithoutGoogle() async {
+    if (familyCareLocked) return;
     if (disposed ||
         state.signingIn ||
         (state.mode != SetupDeviceMode.patient &&
@@ -185,6 +186,7 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   Future<void> signOutGoogle() async {
+    if (familyCareLocked) return;
     if (disposed || authentication == null || state.signingIn) return;
     state.signingIn = true;
     state.signInFailed = false;
@@ -400,6 +402,7 @@ class SetupWizardController extends ChangeNotifier {
   ];
   bool get canSkipCurrentModule =>
       (module?.canSkip ?? false) &&
+      !(module == SetupModule.family && familyCareLocked) &&
       !(module == SetupModule.nightscout &&
           (state.mode == SetupDeviceMode.caregiver || state.config.usesCloud));
   SetupModule? get module => modules.isEmpty
@@ -454,7 +457,24 @@ class SetupWizardController extends ChangeNotifier {
     changed();
   }
 
+  bool familyMembershipPending = false;
+  bool knownFamilyCare = false;
+  bool get familyCareLocked =>
+      familyRepository is SecureFamilyRepository &&
+      (knownFamilyCare ||
+          familyMembershipPending ||
+          state.paired ||
+          state.familyMembers.isNotEmpty);
+
   void select(SetupFeatureId id, bool enabled) {
+    if (!enabled &&
+        familyCareLocked &&
+        {
+          SetupFeatureId.familyChat,
+          SetupFeatureId.childOverview,
+        }.contains(id)) {
+      return;
+    }
     if (enabled && !canEnableFeature(id)) return;
     if (id == SetupFeatureId.familyChat &&
         state.mode == SetupDeviceMode.patient) {
@@ -683,6 +703,9 @@ class SetupWizardController extends ChangeNotifier {
   void refreshFamilyMembers() {
     if (!state.signedIn || disposed) return;
     final session = pairingSession, request = ++membershipRequest;
+    knownFamilyCare =
+        knownFamilyCare || state.paired || state.familyMembers.isNotEmpty;
+    familyMembershipPending = true;
     unawaited(familySubscription?.cancel());
     state.familyMembers = const [];
     state.paired = false;
@@ -710,6 +733,8 @@ class SetupWizardController extends ChangeNotifier {
             return;
           }
           final invitationWasUsed = invitationUsed;
+          familyMembershipPending = false;
+          knownFamilyCare = members.isNotEmpty;
           state.familyMembers = List.unmodifiable(members);
           if (invitationWasUsed && !invitationUsed) {
             state.pairingInvitation = null;
@@ -717,6 +742,7 @@ class SetupWizardController extends ChangeNotifier {
           state.paired = members.isNotEmpty;
           state.familyMembersFailed = false;
           if (state.paired) {
+            state.selected.add(SetupFeatureId.familyChat);
             state.configured.add(SetupModule.family);
           } else {
             state.configured.remove(SetupModule.family);

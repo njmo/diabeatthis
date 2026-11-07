@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/planning/meal_form_actions.dart';
 import '../../../../common/widgets/sheet_surface.dart';
 import '../../../ingredients/presentation/widgets/ingredient_list_filter.dart';
 import '../../data/model/copied_meal_type.dart';
@@ -81,6 +82,9 @@ class CopiedMealPicker extends HookConsumerWidget {
                                 ),
                                 const SizedBox(height: 20),
                                 IngredientListFilter(
+                                  allowIngredientSelection: ref
+                                      .watch(mealFormActionsProvider)
+                                      .allowLocalLookups,
                                   initialQuery: initialQuery,
                                   hintText: context.lang.copiedMealSearchHint,
                                   onQueryChanged: (value) =>

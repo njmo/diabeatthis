@@ -11,8 +11,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../helpers/patient_application_mode.dart';
+
 Widget app(DatabaseImpl db, Widget child) => ProviderScope(
-  overrides: [databaseProvider.overrideWithValue(db)],
+  overrides: [
+    databaseProvider.overrideWithValue(db),
+    patientApplicationModeOverride,
+  ],
   child: MaterialApp(
     locale: const Locale('en'),
     localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -18,6 +18,7 @@ import 'meal_review_summary.dart';
 
 class MealOutcomeSection extends StatelessWidget {
   final MealAnalysisData analysis;
+  final bool hasLocalContext;
   final bool advanced;
   final bool compact;
   final bool readableSummary;
@@ -26,6 +27,7 @@ class MealOutcomeSection extends StatelessWidget {
   const MealOutcomeSection({
     super.key,
     required this.analysis,
+    this.hasLocalContext = true,
     this.advanced = false,
     this.compact = false,
     this.readableSummary = false,
@@ -111,7 +113,10 @@ class MealOutcomeSection extends StatelessWidget {
                           MealExcursionSummary(summary: summary),
                           MealOutcomeDetails(summary: summary),
                           if (analysis.outcomeContext != null)
-                            MealOutcomeFacts(data: analysis.outcomeContext!),
+                            MealOutcomeFacts(
+                              data: analysis.outcomeContext!,
+                              hasLocalContext: hasLocalContext,
+                            ),
                         ],
                       ),
                     )
@@ -125,7 +130,10 @@ class MealOutcomeSection extends StatelessWidget {
                     const SizedBox(height: 8),
                     if (advanced) MealOutcomeDetails(summary: summary),
                     if (analysis.outcomeContext != null)
-                      MealOutcomeFacts(data: analysis.outcomeContext!),
+                      MealOutcomeFacts(
+                        data: analysis.outcomeContext!,
+                        hasLocalContext: hasLocalContext,
+                      ),
                   ],
                 ],
               ),

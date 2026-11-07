@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/features/day_analysis/data/providers/day_meal_review_provider.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_meal_review_entry.dart';
@@ -14,6 +15,9 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../helpers/localized_material_app.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   final day = DateTime(2026, 9, 11);
   final wizard = BolusWizard(
     nightscoutObjectId: 'ns',

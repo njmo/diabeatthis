@@ -10,7 +10,12 @@ import '../utils/activity_log_formatters.dart';
 
 class ActivityAfterMealsCard extends StatelessWidget {
   final ActivityLogAnalysisData analysis;
-  const ActivityAfterMealsCard({super.key, required this.analysis});
+  final bool hasLocalMealContext;
+  const ActivityAfterMealsCard({
+    super.key,
+    required this.analysis,
+    this.hasLocalMealContext = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,13 +28,16 @@ class ActivityAfterMealsCard extends StatelessWidget {
         )
         .toList();
     final meals = analysis.postActivityMeals;
+    if (!hasLocalMealContext && meals.isEmpty && carbs.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return SummaryDetailCard(
       title: lang.activityAfterMeals,
       icon: Icons.restaurant_rounded,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (meals.isEmpty && carbs.isEmpty)
+          if (hasLocalMealContext && meals.isEmpty && carbs.isEmpty)
             Text(lang.activityNoAfterMealRecords),
           for (final details in meals) ...[
             Text(

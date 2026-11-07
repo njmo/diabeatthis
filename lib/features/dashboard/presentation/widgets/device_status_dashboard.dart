@@ -1,26 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../common/l10n/language.dart';
-import '../../../../common/widgets/carbohydrate_icon.dart';
-import '../../../../common/widgets/nutrition_metric_tile.dart';
+import '../../../../common/monitoring/widgets/insulin_carbohydrate_metrics.dart';
 import '../../../../core/domain/model/device_status.dart';
+import '../../../../core/domain/model/glucose.dart';
 import '../../../low_treatment/data/providers/low_treatment_suggestion_visibility_provider.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_sheet.dart';
 import '../../../low_treatment/presentation/widgets/low_treatment_suggestion_card.dart';
 import '../../data/providers/old_reading_provider.dart';
 import '../../data/utils/nightscout_utils.dart';
 import 'dashboard_glucose_reading.dart';
+import 'glucose_dashboard.dart';
 
 class DeviceStatusDashboard extends ConsumerWidget {
   final DeviceStatus deviceStatus;
 
-  const DeviceStatusDashboard({super.key, required this.deviceStatus});
+  const DeviceStatusDashboard({
+    super.key,
+    required this.deviceStatus,
+    this.allowLocalActions = true,
+    this.readingIsOld,
+    this.readings,
+    this.glucose,
+    this.useDeviceGlucose = true,
+  });
+  final bool allowLocalActions;
+  final Glucose? glucose;
+  final bool useDeviceGlucose;
+  final bool? readingIsOld;
+  final List<Glucose>? readings;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final oldReading = ref.watch(isReadingOldProvider.select((v) => v));
+    final oldReading =
+        readingIsOld ?? ref.watch<bool>(isReadingOldProvider.select((v) => v));
     final bg = deviceStatus.bg;
     final tick = parseTick(deviceStatus.tick);
     final bgColor = (oldReading)
@@ -33,49 +46,26 @@ class DeviceStatusDashboard extends ConsumerWidget {
     return RepaintBoundary(
       child: Column(
         children: [
-          DashboardGlucoseReading(
-            value: bg,
-            color: bgColor,
-            trendIcon: trendIcon,
-            change: '$sign$tick mg/dl',
+          if (glucose != null)
+            GlucoseDashboard(glucose: glucose!, readings: readings)
+          else
+            DashboardGlucoseReading(
+              value: useDeviceGlucose ? bg : null,
+              readings: readings,
+              color: bgColor,
+              trendIcon: useDeviceGlucose ? trendIcon : null,
+              change: useDeviceGlucose ? '$sign$tick mg/dl' : null,
+            ),
+          InsulinCarbohydrateMetrics(
+            iob: deviceStatus.iob,
+            cob: deviceStatus.cob,
+            hasIob: deviceStatus.hasIob,
+            hasCob: deviceStatus.hasCob,
+            iconSize: 30,
+            iconSpacing: 16,
           ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Tooltip(
-                  message: context.lang.mealReviewIob,
-                  child: NutritionMetricTile(
-                    iconSize: 30,
-                    iconSpacing: 16,
-                    icon: Icons.water_drop,
-                    iconColor: dark
-                        ? const Color(0xFF80D8F7)
-                        : const Color(0xFF08799E),
-                    label: context.lang.dashboardIobLabel,
-                    value: '${deviceStatus.iob.toStringAsFixed(2)} U',
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Tooltip(
-                  message: context.lang.mealReviewCob,
-                  child: NutritionMetricTile(
-                    iconSize: 30,
-                    iconSpacing: 16,
-                    leading: const CarbohydrateIcon(),
-                    iconColor: dark
-                        ? const Color(0xFFF3C96A)
-                        : const Color(0xFF986500),
-                    label: context.lang.dashboardCobLabel,
-                    value: '${deviceStatus.cob.toStringAsFixed(2)} g',
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (deviceStatus.carbsReq > 0 &&
+          if (allowLocalActions &&
+              deviceStatus.carbsReq > 0 &&
               ref
                       .watch(
                         lowTreatmentSuggestionVisibilityProvider(

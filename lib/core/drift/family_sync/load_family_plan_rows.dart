@@ -38,7 +38,32 @@ Future<List<Map<String, dynamic>>> loadFamilyPlanRows(
 
   final type = plan['type'] as String;
   final values = plan['values'] as Map;
-  if (type.endsWith('Meal')) {
+  if (type == 'setActivityScheduleEnabled') {
+    final schedule = await add('activitySchedules', plan['targetId']);
+    if (schedule != null) await add('activities', schedule['activity_id']);
+    final occurrences = await db
+        .customSelect(
+          "SELECT * FROM family_sync_outbox WHERE kind='activityOccurrences' AND deleted=0 AND json_extract(payload,'\$.schedule_id')=? AND json_extract(payload,'\$.started_at')>?",
+          variables: [
+            Variable(plan['targetId'] as int),
+            Variable(values['effectiveFrom'] as int),
+          ],
+        )
+        .get();
+    collect(occurrences);
+    for (final row in occurrences) {
+      final p = jsonDecode(row.read<String>('payload')) as Map;
+      if (p['activity_log_id'] != null) {
+        await add('activityLogs', p['activity_log_id']);
+      }
+    }
+  } else if ([
+    'createActivity',
+    'updateActivity',
+    'createActivitySchedule',
+  ].contains(type)) {
+    if (type != 'createActivity') await add('activities', plan['targetId']);
+  } else if (type.endsWith('Meal')) {
     if (type == 'updateMeal') {
       await add('meals', plan['targetId']);
       collect(
@@ -64,8 +89,10 @@ Future<List<Map<String, dynamic>>> loadFamilyPlanRows(
         await add('ingredients', item['ingredientId']);
       }
     }
-  } else if (type == 'planActivity') {
-    await add('activities', values['activityId']);
+  } else if (['planActivity', 'startActivity', 'logActivity'].contains(type)) {
+    if (values['activityId'] != null) {
+      await add('activities', values['activityId']);
+    }
   } else {
     final occurrence = await add('activityOccurrences', plan['targetId']);
     if (occurrence != null) {

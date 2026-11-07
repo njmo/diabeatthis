@@ -4,15 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/day/day_history_statistics.dart';
 import '../../data/providers/day_context_provider.dart';
 import '../../data/providers/day_meal_review_provider.dart';
 import '../../data/providers/day_summary_provider.dart';
 import 'day_activity_card.dart';
 import 'day_ai_button.dart';
 import 'day_date_selector.dart';
-import 'day_device_age_card.dart';
-import 'day_glucose_card.dart';
-import 'day_insulin_card.dart';
 import 'day_meals_card.dart';
 import 'day_review_section.dart';
 import 'day_summary_status.dart';
@@ -103,23 +101,7 @@ class TodayPageState extends ConsumerState<TodayPage> {
                     ),
                   ),
                   DaySummaryStatus(date: day.start),
-                  DayDeviceAgeCard(day: day),
-                  DayGlucoseCard(
-                    title: lang.dayNightTitle,
-                    summary: day.nightGlucose,
-                    information: lang.dayNightNote,
-                  ),
-
-                  DayInsulinCard(
-                    summary: day.nightBoluses,
-                    basal: day.nightBasal,
-                    isNight: true,
-                  ),
-                  DayGlucoseCard(
-                    title: lang.dayGlucoseTitle,
-                    summary: day.glucose,
-                  ),
-                  DayInsulinCard(summary: day.boluses, basal: day.basal),
+                  ...dayHistoryStatisticCards(context, day),
                   DayMealsCard(day: day),
                   DayReviewSection(date: day.start),
                   DayActivityCard(activities: day.activities),

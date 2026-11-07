@@ -1,7 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../common/activity/activity_activation_guard.dart';
+import '../../../../common/activity/insert_activity_session.dart';
 import '../../../../core/domain/model/activity.dart' as domain;
 import '../../../../core/domain/model/activity_log.dart' as domain;
 import '../../../../core/drift/database_impl.dart' as db;
@@ -12,7 +12,6 @@ import '../domain/use_cases/end_activity_entry_use_case.dart';
 import '../drafts/activity_draft.dart';
 import '../drafts/activity_log_draft.dart';
 import '../mappers/activity_draft_mapper.dart';
-import '../mappers/activity_log_draft_mapper.dart';
 import '../mappers/activity_log_summary_data_mapper.dart';
 import '../models/activity_log_summary_data.dart';
 
@@ -181,26 +180,16 @@ Future<domain.ActivityLog> insertActivityLog(
 ) async {
   final db = ref.watch(databaseProvider);
   return db.transaction(() async {
-    final end = activityLog.endedAt;
-    if (end != null &&
-        (!end.isAfter(activityLog.startedAt) || end.isAfter(clock.now()))) {
-      throw ArgumentError(
-        'Historical activity must end after its start and not in the future',
-      );
-    }
-    await ensureActivityActivationAllowed(
-      db,
-      startsAt: activityLog.startedAt,
-      endsAt: end,
-      now: clock.now(),
-    );
     final activity = await saveActivityDraft(db, activityLog.activity);
     if (activity == null) {
       throw Exception('Could not insert activity');
     }
-    return await db.activityDao
-        .insertActivityLog(activityLog.toCompanion(activityId: activity.id))
-        .then((value) => value.toDomain());
+    return (await insertActivitySession(
+      db,
+      activityId: activity.id,
+      start: activityLog.startedAt,
+      end: activityLog.endedAt,
+    )).toDomain();
   });
 }
 
@@ -234,7 +223,7 @@ Future<void> stopActivity(Ref ref, ActivityLogSummaryData activityLog) async {
 @riverpod
 Stream<ActivityLogSummaryData?> getPendingActivity(Ref ref) {
   final db = ref.watch(databaseProvider);
-  return db.activityDao.watchActiveActivityLogView().map((row) {
+  return db.activityDao.watchPendingActivityLogView().map((row) {
     if (row == null) {
       Log.i('getPendingActivityProvider', 'value: null');
       return null;

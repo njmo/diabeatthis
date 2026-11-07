@@ -10,12 +10,15 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../helpers/localized_material_app.dart';
 import '../../../../helpers/meal_flow_test_fixture.dart';
+import '../../../../helpers/patient_application_mode.dart';
 
 void main() {
   testWidgets(
     'review generates the name, requires a category and updates its prefix',
     (tester) async {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [patientApplicationModeOverride],
+      );
       addTearDown(container.dispose);
       await tester.pumpWidget(
         UncontrolledProviderScope(

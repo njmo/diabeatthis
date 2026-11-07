@@ -6,9 +6,14 @@ import 'ingredient_icon.dart';
 import 'ingredient_identity_text.dart';
 
 class IngredientDetailsHeader extends StatelessWidget {
-  const IngredientDetailsHeader({super.key, required this.ingredient});
+  const IngredientDetailsHeader({
+    super.key,
+    required this.ingredient,
+    this.showConfidence = true,
+  });
 
   final Ingredient ingredient;
+  final bool showConfidence;
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +46,10 @@ class IngredientDetailsHeader extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        IngredientConfidenceBanner(value: ingredient.nutritionConfidence),
+        if (showConfidence) ...[
+          const SizedBox(height: 16),
+          IngredientConfidenceBanner(value: ingredient.nutritionConfidence),
+        ],
       ],
     );
   }

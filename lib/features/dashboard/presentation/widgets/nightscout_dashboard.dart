@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../common/l10n/language.dart';
+import '../../../../common/family_sync/presentation/child_family_cloud_ribbon.dart';
+import '../../../../common/presentation/dashboard/nightscout_panel_view.dart';
 import '../../../../foreground/providers/blood_sugar_value_provider.dart';
 import '../../data/providers/device_status_ui_provider.dart';
 import '../../data/providers/time_now_provider.dart';
@@ -26,51 +27,20 @@ class NightscoutPanel extends ConsumerWidget {
         )
         .value;
 
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Card(
-        margin: EdgeInsets.zero,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      RepaintBoundary(
-                        child: Text(
-                          readingDate == null
-                              ? context.lang.dashboardWaitingForData
-                              : formatAgo(lastUpdate ?? Duration.zero),
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (deviceStatusValue != null)
-                    DeviceStatusDashboard(deviceStatus: deviceStatusValue)
-                  else if (glucoseValue != null)
-                    GlucoseDashboard(glucose: glucoseValue)
-                  else
-                    DashboardGlucoseReading(
-                      value: null,
-                      color: theme.colorScheme.onSurfaceVariant,
-                      trendIcon: null,
-                    ),
-                ],
-              ),
+    return NightscoutPanelView(
+      syncRibbon: const ChildFamilyCloudRibbon(),
+      lastUpdate: readingDate == null
+          ? null
+          : formatAgo(lastUpdate ?? Duration.zero),
+      readings: deviceStatusValue != null
+          ? DeviceStatusDashboard(deviceStatus: deviceStatusValue)
+          : glucoseValue != null
+          ? GlucoseDashboard(glucose: glucoseValue)
+          : DashboardGlucoseReading(
+              value: null,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              trendIcon: null,
             ),
-          ],
-        ),
-      ),
     );
   }
 }

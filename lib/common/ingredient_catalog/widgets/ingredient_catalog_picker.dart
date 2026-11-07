@@ -13,6 +13,7 @@ Future<IngredientSearchItem?> showIngredientCatalogPicker(
   String? referenceLabel,
   String? ingredientName,
   bool searchOnly = false,
+  Future<void> Function(BuildContext)? onScanBarcode,
 }) => showModalBottomSheet<IngredientSearchItem>(
   context: context,
   isScrollControlled: true,
@@ -24,6 +25,7 @@ Future<IngredientSearchItem?> showIngredientCatalogPicker(
     referenceLabel: referenceLabel,
     ingredientName: ingredientName,
     searchOnly: searchOnly,
+    onScanBarcode: onScanBarcode,
   ),
 );
 
@@ -36,6 +38,7 @@ class IngredientCatalogPicker extends StatefulWidget {
     this.referenceLabel,
     this.ingredientName,
     this.searchOnly = false,
+    this.onScanBarcode,
     super.key,
   });
   final bool includeReferenceIngredients;
@@ -45,6 +48,7 @@ class IngredientCatalogPicker extends StatefulWidget {
   final String? referenceLabel;
   final String? ingredientName;
   final bool searchOnly;
+  final Future<void> Function(BuildContext)? onScanBarcode;
   @override
   State<IngredientCatalogPicker> createState() =>
       IngredientCatalogPickerState();
@@ -52,6 +56,7 @@ class IngredientCatalogPicker extends StatefulWidget {
 
 class IngredientCatalogPickerState extends State<IngredientCatalogPicker> {
   late String query;
+  bool scanning = false;
   late final TextEditingController search;
   @override
   void initState() {
@@ -101,16 +106,46 @@ class IngredientCatalogPickerState extends State<IngredientCatalogPicker> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-            TextField(
-              controller: search,
-              textInputAction: TextInputAction.search,
-              maxLength: 120,
-              onChanged: (value) => setState(() => query = value),
-              decoration: InputDecoration(
-                labelText: context.lang.ingredientSearchLabel,
-                counterText: '',
-                prefixIcon: const Icon(Icons.search),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    enabled: !scanning,
+                    controller: search,
+                    textInputAction: TextInputAction.search,
+                    maxLength: 120,
+                    onChanged: (value) => setState(() => query = value),
+                    decoration: InputDecoration(
+                      labelText: context.lang.ingredientSearchLabel,
+                      counterText: '',
+                      prefixIcon: const Icon(Icons.search),
+                    ),
+                  ),
+                ),
+                if (widget.onScanBarcode != null) ...[
+                  const SizedBox(width: 8),
+                  IconButton.filledTonal(
+                    tooltip: context.lang.ingredientScanBarcodeTooltip,
+                    onPressed: scanning
+                        ? null
+                        : () async {
+                            FocusScope.of(context).unfocus();
+                            setState(() => scanning = true);
+                            try {
+                              await widget.onScanBarcode!(context);
+                            } finally {
+                              if (mounted) setState(() => scanning = false);
+                            }
+                          },
+                    icon: scanning
+                        ? const SizedBox.square(
+                            dimension: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.qr_code_scanner_rounded),
+                  ),
+                ],
+              ],
             ),
             if (widget.onCreateReference != null)
               TextButton.icon(

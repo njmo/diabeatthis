@@ -7,10 +7,12 @@ class SelectedActivityCard extends StatelessWidget {
     super.key,
     required this.activity,
     required this.onChange,
+    this.onRemove,
   });
 
   final ActivityDraft activity;
   final VoidCallback? onChange;
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +73,12 @@ class SelectedActivityCard extends StatelessWidget {
                 tooltip: context.lang.dashboardChangeActivityTooltip,
                 onPressed: onChange,
                 icon: const Icon(Icons.edit),
+              ),
+            if (onRemove != null)
+              IconButton(
+                tooltip: context.lang.activityClearSelection,
+                onPressed: onRemove,
+                icon: const Icon(Icons.close),
               ),
           ],
         ),

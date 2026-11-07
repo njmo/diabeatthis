@@ -20,7 +20,9 @@ class MealTimingStep extends StatelessWidget {
     this.anchor = MealTimeAnchor.eatingStart,
     this.onAnchorChanged,
     this.onCalculatorSelected,
+    this.planningHorizonDays = 5,
   });
+  final int planningHorizonDays;
   final MealTimeAnchor anchor;
   final ValueChanged<MealTimeAnchor>? onAnchorChanged;
   final VoidCallback? onCalculatorSelected;
@@ -52,6 +54,7 @@ class MealTimingStep extends StatelessWidget {
         const SizedBox(height: 16),
       ],
       MealPlannedTimeField(
+        planningHorizonDays: planningHorizonDays,
         key: ValueKey(anchor),
         showTimeLabel: retrospective,
         timeLabel: retrospective

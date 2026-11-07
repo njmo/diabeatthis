@@ -6,6 +6,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_time_anchor.dart';
+import '../../../../common/planning/meal_form_actions.dart';
+import '../../../../common/routing/form_route_guard.dart';
 import '../../../../common/widgets/form_action_bar.dart';
 import '../../../../common/widgets/form_step_header.dart';
 import '../../../../common/widgets/sheet_content_height_request.dart';
@@ -35,6 +37,8 @@ class AddMealPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final actions = ref.watch(mealFormActionsProvider);
+    useListenable(actions);
     final step = useState(0);
     final timing = useState(const RetrospectiveMealTiming());
     final selectedDate = useState(initialEatenAt);
@@ -55,7 +59,8 @@ class AddMealPage extends HookConsumerWidget {
       return null;
     }, const []);
     final mealDraft = ref.read(mealDraftProvider.notifier);
-    final isSaving = ref.watch(addMealControllerProvider).isLoading;
+    final isSaving =
+        actions.saving || ref.watch(addMealControllerProvider).isLoading;
     final isCopying = ref.watch(copyMealSourceControllerProvider).isLoading;
     final busy = isSaving || isCopying;
     final copyController = ref.read(copyMealSourceControllerProvider.notifier);
@@ -79,7 +84,9 @@ class AddMealPage extends HookConsumerWidget {
     void next() {
       if (busy) return;
       if (step.value == 0) {
-        if (draft.mealIngredients.isNotEmpty) changeStep(1);
+        if (draft.mealIngredients.isNotEmpty && actions.canContinue(draft)) {
+          changeStep(1);
+        }
         return;
       }
       final form = timeFormKey.currentState;
@@ -174,6 +181,7 @@ class AddMealPage extends HookConsumerWidget {
                           1 => Form(
                             key: timeFormKey,
                             child: MealTimingStep(
+                              planningHorizonDays: actions.planningHorizonDays,
                               key: ValueKey(timeFieldVersion.value),
                               retrospective: retrospective,
                               selectedDate: selectedDate.value,
@@ -284,14 +292,21 @@ class AddMealPage extends HookConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) {
+    final guard = formRouteGuardOf(context);
+    final container = ProviderScope.containerOf(context);
     return showModalBottomSheet<CopiedMealType>(
       useRootNavigator: false,
       isScrollControlled: true,
       context: context,
-      builder: (context) => CopiedMealPicker(
-        initialQuery: ref.read(mealDraftProvider.notifier).usesAutomaticName
-            ? ''
-            : ref.read(mealDraftProvider).name.trim(),
+      builder: (context) => guard(
+        UncontrolledProviderScope(
+          container: container,
+          child: CopiedMealPicker(
+            initialQuery: ref.read(mealDraftProvider.notifier).usesAutomaticName
+                ? ''
+                : ref.read(mealDraftProvider).name.trim(),
+          ),
+        ),
       ),
     );
   }
@@ -334,10 +349,10 @@ class AddMealPage extends HookConsumerWidget {
     formState.save();
     try {
       final meal = await ref
-          .read(addMealControllerProvider.notifier)
-          .saveCurrentDraft(context.lang, retrospective: timing);
+          .read(mealFormActionsProvider)
+          .save(ref, context.lang, retrospective: timing);
       if (context.mounted) {
-        context.router.pop(meal);
+        ref.read(mealFormActionsProvider).close(context, meal);
       }
     } catch (e) {
       if (context.mounted) {

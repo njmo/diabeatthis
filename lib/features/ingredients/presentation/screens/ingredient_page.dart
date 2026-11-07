@@ -3,19 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/router/app_router.dart';
-import '../../../../common/ingredient_catalog/widgets/ingredient_origin_badge.dart';
 import '../../../../common/l10n/language.dart';
-import '../../../../common/widgets/detail_tabs.dart';
+import '../../../../common/presentation/details/ingredient_details_view.dart';
+import '../../../../common/presentation/details/ingredient_preview_controller.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/models/ingredient_portion_data.dart';
 import '../../data/providers/ingredient_provider.dart';
 import '../controllers/ingredient_details_controller.dart';
-import '../widgets/ingredient_details_header.dart';
 import '../widgets/ingredient_edit_actions.dart';
 import '../widgets/ingredient_edit_mode.dart';
-import '../widgets/ingredient_history_section.dart';
-import '../widgets/ingredient_meals_section.dart';
-import '../widgets/ingredient_nutrition_card.dart';
 import '../widgets/ingredient_portion_amount_form.dart';
 import '../widgets/ingredient_portions_section.dart';
 
@@ -162,60 +158,11 @@ class IngredientPageViewState extends ConsumerState<IngredientPage>
                 ),
               );
             }
-            return NestedScrollView(
-              headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                    child: IngredientDetailsHeader(
-                      ingredient: s.data.ingredient,
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: DetailTabs(
-                      controller: tabs,
-                      labels: [
-                        context.lang.ingredientDataTab,
-                        context.lang.ingredientMealsTab,
-                        context.lang.ingredientHistoryTab,
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-              body: TabBarView(
-                controller: tabs,
-                children: [
-                  scroll(
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (s.data.origin != null) ...[
-                          IngredientOriginBadge(origin: s.data.origin!),
-                          const SizedBox(height: 16),
-                        ],
-                        if (!s.data.confidenceIsAssessed) ...[
-                          Text(context.lang.catalogUnassessedConfidence),
-                          const SizedBox(height: 8),
-                        ],
-                        IngredientNutritionCard(ingredient: s.data.ingredient),
-                        const SizedBox(height: 16),
-                        if (!s.data.ingredient.isReference)
-                          IngredientPortionsSection(portions: s.data.portions),
-                      ],
-                    ),
-                  ),
-                  scroll(IngredientMealsSection(usages: s.data.usages)),
-                  scroll(
-                    IngredientHistorySection(
-                      history: s.data.history,
-                      ingredient: s.data.ingredient,
-                    ),
-                  ),
-                ],
+            return IngredientDetailsView(
+              tabs: tabs,
+              controller: PatientIngredientPreviewController(
+                s.data,
+                (id) => context.router.push(MealRoute(mealId: id)),
               ),
             );
           },

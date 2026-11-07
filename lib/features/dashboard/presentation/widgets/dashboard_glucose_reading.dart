@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../core/domain/model/glucose.dart';
-import 'mini_glucose_chart.dart';
+import 'responsive_glucose_chart.dart';
 
 class DashboardGlucoseReading extends StatelessWidget {
   const DashboardGlucoseReading({
@@ -56,11 +56,7 @@ class DashboardGlucoseReading extends StatelessWidget {
           ],
         ),
       ),
-      SizedBox(
-        height: 94,
-        width: 296,
-        child: MiniGlucoseChart(readings: readings),
-      ),
+      ResponsiveGlucoseChart(readings: readings),
       const SizedBox(height: 12),
     ],
   );

@@ -16,12 +16,14 @@ class IngredientListFilter extends HookConsumerWidget {
   final ValueChanged<String> onQueryChanged;
   final EdgeInsetsGeometry padding;
   final List<Widget> trailingActions;
+  final bool allowIngredientSelection;
 
   const IngredientListFilter({
     super.key,
     required this.hintText,
     this.initialQuery = '',
     this.trailingActions = const [],
+    this.allowIngredientSelection = true,
     required this.onQueryChanged,
     this.padding = const EdgeInsets.fromLTRB(12, 8, 12, 6),
   });
@@ -30,7 +32,10 @@ class IngredientListFilter extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     const filterRowHeight = 48.0;
     final queryController = useTextEditingController(text: initialQuery);
-    final selectedIngredients = ref.watch(ingredientFilterProvider);
+    final selectedIngredients = ref
+        .watch(ingredientFilterProvider)
+        .where((_) => allowIngredientSelection)
+        .toList();
     final controller = ref.read(ingredientFilterProvider.notifier);
     final hasRemovableIngredients = selectedIngredients.any(
       (ingredient) => ingredient.removable,
@@ -67,7 +72,7 @@ class IngredientListFilter extends HookConsumerWidget {
                   ),
                 ),
               ),
-              if (canAddIngredient) ...[
+              if (allowIngredientSelection && canAddIngredient) ...[
                 const SizedBox(width: 8),
                 IngredientFilterButton(
                   height: filterRowHeight,

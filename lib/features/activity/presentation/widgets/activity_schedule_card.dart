@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../../../../common/l10n/language.dart';
 import '../../../../core/drift/database_impl.dart';
 
@@ -14,8 +15,8 @@ class ActivityScheduleCard extends StatelessWidget {
   });
   final ActivityScheduleData rule;
   final String name;
-  final ValueChanged<bool> onEnabled;
-  final VoidCallback onEdit;
+  final ValueChanged<bool>? onEnabled;
+  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   @override
   Widget build(BuildContext context) {
@@ -45,10 +46,11 @@ class ActivityScheduleCard extends StatelessWidget {
           ),
           Wrap(
             children: [
-              TextButton(
-                onPressed: onEdit,
-                child: Text(context.lang.activityScheduleEditFuture),
-              ),
+              if (onEdit != null)
+                TextButton(
+                  onPressed: onEdit,
+                  child: Text(context.lang.activityScheduleEditFuture),
+                ),
               if (onDelete != null)
                 TextButton.icon(
                   onPressed: onDelete,

@@ -9,6 +9,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../../helpers/patient_application_mode.dart';
 import 'add_meal_transaction_test.dart' show transactionMealDraft;
 
 void main() {
@@ -18,7 +19,10 @@ void main() {
     db = DatabaseImpl(NativeDatabase.memory());
     container = ProviderContainer(
       retry: (_, _) => null,
-      overrides: [databaseProvider.overrideWithValue(db)],
+      overrides: [
+        patientApplicationModeOverride,
+        databaseProvider.overrideWithValue(db),
+      ],
     );
   });
   tearDown(() async {

@@ -13,7 +13,10 @@ class FamilyPlannedMealCard extends StatelessWidget {
     required this.history,
     required this.locked,
     this.onEdit,
+    this.onOpen,
     this.monitoring = false,
+    this.requestStatusLabel,
+    this.onRetry,
     this.components = const [],
     this.ingredients = const [],
     this.snapshots = const [],
@@ -25,9 +28,13 @@ class FamilyPlannedMealCard extends StatelessWidget {
   final List<Map<String, dynamic>> snapshots;
   final bool locked;
   final bool monitoring;
+  final String? requestStatusLabel;
+  final VoidCallback? onRetry;
   final VoidCallback? onEdit;
+  final VoidCallback? onOpen;
   @override
   Widget build(BuildContext context) => MealEntryCard(
+    onRetry: onRetry,
     name: payload['name'] as String,
     status: payload['status'] as String,
     plannedAt: DateTime.fromMillisecondsSinceEpoch(
@@ -35,10 +42,15 @@ class FamilyPlannedMealCard extends StatelessWidget {
     ),
     statusLabel: monitoring
         ? context.lang.familyPlanMonitoring
-        : locked
-        ? context.lang.familyPlanPending
-        : null,
+        : requestStatusLabel ??
+              (locked ? context.lang.familyPlanPending : null),
     details: [
+      if (onOpen != null)
+        TextButton.icon(
+          onPressed: onOpen,
+          icon: const Icon(Icons.open_in_new_rounded),
+          label: Text(context.lang.mealReviewPageTitle),
+        ),
       Text(
         DateTime.fromMillisecondsSinceEpoch(
           payload['planned_at'] as int,

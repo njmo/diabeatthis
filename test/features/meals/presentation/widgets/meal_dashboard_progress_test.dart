@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/data/provider/parent_controller_provider.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/time_now_provider.dart';
@@ -11,6 +12,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../helpers/localized_material_app.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   testWidgets(
     'active meal stays first, quick titles stay readable, and every date remains visible',
     (tester) async {

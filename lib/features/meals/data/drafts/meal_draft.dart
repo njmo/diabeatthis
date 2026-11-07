@@ -11,6 +11,9 @@ part 'meal_draft.freezed.dart';
 abstract class MealIngredientsDraft with _$MealIngredientsDraft {
   const factory MealIngredientsDraft({
     int? mealIngredientId,
+    String? catalogId,
+    String? catalogRevision,
+    @Default(true) bool catalogReviewed,
     double? recordedGramsPerAmount,
     required IngredientDraft ingredient,
     required IngredientPortionDraft ingredientPortion,

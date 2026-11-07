@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/language.dart';
 import '../../widgets/history_entry_row.dart';
 import 'meal_entry_metadata.dart';
 
@@ -13,6 +14,7 @@ class MealEntryCard extends StatelessWidget {
     this.statusLabel,
     this.onTap,
     this.details,
+    this.onRetry,
   });
 
   final String name;
@@ -21,15 +23,24 @@ class MealEntryCard extends StatelessWidget {
   final String? statusLabel;
   final VoidCallback? onTap;
   final List<Widget>? details;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
-    final metadata = mealEntryMetadata(
-      context,
-      status: status,
-      plannedAt: plannedAt,
-      statusLabel: statusLabel,
-    );
+    final metadata = [
+      ...mealEntryMetadata(
+        context,
+        status: status,
+        plannedAt: plannedAt,
+        statusLabel: statusLabel,
+      ),
+      if (onRetry != null)
+        TextButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh),
+          label: Text(context.lang.familyPlanRetry),
+        ),
+    ];
     if (details == null) {
       return HistoryEntryRow(name: name, metadata: metadata, onTap: onTap);
     }

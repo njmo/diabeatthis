@@ -29,12 +29,18 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../helpers/localized_material_app.dart';
 import '../../../../helpers/meal_flow_test_fixture.dart';
+import '../../../../helpers/patient_application_mode.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   testWidgets(
     'empty composition cannot advance and date validates only on next',
     (tester) async {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [patientApplicationModeOverride],
+      );
       addTearDown(container.dispose);
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -88,6 +94,7 @@ void main() {
     late ProviderContainer container;
     container = ProviderContainer(
       overrides: [
+        patientApplicationModeOverride,
         getMealIngredientsDraftForMealProvider(
           11,
         ).overrideWith((_) async => [mealFlowIngredient(container)]),
@@ -139,7 +146,9 @@ void main() {
   testWidgets(
     'rejects insulin before eating ends without leaving the timing step',
     (tester) async {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [patientApplicationModeOverride],
+      );
       addTearDown(container.dispose);
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -190,7 +199,9 @@ void main() {
   testWidgets('end reference recalculates offsets and survives step navigation', (
     tester,
   ) async {
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [patientApplicationModeOverride],
+    );
     addTearDown(container.dispose);
     final reference = DateTime(2025, 11, 2, 13, 36);
     await tester.pumpWidget(
@@ -283,7 +294,10 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       final db = DatabaseImpl(NativeDatabase.memory());
       final container = ProviderContainer(
-        overrides: [databaseProvider.overrideWithValue(db)],
+        overrides: [
+          patientApplicationModeOverride,
+          databaseProvider.overrideWithValue(db),
+        ],
       );
       addTearDown(() async {
         container.dispose();

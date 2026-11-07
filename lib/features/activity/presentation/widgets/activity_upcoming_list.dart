@@ -2,7 +2,10 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
 import '../../../../common/l10n/language.dart';
+import '../../../../common/planning/is_upcoming_activity_occurrence.dart';
+import '../../../../common/presentation/widgets/activity_upcoming_sessions_view.dart';
 import '../../../../common/widgets/date_time_picker.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../../../core/drift/providers/database_provider.dart';
@@ -93,26 +96,19 @@ class ActivityUpcomingListState extends ConsumerState<ActivityUpcomingList> {
       error: (_, _) =>
           Center(child: Text(context.lang.activityScheduleSaveFailed)),
       data: (rows) {
-        final now = clock.now().millisecondsSinceEpoch;
-        final recent = clock
-            .now()
-            .subtract(const Duration(days: 7))
-            .millisecondsSinceEpoch;
+        final now = clock.now();
         final visible = rows
             .where(
-              (row) =>
-                  row.status != 'deleted' &&
-                  row.status != 'recorded' &&
-                  (row.startedAt > now ||
-                      (row.status == 'missed' && row.startedAt >= recent)),
+              (row) => isUpcomingActivityOccurrence(
+                status: row.status,
+                startedAt: row.startedAt,
+                now: now,
+              ),
             )
             .toList();
-        if (visible.isEmpty) {
-          return Center(child: Text(context.lang.activityUpcomingEmpty));
-        }
-        return ListView(
-          padding: const EdgeInsets.all(12),
-          children: visible
+        return ActivityUpcomingSessionsView(
+          emptyLabel: context.lang.activityUpcomingEmpty,
+          entries: visible
               .map(
                 (row) => ActivityOccurrenceCard(
                   row: row,
@@ -131,7 +127,9 @@ class ActivityUpcomingListState extends ConsumerState<ActivityUpcomingList> {
                     if (date != null) await service.move(row.id, date);
                   }),
                   onHistory: () => recordHistory(row),
-                  onDelete: row.startedAt > now || row.activityLogId == null
+                  onDelete:
+                      row.startedAt > now.millisecondsSinceEpoch ||
+                          row.activityLogId == null
                       ? () => perform(() => service.removeOccurrence(row.id))
                       : null,
                 ),

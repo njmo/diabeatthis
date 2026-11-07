@@ -1,4 +1,5 @@
 'use strict';
+const {validateProtocol}=require('./plan_operations.cjs');
 const {FamilyError, exact, hash} = require('./security.cjs');
 const contract = require('./mirror_contract.json');
 const fail = code => { throw new FamilyError(code); };
@@ -37,15 +38,18 @@ function createMirrorService({store}) {
     });
   }
   async function register(uid, data) {
-    exact(data, ['sourceId']); source(data.sourceId); await rate(uid, 'register', 20);
+    exact(data, Object.hasOwn(data,'activityCommandsVersion') ? ['sourceId','activityCommandsVersion'] : ['sourceId']);
+    validateProtocol(data);
+    source(data.sourceId); await rate(uid, 'register', 20);
     return store.runTransaction(async tx => {
       const context=await familyContext(store, tx, uid, true);
       const existing = (await tx.get(root(uid))).data();
       if (existing && existing.sourceId !== data.sourceId) fail('failed-precondition');
       if (!existing) {
-        tx.set(root(uid), {sourceId: data.sourceId, sequence: 0});
+        tx.set(root(uid), {sourceId: data.sourceId, sequence: 0, activityCommandsVersion: data.activityCommandsVersion ?? 0});
         for(const memberUid of context.family.memberUids) tx.set(store.doc(`familyMirrorSignals/${memberUid}`),{ownerUid:uid,sourceId:data.sourceId,sequence:0});
       }
+      if (existing) tx.update(root(uid), {activityCommandsVersion: data.activityCommandsVersion ?? 0});
       return {sourceId: data.sourceId};
     });
   }

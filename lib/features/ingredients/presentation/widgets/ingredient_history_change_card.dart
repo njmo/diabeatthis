@@ -16,11 +16,13 @@ class IngredientHistoryChangeCard extends StatelessWidget {
     required this.entry,
     required this.after,
     required this.isReference,
+    this.showConfidence = true,
   });
 
   final IngredientHistoryEntryData entry;
   final IngredientNutritionValues after;
   final bool isReference;
+  final bool showConfidence;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +41,7 @@ class IngredientHistoryChangeCard extends StatelessWidget {
       }
     }
 
-    if (before.confidence != after.confidence) {
+    if (showConfidence && before.confidence != after.confidence) {
       final oldLevel = ConfidenceLevelX.fromDouble01(before.confidence);
       final newLevel = ConfidenceLevelX.fromDouble01(after.confidence);
       changes.add(
@@ -122,7 +124,7 @@ class IngredientHistoryChangeCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
-          if (before.confidence == after.confidence) ...[
+          if (showConfidence && before.confidence == after.confidence) ...[
             const SizedBox(height: 4),
             Text(
               '${lang.ingredientDataConfidence}: ${ConfidenceLevelX.fromDouble01(after.confidence).label}',

@@ -1,8 +1,13 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/features/meals/data/models/meal_analysis_data.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_detail_formatters.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   group('mealStatusLabel', () {
     test('shows add-on statuses explicitly', () {
       expect(mealStatusLabel('eating-extra'), 'W trakcie dokładki');

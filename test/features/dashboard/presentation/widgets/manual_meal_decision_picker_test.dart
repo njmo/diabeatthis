@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/meal/manual_meal_decision.dart';
 import 'package:diabeatthis/common/meal/meal_decision.dart';
 import 'package:diabeatthis/common/widgets/manual_meal_decision_fields.dart';
@@ -9,6 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../../helpers/localized_material_app.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   testWidgets('decision picker covers save outside a nested navigator', (
     tester,
   ) async {

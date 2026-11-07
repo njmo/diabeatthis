@@ -18,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../helpers/meal_flow_test_fixture.dart';
+import '../../../../helpers/patient_application_mode.dart';
 
 void main() {
   for (final retrospective in [false, true]) {
@@ -28,7 +29,10 @@ void main() {
         addTearDown(() => tester.binding.setSurfaceSize(null));
         final db = DatabaseImpl(NativeDatabase.memory());
         final container = ProviderContainer(
-          overrides: [databaseProvider.overrideWithValue(db)],
+          overrides: [
+            patientApplicationModeOverride,
+            databaseProvider.overrideWithValue(db),
+          ],
         );
         addTearDown(() async {
           container.dispose();

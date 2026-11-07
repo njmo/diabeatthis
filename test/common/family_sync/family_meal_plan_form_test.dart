@@ -7,6 +7,8 @@ import 'package:diabeatthis/common/ingredient_catalog/ingredient_identity.dart';
 import 'package:diabeatthis/common/ingredient_catalog/ingredient_search_item.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/domain/model/carbs_label_mode.dart';
+import 'package:diabeatthis/core/drift/providers/database_provider.dart';
+import 'package:diabeatthis/features/meals/presentation/screens/add_meal_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -59,7 +61,14 @@ void main() {
       Map<String, dynamic>? sent;
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [catalogRepositoryProvider.overrideWithValue(catalog)],
+          overrides: [
+            catalogRepositoryProvider.overrideWithValue(catalog),
+            databaseProvider.overrideWith(
+              (_) => throw StateError(
+                'Caregiver must not access local patient tables',
+              ),
+            ),
+          ],
           child: MaterialApp(
             locale: const Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -77,6 +86,12 @@ void main() {
                       'name': 'Bread child',
                       'brand': null,
                       'is_reference': 0,
+                      'carbs_per_100g': 40.0,
+                      'fat_per_100g': 1.0,
+                      'fiber_per_100g': 2.0,
+                      'protein_per_100g': 5.0,
+                      'nutrition_confidence': .8,
+                      'carbs_label_mode': 'eu',
                     },
                   },
                 ],
@@ -91,11 +106,9 @@ void main() {
       final language = AppLocalizations.of(
         tester.element(find.byType(FamilyMealPlanForm)),
       );
-      await tester.enterText(
-        find.widgetWithText(TextField, language.familyPlanName),
-        'Lunch',
-      );
-      await tester.tap(find.text(language.familyPlanAddIngredient));
+      await tester.pumpAndSettle();
+      expect(find.byType(AddMealPage), findsOneWidget);
+      await tester.tap(find.text(language.mealCompositionAddIngredient));
       await tester.pumpAndSettle();
       await tester.enterText(
         find.widgetWithText(TextField, language.ingredientSearchLabel),
@@ -109,7 +122,9 @@ void main() {
       await tester.tap(find.text('Bread child'));
       await tester.pumpAndSettle();
       expect(catalog.gets, 0);
-      await tester.tap(find.text(language.familyPlanAddIngredient));
+      await tester.tap(find.text(language.commonSave));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(language.mealCompositionAddIngredient));
       await tester.pumpAndSettle();
       await tester.enterText(
         find.widgetWithText(TextField, language.ingredientSearchLabel),
@@ -121,8 +136,14 @@ void main() {
       await tester.tap(find.text('Bread catalog'));
       await tester.pumpAndSettle();
       expect(catalog.gets, 1);
-      await tester.ensureVisible(find.text(language.familyPlanSend));
-      await tester.tap(find.text(language.familyPlanSend));
+      await tester.tap(find.text(language.commonSave));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(language.mealFlowNextTime));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(language.mealFlowNextReview));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text(language.mealFlowPlan));
+      await tester.tap(find.text(language.mealFlowPlan));
       await tester.pumpAndSettle();
       expect(sent, isNotNull);
       expect(sent!['ingredients'], [

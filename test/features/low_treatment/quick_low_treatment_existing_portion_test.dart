@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
@@ -17,6 +18,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../helpers/localized_material_app.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
   late DatabaseImpl db;
   late ProviderContainer container;
   late int ingredientId;

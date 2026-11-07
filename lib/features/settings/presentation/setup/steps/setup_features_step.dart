@@ -37,6 +37,9 @@ class SetupFeaturesStep extends StatelessWidget {
                 .where((feature) => !controller.canEnableFeature(feature.id))
                 .map((feature) => feature.id)
                 .toSet(),
+            locked: controller.familyCareLocked
+                ? {SetupFeatureId.familyChat, SetupFeatureId.childOverview}
+                : const {},
             onChanged: controller.select,
           ),
       const SizedBox(height: 16),

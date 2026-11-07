@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/nutrition/confidence_level.dart';
 import 'package:diabeatthis/common/widgets/friendly_amount_selector.dart';
 import 'package:diabeatthis/features/ingredients/data/drafts/ingredient_draft.dart';
@@ -17,6 +18,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../helpers/localized_material_app.dart';
 
 void main() {
+  setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
+  tearDown(() => LanguageStrings.setSelectedLocale(null));
+
   for (final isReference in [false, true]) {
     testWidgets(
       'preserves edited amount and confidence (reference: $isReference)',

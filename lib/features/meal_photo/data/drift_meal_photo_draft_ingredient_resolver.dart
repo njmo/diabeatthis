@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../../common/ingredient_catalog/drift_selected_catalog_ingredient_store.dart';
 import '../../../common/ingredient_catalog/ingredient_identity.dart';
 import '../../../core/drift/database_impl.dart';
+import '../../ingredients/data/domain/use_cases/resolve_reviewed_barcode_ingredient_use_case.dart';
 import '../../ingredients/data/drafts/ingredient_draft.dart';
 import '../../ingredients/data/mappers/ingredient_draft_mapper.dart';
 import '../../ingredients/data/persistence/insert_ingredient_draft.dart';
@@ -27,6 +28,26 @@ class DriftMealPhotoDraftIngredientResolver
   @override
   Future<IngredientDraft> resolve(MealPhotoReviewItem item) async {
     if (item.product case final product?) {
+      if (product.identity.source == IngredientSource.barcode) {
+        final nutrition = product.nutritionPer100g;
+        final draft = IngredientDraft.draft(
+          name: product.name,
+          brand: product.brand,
+          barcode: product.barcode,
+          carbsPer100g: nutrition.carbs,
+          fiberPer100g: nutrition.fiber,
+          proteinPer100g: nutrition.protein,
+          fatPer100g: nutrition.fat,
+          carbsLabelMode: nutrition.carbsLabelMode,
+          nutritionConfidence: item.nutritionConfidence,
+          iconAssetPath: product.iconAssetPath,
+          isReference: false,
+        );
+        if (product.barcode != product.identity.sourceId) {
+          throw StateError('Barcode identity mismatch');
+        }
+        return ResolveReviewedBarcodeIngredientUseCase(db)(draft);
+      }
       final int id;
       if (product.identity.source == IngredientSource.local ||
           product.localIngredientId != null) {

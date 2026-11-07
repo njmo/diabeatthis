@@ -60,6 +60,8 @@ void main() {
           ),
         ),
       );
+      updates.add(const FamilyStatus());
+      await tester.pump();
       await tester.ensureVisible(find.text('Dodaj opiekuna'));
       await tester.tap(find.text('Dodaj opiekuna'));
       await tester.pumpAndSettle(const Duration(milliseconds: 300));

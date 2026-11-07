@@ -12,6 +12,7 @@ import '../../../../core/domain/model/activity.dart';
 import '../../common/controllers/activity_actions_controller.dart';
 import '../../data/providers/activity_provider.dart';
 import '../utils/delete_activity_history_entry.dart';
+import 'activity_schedules_section.dart';
 
 class ActivityLogList extends HookConsumerWidget {
   const ActivityLogList({super.key, this.activityId, this.definition});
@@ -53,7 +54,11 @@ class ActivityLogList extends HookConsumerWidget {
       top: false,
       child: definition == null
           ? ActivityLogsView(controller: controller)
-          : ActivityDefinitionView(activity: definition!, logs: controller),
+          : ActivityDefinitionView(
+              activity: definition!,
+              logs: controller,
+              plans: ActivitySchedulesSection(activity: definition!),
+            ),
     );
   }
 }

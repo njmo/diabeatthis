@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/planning/meal_form_actions.dart';
 import '../../../meals/data/providers/meal_draft_provider.dart';
 import '../../data/drafts/meal_draft.dart';
 import '../../data/models/meal_ingredient_replacement_result.dart';
 import '../../data/providers/meal_ingredients_list_provider.dart';
-import 'add_meal_ingredient.dart';
 import 'meal_ingredient_preview_tile.dart';
 
 class MealIngredientsList extends ConsumerWidget {
@@ -41,17 +41,27 @@ class MealIngredientsList extends ConsumerWidget {
     WidgetRef ref,
     MealIngredientsDraft draft,
   ) async {
-    final mealIngredient = await showAddMealIngredientSheet(
-      context: context,
-      ref: ref,
-      initialDraft: draft,
-    );
-    if (mealIngredient != null && context.mounted) {
-      final mealDraft = ref.read(mealDraftProvider.notifier);
-      final result = mealDraft.replaceMealIngredient(draft, mealIngredient);
-      if (result == MealIngredientReplacementResult.duplicate) {
+    try {
+      final mealIngredient = await ref
+          .read(mealFormActionsProvider)
+          .pickIngredient(context, ref, initial: draft);
+      if (mealIngredient != null && context.mounted) {
+        final mealDraft = ref.read(mealDraftProvider.notifier);
+        final result = mealDraft.replaceMealIngredient(draft, mealIngredient);
+        if (result == MealIngredientReplacementResult.duplicate) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.lang.mealIngredientAlreadyOnList)),
+          );
+        }
+      }
+    } catch (error) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.lang.mealIngredientAlreadyOnList)),
+          SnackBar(
+            content: Text(
+              ref.read(mealFormActionsProvider).failureMessage(context, error),
+            ),
+          ),
         );
       }
     }

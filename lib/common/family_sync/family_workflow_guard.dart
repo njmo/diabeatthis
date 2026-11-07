@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/drift/database_impl.dart';
+import 'family_workflow_phase.dart';
 
 final familyWorkflowGuardProvider = Provider<FamilyWorkflowGuard>(
   (ref) => FamilyWorkflowGuard(),
@@ -22,7 +23,7 @@ class FamilyWorkflowGuard {
   bool contains(String kind, int id) => blocked[kind] == id;
   void record(String kind, int? id, String phase) {
     if (['initializing', 'unavailable'].contains(phase)) return;
-    final active = phase != 'idle';
+    final active = familyWorkflowPhaseBlocks(kind, phase);
     if (id != null && active) {
       blocked[kind] = id;
     } else {
@@ -39,7 +40,7 @@ class FamilyWorkflowGuard {
             );
             if (id != null) {
               await db.customStatement(
-                "INSERT INTO family_workflow_lock(kind,entity_id,phase,active,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(kind,entity_id) DO UPDATE SET phase=excluded.phase,active=CASE WHEN excluded.phase='planned' THEN MAX(family_workflow_lock.active,excluded.active) ELSE excluded.active END,updated_at=excluded.updated_at",
+                "INSERT INTO family_workflow_lock(kind,entity_id,phase,active,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(kind,entity_id) DO UPDATE SET phase=excluded.phase,active=CASE WHEN excluded.kind='meal' AND excluded.phase='planned' THEN MAX(family_workflow_lock.active,excluded.active) ELSE excluded.active END,updated_at=excluded.updated_at",
                 [
                   kind,
                   id,
@@ -56,13 +57,20 @@ class FamilyWorkflowGuard {
         });
   }
 
-  Future<bool> persisted(String kind, int id) async {
+  Future<bool> persisted(String kind, int id) =>
+      persistedBlock(kind, entityId: id);
+  Future<bool> persistedAny(String kind) => persistedBlock(kind);
+  Future<bool> persistedBlock(String kind, {int? entityId}) async {
     final db = database;
     if (db == null) return false;
     return (await db
             .customSelect(
-              'SELECT id FROM family_workflow_lock WHERE kind=? AND entity_id=? AND active=1',
-              variables: [Variable(kind), Variable(id)],
+              "SELECT id FROM family_workflow_lock WHERE kind=? AND (? IS NULL OR entity_id=?) AND active=1 AND (kind<>'activity' OR phase<>'planned') LIMIT 1",
+              variables: [
+                Variable(kind),
+                Variable<int>(entityId),
+                Variable<int>(entityId),
+              ],
             )
             .get())
         .isNotEmpty;

@@ -13,9 +13,11 @@ class KeyboardAwareSheetFrame extends HookWidget {
     super.key,
     required this.child,
     this.heightFactor = 0.9,
+    this.initialContentHeight,
   });
   final Widget child;
   final double heightFactor;
+  final double? initialContentHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +65,7 @@ class KeyboardAwareSheetFrame extends HookWidget {
                                       0
                                   ? MediaQuery.paddingOf(context).bottom
                                   : 0)
-                        : double.infinity,
+                        : initialContentHeight ?? double.infinity,
                   ),
                 ),
                 child: MediaQuery.removeViewInsets(

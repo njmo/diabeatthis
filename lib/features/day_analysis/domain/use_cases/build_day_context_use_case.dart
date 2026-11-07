@@ -17,10 +17,10 @@ import '../models/day_meal_summary.dart';
 class BuildDayContextUseCase with Logging {
   final Future<List<Glucose>> Function(DateTime, DateTime) loadGlucose;
   final Future<List<Treatment>> Function(DateTime, DateTime) loadTreatments;
-  final Future<DayMealSummary> Function(DateTime, DateTime) loadMeals;
-  final Future<List<RecordedLowTreatment>> Function(DateTime, DateTime)
+  final Future<DayMealSummary> Function(DateTime, DateTime)? loadMeals;
+  final Future<List<RecordedLowTreatment>> Function(DateTime, DateTime)?
   loadLowTreatments;
-  final Future<List<DayActivitySummary>> Function(DateTime, DateTime)
+  final Future<List<DayActivitySummary>> Function(DateTime, DateTime)?
   loadActivities;
   final Future<Duration?> Function(DateTime)? loadSensorAge;
   final Future<Duration?> Function(DateTime)? loadPodAge;
@@ -32,9 +32,9 @@ class BuildDayContextUseCase with Logging {
   const BuildDayContextUseCase({
     required this.loadGlucose,
     required this.loadTreatments,
-    required this.loadMeals,
-    required this.loadLowTreatments,
-    required this.loadActivities,
+    this.loadMeals,
+    this.loadLowTreatments,
+    this.loadActivities,
     required this.now,
     this.loadDeviceStatuses,
     this.loadSensorAge,
@@ -83,18 +83,18 @@ class BuildDayContextUseCase with Logging {
       DayDataSource.treatments,
       () => loadTreatments(nightStart, queryEnd),
     );
-    final mealsFuture = fetch(
-      DayDataSource.meals,
-      () => loadMeals(start, queryEnd),
-    );
-    final lowsFuture = fetch(
-      DayDataSource.lowTreatments,
-      () => loadLowTreatments(start, queryEnd),
-    );
-    final activitiesFuture = fetch(
-      DayDataSource.activities,
-      () => loadActivities(start, asOf),
-    );
+    final mealsFuture = loadMeals == null
+        ? Future<DayMealSummary?>.value(null)
+        : fetch(DayDataSource.meals, () => loadMeals!(start, queryEnd));
+    final lowsFuture = loadLowTreatments == null
+        ? Future<List<RecordedLowTreatment>?>.value(null)
+        : fetch(
+            DayDataSource.lowTreatments,
+            () => loadLowTreatments!(start, queryEnd),
+          );
+    final activitiesFuture = loadActivities == null
+        ? Future<List<DayActivitySummary>?>.value(null)
+        : fetch(DayDataSource.activities, () => loadActivities!(start, asOf));
     Future<Duration?> fetchAge(
       DayDataSource source,
       Future<Duration?> Function(DateTime)? load,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/planning/meal_form_actions.dart';
 import '../../../ingredients/data/icons/ingredient_icon_provider.dart';
 import '../../../ingredients/presentation/widgets/ingredient_icon.dart';
 import '../../../ingredients/presentation/widgets/ingredient_identity_text.dart';
@@ -25,19 +26,24 @@ class MealIngredientPreviewTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final allowLocalLookups = ref
+        .watch(mealFormActionsProvider)
+        .allowLocalLookups;
     final colorScheme = Theme.of(context).colorScheme;
     final portionInfo = _portionInfo(context, ref, draft);
     final iconPath =
         draft.ingredient.iconAssetPath ??
-        ref
-            .watch(
-              ingredientIconSuggestionProvider((
-                draft.ingredient.name,
-                draft.ingredient.brand,
-              )),
-            )
-            .asData
-            ?.value;
+        (allowLocalLookups
+            ? ref
+                  .watch(
+                    ingredientIconSuggestionProvider((
+                      draft.ingredient.name,
+                      draft.ingredient.brand,
+                    )),
+                  )
+                  .asData
+                  ?.value
+            : null);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -90,7 +96,9 @@ class MealIngredientPreviewTile extends ConsumerWidget {
     var portionAmount = draft.ingredientPortion.amount;
     final amount = draft.amount;
 
-    if (!draft.ingredient.isReference && portionAmount == 0) {
+    if (ref.read(mealFormActionsProvider).allowLocalLookups &&
+        !draft.ingredient.isReference &&
+        portionAmount == 0) {
       portionAmount = ref
           .watch(
             gramsPerPortionProvider(

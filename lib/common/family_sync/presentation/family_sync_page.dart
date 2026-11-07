@@ -13,6 +13,7 @@ import '../../family/family_providers.dart';
 import '../../l10n/language.dart';
 import '../family_mirror_integration.dart';
 import '../publish_family_mirror_use_case.dart';
+import '../request_family_mirror_sync.dart';
 import 'family_sync_labels.dart';
 
 class FamilySyncPage extends ConsumerStatefulWidget {
@@ -47,10 +48,6 @@ class FamilySyncPageState extends ConsumerState<FamilySyncPage>
   void start() {
     if (!mounted || !active) return;
     timer?.cancel();
-    timer = Timer.periodic(
-      const Duration(seconds: 15),
-      (_) => unawaited(refresh()),
-    );
     unawaited(refresh());
     final uid = FirebaseAuth.instance.currentUser?.uid;
     listeningUid = uid;
@@ -73,6 +70,8 @@ class FamilySyncPageState extends ConsumerState<FamilySyncPage>
                   cursor = 0;
                   loadedUid = null;
                 });
+                timer?.cancel();
+                timer = Timer(const Duration(seconds: 15), start);
               }
             },
           );
@@ -227,7 +226,11 @@ class FamilySyncPageState extends ConsumerState<FamilySyncPage>
         });
       }
     } finally {
-      if (mounted) setState(() => busy = false);
+      if (mounted) {
+        setState(() => busy = false);
+        timer?.cancel();
+        if (failed && active) timer = Timer(const Duration(seconds: 15), start);
+      }
     }
   }
 
@@ -256,6 +259,14 @@ class FamilySyncPageState extends ConsumerState<FamilySyncPage>
     final patient =
         ref.watch(applicationDeviceModeProvider).asData?.value ==
         ApplicationDeviceMode.patient;
+    final familyStatus = patient && account != null
+        ? ref.watch(secureFamilyStatusProvider(account.uid))
+        : null;
+    final mayDisable =
+        familyStatus != null &&
+        !familyStatus.isLoading &&
+        !familyStatus.hasError &&
+        familyStatus.asData?.value.members.isEmpty == true;
     final visible = loadedUid == account?.uid
         ? counts
         : <String, ({int records, int pending})>{};
@@ -273,14 +284,43 @@ class FamilySyncPageState extends ConsumerState<FamilySyncPage>
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(context.lang.familySyncEnable),
-                  subtitle: Text(context.lang.familySyncOffline),
+                  subtitle: Text(
+                    enabled && !mayDisable
+                        ? context.lang.setupFamilyDisconnectBeforeDisable
+                        : context.lang.familySyncOffline,
+                  ),
                   value: enabled,
-                  onChanged: busy
+                  onChanged: busy || (enabled && !mayDisable)
                       ? null
                       : (value) async {
+                          final currentAccount = ref
+                              .read(googleAccountProvider)
+                              .asData
+                              ?.value;
+                          final roster = ref.read(
+                            secureFamilyStatusProvider(account.uid),
+                          );
+                          if (currentAccount?.uid != account.uid ||
+                              ref
+                                      .read(applicationDeviceModeProvider)
+                                      .asData
+                                      ?.value !=
+                                  ApplicationDeviceMode.patient) {
+                            return;
+                          }
+                          if (!value &&
+                              (roster.isLoading ||
+                                  roster.hasError ||
+                                  roster.asData?.value.members.isEmpty !=
+                                      true)) {
+                            return;
+                          }
                           await ref.read(databaseProvider).customStatement(
                             'UPDATE family_sync_identity SET enabled=?,enabled_revision=enabled_revision+1 WHERE singleton=1',
                             [value ? 1 : 0],
+                          );
+                          await requestFamilyMirrorSync(
+                            ref.read(databaseProvider),
                           );
                           if (mounted) setState(() => enabled = value);
                           await refresh(upload: value);

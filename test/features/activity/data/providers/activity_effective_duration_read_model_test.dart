@@ -58,10 +58,12 @@ void main() {
         final occurrence =
             (await db.select(db.activityOccurrence).get()).single;
 
+        expect(await db.activityDao.getActiveActivityLogView(), isNull);
+        expect(await db.activityDao.getActiveActivityLogOrNull(), isNull);
         final pending = await pendingActivity();
         expect(pending!.durationMinutes, duration);
         expect(
-          (await db.activityDao.getActiveActivityLogView())!
+          (await db.activityDao.getPendingActivityLogView())!
               .toSummaryData()
               .durationMinutes,
           duration,
@@ -74,6 +76,15 @@ void main() {
           duration,
         );
 
+        await withClock(Clock.fixed(start), () async {
+          expect(
+            (await db.activityDao.getActiveActivityLogView())!
+                .toSummaryData()
+                .durationMinutes,
+            duration,
+          );
+          expect(await db.activityDao.getActiveActivityLogOrNull(), isNotNull);
+        });
         final history = await db.activityDao.watchActivityLogViews().first;
         expect(history.single.toSummaryData().durationMinutes, duration);
         final overlapping = await db.activityDao.getActivityLogsOverlapping(

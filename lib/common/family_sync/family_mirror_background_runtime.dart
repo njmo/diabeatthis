@@ -19,6 +19,8 @@ class FamilyMirrorBackgroundRuntime {
   final DatabaseImpl db;
   final client = http.Client();
   Timer? timer;
+  StreamSubscription? databaseSubscription;
+  DateTime? retryAfter;
   StreamSubscription<User?>? accountSubscription;
   bool disposed = false;
   bool running = false;
@@ -34,11 +36,18 @@ class FamilyMirrorBackgroundRuntime {
   }
 
   void start() {
-    timer = Timer.periodic(
-      const Duration(seconds: 15),
-      (_) => unawaited(tick()),
-    );
+    databaseSubscription ??= db.tableUpdates().listen((_) => requestSync());
     unawaited(tick());
+  }
+
+  void scheduleRetry() {
+    if (disposed) return;
+    retryAfter = DateTime.now().add(const Duration(seconds: 15));
+    timer?.cancel();
+    timer = Timer(const Duration(seconds: 15), () {
+      retryAfter = null;
+      requestSync();
+    });
   }
 
   Future<void> initialize() async {
@@ -51,15 +60,19 @@ class FamilyMirrorBackgroundRuntime {
       providerAndroid: await createAndroidAppCheckProvider(),
     );
     if (!disposed) {
-      accountSubscription ??= FirebaseAuth.instance.idTokenChanges().listen(
-        (_) {},
-        onError: (Object error) {},
-      );
+      accountSubscription ??= FirebaseAuth.instance.idTokenChanges().listen((
+        _,
+      ) {
+        retryAfter = null;
+        requestSync();
+      }, onError: (Object error) => scheduleRetry());
     }
   }
 
   Future<void> tick() async {
-    if (disposed || running) return;
+    if (disposed || running || (retryAfter?.isAfter(DateTime.now()) ?? false)) {
+      return;
+    }
     running = true;
     try {
       final settings = await db
@@ -82,6 +95,11 @@ class FamilyMirrorBackgroundRuntime {
           });
       await initialization;
       if (disposed) return;
+      if (FirebaseAuth.instance.currentUser == null) {
+        retryAfter = null;
+        timer?.cancel();
+        return;
+      }
       final transport = AuthenticatedCallableTransport(
         client: client,
         projectId: Firebase.app().options.projectId,
@@ -106,7 +124,12 @@ class FamilyMirrorBackgroundRuntime {
           return true;
         },
       )();
+      if (published > 0 && (await queue.pending(limit: 1)).isNotEmpty) {
+        wakePending = true;
+      }
       if (!disposed) {
+        retryAfter = null;
+        timer?.cancel();
         await db.customStatement(
           'UPDATE family_sync_identity SET last_error=NULL WHERE singleton=1',
         );
@@ -118,6 +141,7 @@ class FamilyMirrorBackgroundRuntime {
         }
       }
     } catch (_) {
+      scheduleRetry();
       if (!disposed) {
         try {
           await db.customStatement(
@@ -142,6 +166,7 @@ class FamilyMirrorBackgroundRuntime {
   void dispose() {
     disposed = true;
     timer?.cancel();
+    unawaited(databaseSubscription?.cancel());
     unawaited(accountSubscription?.cancel());
     client.close();
   }

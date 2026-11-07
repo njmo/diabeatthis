@@ -77,9 +77,11 @@ void main() {
       );
     },
   );
-  test('selected waiting workflow is locked without requiring a database', () {
+  test('planned activity stays editable until preparation actually begins', () {
     final guard = FamilyWorkflowGuard();
     guard.record('activity', 7, 'planned');
+    expect(guard.contains('activity', 7), false);
+    guard.record('activity', 7, 'preparing');
     expect(guard.contains('activity', 7), true);
     guard.record('activity', null, 'unavailable');
     expect(guard.contains('activity', 7), true);

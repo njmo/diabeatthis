@@ -1,5 +1,30 @@
 {
-  "functions": [{"source": ".", "codebase": "family", "ignore": ["node_modules", ".git", "*.log", "test", "firebase.json", "firestore.rules", "README.md"]}],
-  "firestore": {"rules": "firestore.rules"},
-  "emulators": {"firestore": {"port": 8087}, "ui": {"enabled": false}, "singleProjectMode": true}
+  "functions": [
+    {
+      "source": ".",
+      "codebase": "family",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "*.log",
+        "test",
+        "firebase.json",
+        "firestore.rules",
+        "README.md"
+      ]
+    }
+  ],
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8087
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
+  }
 }

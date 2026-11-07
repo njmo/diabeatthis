@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/planning/activity_catalog_repository.dart';
 import '../../data/drafts/activity_draft.dart';
 import '../../data/providers/activity_provider.dart';
 import '../widgets/activity_edit_form.dart';
@@ -63,8 +64,8 @@ class ActivityPage extends HookConsumerWidget {
                     isSaving.value = true;
                     try {
                       await ref
-                          .read(activityControllerProvider.notifier)
-                          .updateActivity(
+                          .read(activityCatalogRepositoryProvider)
+                          .saveDefinition(
                             ActivityDraft.existing(
                               id: activity.id,
                               name: values.name,
