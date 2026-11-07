@@ -222,3 +222,84 @@ history. Missing fiber remains optional and is not filled by this pass.
 The cumulative audit is `data/poland/current/type_zero_report.json`; each working
 record also carries its own derivations. Reruns are idempotent and report both
 the current-run delta and cumulative changes. Nothing is uploaded to Firebase.
+
+## Two-bucket review partition
+
+```sh
+python3 tool/off_catalog/partition_catalog.py
+```
+
+The script reads the resolved named OFF generation and every downloaded manufacturer
+catalog. It verifies source ID uniqueness and manufacturer cached-body hashes, and
+publishes an atomic `data/partition/current` generation with exactly two datasets:
+
+- `consistent_candidates.jsonl`: complete, internally consistent per-100-g producer
+  profiles without identified conflicts. This is **not** approval to import.
+- `requires_review.jsonl`: all other records with explicit reasons, including OFF
+  rows whose flat export cannot establish nutrition basis and carbohydrate convention.
+
+The `classification.import_ready` flag is separate from these quality buckets.
+Unknown EU/US convention and missing publication approval remain explicit blockers;
+no script guesses either. Cached hash verification attests stored page bytes, not
+independent confirmation that a product label is correct. Repeated names with
+multiple complete nutrition profiles are held, rather than merged. Source identities,
+original values, units, URLs, and derivations are preserved. A missing barcode or
+fiber alone does not reject a producer profile; non-EU net-carbohydrate conversion
+still needs fiber. Energy screening accounts for separate versus included fiber and
+never replaces declared calories. A review reason is a screening result, not proof
+that the manufacturer label is wrong.
+
+`report.json` records complete coverage, per-source counts, overlapping reason
+counts, input hashes, and zero Firebase writes. This workspace does not yet convert
+these candidates into the application catalog schema or publish them.
+
+Whole-partition statistics are available without any external requests:
+
+```sh
+python3 tool/off_catalog/catalog_statistics.py
+```
+
+The resolved partition generation receives `statistics.json`, with source-level
+completeness, missing/invalid distinctions, known 100g/100ml/unknown bases, reason
+counts, source quality flags, duplicate-name groups, and examples. Macro distributions
+are separated by physical basis. Packaging-unit hints never become nutrition-unit
+facts. `grams_only_scope` summarizes the current g-only application scope; the
+separate ml scenario is an optional future estimate, not an import approval.
+
+To replay the ten inspected incomplete-record examples and route the entire partition:
+
+```sh
+python3 tool/off_catalog/filter_incomplete_records.py
+```
+
+`entry-filter.jsonl` assigns every source identity one route: complete candidate,
+complete but needing quality/basis review, whole-profile missing, partial-profile
+missing, invalid macro, non-food, or structural-zero candidate. The companion
+`entry-filter-report.json` retains ten examples and exact counts. A narrow additional
+plain-sugar vocabulary handles source names such as `Sucre blanc`; it proposes
+missing fat/protein zeros only with the primary sugar macro present, without changing
+source facts or approving an unknown label basis. Energy is never inverted to invent
+missing macros. Raw missing strings are reported only where raw fields exist.
+
+For a separate energy consistency check across every source identity:
+
+```sh
+python3 tool/off_catalog/audit_calories.py
+```
+
+The resolved partition generation receives `calorie-audit.jsonl` and
+`calorie-audit-report.json`. Each record has either a comparison or an explicit
+missing/invalid-data status. The baseline is 4 kcal/g carbohydrate and protein,
+9 kcal/g fat; known fiber uses separate EU or included-fiber non-EU scenarios.
+Unknown convention remains unknown even when one scenario fits. Close agreement
+is at most 2 kcal; the screening tolerance is max(10 kcal, 10% of declared energy).
+These are audit heuristics, not regulatory label tolerances or nutrition approval.
+Polyol names receive a hint, not an invented correction. Source calories are never
+replaced, missing fiber is never filled, and matching energy does not resolve a
+100g/100ml ambiguity. This audit performs no external calls or Firebase writes.
+
+Energy-audit headline counts use original source nutrition. Previously inferred
+working zeros are excluded from those source comparisons; their optional separate
+`working_comparison` retains `imputations_not_used` provenance. This prevents an
+incomplete original label record from appearing complete merely because of an
+inference made during an earlier cleanup.
