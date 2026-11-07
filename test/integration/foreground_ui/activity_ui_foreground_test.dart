@@ -716,32 +716,33 @@ void main() {
           await tester.runAsync(
             () => Future<void>.delayed(const Duration(milliseconds: 5)),
           );
-          if (uiRows?.length == 2 && foregroundRows?.length == 2) break;
+          final expectedStart = DateTime(
+            2026,
+            11,
+            6,
+            12,
+          ).millisecondsSinceEpoch;
+          if (uiRows?.singleOrNull?.startedAt == expectedStart &&
+              foregroundRows?.singleOrNull?.startedAt == expectedStart) {
+            break;
+          }
         }
-        expect(uiRows, hasLength(2));
-        expect(foregroundRows, hasLength(2));
-        final updatedRows = uiRows!;
-        final foregroundUpdatedRows = foregroundRows!;
-        expect(
-          updatedRows.singleWhere((row) => row.id == occurrenceId).status,
-          'skipped',
-        );
-        expect(
-          foregroundUpdatedRows
-              .singleWhere((row) => row.id == occurrenceId)
-              .status,
-          'skipped',
-        );
-        expect(
-          updatedRows.singleWhere((row) => row.id != occurrenceId).startedAt,
-          DateTime(2026, 11, 6, 12).millisecondsSinceEpoch,
-        );
-        expect(
-          foregroundUpdatedRows
-              .singleWhere((row) => row.id != occurrenceId)
-              .startedAt,
-          DateTime(2026, 11, 6, 12).millisecondsSinceEpoch,
-        );
+        expect(uiRows, hasLength(1));
+        expect(foregroundRows, hasLength(1));
+        for (final row in [uiRows!.single, foregroundRows!.single]) {
+          expect(row.id, occurrenceId);
+          expect(row.status, 'pending');
+          expect(
+            row.startedAt,
+            DateTime(2026, 11, 6, 12).millisecondsSinceEpoch,
+          );
+          expect(row.durationMinutes, 45);
+          expect(
+            row.actionAt,
+            DateTime(2026, 11, 6, 10, 30).millisecondsSinceEpoch,
+          );
+          expect(row.askedAt, isNull);
+        }
         expect(harness.notifications.contains(originalPrompt), isFalse);
       });
     });
