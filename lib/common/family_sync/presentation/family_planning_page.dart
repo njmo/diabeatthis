@@ -11,6 +11,7 @@ import '../../../features/day_analysis/presentation/widgets/day_date_selector.da
 import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../l10n/language.dart';
+import '../../presentation/widgets/activity_catalog_card.dart';
 import '../family_plan_submission_store.dart';
 import '../family_planning_controller.dart';
 import '../family_planning_view.dart';
@@ -357,10 +358,16 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
               ),
             if (widget.view == FamilyPlanningView.activityCatalog)
               for (final row in controller.ofKind('activities'))
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.directions_run),
-                    title: Text((row['payload'] as Map)['name'] as String),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: ActivityCatalogCard(
+                    name: (row['payload'] as Map)['name'] as String,
+                    percentagePre:
+                        (row['payload'] as Map)['percentage_pre'] as int? ?? 0,
+                    percentagePost:
+                        (row['payload'] as Map)['percentage_post'] as int? ?? 0,
+                    durationMinutes:
+                        (row['payload'] as Map)['duration_minutes'] as int?,
                   ),
                 ),
             if (controller.busy) const LinearProgressIndicator(),

@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/widgets/activity_catalog_card.dart';
 import '../../data/providers/activity_provider.dart';
 
 class ActivityList extends HookConsumerWidget {
@@ -89,7 +90,7 @@ class ActivityList extends HookConsumerWidget {
                   }
 
                   final activity = visibleActivities[index];
-                  return _ActivityCard(
+                  return ActivityCatalogCard(
                     name: activity.name,
                     percentagePre: activity.percentagePre,
                     percentagePost: activity.percentagePost,
@@ -147,113 +148,5 @@ class _ActivityListTail extends StatelessWidget {
     }
 
     return const SizedBox(height: 24);
-  }
-}
-
-class _ActivityCard extends StatelessWidget {
-  final String name;
-  final int percentagePre;
-  final int percentagePost;
-  final int? durationMinutes;
-  final VoidCallback onTap;
-
-  const _ActivityCard({
-    required this.name,
-    required this.percentagePre,
-    required this.percentagePost,
-    required this.durationMinutes,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 1,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  _MetaPill(
-                    icon: Icons.timer,
-                    text: _formatDuration(context, durationMinutes),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  static String _formatDuration(BuildContext context, int? minutes) {
-    if (minutes == null) {
-      return context.lang.activityManualEnd;
-    }
-
-    final hours = minutes ~/ 60;
-    final remainingMinutes = minutes.remainder(60);
-    if (hours == 0) {
-      return '$minutes min';
-    }
-    if (remainingMinutes == 0) {
-      return '${hours}h';
-    }
-    return '${hours}h ${remainingMinutes.toString().padLeft(2, '0')} min';
-  }
-}
-
-class _MetaPill extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _MetaPill({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: scheme.onSecondaryContainer),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: scheme.onSecondaryContainer,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

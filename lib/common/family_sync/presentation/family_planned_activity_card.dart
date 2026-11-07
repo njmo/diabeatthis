@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/language.dart';
+import '../../presentation/widgets/activity_occurrence_view.dart';
 import 'family_plan_snapshot_view.dart';
 
 class FamilyPlannedActivityCard extends StatelessWidget {
@@ -21,49 +22,24 @@ class FamilyPlannedActivityCard extends StatelessWidget {
   final VoidCallback? onMove;
   @override
   Widget build(BuildContext context) {
-    final future =
-        (payload['started_at'] as int) > DateTime.now().millisecondsSinceEpoch;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(name, style: Theme.of(context).textTheme.titleMedium),
-            Text(
-              DateTime.fromMillisecondsSinceEpoch(
-                payload['started_at'] as int,
-              ).toLocal().toString(),
-            ),
-            Text(
-              monitoring
-                  ? context.lang.familyPlanMonitoring
-                  : locked
-                  ? context.lang.familyPlanPending
-                  : familyPlanExecutionLabel(
-                      context,
-                      payload['status'] as String,
-                    ),
-            ),
-            Wrap(
-              spacing: 8,
-              children: [
-                if (payload['status'] == 'pending' && future)
-                  TextButton(
-                    onPressed: onConfirm,
-                    child: Text(context.lang.familyPlanConfirm),
-                  ),
-                if (['pending', 'planned'].contains(payload['status']) &&
-                    future)
-                  TextButton(
-                    onPressed: onMove,
-                    child: Text(context.lang.familyPlanMove),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    return ActivityOccurrenceView(
+      startedAt: payload['started_at'] as int,
+      durationMinutes: payload['duration_minutes'] as int?,
+      status: payload['status'] as String,
+      recurring: payload['schedule_id'] != null,
+      name: name,
+      statusLabel: monitoring
+          ? context.lang.familyPlanMonitoring
+          : locked
+          ? context.lang.familyPlanPending
+          : familyPlanExecutionLabel(context, payload['status'] as String),
+      onConfirm: locked || monitoring ? null : onConfirm,
+      onMove:
+          locked ||
+              monitoring ||
+              !['pending', 'planned'].contains(payload['status'])
+          ? null
+          : onMove,
     );
   }
 }

@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/domain/model/carbs_label_mode.dart';
 import '../../ingredient_catalog/ingredient_catalog_providers.dart';
 import '../../l10n/language.dart';
+import '../../presentation/widgets/ingredient_list_item.dart';
 import 'family_ingredient_details_dialog.dart';
+import 'models/family_ingredient_view.dart';
 import 'show_family_ingredient_picker.dart';
 
 /// Read-only catalog: selection never writes patient data on the caregiver.
@@ -82,12 +84,13 @@ class FamilyIngredientCatalogSectionState
       for (final row in widget.rows.where(
         (r) => r['kind'] == 'ingredients' && r['deleted'] != true,
       ))
-        ListTile(
-          leading: const Icon(Icons.egg_alt_outlined),
-          title: Text((row['payload'] as Map)['name'] as String),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () =>
-              preview(Map<String, dynamic>.from(row['payload'] as Map)),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: IngredientListItem(
+            ingredient: familyIngredientView(row),
+            onTap: () =>
+                preview(Map<String, dynamic>.from(row['payload'] as Map)),
+          ),
         ),
     ],
   );
