@@ -39,7 +39,9 @@ class MealPhotoReviewScreen extends HookWidget {
     this.findReferenceMatches,
     this.canConfirm = true,
     this.confirmLabel,
+    this.allowIngredientCreation = true,
   });
+  final bool allowIngredientCreation;
   final MealPhotoController controller;
   final Widget capture;
   final Widget? reviewOptions;
@@ -340,6 +342,8 @@ class MealPhotoReviewScreen extends HookWidget {
                             ),
                             if (state.step == MealPhotoStep.mode)
                               MealPhotoModeSelector(
+                                allowIngredientCreation:
+                                    allowIngredientCreation,
                                 proposal: state.proposal!,
                                 onUseWholePlate:
                                     controller.acceptWholePlateProposal,
@@ -416,6 +420,8 @@ class MealPhotoReviewScreen extends HookWidget {
                                 builder: (item, onConfirmed) => MealPhotoAssignmentTile(
                                   key: ValueKey(item.proposal.id),
                                   item: item,
+                                  allowIngredientCreation:
+                                      allowIngredientCreation,
                                   onNutritionConfidenceChanged: (confidence) =>
                                       controller.setAmount(
                                         item.proposal.id,
@@ -582,12 +588,13 @@ class MealPhotoReviewScreen extends HookWidget {
                                     value: 'product',
                                     child: Text(context.lang.mealPhotoAssign),
                                   ),
-                                  PopupMenuItem(
-                                    value: 'reference',
-                                    child: Text(
-                                      context.lang.mealPhotoAddReference,
+                                  if (allowIngredientCreation)
+                                    PopupMenuItem(
+                                      value: 'reference',
+                                      child: Text(
+                                        context.lang.mealPhotoAddReference,
+                                      ),
                                     ),
-                                  ),
                                 ],
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(

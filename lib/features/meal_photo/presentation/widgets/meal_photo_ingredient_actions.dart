@@ -15,11 +15,13 @@ class MealPhotoIngredientActions extends StatelessWidget {
     required this.allowProduct,
     this.onCreateReference,
     this.onRemove,
+    this.allowIngredientCreation = true,
   });
   final MealPhotoReviewItem item;
   final VoidCallback onAssign;
   final VoidCallback onReference;
   final bool allowProduct;
+  final bool allowIngredientCreation;
   final VoidCallback? onCreateReference;
   final VoidCallback? onRemove;
 
@@ -52,7 +54,7 @@ class MealPhotoIngredientActions extends StatelessWidget {
                     : context.lang.mealPhotoAssign,
               ),
             ),
-          if (item.referenceNutrition != null)
+          if (allowIngredientCreation && item.referenceNutrition != null)
             PopupMenuItem(
               value: MealPhotoIngredientAction.reference,
               enabled: !item.referenceAccepted,
@@ -71,7 +73,7 @@ class MealPhotoIngredientActions extends StatelessWidget {
                 ],
               ),
             ),
-          if (onCreateReference != null)
+          if (allowIngredientCreation && onCreateReference != null)
             PopupMenuItem(
               value: MealPhotoIngredientAction.editReference,
               child: Text(

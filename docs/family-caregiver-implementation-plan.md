@@ -488,3 +488,12 @@ The child and caregiver reuse pure meal record mapping and historical ingredient
 
 
 Validation for the shared-controller increment: 184 scoped tests passed, including both controller implementations, read-only preview isolation, account/source changes, tombstones, reference units and the existing patient history/meal nutrition regressions. The four Polish-label expectations in `meal_detail_formatters_test.dart` fail identically on the clean earlier checkout and were not changed. Terra high reviewed the changes and the follow-up fixes; no blocking findings remained. Existing tests were not edited.
+
+
+### Caregiver action menu and photo planning
+
+The caregiver uses the same tile presentation as the child: a full-width meal-photo action followed by meal and activity planning in two columns. Home retains current record/proposal cards without technical section headings or empty section spacing.
+
+Photo planning reuses recognition, product lookup, capture and review. Its ingredient reader uses the family projection and its saver submits only canonical child-ingredient/catalog references through the existing family proposal flow. It never creates local child meals or ingredients and never offers execution actions. Creating or accepting new reference ingredients is disabled for this controller/view; an unmatched item requires product selection before continuing. Compatible duplicate products merge, and proposal count/mass/date limits are checked before submission. No additional backend deployment is required.
+
+Validation: 88 scoped tests passed, including menu geometry at 320/390 pixels, home headings, proposal persistence boundaries and unchanged child photo defaults. Analyzer clean; final Terra high review found no remaining blockers. Existing tests were not edited.

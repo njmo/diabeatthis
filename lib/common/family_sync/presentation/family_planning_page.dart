@@ -19,6 +19,7 @@ import 'family_activity_log_card.dart';
 import 'family_activity_plan_form.dart';
 import 'family_collections_body.dart';
 import 'family_ingredient_catalog_section.dart';
+import 'family_meal_photo_page.dart';
 import 'family_meal_plan_form.dart';
 import 'family_plan_request_card.dart';
 import 'family_planned_activity_card.dart';
@@ -127,6 +128,55 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     controller.removeListener(changed);
     controller.dispose();
     super.dispose();
+  }
+
+  Future<void> planFromPhoto() async {
+    if (!enabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.lang.familyPlanWaitingForChild)),
+      );
+      return;
+    }
+    final uid = controller.uid!,
+        source = controller.source!,
+        owner = controller.owner;
+    final rows = controller.rows.values.toList();
+    bool current() =>
+        !controller.disposed &&
+        !controller.failed &&
+        controller.uid == uid &&
+        controller.currentUid() == uid &&
+        controller.source == source &&
+        controller.owner == owner;
+    final photo = FamilyMealPhotoPage(
+      rows: rows,
+      onSubmit: (values) async {
+        if (!current() || !controller.complete) {
+          throw StateError('Family changed');
+        }
+        await controller.submit(
+          type: 'createMeal',
+          targetId: null,
+          values: values,
+          baseRows: rows,
+          expectedUid: uid,
+          expectedSource: source,
+        );
+      },
+    );
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => ListenableBuilder(
+          listenable: controller,
+          builder: (context, _) => current()
+              ? photo
+              : Scaffold(
+                  appBar: AppBar(title: Text(context.lang.mealPhotoTitle)),
+                  body: Center(child: Text(context.lang.familyPlanFailed)),
+                ),
+        ),
+      ),
+    );
   }
 
   Future<void> edit(
@@ -461,12 +511,13 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                   ),
                 ],
               ),
-            if (showMeals) ...[
+            if (showMeals && visibleMeals.isNotEmpty) ...[
               const SizedBox(height: 16),
-              Text(
-                context.lang.familySyncMeals,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              if (widget.view != FamilyPlanningView.home)
+                Text(
+                  context.lang.familySyncMeals,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               for (final row in visibleMeals)
                 FamilyPlannedMealCard(
                   payload: row['payload'] as Map,
@@ -517,12 +568,14 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                       : null,
                 ),
             ],
-            if (showActivities) ...[
+            if (showActivities &&
+                (visibleOccurrences.isNotEmpty || visibleLogs.isNotEmpty)) ...[
               const SizedBox(height: 16),
-              Text(
-                context.lang.familySyncActivityOccurrences,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              if (widget.view != FamilyPlanningView.home)
+                Text(
+                  context.lang.familySyncActivityOccurrences,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               for (final row in visibleOccurrences)
                 FamilyPlannedActivityCard(
                   payload: row['payload'] as Map,
@@ -587,12 +640,13 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                       context.lang.familyPlanActivity,
                 ),
             ],
-            if (showRequests) ...[
+            if (showRequests && controller.plans.any(visibleRequest)) ...[
               const SizedBox(height: 16),
-              Text(
-                context.lang.familyPlanRequests,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              if (widget.view != FamilyPlanningView.home)
+                Text(
+                  context.lang.familyPlanRequests,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               for (final plan in controller.plans.where(visibleRequest))
                 FamilyPlanRequestCard(
                   plan: plan,

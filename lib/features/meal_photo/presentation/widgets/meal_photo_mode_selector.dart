@@ -14,7 +14,9 @@ class MealPhotoModeSelector extends StatelessWidget {
     this.onEditReference,
     this.referenceNutrition,
     this.referenceConfidence,
+    this.allowIngredientCreation = true,
   });
+  final bool allowIngredientCreation;
   final MealPhotoProposal proposal;
   final VoidCallback onUseWholePlate;
   final VoidCallback onDivide;
@@ -30,17 +32,18 @@ class MealPhotoModeSelector extends StatelessWidget {
         referenceNutrition: referenceNutrition,
         referenceConfidence: referenceConfidence,
       ),
-      if (onEditReference != null)
+      if (allowIngredientCreation && onEditReference != null)
         TextButton.icon(
           onPressed: onEditReference,
           icon: const Icon(Icons.edit_outlined),
           label: Text(context.lang.ingredientEditReferenceData),
         ),
       const SizedBox(height: 16),
-      FilledButton(
-        onPressed: onUseWholePlate,
-        child: Text(context.lang.mealPhotoUseWholePlate),
-      ),
+      if (allowIngredientCreation)
+        FilledButton(
+          onPressed: onUseWholePlate,
+          child: Text(context.lang.mealPhotoUseWholePlate),
+        ),
       const SizedBox(height: 8),
       TextButton.icon(
         onPressed: onDivide,

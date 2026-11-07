@@ -18,6 +18,7 @@ class MealPhotoAssignmentTile extends HookWidget {
     required this.onAssign,
     required this.onReference,
     this.allowProduct = true,
+    this.allowIngredientCreation = true,
     this.onCreateReference,
     this.onRemove,
     this.onAmountChanged,
@@ -28,6 +29,7 @@ class MealPhotoAssignmentTile extends HookWidget {
   final VoidCallback onAssign;
   final VoidCallback onReference;
   final bool allowProduct;
+  final bool allowIngredientCreation;
   final VoidCallback? onCreateReference;
   final VoidCallback? onRemove;
   final ValueChanged<double>? onAmountChanged;
@@ -62,6 +64,7 @@ class MealPhotoAssignmentTile extends HookWidget {
                   onAssign: onAssign,
                   onReference: onReference,
                   allowProduct: allowProduct,
+                  allowIngredientCreation: allowIngredientCreation,
                   onCreateReference: onCreateReference,
                   onRemove: onRemove,
                 ),

@@ -11,6 +11,7 @@ import '../../domain/models/meal_photo_model_response.dart';
 import '../../domain/models/meal_photo_nutrition.dart';
 import '../../domain/models/meal_photo_proposal.dart';
 import '../../domain/models/meal_photo_proposal_stage.dart';
+import '../../domain/models/meal_photo_review_exception.dart';
 import '../../domain/models/meal_photo_review_item.dart';
 import '../../domain/ports/meal_photo_meal_saver.dart';
 import '../../domain/use_cases/find_meal_photo_product_use_case.dart';
@@ -24,8 +25,10 @@ class MealPhotoController extends ChangeNotifier {
     required this.propose,
     required this.saver,
     this.checkIngredientCreation,
+    this.allowIngredientCreation = true,
     this.validate = const ValidateMealPhotoReviewUseCase(),
   });
+  final bool allowIngredientCreation;
   final ProposeMealFromPhotoUseCase propose;
   final MealPhotoMealSaver saver;
   final Future<bool?> Function(MealPhotoReviewItem)? checkIngredientCreation;
@@ -209,6 +212,11 @@ class MealPhotoController extends ChangeNotifier {
 
   void chooseMode(MealPhotoMode mode) {
     requireEditable();
+    if (!allowIngredientCreation && mode == MealPhotoMode.reference) {
+      throw MealPhotoReviewException(
+        MealPhotoReviewFailure.legacyReferenceUnsupported,
+      );
+    }
     final proposal = state.proposal;
     if (proposal == null) throw StateError('No proposal');
     revision++;
@@ -271,7 +279,7 @@ class MealPhotoController extends ChangeNotifier {
           final product = await find(item.proposal, languageCode: languageCode);
           return product != null
               ? item.assign(product, method: MealPhotoSelectionMethod.automatic)
-              : item.referenceNutrition != null
+              : allowIngredientCreation && item.referenceNutrition != null
               ? item.acceptReference(method: MealPhotoSelectionMethod.automatic)
               : item;
         }),

@@ -93,6 +93,7 @@ class CaregiverDashboardState extends State<CaregiverDashboard> {
         onSelected: (index) => setState(() => destination = index),
       ),
       floatingActionButton: CaregiverDashboardFab(
+        onPhoto: () => planning.currentState?.planFromPhoto(),
         onMeal: () => planning.currentState?.edit('createMeal'),
         onActivity: () => planning.currentState?.edit('planActivity'),
       ),

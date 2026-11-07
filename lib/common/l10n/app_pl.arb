@@ -4365,5 +4365,6 @@
   "familyPlanRequests": "Propozycje i wyniki",
   "familyPlanReviewCatalog": "Przed ponowieniem wybierz ponownie produkty z katalogu, aby potwierdzić ich aktualną wersję.",
   "familyPlanComparisonPartial": "To porównanie jest skrócone. Pełny aktualny plan znajdziesz w najnowszych danych dziecka.",
-  "familyPlanMonitoring": "Trwa monitorowanie lub wykonywanie — anulować może tylko dziecko."
+  "familyPlanMonitoring": "Trwa monitorowanie lub wykonywanie — anulować może tylko dziecko.",
+  "familyPhotoPlanningHint": "Zaplanuj posiłek dziecka. Przypisz każdy element do składnika dziecka lub produktu z katalogu. Nowe składniki można tworzyć tylko na telefonie dziecka."
 }

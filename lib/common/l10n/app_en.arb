@@ -3908,5 +3908,6 @@
   "familyPlanRequests": "Proposals and results",
   "familyPlanReviewCatalog": "Select the catalog products again to review their current version before retrying.",
   "familyPlanComparisonPartial": "This comparison is shortened. Check the latest child data for the complete current plan.",
-  "familyPlanMonitoring": "Monitoring or execution in progress — only the child can cancel."
+  "familyPlanMonitoring": "Monitoring or execution in progress — only the child can cancel.",
+  "familyPhotoPlanningHint": "Plan a meal for your child. Assign each item to a child ingredient or a catalog product. New ingredients can only be created on the child’s phone."
 }
