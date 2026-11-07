@@ -19,8 +19,8 @@ class MealHandoffInstruction {
     final schedule =
         event.extendedCarbs > 0 && delay != null && duration != null
         ? strings.aapsPipSchedule(
-            formatExtendedCarbsScheduleMinutes(delay),
-            formatExtendedCarbsScheduleMinutes(duration),
+            formatExtendedCarbsScheduleMinutes(delay, messages: strings),
+            formatExtendedCarbsScheduleMinutes(duration, messages: strings),
           )
         : strings.aapsPipNoSchedule;
     final hasExtendedCarbs = event.extendedCarbs > 0;

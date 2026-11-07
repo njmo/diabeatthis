@@ -611,6 +611,7 @@ void main() {
             () => Future<void>.delayed(const Duration(milliseconds: 50)),
           );
           await tester.pump(const Duration(milliseconds: 50));
+          await pumpDatabaseStreams(tester);
           final log = await tester.runAsync(
             () => harness.uiDb.activityDao.getActivityLogById(logId),
           );

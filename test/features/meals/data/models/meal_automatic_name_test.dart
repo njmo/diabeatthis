@@ -117,6 +117,11 @@ void main() {
             .first),
         isEmpty,
       );
+      for (final event in ['insert', 'update', 'delete']) {
+        await db.customStatement(
+          'DROP TRIGGER IF EXISTS family_sync_meal_$event',
+        );
+      }
       await db.customStatement('ALTER TABLE meal DROP COLUMN category');
       await db.migration.onUpgrade(Migrator(db), 40, 41);
       final rows = await db.select(db.meal).get();

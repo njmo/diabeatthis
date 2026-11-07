@@ -9,37 +9,81 @@ on:
       - develop
 
 jobs:
-  flutter:
+  checks:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.47.0"
-          channel: stable
-          cache: true
-
-      - name: Get dependencies
-        run: flutter pub get --enforce-lockfile
-
-      - name: Generate code
-        run: flutter pub run build_runner build --delete-conflicting-outputs
+      - uses: ./.github/actions/setup-flutter-project
 
       - name: Analyze
         run: flutter analyze lib test
 
-      - name: Test and audit use case and controller coverage
-        run: bash tool/testing/run_behavior_regression.sh
+      - name: Test behavior coverage tools
+        run: python3 -m unittest discover -s tool/testing -p 'test_*.py'
 
       - name: Build Android debug APK
         run: flutter build apk --debug --no-pub
+
+  test:
+    name: Tests (shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-flutter-project
+
+      - name: Test with coverage
+        run: >-
+          flutter test --no-pub --coverage
+          --total-shards=${{ strategy.job-total }}
+          --shard-index=${{ matrix.shard }}
+
+      - name: Upload shard coverage
+        uses: actions/upload-artifact@v7
+        with:
+          name: flutter-coverage-${{ matrix.shard }}
+          path: coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 7
+
+  flutter:
+    needs: [checks, test]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require successful checks and all test shards
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+        run: |
+          [[ "$CHECKS_RESULT" == success && "$TEST_RESULT" == success ]]
+
+      - uses: actions/checkout@v4
+
+      - name: Download shard coverage
+        uses: actions/download-artifact@v8
+        with:
+          pattern: flutter-coverage-*
+          path: coverage/shards
+
+      - name: Audit combined use case and controller coverage
+        shell: bash
+        run: |
+          reports=(coverage/shards/flutter-coverage-*/lcov.info)
+          [[ ${#reports[@]} -eq 4 ]]
+          args=(--require-executed)
+          for index in "${!reports[@]}"; do
+            [[ -s "${reports[$index]}" ]]
+            if [[ "$index" -eq 0 ]]; then
+              args+=(--lcov "${reports[$index]}")
+            else
+              args+=(--additional-lcov "${reports[$index]}")
+            fi
+          done
+          python3 tool/testing/audit_behavior_coverage.py "${args[@]}"

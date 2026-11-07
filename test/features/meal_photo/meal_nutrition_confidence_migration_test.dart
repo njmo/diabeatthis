@@ -30,6 +30,11 @@ void main() {
       );
       await current.close();
       final legacy = sqlite3.open(file.path);
+      for (final event in ['insert', 'update', 'delete']) {
+        legacy.execute(
+          'DROP TRIGGER IF EXISTS family_sync_meal_ingredients_$event',
+        );
+      }
       legacy.execute('DROP TRIGGER meal_ingredients_summary_set_updated_at');
       legacy.execute(
         'ALTER TABLE meal_ingredients DROP COLUMN nutrition_confidence_override',
@@ -55,7 +60,7 @@ void main() {
       expect(
         (await upgraded.customSelect('PRAGMA user_version').getSingle())
             .read<int>('user_version'),
-        47,
+        upgraded.schemaVersion,
       );
     },
   );

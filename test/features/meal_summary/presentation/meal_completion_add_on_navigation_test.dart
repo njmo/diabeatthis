@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:clock/clock.dart';
 import 'package:diabeatthis/app/router/app_router.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/meal/meal_completion_timing.dart';
@@ -27,7 +28,7 @@ void main() {
       ],
     );
     addTearDown(router.dispose);
-    final now = DateTime.now();
+    final now = clock.now();
     await tester.pumpWidget(
       ProviderScope(
         overrides: [

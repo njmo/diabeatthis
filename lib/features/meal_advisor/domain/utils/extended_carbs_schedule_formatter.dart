@@ -42,10 +42,14 @@ String formatExtendedCarbsInstruction(
   };
 }
 
-String formatExtendedCarbsScheduleMinutes(int minutes) {
-  if (minutes == 60) return lang.durationOneHourShort;
+String formatExtendedCarbsScheduleMinutes(
+  int minutes, {
+  AppLocalizations? messages,
+}) {
+  final strings = messages ?? lang;
+  if (minutes == 60) return strings.durationOneHourShort;
   if (minutes > 0 && minutes % 60 == 0) {
-    return lang.durationHoursShort(minutes ~/ 60);
+    return strings.durationHoursShort(minutes ~/ 60);
   }
-  return lang.durationMinutesShort(minutes);
+  return strings.durationMinutesShort(minutes);
 }
