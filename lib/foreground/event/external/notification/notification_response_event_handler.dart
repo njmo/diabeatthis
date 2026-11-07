@@ -220,11 +220,21 @@ class NotificationResponseEventHandler with Logging {
     try {
       final service = context.container.read(activityScheduleServiceProvider);
       await data.when(
-        agree: (id) async {
-          await service.confirm(id);
+        agree: (id, expectedStart, revision) async {
+          await service.confirm(
+            id,
+            fromNotification: true,
+            expectedStartedAt: expectedStart,
+            expectedRevision: revision,
+          );
         },
-        skip: service.skip,
-        empty: (_) async {},
+        skip: (id, expectedStart, revision) => service.skip(
+          id,
+          fromNotification: true,
+          expectedStartedAt: expectedStart,
+          expectedRevision: revision,
+        ),
+        empty: (_, _, _) async {},
       );
     } catch (error, stackTrace) {
       logE(

@@ -4395,5 +4395,8 @@
   "setupFamilyDisconnectBeforeDisable": "Przed wyłączeniem opieki trzeba odłączyć powiązane konta.",
   "familyManageAction": "Zarządzaj rodziną",
   "caregiverDaySummaryTitle": "Podsumowanie dnia z Nightscout",
-  "familyUpcomingEmpty": "Brak najbliższych lub niedawno pominiętych sesji."
+  "familyUpcomingEmpty": "Brak najbliższych lub niedawno pominiętych sesji.",
+  "activityRescheduledFrom": "Przełożono z {date}",
+  "@activityRescheduledFrom": {"placeholders": {"date": {"type": "String"}}},
+  "familySyncActivityReschedules": "Przełożenia aktywności"
 }

@@ -8,6 +8,7 @@ class ActivityOccurrenceView extends StatelessWidget {
   const ActivityOccurrenceView({
     super.key,
     required this.startedAt,
+    this.originalStartedAt,
     required this.durationMinutes,
     required this.status,
     required this.recurring,
@@ -21,6 +22,7 @@ class ActivityOccurrenceView extends StatelessWidget {
     this.onRetry,
   });
   final int startedAt;
+  final int? originalStartedAt;
   final int? durationMinutes;
   final String status;
   final bool recurring;
@@ -76,6 +78,15 @@ class ActivityOccurrenceView extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             Text(label),
+            if (originalStartedAt != null && originalStartedAt != startedAt)
+              Text(
+                context.lang.activityRescheduledFrom(
+                  DateFormat.yMd(context.lang.localeName).add_Hm().format(
+                    DateTime.fromMillisecondsSinceEpoch(originalStartedAt!),
+                  ),
+                ),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             if (onRetry != null)
               TextButton.icon(
                 onPressed: onRetry,

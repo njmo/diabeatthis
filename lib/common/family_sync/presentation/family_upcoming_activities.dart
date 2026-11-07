@@ -121,6 +121,10 @@ class FamilyUpcomingActivities extends ConsumerWidget {
                     );
                     return FamilyPlannedActivityCard(
                       payload: p,
+                      originalStartedAt:
+                          (family.rows['activityOccurrenceReschedules/$id']?['payload']
+                                  as Map?)?['original_started_at']
+                              as int?,
                       name:
                           activity?['name'] as String? ??
                           context.lang.familyPlanActivity,

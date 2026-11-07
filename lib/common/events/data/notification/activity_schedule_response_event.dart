@@ -12,12 +12,18 @@ sealed class ActivityScheduleResponseEvent
   const ActivityScheduleResponseEvent._();
   const factory ActivityScheduleResponseEvent.agree({
     required int occurrenceId,
+    int? expectedStartedAt,
+    int? expectedRevision,
   }) = ActivityScheduleAgree;
   const factory ActivityScheduleResponseEvent.skip({
     required int occurrenceId,
+    int? expectedStartedAt,
+    int? expectedRevision,
   }) = ActivityScheduleSkip;
   const factory ActivityScheduleResponseEvent.empty({
     required int occurrenceId,
+    int? expectedStartedAt,
+    int? expectedRevision,
   }) = ActivityScheduleOpen;
   factory ActivityScheduleResponseEvent.fromJson(Map<String, dynamic> json) =>
       _$ActivityScheduleResponseEventFromJson(json);

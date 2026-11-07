@@ -28,3 +28,17 @@ CREATE TABLE activity_occurrence (
   activity_log_id INTEGER REFERENCES activity_log(id) ON DELETE SET NULL,
   UNIQUE(schedule_id, started_at)
 );
+
+-- Stable occurrence identity with separate recurrence exclusions.
+CREATE TABLE activity_schedule_exception (
+  schedule_id INTEGER NOT NULL REFERENCES activity_schedule(id) ON DELETE CASCADE,
+  started_at INTEGER NOT NULL,
+  occurrence_id INTEGER REFERENCES activity_occurrence(id) ON DELETE SET NULL,
+  PRIMARY KEY(schedule_id, started_at)
+);
+
+CREATE TABLE activity_occurrence_reschedule (
+  occurrence_id INTEGER NOT NULL PRIMARY KEY REFERENCES activity_occurrence(id) ON DELETE CASCADE,
+  original_started_at INTEGER NOT NULL,
+  notification_revision INTEGER NOT NULL DEFAULT 1
+);

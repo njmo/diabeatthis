@@ -278,5 +278,16 @@
       "active",
       "updated_at"
     ]
+  },
+  "activityOccurrenceReschedules": {
+    "table": "activity_occurrence_reschedule",
+    "keys": [
+      "occurrence_id"
+    ],
+    "columns": [
+      "occurrence_id",
+      "original_started_at",
+      "notification_revision"
+    ]
   }
 }

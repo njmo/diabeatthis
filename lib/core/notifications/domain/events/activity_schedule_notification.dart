@@ -9,8 +9,10 @@ class ActivityScheduleNotificationEvent implements NotificationEvent {
     required this.occurrenceId,
     required this.activityName,
     required this.startsAt,
+    this.revision = 0,
   });
   final int occurrenceId;
+  final int revision;
   final String activityName;
   final DateTime startsAt;
   @override
@@ -30,13 +32,18 @@ class ActivityScheduleNotificationEvent implements NotificationEvent {
   @override
   Map<String, Object?> toPayload() => {
     'response_event_type': notificationResponseEvent,
-    'action_data': {'occurrenceId': occurrenceId},
+    'action_data': {
+      'occurrenceId': occurrenceId,
+      'expectedStartedAt': startsAt.millisecondsSinceEpoch,
+      'expectedRevision': revision,
+    },
   };
   @override
   Map<String, Object?> toJson() => {
     'occurrenceId': occurrenceId,
     'activityName': activityName,
     'startsAt': startsAt.toIso8601String(),
+    'revision': revision,
   };
   factory ActivityScheduleNotificationEvent.fromPayload(
     Map<String, dynamic> json,
@@ -44,5 +51,6 @@ class ActivityScheduleNotificationEvent implements NotificationEvent {
     occurrenceId: json['occurrenceId'] as int,
     activityName: json['activityName'] as String,
     startsAt: DateTime.parse(json['startsAt'] as String),
+    revision: json['revision'] as int? ?? 0,
   );
 }

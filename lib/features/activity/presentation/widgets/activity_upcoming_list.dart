@@ -86,6 +86,12 @@ class ActivityUpcomingListState extends ConsumerState<ActivityUpcomingList> {
   @override
   Widget build(BuildContext context) {
     final rows = ref.watch(activityOccurrencesProvider);
+    final reschedules = {
+      for (final row
+          in ref.watch(activityReschedulesProvider).value ??
+              <ActivityOccurrenceRescheduleData>[])
+        row.occurrenceId: row,
+    };
     final activities = ref.watch(activityListStreamProvider);
     final names = {
       for (final activity in activities.value ?? []) activity.id: activity.name,
@@ -112,11 +118,24 @@ class ActivityUpcomingListState extends ConsumerState<ActivityUpcomingList> {
               .map(
                 (row) => ActivityOccurrenceCard(
                   row: row,
+                  originalStartedAt: reschedules[row.id]?.originalStartedAt,
                   name: names[row.activityId] ?? context.lang.activityTitle,
                   onConfirm: () => perform(() async {
-                    await service.confirm(row.id);
+                    await service.confirm(
+                      row.id,
+                      expectedStartedAt: row.startedAt,
+                      expectedRevision:
+                          reschedules[row.id]?.notificationRevision ?? 0,
+                    );
                   }),
-                  onSkip: () => perform(() => service.skip(row.id)),
+                  onSkip: () => perform(
+                    () => service.skip(
+                      row.id,
+                      expectedStartedAt: row.startedAt,
+                      expectedRevision:
+                          reschedules[row.id]?.notificationRevision ?? 0,
+                    ),
+                  ),
                   onMove: () => perform(() async {
                     final date = await showDateTimePicker(
                       context: context,
@@ -124,13 +143,28 @@ class ActivityUpcomingListState extends ConsumerState<ActivityUpcomingList> {
                         row.startedAt,
                       ),
                     );
-                    if (date != null) await service.move(row.id, date);
+                    if (date != null) {
+                      await service.move(
+                        row.id,
+                        date,
+                        expectedStartedAt: row.startedAt,
+                        expectedRevision:
+                            reschedules[row.id]?.notificationRevision ?? 0,
+                      );
+                    }
                   }),
                   onHistory: () => recordHistory(row),
                   onDelete:
                       row.startedAt > now.millisecondsSinceEpoch ||
                           row.activityLogId == null
-                      ? () => perform(() => service.removeOccurrence(row.id))
+                      ? () => perform(
+                          () => service.removeOccurrence(
+                            row.id,
+                            expectedStartedAt: row.startedAt,
+                            expectedRevision:
+                                reschedules[row.id]?.notificationRevision ?? 0,
+                          ),
+                        )
                       : null,
                 ),
               )

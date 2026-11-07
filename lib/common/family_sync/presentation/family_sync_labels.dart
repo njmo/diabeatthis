@@ -17,6 +17,8 @@ String familySyncIntegrationLabel(BuildContext context, String kind) =>
       'activities' => context.lang.familySyncActivities,
       'activitySchedules' => context.lang.familySyncActivitySchedules,
       'activityOccurrences' => context.lang.familySyncActivityOccurrences,
+      'activityOccurrenceReschedules' =>
+        context.lang.familySyncActivityReschedules,
       'activityLogs' => context.lang.familySyncActivityLogs,
       'mealTemplates' => context.lang.familySyncMealTemplates,
       'mealTemplateIngredients' => context.lang.familySyncTemplateIngredients,

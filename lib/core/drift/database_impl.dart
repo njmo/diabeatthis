@@ -18,6 +18,7 @@ import 'dao/portion_dao.dart';
 import 'dao/quick_low_treatment_item_dao.dart';
 import 'database.dart';
 import 'family_sync/install_family_mirror_schema.dart';
+import 'migrations/migrate_activity_rescheduling.dart';
 import 'migrations/migrate_activity_summary.dart';
 import 'migrations/migrate_ingredient_origin.dart';
 import 'migrations/migrate_meal_add_on_bolus_context.dart';
@@ -76,7 +77,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 48;
+  int get schemaVersion => 49;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -359,6 +360,9 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       }
       if (from < 47) {
         await migrateMealNutritionConfidence(this);
+      }
+      if (from < 49) {
+        await migrateActivityRescheduling(this, m);
       }
     },
     beforeOpen: (details) async {

@@ -8,6 +8,7 @@ import '../backend/authenticated_callable_transport.dart';
 import '../ingredient_catalog/catalog_ingredient.dart';
 import '../ingredient_catalog/ingredient_catalog_repository.dart';
 import '../ingredient_catalog/ingredient_identity.dart';
+import '../notifications/clear_pending_activity_confirmations.dart';
 import 'apply_family_plan_use_case.dart';
 import 'call_family_activity_protocol.dart';
 import 'family_workflow_guard.dart';
@@ -85,10 +86,10 @@ class SynchronizeFamilyPlansUseCase {
         if (cancelConfirmation == null) {
           throw StateError('Notification cancellation unavailable');
         }
-        await cancelConfirmation!(cancelId);
-        await db.customStatement(
-          'UPDATE family_plan_journal SET notification_cleared=1 WHERE operation_id=?',
-          [row.read<String>('operation_id')],
+        await clearPendingActivityConfirmations(
+          db,
+          cancelId,
+          cancelConfirmation!,
         );
       }
       final cancellations = await db
@@ -103,11 +104,7 @@ class SynchronizeFamilyPlansUseCase {
           throw StateError('Notification cancellation unavailable');
         }
         final id = cancellation.read<int>('occurrence_id');
-        await cancelConfirmation!(id);
-        await db.customStatement(
-          'UPDATE family_plan_notification_cancellations SET cleared=1 WHERE operation_id=? AND occurrence_id=?',
-          [row.read<String>('operation_id'), id],
-        );
+        await clearPendingActivityConfirmations(db, id, cancelConfirmation!);
       }
       var ready = true;
       for (final required

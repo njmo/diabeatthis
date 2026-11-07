@@ -627,23 +627,11 @@ class ApplyFamilyPlanUseCase {
       return id;
     }
     if (type == 'moveActivity') {
-      final old = await (db.select(
-        db.activityOccurrence,
-      )..where((r) => r.id.equals(id))).getSingle();
       await service.move(
         id,
         DateTime.fromMillisecondsSinceEpoch(v['startedAt'] as int),
       );
-      return (await (db.select(db.activityOccurrence)
-                ..where(
-                  (r) =>
-                      r.activityId.equals(old.activityId) &
-                      r.startedAt.equals(v['startedAt'] as int),
-                )
-                ..orderBy([(r) => OrderingTerm.desc(r.id)])
-                ..limit(1))
-              .getSingle())
-          .id;
+      return id;
     }
     throw ArgumentError('Unsupported family operation');
   }

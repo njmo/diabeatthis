@@ -708,6 +708,10 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                       (row['payload'] as Map)['id'] as int,
                     ),
                     payload: row['payload'] as Map,
+                    originalStartedAt:
+                        (controller.rows['activityOccurrenceReschedules/${row['id']}']?['payload']
+                                as Map?)?['original_started_at']
+                            as int?,
                     name:
                         controller
                             .ofKind('activities')

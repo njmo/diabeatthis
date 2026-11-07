@@ -10,6 +10,7 @@ class FamilyPlannedActivityCard extends StatelessWidget {
     required this.payload,
     required this.name,
     required this.locked,
+    this.originalStartedAt,
     this.onConfirm,
     this.monitoring = false,
     this.requestStatusLabel,
@@ -18,6 +19,7 @@ class FamilyPlannedActivityCard extends StatelessWidget {
     this.onSkip,
   });
   final Map payload;
+  final int? originalStartedAt;
   final String name;
   final bool locked;
   final bool monitoring;
@@ -31,6 +33,7 @@ class FamilyPlannedActivityCard extends StatelessWidget {
     return ActivityOccurrenceView(
       onRetry: onRetry,
       startedAt: payload['started_at'] as int,
+      originalStartedAt: originalStartedAt,
       durationMinutes: payload['duration_minutes'] as int?,
       status: payload['status'] as String,
       recurring: payload['schedule_id'] != null,
@@ -45,7 +48,12 @@ class FamilyPlannedActivityCard extends StatelessWidget {
                         payload['status'] as String,
                       )),
       onConfirm: locked || monitoring ? null : onConfirm,
-      onSkip: locked || monitoring || !['pending','planned'].contains(payload['status']) ? null : onSkip,
+      onSkip:
+          locked ||
+              monitoring ||
+              !['pending', 'planned'].contains(payload['status'])
+          ? null
+          : onSkip,
       onMove:
           locked ||
               monitoring ||

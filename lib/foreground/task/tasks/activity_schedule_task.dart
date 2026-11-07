@@ -3,10 +3,14 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 
 import '../../../common/events/data/notification/activity_schedule_response_event.dart';
+import '../../../common/notifications/clear_pending_activity_confirmations.dart';
+import '../../../common/notifications/scoped_notification_cancellation.dart';
 import '../../../core/drift/database_impl.dart';
 import '../../../core/drift/providers/database_provider.dart';
 import '../../../core/notifications/domain/events/activity_schedule_notification.dart';
 import '../../../core/notifications/domain/events/temp_target_notification.dart';
+import '../../../core/notifications/domain/models/notification_event_type.dart';
+import '../../../core/notifications/domain/models/notification_key.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../features/activity/data/services/activity_schedule_service.dart';
 import '../../runtime/task_cancelled_exception.dart';
@@ -48,11 +52,21 @@ class ActivityScheduleTask extends WorkflowTask {
             response.future.ignore();
             for (final event in inbox.drain()) {
               await event.when(
-                agree: (id) async {
-                  await service.confirm(id);
+                agree: (id, expectedStart, revision) async {
+                  await service.confirm(
+                    id,
+                    fromNotification: true,
+                    expectedStartedAt: expectedStart,
+                    expectedRevision: revision,
+                  );
                 },
-                skip: service.skip,
-                empty: (_) async {},
+                skip: (id, expectedStart, revision) => service.skip(
+                  id,
+                  fromNotification: true,
+                  expectedStartedAt: expectedStart,
+                  expectedRevision: revision,
+                ),
+                empty: (_, _, _) async {},
               );
             }
             await service.refresh();
@@ -64,70 +78,96 @@ class ActivityScheduleTask extends WorkflowTask {
             final notifications = context.container.read(
               notificationsControllerForegroundProvider,
             );
-            for (final row in rows) {
-              if (row.startedAt <= now.millisecondsSinceEpoch ||
-                  row.status == 'skipped' ||
-                  row.status == 'missed') {
-                continue;
-              }
-              if (row.status == 'pending') {
-                final start = DateTime.fromMillisecondsSinceEpoch(
-                  row.startedAt,
+            for (final snapshot in rows) {
+              // Serialize each notification decision with moves. Reload after
+              // acquiring the transaction so a stale scan cannot mark a new slot.
+              await db.transaction(() async {
+                final row = await (db.select(
+                  db.activityOccurrence,
+                )..where((r) => r.id.equals(snapshot.id))).getSingleOrNull();
+                if (row == null) return;
+                await clearPendingActivityConfirmations(
+                  db,
+                  row.id,
+                  (id) => notifications.cancelNotification(
+                    NotificationKey(
+                      type: NotificationEventType.activitySchedule,
+                      entityId: id,
+                    ),
+                  ),
                 );
-                if (start.isBefore(next)) next = start;
-                final actionAt = DateTime.fromMillisecondsSinceEpoch(
-                  row.actionAt,
-                );
-                if (actionAt.isAfter(now)) {
-                  if (actionAt.isBefore(next)) next = actionAt;
-                } else if (row.confirmationMode == 'automatic') {
-                  await service.confirm(row.id);
-                } else if (row.askedAt == null) {
-                  final activity = await db.activityDao.getActivityById(
-                    row.activityId,
+                if (row.startedAt <= now.millisecondsSinceEpoch ||
+                    row.status == 'skipped' ||
+                    row.status == 'missed') {
+                  return;
+                }
+                if (row.status == 'pending') {
+                  final start = DateTime.fromMillisecondsSinceEpoch(
+                    row.startedAt,
                   );
-                  await notifications.show(
-                    ActivityScheduleNotificationEvent(
-                      occurrenceId: row.id,
-                      activityName: activity.name,
-                      startsAt: DateTime.fromMillisecondsSinceEpoch(
-                        row.startedAt,
+                  if (start.isBefore(next)) next = start;
+                  final actionAt = DateTime.fromMillisecondsSinceEpoch(
+                    row.actionAt,
+                  );
+                  if (actionAt.isAfter(now)) {
+                    if (actionAt.isBefore(next)) next = actionAt;
+                  } else if (row.confirmationMode == 'automatic') {
+                    await service.confirm(row.id);
+                  } else if (row.askedAt == null) {
+                    final activity = await db.activityDao.getActivityById(
+                      row.activityId,
+                    );
+                    await notifications.show(
+                      ActivityScheduleNotificationEvent(
+                        occurrenceId: row.id,
+                        revision:
+                            (await (db.select(db.activityOccurrenceReschedule)
+                                      ..where(
+                                        (r) => r.occurrenceId.equals(row.id),
+                                      ))
+                                    .getSingleOrNull())
+                                ?.notificationRevision ??
+                            0,
+                        activityName: activity.name,
+                        startsAt: DateTime.fromMillisecondsSinceEpoch(
+                          row.startedAt,
+                        ),
                       ),
-                    ),
-                  );
-                  await (db.update(
-                    db.activityOccurrence,
-                  )..where((r) => r.id.equals(row.id))).write(
-                    ActivityOccurrenceCompanion(
-                      askedAt: Value(now.millisecondsSinceEpoch),
-                    ),
-                  );
+                    );
+                    await (db.update(
+                      db.activityOccurrence,
+                    )..where((r) => r.id.equals(row.id))).write(
+                      ActivityOccurrenceCompanion(
+                        askedAt: Value(now.millisecondsSinceEpoch),
+                      ),
+                    );
+                  }
+                } else if (row.status == 'planned' &&
+                    row.targetRequestedAt == null &&
+                    row.activityLogId != null) {
+                  // Previous-evening confirmation reserves the session immediately;
+                  // the target prompt belongs to the 90-minute preparation window.
+                  final targetAt = DateTime.fromMillisecondsSinceEpoch(
+                    row.startedAt,
+                  ).subtract(const Duration(minutes: 90));
+                  if (targetAt.isAfter(now)) {
+                    if (targetAt.isBefore(next)) next = targetAt;
+                  } else {
+                    await notifications.show(
+                      TempTargetNotificationEvent.activity(
+                        entityId: row.activityLogId!,
+                      ),
+                    );
+                    await (db.update(
+                      db.activityOccurrence,
+                    )..where((r) => r.id.equals(row.id))).write(
+                      ActivityOccurrenceCompanion(
+                        targetRequestedAt: Value(now.millisecondsSinceEpoch),
+                      ),
+                    );
+                  }
                 }
-              } else if (row.status == 'planned' &&
-                  row.targetRequestedAt == null &&
-                  row.activityLogId != null) {
-                // Previous-evening confirmation reserves the session immediately;
-                // the target prompt belongs to the 90-minute preparation window.
-                final targetAt = DateTime.fromMillisecondsSinceEpoch(
-                  row.startedAt,
-                ).subtract(const Duration(minutes: 90));
-                if (targetAt.isAfter(now)) {
-                  if (targetAt.isBefore(next)) next = targetAt;
-                } else {
-                  await notifications.show(
-                    TempTargetNotificationEvent.activity(
-                      entityId: row.activityLogId!,
-                    ),
-                  );
-                  await (db.update(
-                    db.activityOccurrence,
-                  )..where((r) => r.id.equals(row.id))).write(
-                    ActivityOccurrenceCompanion(
-                      targetRequestedAt: Value(now.millisecondsSinceEpoch),
-                    ),
-                  );
-                }
-              }
+              });
             }
             await scope.any<void>([
               changed,

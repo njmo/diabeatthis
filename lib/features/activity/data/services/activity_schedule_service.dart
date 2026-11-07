@@ -31,6 +31,13 @@ final activitySchedulesProvider = StreamProvider((ref) {
   )..orderBy([(row) => OrderingTerm.asc(row.startMinute)])).watch();
 });
 
+final activityReschedulesProvider = StreamProvider(
+  (ref) => ref
+      .watch(databaseProvider)
+      .select(ref.watch(databaseProvider).activityOccurrenceReschedule)
+      .watch(),
+);
+
 final activityOccurrencesProvider = StreamProvider((ref) {
   final db = ref.watch(databaseProvider);
   return (db.select(
@@ -99,6 +106,12 @@ class ActivityScheduleService {
   }
 
   Future<void> clearFuture(int scheduleId) async {
+    await (db.delete(db.activityScheduleException)..where(
+          (r) =>
+              r.scheduleId.equals(scheduleId) &
+              r.startedAt.isBiggerThanValue(clock.now().millisecondsSinceEpoch),
+        ))
+        .go();
     final rows =
         await (db.select(db.activityOccurrence)..where(
               (r) =>
@@ -133,8 +146,10 @@ class ActivityScheduleService {
       db.activitySchedule,
     )..where((r) => r.enabled.equals(true))).get();
     final existing = await db.select(db.activityOccurrence).get();
+    final excluded = await db.select(db.activityScheduleException).get();
     final keys = {
       for (final row in existing) '${row.scheduleId}:${row.startedAt}',
+      for (final row in excluded) '${row.scheduleId}:${row.startedAt}',
     };
     for (final rule in rules) {
       final weekdays = rule.weekdays.split(',').map(int.parse).toSet();
@@ -202,13 +217,46 @@ class ActivityScheduleService {
   }
 
   /// A transaction makes UI taps and notification responses idempotent.
-  Future<int?> confirm(int occurrenceId) => db.transaction(() async {
+  Future<bool> matchesOccurrenceVersion(
+    ActivityOccurrenceData row,
+    int? expectedStartedAt,
+    int? expectedRevision,
+  ) async {
+    final revision =
+        (await (db.select(
+              db.activityOccurrenceReschedule,
+            )..where((r) => r.occurrenceId.equals(row.id))).getSingleOrNull())
+            ?.notificationRevision ??
+        0;
+    if (expectedRevision == null) {
+      return revision == 0 &&
+          (expectedStartedAt == null || expectedStartedAt == row.startedAt);
+    }
+    return expectedStartedAt == row.startedAt && expectedRevision == revision;
+  }
+
+  Future<int?> confirm(
+    int occurrenceId, {
+    bool fromNotification = false,
+    int? expectedStartedAt,
+    int? expectedRevision,
+  }) => db.transaction(() async {
     final row = await (db.select(
       db.activityOccurrence,
     )..where((r) => r.id.equals(occurrenceId))).getSingleOrNull();
     if (row == null ||
         row.status != 'pending' ||
         row.startedAt <= clock.now().millisecondsSinceEpoch) {
+      return null;
+    }
+    if ((fromNotification ||
+            expectedStartedAt != null ||
+            expectedRevision != null) &&
+        !await matchesOccurrenceVersion(
+          row,
+          expectedStartedAt,
+          expectedRevision,
+        )) {
       return null;
     }
     final log = await db.activityDao.insertActivityLog(
@@ -228,7 +276,12 @@ class ActivityScheduleService {
     return log.id;
   });
 
-  Future<void> skip(int id) => db
+  Future<void> skip(
+    int id, {
+    bool fromNotification = false,
+    int? expectedStartedAt,
+    int? expectedRevision,
+  }) => db
       .transaction(() async {
         final row = await (db.select(
           db.activityOccurrence,
@@ -236,24 +289,47 @@ class ActivityScheduleService {
         if (row == null ||
             row.status == 'deleted' ||
             row.startedAt <= clock.now().millisecondsSinceEpoch) {
-          return;
+          return false;
+        }
+        if ((fromNotification ||
+                expectedStartedAt != null ||
+                expectedRevision != null) &&
+            !await matchesOccurrenceVersion(
+              row,
+              expectedStartedAt,
+              expectedRevision,
+            )) {
+          return false;
         }
         await cancelLog(row);
         await (db.update(db.activityOccurrence)..where((r) => r.id.equals(id)))
             .write(const ActivityOccurrenceCompanion(status: Value('skipped')));
+        return true;
       })
-      .then((_) async {
-        await cancelConfirmation?.call(id);
+      .then((changed) async {
+        if (changed) await cancelConfirmation?.call(id);
       });
 
   /// Keep the occurrence key as a tombstone so recurring refresh cannot recreate it.
   /// Executed sessions are managed through activity history, never deleted here.
-  Future<void> removeOccurrence(int id) => db
+  Future<void> removeOccurrence(
+    int id, {
+    int? expectedStartedAt,
+    int? expectedRevision,
+  }) => db
       .transaction(() async {
         final row = await (db.select(
           db.activityOccurrence,
         )..where((r) => r.id.equals(id))).getSingleOrNull();
         if (row == null || row.status == 'deleted') return;
+        if ((expectedStartedAt != null || expectedRevision != null) &&
+            !await matchesOccurrenceVersion(
+              row,
+              expectedStartedAt,
+              expectedRevision,
+            )) {
+          throw StateError('Activity changed; reopen the session');
+        }
         final log = row.activityLogId == null
             ? null
             : await db.activityDao.getActivityLogByIdOrNull(row.activityLogId!);
@@ -334,47 +410,86 @@ class ActivityScheduleService {
     });
   }
 
-  Future<void> move(int id, DateTime start) => db
-      .transaction(() async {
-        final row = await (db.select(
-          db.activityOccurrence,
-        )..where((r) => r.id.equals(id))).getSingle();
-        if (!['pending', 'planned'].contains(row.status) ||
-            start.isBefore(clock.now()) ||
-            row.startedAt <= clock.now().millisecondsSinceEpoch) {
-          throw ArgumentError('Only future occurrences can be moved');
-        }
-        if (start.millisecondsSinceEpoch == row.startedAt) return false;
-        final rule = row.scheduleId == null
-            ? null
-            : await (db.select(
-                db.activitySchedule,
-              )..where((r) => r.id.equals(row.scheduleId!))).getSingleOrNull();
-        final alreadyPlanned = row.status == 'planned';
-        await cancelLog(row);
-        // Keep the original occurrence as an exception so refresh cannot recreate it.
-        await (db.update(db.activityOccurrence)..where((r) => r.id.equals(id)))
-            .write(const ActivityOccurrenceCompanion(status: Value('skipped')));
-        final newId = await db
-            .into(db.activityOccurrence)
-            .insert(
-              ActivityOccurrenceCompanion.insert(
-                scheduleId: Value(row.scheduleId),
-                activityId: row.activityId,
-                startedAt: start.millisecondsSinceEpoch,
-                durationMinutes: Value(row.durationMinutes),
-                confirmationMode: row.confirmationMode,
-                actionAt: activityScheduleActionAt(
-                  start,
-                  row.confirmationMode,
-                  rule?.previousDayMinute ?? 19 * 60,
-                ).millisecondsSinceEpoch,
-              ),
-            );
-        if (alreadyPlanned) await confirm(newId);
-        return true;
-      })
-      .then((changed) async {
-        if (changed) await cancelConfirmation?.call(id);
-      });
+  Future<void> move(
+    int id,
+    DateTime start, {
+    int? expectedStartedAt,
+    int? expectedRevision,
+  }) => db.transaction(() async {
+    final row = await (db.select(
+      db.activityOccurrence,
+    )..where((r) => r.id.equals(id))).getSingle();
+    if (!['pending', 'planned'].contains(row.status) ||
+        start.isBefore(clock.now()) ||
+        row.startedAt <= clock.now().millisecondsSinceEpoch) {
+      throw ArgumentError('Only future occurrences can be moved');
+    }
+    if ((expectedStartedAt != null || expectedRevision != null) &&
+        !await matchesOccurrenceVersion(
+          row,
+          expectedStartedAt,
+          expectedRevision,
+        )) {
+      throw StateError('Activity changed; reopen the session');
+    }
+    if (start.millisecondsSinceEpoch == row.startedAt) return;
+    final rule = row.scheduleId == null
+        ? null
+        : await (db.select(
+            db.activitySchedule,
+          )..where((r) => r.id.equals(row.scheduleId!))).getSingleOrNull();
+    final alreadyPlanned = row.status == 'planned';
+    if (alreadyPlanned) {
+      final log = row.activityLogId == null
+          ? null
+          : await db.activityDao.getActivityLogByIdOrNull(row.activityLogId!);
+      if (log == null ||
+          log.endedAt != null ||
+          log.startedAt <= clock.now().millisecondsSinceEpoch ||
+          log.startedAt != row.startedAt) {
+        throw StateError('Only an unstarted reservation can be moved');
+      }
+    }
+    await db.customStatement(
+      'INSERT INTO activity_occurrence_reschedule(occurrence_id,original_started_at,notification_revision) VALUES(?,?,1) ON CONFLICT(occurrence_id) DO UPDATE SET notification_revision=notification_revision+1',
+      [row.id, row.startedAt],
+    );
+    if (row.scheduleId != null) {
+      await db
+          .into(db.activityScheduleException)
+          .insert(
+            ActivityScheduleExceptionCompanion.insert(
+              scheduleId: row.scheduleId!,
+              startedAt: row.startedAt,
+              occurrenceId: Value(row.id),
+            ),
+            mode: InsertMode.insertOrIgnore,
+          );
+    }
+    // The occurrence is the stable session. Re-arm its unstarted execution
+    // reservation so monitor and owned-target cleanup observe the old log end.
+    await cancelLog(row);
+    await (db.update(
+      db.activityOccurrence,
+    )..where((r) => r.id.equals(id))).write(
+      ActivityOccurrenceCompanion(
+        startedAt: Value(start.millisecondsSinceEpoch),
+        status: const Value('pending'),
+        askedAt: const Value(null),
+        targetRequestedAt: const Value(null),
+        activityLogId: const Value(null),
+        actionAt: Value(
+          activityScheduleActionAt(
+            start,
+            row.confirmationMode,
+            rule?.previousDayMinute ?? 19 * 60,
+          ).millisecondsSinceEpoch,
+        ),
+      ),
+    );
+    if (alreadyPlanned) await confirm(id);
+    // Keep cancellation inside the same lock as notification decisions so
+    // it cannot remove a newer prompt already delivered for this stable ID.
+    await cancelConfirmation?.call(id);
+  });
 }

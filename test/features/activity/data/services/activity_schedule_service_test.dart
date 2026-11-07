@@ -112,7 +112,20 @@ void main() {
       await service.move(row.id, DateTime(2026, 10, 28, 9));
       await service.refresh();
       final rows = await db.select(db.activityOccurrence).get();
-      expect(rows.singleWhere((r) => r.id == row.id).status, 'skipped');
+      expect(rows.singleWhere((r) => r.id == row.id).status, 'planned');
+      expect(
+        rows.singleWhere((r) => r.id == row.id).startedAt,
+        DateTime(2026, 10, 28, 9).millisecondsSinceEpoch,
+      );
+      expect(
+        (await db.select(db.activityScheduleException).getSingle()).startedAt,
+        row.startedAt,
+      );
+      expect(
+        (await db.select(db.activityOccurrenceReschedule).getSingle())
+            .originalStartedAt,
+        row.startedAt,
+      );
       expect(
         rows
             .where(

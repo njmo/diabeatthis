@@ -13,8 +13,10 @@ class ActivityOccurrenceCard extends StatelessWidget {
     required this.onMove,
     required this.onHistory,
     this.onDelete,
+    this.originalStartedAt,
   });
   final ActivityOccurrenceData row;
+  final int? originalStartedAt;
   final String name;
   final VoidCallback onConfirm;
   final VoidCallback onSkip;
@@ -24,6 +26,7 @@ class ActivityOccurrenceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ActivityOccurrenceView(
     startedAt: row.startedAt,
+    originalStartedAt: originalStartedAt,
     durationMinutes: row.durationMinutes,
     status: row.status,
     recurring: row.scheduleId != null,

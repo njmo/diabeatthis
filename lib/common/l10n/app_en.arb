@@ -3938,5 +3938,8 @@
   "setupFamilyDisconnectBeforeDisable": "Linked accounts must disconnect before family care can be turned off.",
   "familyManageAction": "Manage family",
   "caregiverDaySummaryTitle": "Nightscout day summary",
-  "familyUpcomingEmpty": "No upcoming sessions or recently missed sessions."
+  "familyUpcomingEmpty": "No upcoming sessions or recently missed sessions.",
+  "activityRescheduledFrom": "Rescheduled from {date}",
+  "@activityRescheduledFrom": {"placeholders": {"date": {"type": "String"}}},
+  "familySyncActivityReschedules": "Activity reschedules"
 }
