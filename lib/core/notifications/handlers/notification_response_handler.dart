@@ -5,10 +5,20 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../../common/meal/pending_meal_completion_requests.dart';
+import '../../../common/meal_advisor/notifications/meal_decision_notification_intent.dart';
 
 Future<void> onDidReceiveNotificationResponse(
   NotificationResponse response,
 ) async {
+  final decisionIntent = MealDecisionNotificationIntent.parse(
+    response.payload,
+    response.actionId,
+  );
+  if (decisionIntent != null) {
+    await MealDecisionNotificationIntentStore().add(decisionIntent);
+    return;
+  }
+
   debugPrint(
     'BG RESPONSE: actionId=${response.actionId} data=${response.payload}',
   );

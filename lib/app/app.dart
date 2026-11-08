@@ -12,6 +12,7 @@ import '../common/events/data/app_event_data.dart';
 import '../common/l10n/application_language.dart';
 import '../common/l10n/language.dart';
 import '../common/location/residence_country_provider.dart';
+import '../common/meal_advisor/presentation/remote/meal_decision_runtime.dart';
 import '../common/theme/application_theme_data.dart';
 import '../common/theme/application_theme_mode_controller.dart';
 import '../common/widgets/application_backdrop.dart';
@@ -203,8 +204,9 @@ class _MyAppState extends ConsumerState<MyApp>
         .maybeWhen(data: (language) => language, orElse: () => null);
 
     return MaterialApp.router(
-      builder: (context, child) =>
-          ApplicationBackdrop(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => ApplicationBackdrop(
+        child: MealDecisionRuntime(child: child ?? const SizedBox.shrink()),
+      ),
       locale: selectedLanguage?.locale,
       onGenerateTitle: (context) => context.lang.appTitle,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

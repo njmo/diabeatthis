@@ -1,0 +1,82 @@
+import 'dart:convert';
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+import '../../../core/notifications/bootstrap/local_notifications_bootstrap.dart'
+    as bootstrap;
+import '../../../firebase_options.dart';
+import '../../app_mode/application_device_mode.dart';
+import '../../l10n/application_language.dart';
+import '../../l10n/language.dart';
+import 'meal_decision_notification_intent.dart';
+
+/// FCM data contains only the opaque request ID, never clinical information.
+Future<void> showMealDecisionPush(RemoteMessage message) async {
+  final id = message.data['requestId'];
+  if (message.data.length != 1 ||
+      id is! String ||
+      !RegExp(r'^[A-Za-z0-9_-]{1,128}$').hasMatch(id)) {
+    return;
+  }
+  final plugin = FlutterLocalNotificationsPlugin();
+  await initializeLanguageStringsFromPreferences();
+  await bootstrap.init(plugin);
+  var notificationId = 0;
+  for (final unit in id.codeUnits) {
+    notificationId = (notificationId * 31 + unit) & 0x7fffffff;
+  }
+  final caregiver =
+      await loadApplicationDeviceMode() == ApplicationDeviceMode.caregiver;
+  await plugin.show(
+    id: notificationId,
+    title: lang.mealDecisionNotificationTitle,
+    body: lang.mealDecisionNotificationBody,
+    notificationDetails: NotificationDetails(
+      android: AndroidNotificationDetails(
+        'meal_decision_requests',
+        lang.mealDecisionNotificationTitle,
+        importance: Importance.high,
+        priority: Priority.high,
+        actions: caregiver
+            ? [
+                AndroidNotificationAction(
+                  'claim',
+                  lang.mealDecisionNotificationClaim,
+                  showsUserInterface: true,
+                ),
+                AndroidNotificationAction(
+                  'delegate',
+                  lang.mealDecisionNotificationDelegate,
+                  showsUserInterface: true,
+                ),
+                AndroidNotificationAction(
+                  'decline',
+                  lang.mealDecisionNotificationDecline,
+                  showsUserInterface: true,
+                ),
+              ]
+            : [],
+      ),
+    ),
+    payload: jsonEncode({
+      'type': mealDecisionNotificationType,
+      'requestId': id,
+    }),
+  );
+}
+
+@pragma('vm:entry-point')
+Future<void> mealDecisionFirebaseBackgroundHandler(
+  RemoteMessage message,
+) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
+  await showMealDecisionPush(message);
+}

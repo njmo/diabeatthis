@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/meal/manual_meal_decision.dart';
+import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
@@ -25,6 +26,7 @@ import 'package:diabeatthis/features/meals/data/providers/meal_activation_guard_
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../foreground/utils/fake_notifications_controller.dart';
 import '../../../helpers/device_status_factory.dart';
@@ -65,6 +67,10 @@ class AssistedAdvisorFixture {
   AssistedAdvisorFixture({required bool assisted, bool cache = true}) {
     container = ProviderContainer(
       overrides: [
+        sharedPrefsProvider.overrideWith((ref) async {
+          SharedPreferences.setMockInitialValues({});
+          return SharedPreferences.getInstance();
+        }),
         aiAssistedMealAdvisorEnabledProvider.overrideWithValue(assisted),
         checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
           eligibility,

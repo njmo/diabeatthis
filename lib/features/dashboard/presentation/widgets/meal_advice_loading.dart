@@ -4,7 +4,7 @@ import '../../../../common/l10n/language.dart';
 
 class MealAdviceLoading extends StatelessWidget {
   final bool aiAssisted;
-  final VoidCallback onManual;
+  final VoidCallback? onManual;
   const MealAdviceLoading({
     super.key,
     required this.aiAssisted,
@@ -22,11 +22,12 @@ class MealAdviceLoading extends StatelessWidget {
             : context.lang.mealAdviceCheckingData,
       ),
       const SizedBox(height: 12),
-      OutlinedButton.icon(
-        onPressed: onManual,
-        icon: const Icon(Icons.edit_outlined),
-        label: Text(context.lang.uiChooseADecisionManually),
-      ),
+      if (onManual != null)
+        OutlinedButton.icon(
+          onPressed: onManual,
+          icon: const Icon(Icons.edit_outlined),
+          label: Text(context.lang.uiChooseADecisionManually),
+        ),
     ],
   );
 }

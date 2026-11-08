@@ -1,5 +1,6 @@
 import 'package:diabeatthis/common/meal/manual_meal_decision.dart';
 import 'package:diabeatthis/common/meal/meal_decision.dart';
+import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/notifications/base/notifications_controller.dart';
@@ -16,6 +17,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../helpers/device_status_factory.dart';
 import '../../../../helpers/localized_material_app.dart';
@@ -26,10 +28,13 @@ void main() {
   testWidgets(
     'manual icon appears only at suggestion and editing does not save advice',
     (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
       final db = DatabaseImpl(NativeDatabase.memory());
       final container = ProviderContainer(
         retry: (_, _) => null,
         overrides: [
+          sharedPrefsProvider.overrideWith((ref) async => prefs),
           databaseProvider.overrideWithValue(db),
           notificationsControllerUiProvider.overrideWithValue(
             SilentMealNotifications(),
@@ -83,7 +88,10 @@ void main() {
         await tester.runAsync(() => db.select(db.mealAdvisorResult).get()),
         isEmpty,
       );
-      await tester.tap(find.byTooltip('Wybierz decyzję ręcznie'));
+      await tester.runAsync(() async {
+        await tester.tap(find.byTooltip('Wybierz decyzję ręcznie'));
+        await Future<void>.delayed(Duration.zero);
+      });
       await tester.pumpAndSettle();
       expect(find.text('Wybierz samodzielnie'), findsOneWidget);
       await tester.tap(find.text('Anuluj').last);

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:clock/clock.dart';
+import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/meal_dialog_controller.dart';
@@ -18,6 +19,7 @@ import 'package:diabeatthis/features/meals/data/providers/meal_activation_guard_
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../foreground/utils/fake_notifications_controller.dart';
 import '../../../helpers/available_meal_advice_eligibility.dart';
@@ -52,6 +54,10 @@ void main() {
   ProviderContainer create(StubMealActivityAdvice activity) {
     final container = ProviderContainer(
       overrides: [
+        sharedPrefsProvider.overrideWith((ref) async {
+          SharedPreferences.setMockInitialValues({});
+          return SharedPreferences.getInstance();
+        }),
         getMealActivityAdviceUseCaseProvider.overrideWithValue(activity),
         aiAssistedMealAdvisorEnabledProvider.overrideWithValue(false),
         checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/meal/manual_meal_decision.dart';
+import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_advice_pending_notification.dart';
@@ -23,6 +24,7 @@ import 'package:diabeatthis/features/meals/data/providers/meal_activation_guard_
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../foreground/utils/fake_notifications_controller.dart';
 import '../../../helpers/available_meal_advice_eligibility.dart';
@@ -55,6 +57,10 @@ void main() {
     );
     container = ProviderContainer(
       overrides: [
+        sharedPrefsProvider.overrideWith((ref) async {
+          SharedPreferences.setMockInitialValues({});
+          return SharedPreferences.getInstance();
+        }),
         checkMealAdviceEligibilityUseCaseProvider.overrideWithValue(
           eligibility,
         ),
@@ -252,6 +258,10 @@ void main() {
       );
       final seeded = ProviderContainer(
         overrides: [
+          sharedPrefsProvider.overrideWith((ref) async {
+            SharedPreferences.setMockInitialValues({});
+            return SharedPreferences.getInstance();
+          }),
           provider.overrideWith(
             () => SeededMealDialogController(extendedCarbs),
           ),

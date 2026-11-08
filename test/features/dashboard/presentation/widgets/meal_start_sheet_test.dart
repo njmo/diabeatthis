@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/widgets/manual_meal_decision_dialog.dart';
+import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/features/dashboard/data/meal_dialog_controller.dart';
 import 'package:diabeatthis/features/dashboard/data/meal_dialog_state.dart';
@@ -15,6 +16,7 @@ import 'package:diabeatthis/features/meals/data/providers/meal_activation_guard_
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUp(() => LanguageStrings.setSelectedLocale(const Locale('pl')));
@@ -320,9 +322,12 @@ Future<void> openMealSheet(
   ValueChanged<MealStatusDialogResult?>? onResult,
   double textScale = 1,
 }) async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        sharedPrefsProvider.overrideWith((ref) async => prefs),
         mealDialogControllerProvider(
           1,
           MealDialogStep.choose,

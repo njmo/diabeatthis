@@ -11,6 +11,7 @@ import '../../../../common/meal_advisor/demo/meal_decision_demo_request.dart';
 import '../../../../common/meal_advisor/meal_decision_preferences_provider.dart';
 import '../../../../common/meal_advisor/presentation/demo/caregiver_meal_decision_demo_inbox.dart';
 import '../../../../common/meal_advisor/presentation/demo/show_meal_decision_demo.dart';
+import '../../../../common/meal_advisor/presentation/remote/meal_decision_remote_inbox.dart';
 import '../../../../common/presentation/dashboard/dashboard_shell.dart';
 import 'caregiver_dashboard_fab.dart';
 import 'caregiver_data_error_notice.dart';
@@ -142,6 +143,7 @@ class CaregiverDashboardState extends ConsumerState<CaregiverDashboard> {
                     syncFailed: failed,
                     syncReady: ready,
                   ),
+                  const MealDecisionRemoteInboxView(),
                   CaregiverMealDecisionDemoInbox(
                     family: () => planning.currentState?.controller,
                   ),

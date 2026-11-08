@@ -1,9 +1,18 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/app_mode/application_device_mode.dart';
+import '../../../common/auth/google_authentication_providers.dart';
+import '../../../common/family/family_providers.dart';
 import '../../../common/meal/manual_meal_decision.dart';
+import '../../../common/meal_advisor/meal_decision_preferences_provider.dart';
+import '../../../common/meal_advisor/remote/accept_remote_meal_decision.dart';
+import '../../../common/meal_advisor/remote/meal_decision_remote_request.dart';
+import '../../../common/meal_advisor/remote/record_meal_decision_fallback.dart';
+import '../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../core/domain/model/device_status.dart';
 import '../../../core/domain/model/meal_macro_summary.dart';
+import '../../../core/drift/providers/database_provider.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/meal_advice_pending_notification.dart';
 import '../../../core/notifications/domain/models/hash_notification_id_factory.dart';
@@ -38,6 +47,33 @@ class MealDialogController extends _$MealDialogController with Logging {
   late final int mealId;
   int _adviceRequest = 0;
   DeviceStatus? _adviceDeviceStatus;
+  MealDecisionRemoteRequest? _caregiverFallback;
+  MealDecisionRemoteRequest? _caregiverRequest;
+  void setCaregiverRequest(MealDecisionRemoteRequest? request) {
+    _caregiverRequest = request;
+  }
+
+  void beginCaregiverFallback(MealDecisionRemoteRequest request) {
+    _caregiverRequest = null;
+    _caregiverFallback = request;
+    _adviceRequest++;
+    state = state.copyWith(
+      step: MealDialogStep.choose,
+      advice: MealAdvice.empty(),
+      isPreparingAdvice: false,
+      skipMeal: false,
+      extendedCarbsGrams: 0,
+    );
+  }
+
+  String? _fallbackAcceptanceToken;
+  void setCaregiverFallback(
+    MealDecisionRemoteRequest? request, {
+    String? acceptanceToken,
+  }) {
+    _caregiverFallback = request;
+    _fallbackAcceptanceToken = acceptanceToken;
+  }
 
   @override
   MealDialogState build(int mId, MealDialogStep initialStep) {
@@ -45,7 +81,16 @@ class MealDialogController extends _$MealDialogController with Logging {
     return MealDialogState.initial(initialStep);
   }
 
-  Future<void> chooseEat({ManualMealDecision? manual}) async {
+  Future<void> chooseEat({ManualMealDecision? manual}) =>
+      _chooseEat(manual: manual);
+
+  Future<void> chooseCaregiverAdvice(MealAdvice advice) =>
+      _chooseEat(caregiverAdvice: advice);
+
+  Future<void> _chooseEat({
+    ManualMealDecision? manual,
+    MealAdvice? caregiverAdvice,
+  }) async {
     if (manual == null && state.isPreparingAdvice) return;
     final request = ++_adviceRequest;
     state = state.copyWith(
@@ -56,7 +101,15 @@ class MealDialogController extends _$MealDialogController with Logging {
       clearUnavailableReason: true,
     );
     try {
-      await _prepareChoice(request, manual);
+      if (manual != null) {
+        await ref.read(sharedPrefsProvider.future);
+        if (!ref.mounted || request != _adviceRequest) return;
+        if ((!ref.read(mealDecisionPreferencesProvider).allowManualDecision ||
+            _caregiverFallback?.data['allowManualDecision'] == false)) {
+          throw StateError('Manual meal decisions are disabled');
+        }
+      }
+      await _prepareChoice(request, manual, caregiverAdvice);
     } catch (error, stack) {
       logE(
         'Meal advice preparation failed: ${error.runtimeType}',
@@ -78,7 +131,11 @@ class MealDialogController extends _$MealDialogController with Logging {
     }
   }
 
-  Future<void> _prepareChoice(int request, ManualMealDecision? manual) async {
+  Future<void> _prepareChoice(
+    int request,
+    ManualMealDecision? manual,
+    MealAdvice? caregiverAdvice,
+  ) async {
     final blockingMeal = await ref.read(
       mealBlockingActivationProvider(mealId).future,
     );
@@ -140,6 +197,43 @@ class MealDialogController extends _$MealDialogController with Logging {
               : null,
           source: 'manual',
           extendedCarbs: extendedCarbs,
+        ),
+        clearActivationBlock: true,
+      );
+      return;
+    }
+    if (caregiverAdvice != null) {
+      if (caregiverAdvice.source != 'caregiver' ||
+          caregiverAdvice.caregiverId == null ||
+          caregiverAdvice.caregiverRequestId == null) {
+        throw StateError('Invalid caregiver attribution');
+      }
+      final settings = await ref.read(
+        extendedCarbsScheduleSettingsProvider.future,
+      );
+      if (!ref.mounted || request != _adviceRequest) return;
+      final extended = const WbtExtendedCarbsCalculator()
+          .calculateFromMacros(
+            fatGrams: mealStatus?.fatGrams ?? 0,
+            proteinGrams: mealStatus?.proteinGrams ?? 0,
+          )
+          .withSchedule(
+            settings.copyWith(
+              deliveryMode: ExtendedCarbsDeliveryMode.extendedCarbs,
+            ),
+          );
+      state = state.copyWith(
+        step: MealDialogStep.confirm,
+        skipMeal: false,
+        carbsGrams: carbs,
+        extendedCarbsGrams: extended.grams.toDouble(),
+        advice: MealAdvice(
+          caregiverAdvice.decision,
+          caregiverAdvice.wait,
+          source: 'caregiver',
+          caregiverId: caregiverAdvice.caregiverId,
+          caregiverRequestId: caregiverAdvice.caregiverRequestId,
+          extendedCarbs: extended,
         ),
         clearActivationBlock: true,
       );
@@ -238,7 +332,23 @@ class MealDialogController extends _$MealDialogController with Logging {
     final request = _adviceRequest;
     final advice = state.advice;
     final adviceDeviceStatus = _adviceDeviceStatus;
-    if (advice.source != 'manual') {
+    if (advice.source == 'manual') {
+      await ref.read(sharedPrefsProvider.future);
+      if (!ref.mounted ||
+          request != _adviceRequest ||
+          !identical(state.advice, advice)) {
+        return false;
+      }
+      if ((!ref.read(mealDecisionPreferencesProvider).allowManualDecision ||
+          _caregiverFallback?.data['allowManualDecision'] == false)) {
+        state = state.copyWith(
+          advice: MealAdvice.empty(),
+          extendedCarbsGrams: 0,
+        );
+        return false;
+      }
+    }
+    if (advice.source != 'manual' && advice.source != 'caregiver') {
       final checkStatus = ref.read(checkMealAdvisorDeviceStatusUseCaseProvider);
       var unavailableReason = checkStatus(adviceDeviceStatus);
       // A fresh history response must not revive a suggestion calculated on expired inputs.
@@ -278,7 +388,59 @@ class MealDialogController extends _$MealDialogController with Logging {
         throw const MealAdviceUnavailableException();
       }
     }
-    await AcceptMealDecisionUseCase(ref).call(mealId, advice);
+    if (advice.source == 'caregiver') {
+      final remoteRequest = _caregiverRequest;
+      if (remoteRequest == null || remoteRequest.mealId != mealId) {
+        throw StateError('Missing caregiver request');
+      }
+      await ref.read(acceptRemoteMealDecisionProvider)(
+        remoteRequest,
+        reviewedAdvice: advice,
+        startMeal: true,
+        isCancelled: () =>
+            !ref.mounted ||
+            request != _adviceRequest ||
+            !identical(state.advice, advice),
+      );
+      return true;
+    }
+    final fallback = _caregiverFallback;
+    final uid = ref.read(googleAccountProvider).asData?.value?.uid;
+    final db = ref.read(databaseProvider);
+    if (fallback != null) await ref.read(applicationDeviceModeProvider.future);
+    await db.transaction(() async {
+      if (fallback != null) {
+        final identity = await db
+            .customSelect(
+              'SELECT owner_uid,source_id FROM family_sync_identity WHERE singleton=1',
+            )
+            .getSingle();
+        if (fallback.mealId != mealId ||
+            ref.read(authenticatedFamilyTransportProvider).currentUid() !=
+                uid ||
+            uid != fallback.ownerUid ||
+            ref.read(googleAccountProvider).asData?.value?.uid != uid ||
+            ref.read(applicationDeviceModeProvider).asData?.value !=
+                ApplicationDeviceMode.patient ||
+            identity.readNullable<String>('owner_uid') != uid ||
+            identity.read<String>('source_id') != fallback.sourceId) {
+          throw StateError('Fallback account or source changed');
+        }
+      }
+      await AcceptMealDecisionUseCase(ref).call(mealId, advice);
+      if (fallback != null &&
+          fallback.ownerUid == uid &&
+          advice.source != 'caregiver') {
+        await storeMealDecisionFallback(
+          db,
+          uid!,
+          fallback,
+          advice,
+          acceptanceToken: _fallbackAcceptanceToken,
+        );
+      }
+    });
+    if (fallback != null) await reconcileMealDecisionReceipts(ref);
     return true;
   }
 

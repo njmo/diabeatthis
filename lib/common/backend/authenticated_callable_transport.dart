@@ -31,6 +31,8 @@ class AuthenticatedCallableTransport {
   final Future<CallableIdentity> Function() identity;
   final String? Function() currentUid;
   static const functions = {
+    'mealDecision',
+    'registerMealDecisionNotifications',
     'claimFamilyPlan',
     'submitFamilyPlan',
     'fetchFamilyPlans',

@@ -13,6 +13,7 @@ class FamilyPlannedMealCard extends StatelessWidget {
     required this.history,
     required this.locked,
     this.onEdit,
+    this.decisionAction,
     this.onOpen,
     this.monitoring = false,
     this.requestStatusLabel,
@@ -21,6 +22,7 @@ class FamilyPlannedMealCard extends StatelessWidget {
     this.ingredients = const [],
     this.snapshots = const [],
   });
+  final Widget? decisionAction;
   final Map payload;
   final List<Map<String, dynamic>> history;
   final List<Map<String, dynamic>> components;
@@ -44,6 +46,7 @@ class FamilyPlannedMealCard extends StatelessWidget {
         ? context.lang.familyPlanMonitoring
         : requestStatusLabel ??
               (locked ? context.lang.familyPlanPending : null),
+    additionalMetadata: [if (decisionAction != null) decisionAction!],
     details: [
       if (onOpen != null)
         TextButton.icon(

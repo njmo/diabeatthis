@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/meal/manual_meal_decision.dart';
+import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/data_sources/domain/device_status_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/domain/glucose_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/providers/source_repository_providers.dart';
@@ -28,6 +29,7 @@ import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../foreground/utils/fake_notifications_controller.dart';
 import '../../../helpers/device_status_factory.dart';
@@ -321,6 +323,10 @@ class MealHistoryFixture {
     container = ProviderContainer(
       retry: (_, _) => null,
       overrides: [
+        sharedPrefsProvider.overrideWith((ref) async {
+          SharedPreferences.setMockInitialValues({});
+          return SharedPreferences.getInstance();
+        }),
         databaseProvider.overrideWithValue(db),
         aiAssistedMealAdvisorEnabledProvider.overrideWithValue(false),
         notificationsControllerUiProvider.overrideWithValue(notifications),

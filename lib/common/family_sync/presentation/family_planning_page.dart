@@ -11,6 +11,7 @@ import '../../../features/caregiver/presentation/widgets/caregiver_day_view.dart
 import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../l10n/language.dart';
+import '../../meal_advisor/presentation/remote/meal_decision_remote_meal_action.dart';
 import '../../planning/firebase_planning_repository.dart';
 import '../../planning/planning_repository_provider.dart';
 import '../../presentation/dashboard/dashboard_card_padding.dart';
@@ -585,6 +586,9 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                 DashboardCardPadding(
                   enabled: homeLayout,
                   child: FamilyPlannedMealCard(
+                    decisionAction: MealDecisionRemoteMealAction(
+                      mealId: (row['payload'] as Map)['id'] as int,
+                    ),
                     onOpen: recordOpener(
                       context,
                       'meals',

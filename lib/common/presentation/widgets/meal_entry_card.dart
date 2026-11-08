@@ -15,8 +15,10 @@ class MealEntryCard extends StatelessWidget {
     this.onTap,
     this.details,
     this.onRetry,
+    this.additionalMetadata = const [],
   });
 
+  final List<Widget> additionalMetadata;
   final String name;
   final String status;
   final DateTime? plannedAt;
@@ -34,6 +36,7 @@ class MealEntryCard extends StatelessWidget {
         plannedAt: plannedAt,
         statusLabel: statusLabel,
       ),
+      ...additionalMetadata,
       if (onRetry != null)
         TextButton.icon(
           onPressed: onRetry,
