@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/charts/draw_dashed_chart_line.dart';
+import '../../../../common/presentation/charts/glucose_chart_timeline.dart';
 import '../../../../common/widgets/waiting_for_data.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../data/providers/blood_sugar_readings_list_provider.dart';
@@ -114,7 +116,8 @@ class MiniGlucoseChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final data = _normalizedValues(values);
+    final timeline = GlucoseChartTimeline(values, maxReadings: maxReadings);
+    final data = timeline.values;
     if (data.length < 3) return;
 
     final scale = GlucoseChartScale.fromValues(data.map((value) => value.sgv));
@@ -136,13 +139,11 @@ class MiniGlucoseChartPainter extends CustomPainter {
       }
     }
 
-    final dx = data.length <= 1 ? 0.0 : w / (data.length - 1);
-
-    Offset pointFor(int index, double value) {
+    Offset pointFor(double x, double value) {
       final v = value.clamp(minY, maxY).toDouble();
       final t = (v - minY) / (maxY - minY); // 0..1
       final y = topPad + (1.0 - t) * h;
-      return Offset(index * dx, y);
+      return Offset(x, y);
     }
 
     Paint segPaint(Color c) => Paint()
@@ -153,41 +154,74 @@ class MiniGlucoseChartPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round
       ..isAntiAlias = true;
 
-    final samples = <MiniGlucoseChartSample>[];
-    for (var i = 0; i < data.length - 1; i++) {
-      final start = data[i].sgv.toDouble();
-      final end = data[i + 1].sgv.toDouble();
-      final delta = end - start;
-      final segmentMin = math.min(start, end);
-      final segmentMax = math.max(start, end);
-      final steps = math.max(8, (dx / 4).ceil());
-      final splitPoints = <double>{
-        for (var step = i == 0 ? 0 : 1; step <= steps; step++) step / steps,
-        ..._thresholdSplits(start, end),
-      }.toList()..sort();
-
-      for (final t in splitPoints) {
-        final smoothValue = _smoothValueAt(
-          data,
-          i,
-          t,
-        ).clamp(segmentMin, segmentMax).toDouble();
-        final glucoseValue = start + delta * t;
-        final point = pointFor(i, smoothValue);
-        final x = point.dx + dx * t;
-        samples.add(MiniGlucoseChartSample(Offset(x, point.dy), glucoseValue));
-      }
-    }
-
-    for (var i = 0; i < samples.length - 1; i++) {
-      final start = samples[i];
-      final end = samples[i + 1];
-      final colorValue = (start.value + end.value) / 2;
-      canvas.drawLine(
-        start.offset,
-        end.offset,
-        segPaint(_colorFor(colorValue)),
+    for (var i = 1; i < timeline.segments.length; i++) {
+      final before = timeline.segments[i - 1].last;
+      final after = timeline.segments[i].first;
+      drawDashedChartLine(
+        canvas,
+        pointFor(timeline.fractionAt(before.date) * w, before.sgv.toDouble()),
+        pointFor(timeline.fractionAt(after.date) * w, after.sgv.toDouble()),
+        Paint()
+          ..color = (gridColor ?? const Color(0xFF90A4AE)).withValues(alpha: .5)
+          ..strokeWidth = 1
+          ..strokeCap = StrokeCap.round,
       );
+    }
+    for (final segment in timeline.segments) {
+      if (segment.length == 1) {
+        final reading = segment.single;
+        canvas.drawCircle(
+          pointFor(
+            timeline.fractionAt(reading.date) * w,
+            reading.sgv.toDouble(),
+          ),
+          2,
+          Paint()..color = _colorFor(reading.sgv.toDouble()),
+        );
+        continue;
+      }
+      for (var i = 0; i < segment.length - 1; i++) {
+        final start = segment[i].sgv.toDouble();
+        final end = segment[i + 1].sgv.toDouble();
+        final startX = timeline.fractionAt(segment[i].date) * w;
+        final endX = timeline.fractionAt(segment[i + 1].date) * w;
+        final dx = endX - startX;
+        final steps = math.max(8, (dx / 4).ceil());
+        final splitPoints = <double>{
+          for (var step = 0; step <= steps; step++) step / steps,
+        }.toList()..sort();
+        final samples = <MiniGlucoseChartSample>[];
+        for (final t in splitPoints) {
+          final smoothValue = _smoothValueAt(
+            segment,
+            i,
+            t,
+          ).clamp(math.min(start, end), math.max(start, end)).toDouble();
+          samples.add(
+            MiniGlucoseChartSample(
+              pointFor(startX + dx * t, smoothValue),
+              smoothValue,
+            ),
+          );
+        }
+        for (var j = 0; j < samples.length - 1; j++) {
+          final first = samples[j];
+          final last = samples[j + 1];
+          final cuts = [0.0, ..._thresholdSplits(first.value, last.value), 1.0]
+            ..sort();
+          for (var k = 0; k < cuts.length - 1; k++) {
+            final from = cuts[k];
+            final to = cuts[k + 1];
+            final midpoint =
+                first.value + (last.value - first.value) * ((from + to) / 2);
+            canvas.drawLine(
+              Offset.lerp(first.offset, last.offset, from)!,
+              Offset.lerp(first.offset, last.offset, to)!,
+              segPaint(_colorFor(midpoint)),
+            );
+          }
+        }
+      }
     }
   }
 
@@ -202,17 +236,7 @@ class MiniGlucoseChartPainter extends CustomPainter {
   }
 
   List<Glucose> _normalizedValues(List<Glucose> values) {
-    final byTimestamp = <int, Glucose>{};
-    for (final value in values) {
-      byTimestamp[value.date.millisecondsSinceEpoch] = value;
-    }
-
-    final normalized = byTimestamp.values.toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
-
-    if (normalized.length <= maxReadings) return normalized;
-
-    return normalized.sublist(normalized.length - maxReadings);
+    return GlucoseChartTimeline(values, maxReadings: maxReadings).values;
   }
 
   List<double> _thresholdSplits(double start, double end) {
