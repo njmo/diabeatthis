@@ -82,6 +82,7 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
       family,
       'meals',
       id,
+      scope: access,
       editMeal: () {
         final payload = family.rows['meals/$id']?['payload'] as Map?;
         if (payload != null && widget.enabled && !family.locked('meals', id)) {
@@ -119,6 +120,7 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
                   family,
                   'ingredients',
                   item.id,
+                  scope: access,
                 ),
               ),
             ),
@@ -248,8 +250,13 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
         loading: loading,
         failed: family.failed,
         onRetry: family.refresh,
-        open: (item) =>
-            FamilyRecordPage.open(context, family, 'activityLogs', item.id),
+        open: (item) => FamilyRecordPage.open(
+          context,
+          family,
+          'activityLogs',
+          item.id,
+          scope: access,
+        ),
       ),
       header: [
         ActivityUpcomingSessionsButton(

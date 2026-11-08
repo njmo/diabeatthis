@@ -63,7 +63,7 @@ class CollectionListView<T> extends StatelessWidget {
           if (index < state.items.length) {
             return itemBuilder(context, state.items[index]);
           }
-          if (state.loadingMore) {
+          if (state.loadingMore || state.loading && state.items.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
           if (state.failed) {

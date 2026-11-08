@@ -12,6 +12,8 @@ class MealStartSheet extends StatelessWidget {
     required this.actions,
     this.onBack,
     this.onClose,
+    this.showClose = true,
+    this.maxHeightFactor = .9,
   });
 
   final String title;
@@ -20,6 +22,8 @@ class MealStartSheet extends StatelessWidget {
   final Widget actions;
   final VoidCallback? onBack;
   final VoidCallback? onClose;
+  final bool showClose;
+  final double maxHeightFactor;
 
   @override
   Widget build(BuildContext context) => Align(
@@ -40,9 +44,14 @@ class MealStartSheet extends StatelessWidget {
               subtitle: subtitle,
               onBack: onBack,
               onClose: onClose,
+              showClose: showClose,
             );
             // Keep every control reachable when fixed actions would crowd out the body.
             if (constraints.maxHeight < 600 ||
+                (maxHeightFactor < .9 &&
+                    media.size.height * maxHeightFactor -
+                            media.viewInsets.bottom <
+                        600) ||
                 media.textScaler.scale(16) > 20) {
               return Padding(
                 padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
@@ -51,7 +60,8 @@ class MealStartSheet extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       maxHeight:
-                          (media.size.height * 0.9 - media.viewInsets.bottom)
+                          (media.size.height * maxHeightFactor -
+                                  media.viewInsets.bottom)
                               .clamp(160, double.infinity),
                     ),
                     child: SingleChildScrollView(
@@ -73,6 +83,7 @@ class MealStartSheet extends StatelessWidget {
               );
             }
             return KeyboardAwareBottomSheet(
+              maxHeightFactor: maxHeightFactor,
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
               header: header,
               body: body,

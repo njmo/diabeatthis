@@ -15,9 +15,17 @@ class NightscoutRecordHistory<T> extends HookConsumerWidget {
     required this.load,
     required this.builder,
     this.fallback,
+    this.errorFallback,
+    this.expandFallback = true,
+    this.refreshKey,
+    this.keepPreviousDuringRefresh = false,
   });
   final Object recordKey;
+  final Object? refreshKey;
+  final bool keepPreviousDuringRefresh;
   final Widget? fallback;
+  final Widget? errorFallback;
+  final bool expandFallback;
   final Future<T?> Function(
     WidgetRef ref,
     NightscoutHistoryRepositories history,
@@ -30,6 +38,8 @@ class NightscoutRecordHistory<T> extends HookConsumerWidget {
     final repository = ref.watch(nightscoutRepositoryProvider);
     final attempt = useState(0);
     final connection = repository.isLoading ? null : repository.asData?.value;
+    // Cache belongs to one exact connection and record scope, never another family.
+    final retained = useMemoized(() => <T>[], [connection, recordKey]);
     final future = useMemoized(
       () => connection == null
           ? null
@@ -37,7 +47,7 @@ class NightscoutRecordHistory<T> extends HookConsumerWidget {
               ref,
               NightscoutHistoryRepositories(connection),
             ).timeout(const Duration(seconds: 30)),
-      [connection, recordKey, attempt.value],
+      [connection, recordKey, refreshKey, attempt.value],
     );
     final snapshot = useFuture(future, preserveState: false);
     if (repository.hasError || snapshot.hasError) {
@@ -57,16 +67,23 @@ class NightscoutRecordHistory<T> extends HookConsumerWidget {
           ),
         ],
       );
-      return fallback == null
+      final content = errorFallback ?? fallback;
+      return content == null
           ? status
           : Column(
+              mainAxisSize: expandFallback
+                  ? MainAxisSize.max
+                  : MainAxisSize.min,
               children: [
                 status,
-                Expanded(child: fallback!),
+                if (expandFallback) Expanded(child: content) else content,
               ],
             );
     }
     if (snapshot.connectionState != ConnectionState.done) {
+      if (keepPreviousDuringRefresh && retained.isNotEmpty) {
+        return builder(retained.single);
+      }
       const status = Center(
         child: Padding(
           padding: EdgeInsets.all(24),
@@ -76,13 +93,21 @@ class NightscoutRecordHistory<T> extends HookConsumerWidget {
       return fallback == null
           ? status
           : Column(
+              mainAxisSize: expandFallback
+                  ? MainAxisSize.max
+                  : MainAxisSize.min,
               children: [
                 status,
-                Expanded(child: fallback!),
+                if (expandFallback) Expanded(child: fallback!) else fallback!,
               ],
             );
     }
     final data = snapshot.data;
+    if (data != null) {
+      retained
+        ..clear()
+        ..add(data);
+    }
     return data == null
         ? Text(context.lang.activityMissingData)
         : builder(data);

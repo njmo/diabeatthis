@@ -7,12 +7,14 @@ class MealStartHeader extends StatelessWidget {
     required this.subtitle,
     this.onBack,
     this.onClose,
+    this.showClose = true,
   });
 
   final String title;
   final String subtitle;
   final VoidCallback? onBack;
   final VoidCallback? onClose;
+  final bool showClose;
 
   @override
   Widget build(BuildContext context) {
@@ -54,11 +56,12 @@ class MealStartHeader extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
-            onPressed: onClose,
-            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-            icon: const Icon(Icons.close),
-          ),
+          if (showClose)
+            IconButton(
+              onPressed: onClose,
+              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+              icon: const Icon(Icons.close),
+            ),
         ],
       ),
     );

@@ -7,8 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/drift/providers/database_provider.dart';
-import '../../../features/caregiver/presentation/widgets/caregiver_day_summary.dart';
-import '../../../features/day_analysis/presentation/widgets/day_date_selector.dart';
+import '../../../features/caregiver/presentation/widgets/caregiver_day_view.dart';
 import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../l10n/language.dart';
@@ -16,7 +15,6 @@ import '../../planning/firebase_planning_repository.dart';
 import '../../planning/planning_repository_provider.dart';
 import '../../presentation/dashboard/dashboard_card_padding.dart';
 import '../../presentation/dashboard/dashboard_spacing.dart';
-import '../../presentation/widgets/activity_catalog_card.dart';
 import '../../routing/form_bottom_sheet_route.dart';
 import '../family_access_scope.dart';
 import '../family_plan_submission_store.dart';
@@ -25,7 +23,6 @@ import '../family_planning_view.dart';
 import 'family_activity_log_card.dart';
 import 'family_activity_plan_form.dart';
 import 'family_collections_body.dart';
-import 'family_ingredient_catalog_section.dart';
 import 'family_meal_photo_page.dart';
 import 'family_meal_plan_form.dart';
 import 'family_plan_status_card.dart';
@@ -320,13 +317,11 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
   bool get showMeals => [
     FamilyPlanningView.all,
     FamilyPlanningView.home,
-    FamilyPlanningView.day,
     FamilyPlanningView.meals,
   ].contains(widget.view);
   bool get showActivities => [
     FamilyPlanningView.all,
     FamilyPlanningView.home,
-    FamilyPlanningView.day,
     FamilyPlanningView.activities,
   ].contains(widget.view);
   bool get showRequests => [
@@ -338,9 +333,6 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
   List<Map<String, dynamic>> get visibleMeals =>
       controller.ofKind('meals').where((row) {
         final p = row['payload'] as Map;
-        if (widget.view == FamilyPlanningView.day) {
-          return sameDay(p['planned_at'] as int, day);
-        }
         if (widget.view == FamilyPlanningView.home) {
           return sameDay(p['planned_at'] as int, DateTime.now()) ||
               ![
@@ -360,7 +352,6 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
       );
   List<Map<String, dynamic>> get visibleOccurrences =>
       controller.ofKind('activityOccurrences').where((row) {
-        if (widget.view == FamilyPlanningView.day) return false;
         final p = row['payload'] as Map;
         if (!['pending', 'planned'].contains(p['status'])) return false;
         final log =
@@ -370,9 +361,6 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
             (log['started_at'] as int) <=
                 DateTime.now().millisecondsSinceEpoch) {
           return false;
-        }
-        if (widget.view == FamilyPlanningView.day) {
-          return sameDay(p['started_at'] as int, day);
         }
         if (widget.view == FamilyPlanningView.home) {
           return sameDay(p['started_at'] as int, DateTime.now());
@@ -388,9 +376,6 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
         final p = row['payload'] as Map;
         if ((p['started_at'] as int) > DateTime.now().millisecondsSinceEpoch) {
           return false;
-        }
-        if (widget.view == FamilyPlanningView.day) {
-          return sameDay(p['started_at'] as int, day);
         }
         if (widget.view == FamilyPlanningView.home) {
           return p['ended_at'] == null;
@@ -438,6 +423,26 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
         });
       }
     });
+    if (widget.view == FamilyPlanningView.day) {
+      final content = SafeArea(
+        bottom: !widget.embedded,
+        child: CaregiverDayView(
+          date: day,
+          today: DateUtils.dateOnly(DateTime.now()),
+          owner: controller.owner,
+          source: controller.source,
+          revision: daySummaryRevision,
+          onDateSelected: (date) => setState(() => selectedDate = date),
+          onRefresh: () async => setState(() => daySummaryRevision++),
+        ),
+      );
+      return widget.embedded
+          ? content
+          : Scaffold(
+              appBar: AppBar(title: Text(context.lang.dashboardDayTab)),
+              body: content,
+            );
+    }
     if ([
       FamilyPlanningView.meals,
       FamilyPlanningView.activities,
@@ -456,11 +461,11 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                 controller.complete,
               ),
             if (widget.header != null) widget.header!,
-            if (controller.busy && widget.headerBuilder == null)
-              const LinearProgressIndicator(),
-            if (controller.failed)
+            if (controller.failed &&
+                !controller.busy &&
+                widget.headerBuilder == null)
               Text(
-                context.lang.familyPlanFailed,
+                context.lang.familyDataRefreshFailed,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             if (!widget.embedded)
@@ -512,9 +517,6 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
       bottom: !widget.embedded,
       child: RefreshIndicator(
         onRefresh: () async {
-          if (widget.view == FamilyPlanningView.day) {
-            setState(() => daySummaryRevision++);
-          }
           await controller.refresh();
         },
         child: ListView(
@@ -539,43 +541,15 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
             if (widget.header != null) widget.header!,
             if (!widget.embedded)
               Text(context.lang.familyPlanPendingExplanation),
-            if (widget.view == FamilyPlanningView.day)
-              DayDateSelector(
-                date: day,
-                today: DateUtils.dateOnly(DateTime.now()),
-                onSelected: (date) => setState(() => selectedDate = date),
-              ),
-            if (widget.view == FamilyPlanningView.day)
-              CaregiverDaySummary(
-                date: day,
-                owner: controller.owner,
-                source: controller.source,
-                revision: daySummaryRevision,
-              ),
-            if (widget.view == FamilyPlanningView.ingredients)
-              FamilyIngredientCatalogSection(
-                family: controller,
-                rows: controller.rows.values.toList(),
-              ),
-            if (widget.view == FamilyPlanningView.activityCatalog)
-              for (final row in controller.ofKind('activities'))
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: ActivityCatalogCard(
-                    name: (row['payload'] as Map)['name'] as String,
-                    percentagePre:
-                        (row['payload'] as Map)['percentage_pre'] as int? ?? 0,
-                    percentagePost:
-                        (row['payload'] as Map)['percentage_post'] as int? ?? 0,
-                    durationMinutes:
-                        (row['payload'] as Map)['duration_minutes'] as int?,
-                  ),
-                ),
-            if (controller.busy && widget.headerBuilder == null)
-              const LinearProgressIndicator(),
-            if (controller.failed)
+            if (controller.busy &&
+                controller.rows.isEmpty &&
+                widget.headerBuilder == null)
+              const Center(child: CircularProgressIndicator()),
+            if (controller.failed &&
+                !controller.busy &&
+                widget.headerBuilder == null)
               Text(
-                context.lang.familyPlanFailed,
+                context.lang.familyDataRefreshFailed,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             if (!controller.busy &&
@@ -684,9 +658,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
               if (!homeLayout) const SizedBox(height: 16),
               if (widget.view != FamilyPlanningView.home)
                 Text(
-                  widget.view == FamilyPlanningView.day
-                      ? context.lang.activityLogsTitle
-                      : context.lang.familySyncActivityOccurrences,
+                  context.lang.familySyncActivityOccurrences,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               for (final row in visibleOccurrences)

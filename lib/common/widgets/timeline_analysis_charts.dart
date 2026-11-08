@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show NumberFormat;
 
 import '../../core/domain/model/device_status.dart';
 import '../../core/domain/model/glucose.dart';
@@ -15,6 +16,8 @@ class TimelineAnalysisCharts extends StatefulWidget {
   final bool showDeviceMetrics;
   final bool overviewStyle;
   final DateTime? selectedTimestamp;
+  final double? targetGlucose;
+  final String? targetLabel;
   final List<Glucose> glucoseReadings;
   final List<DeviceStatus> deviceStatuses;
   final List<TimelineChartEvent> events;
@@ -30,6 +33,8 @@ class TimelineAnalysisCharts extends StatefulWidget {
     this.showDeviceMetrics = true,
     this.overviewStyle = false,
     this.selectedTimestamp,
+    this.targetGlucose,
+    this.targetLabel,
     required this.glucoseReadings,
     required this.deviceStatuses,
     this.events = const [],
@@ -93,6 +98,8 @@ class _TimelineAnalysisChartsState extends State<TimelineAnalysisCharts> {
                   chartStart: widget.chartStart,
                   chartEnd: widget.chartEnd,
                   selectedTimestamp: widget.selectedTimestamp,
+                  targetGlucose: widget.targetGlucose,
+                  targetLabel: widget.targetLabel,
                   glucoseReadings: widget.glucoseReadings,
                   events: widget.events,
                   ranges: widget.ranges,
@@ -179,6 +186,8 @@ class TimelineGlucoseChart extends StatelessWidget {
   final DateTime chartStart;
   final DateTime chartEnd;
   final DateTime? selectedTimestamp;
+  final double? targetGlucose;
+  final String? targetLabel;
   final List<Glucose> glucoseReadings;
   final List<TimelineChartEvent> events;
   final List<TimelineChartRange> ranges;
@@ -191,6 +200,8 @@ class TimelineGlucoseChart extends StatelessWidget {
     required this.chartStart,
     required this.chartEnd,
     this.selectedTimestamp,
+    this.targetGlucose,
+    this.targetLabel,
     required this.glucoseReadings,
     this.events = const [],
     this.ranges = const [],
@@ -209,6 +220,10 @@ class TimelineGlucoseChart extends StatelessWidget {
     }
 
     final scheme = Theme.of(context).colorScheme;
+    final visibleTarget =
+        targetGlucose != null && targetGlucose!.isFinite && targetGlucose! > 0
+        ? targetGlucose
+        : null;
     final bounds = TimelineChartBounds.fromGlucose(
       chartStart: chartStart,
       chartEnd: chartEnd,
@@ -230,8 +245,12 @@ class TimelineGlucoseChart extends StatelessWidget {
         LineChartData(
           minX: 0,
           maxX: bounds.totalMinutes,
-          minY: bounds.minY,
-          maxY: bounds.maxY,
+          minY: visibleTarget == null
+              ? bounds.minY
+              : math.min(bounds.minY, math.max(0, visibleTarget - 10)),
+          maxY: visibleTarget == null
+              ? bounds.maxY
+              : math.max(bounds.maxY, visibleTarget + 10),
           clipData: const FlClipData.all(),
           rangeAnnotations: RangeAnnotations(
             horizontalRangeAnnotations: _glucoseRanges(bounds),
@@ -242,6 +261,8 @@ class TimelineGlucoseChart extends StatelessWidget {
             selectedTimestamp,
             ranges,
             scheme.onSurface,
+            targetGlucose: visibleTarget,
+            targetLabel: targetLabel,
           ),
           lineBarsData: [
             ..._glucoseSegments(bounds),
@@ -526,6 +547,7 @@ class TimelineGlucoseChart extends StatelessWidget {
       bottomTitles: AxisTitles(
         sideTitles: SideTitles(
           showTitles: showBottomTitles,
+          maxIncluded: false,
           reservedSize: showBottomTitles ? 28 : 0,
           interval: math
               .max(
@@ -658,7 +680,7 @@ class TimelineDeviceMetricChart extends StatelessWidget {
                     Duration(minutes: spot.x.round()),
                   );
                   return LineTooltipItem(
-                    '${_formatTime(time)}\n${metric.label}: ${_formatMetricValue(spot.y)} ${metric.unit}',
+                    '${_formatTime(time)}\n${metric.label}: ${_formatMetricValue(spot.y, context.lang.localeName)} ${metric.unit}',
                     TextStyle(
                       color: scheme.onInverseSurface,
                       fontWeight: FontWeight.w600,
@@ -687,7 +709,7 @@ class TimelineDeviceMetricChart extends StatelessWidget {
               meta: meta,
               fitInside: SideTitleFitInsideData.fromTitleMeta(meta),
               child: Text(
-                value.round().toString(),
+                _formatMetricValue(value, context.lang.localeName),
                 style: Theme.of(context).textTheme.labelSmall,
               ),
             );
@@ -697,6 +719,7 @@ class TimelineDeviceMetricChart extends StatelessWidget {
       bottomTitles: AxisTitles(
         sideTitles: SideTitles(
           showTitles: showBottomTitles,
+          maxIncluded: false,
           reservedSize: showBottomTitles ? 28 : 0,
           interval: math
               .max(
@@ -1039,9 +1062,25 @@ ExtraLinesData _extraLines(
   TimelineChartBounds bounds,
   DateTime? selectedTimestamp,
   List<TimelineChartRange> ranges,
-  Color selectionColor,
-) {
+  Color selectionColor, {
+  double? targetGlucose,
+  String? targetLabel,
+}) {
   return ExtraLinesData(
+    horizontalLines: [
+      if (targetGlucose != null)
+        HorizontalLine(
+          y: targetGlucose,
+          color: selectionColor,
+          strokeWidth: 1.5,
+          dashArray: [6, 4],
+          label: HorizontalLineLabel(
+            show: true,
+            alignment: Alignment.topLeft,
+            labelResolver: (_) => targetLabel ?? '$targetGlucose mg/dl',
+          ),
+        ),
+    ],
     verticalLines: [
       for (final range in ranges) ...[
         VerticalLine(
@@ -1082,9 +1121,9 @@ String _formatTime(DateTime date) {
   return '$hour:$minute';
 }
 
-String _formatMetricValue(double value) {
-  if (value == value.roundToDouble()) return value.round().toString();
-  return value.toStringAsFixed(1);
+String _formatMetricValue(double value, String locale) {
+  final number = NumberFormat.decimalPattern(locale)..maximumFractionDigits = 3;
+  return number.format(value);
 }
 
 DateTime _minDate(DateTime a, DateTime b) => a.isBefore(b) ? a : b;
