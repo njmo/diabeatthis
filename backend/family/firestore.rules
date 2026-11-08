@@ -8,6 +8,13 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/familyAccounts/$(uid));
       allow list, write: if false;
     }
+    match /familyMealDecisionSignals/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider == 'google.com'
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/familyAccounts/$(uid));
+      allow list, write: if false;
+    }
     match /familyPlanSignals/{uid} {
       allow get: if request.auth != null && request.auth.uid == uid
         && request.auth.token.firebase.sign_in_provider == 'google.com'

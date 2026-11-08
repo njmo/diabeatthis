@@ -2,6 +2,10 @@
 const {initializeApp} = require('firebase-admin/app');
 const {getFirestore} = require('firebase-admin/firestore');
 const {getAuth} = require('firebase-admin/auth');
+const {getMessaging} = require('firebase-admin/messaging');
+const {onDocumentCreated} = require('firebase-functions/v2/firestore');
+const {createDecisionNotifications} = require('./common/decision_notifications.cjs');
+const {createMealDecisionService} = require('./common/meal_decision_service.cjs');
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {requireGoogle, profile, FamilyError} = require('./common/security.cjs');
 const {createFamilyService} = require('./common/family_service.cjs');
@@ -11,8 +15,11 @@ initializeApp();
 const auth = getAuth();
 const mirror = createMirrorService({store: getFirestore()});
 const plans = createPlanService({store: getFirestore()});
-const service = {claimPlan:plans.claim,submitPlan:plans.submit,fetchPlans:plans.fetch,acknowledgePlan:plans.acknowledge,...createFamilyService({store: getFirestore(), auth}), registerMirror: mirror.register, publishMirror: mirror.publish, fetchMirror: mirror.fetch};
+const notifications = createDecisionNotifications({store: getFirestore(), messaging: getMessaging()});
+const decisions = createMealDecisionService({store: getFirestore()});
+const service = {mealDecision: decisions.execute, registerMealDecisionNotifications: notifications.register, claimPlan:plans.claim,submitPlan:plans.submit,fetchPlans:plans.fetch,acknowledgePlan:plans.acknowledge,...createFamilyService({store: getFirestore(), auth}), registerMirror: mirror.register, publishMirror: mirror.publish, fetchMirror: mirror.fetch};
 for (const [name, operation] of Object.entries({
+  mealDecision: 'mealDecision', registerMealDecisionNotifications: 'registerMealDecisionNotifications',
   claimFamilyPlan:'claimPlan', submitFamilyPlan:'submitPlan', fetchFamilyPlans:'fetchPlans', acknowledgeFamilyPlan:'acknowledgePlan',
   registerFamilyMirror: 'registerMirror', publishFamilyMirror: 'publishMirror', fetchFamilyMirror: 'fetchMirror',
   createFamilyInvite: 'createInvite', requestFamilyJoin: 'requestJoin', decideFamilyJoin: 'decide',
@@ -37,3 +44,7 @@ for (const [name, operation] of Object.entries({
 }
 // There is deliberately no client-addressable send-notification or messaging endpoint.
 // Those features must derive recipients from current membership server-side when introduced.
+
+exports.dispatchMealDecisionNotification = onDocumentCreated({document: 'familyMealDecisionNotifications/{jobId}', region: 'europe-west1', retry: true}, async event => {
+  await notifications.dispatch(event.params.jobId, event.data?.data());
+});
