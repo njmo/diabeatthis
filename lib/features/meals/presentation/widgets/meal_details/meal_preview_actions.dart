@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/meal/open_meal_completion.dart';
+import '../../../../../common/meal_advisor/presentation/demo/child_meal_decision_demo_action.dart';
 import '../../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../dashboard/presentation/utils/meal_status_dialog_result_handler.dart';
 import '../../../../dashboard/presentation/utils/show_meal_status_dialog.dart';
@@ -25,31 +26,38 @@ class MealPreviewActions extends ConsumerWidget {
     if (!canComplete && !canOpen) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: FilledButton(
-        onPressed: () async {
-          if (canComplete) {
-            openMealCompletion(context, mealId: meal.id);
-            return;
-          }
-          final treatment = meal.toDomainTreatment();
-          final result = await showMealStatusDialog(
-            context: context,
-            meal: treatment,
-          );
-          if (result != null && context.mounted) {
-            await handleMealStatusDialogResult(
-              context: context,
-              ref: ref,
-              meal: treatment,
-              result: result,
-            );
-          }
-        },
-        child: Text(
-          canComplete
-              ? context.lang.mealStatusAte
-              : context.lang.mealPreviewActions,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (meal.status == 'planned')
+            ChildMealDecisionDemoAction(mealId: meal.id, mealName: meal.name),
+          FilledButton(
+            onPressed: () async {
+              if (canComplete) {
+                openMealCompletion(context, mealId: meal.id);
+                return;
+              }
+              final treatment = meal.toDomainTreatment();
+              final result = await showMealStatusDialog(
+                context: context,
+                meal: treatment,
+              );
+              if (result != null && context.mounted) {
+                await handleMealStatusDialogResult(
+                  context: context,
+                  ref: ref,
+                  meal: treatment,
+                  result: result,
+                );
+              }
+            },
+            child: Text(
+              canComplete
+                  ? context.lang.mealStatusAte
+                  : context.lang.mealPreviewActions,
+            ),
+          ),
+        ],
       ),
     );
   }

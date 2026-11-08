@@ -14,6 +14,7 @@ class MealScheduleTile extends StatelessWidget {
     required this.onOpen,
     this.onDelete,
     this.showDate = false,
+    this.footer,
   });
 
   final Meal meal;
@@ -21,6 +22,7 @@ class MealScheduleTile extends StatelessWidget {
   final VoidCallback onOpen;
   final VoidCallback? onDelete;
   final bool showDate;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +49,7 @@ class MealScheduleTile extends StatelessWidget {
             Text(mealScheduleFullDate(context, meal.plannedAt!)),
           Text(mealStatusLabel(meal.status ?? 'planned')),
           if (!enabled) Text(lang.mealProgressBlocked),
+          if (footer != null) footer!,
         ],
       ),
       trailing: onDelete == null
