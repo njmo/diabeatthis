@@ -178,9 +178,11 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
 
   @override
   Widget build(BuildContext context) {
+    if (Firebase.apps.isNotEmpty) {
+      ref.watch(mealDecisionNotificationsProvider);
+    }
     if (Firebase.apps.isNotEmpty &&
         ref.watch(initialConfigurationDoneProvider).asData?.value == true) {
-      ref.watch(mealDecisionNotificationsProvider);
       ref.watch(mealDecisionRemoteControllerProvider);
       ref.listen(mealDecisionRemoteControllerProvider, (previous, next) {
         final shouldDrain =

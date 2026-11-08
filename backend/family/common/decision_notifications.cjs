@@ -13,24 +13,24 @@ function createDecisionNotifications({store, messaging, now = Date.now}) {
     const tokens = store.collection(`familyMealDecisionPreferences/${uid}/devices`);
     const id = tokenId(data.token);
     await store.runTransaction(async tx => {
+      const binding = store.doc(`familyMealDecisionDeviceBindings/${id}`);
+      const old = (await tx.get(binding)).data();
+      if (!data.enabled) {
+        tx.delete(tokens.doc(id));
+        if (old?.uid === uid) tx.delete(binding);
+        return;
+      }
       const account = (await tx.get(accountRef)).data();
       if (!account?.familyId || !['child', 'managingCaregiver'].includes(account.role)) throw new FamilyError('permission-denied');
       const family = (await tx.get(store.doc(`families/${account.familyId}`))).data();
       const member = (await tx.get(store.doc(`families/${account.familyId}/members/${uid}`))).data();
       if (member?.role !== account.role || !family?.memberUids?.includes(uid) || (account.role === 'child' ? family.childUid !== uid : !family.managerUids?.includes(uid))) throw new FamilyError('permission-denied');
       const existing = await tx.get(tokens);
-      const binding = store.doc(`familyMealDecisionDeviceBindings/${id}`);
-      const old = (await tx.get(binding)).data();
-      if (!data.enabled) {
-        tx.delete(tokens.doc(id));
-        if (old?.uid === uid) tx.delete(binding);
-      } else {
-        if (old?.uid && old.uid !== uid) tx.delete(store.doc(`familyMealDecisionPreferences/${old.uid}/devices/${id}`));
-        const ordered = existing.docs.filter(doc => doc.id !== id).sort((a,b) => (a.data().updatedAt || 0) - (b.data().updatedAt || 0));
-        while (ordered.length >= MAX_DEVICES) tx.delete(tokens.doc(ordered.shift().id));
-        tx.set(tokens.doc(id), {token: data.token, updatedAt: now()});
-        tx.set(binding, {uid});
-      }
+      if (old?.uid && old.uid !== uid) tx.delete(store.doc(`familyMealDecisionPreferences/${old.uid}/devices/${id}`));
+      const ordered = existing.docs.filter(doc => doc.id !== id).sort((a,b) => (a.data().updatedAt || 0) - (b.data().updatedAt || 0));
+      while (ordered.length >= MAX_DEVICES) tx.delete(tokens.doc(ordered.shift().id));
+      tx.set(tokens.doc(id), {token: data.token, updatedAt: now()});
+      tx.set(binding, {uid});
     });
     return {ok: true};
   }

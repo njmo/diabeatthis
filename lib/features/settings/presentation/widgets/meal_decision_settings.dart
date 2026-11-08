@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/app_mode/application_device_mode.dart';
 import '../../../../common/auth/google_authentication_providers.dart';
-import '../../../../common/family/family_pairing_member.dart';
 import '../../../../common/family/family_providers.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/meal_advisor/meal_decision_eligibility.dart';
 import '../../../../common/meal_advisor/meal_decision_preferences.dart';
 import '../../../../common/meal_advisor/meal_decision_preferences_provider.dart';
 import '../../../../common/meal_advisor/presentation/meal_decision_method_field.dart';
@@ -32,8 +33,9 @@ class MealDecisionSettings extends HookConsumerWidget {
         status != null &&
         !status.isLoading &&
         !status.hasError &&
-        status.asData!.value.members.any(
-          (member) => member.role == FamilyMemberRole.caregiver,
+        mealDecisionFamilyPaired(
+          ApplicationDeviceMode.patient,
+          status.asData?.value,
         );
     Future<void> save(MealDecisionPreferences next) async {
       saving.value = true;

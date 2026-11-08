@@ -6,10 +6,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/data/provider/initial_configuration_provider.dart';
+import '../../../core/data/provider/shared_prefs_provider.dart';
 import '../../app_mode/application_device_mode.dart';
 import '../../auth/google_authentication_providers.dart';
 import '../../backend/authenticated_callable_transport.dart';
 import '../../family/family_providers.dart';
+import '../meal_decision_eligibility.dart';
 import '../meal_decision_preferences_provider.dart';
 import 'meal_decision_remote_request.dart';
 
@@ -38,23 +40,26 @@ class MealDecisionRemoteController extends Notifier<MealDecisionRemoteInbox> {
   int generation = 0;
   bool again = false;
   Future<void>? pendingRefresh;
+  bool backgroundEnabled = true;
   @override
   MealDecisionRemoteInbox build() {
+    backgroundEnabled = false;
     if (Firebase.apps.isEmpty) return const MealDecisionRemoteInbox();
     final configured =
         ref.watch(initialConfigurationDoneProvider).asData?.value == true;
     final uid = ref.watch(googleAccountProvider).asData?.value?.uid;
     final mode = ref.watch(applicationDeviceModeProvider).asData?.value;
-    if (uid != null) {
-      ref.watch(
-        secureFamilyStatusProvider(uid).select(
-          (value) => value.asData?.value.members.map((m) => m.id).join(','),
-        ),
-      );
-    }
-    final enabled = ref
-        .watch(mealDecisionPreferencesProvider)
-        .caregiverResponsesEnabled;
+    final preferencesReady = ref.watch(sharedPrefsProvider).asData != null;
+    final preferences = ref.watch(mealDecisionPreferencesProvider);
+    final paired = configured && uid != null && mode != null && preferencesReady
+        ? ref.watch(
+            secureFamilyStatusProvider(uid).select(
+              (value) => mealDecisionFamilyPaired(mode, value.asData?.value),
+            ),
+          )
+        : false;
+    final enabled = mode != null && mealDecisionEnabled(mode, preferences);
+    backgroundEnabled = configured && uid != null && paired && enabled;
     final version = ++generation;
     var active = true;
     StreamSubscription? subscription;
@@ -64,7 +69,11 @@ class MealDecisionRemoteController extends Notifier<MealDecisionRemoteInbox> {
       subscription?.cancel();
       initializationRetry?.cancel();
     });
-    if (!configured || uid == null || mode == null) {
+    if (!configured ||
+        uid == null ||
+        mode == null ||
+        !preferencesReady ||
+        !paired) {
       return const MealDecisionRemoteInbox();
     }
     late Future<void> Function() connect;
@@ -87,6 +96,10 @@ class MealDecisionRemoteController extends Notifier<MealDecisionRemoteInbox> {
           await execute('configure', {'enabled': enabled}, refresh: false);
         }
         if (!active || generation != version) return;
+        if (!enabled) {
+          state = MealDecisionRemoteInbox(accountUid: uid);
+          return;
+        }
         await refresh();
         if (!active || generation != version) return;
         await subscription?.cancel();
@@ -128,7 +141,7 @@ class MealDecisionRemoteController extends Notifier<MealDecisionRemoteInbox> {
       }
     };
     Future.microtask(connect);
-    return const MealDecisionRemoteInbox(loading: true);
+    return MealDecisionRemoteInbox(loading: enabled);
   }
 
   Future<Map<String, dynamic>> execute(
@@ -152,6 +165,7 @@ class MealDecisionRemoteController extends Notifier<MealDecisionRemoteInbox> {
   }
 
   Future<void> refresh() {
+    if (!backgroundEnabled) return Future.value();
     again = true;
     if (pendingRefresh != null) return pendingRefresh!;
     final completion = Completer<void>();
