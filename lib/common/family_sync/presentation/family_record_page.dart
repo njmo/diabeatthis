@@ -18,9 +18,9 @@ import '../../presentation/details/activity_history_statistics.dart';
 import '../../presentation/details/activity_log_preview_controller.dart';
 import '../../presentation/details/ingredient_details_view.dart';
 import '../../presentation/details/ingredient_preview_controller.dart';
-import '../../presentation/details/meal_history_statistics.dart';
 import '../../presentation/details/meal_preview_controller.dart';
 import '../../presentation/details/nightscout_record_history.dart';
+import '../../routing/owned_route_registry.dart';
 import '../family_access_scope.dart';
 import '../family_planning_controller.dart';
 import 'family_activity_catalog_scope.dart';
@@ -67,9 +67,11 @@ class FamilyRecordPage extends ConsumerWidget {
       id: id,
       editMeal: editMeal,
     );
-    return Navigator.of(
-      context,
-    ).push<void>(MaterialPageRoute(builder: (_) => page));
+    final route = MaterialPageRoute<void>(builder: (_) => page);
+    OwnedRouteRegistry.register(family, route);
+    return Navigator.of(context)
+        .push<void>(route)
+        .whenComplete(() => OwnedRouteRegistry.unregister(family, route));
   }
 
   @override
@@ -107,39 +109,68 @@ class FamilyRecordPage extends ConsumerWidget {
                 rows,
               ).build(id, context.lang.mealPortionLabel);
               if (state != null) {
-                body = MealPageBody.controlled(
-                  controller: CaregiverMealPreviewController(state),
-                  historyStatistics: !state.details.meal.isEaten
-                      ? null
-                      : NightscoutRecordHistory<MealAnalysisData>(
-                          key: ValueKey((uid, owner, source, kind, id)),
-                          recordKey: (
-                            id,
-                            state.details.analysisTime,
-                            state.details.observationWindow,
-                            state.details.meal.status,
-                          ),
-                          load: (ref, history) => ref
-                              .read(analyzeMealUseCaseProvider)
-                              .call(
-                                state.details,
-                                history: history,
-                                includeLocalContext: false,
-                              ),
-                          builder: (data) => MealHistoryStatistics(
-                            details: state.details,
-                            data: data,
-                          ),
+                Widget mealBody({MealAnalysisData? analysis}) =>
+                    MealPageBody.controlled(
+                      controller: CaregiverMealPreviewController(
+                        analysis == null
+                            ? state
+                            : state.copyWith(analysis: analysis),
+                        showAnalysis: analysis != null,
+                        onOpenIngredient: (ingredientId) =>
+                            FamilyRecordPage.open(
+                              context,
+                              family,
+                              'ingredients',
+                              ingredientId,
+                              scope: recordScope,
+                            ),
+                      ),
+                    );
+                body = !state.details.meal.isEaten
+                    ? mealBody()
+                    : NightscoutRecordHistory<MealAnalysisData>(
+                        key: ValueKey((uid, owner, source, kind, id)),
+                        recordKey: (
+                          id,
+                          state.details.analysisTime,
+                          state.details.observationWindow,
+                          state.details.meal.status,
                         ),
-                );
+                        load: (ref, history) => ref
+                            .read(analyzeMealUseCaseProvider)
+                            .call(
+                              state.details,
+                              history: history,
+                              includeLocalContext: false,
+                            ),
+                        fallback: mealBody(),
+                        showFallbackOnEmpty: true,
+                        builder: (data) => mealBody(analysis: data),
+                      );
               }
             } else if (kind == 'activityLogs') {
               final state = familyActivityLogDetails(rows, id);
               if (state != null) {
+                final onOpenActivity =
+                    rows.any(
+                      (row) =>
+                          row['kind'] == 'activities' &&
+                          row['deleted'] != true &&
+                          row['id'] == '${state.data.activityId}',
+                    )
+                    ? () => open(
+                        context,
+                        family,
+                        'activities',
+                        state.data.activityId,
+                        scope: recordScope,
+                      )
+                    : null;
                 body = state.data.endedAt == null
                     ? ActivityLogBody.controlled(
                         controller: CaregiverActivityLogPreviewController(
                           state,
+                          onOpenActivity: onOpenActivity,
                         ),
                         onTimestampSelected: (_) {},
                       )
@@ -153,6 +184,7 @@ class FamilyRecordPage extends ConsumerWidget {
                         fallback: ActivityLogBody.controlled(
                           controller: CaregiverActivityLogPreviewController(
                             state,
+                            onOpenActivity: onOpenActivity,
                           ),
                           onTimestampSelected: (_) {},
                         ),
@@ -164,8 +196,11 @@ class FamilyRecordPage extends ConsumerWidget {
                               includeContext: true,
                               includeLocalContext: false,
                             ),
-                        builder: (data) =>
-                            ActivityHistoryStatistics(state: state, data: data),
+                        builder: (data) => ActivityHistoryStatistics(
+                          state: state,
+                          data: data,
+                          onOpenActivity: onOpenActivity,
+                        ),
                       );
               }
             } else if (kind == 'activities') {

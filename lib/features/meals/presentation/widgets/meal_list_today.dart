@@ -46,7 +46,7 @@ class MealListToday extends ConsumerWidget {
           !meals.any((meal) => meal.id == blockingMeal.id))
         blockingMeal,
       ...meals,
-    ];
+    ].where((meal) => mealStatusAppearsOnDashboard(meal.status)).toList();
     final activeMeals = visibleMeals.where(
       (meal) => mealStatusBlocksAnotherMealActivation(meal.status),
     );

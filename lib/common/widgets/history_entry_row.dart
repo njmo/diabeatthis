@@ -7,11 +7,13 @@ class HistoryEntryRow extends StatelessWidget {
     required this.name,
     required this.metadata,
     required this.onTap,
+    this.trailing,
   });
 
   final String name;
   final List<Widget> metadata;
   final VoidCallback? onTap;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) => InkWell(
@@ -35,7 +37,10 @@ class HistoryEntryRow extends StatelessWidget {
               ],
             ),
           ),
-          if (onTap != null) ...[
+          if (trailing != null) ...[
+            const SizedBox(width: 8),
+            trailing!,
+          ] else if (onTap != null) ...[
             const SizedBox(width: 8),
             const Icon(Icons.chevron_right),
           ],

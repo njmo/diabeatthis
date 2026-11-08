@@ -2,15 +2,18 @@ import 'package:diabeatthis/common/family_sync/presentation/models/family_activi
 import 'package:diabeatthis/common/family_sync/presentation/models/family_meal_details.dart';
 import 'package:diabeatthis/common/history/nightscout_history_repositories.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
-import 'package:diabeatthis/common/presentation/details/meal_history_statistics.dart';
-import 'package:diabeatthis/common/widgets/analysis_metric.dart';
+import 'package:diabeatthis/common/presentation/details/meal_preview_controller.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/activity/data/domain/use_cases/load_activity_log_analysis_use_case.dart';
 import 'package:diabeatthis/features/activity/presentation/widgets/activity_after_section.dart';
 import 'package:diabeatthis/features/activity/presentation/widgets/activity_before_section.dart';
 import 'package:diabeatthis/features/meal_analysis/presentation/widgets/meal_outcome_facts.dart';
 import 'package:diabeatthis/features/meals/data/domain/use_cases/analyze_meal_use_case.dart';
+import 'package:diabeatthis/features/meals/presentation/screens/meal_page_body.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_charts_section.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_low_treatments_section.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_preview_actions.dart';
+import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/similar_meals_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,9 +33,10 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
-      final details = FamilyMealDetails(
+      final state = FamilyMealDetails(
         familyCollectionFixtures(status: 'eaten'),
-      ).build(2, 'portion')!.details;
+      ).build(2, 'portion')!;
+      final details = state.details;
       final data = await container
           .read(analyzeMealUseCaseProvider)
           .call(
@@ -47,20 +51,28 @@ void main() {
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
-              body: SingleChildScrollView(
-                child: MealHistoryStatistics(details: details, data: data!),
+              body: MealPageBody.controlled(
+                controller: CaregiverMealPreviewController(
+                  state.copyWith(analysis: data!),
+                  showAnalysis: true,
+                ),
               ),
             ),
           ),
         ),
       );
       await tester.pump();
-      expect(find.byType(MealOutcomeFacts), findsOneWidget);
       expect(
-        tester
-            .widget<MealOutcomeFacts>(find.byType(MealOutcomeFacts))
-            .hasLocalContext,
-        isFalse,
+        find.byType(MealPreviewActions, skipOffstage: false),
+        findsNothing,
+      );
+      expect(
+        find.byType(MealLowTreatmentsSection, skipOffstage: false),
+        findsNothing,
+      );
+      expect(
+        find.byType(SimilarMealsSection, skipOffstage: false),
+        findsNothing,
       );
       final selected = details.analysisTime.add(const Duration(minutes: 10));
       tester
@@ -144,7 +156,7 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
-  testWidgets('unshared meal context is unknown rather than zero', (
+  testWidgets('unshared meal context remains absent from shared preview', (
     tester,
   ) async {
     final container = ProviderContainer(
@@ -155,50 +167,45 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    final details = FamilyMealDetails(
+    final state = FamilyMealDetails(
       familyCollectionFixtures(status: 'eaten'),
-    ).build(2, 'portion')!.details;
+    ).build(2, 'portion')!;
     final data = await container
         .read(analyzeMealUseCaseProvider)
         .call(
-          details,
+          state.details,
           history: NightscoutHistoryRepositories(StatisticsNightscout()),
           includeLocalContext: false,
         );
-    late BuildContext viewContext;
+    expect(data!.lowTreatments, isEmpty);
+    expect(data.linkedActivities, isEmpty);
+    expect(data.linkedMeals, isEmpty);
+    expect(data.outcomeContext!.subsequentMeals, isNull);
     await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: Builder(
-            builder: (context) {
-              viewContext = context;
-              return SingleChildScrollView(
-                child: MealOutcomeFacts(
-                  data: data!.outcomeContext!,
-                  hasLocalContext: false,
-                ),
-              );
-            },
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: MealPageBody.controlled(
+              controller: CaregiverMealPreviewController(
+                state.copyWith(analysis: data),
+                showAnalysis: true,
+              ),
+            ),
           ),
         ),
       ),
     );
-    await tester.tap(find.text(viewContext.lang.mealOutcomeFactsTitle));
     await tester.pumpAndSettle();
-    for (final label in [
-      viewContext.lang.beforeMealLows,
-      viewContext.lang.mealOutcomeActivities,
-      viewContext.lang.mealOutcomeSubsequentMeals,
-    ]) {
-      final metric = tester.widget<AnalysisMetric>(
-        find.byWidgetPredicate(
-          (widget) => widget is AnalysisMetric && widget.label == label,
-        ),
-      );
-      expect(metric.value, '—');
-    }
+    expect(
+      find.byType(MealLowTreatmentsSection, skipOffstage: false),
+      findsNothing,
+    );
+    expect(find.byType(SimilarMealsSection, skipOffstage: false), findsNothing);
+    expect(find.byType(MealPreviewActions, skipOffstage: false), findsNothing);
+    expect(find.byType(MealOutcomeFacts, skipOffstage: false), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

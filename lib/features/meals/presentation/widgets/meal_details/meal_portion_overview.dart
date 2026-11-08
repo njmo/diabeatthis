@@ -19,9 +19,11 @@ class MealPortionOverview extends StatelessWidget {
     required this.details,
     this.showHeader = true,
     this.canUseLocalActions = true,
+    this.onOpenIngredient,
   });
   final bool showHeader;
   final bool canUseLocalActions;
+  final void Function(int id)? onOpenIngredient;
   final MealDetailsData details;
 
   @override
@@ -50,6 +52,8 @@ class MealPortionOverview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (consumed == null && details.meal.isEaten && planned != null)
+            Text(lang.mealPortionPlanOnly),
           if (nutrition != null) ...[
             if (planned != null && consumed != null && !equal)
               MealMacroComparison(
@@ -76,14 +80,13 @@ class MealPortionOverview extends StatelessWidget {
           MealPortionConfidence(details: details),
           const SizedBox(height: 16),
           Text(status, style: Theme.of(context).textTheme.titleSmall),
-          if (consumed == null && details.meal.isEaten && planned != null)
-            Text(lang.mealPortionPlanOnly),
           if (details.ingredients.isEmpty) Text(lang.mealNoIngredientsTitle),
           for (final ingredient in summary.ingredients)
             MealPortionIngredient(
               ingredient: ingredient,
               hasConsumedSnapshot: consumed != null,
               canUseLocalActions: canUseLocalActions,
+              onOpenIngredient: onOpenIngredient,
             ),
           if (summary.extras.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -98,6 +101,7 @@ class MealPortionOverview extends StatelessWidget {
                 ingredient: ingredient,
                 hasConsumedSnapshot: consumed != null,
                 canUseLocalActions: canUseLocalActions,
+                onOpenIngredient: onOpenIngredient,
               ),
           ],
         ],

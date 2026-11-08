@@ -71,14 +71,17 @@ class ActivityLogBody extends HookWidget {
         showPageControls: false,
         header: DetailIdentityHeader(
           title: log.activityName,
-          titleAction: !source.canUseLocalActions
+          titleAction:
+              !source.canUseLocalActions && source.onOpenActivity == null
               ? null
               : TextButton.icon(
                   icon: const Icon(Icons.history_rounded),
                   label: Text(lang.activityHistoryShort),
-                  onPressed: () => context.router.push(
-                    routes.ActivityRoute(activityId: log.activityId),
-                  ),
+                  onPressed:
+                      source.onOpenActivity ??
+                      () => context.router.push(
+                        routes.ActivityRoute(activityId: log.activityId),
+                      ),
                 ),
           status: activitySessionStateLabel(
             lang,

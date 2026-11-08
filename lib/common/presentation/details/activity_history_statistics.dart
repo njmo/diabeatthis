@@ -12,9 +12,11 @@ class ActivityHistoryStatistics extends HookWidget {
     super.key,
     required this.state,
     required this.data,
+    this.onOpenActivity,
   });
   final ActivityLogPageState state;
   final ActivityLogAnalysisData data;
+  final VoidCallback? onOpenActivity;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +28,7 @@ class ActivityHistoryStatistics extends HookWidget {
           selectedTimestamp: selected.value,
         ),
         showAnalysis: true,
+        onOpenActivity: onOpenActivity,
       ),
       onTimestampSelected: (time) => selected.value = time,
     );

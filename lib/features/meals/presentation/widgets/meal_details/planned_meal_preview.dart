@@ -13,8 +13,10 @@ class PlannedMealPreview extends HookWidget {
     super.key,
     required this.state,
     this.canUseLocalActions = true,
+    this.onOpenIngredient,
   });
   final bool canUseLocalActions;
+  final void Function(int id)? onOpenIngredient;
   final MealPageState state;
 
   @override
@@ -37,6 +39,7 @@ class PlannedMealPreview extends HookWidget {
           details: state.details,
           showHeader: false,
           canUseLocalActions: canUseLocalActions,
+          onOpenIngredient: onOpenIngredient,
         ),
       ],
     );

@@ -15,6 +15,7 @@ class MealEntryCard extends StatelessWidget {
     this.onTap,
     this.details,
     this.onRetry,
+    this.trailing,
     this.additionalMetadata = const [],
   });
 
@@ -26,6 +27,7 @@ class MealEntryCard extends StatelessWidget {
   final VoidCallback? onTap;
   final List<Widget>? details;
   final VoidCallback? onRetry;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -45,10 +47,16 @@ class MealEntryCard extends StatelessWidget {
         ),
     ];
     if (details == null) {
-      return HistoryEntryRow(name: name, metadata: metadata, onTap: onTap);
+      return HistoryEntryRow(
+        name: name,
+        metadata: metadata,
+        onTap: onTap,
+        trailing: trailing,
+      );
     }
     return Card(
       child: ExpansionTile(
+        trailing: trailing,
         title: Text(name),
         subtitle: Wrap(
           spacing: 8,

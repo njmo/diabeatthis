@@ -24,3 +24,9 @@ const mealStatusesStartingEating = {
   'bolused-eating',
   'waited-eating',
 };
+
+/// Terminal meals remain in history, while actionable meals stay on the dashboard.
+bool mealStatusAppearsOnDashboard(String? status) =>
+    status == 'planned' ||
+    mealStatusBlocksAnotherMealActivation(status) ||
+    mealStatusReadyToSummarize(status);

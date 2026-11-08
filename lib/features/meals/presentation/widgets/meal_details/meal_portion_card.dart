@@ -9,9 +9,11 @@ class MealPortionCard extends StatelessWidget {
     required this.details,
     this.showHeader = true,
     this.canUseLocalActions = true,
+    this.onOpenIngredient,
   });
   final bool showHeader;
   final bool canUseLocalActions;
+  final void Function(int id)? onOpenIngredient;
   final MealDetailsData details;
 
   @override
@@ -19,5 +21,6 @@ class MealPortionCard extends StatelessWidget {
     details: details,
     showHeader: showHeader,
     canUseLocalActions: canUseLocalActions,
+    onOpenIngredient: onOpenIngredient,
   );
 }

@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/domain/model/meal_status_flow.dart';
 import '../../../core/drift/providers/database_provider.dart';
 import '../../../features/caregiver/presentation/widgets/caregiver_day_view.dart';
 import '../../auth/google_authentication_providers.dart';
@@ -335,13 +336,10 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
       controller.ofKind('meals').where((row) {
         final p = row['payload'] as Map;
         if (widget.view == FamilyPlanningView.home) {
-          return sameDay(p['planned_at'] as int, DateTime.now()) ||
-              ![
-                'planned',
-                'summarized',
-                'skipped',
-                'interrupted',
-              ].contains(p['status']);
+          final status = p['status'] as String?;
+          return mealStatusAppearsOnDashboard(status) &&
+              (status != 'planned' ||
+                  sameDay(p['planned_at'] as int, DateTime.now()));
         }
         return true;
       }).toList()..sort(
@@ -406,10 +404,41 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
       !controller.failed &&
       controller.source != null &&
       controller.uid == FirebaseAuth.instance.currentUser?.uid;
+  VoidCallback? mealEditor(int id) {
+    final scope = FamilyAccessScope(controller);
+    bool canEdit() {
+      final payload = controller.rows['meals/$id']?['payload'] as Map?;
+      return mounted &&
+          scope.isCurrent &&
+          enabled &&
+          !controller.locked('meals', id) &&
+          payload?['status'] == 'planned' &&
+          payload?['purpose'] == 'meal' &&
+          !controller.ofKind('mealIngredients').any((row) {
+            final item = row['payload'] as Map;
+            return item['meal_id'] == id &&
+                item['grams_per_portion_used'] == null;
+          });
+    }
+
+    if (!canEdit()) return null;
+    return () {
+      if (!canEdit()) return;
+      final payload = controller.rows['meals/$id']!['payload'] as Map;
+      edit('updateMeal', targetId: id, initial: mealValues(payload));
+    };
+  }
+
   VoidCallback recordOpener(BuildContext context, String kind, int id) {
     final scope = FamilyAccessScope(controller);
-    return () =>
-        FamilyRecordPage.open(context, controller, kind, id, scope: scope);
+    return () => FamilyRecordPage.open(
+      context,
+      controller,
+      kind,
+      id,
+      scope: scope,
+      editMeal: kind == 'meals' ? mealEditor(id) : null,
+    );
   }
 
   @override
@@ -642,18 +671,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                       'meals',
                       (row['payload'] as Map)['id'] as int,
                     ),
-                    onEdit:
-                        enabled &&
-                            !controller.locked(
-                              'meals',
-                              (row['payload'] as Map)['id'] as int,
-                            )
-                        ? () => edit(
-                            'updateMeal',
-                            targetId: (row['payload'] as Map)['id'] as int,
-                            initial: mealValues(row['payload'] as Map),
-                          )
-                        : null,
+                    onEdit: mealEditor((row['payload'] as Map)['id'] as int),
                   ),
                 ),
             ],

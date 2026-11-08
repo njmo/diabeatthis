@@ -149,8 +149,8 @@ class FamilyMealDetails {
         : records.mapSnapshot(
             MealSnapshotData.fromJson({...p, 'is_synced': true}),
           );
-    // A completed server fetch can still fall between child publication batches.
-    // Only saved snapshots provide authoritative whole-meal totals remotely.
+    // Recorded whole-meal totals come from the child's saved snapshots,
+    // never from a potentially partial list of mirrored ingredient links.
     return MealPageState(
       details: MealDetailsData(
         meal: records.mapMeal(MealData.fromJson({...meal, 'is_synced': true})),

@@ -15,6 +15,7 @@ import '../widgets/meal_details/meal_comparison_section.dart';
 import '../widgets/meal_details/meal_events_card.dart';
 import '../widgets/meal_details/meal_glucose_card.dart';
 import '../widgets/meal_details/meal_history_download_button.dart';
+import '../widgets/meal_details/meal_observation_context.dart';
 import '../widgets/meal_details/meal_outcome_section.dart';
 import '../widgets/meal_details/meal_portion_card.dart';
 import '../widgets/meal_details/meal_preview_actions.dart';
@@ -25,18 +26,11 @@ import '../widgets/meal_details/similar_meals_section.dart';
 
 class MealPageBody extends HookConsumerWidget {
   final MealPageState state;
-  final Widget? historyStatistics;
-  const MealPageBody({
-    super.key,
-    required this.state,
-    this.presentation,
-    this.historyStatistics,
-  });
+  const MealPageBody({super.key, required this.state, this.presentation});
   final MealPreviewController? presentation;
   MealPageBody.controlled({
     super.key,
     required MealPreviewController controller,
-    this.historyStatistics,
   }) : state = controller.state,
        presentation = controller;
 
@@ -45,6 +39,7 @@ class MealPageBody extends HookConsumerWidget {
     final source = presentation ?? PatientMealPreviewController(state);
     final canUseLocalActions = source.canUseLocalActions;
     final chartKey = useMemoized(() => GlobalKey());
+    final sharedSelection = useState<DateTime?>(null);
     final details = state.details;
     final complete =
         source.showAnalysis &&
@@ -55,21 +50,32 @@ class MealPageBody extends HookConsumerWidget {
       details: details,
       analysis: state.analysis,
       analysisError: state.analysisError,
-      selectedTimestamp: state.selectedTimestamp,
+      selectedTimestamp: canUseLocalActions
+          ? state.selectedTimestamp
+          : sharedSelection.value,
       advanced: true,
+      onTimestampSelected: canUseLocalActions
+          ? null
+          : (time) => sharedSelection.value = time,
     );
     final controller = useTabController(
       initialLength: !source.showAnalysis
-          ? (historyStatistics == null ? 2 : 3)
-          : complete
+          ? 2
+          : complete && canUseLocalActions
           ? 6
           : 3,
-      keys: [details.meal.id, complete, historyStatistics != null],
+      keys: [
+        details.meal.id,
+        complete,
+        source.showAnalysis,
+        canUseLocalActions,
+      ],
     );
     if (details.meal.status == 'planned') {
       return PlannedMealPreview(
         state: state,
         canUseLocalActions: canUseLocalActions,
+        onOpenIngredient: source.onOpenIngredient,
       );
     }
     final lang = context.lang;
@@ -83,17 +89,13 @@ class MealPageBody extends HookConsumerWidget {
           canUseLocalActions: canUseLocalActions,
           showAnalysis: source.showAnalysis,
         ),
-        labels: [
-          if (historyStatistics != null) lang.mealGlucoseChapter,
-          lang.mealPortionCardTitle,
-          lang.mealApplicationContextTitle,
-        ],
+        labels: [lang.mealPortionCardTitle, lang.mealApplicationContextTitle],
         children: [
-          if (historyStatistics != null) historyStatistics!,
           MealPortionCard(
             details: details,
             showHeader: false,
             canUseLocalActions: canUseLocalActions,
+            onOpenIngredient: source.onOpenIngredient,
           ),
           MealSavedInformationCard(state: state),
         ],
@@ -103,17 +105,20 @@ class MealPageBody extends HookConsumerWidget {
     final overview = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        MealPreviewActions(meal: details.meal),
-        if (complete) ...[
+        if (canUseLocalActions) MealPreviewActions(meal: details.meal),
+        if (complete || (!canUseLocalActions && state.analysis != null)) ...[
           MealOutcomeSection(
             analysis: state.analysis!,
+            hasLocalContext: canUseLocalActions,
             advanced: true,
             readableSummary: true,
             chart: chart,
           ),
-          if (state.showHistoryDownload)
+          if (!canUseLocalActions)
+            MealObservationContext(analysis: state.analysis!),
+          if (canUseLocalActions && state.showHistoryDownload)
             MealHistoryDownloadButton(state: state, inline: true),
-        ] else if (details.meal.isEaten)
+        ] else if (details.meal.isEaten && canUseLocalActions)
           MealGlucoseCard(state: state),
       ],
     );
@@ -121,8 +126,11 @@ class MealPageBody extends HookConsumerWidget {
       key: ValueKey((details.meal.id, complete)),
       controller: controller,
       showPageControls: false,
-      header: MealPreviewHeader(state: state),
-      labels: complete
+      header: MealPreviewHeader(
+        state: state,
+        canUseLocalActions: canUseLocalActions,
+      ),
+      labels: complete && canUseLocalActions
           ? [
               lang.mealGlucoseChapter,
               lang.mealCardBeforeTab,
@@ -132,7 +140,9 @@ class MealPageBody extends HookConsumerWidget {
               lang.mealApplicationContextTitle,
             ]
           : [
-              details.meal.isEaten
+              complete
+                  ? lang.mealGlucoseChapter
+                  : details.meal.isEaten
                   ? lang.mealCardObservation
                   : lang.mealCardMealTab,
               lang.mealPortionCardTitle,
@@ -140,15 +150,20 @@ class MealPageBody extends HookConsumerWidget {
             ],
       children: [
         overview,
-        if (complete)
+        if (complete && canUseLocalActions)
           MealBeforeCard(
             data: MealStartContextData(
               details: details,
               analysis: state.analysis!,
             ),
           ),
-        MealPortionCard(details: details, showHeader: false),
-        if (complete) ...[
+        MealPortionCard(
+          details: details,
+          showHeader: false,
+          canUseLocalActions: canUseLocalActions,
+          onOpenIngredient: source.onOpenIngredient,
+        ),
+        if (complete && canUseLocalActions) ...[
           MealEventsCard(
             details: details,
             analysis: state.analysis!,
@@ -179,7 +194,10 @@ class MealPageBody extends HookConsumerWidget {
             ],
           ),
         ],
-        MealApplicationContext(state: state),
+        if (canUseLocalActions)
+          MealApplicationContext(state: state)
+        else
+          MealSavedInformationCard(state: state),
       ],
     );
   }

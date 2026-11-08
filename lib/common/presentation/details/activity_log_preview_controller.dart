@@ -5,6 +5,7 @@ abstract interface class ActivityLogPreviewController {
   bool get showAnalysis;
   bool get showRecordedSettings;
   bool get canUseLocalActions;
+  void Function()? get onOpenActivity;
 }
 
 class PatientActivityLogPreviewController
@@ -18,6 +19,8 @@ class PatientActivityLogPreviewController
   bool get showRecordedSettings => true;
   @override
   bool get canUseLocalActions => true;
+  @override
+  void Function()? get onOpenActivity => null;
 }
 
 class CaregiverActivityLogPreviewController
@@ -25,6 +28,7 @@ class CaregiverActivityLogPreviewController
   const CaregiverActivityLogPreviewController(
     this.state, {
     this.showAnalysis = false,
+    this.onOpenActivity,
   });
   @override
   final ActivityLogPageState state;
@@ -35,4 +39,6 @@ class CaregiverActivityLogPreviewController
   bool get showRecordedSettings => false;
   @override
   bool get canUseLocalActions => false;
+  @override
+  final void Function()? onOpenActivity;
 }

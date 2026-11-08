@@ -13,10 +13,12 @@ class MealPortionIngredient extends StatelessWidget {
     required this.ingredient,
     required this.hasConsumedSnapshot,
     this.canUseLocalActions = true,
+    this.onOpenIngredient,
   });
   final MealIngredientDetailsData ingredient;
   final bool hasConsumedSnapshot;
   final bool canUseLocalActions;
+  final void Function(int id)? onOpenIngredient;
 
   @override
   Widget build(BuildContext context) {
@@ -96,12 +98,16 @@ class MealPortionIngredient extends StatelessWidget {
             Text(lang.mealPlanInline(plannedLabel)),
         ],
       ),
-      onTap: !canUseLocalActions
+      onTap: onOpenIngredient != null
+          ? () => onOpenIngredient!(ingredient.ingredientId)
+          : !canUseLocalActions
           ? null
           : () => context.router.push(
               IngredientRoute(ingredientId: ingredient.ingredientId),
             ),
-      trailing: canUseLocalActions ? const Icon(Icons.chevron_right) : null,
+      trailing: canUseLocalActions || onOpenIngredient != null
+          ? const Icon(Icons.chevron_right)
+          : null,
     );
   }
 }

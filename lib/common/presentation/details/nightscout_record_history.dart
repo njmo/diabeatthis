@@ -19,10 +19,12 @@ class NightscoutRecordHistory<T> extends HookConsumerWidget {
     this.expandFallback = true,
     this.refreshKey,
     this.keepPreviousDuringRefresh = false,
+    this.showFallbackOnEmpty = false,
   });
   final Object recordKey;
   final Object? refreshKey;
   final bool keepPreviousDuringRefresh;
+  final bool showFallbackOnEmpty;
   final Widget? fallback;
   final Widget? errorFallback;
   final bool expandFallback;
@@ -108,8 +110,15 @@ class NightscoutRecordHistory<T> extends HookConsumerWidget {
         ..clear()
         ..add(data);
     }
-    return data == null
-        ? Text(context.lang.activityMissingData)
-        : builder(data);
+    if (data != null) return builder(data);
+    final missing = Text(context.lang.activityMissingData);
+    if (!showFallbackOnEmpty || fallback == null) return missing;
+    return Column(
+      mainAxisSize: expandFallback ? MainAxisSize.max : MainAxisSize.min,
+      children: [
+        missing,
+        if (expandFallback) Expanded(child: fallback!) else fallback!,
+      ],
+    );
   }
 }
