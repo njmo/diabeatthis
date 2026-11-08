@@ -41,10 +41,7 @@ Future<void> showMealDecisionPush(RemoteMessage message) async {
   final plugin = FlutterLocalNotificationsPlugin();
   await initializeLanguageStringsFromPreferences();
   await bootstrap.init(plugin);
-  var notificationId = 0;
-  for (final unit in id.codeUnits) {
-    notificationId = (notificationId * 31 + unit) & 0x7fffffff;
-  }
+  final notificationId = mealDecisionNotificationId(id);
   final caregiver = mode == ApplicationDeviceMode.caregiver;
   await plugin.show(
     id: notificationId,
@@ -95,4 +92,22 @@ Future<void> mealDecisionFirebaseBackgroundHandler(
     );
   }
   await showMealDecisionPush(message);
+}
+
+int mealDecisionNotificationId(String requestId) {
+  var id = 0;
+  for (final unit in requestId.codeUnits) {
+    id = (id * 31 + unit) & 0x7fffffff;
+  }
+  return id;
+}
+
+Future<void> cancelMealDecisionNotification(String requestId) async {
+  try {
+    await FlutterLocalNotificationsPlugin().cancel(
+      id: mealDecisionNotificationId(requestId),
+    );
+  } catch (_) {
+    // A notification failure must not prevent the decision UI from closing.
+  }
 }

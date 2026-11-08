@@ -134,9 +134,7 @@ void main() {
                 .text,
             '45',
           );
-          final target = find.byType(SwitchListTile);
-          await tester.ensureVisible(target);
-          await tester.tap(target);
+          expect(find.byType(SwitchListTile), findsNothing);
           await tester.pumpAndSettle();
         }
         await tester.tap(find.text('Send to child · demo'));
@@ -151,7 +149,7 @@ void main() {
         )['locked']!;
         if (answer == MealDecisionDemoAnswer.deferMeal) {
           expect(response.waitMinutes, 45);
-          expect(response.suggestMealTarget, isTrue);
+          expect(response.suggestMealTarget, isFalse);
           await captureMealDemo(tester, '04-child-deferral');
         }
         const action = 'Accept';

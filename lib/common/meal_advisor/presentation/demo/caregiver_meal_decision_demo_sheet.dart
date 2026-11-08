@@ -14,6 +14,7 @@ import '../../demo/meal_decision_demo_controller.dart';
 import '../../demo/meal_decision_demo_request.dart';
 import '../../meal_decision_preferences_provider.dart';
 import '../caregiver_meal_local_context.dart';
+import '../meal_decision_default_minutes.dart';
 import 'meal_decision_demo_meal_link.dart';
 import 'meal_decision_demo_notice.dart';
 import 'meal_decision_demo_options.dart';
@@ -41,7 +42,6 @@ class CaregiverMealDecisionDemoSheet extends HookConsumerWidget {
     final decisionStep = useState(false);
     final answer = useState(MealDecisionDemoAnswer.insulinAndEat);
     final preferences = ref.watch(mealDecisionPreferencesProvider);
-    final suggestMealTarget = useState(false);
     final minutes = useTextEditingController(text: '10');
     final message = useTextEditingController();
     final form = useMemoized(() => GlobalKey<FormState>());
@@ -200,9 +200,7 @@ class CaregiverMealDecisionDemoSheet extends HookConsumerWidget {
                         onChanged: (value) {
                           if (value != answer.value && value.requiresMinutes) {
                             minutes.text =
-                                value == MealDecisionDemoAnswer.deferMeal
-                                ? '${preferences.deferralMinutes}'
-                                : '10';
+                                '${mealDecisionDefaultMinutes(value, deferralMinutes: preferences.deferralMinutes)}';
                           }
                           answer.value = value;
                         },
@@ -223,18 +221,6 @@ class CaregiverMealDecisionDemoSheet extends HookConsumerWidget {
                                 ? context.lang.mealDecisionDemoMinutesInvalid
                                 : null;
                           },
-                        ),
-                      if (answer.value == MealDecisionDemoAnswer.deferMeal)
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          value: suggestMealTarget.value,
-                          onChanged: (value) => suggestMealTarget.value = value,
-                          title: Text(
-                            context.lang.mealDecisionSuggestMealTarget,
-                          ),
-                          subtitle: Text(
-                            context.lang.mealDecisionTargetDemoOnly,
-                          ),
                         ),
                       const SizedBox(height: 12),
                       TextFormField(
@@ -303,7 +289,7 @@ class CaregiverMealDecisionDemoSheet extends HookConsumerWidget {
                         caregiverName: caregiverName,
                         caregiverId: caregiverId,
                         message: message.text,
-                        suggestMealTarget: suggestMealTarget.value,
+                        suggestMealTarget: false,
                       );
                 },
                 child: Text(context.lang.mealDecisionDemoSendToChild),

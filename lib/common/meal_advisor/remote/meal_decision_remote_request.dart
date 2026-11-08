@@ -26,6 +26,13 @@ class MealDecisionRemoteRequest {
           !DateTime.now().isBefore(deadline));
   bool get pending =>
       !expired && const {'waiting', 'answered', 'accepting'}.contains(status);
+  bool timedOutAt(DateTime time) =>
+      const {'waiting', 'answered', 'expired'}.contains(status) &&
+      !time.isBefore(deadline) &&
+      data['terminalReason'] != 'allCaregiversDeclined' &&
+      (data['acceptanceAborted'] != true ||
+          (data['completedAt'] is num &&
+              (data['completedAt'] as num) >= deadline.millisecondsSinceEpoch));
   bool get claimAvailable =>
       data['claimAvailable'] == true ||
       claimedByUid == null ||

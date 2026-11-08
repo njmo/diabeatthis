@@ -17,6 +17,7 @@ import '../../backend/authenticated_callable_transport.dart';
 import '../../family/family_providers.dart';
 import '../meal_decision_eligibility.dart';
 import '../meal_decision_preferences_provider.dart';
+import '../remote/meal_decision_remote_controller.dart';
 import 'meal_decision_notification_eligibility.dart';
 import 'meal_decision_push.dart';
 import 'notification_token_serial_queue.dart';
@@ -54,13 +55,37 @@ final mealDecisionNotificationsProvider = Provider<void>((ref) {
       }
     }
   }
-  final runtime = MealDecisionNotificationsRuntime(enabled, revoke: revoke);
+  final runtime = MealDecisionNotificationsRuntime(
+    enabled,
+    revoke: revoke,
+    afterForegroundPush: (requestId) async {
+      if (!ref.mounted || mode != ApplicationDeviceMode.caregiver) return;
+      await ref.read(mealDecisionRemoteControllerProvider.notifier).refresh();
+      if (!ref.mounted) return;
+      final inbox = ref.read(mealDecisionRemoteControllerProvider);
+      if (inbox.failed || inbox.loading || inbox.accountUid != uid) return;
+      final request = inbox.byId(requestId);
+      final member = request?.members.where((m) => m['uid'] == uid).firstOrNull;
+      if (request == null ||
+          !request.pending ||
+          request.status != 'waiting' ||
+          member?['status'] == 'declined' ||
+          (request.claimedByUid != null && !request.claimAvailable)) {
+        await cancelMealDecisionNotification(requestId);
+      }
+    },
+  );
   ref.onDispose(runtime.dispose);
   runtime.start();
 });
 
 class MealDecisionNotificationsRuntime {
-  MealDecisionNotificationsRuntime(this.enabled, {this.revoke = true});
+  MealDecisionNotificationsRuntime(
+    this.enabled, {
+    this.revoke = true,
+    this.afterForegroundPush,
+  });
+  final Future<void> Function(String requestId)? afterForegroundPush;
   final bool enabled;
   final bool revoke;
   static final NotificationTokenSerialQueue tokenQueue =
@@ -83,7 +108,11 @@ class MealDecisionNotificationsRuntime {
       mealDecisionFirebaseBackgroundHandler,
     );
     messageSubscription = FirebaseMessaging.onMessage.listen((message) {
-      unawaited(showMealDecisionPush(message));
+      unawaited(() async {
+        await showMealDecisionPush(message);
+        final id = message.data['requestId'];
+        if (id is String) await afterForegroundPush?.call(id);
+      }());
     });
     tokenSubscription = FirebaseMessaging.instance.onTokenRefresh.listen(
       (_) => scheduleRegistration(),

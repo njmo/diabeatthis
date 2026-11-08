@@ -31,7 +31,7 @@ void main() {
 
     expect(find.byType(BottomSheet), findsOneWidget);
     expect(find.byType(AlertDialog), findsNothing);
-    expect(find.text('Ten posiłek?'), findsOneWidget);
+    expect(find.text('Co chcesz zrobić z posiłkiem?'), findsOneWidget);
     expect(find.text('Zjem'), findsOneWidget);
     expect(find.text('Pomijam'), findsOneWidget);
 

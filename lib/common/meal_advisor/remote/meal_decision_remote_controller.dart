@@ -29,6 +29,11 @@ class MealDecisionRemoteInbox {
       requests.where((r) => r.id == id).firstOrNull;
   MealDecisionRemoteRequest? forMeal(int mealId) =>
       requests.where((r) => r.mealId == mealId && r.pending).firstOrNull;
+  MealDecisionRemoteRequest? latestForMeal(int mealId) {
+    final matches = requests.where((r) => r.mealId == mealId).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return matches.firstOrNull;
+  }
 }
 
 final mealDecisionRemoteControllerProvider =

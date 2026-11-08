@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/meal_advisor/presentation/remote/meal_decision_step_host.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../data/meal_dialog_state.dart';
 import '../widgets/meal_status_dialog.dart';
@@ -9,6 +10,7 @@ Future<MealStatusDialogResult?> showMealStatusDialog({
   required BuildContext context,
   required Meal meal,
   bool startImmediately = false,
+  String? initialCaregiverRequestId,
 }) {
   final dialog = MealStatusDialog(
     meal: meal,
@@ -22,7 +24,10 @@ Future<MealStatusDialogResult?> showMealStatusDialog({
       isScrollControlled: true,
       enableDrag: false,
       backgroundColor: Colors.transparent,
-      builder: (_) => dialog,
+      builder: (_) => MealDecisionStepHost(
+        initialRequestId: initialCaregiverRequestId,
+        child: dialog,
+      ),
     );
   }
   return showDialog<MealStatusDialogResult>(

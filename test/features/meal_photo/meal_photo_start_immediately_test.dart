@@ -1,4 +1,5 @@
 import 'package:diabeatthis/common/meal/manual_meal_decision.dart';
+import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/features/dashboard/data/meal_dialog_controller.dart';
 import 'package:diabeatthis/features/dashboard/data/meal_dialog_state.dart';
@@ -6,6 +7,7 @@ import 'package:diabeatthis/features/dashboard/presentation/widgets/meal_status_
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../helpers/localized_material_app.dart';
 
@@ -24,12 +26,15 @@ void main() {
   testWidgets(
     'start from photo enters existing eating flow once across rebuilds',
     (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
       final controller = PhotoStartController();
       final rebuild = ValueNotifier(0);
       addTearDown(rebuild.dispose);
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            sharedPrefsProvider.overrideWith((ref) async => prefs),
             mealDialogControllerProvider(
               1,
               MealDialogStep.choose,

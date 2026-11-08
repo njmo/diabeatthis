@@ -39,7 +39,7 @@ void main() {
           'status': 'waiting',
           'allowManualDecision': captured,
           'members': [
-            {'uid': 'parent', 'displayName': 'Parent', 'status': 'declined'},
+            {'uid': 'parent', 'displayName': 'Parent', 'status': 'available'},
           ],
         });
         MealDecisionResolution? result;
@@ -81,11 +81,11 @@ void main() {
         await tester.tap(find.text('Ask'));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 400));
-        expect(find.text('Declined'), findsOneWidget);
+        expect(find.text('Awaiting a caregiver'), findsOneWidget);
         expect(
           find.byIcon(Icons.close),
-          findsOneWidget,
-        ); // The caregiver's refusal, not a close button.
+          findsNothing,
+        ); // The waiting step has no close button.
         final sheet = tester.widget<PopScope>(find.byType(PopScope).last);
         expect(sheet.canPop, isFalse);
         // The test advances real deadline by overriding its server timestamp explicitly.

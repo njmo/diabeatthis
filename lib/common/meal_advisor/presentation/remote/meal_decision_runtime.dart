@@ -12,9 +12,13 @@ import '../../../../features/dashboard/presentation/utils/meal_status_dialog_res
 import '../../../../features/dashboard/presentation/utils/show_meal_status_dialog.dart';
 import '../../../app_mode/application_device_mode.dart';
 import '../../../auth/google_authentication_providers.dart';
+import '../../meal_decision_preferences.dart';
+import '../../meal_decision_preferences_provider.dart';
 import '../../notifications/meal_decision_notification_intent.dart';
 import '../../notifications/meal_decision_notifications_runtime.dart';
+import '../../notifications/meal_decision_push.dart';
 import '../../remote/accept_remote_meal_decision.dart';
+import '../../remote/caregiver_meal_decision_eligibility.dart';
 import '../../remote/meal_decision_remote_controller.dart';
 import 'caregiver_meal_decision_sheet.dart';
 import 'meal_decision_presentation_registry.dart';
@@ -35,6 +39,8 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
   Timer? receiptRetry;
   bool routing = false, replaying = false;
   bool drainAgain = false;
+  final presentedRequests = <String>{};
+  String? presentedAccount;
   @override
   void initState() {
     super.initState();
@@ -114,6 +120,11 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
           await store.remove(intent);
         } else if (mode == ApplicationDeviceMode.patient &&
             request.ownerUid == uid) {
+          if (ref.read(mealDecisionPreferencesProvider).method !=
+              MealDecisionMethod.caregiver) {
+            await store.remove(intent);
+            continue;
+          }
           if (MealDecisionPresentationRegistry.childMeals.contains(
             request.mealId,
           )) {
@@ -134,6 +145,7 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
             context: navContext,
             meal: meal,
             startImmediately: true,
+            initialCaregiverRequestId: request.id,
           );
           if (result != null && mounted && navContext.mounted) {
             await handleMealStatusDialogResult(
@@ -145,6 +157,44 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
           }
           await store.remove(intent);
         }
+      }
+      if (!mounted ||
+          !configured ||
+          !navContext.mounted ||
+          WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed ||
+          MealDecisionPresentationRegistry.caregiverRequests.isNotEmpty) {
+        return;
+      }
+      final mode = await ref.read(applicationDeviceModeProvider.future);
+      if (!mounted ||
+          !navContext.mounted ||
+          mode != ApplicationDeviceMode.caregiver) {
+        return;
+      }
+      final uid = ref.read(googleAccountProvider).asData?.value?.uid;
+      final inbox = ref.read(mealDecisionRemoteControllerProvider);
+      if (uid == null ||
+          inbox.accountUid != uid ||
+          inbox.loading ||
+          inbox.failed) {
+        return;
+      }
+      if (presentedAccount != uid) {
+        presentedAccount = uid;
+        presentedRequests.clear();
+      }
+      for (final request in inbox.requests.reversed) {
+        if (!caregiverCanOpenMealDecision(request, uid) ||
+            presentedRequests.contains(request.id)) {
+          continue;
+        }
+        presentedRequests.add(request.id);
+        await showCaregiverMealDecisionRequest(
+          navContext,
+          request.id,
+          waitForClose: false,
+        );
+        break;
       }
     } catch (_) {
       // Keep the durable intent for the next resume/refresh if navigation failed.
@@ -185,12 +235,34 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
         ref.watch(initialConfigurationDoneProvider).asData?.value == true) {
       ref.watch(mealDecisionRemoteControllerProvider);
       ref.listen(mealDecisionRemoteControllerProvider, (previous, next) {
-        final shouldDrain =
-            previous == null ||
-            previous.loading ||
-            previous.failed ||
-            previous.requests.map((r) => r.id).join(',') !=
-                next.requests.map((r) => r.id).join(',');
+        final uid = ref.read(googleAccountProvider).asData?.value?.uid;
+        if (uid != null &&
+            next.accountUid == uid &&
+            !next.loading &&
+            !next.failed) {
+          for (final request in next.requests) {
+            final before = previous?.byId(request.id);
+            if (request.claimedByUid == uid && before?.claimedByUid != uid) {
+              if (MealDecisionPresentationRegistry.caregiverRequests.contains(
+                request.id,
+              )) {
+                presentedRequests.add(request.id);
+              } else {
+                presentedRequests.remove(request.id);
+              }
+            }
+            final member = request.members
+                .where((m) => m['uid'] == uid)
+                .firstOrNull;
+            if (!request.pending ||
+                request.status != 'waiting' ||
+                member?['status'] == 'declined' ||
+                (request.claimedByUid != null && !request.claimAvailable)) {
+              unawaited(cancelMealDecisionNotification(request.id));
+            }
+          }
+        }
+        final shouldDrain = !identical(previous, next);
         if (shouldDrain && !next.loading && !next.failed) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
