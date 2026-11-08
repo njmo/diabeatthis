@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
 
 import '../l10n/language.dart';
+import '../utils/format_precise_amount.dart';
 
 // Keep scaling by ten within the exact integer range of a double.
 const _maxPreciselyRoundedAmount = 900719925474099;
@@ -13,17 +14,22 @@ class AmountEntryDialog extends HookWidget {
     required this.value,
     required this.min,
     this.max,
+    this.preservePrecision = false,
   });
 
   final double value;
   final double min;
   final double? max;
+  final bool preservePrecision;
 
   @override
   Widget build(BuildContext context) {
     final lang = context.lang;
     final format = NumberFormat('0.#', lang.localeName);
-    final controller = useTextEditingController(text: format.format(value));
+    final preciseValue = formatPreciseAmount(value, lang.localeName);
+    final controller = useTextEditingController(
+      text: preservePrecision ? preciseValue : format.format(value),
+    );
     final formKey = useMemoized(() => GlobalKey<FormState>());
     useEffect(() {
       controller.selection = TextSelection(

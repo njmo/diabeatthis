@@ -11,7 +11,9 @@ class MealAmountBindings {
     required this.formKey,
     required this.onAmount,
     required this.onConfidence,
+    this.portionChoices,
   });
+  final Widget? portionChoices;
   final MealIngredientsDraft draft;
   final double amount;
   final ConfidenceLevel confidence;

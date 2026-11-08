@@ -30,6 +30,7 @@ class FriendlyAmountSelector extends StatelessWidget {
     this.additiveOptions = false,
     this.compact = false,
     this.onEditingChanged,
+    this.preservePrecision = false,
   });
 
   final double value;
@@ -43,6 +44,7 @@ class FriendlyAmountSelector extends StatelessWidget {
   final bool additiveOptions;
   final bool compact;
   final ValueChanged<bool>? onEditingChanged;
+  final bool preservePrecision;
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +100,7 @@ class FriendlyAmountSelector extends StatelessWidget {
                           context: context,
                           builder: (_) => AmountEntryDialog(
                             value: normalizedValue,
+                            preservePrecision: preservePrecision,
                             min: min,
                             max: max,
                           ),
@@ -187,16 +190,19 @@ class FriendlyAmountSelector extends StatelessWidget {
   }
 
   double _normalize(double rawValue) {
-    final rounded = (rawValue * 10).round() / 10;
+    final rounded = preservePrecision ? rawValue : (rawValue * 10).round() / 10;
     final clampedToMin = rounded < min ? min : rounded;
     final clampedToMax = max == null || clampedToMin <= max!
         ? clampedToMin
         : max!;
-    return double.parse(clampedToMax.toStringAsFixed(1));
+    return preservePrecision
+        ? clampedToMax
+        : double.parse(clampedToMax.toStringAsFixed(1));
   }
 
   bool _isSelected(double current, double option) {
-    return (current - _normalize(option)).abs() < 0.05;
+    return (current - _normalize(option)).abs() <
+        (preservePrecision ? 1e-12 : 0.05);
   }
 
   String _stepLabel(double rawStep) {

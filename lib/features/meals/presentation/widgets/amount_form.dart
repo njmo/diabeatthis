@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/nutrition/ingredient_amount_calculator.dart';
 import '../../../../common/planning/meal_amount_bindings.dart';
+import '../../../../common/utils/format_precise_amount.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
 import '../../../ingredients/data/icons/ingredient_icon_provider.dart';
 import '../../../portions/data/providers/portion_provider.dart';
@@ -88,9 +89,13 @@ class AmountForm extends ConsumerWidget {
                 description: draft.measureDescription(
                   gramsPerPortion: gramsPerPortion,
                   isLoading: isLoadingPortionAmount,
+                  weightUnitOverride: bindings == null ? null : 'g',
                 ),
               ),
-              if (bindings == null && !draft.ingredient.isReference) ...[
+              if (bindings?.portionChoices != null) ...[
+                const SizedBox(height: 16),
+                bindings!.portionChoices!,
+              ] else if (bindings == null && !draft.ingredient.isReference) ...[
                 const SizedBox(height: 16),
                 const IngredientAmountPortions(),
               ],
@@ -116,6 +121,7 @@ class AmountForm extends ConsumerWidget {
                     children: [
                       FriendlyAmountSelector(
                         value: amount,
+                        preservePrecision: bindings != null,
                         min: 0,
                         step: draft.usesGramAmount ? 5 : 1,
                         innerStep: draft.usesGramAmount ? 1 : 0.5,
@@ -125,7 +131,7 @@ class AmountForm extends ConsumerWidget {
                           isGramAmount: draft.usesGramAmount,
                         ),
                         valueLabel: (value) =>
-                            '${value.formattedAmount} ${unitLabelForAmount(value, unitLabel)}',
+                            '${bindings == null ? value.formattedAmount : formatPreciseAmount(value, context.lang.localeName)} ${unitLabelForAmount(value, unitLabel)}',
                         onChanged: (value) {
                           (bindings?.onAmount ?? amountNotifier!.setValue)(
                             value,

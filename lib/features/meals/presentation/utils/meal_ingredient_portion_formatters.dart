@@ -40,12 +40,13 @@ extension MealIngredientPortionPresentationX on MealIngredientsDraft {
   String measureDescription({
     required double? gramsPerPortion,
     bool isLoading = false,
+    String? weightUnitOverride,
   }) {
     if (ingredient.isReference) return lang.ingredientReferenceAmountHint;
     if (usesGramAmount) return lang.addIngredientAddedInGrams;
     if (isLoading) return lang.commonLoading;
     if (gramsPerPortion == null) return lang.amountMissingPortionWeight;
-    return '1 × ${unitLabelForAmount(1, portionCountUnitLabel)} = ${gramsPerPortion.formattedAmount} $portionWeightUnitLabel';
+    return '1 × ${unitLabelForAmount(1, portionCountUnitLabel)} = ${gramsPerPortion.formattedAmount} ${weightUnitOverride ?? portionWeightUnitLabel}';
   }
 
   String portionDescription({

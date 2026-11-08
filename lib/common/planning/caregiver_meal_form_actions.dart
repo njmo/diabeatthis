@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/ingredients/data/drafts/ingredient_draft.dart';
 import '../../features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../features/ingredients/data/mappers/ingredient_draft_mapper.dart';
+import '../../features/ingredients/data/models/ingredient_portion_data.dart';
 import '../../features/meals/data/drafts/meal_draft.dart';
 import '../../features/meals/data/models/retrospective_meal_timing.dart';
 import '../../features/meals/data/providers/meal_draft_provider.dart';
@@ -117,12 +118,48 @@ class CaregiverMealFormActions extends MealFormActions {
         consumedConfidence: null,
       );
     }
+    final ingredientId = draft.ingredient.getIngredientIdOrNull();
+    final portions = <IngredientPortionData>[];
+    if (ingredientId != null && !draft.ingredient.isReference) {
+      for (final row in rows) {
+        if (row['kind'] != 'ingredientPortions' || row['deleted'] == true) {
+          continue;
+        }
+        final link = row['payload'] as Map;
+        if (link['ingredient_id'] != ingredientId) {
+          continue;
+        }
+        final weight = (link['grams_per_portion'] as num?)?.toDouble();
+        if (weight == null || !weight.isFinite || weight <= 0) {
+          continue;
+        }
+        final matches = rows.where(
+          (item) =>
+              item['kind'] == 'portions' &&
+              item['deleted'] != true &&
+              (item['payload'] as Map)['id'] == link['portion_id'],
+        );
+        if (matches.isEmpty) {
+          continue;
+        }
+        final portion = matches.first['payload'] as Map;
+        portions.add(
+          IngredientPortionData(
+            portionId: portion['id'] as int,
+            name: portion['name'] as String,
+            unitHint: portion['unit_hint'] as String? ?? '',
+            gramsPerPortion: weight,
+          ),
+        );
+      }
+    }
     final guard = formRouteGuardOf(context);
     final result = await showModalBottomSheet<MealIngredientsDraft>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => guard(MealIngredientAmountSheet(draft: draft!)),
+      builder: (_) =>
+          guard(MealIngredientAmountSheet(draft: draft!, portions: portions)),
     );
     return result;
   }

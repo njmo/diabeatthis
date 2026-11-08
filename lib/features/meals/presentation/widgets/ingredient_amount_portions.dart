@@ -147,6 +147,34 @@ class IngredientAmountPortionChoice extends ConsumerWidget {
                   .read(addMealIngredientStageProvider.notifier)
                   .inlinePortionWeight(portion) ??
               stored?.asData?.value;
+    return IngredientAmountPortionTile(
+      portion: portion,
+      selected: selected,
+      onSelected: onSelected,
+      grams: grams,
+      loading: stored?.isLoading == true,
+    );
+  }
+}
+
+/// Presentation shared by local and family-backed portion selectors.
+class IngredientAmountPortionTile extends StatelessWidget {
+  const IngredientAmountPortionTile({
+    super.key,
+    required this.portion,
+    required this.selected,
+    required this.onSelected,
+    required this.grams,
+    this.loading = false,
+  });
+  final PortionSelection portion;
+  final bool selected;
+  final VoidCallback onSelected;
+  final double? grams;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
     final name = portion.map(
       draft: (p) => p.name,
       existing: (p) => p.name,
@@ -188,10 +216,10 @@ class IngredientAmountPortionChoice extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   grams == null
-                      ? (stored?.isLoading == true
+                      ? (loading
                             ? context.lang.commonLoading
                             : context.lang.amountMissingPortionWeight)
-                      : '${grams.formattedAmount} g',
+                      : '${grams!.formattedAmount} g',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
