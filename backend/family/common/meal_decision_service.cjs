@@ -146,7 +146,9 @@ function createMealDecisionService({store, now = Date.now}) {
         if (action === 'acknowledge' && row.acceptanceToken !== input.acceptanceToken) fail('permission-denied');
         if (action === 'expire' && row.acceptanceToken) fail('failed-precondition');
         if (row.status === target && row.outcome !== null && JSON.stringify(row.outcome) === JSON.stringify(input.outcome)) return row;
-        if (action === 'acknowledge' ? row.status !== 'responded' : row.deadline > time || !(row.status === 'expired' && row.acceptanceAborted === true && row.outcome === null) && !['open','responded'].includes(row.status)) fail('failed-precondition');
+        const allDeclined = row.status === 'expired' && row.terminalReason === 'allCaregiversDeclined' && row.outcome === null;
+        const aborted = row.status === 'expired' && row.acceptanceAborted === true && row.outcome === null;
+        if (action === 'acknowledge' ? row.status !== 'responded' : (row.deadline > time && !allDeclined) || !(allDeclined || aborted || ['open','responded'].includes(row.status))) fail('failed-precondition');
         if (action === 'acknowledge' && (input.outcome.caregiverUid !== row.response?.caregiverUid || input.outcome.decision !== row.response?.type || input.outcome.minutes !== row.response?.minutes)) fail('failed-precondition');
         if (action === 'expire' && input.outcome.source === 'manual' && row.allowManualDecision === false) fail('failed-precondition');
         const updated = {...row,status:target,outcome:input.outcome,completedAt:time};
@@ -165,7 +167,9 @@ function createMealDecisionService({store, now = Date.now}) {
         if (row.ownerUid !== uid) fail('failed-precondition');
         Object.assign(patch,input.present ? {claimUntil:time+30000,presentUntil:time+30000,stage:input.stage} : {presentUntil:0,stage:input.stage});
       } else if (action === 'decline') {
-        Object.assign(patch,{declinedUids:[...row.declinedUids,uid],...(row.ownerUid === uid ? {ownerUid:null,claimUntil:null,presentUntil:null,stage:null} : {})});
+        const declinedUids = [...row.declinedUids,uid];
+        const allDeclined = caregivers.filter(c => c.enabled).every(c => declinedUids.includes(c.uid));
+        Object.assign(patch,{declinedUids,...(row.ownerUid === uid || allDeclined ? {ownerUid:null,claimUntil:null,presentUntil:null,stage:null} : {}),...(allDeclined ? {status:'expired',terminalReason:'allCaregiversDeclined',outcome:null,completedAt:time} : {})});
       } else if (action === 'delegate') {
         if (activeOwner !== uid) fail('failed-precondition');
         const target = caregivers.find(c => c.uid === input.caregiverUid && c.enabled);
@@ -180,7 +184,7 @@ function createMealDecisionService({store, now = Date.now}) {
       const updated = {...row,...patch};
       tx.set(recordRef,updated); signal(tx,family.memberUids,input.requestId,time);
       if (action === 'delegate') notify(tx,child,input.caregiverUid,input.requestId,time,'delegate');
-      if (action === 'respond') notify(tx,child,child,input.requestId,time,'response');
+      if (action === 'respond' || patch.terminalReason === 'allCaregiversDeclined') notify(tx,child,child,input.requestId,time,'response');
       return updated;
     });
   }

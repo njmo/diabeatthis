@@ -64,3 +64,6 @@ lib/common/l10n/generated/
 *.part.dart
 *.d
 *.reflectable.dart
+
+# Local Firebase CLI trace
+/firepit-log.txt

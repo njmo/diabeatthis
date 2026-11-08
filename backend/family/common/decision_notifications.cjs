@@ -45,7 +45,8 @@ function createDecisionNotifications({store, messaging, now = Date.now}) {
       if (previous?.status === 'sending' && previous.leaseUntil > now()) throw new Error('Notification delivery is already in progress');
       const decision = (await tx.get(store.doc(`userMirrors/${childUid}/mealDecisions/${requestId}`))).data();
       const childResponse = job.kind === 'response' && childUid === recipientUid;
-      if (!decision || decision.status !== (childResponse ? 'responded' : 'open') || decision.deadline <= now() || !validId(decision.familyId) || (!childResponse && (decision.declinedUids || []).includes(recipientUid))) return null;
+      const allDeclined = childResponse && decision?.status === 'expired' && decision.terminalReason === 'allCaregiversDeclined' && decision.outcome == null;
+      if (!decision || (decision.status !== (childResponse ? 'responded' : 'open') && !allDeclined) || decision.deadline <= now() || !validId(decision.familyId) || (!childResponse && (decision.declinedUids || []).includes(recipientUid))) return null;
       if (childResponse && (await tx.get(store.doc(`userMirrors/${childUid}`))).data()?.sourceId !== decision.sourceId) return null;
       const family = (await tx.get(store.doc(`families/${decision.familyId}`))).data();
       const account = (await tx.get(store.doc(`familyAccounts/${recipientUid}`))).data();
