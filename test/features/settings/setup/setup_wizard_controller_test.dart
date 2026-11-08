@@ -30,6 +30,7 @@ void main() {
         SetupModule.activity,
         SetupModule.lowTreatment,
         SetupModule.family,
+        SetupModule.mealAdvisor,
         SetupModule.ai,
         SetupModule.nightscout,
       ]);
@@ -45,10 +46,15 @@ void main() {
       controller.simulatePairing();
       expect(controller.next(), isTrue);
       expect(controller.state.step, SetupStep.configuration.index);
+      expect(controller.module, SetupModule.mealAdvisor);
+      controller.next();
       expect(controller.module, SetupModule.ai);
+      controller.back();
+      expect(controller.module, SetupModule.mealAdvisor);
       controller.back();
       expect(controller.module, SetupModule.family);
       expect(controller.state.paired, isTrue);
+      controller.next();
       controller.next();
       controller.simulateModule(SetupModule.ai);
       controller.next();
@@ -107,6 +113,7 @@ void main() {
       );
       expect(controller.modules, [
         SetupModule.family,
+        SetupModule.mealAdvisor,
         SetupModule.ai,
         SetupModule.nightscout,
       ]);

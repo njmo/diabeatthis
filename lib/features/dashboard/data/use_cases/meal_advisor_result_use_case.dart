@@ -27,6 +27,8 @@ class MealAdvisorResultUseCase {
           : WaitSuggestion(result.initialWaitTime, 0, 0),
       DateTime.fromMillisecondsSinceEpoch(result.createdAt),
       source: result.source,
+      caregiverId: result.caregiverId,
+      caregiverRequestId: result.caregiverRequestId,
       reason: result.source == 'manual'
           ? null
           : MealAdviceReason.values
@@ -49,6 +51,9 @@ class MealAdvisorResultUseCase {
     return store.insertMealAdvisorResult(
       PersistedMealAdvisorResult(
         mealId: mealId,
+        decisionSource: advice.source,
+        caregiverId: advice.caregiverId,
+        caregiverRequestId: advice.caregiverRequestId,
         decisionReason: advice.source == 'manual' ? null : advice.reason?.name,
         version: advice.source == 'manual'
             ? null

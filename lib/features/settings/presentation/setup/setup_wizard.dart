@@ -22,6 +22,7 @@ import 'steps/setup_data_module.dart';
 import 'steps/setup_family_module.dart';
 import 'steps/setup_feature_options_module.dart';
 import 'steps/setup_features_step.dart';
+import 'steps/setup_meal_advisor_module.dart';
 import 'steps/setup_nightscout_module.dart';
 import 'steps/setup_role_step.dart';
 import 'steps/setup_start_step.dart';
@@ -227,39 +228,39 @@ class SetupWizardViewState extends State<SetupWizard>
     }
   }
 
-  Widget contentForStep(BuildContext context) =>
-      switch (controller.state.currentStep) {
-        SetupStep.start => SetupStartStep(
-          controller: controller,
-          enableProfilePhoto: widget.onSavePatient != null,
-        ),
-        SetupStep.role => SetupRoleStep(controller: controller),
-        SetupStep.features => SetupFeaturesStep(controller: controller),
-        SetupStep.access => SetupAccessStep(controller: controller),
-        SetupStep.configuration => switch (controller.module) {
-          SetupModule.data => SetupDataModule(
-            controller: controller,
-            availability: widget.availability,
-          ),
-          SetupModule.family => SetupFamilyModule(controller: controller),
-          SetupModule.ai => SetupAiModule(controller: controller),
-          SetupModule.activity || SetupModule.lowTreatment =>
-            SetupFeatureOptionsModule(controller: controller),
-          SetupModule.nightscout => SetupNightscoutModule(
-            controller: controller,
-          ),
-          null => SetupStepHeading(
-            title: context.lang.setupModulesEmpty,
-            description: context.lang.setupSummaryDescription,
-          ),
-        },
-        SetupStep.summary => SetupSummaryStep(
-          controller: controller,
-          canSavePatient:
-              widget.onSavePatient != null &&
-              controller.state.mode == SetupDeviceMode.patient,
-        ),
-      };
+  Widget contentForStep(
+    BuildContext context,
+  ) => switch (controller.state.currentStep) {
+    SetupStep.start => SetupStartStep(
+      controller: controller,
+      enableProfilePhoto: widget.onSavePatient != null,
+    ),
+    SetupStep.role => SetupRoleStep(controller: controller),
+    SetupStep.features => SetupFeaturesStep(controller: controller),
+    SetupStep.access => SetupAccessStep(controller: controller),
+    SetupStep.configuration => switch (controller.module) {
+      SetupModule.data => SetupDataModule(
+        controller: controller,
+        availability: widget.availability,
+      ),
+      SetupModule.family => SetupFamilyModule(controller: controller),
+      SetupModule.mealAdvisor => SetupMealAdvisorModule(controller: controller),
+      SetupModule.ai => SetupAiModule(controller: controller),
+      SetupModule.activity || SetupModule.lowTreatment =>
+        SetupFeatureOptionsModule(controller: controller),
+      SetupModule.nightscout => SetupNightscoutModule(controller: controller),
+      null => SetupStepHeading(
+        title: context.lang.setupModulesEmpty,
+        description: context.lang.setupSummaryDescription,
+      ),
+    },
+    SetupStep.summary => SetupSummaryStep(
+      controller: controller,
+      canSavePatient:
+          widget.onSavePatient != null &&
+          controller.state.mode == SetupDeviceMode.patient,
+    ),
+  };
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(

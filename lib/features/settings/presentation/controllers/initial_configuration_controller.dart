@@ -4,6 +4,8 @@ import '../../../../common/family_sync/enable_initial_family_sharing.dart';
 import '../../../../common/l10n/application_language.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/l10n/resolve_application_locale.dart';
+import '../../../../common/meal_advisor/meal_decision_preferences.dart';
+import '../../../../common/meal_advisor/meal_decision_preferences_provider.dart';
 import '../../../../common/notifier_provider/simple_provider.dart';
 import '../../../../common/platform/external_app_installation_checker.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
@@ -95,6 +97,7 @@ class InitialConfigurationController extends _$InitialConfigurationController
     String? nightscoutUrl,
     String? nightscoutToken,
     bool enableFamilySharing = false,
+    MealDecisionPreferences? mealDecisionPreferences,
   }) async {
     final current = _currentState;
     if (current == null || current.isSaving) return false;
@@ -105,19 +108,31 @@ class InitialConfigurationController extends _$InitialConfigurationController
     );
 
     try {
-      final reconcileSharing = ref.read(reconcileInitialFamilySharingProvider);
-      await reconcileSharing(enableFamilySharing);
-      final apply = enableFamilySharing
-          ? ref.read(applyInitialFamilyConfigurationProvider)
-          : _applyInitialConfigurationUseCase;
-      await apply(
-        config: current.config,
-        nightscoutUrl: (nightscoutUrl ?? current.nightscoutUrl).trim(),
-        nightscoutToken: (nightscoutToken ?? current.nightscoutToken).trim(),
-        childName: current.userName.trim(),
-        language: current.language,
-      );
-      await reconcileSharing(true);
+      await ref.read(
+        configureMealDecisionPreferencesProvider,
+      )(mealDecisionPreferences, () async {
+        final reconcileSharing = ref.read(
+          reconcileInitialFamilySharingProvider,
+        );
+        await reconcileSharing(enableFamilySharing);
+        final apply = enableFamilySharing
+            ? ref.read(applyInitialFamilyConfigurationProvider)
+            : _applyInitialConfigurationUseCase;
+        await apply(
+          config: current.config,
+          nightscoutUrl: (nightscoutUrl ?? current.nightscoutUrl).trim(),
+          nightscoutToken: (nightscoutToken ?? current.nightscoutToken).trim(),
+          childName: current.userName.trim(),
+          language: current.language,
+        );
+      });
+      // Completion is already committed. Retryable consent-marker cleanup must
+      // not roll back a completed configuration or its advisor preference.
+      try {
+        await ref.read(reconcileInitialFamilySharingProvider)(true);
+      } catch (error) {
+        logW('Completed setup consent cleanup deferred (${error.runtimeType})');
+      }
       return true;
     } on DataSourceConfigUnavailableException catch (e, st) {
       logE(
@@ -145,16 +160,22 @@ class InitialConfigurationController extends _$InitialConfigurationController
   Future<bool> submitCaregiver({
     required String url,
     required String token,
+    MealDecisionPreferences? mealDecisionPreferences,
   }) async {
     final current = _currentState;
     if (current == null || current.isSaving) return false;
     _setSaving();
     try {
-      await ref.read(applyCaregiverConfigurationProvider)(
-        url: url,
-        token: token,
-        userName: current.userName,
-        language: current.language,
+      await ref.read(configureMealDecisionPreferencesProvider)(
+        mealDecisionPreferences,
+        () async {
+          await ref.read(applyCaregiverConfigurationProvider)(
+            url: url,
+            token: token,
+            userName: current.userName,
+            language: current.language,
+          );
+        },
       );
       return true;
     } catch (error) {

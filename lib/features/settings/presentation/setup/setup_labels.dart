@@ -11,6 +11,8 @@ extension SetupLabels on AppLocalizations {
     SetupFeatureId id, {
     SetupDeviceMode mode = SetupDeviceMode.patient,
   }) => switch (id) {
+    SetupFeatureId.mealAdvisor => settingsMealAdvisorTitle,
+    SetupFeatureId.caregiverMealDecisions => mealDecisionResponsesTitle,
     SetupFeatureId.dataAndMeals => setupFeatureDataMealsName,
     SetupFeatureId.nightscoutOverview => setupFeatureNightscoutOverviewName,
     SetupFeatureId.mealPlanning => setupCapabilityMealPlanningName,
@@ -38,6 +40,8 @@ extension SetupLabels on AppLocalizations {
     SetupFeatureId id, {
     SetupDeviceMode mode = SetupDeviceMode.patient,
   }) => switch (id) {
+    SetupFeatureId.mealAdvisor => mealDecisionConfigurationDescription,
+    SetupFeatureId.caregiverMealDecisions => mealDecisionResponsesDescription,
     SetupFeatureId.dataAndMeals => setupFeatureDataMealsDescription,
     SetupFeatureId.nightscoutOverview =>
       setupFeatureNightscoutOverviewDescription,
@@ -81,6 +85,8 @@ extension SetupLabels on AppLocalizations {
     SetupFeatureId id, {
     SetupDeviceMode mode = SetupDeviceMode.patient,
   }) => switch (id) {
+    SetupFeatureId.mealAdvisor => mealDecisionConfigurationDetails,
+    SetupFeatureId.caregiverMealDecisions => mealDecisionResponsesDetails,
     SetupFeatureId.dataAndMeals => setupFeatureDataMealsDetails,
     SetupFeatureId.nightscoutOverview => setupFeatureNightscoutOverviewDetails,
     SetupFeatureId.mealPlanning =>
@@ -156,6 +162,7 @@ extension SetupLabels on AppLocalizations {
         SetupConfigurationField.nightscoutToken => setupFieldNightscoutToken,
       };
   String moduleName(SetupModule? module) => switch (module) {
+    SetupModule.mealAdvisor => settingsMealAdvisorTitle,
     SetupModule.data => setupModuleData,
     SetupModule.family => setupModuleFamily,
     SetupModule.ai => setupModuleAi,
@@ -167,6 +174,8 @@ extension SetupLabels on AppLocalizations {
 }
 
 IconData setupFeatureIcon(SetupFeatureId id) => switch (id) {
+  SetupFeatureId.mealAdvisor => Icons.restaurant_menu_outlined,
+  SetupFeatureId.caregiverMealDecisions => Icons.question_answer_outlined,
   SetupFeatureId.dataAndMeals => Icons.storage_outlined,
   SetupFeatureId.nightscoutOverview => Icons.cloud_outlined,
   SetupFeatureId.mealPlanning => Icons.restaurant_menu,

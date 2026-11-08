@@ -25,6 +25,7 @@ import '../controllers/nightscout_settings_controller.dart';
 import '../widgets/ai_settings_section.dart';
 import '../widgets/application_language_selector.dart';
 import '../widgets/application_theme_settings_section.dart';
+import '../widgets/caregiver_meal_decision_settings_section.dart';
 import '../widgets/data_source_settings_section.dart';
 import '../widgets/database_settings_section.dart';
 import '../widgets/google_account_settings_section.dart';
@@ -270,7 +271,10 @@ class SettingsPage extends HookConsumerWidget with Logging {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    if (!caregiver) const MealAdvisorSettingsSection(),
+                    if (caregiver)
+                      const CaregiverMealDecisionSettingsSection()
+                    else
+                      const MealAdvisorSettingsSection(),
                     const SizedBox(height: 16),
                     const AiSettingsSection(),
                     const SizedBox(height: 16),

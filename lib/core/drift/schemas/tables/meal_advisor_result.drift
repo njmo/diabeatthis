@@ -13,6 +13,9 @@ CREATE TABLE meal_advisor_result (
   extended_carbs_delay_minutes INTEGER,
   extended_carbs_duration_minutes INTEGER,
   decision_reason TEXT,
+  advice_source TEXT,
+  caregiver_uid TEXT,
+  caregiver_request_id TEXT,
 
   version INTEGER DEFAULT 2,
 

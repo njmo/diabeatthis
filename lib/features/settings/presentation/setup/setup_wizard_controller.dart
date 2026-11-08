@@ -14,6 +14,7 @@ import '../../../../common/family/use_cases/disconnect_family_member_use_case.da
 import '../../../../common/family/use_cases/simulate_family_pairing_use_case.dart';
 import '../../../../common/family/use_cases/watch_family_members_use_case.dart';
 import '../../../../common/forms/form_submission_controller.dart';
+import '../../../../common/meal_advisor/meal_decision_preferences.dart';
 import '../../../../common/setup/domain/collect_setup_configuration_fields_use_case.dart';
 import '../../../../common/setup/domain/collect_setup_requirements_use_case.dart';
 import '../../../../common/setup/domain/get_available_setup_features_use_case.dart';
@@ -373,12 +374,82 @@ class SetupWizardController extends ChangeNotifier {
           SetupConfigurationField.nightscoutToken: state.nightscoutToken,
         },
       );
+  bool get caregiverDecisionAvailable =>
+      state.mode == SetupDeviceMode.patient &&
+      state.signedIn &&
+      state.paired &&
+      state.shareData &&
+      !state.familyMembersFailed &&
+      !familyMembershipPending;
+
+  void selectMealDecisionMethod(MealDecisionMethod method) {
+    if (method == MealDecisionMethod.ai ||
+        method == MealDecisionMethod.caregiver && !caregiverDecisionAvailable) {
+      return;
+    }
+    state.mealDecisionPreferences = state.mealDecisionPreferences.copyWith(
+      method: method,
+    );
+    configurationRevision++;
+    changed();
+  }
+
+  void setAllowManualDecision(bool allowed) {
+    state.mealDecisionPreferences = state.mealDecisionPreferences.copyWith(
+      allowManualDecision: allowed,
+      timeoutFallback: allowed
+          ? state.mealDecisionPreferences.timeoutFallback
+          : MealDecisionTimeoutFallback.app,
+    );
+    configurationRevision++;
+    changed();
+  }
+
+  void setMealDecisionTimeoutFallback(MealDecisionTimeoutFallback value) {
+    if (value == MealDecisionTimeoutFallback.manual &&
+        !state.mealDecisionPreferences.allowManualDecision) {
+      return;
+    }
+    state.mealDecisionPreferences = state.mealDecisionPreferences.copyWith(
+      timeoutFallback: value,
+    );
+    configurationRevision++;
+    changed();
+  }
+
+  void setDeferralMinutes(int minutes) {
+    if (minutes < 1 || minutes > 180) return;
+    state.mealDecisionPreferences = state.mealDecisionPreferences.copyWith(
+      deferralMinutes: minutes,
+    );
+    configurationRevision++;
+    changed();
+  }
+
+  void setCaregiverResponses(bool enabled) {
+    state.mealDecisionPreferences = state.mealDecisionPreferences.copyWith(
+      caregiverResponsesEnabled: enabled,
+    );
+    configurationRevision++;
+    changed();
+  }
+
   bool configurationComplete(SetupModule module) =>
+      (module != SetupModule.mealAdvisor ||
+          state.mode != SetupDeviceMode.patient ||
+          state.mealDecisionPreferences.method == MealDecisionMethod.app ||
+          state.mealDecisionPreferences.method ==
+                  MealDecisionMethod.caregiver &&
+              caregiverDecisionAvailable) &&
       !missingConfiguration.any((field) => field.module == module);
   bool moduleReady(SetupModule module) =>
       (!module.requiresConfirmation || state.configured.contains(module)) &&
       configurationComplete(module);
   SetupModule? get incompleteRequiredConfigurationModule {
+    if (modules.contains(SetupModule.mealAdvisor) &&
+        !moduleReady(SetupModule.mealAdvisor)) {
+      return SetupModule.mealAdvisor;
+    }
     for (final field in requiredConfiguration.keys) {
       if (!moduleReady(field.module)) return field.module;
     }
@@ -389,9 +460,14 @@ class SetupWizardController extends ChangeNotifier {
     ...selected
         .map((feature) => feature.configurationModule)
         .whereType<SetupModule>()
+        .where((module) => module != SetupModule.mealAdvisor)
         .toSet(),
     if (requirements.containsKey(SetupRequirement.familyPairing))
       SetupModule.family,
+    if (selected.any(
+      (feature) => feature.configurationModule == SetupModule.mealAdvisor,
+    ))
+      SetupModule.mealAdvisor,
     if (requirements.containsKey(SetupRequirement.aiConfiguration))
       SetupModule.ai,
     if ((state.mode == SetupDeviceMode.patient && state.config.usesCloud) ||
@@ -788,7 +864,10 @@ class SetupWizardController extends ChangeNotifier {
         state.selected.removeAll({
           SetupFeatureId.familyChat,
           SetupFeatureId.childOverview,
+          SetupFeatureId.caregiverMealDecisions,
         });
+      case SetupModule.mealAdvisor:
+        return;
       case SetupModule.ai:
         state.selected.removeAll({
           SetupFeatureId.mealPhoto,

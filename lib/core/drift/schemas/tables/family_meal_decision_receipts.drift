@@ -1,0 +1,10 @@
+CREATE TABLE family_meal_decision_receipts (
+  request_id TEXT NOT NULL PRIMARY KEY,
+  owner_uid TEXT NOT NULL,
+  source_id TEXT NOT NULL,
+  meal_id INTEGER NOT NULL,
+  acceptance_token TEXT NOT NULL,
+  outcome_json TEXT NOT NULL,
+  acknowledged BOOL NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL
+);

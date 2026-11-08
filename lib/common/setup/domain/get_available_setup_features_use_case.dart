@@ -159,6 +159,28 @@ class GetAvailableSetupFeaturesUseCase {
       },
     ),
     SetupFeature(
+      id: SetupFeatureId.mealAdvisor,
+      modes: {SetupDeviceMode.patient},
+      requirements: {},
+      alwaysEnabled: true,
+      group: SetupFeatureGroup.assistance,
+      configurationModule: SetupModule.mealAdvisor,
+      wikiPage: 'Meals',
+    ),
+    SetupFeature(
+      id: SetupFeatureId.caregiverMealDecisions,
+      modes: {SetupDeviceMode.caregiver},
+      requirements: {
+        SetupRequirement.googleAccount,
+        SetupRequirement.familyPairing,
+        SetupRequirement.internet,
+        SetupRequirement.notifications,
+      },
+      group: SetupFeatureGroup.family,
+      configurationModule: SetupModule.mealAdvisor,
+      wikiPage: 'Meals',
+    ),
+    SetupFeature(
       id: SetupFeatureId.aiAssistance,
       wikiPage: 'AI',
       group: SetupFeatureGroup.assistance,

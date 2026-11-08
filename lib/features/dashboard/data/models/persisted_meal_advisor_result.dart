@@ -1,5 +1,9 @@
 class PersistedMealAdvisorResult {
-  String get source => result == 'manual' ? 'manual' : 'mealAdvisor';
+  String get source =>
+      decisionSource ?? (result == 'manual' ? 'manual' : 'mealAdvisor');
+  final String? decisionSource;
+  final String? caregiverId;
+  final String? caregiverRequestId;
   final int mealId;
   final String? decisionReason;
   final int? version;
@@ -15,6 +19,9 @@ class PersistedMealAdvisorResult {
 
   const PersistedMealAdvisorResult({
     required this.mealId,
+    this.decisionSource,
+    this.caregiverId,
+    this.caregiverRequestId,
     this.decisionReason,
     this.version = 2,
     required this.result,

@@ -1,8 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/meal_advisor/meal_decision_preferences.dart';
+import '../../../../common/meal_advisor/meal_decision_preferences_provider.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 
-const aiAssistedMealAdvisorPreferenceKey = 'meal_advisor_ai_assisted';
+export '../../../../common/meal_advisor/meal_decision_preference_keys.dart'
+    show aiAssistedMealAdvisorPreferenceKey;
 
 /// Temporarily unavailable independently of a previously saved opt-in.
 final aiAssistedMealAdvisorAvailableProvider = Provider<bool>((ref) => false);
@@ -11,12 +14,8 @@ final aiAssistedMealAdvisorAvailableProvider = Provider<bool>((ref) => false);
 final aiAssistedMealAdvisorEnabledProvider = Provider<bool>(
   (ref) =>
       ref.watch(aiAssistedMealAdvisorAvailableProvider) &&
-      (ref
-              .watch(sharedPrefsProvider)
-              .asData
-              ?.value
-              .getBool(aiAssistedMealAdvisorPreferenceKey) ??
-          false),
+      ref.watch(mealDecisionPreferencesProvider).method ==
+          MealDecisionMethod.ai,
 );
 
 final aiAssistedMealAdvisorSettingsControllerProvider = Provider(
@@ -38,6 +37,25 @@ class AiAssistedMealAdvisorSettingsController {
     if (!saved) {
       throw StateError('Could not save AI-assisted Meal Advisor preference');
     }
-    if (ref.mounted) ref.invalidate(aiAssistedMealAdvisorEnabledProvider);
+    if (prefs.containsKey(mealDecisionPreferencesKey)) {
+      final current = MealDecisionPreferences.decode(
+        prefs.getString(mealDecisionPreferencesKey),
+      );
+      final method = enabled
+          ? MealDecisionMethod.ai
+          : current.method == MealDecisionMethod.ai
+          ? MealDecisionMethod.app
+          : current.method;
+      if (!await prefs.setString(
+        mealDecisionPreferencesKey,
+        current.copyWith(method: method).encode(),
+      )) {
+        throw StateError('Could not save meal decision method');
+      }
+    }
+    if (ref.mounted) {
+      ref.invalidate(mealDecisionPreferencesProvider);
+      ref.invalidate(aiAssistedMealAdvisorEnabledProvider);
+    }
   }
 }

@@ -2,6 +2,7 @@ import '../../../../common/auth/google_account.dart';
 import '../../../../common/family/family_pairing_invitation.dart';
 import '../../../../common/family/family_pairing_member.dart';
 import '../../../../common/l10n/application_language.dart';
+import '../../../../common/meal_advisor/meal_decision_preferences.dart';
 import '../../../../common/setup/domain/setup_account_choice.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
 import '../../../../common/setup/domain/setup_feature_option.dart';
@@ -15,11 +16,13 @@ class SetupWizardState {
     required this.name,
     required this.nightscoutUrl,
     required this.nightscoutToken,
+    this.mealDecisionPreferences = const MealDecisionPreferences(),
     Set<SetupFeatureOptionId> initialOptions = const {},
   }) {
     enabledOptionsByMode[SetupDeviceMode.patient]!.addAll(initialOptions);
   }
 
+  MealDecisionPreferences mealDecisionPreferences;
   DataSourceConfig config;
   ApplicationLanguage language;
   String name;
@@ -62,6 +65,7 @@ class SetupWizardState {
       SetupFeatureId.familyChat,
     },
     SetupDeviceMode.caregiver: {
+      SetupFeatureId.caregiverMealDecisions,
       SetupFeatureId.aiAssistance,
       SetupFeatureId.mealPhoto,
       SetupFeatureId.familyChat,

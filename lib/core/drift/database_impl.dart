@@ -77,7 +77,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 49;
+  int get schemaVersion => 50;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -363,6 +363,35 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       }
       if (from < 49) {
         await migrateActivityRescheduling(this, m);
+      }
+      if (from < 50) {
+        final receiptTable = await customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'family_meal_decision_receipts'",
+        ).get();
+        if (receiptTable.isEmpty) {
+          await m.createTable(familyMealDecisionReceipts);
+        }
+        final columns = await customSelect(
+          'PRAGMA table_info(meal_advisor_result)',
+        ).get();
+        if (!columns.any(
+          (row) => row.read<String>('name') == 'advice_source',
+        )) {
+          await m.addColumn(mealAdvisorResult, mealAdvisorResult.adviceSource);
+        }
+        if (!columns.any(
+          (row) => row.read<String>('name') == 'caregiver_uid',
+        )) {
+          await m.addColumn(mealAdvisorResult, mealAdvisorResult.caregiverUid);
+        }
+        if (!columns.any(
+          (row) => row.read<String>('name') == 'caregiver_request_id',
+        )) {
+          await m.addColumn(
+            mealAdvisorResult,
+            mealAdvisorResult.caregiverRequestId,
+          );
+        }
       }
     },
     beforeOpen: (details) async {

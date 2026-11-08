@@ -69,6 +69,7 @@ void main() {
           expect(controller.modules, contains(SetupModule.nightscout));
           controller.select(SetupFeatureId.familyChat, false);
           controller.select(SetupFeatureId.childOverview, false);
+          controller.select(SetupFeatureId.caregiverMealDecisions, false);
           expect(
             controller.modules,
             [SetupModule.ai, SetupModule.nightscout],

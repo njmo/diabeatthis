@@ -44,6 +44,7 @@ void main() {
       expect(controller.modules, [
         SetupModule.data,
         SetupModule.lowTreatment,
+        SetupModule.mealAdvisor,
         SetupModule.nightscout,
       ]);
       expect(controller.module, SetupModule.data);
@@ -68,7 +69,7 @@ void main() {
         ..enabledOptions.add(
           SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
         )
-        ..moduleIndex = 2;
+        ..moduleIndex = 3;
       var calls = 0;
       final controller = SetupWizardController(
         state,
@@ -93,7 +94,7 @@ void main() {
     () async {
       final state = dataValidationDraft()
         ..nightscoutUrl = 'https://example.com'
-        ..moduleIndex = 2;
+        ..moduleIndex = 3;
       var calls = 0;
       final controller = SetupWizardController(
         state,
@@ -113,7 +114,7 @@ void main() {
     () async {
       final state = dataValidationDraft()
         ..nightscoutUrl = 'https://example.com'
-        ..moduleIndex = 2;
+        ..moduleIndex = 3;
       final controller = SetupWizardController(
         state,
         checkNightscoutConnection: (_, _, _) async =>
@@ -132,7 +133,7 @@ void main() {
       final pending = Completer<bool>();
       final state = dataValidationDraft()
         ..nightscoutUrl = 'https://example.com'
-        ..moduleIndex = 2;
+        ..moduleIndex = 3;
       var calls = 0;
       final controller = SetupWizardController(
         state,
@@ -157,7 +158,7 @@ void main() {
     final pending = Completer<bool>();
     final state = dataValidationDraft()
       ..nightscoutUrl = 'https://example.com'
-      ..moduleIndex = 2;
+      ..moduleIndex = 3;
     final controller = SetupWizardController(
       state,
       checkNightscoutConnection: (_, _, _) => pending.future,
@@ -195,6 +196,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(controller.module, SetupModule.lowTreatment);
       expect(find.text('Zatwierdź opcje'), findsNothing);
+      await tester.tap(find.text('Dalej'));
+      await tester.pumpAndSettle();
+      expect(controller.module, SetupModule.mealAdvisor);
       await tester.tap(find.text('Dalej'));
       await tester.pumpAndSettle();
       expect(controller.module, SetupModule.nightscout);

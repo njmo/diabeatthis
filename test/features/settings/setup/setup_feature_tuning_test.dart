@@ -131,6 +131,7 @@ void main() {
         SetupModule.data,
         SetupModule.activity,
         SetupModule.lowTreatment,
+        SetupModule.mealAdvisor,
         SetupModule.nightscout,
       ]);
       expect(find.text('Zatwierdź opcje'), findsNothing);
@@ -139,6 +140,9 @@ void main() {
       expect(wizard.controller.module, SetupModule.lowTreatment);
       expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
       expect(find.text('Zatwierdź opcje'), findsNothing);
+      await tester.tap(find.text('Dalej'));
+      await tester.pumpAndSettle();
+      expect(wizard.controller.module, SetupModule.mealAdvisor);
       await tester.tap(find.text('Dalej'));
       await tester.pumpAndSettle();
       expect(wizard.controller.module, SetupModule.nightscout);
@@ -152,6 +156,9 @@ void main() {
       );
       await tester.tap(find.text('Poprzednia funkcja'));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('Poprzednia funkcja'));
+      await tester.pumpAndSettle();
+      expect(wizard.controller.module, SetupModule.lowTreatment);
       await tester.tap(find.text('Poprzednia funkcja'));
       await tester.pumpAndSettle();
       expect(wizard.controller.module, SetupModule.activity);

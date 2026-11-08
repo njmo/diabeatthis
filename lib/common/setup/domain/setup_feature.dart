@@ -5,6 +5,8 @@ import 'setup_feature_option.dart';
 enum SetupDeviceMode { patient, caregiver }
 
 enum SetupFeatureId {
+  mealAdvisor,
+  caregiverMealDecisions,
   dataAndMeals,
   nightscoutOverview,
   mealPlanning,
@@ -42,6 +44,7 @@ enum SetupModule {
   ai,
   activity(requiresConfirmation: false),
   lowTreatment(requiresConfirmation: false, canSkip: false),
+  mealAdvisor(requiresConfirmation: false, canSkip: false),
   nightscout;
 
   const SetupModule({this.requiresConfirmation = true, this.canSkip = true});

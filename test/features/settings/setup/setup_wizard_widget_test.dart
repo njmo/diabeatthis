@@ -51,7 +51,7 @@ void main() {
         tester.widget<FormStepHeader>(find.byType(FormStepHeader)).labels,
         ['Start', 'Rola', 'Funkcje', 'Dostęp', 'Rodzina', 'Gotowe'],
       );
-      expect(find.text('Konfiguracja funkcji 4/6'), findsOneWidget);
+      expect(find.text('Konfiguracja funkcji 4/7'), findsOneWidget);
       await tester.tap(find.text('Symuluj logowanie Google'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Symuluj parowanie'));
@@ -59,14 +59,24 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Dalej'));
       await tester.pumpAndSettle();
-      expect(find.text('Konfiguracja funkcji 5/6'), findsOneWidget);
+      expect(find.text('Konfiguracja funkcji 5/7'), findsOneWidget);
+      expect(
+        tester.widget<FormStepHeader>(find.byType(FormStepHeader)).labels[4],
+        'Meal Advisor',
+      );
+      await tester.tap(find.text('Dalej'));
+      await tester.pumpAndSettle();
+      expect(find.text('Konfiguracja funkcji 6/7'), findsOneWidget);
       expect(
         tester.widget<FormStepHeader>(find.byType(FormStepHeader)).labels[4],
         'AI',
       );
       await tester.tap(find.text('Poprzednia funkcja'));
       await tester.pumpAndSettle();
-      expect(find.text('Konfiguracja funkcji 4/6'), findsOneWidget);
+      expect(find.text('Konfiguracja funkcji 5/7'), findsOneWidget);
+      await tester.tap(find.text('Poprzednia funkcja'));
+      await tester.pumpAndSettle();
+      expect(find.text('Konfiguracja funkcji 4/7'), findsOneWidget);
       expect(draft.paired, isTrue);
       expect(tester.takeException(), isNull);
     },

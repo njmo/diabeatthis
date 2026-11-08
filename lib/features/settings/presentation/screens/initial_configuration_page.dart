@@ -6,6 +6,9 @@ import '../../../../common/auth/google_authentication_providers.dart';
 import '../../../../common/family/family_management_context.dart';
 import '../../../../common/family/family_providers.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/meal_advisor/meal_decision_preferences.dart';
+import '../../../../common/meal_advisor/meal_decision_preferences_provider.dart';
+import '../../../../common/setup/domain/setup_feature.dart';
 import '../../../../common/setup/domain/setup_feature_option.dart';
 import '../../../../common/setup/platform/native_setup_permission_gateway.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
@@ -48,6 +51,7 @@ class InitialConfigurationPage extends ConsumerWidget {
           saving: draft.isSaving,
           saveError: draft.submitError,
           initialState: SetupWizardState(
+            mealDecisionPreferences: ref.watch(mealDecisionPreferencesProvider),
             config: draft.config,
             language: draft.language,
             name: draft.userName,
@@ -67,6 +71,14 @@ class InitialConfigurationPage extends ConsumerWidget {
             controller.setUserName(value.name);
             controller.setLanguage(value.language);
             final saved = await controller.submitCaregiver(
+              mealDecisionPreferences: value.mealDecisionPreferences.copyWith(
+                method: MealDecisionMethod.app,
+                caregiverResponsesEnabled:
+                    value.selected.contains(
+                      SetupFeatureId.caregiverMealDecisions,
+                    ) &&
+                    value.mealDecisionPreferences.caregiverResponsesEnabled,
+              ),
               url: value.nightscoutUrl,
               token: value.nightscoutToken,
             );
@@ -83,6 +95,7 @@ class InitialConfigurationPage extends ConsumerWidget {
             controller.setLanguage(value.language);
             controller.setDataSourceConfig(value.config);
             final saved = await controller.submit(
+              mealDecisionPreferences: value.mealDecisionPreferences,
               enableFamilySharing: value.shareData,
               nightscoutUrl: value.nightscoutUrl,
               nightscoutToken: value.nightscoutToken,

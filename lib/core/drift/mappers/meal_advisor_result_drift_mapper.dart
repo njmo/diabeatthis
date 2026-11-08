@@ -10,6 +10,9 @@ class MealAdvisorResultDriftMapper {
     return PersistedMealAdvisorResult(
       mealId: data.mealId,
       result: data.result,
+      decisionSource: data.adviceSource,
+      caregiverId: data.caregiverUid,
+      caregiverRequestId: data.caregiverRequestId,
       decisionReason: data.decisionReason,
       version: data.version,
       initialWaitTime: data.initialWaitTime,
@@ -27,6 +30,9 @@ class MealAdvisorResultDriftMapper {
     return MealAdvisorResultCompanion(
       mealId: Value(result.mealId),
       result: Value(result.result),
+      adviceSource: Value(result.decisionSource),
+      caregiverUid: Value(result.caregiverId),
+      caregiverRequestId: Value(result.caregiverRequestId),
       decisionReason: Value(result.decisionReason),
       createdAt: Value(result.createdAt),
       initialWaitTime: Value(result.initialWaitTime),

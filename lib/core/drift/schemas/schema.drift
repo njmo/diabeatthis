@@ -6,6 +6,7 @@ import 'tables/meal_ingredients.drift';
 import 'tables/low_treatment_context.drift';
 import 'tables/quick_low_treatment_item.drift';
 import 'tables/meal_advisor_result.drift';
+import 'tables/family_meal_decision_receipts.drift';
 import 'tables/activity.drift';
 import 'tables/activity_log.drift';
 import 'tables/meal_snapshot.drift';

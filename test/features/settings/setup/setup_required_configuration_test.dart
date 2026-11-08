@@ -80,7 +80,7 @@ void main() {
         ..enabledOptions.add(
           SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
         )
-        ..moduleIndex = 2;
+        ..moduleIndex = 3;
       await tester.pumpWidget(
         localizedMaterialApp(
           home: SetupWizard(
@@ -145,7 +145,7 @@ void main() {
     final draft = requiredConfigurationDraft()
       ..config = const DataSourceConfig.defaults()
       ..step = SetupStep.configuration.index
-      ..moduleIndex = 2;
+      ..moduleIndex = 3;
     await tester.pumpWidget(
       localizedMaterialApp(
         home: SetupWizard(

@@ -11,6 +11,8 @@ class MealAdvice {
   final MealDecision? decision;
   final MealAdviceReason? reason;
   final String source;
+  final String? caregiverId;
+  final String? caregiverRequestId;
   final WaitSuggestion? wait;
   final WbtExtendedCarbsSuggestion extendedCarbs;
   final DateTime createdAt;
@@ -19,6 +21,8 @@ class MealAdvice {
     this.decision,
     this.wait, {
     this.source = 'mealAdvisor',
+    this.caregiverId,
+    this.caregiverRequestId,
     this.activityDoseSuggestion,
     this.reason,
     WbtExtendedCarbsSuggestion? extendedCarbs,
@@ -30,13 +34,17 @@ class MealAdvice {
     this.wait,
     this.createdAt, {
     this.source = 'mealAdvisor',
+    this.caregiverId,
+    this.caregiverRequestId,
     this.activityDoseSuggestion,
     this.reason,
     WbtExtendedCarbsSuggestion? extendedCarbs,
   }) : extendedCarbs = extendedCarbs ?? const WbtExtendedCarbsSuggestion.none();
 
   MealAdvice.empty()
-    : activityDoseSuggestion = null,
+    : caregiverId = null,
+      caregiverRequestId = null,
+      activityDoseSuggestion = null,
       reason = null,
       source = 'mealAdvisor',
       decision = null,
