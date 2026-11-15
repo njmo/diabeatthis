@@ -33,10 +33,13 @@ void main() {
   late SetupWizardController controller;
   setUp(() {
     repository = ControlledFamilyPairingRepository();
+    final draft = familyDraft();
     controller = SetupWizardController(
-      familyDraft(),
+      draft,
       familyRepository: repository,
     );
+    controller.state.moduleIndex =
+        controller.modules.indexOf(SetupModule.family);
     addTearDown(repository.dispose);
     addTearDown(controller.dispose);
   });

@@ -4610,5 +4610,18 @@
 "mealDecisionCaregiverTimedOutDescription": "Dziecko przejdzie do wybranej opcji zastępczej.",
 "mealDecisionRequestSent": "Prośba wysłana",
 "mealDecisionWaitingDescription": "Czekamy na odpowiedź opiekuna",
-"mealDecisionWaitingBadge": "Oczekuje"
+"mealDecisionWaitingBadge": "Oczekuje",
+  "setupPermissionsProgress": "Przyznane zgody: {granted} z {total}",
+  "@setupPermissionsProgress": {
+    "placeholders": {
+      "granted": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "setupExactAlarmsSettingsHint": "Otwórz ustawienia alarmów i przypomnień, zezwól na dokładne alarmy, a następnie wróć do aplikacji.",
+  "setupOpenSystemSettings": "Otwórz ustawienia"
 }

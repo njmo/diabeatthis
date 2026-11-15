@@ -72,6 +72,7 @@ class SetupWizardViewState extends State<SetupWizard>
     permissions: widget.permissions,
     checkNightscoutConnection: widget.checkNightscoutConnection,
   );
+  final _accessCardKeys = <SetupRequirement, GlobalKey>{};
   bool allowExit = false;
   @override
   void initState() {
@@ -204,6 +205,20 @@ class SetupWizardViewState extends State<SetupWizard>
       return;
     }
     if (!await controller.validateAndNext() && context.mounted) {
+      if (controller.state.currentStep == SetupStep.access) {
+        await WidgetsBinding.instance.endOfFrame;
+        if (!mounted || !context.mounted) return;
+        final missing = controller.missingSystemRequirements.firstOrNull;
+        final targetContext = _accessCardKeys[missing]?.currentContext;
+        if (targetContext != null) {
+          await Scrollable.ensureVisible(
+            targetContext,
+            duration: const Duration(milliseconds: 250),
+            alignment: 0.1,
+          );
+        }
+        if (!mounted || !context.mounted) return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -237,7 +252,10 @@ class SetupWizardViewState extends State<SetupWizard>
     ),
     SetupStep.role => SetupRoleStep(controller: controller),
     SetupStep.features => SetupFeaturesStep(controller: controller),
-    SetupStep.access => SetupAccessStep(controller: controller),
+    SetupStep.access => SetupAccessStep(
+      controller: controller,
+      accessCardKeys: _accessCardKeys,
+    ),
     SetupStep.configuration => switch (controller.module) {
       SetupModule.data => SetupDataModule(
         controller: controller,

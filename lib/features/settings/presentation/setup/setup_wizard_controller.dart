@@ -27,6 +27,7 @@ import '../../../../common/setup/domain/setup_step.dart';
 import '../../../../common/setup/domain/validate_setup_configuration_use_case.dart';
 import '../../../../common/setup/domain/validate_setup_module_use_case.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
+import 'setup_labels.dart';
 import 'setup_wizard_state.dart';
 
 /// Coordinates setup choices with optional live account and permission adapters.
@@ -359,6 +360,10 @@ class SetupWizardController extends ChangeNotifier {
       .toList();
   Map<SetupRequirement, Set<SetupFeatureId>> get requirements =>
       const CollectSetupRequirementsUseCase()(selected);
+  List<SetupRequirement> get missingSystemRequirements => requirements.keys
+      .where(isSetupSystemRequirement)
+      .where((req) => !state.granted.contains(req))
+      .toList();
   Map<SetupConfigurationField, Set<SetupFeatureId>> get requiredConfiguration =>
       const CollectSetupConfigurationFieldsUseCase()(
         selected,
@@ -692,18 +697,8 @@ class SetupWizardController extends ChangeNotifier {
     if (state.currentStep == SetupStep.access && permissions != null) {
       await refreshPermissions();
       if (disposed) return false;
-      final missing = requirements.keys.where(
-        (requirement) =>
-            [
-              SetupRequirement.notifications,
-              SetupRequirement.healthMonitoring,
-              SetupRequirement.camera,
-              SetupRequirement.backgroundExecution,
-              SetupRequirement.exactAlarms,
-            ].contains(requirement) &&
-            !state.granted.contains(requirement),
-      );
-      if (missing.isNotEmpty || state.requestingPermissions.isNotEmpty) {
+      if (missingSystemRequirements.isNotEmpty ||
+          state.requestingPermissions.isNotEmpty) {
         return false;
       }
     }

@@ -38,7 +38,11 @@ class SetupAccessCard extends StatelessWidget {
               granted ? Icons.check : Icons.add_moderator_outlined,
               size: 18,
             ),
-      label: Text(context.lang.setupConsent),
+      label: Text(
+        requirement == SetupRequirement.exactAlarms && !granted
+            ? context.lang.setupOpenSystemSettings
+            : context.lang.setupConsent,
+      ),
     ),
     children: [
       Text(switch (requirement) {
@@ -49,6 +53,11 @@ class SetupAccessCard extends StatelessWidget {
           context.lang.setupHealthMonitoringWhy,
         _ => context.lang.setupCameraWhy,
       }, style: Theme.of(context).textTheme.bodySmall),
+      if (requirement == SetupRequirement.exactAlarms && !granted)
+        Text(
+          context.lang.setupExactAlarmsSettingsHint,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
       if (denied)
         Text(
           context.lang.setupPermissionNotGranted,

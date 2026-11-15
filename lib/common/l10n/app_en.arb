@@ -4153,5 +4153,18 @@
 "mealDecisionCaregiverTimedOutDescription": "The child will continue with the configured fallback.",
 "mealDecisionRequestSent": "Request sent",
 "mealDecisionWaitingDescription": "Waiting for a caregiver to respond",
-"mealDecisionWaitingBadge": "Waiting"
+"mealDecisionWaitingBadge": "Waiting",
+  "setupPermissionsProgress": "Permissions granted: {granted} of {total}",
+  "@setupPermissionsProgress": {
+    "placeholders": {
+      "granted": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "setupExactAlarmsSettingsHint": "Open alarms and reminders settings, allow exact alarms, then return to the app.",
+  "setupOpenSystemSettings": "Open settings"
 }
