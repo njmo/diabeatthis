@@ -1,9 +1,30 @@
 import 'setup_configuration_field.dart';
 import 'validate_setup_configuration_use_case.dart';
 
+enum SetupNightscoutVerification {
+  readWriteVerified,
+  readVerified,
+  tokenRequired,
+  invalidToken,
+  writeAccessMissing,
+  unavailable,
+  invalidUrl,
+  previewOnly;
+
+  bool get isSuccess =>
+      this == readWriteVerified || this == readVerified || this == previewOnly;
+  bool isAcceptable({required bool requiresWrite}) => requiresWrite
+      ? (this == readWriteVerified || this == previewOnly)
+      : isSuccess;
+}
+
 /// The preview supplies a simulated check; a real adapter can verify write access.
 typedef SetupConnectionValidator =
-    Future<bool> Function(String url, String token, bool requiresWrite);
+    Future<SetupNightscoutVerification> Function(
+      String url,
+      String token,
+      bool requiresWrite,
+    );
 
 class ValidateSetupModuleUseCase {
   const ValidateSetupModuleUseCase();
@@ -33,6 +54,10 @@ class ValidateSetupModuleUseCase {
     // No network operation is performed by the default preview validator.
     return checkConnection == null
         ? true
-        : await checkConnection(url, token, requiresWrite);
+        : (await checkConnection(
+            url,
+            token,
+            requiresWrite,
+          )).isAcceptable(requiresWrite: requiresWrite);
   }
 }

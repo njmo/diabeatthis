@@ -7,6 +7,7 @@ import '../../../../common/setup/domain/setup_account_choice.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
 import '../../../../common/setup/domain/setup_feature_option.dart';
 import '../../../../common/setup/domain/setup_step.dart';
+import '../../../../common/setup/domain/validate_setup_module_use_case.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 
 class SetupWizardState {
@@ -28,6 +29,7 @@ class SetupWizardState {
   String name;
   String nightscoutUrl;
   String nightscoutToken;
+  SetupNightscoutVerification? nightscoutVerification;
   SetupDeviceMode mode = SetupDeviceMode.patient;
   int step = 0;
   SetupStep get currentStep =>

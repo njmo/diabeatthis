@@ -4167,5 +4167,15 @@
     }
   },
   "setupExactAlarmsSettingsHint": "Open alarms and reminders settings, allow exact alarms, then return to the app.",
-  "setupOpenSystemSettings": "Open settings"
+  "setupOpenSystemSettings": "Open settings",
+  "setupNightscoutCheck": "Check connection",
+  "setupNightscoutChecking": "Connecting to Nightscout...",
+  "setupNightscoutReadWriteVerified": "Connected successfully. Glucose reading and event uploads available.",
+  "setupNightscoutReadVerified": "Connected. Glucose reading available.",
+  "setupNightscoutTokenRequired": "Nightscout token required.",
+  "setupNightscoutInvalidToken": "Invalid Nightscout token.",
+  "setupNightscoutWriteAccessMissing": "Write access for treatments not confirmed. Check token permissions.",
+  "setupNightscoutUnavailable": "Cannot connect to Nightscout. Check URL and internet.",
+  "setupNightscoutInvalidUrl": "Invalid Nightscout URL.",
+  "setupNightscoutPreviewOnly": "Preview mode (demonstration check)."
 }

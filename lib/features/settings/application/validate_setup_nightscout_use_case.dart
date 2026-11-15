@@ -8,19 +8,47 @@ import '../../../core/data_sources/nightscout/providers/nightscout_connection_ch
 final validateSetupNightscoutProvider = Provider<SetupConnectionValidator>(
   (ref) => (url, token, requiresWrite) async {
     ref.read(nightscoutConnectionVerificationProvider).clear();
-    await ref.read(nightscoutConnectionCheckProvider)(url: url, token: token);
-    if (requiresWrite || token.isNotEmpty) {
-      await ref
-          .read(nightscoutTokenValidatorProvider)
-          .validate(
-            url: url,
-            token: token,
-            requireTreatmentWrite: requiresWrite,
-          );
+    final uri = Uri.tryParse(url.trim());
+    if (uri == null ||
+        !['http', 'https'].contains(uri.scheme) ||
+        uri.host.isEmpty) {
+      return SetupNightscoutVerification.invalidUrl;
     }
-    ref
-        .read(nightscoutConnectionVerificationProvider)
-        .remember(url: url, token: token);
-    return true;
+    if (requiresWrite && token.trim().isEmpty) {
+      return SetupNightscoutVerification.tokenRequired;
+    }
+    try {
+      if (requiresWrite || token.trim().isNotEmpty) {
+        await ref
+            .read(nightscoutTokenValidatorProvider)
+            .validate(
+              url: url,
+              token: token,
+              requireTreatmentWrite: requiresWrite,
+            );
+      }
+      await ref.read(nightscoutConnectionCheckProvider)(url: url, token: token);
+      ref
+          .read(nightscoutConnectionVerificationProvider)
+          .remember(url: url, token: token);
+      return requiresWrite
+          ? SetupNightscoutVerification.readWriteVerified
+          : SetupNightscoutVerification.readVerified;
+    } on NightscoutTokenValidationException catch (error) {
+      return switch (error.issue) {
+        NightscoutTokenIssue.required =>
+          SetupNightscoutVerification.tokenRequired,
+        NightscoutTokenIssue.invalid =>
+          SetupNightscoutVerification.invalidToken,
+        NightscoutTokenIssue.treatmentAccess =>
+          SetupNightscoutVerification.writeAccessMissing,
+        NightscoutTokenIssue.unavailable =>
+          SetupNightscoutVerification.unavailable,
+        NightscoutTokenIssue.invalidUrl =>
+          SetupNightscoutVerification.invalidUrl,
+      };
+    } catch (_) {
+      return SetupNightscoutVerification.unavailable;
+    }
   },
 );

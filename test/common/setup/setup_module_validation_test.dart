@@ -22,7 +22,7 @@ void main() {
           requiresWrite: true,
           checkConnection: (_, _, _) async {
             calls++;
-            return true;
+            return SetupNightscoutVerification.readWriteVerified;
           },
         );
         expect(valid, isFalse);

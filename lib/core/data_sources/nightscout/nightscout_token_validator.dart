@@ -9,7 +9,13 @@ final nightscoutTokenValidatorProvider = Provider<NightscoutTokenValidator>(
   (_) => NightscoutTokenValidator(),
 );
 
-enum NightscoutTokenIssue { required, invalid, treatmentAccess, unavailable }
+enum NightscoutTokenIssue {
+  required,
+  invalid,
+  treatmentAccess,
+  unavailable,
+  invalidUrl,
+}
 
 class NightscoutTokenValidationException implements Exception {
   const NightscoutTokenValidationException(this.issue);
@@ -40,12 +46,15 @@ class NightscoutTokenValidator with Logging {
     }
     final requestClient = client ?? http.Client();
     try {
-      final base = Uri.parse(url.trim()).replace(userInfo: '');
-      if (!['https', 'http'].contains(base.scheme) || base.host.isEmpty) {
+      final parsed = Uri.tryParse(url.trim());
+      if (parsed == null ||
+          !['https', 'http'].contains(parsed.scheme) ||
+          parsed.host.isEmpty) {
         throw const NightscoutTokenValidationException(
-          NightscoutTokenIssue.unavailable,
+          NightscoutTokenIssue.invalidUrl,
         );
       }
+      final base = parsed.replace(userInfo: '');
       final prefix = base.pathSegments
           .where((part) => part.isNotEmpty)
           .toList();

@@ -92,6 +92,7 @@ class SetupWizardController extends ChangeNotifier {
         );
         restorePatientFamilyAfterSignIn = false;
         configurationRevision++;
+        state.nightscoutVerification = null;
       }
       if (state.googleAccount == null) nameBeforeGoogle = state.name;
       state.name = account.label.isNotEmpty ? account.label : state.name;
@@ -108,6 +109,7 @@ class SetupWizardController extends ChangeNotifier {
       state.mode = SetupDeviceMode.patient;
       state.moduleIndex = 0;
       configurationRevision++;
+      state.nightscoutVerification = null;
     }
     state.familyMembers = const [];
     state.pairingInvitation = null;
@@ -396,6 +398,7 @@ class SetupWizardController extends ChangeNotifier {
       method: method,
     );
     configurationRevision++;
+    state.nightscoutVerification = null;
     changed();
   }
 
@@ -407,6 +410,7 @@ class SetupWizardController extends ChangeNotifier {
           : MealDecisionTimeoutFallback.app,
     );
     configurationRevision++;
+    state.nightscoutVerification = null;
     changed();
   }
 
@@ -419,6 +423,7 @@ class SetupWizardController extends ChangeNotifier {
       timeoutFallback: value,
     );
     configurationRevision++;
+    state.nightscoutVerification = null;
     changed();
   }
 
@@ -428,6 +433,7 @@ class SetupWizardController extends ChangeNotifier {
       deferralMinutes: minutes,
     );
     configurationRevision++;
+    state.nightscoutVerification = null;
     changed();
   }
 
@@ -436,6 +442,7 @@ class SetupWizardController extends ChangeNotifier {
       caregiverResponsesEnabled: enabled,
     );
     configurationRevision++;
+    state.nightscoutVerification = null;
     changed();
   }
 
@@ -521,6 +528,7 @@ class SetupWizardController extends ChangeNotifier {
     if (disposed || state.signingIn) return;
     if (state.mode == mode) return;
     configurationRevision++;
+    state.nightscoutVerification = null;
     state.moduleValidationFailed = false;
     state.attemptedModules.clear();
     if (state.googleAccount != null) {
@@ -575,6 +583,7 @@ class SetupWizardController extends ChangeNotifier {
       return;
     }
     configurationRevision++;
+    state.nightscoutVerification = null;
     if (enabled) {
       state.selected.add(id);
     } else {
@@ -596,6 +605,7 @@ class SetupWizardController extends ChangeNotifier {
         .where((field) => field.module == SetupModule.nightscout)
         .toSet();
     configurationRevision++;
+    state.nightscoutVerification = null;
     if (enabled) {
       state.enabledOptions.add(id);
     } else {
@@ -626,6 +636,7 @@ class SetupWizardController extends ChangeNotifier {
     if (config == state.config) return;
     final current = module;
     configurationRevision++;
+    state.nightscoutVerification = null;
     state.config = config;
     state.configured.remove(SetupModule.nightscout);
     state.moduleValidationFailed = false;
@@ -639,6 +650,7 @@ class SetupWizardController extends ChangeNotifier {
 
   void setNightscout(String url, String token) {
     configurationRevision++;
+    state.nightscoutVerification = null;
     state.nightscoutUrl = url;
     state.nightscoutToken = token;
     state.moduleValidationFailed = false;
@@ -682,6 +694,59 @@ class SetupWizardController extends ChangeNotifier {
     return true;
   }
 
+  bool isCheckingNightscout = false;
+
+  Future<SetupNightscoutVerification?> _checkNightscout() async {
+    final revision = configurationRevision;
+    final session = pairingSession;
+    final url = state.nightscoutUrl.trim();
+    final token = state.nightscoutToken.trim();
+    final requiresWrite = requiredConfiguration.containsKey(
+      SetupConfigurationField.nightscoutToken,
+    );
+    final uri = Uri.tryParse(url);
+    SetupNightscoutVerification result;
+    try {
+      if (uri == null ||
+          !['http', 'https'].contains(uri.scheme) ||
+          uri.host.isEmpty) {
+        result = SetupNightscoutVerification.invalidUrl;
+      } else if (requiresWrite && token.isEmpty) {
+        result = SetupNightscoutVerification.tokenRequired;
+      } else {
+        result =
+            await checkNightscoutConnection?.call(url, token, requiresWrite) ??
+            SetupNightscoutVerification.previewOnly;
+      }
+    } catch (_) {
+      result = SetupNightscoutVerification.unavailable;
+    }
+    if (disposed ||
+        revision != configurationRevision ||
+        session != pairingSession) {
+      return null;
+    }
+    state.nightscoutVerification = result;
+    return result;
+  }
+
+  Future<SetupNightscoutVerification?> verifyNightscout() async {
+    if (disposed || isValidating || state.signingIn) return null;
+    isValidating = true;
+    isCheckingNightscout = true;
+    state.nightscoutVerification = null;
+    state.configured.remove(SetupModule.nightscout);
+    state.moduleValidationFailed = false;
+    changed();
+    try {
+      return await _checkNightscout();
+    } finally {
+      isValidating = false;
+      isCheckingNightscout = false;
+      changed();
+    }
+  }
+
   Future<bool> validateAndNext() async {
     if (disposed || isValidating || state.signingIn) return false;
     if (authentication != null && !state.signedIn) {
@@ -716,13 +781,21 @@ class SetupWizardController extends ChangeNotifier {
     final revision = configurationRevision;
     final session = pairingSession;
     isValidating = true;
+    isCheckingNightscout = current == SetupModule.nightscout;
     state.attemptedModules.add(current);
     state.moduleValidationFailed = false;
     changed();
     try {
       final submittingAi = current == SetupModule.ai && aiSubmission.isAttached;
-      final valid =
-          current == SetupModule.ai && (authentication != null || submittingAi)
+      final valid = current == SetupModule.nightscout
+          ? (await _checkNightscout())?.isAcceptable(
+                  requiresWrite: requiredConfiguration.containsKey(
+                    SetupConfigurationField.nightscoutToken,
+                  ),
+                ) ??
+                false
+          : current == SetupModule.ai &&
+                (authentication != null || submittingAi)
           ? await aiSubmission.submit()
           : await const ValidateSetupModuleUseCase()(
               requiredFields: requiredConfiguration.keys.where(
@@ -762,6 +835,7 @@ class SetupWizardController extends ChangeNotifier {
       return false;
     } finally {
       isValidating = false;
+      isCheckingNightscout = false;
       if (!disposed) changed();
     }
   }
@@ -875,6 +949,7 @@ class SetupWizardController extends ChangeNotifier {
   void invalidateModule(SetupModule module) {
     if (disposed) return;
     configurationRevision++;
+    state.nightscoutVerification = null;
     state.configured.remove(module);
     changed();
   }

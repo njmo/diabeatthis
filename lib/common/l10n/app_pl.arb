@@ -4624,5 +4624,15 @@
     }
   },
   "setupExactAlarmsSettingsHint": "Otwórz ustawienia alarmów i przypomnień, zezwól na dokładne alarmy, a następnie wróć do aplikacji.",
-  "setupOpenSystemSettings": "Otwórz ustawienia"
+  "setupOpenSystemSettings": "Otwórz ustawienia",
+  "setupNightscoutCheck": "Sprawdź połączenie",
+  "setupNightscoutChecking": "Łączenie z Nightscout...",
+  "setupNightscoutReadWriteVerified": "Połączono pomyślnie. Odczyt glukozy i zapis zdarzeń dostępne.",
+  "setupNightscoutReadVerified": "Połączono. Odczyt glukozy dostępny.",
+  "setupNightscoutTokenRequired": "Wymagany token Nightscout.",
+  "setupNightscoutInvalidToken": "Niepoprawny token Nightscout.",
+  "setupNightscoutWriteAccessMissing": "Nie potwierdzono praw zapisu treatments. Sprawdź uprawnienia tokenu.",
+  "setupNightscoutUnavailable": "Nie można połączyć się z Nightscout. Sprawdź adres i internet.",
+  "setupNightscoutInvalidUrl": "Niepoprawny adres URL Nightscout.",
+  "setupNightscoutPreviewOnly": "Tryb podglądu (sprawdzenie demonstracyjne)."
 }

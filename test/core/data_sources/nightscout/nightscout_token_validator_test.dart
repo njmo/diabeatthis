@@ -14,6 +14,20 @@ void main() {
         value,
       );
 
+  test('invalid URLs fail without sending credentials', () async {
+    final validator = NightscoutTokenValidator(
+      client: MockClient((_) async {
+        fail('Invalid URL must not issue requests');
+      }),
+    );
+    for (final url in ['not-a-url', 'ftp://example.com', 'https://[']) {
+      await expectLater(
+        validator.validate(url: url, token: 'token'),
+        throwsA(issue(NightscoutTokenIssue.invalidUrl)),
+      );
+    }
+  });
+
   test('empty and whitespace tokens fail before any request', () async {
     var requests = 0;
     final validator = NightscoutTokenValidator(

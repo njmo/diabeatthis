@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/setup/domain/setup_configuration_field.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
+import '../../../../../common/setup/domain/validate_setup_module_use_case.dart';
 import '../../widgets/nightscout_connection_fields.dart';
 import '../../widgets/settings_section_card.dart';
 import '../setup_wizard_controller.dart';
@@ -93,7 +94,65 @@ class SetupNightscoutModuleState extends State<SetupNightscoutModule> {
                   widget.controller.setNightscout(url.text, token.text),
             ),
           ),
-          if (widget.controller.state.moduleValidationFailed) ...[
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: widget.controller.isValidating
+                ? null
+                : () => widget.controller.verifyNightscout(),
+            child: Text(context.lang.setupNightscoutCheck),
+          ),
+          if (widget.controller.isCheckingNightscout)
+            Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Text(context.lang.setupNightscoutChecking)),
+              ],
+            )
+          else if (widget.controller.state.nightscoutVerification
+              case final result?)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  result.isSuccess
+                      ? Icons.check_circle_outline
+                      : Icons.error_outline,
+                  color: result == SetupNightscoutVerification.previewOnly
+                      ? Colors.orange
+                      : result.isSuccess
+                      ? Colors.green
+                      : Colors.red,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(switch (result) {
+                    SetupNightscoutVerification.readWriteVerified =>
+                      context.lang.setupNightscoutReadWriteVerified,
+                    SetupNightscoutVerification.readVerified =>
+                      context.lang.setupNightscoutReadVerified,
+                    SetupNightscoutVerification.tokenRequired =>
+                      context.lang.setupNightscoutTokenRequired,
+                    SetupNightscoutVerification.invalidToken =>
+                      context.lang.setupNightscoutInvalidToken,
+                    SetupNightscoutVerification.writeAccessMissing =>
+                      context.lang.setupNightscoutWriteAccessMissing,
+                    SetupNightscoutVerification.unavailable =>
+                      context.lang.setupNightscoutUnavailable,
+                    SetupNightscoutVerification.invalidUrl =>
+                      context.lang.setupNightscoutInvalidUrl,
+                    SetupNightscoutVerification.previewOnly =>
+                      context.lang.setupNightscoutPreviewOnly,
+                  }),
+                ),
+              ],
+            ),
+          if (widget.controller.state.moduleValidationFailed &&
+              widget.controller.state.nightscoutVerification == null) ...[
             const SizedBox(height: 12),
             SetupNotice(
               text: context.lang.setupNightscoutValidationFailed,

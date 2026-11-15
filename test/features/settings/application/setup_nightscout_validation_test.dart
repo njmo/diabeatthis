@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/setup/domain/validate_setup_module_use_case.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/nightscout_connection_verification.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/nightscout_token_validator.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_connection_check_provider.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 class SetupTokenValidator extends NightscoutTokenValidator {
   final List<bool> requests = [];
   bool fail = false;
+  NightscoutTokenIssue? issue;
   @override
   Future<void> validate({
     required String url,
@@ -15,6 +17,7 @@ class SetupTokenValidator extends NightscoutTokenValidator {
     bool requireTreatmentWrite = true,
   }) async {
     requests.add(requireTreatmentWrite);
+    if (issue != null) throw NightscoutTokenValidationException(issue!);
     if (fail) {
       throw const NightscoutTokenValidationException(
         NightscoutTokenIssue.treatmentAccess,
@@ -24,6 +27,74 @@ class SetupTokenValidator extends NightscoutTokenValidator {
 }
 
 void main() {
+  test('maps every token issue and local validation failure', () async {
+    final validator = SetupTokenValidator();
+    final container = ProviderContainer(
+      overrides: [
+        nightscoutTokenValidatorProvider.overrideWithValue(validator),
+        nightscoutConnectionCheckProvider.overrideWithValue(
+          ({required String url, required String token}) async {},
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final check = container.read(validateSetupNightscoutProvider);
+    expect(
+      await check('bad-url', 'token', true),
+      SetupNightscoutVerification.invalidUrl,
+    );
+    expect(
+      await check('https://example.com', '  ', true),
+      SetupNightscoutVerification.tokenRequired,
+    );
+    expect(validator.requests, isEmpty);
+    for (final entry in {
+      NightscoutTokenIssue.required: SetupNightscoutVerification.tokenRequired,
+      NightscoutTokenIssue.invalid: SetupNightscoutVerification.invalidToken,
+      NightscoutTokenIssue.treatmentAccess:
+          SetupNightscoutVerification.writeAccessMissing,
+      NightscoutTokenIssue.unavailable: SetupNightscoutVerification.unavailable,
+      NightscoutTokenIssue.invalidUrl: SetupNightscoutVerification.invalidUrl,
+    }.entries) {
+      validator.issue = entry.key;
+      expect(await check('https://example.com', 'token', true), entry.value);
+    }
+  });
+
+  test(
+    'anonymous read succeeds and connection exceptions become unavailable',
+    () async {
+      var offline = false;
+      final container = ProviderContainer(
+        overrides: [
+          nightscoutConnectionCheckProvider.overrideWithValue(({
+            required String url,
+            required String token,
+          }) async {
+            if (offline) throw StateError('offline');
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      final check = container.read(validateSetupNightscoutProvider);
+      expect(
+        await check('https://example.com', '', false),
+        SetupNightscoutVerification.readVerified,
+      );
+      offline = true;
+      expect(
+        await check('https://example.com', '', false),
+        SetupNightscoutVerification.unavailable,
+      );
+      expect(
+        container
+            .read(nightscoutConnectionVerificationProvider)
+            .matches(url: 'https://example.com', token: ''),
+        isFalse,
+      );
+    },
+  );
+
   test(
     'verification is scoped to exact credentials, time and clock direction',
     () {
@@ -72,7 +143,10 @@ void main() {
       );
       addTearDown(container.dispose);
       final check = container.read(validateSetupNightscoutProvider);
-      expect(await check('https://nightscout.test', 'token', true), isTrue);
+      expect(
+        await check('https://nightscout.test', 'token', true),
+        SetupNightscoutVerification.readWriteVerified,
+      );
       expect(checks, 1);
       expect(validator.requests, [true]);
       final verification = container.read(
@@ -83,9 +157,9 @@ void main() {
         isTrue,
       );
       validator.fail = true;
-      await expectLater(
-        check('https://nightscout.test', 'token', true),
-        throwsA(isA<NightscoutTokenValidationException>()),
+      expect(
+        await check('https://nightscout.test', 'token', true),
+        SetupNightscoutVerification.writeAccessMissing,
       );
       expect(
         verification.matches(url: 'https://nightscout.test', token: 'token'),

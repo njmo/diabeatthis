@@ -2,6 +2,7 @@ import 'package:diabeatthis/common/auth/google_account.dart';
 import 'package:diabeatthis/common/setup/domain/setup_configuration_field.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
 import 'package:diabeatthis/common/setup/domain/setup_step.dart';
+import 'package:diabeatthis/common/setup/domain/validate_setup_module_use_case.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,7 +31,7 @@ void main() {
         authentication: auth,
         checkNightscoutConnection: (url, token, writes) async {
           checks.add(writes);
-          return true;
+          return SetupNightscoutVerification.readWriteVerified;
         },
       );
       addTearDown(controller.dispose);
@@ -59,7 +60,8 @@ void main() {
       controller.setNightscout('https://nightscout.test', 'read-token');
       expect(await controller.validateAndNext(), isTrue);
       expect(checks, [false]);
-      expect(draft.currentStep, SetupStep.summary);
+      expect(draft.currentStep, SetupStep.configuration);
+      expect(controller.module, controller.modules[1]);
       expect(draft.configured, contains(SetupModule.nightscout));
     },
   );

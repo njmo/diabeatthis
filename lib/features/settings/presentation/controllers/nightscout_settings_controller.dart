@@ -44,7 +44,8 @@ class NightscoutSettingsController extends Notifier<NightscoutSettingsSaveState>
               NightscoutSettingsSaveFailure.invalidToken,
             NightscoutTokenIssue.treatmentAccess =>
               NightscoutSettingsSaveFailure.treatmentAccess,
-            NightscoutTokenIssue.unavailable =>
+            NightscoutTokenIssue.unavailable ||
+            NightscoutTokenIssue.invalidUrl =>
               NightscoutSettingsSaveFailure.verificationUnavailable,
           },
         );
