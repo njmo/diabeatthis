@@ -3646,6 +3646,7 @@
   "setupFeatureLowTreatmentName": "Low treatment monitor",
   "setupFeatureLowTreatmentDescription": "Core low treatment handling, AAPS reminders and background records.",
   "setupFeatureLowTreatmentDetails": "The low treatment monitor is always enabled on the child device.\nRequires background execution and notifications.\nIts configuration can optionally enable carbohydrate recording to Nightscout.",
+  "setupBuiltInFeature": "Core feature",
   "setupAlwaysEnabled": "Always enabled",
   "setupFeatureOptions": "Feature options",
   "setupTuneFeatureDescription": "Tune this feature before configuring the Nightscout connection.",

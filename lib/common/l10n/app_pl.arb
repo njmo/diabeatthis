@@ -4103,6 +4103,7 @@
   "setupFeatureLowTreatmentName": "Monitor dosładzania",
   "setupFeatureLowTreatmentDescription": "Stała obsługa dosładzania, przypomnień AAPS i zapisów w tle.",
   "setupFeatureLowTreatmentDetails": "Monitor dosładzania jest zawsze włączony na telefonie dziecka.\nWymaga pracy w tle i powiadomień.\nW jego konfiguracji można opcjonalnie włączyć zapis węglowodanów do Nightscout.",
+  "setupBuiltInFeature": "Funkcja podstawowa",
   "setupAlwaysEnabled": "Zawsze włączone",
   "setupFeatureOptions": "Opcje funkcji",
   "setupTuneFeatureDescription": "Dostosuj opcje tej funkcji przed konfiguracją połączenia z Nightscout.",

@@ -64,6 +64,51 @@ class SetupFeatureTile extends StatelessWidget {
                   context.lang.featureDescription(feature.id, mode: mode),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                if (feature.alwaysEnabled)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Semantics(
+                      label:
+                          '${context.lang.featureName(feature.id, mode: mode)}: ${context.lang.setupBuiltInFeature}',
+                      excludeSemantics: true,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              size: 16,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSecondaryContainer,
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                context.lang.setupBuiltInFeature,
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSecondaryContainer,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 if (locked)
                   Text(
                     context.lang.setupFamilyDisconnectBeforeDisable,
@@ -105,23 +150,14 @@ class SetupFeatureTile extends StatelessWidget {
               ],
             ),
           ),
-          Semantics(
-            enabled: feature.alwaysEnabled ? false : null,
-            toggled: feature.alwaysEnabled ? true : null,
-            label: context.lang.featureName(feature.id, mode: mode),
-            child: feature.alwaysEnabled
-                ? Tooltip(
-                    message: context.lang.setupAlwaysEnabled,
-                    child: const Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Icon(Icons.check_circle_outline),
-                    ),
-                  )
-                : Switch(
-                    value: selected,
-                    onChanged: enabled && !locked ? onChanged : null,
-                  ),
-          ),
+          if (!feature.alwaysEnabled)
+            Semantics(
+              label: context.lang.featureName(feature.id, mode: mode),
+              child: Switch(
+                value: selected,
+                onChanged: enabled && !locked ? onChanged : null,
+              ),
+            ),
         ],
       ),
     );

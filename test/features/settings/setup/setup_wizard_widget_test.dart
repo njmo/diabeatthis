@@ -26,6 +26,57 @@ SetupWizardState setupDraft() => SetupWizardState(
 );
 
 void main() {
+  testWidgets('core features show an informational badge without a switch', (
+    tester,
+  ) async {
+    final draft = setupDraft()..step = SetupStep.features.index;
+    await tester.pumpWidget(
+      localizedMaterialApp(
+        home: SetupWizard(
+          initialState: draft,
+          availability: const DataSourceOptionAvailability.none(),
+        ),
+      ),
+    );
+    final coreTiles = find.byWidgetPredicate(
+      (widget) => widget is SetupFeatureTile && widget.feature.alwaysEnabled,
+    );
+    expect(coreTiles, findsWidgets);
+    for (final tile in coreTiles.evaluate()) {
+      final finder = find.byWidget(tile.widget);
+      expect(
+        find.descendant(of: finder, matching: find.text('Funkcja podstawowa')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: finder, matching: find.byType(Switch)),
+        findsNothing,
+      );
+      final badge = find.descendant(
+        of: finder,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Semantics &&
+              (widget.properties.label?.endsWith(': Funkcja podstawowa') ??
+                  false),
+        ),
+      );
+      expect(badge, findsOneWidget);
+      expect(tester.widget<Semantics>(badge).properties.toggled, isNull);
+      expect(tester.widget<Semantics>(badge).properties.enabled, isNull);
+    }
+    final optionalTile = find
+        .byWidgetPredicate(
+          (widget) =>
+              widget is SetupFeatureTile && !widget.feature.alwaysEnabled,
+        )
+        .first;
+    expect(
+      find.descendant(of: optionalTile, matching: find.byType(Switch)),
+      findsOneWidget,
+    );
+  });
+
   testWidgets(
     'six markers remain visible while fifth label and module count change',
     (tester) async {
@@ -207,6 +258,7 @@ void main() {
       state.controller.changed();
       await tester.pumpAndSettle();
       expect(find.text('What you can do'), findsOneWidget);
+      expect(find.text('Core feature'), findsWidgets);
       await tester.ensureVisible(
         find.byWidgetPredicate(
           (widget) =>
