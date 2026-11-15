@@ -8,8 +8,8 @@ import 'package:diabeatthis/core/data_sources/config/data_source_option_availabi
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_controller.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_state.dart';
-import 'package:diabeatthis/features/settings/presentation/widgets/nightscout_connection_fields.dart';
-import 'package:flutter/material.dart';
+import 'package:diabeatthis/features/settings/presentation/setup/widgets/setup_configuration_field_chip.dart';
+import 'package:diabeatthis/features/settings/presentation/setup/widgets/setup_monitoring_choice_card.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../helpers/localized_material_app.dart';
@@ -105,7 +105,7 @@ void main() {
     );
   });
   testWidgets(
-    'activity and low treatment tuning precede Nightscout and retain choices',
+    'activity and low treatment choices persist with Nightscout first',
     (tester) async {
       final draft = featureTuningDraft()
         ..selected.add(SetupFeatureId.activityMonitor)
@@ -122,47 +122,65 @@ void main() {
         find.byType(SetupWizard),
       );
       expect(wizard.controller.module, SetupModule.activity);
-      await tester.tap(find.byType(Switch));
+      const uploadTitle = 'Monitorowanie z zapisem do Nightscout';
+      const localTitle = 'Monitorowanie lokalne';
+      bool uploadSelected() => tester
+          .widget<SetupMonitoringChoiceCard>(
+            find.widgetWithText(SetupMonitoringChoiceCard, uploadTitle),
+          )
+          .selected;
+      expect(find.byType(SetupMonitoringChoiceCard), findsNWidgets(2));
+      expect(uploadSelected(), isFalse);
+      expect(find.byType(SetupConfigurationFieldChip), findsNothing);
+      await tester.tap(find.text(uploadTitle));
       await tester.pumpAndSettle();
       expect(draft.enabledOptions, {
         SetupFeatureOptionId.activityTempTargetUpload,
       });
+      expect(uploadSelected(), isTrue);
+      expect(find.byType(SetupConfigurationFieldChip), findsWidgets);
       expect(wizard.controller.modules, [
+        SetupModule.nightscout,
         SetupModule.data,
         SetupModule.activity,
         SetupModule.lowTreatment,
         SetupModule.mealAdvisor,
-        SetupModule.nightscout,
       ]);
-      expect(find.text('Zatwierdź opcje'), findsNothing);
-      await tester.tap(find.text('Dalej'));
+      await tester.tap(find.text(localTitle));
+      await tester.pumpAndSettle();
+      expect(draft.enabledOptions, isEmpty);
+      expect(uploadSelected(), isFalse);
+      expect(find.byType(SetupConfigurationFieldChip), findsNothing);
+      await tester.tap(find.text(uploadTitle));
+      await tester.pumpAndSettle();
+      // Navigate the modules directly to isolate choice retention from the
+      // Nightscout connection validation covered by integration tests.
+      wizard.controller.next();
       await tester.pumpAndSettle();
       expect(wizard.controller.module, SetupModule.lowTreatment);
-      expect(tester.widget<Switch>(find.byType(Switch)).value, isFalse);
-      expect(find.text('Zatwierdź opcje'), findsNothing);
-      await tester.tap(find.text('Dalej'));
+      expect(uploadSelected(), isFalse);
+      await tester.tap(find.text(uploadTitle));
+      await tester.pumpAndSettle();
+      expect(
+        draft.enabledOptions,
+        contains(SetupFeatureOptionId.lowTreatmentCarbohydrateUpload),
+      );
+      await tester.tap(find.text(localTitle));
+      await tester.pumpAndSettle();
+      expect(draft.enabledOptions, {
+        SetupFeatureOptionId.activityTempTargetUpload,
+      });
+      wizard.controller.next();
       await tester.pumpAndSettle();
       expect(wizard.controller.module, SetupModule.mealAdvisor);
-      await tester.tap(find.text('Dalej'));
-      await tester.pumpAndSettle();
-      expect(wizard.controller.module, SetupModule.nightscout);
-      expect(
-        tester
-            .widget<NightscoutConnectionFields>(
-              find.byType(NightscoutConnectionFields),
-            )
-            .tokenRequired,
-        isTrue,
-      );
-      await tester.tap(find.text('Poprzednia funkcja'));
-      await tester.pumpAndSettle();
       await tester.tap(find.text('Poprzednia funkcja'));
       await tester.pumpAndSettle();
       expect(wizard.controller.module, SetupModule.lowTreatment);
+      expect(uploadSelected(), isFalse);
       await tester.tap(find.text('Poprzednia funkcja'));
       await tester.pumpAndSettle();
       expect(wizard.controller.module, SetupModule.activity);
-      expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+      expect(uploadSelected(), isTrue);
       expect(tester.takeException(), isNull);
     },
   );

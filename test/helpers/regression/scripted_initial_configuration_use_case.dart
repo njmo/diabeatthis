@@ -16,6 +16,8 @@ class ScriptedInitialConfigurationUseCase
     required String nightscoutToken,
     required String childName,
     required ApplicationLanguage language,
+    bool tempTargetsEnabled = false,
+    bool lowTreatmentsEnabled = false,
   }) => writes([
     config,
     nightscoutUrl,

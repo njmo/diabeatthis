@@ -4634,5 +4634,9 @@
   "setupNightscoutWriteAccessMissing": "Nie potwierdzono praw zapisu treatments. Sprawdź uprawnienia tokenu.",
   "setupNightscoutUnavailable": "Nie można połączyć się z Nightscout. Sprawdź adres i internet.",
   "setupNightscoutInvalidUrl": "Niepoprawny adres URL Nightscout.",
-  "setupNightscoutPreviewOnly": "Tryb podglądu (sprawdzenie demonstracyjne)."
+  "setupNightscoutPreviewOnly": "Tryb podglądu (sprawdzenie demonstracyjne).",
+  "setupMonitoringLocalTitle": "Monitorowanie lokalne",
+  "setupMonitoringLocalDescription": "Działanie wyłącznie na tym telefonie, bez przesyłania danych do Nightscout.",
+  "setupMonitoringUploadTitle": "Monitorowanie z zapisem do Nightscout",
+  "setupMonitoringUploadDescription": "Automatyczne przesyłanie wpisów do Twojej instancji Nightscout."
 }

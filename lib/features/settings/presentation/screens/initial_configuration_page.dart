@@ -97,6 +97,12 @@ class InitialConfigurationPage extends ConsumerWidget {
             final saved = await controller.submit(
               mealDecisionPreferences: value.mealDecisionPreferences,
               enableFamilySharing: value.shareData,
+              tempTargetsEnabled: value.enabledOptions.contains(
+                SetupFeatureOptionId.activityTempTargetUpload,
+              ),
+              lowTreatmentsEnabled: value.enabledOptions.contains(
+                SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
+              ),
               nightscoutUrl: value.nightscoutUrl,
               nightscoutToken: value.nightscoutToken,
             );

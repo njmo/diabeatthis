@@ -97,6 +97,8 @@ class InitialConfigurationController extends _$InitialConfigurationController
     String? nightscoutUrl,
     String? nightscoutToken,
     bool enableFamilySharing = false,
+    bool? tempTargetsEnabled,
+    bool? lowTreatmentsEnabled,
     MealDecisionPreferences? mealDecisionPreferences,
   }) async {
     final current = _currentState;
@@ -119,6 +121,9 @@ class InitialConfigurationController extends _$InitialConfigurationController
             ? ref.read(applyInitialFamilyConfigurationProvider)
             : _applyInitialConfigurationUseCase;
         await apply(
+          tempTargetsEnabled: tempTargetsEnabled ?? current.tempTargetsEnabled,
+          lowTreatmentsEnabled:
+              lowTreatmentsEnabled ?? current.lowTreatmentsEnabled,
           config: current.config,
           nightscoutUrl: (nightscoutUrl ?? current.nightscoutUrl).trim(),
           nightscoutToken: (nightscoutToken ?? current.nightscoutToken).trim(),

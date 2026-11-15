@@ -68,6 +68,8 @@ void main() {
         childName: ' Child ',
         language: applicationLanguageByCode('en'),
       );
+      expect(prefs.getBool(nightscoutTempTargetsEnabledKey), isFalse);
+      expect(prefs.getBool(nightscoutLowTreatmentsEnabledKey), isFalse);
       expect(prefs.getString(childNameKey), 'Child');
       expect(prefs.getString(applicationLanguageCodeKey), 'en');
       expect(prefs.getBool(initialConfigurationDoneKey), true);
@@ -78,6 +80,55 @@ void main() {
       expect(router.events, hasLength(2));
     },
   );
+
+  for (final flags in [
+    (false, false),
+    (true, false),
+    (false, true),
+    (true, true),
+  ]) {
+    test('setup persists upload flags independently: $flags', () async {
+      SharedPreferences.setMockInitialValues({
+        nightscoutTempTargetsEnabledKey: !flags.$1,
+        nightscoutLowTreatmentsEnabledKey: !flags.$2,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPrefsProvider.overrideWith((ref) async => prefs),
+          dataSourceOptionAvailabilityProvider.overrideWith(
+            (ref) async => const DataSourceOptionAvailability.none(),
+          ),
+          nightscoutConnectionCheckProvider.overrideWithValue(
+            ({required String url, required String token}) async {},
+          ),
+          dataReceiverActivationControllerProvider.overrideWithValue(
+            DataReceiverActivationController(
+              xdripReceiverController: RecordingDataReceiverController(),
+              aapsReceiverController: RecordingDataReceiverController(),
+            ),
+          ),
+          monitorServiceEnabledProvider.overrideWith((ref) => false),
+          appEventRouterProvider.overrideWithValue(
+            RecordingSettingsEventRouter(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(applyInitialConfigurationUseCaseProvider)(
+        config: const DataSourceConfig.defaults(),
+        nightscoutUrl: 'https://example.test',
+        nightscoutToken: 'token',
+        childName: 'Child',
+        language: applicationLanguageByCode('en'),
+        tempTargetsEnabled: flags.$1,
+        lowTreatmentsEnabled: flags.$2,
+      );
+      expect(prefs.getBool(nightscoutTempTargetsEnabledKey), flags.$1);
+      expect(prefs.getBool(nightscoutLowTreatmentsEnabledKey), flags.$2);
+      expect(prefs.getBool(initialConfigurationDoneKey), isTrue);
+    });
+  }
 
   test(
     'unavailable source rejects configuration before any storage or activation',

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../common/l10n/language.dart';
+import '../../../../../common/widgets/scrollable_chip_rail.dart';
 import '../../widgets/settings_section_card.dart';
 import '../setup_labels.dart';
 import '../setup_wizard_controller.dart';
-import '../widgets/setup_feature_option_tile.dart';
-import '../widgets/setup_notice.dart';
+import '../widgets/setup_configuration_field_chip.dart';
+import '../widgets/setup_monitoring_choice_card.dart';
 import '../widgets/setup_step_heading.dart';
 
 class SetupFeatureOptionsModule extends StatelessWidget {
@@ -28,14 +29,32 @@ class SetupFeatureOptionsModule extends StatelessWidget {
           icon: setupFeatureIcon(feature.id),
           title: context.lang.setupFeatureOptions,
           children: [
-            for (final option in feature.options)
-              SetupFeatureOptionTile(
-                option: option,
-                enabled: controller.state.enabledOptions.contains(option.id),
-                onChanged: (value) => controller.selectOption(option.id, value),
+            for (final option in feature.options) ...[
+              SetupMonitoringChoiceCard(
+                title: context.lang.setupMonitoringLocalTitle,
+                description: context.lang.setupMonitoringLocalDescription,
+                icon: Icons.phone_android_outlined,
+                selected: !controller.state.enabledOptions.contains(option.id),
+                onSelected: () => controller.selectOption(option.id, false),
               ),
-            const SizedBox(height: 12),
-            SetupNotice(text: context.lang.setupTuneFeatureDemo),
+              SetupMonitoringChoiceCard(
+                title: context.lang.setupMonitoringUploadTitle,
+                description: context.lang.setupMonitoringUploadDescription,
+                icon: Icons.cloud_upload_outlined,
+                selected: controller.state.enabledOptions.contains(option.id),
+                onSelected: () => controller.selectOption(option.id, true),
+                chips:
+                    controller.state.enabledOptions.contains(option.id) &&
+                        option.requiredConfiguration.isNotEmpty
+                    ? ScrollableChipRail(
+                        children: [
+                          for (final field in option.requiredConfiguration)
+                            SetupConfigurationFieldChip(field: field),
+                        ],
+                      )
+                    : null,
+              ),
+            ],
           ],
         ),
       ],

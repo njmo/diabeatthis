@@ -41,6 +41,8 @@ class ApplyInitialConfigurationUseCase {
     required String nightscoutToken,
     required String childName,
     required ApplicationLanguage language,
+    bool tempTargetsEnabled = false,
+    bool lowTreatmentsEnabled = false,
   }) async {
     final availability = await _ref.read(
       dataSourceOptionAvailabilityProvider.future,
@@ -72,6 +74,8 @@ class ApplyInitialConfigurationUseCase {
         prefs.setString(nightscoutUrlKey, nightscoutUrl.trim()),
       if (config.usesCloud)
         prefs.setString(nightscoutTokenKey, nightscoutToken.trim()),
+      prefs.setBool(nightscoutTempTargetsEnabledKey, tempTargetsEnabled),
+      prefs.setBool(nightscoutLowTreatmentsEnabledKey, lowTreatmentsEnabled),
       prefs.setString(childNameKey, childName.trim()),
       prefs.setString(applicationLanguageCodeKey, language.code),
     ]);

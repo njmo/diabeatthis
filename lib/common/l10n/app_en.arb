@@ -4177,5 +4177,9 @@
   "setupNightscoutWriteAccessMissing": "Write access for treatments not confirmed. Check token permissions.",
   "setupNightscoutUnavailable": "Cannot connect to Nightscout. Check URL and internet.",
   "setupNightscoutInvalidUrl": "Invalid Nightscout URL.",
-  "setupNightscoutPreviewOnly": "Preview mode (demonstration check)."
+  "setupNightscoutPreviewOnly": "Preview mode (demonstration check).",
+  "setupMonitoringLocalTitle": "Local monitoring",
+  "setupMonitoringLocalDescription": "Operates only on this phone without uploading data to Nightscout.",
+  "setupMonitoringUploadTitle": "Monitoring with Nightscout upload",
+  "setupMonitoringUploadDescription": "Automatically uploads entries to your Nightscout instance."
 }
