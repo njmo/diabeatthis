@@ -446,36 +446,46 @@ class SetupWizardController extends ChangeNotifier {
       (!module.requiresConfirmation || state.configured.contains(module)) &&
       configurationComplete(module);
   SetupModule? get incompleteRequiredConfigurationModule {
-    if (modules.contains(SetupModule.mealAdvisor) &&
-        !moduleReady(SetupModule.mealAdvisor)) {
-      return SetupModule.mealAdvisor;
-    }
-    for (final field in requiredConfiguration.keys) {
-      if (!moduleReady(field.module)) return field.module;
+    final requiredModules = {
+      ...requiredConfiguration.keys.map((field) => field.module),
+      SetupModule.mealAdvisor,
+    };
+    for (final module in modules) {
+      if (requiredModules.contains(module) && !moduleReady(module)) {
+        return module;
+      }
     }
     return null;
   }
 
-  List<SetupModule> get modules => [
-    ...selected
-        .map((feature) => feature.configurationModule)
-        .whereType<SetupModule>()
-        .where((module) => module != SetupModule.mealAdvisor)
-        .toSet(),
-    if (requirements.containsKey(SetupRequirement.familyPairing))
-      SetupModule.family,
-    if (selected.any(
-      (feature) => feature.configurationModule == SetupModule.mealAdvisor,
-    ))
-      SetupModule.mealAdvisor,
-    if (requirements.containsKey(SetupRequirement.aiConfiguration))
-      SetupModule.ai,
+  List<SetupModule> get modules {
+    final included = {
+      ...selected
+          .map((feature) => feature.configurationModule)
+          .whereType<SetupModule>(),
+      if (requirements.containsKey(SetupRequirement.familyPairing))
+        SetupModule.family,
+      if (requirements.containsKey(SetupRequirement.aiConfiguration))
+        SetupModule.ai,
+    };
+    included.remove(SetupModule.nightscout);
     if ((state.mode == SetupDeviceMode.patient && state.config.usesCloud) ||
         requiredConfiguration.keys.any(
           (field) => field.module == SetupModule.nightscout,
-        ))
+        )) {
+      included.add(SetupModule.nightscout);
+    }
+    return [
       SetupModule.nightscout,
-  ];
+      SetupModule.data,
+      SetupModule.family,
+      SetupModule.activity,
+      SetupModule.lowTreatment,
+      SetupModule.mealAdvisor,
+      SetupModule.ai,
+    ].where(included.contains).toList();
+  }
+
   bool get canSkipCurrentModule =>
       (module?.canSkip ?? false) &&
       !(module == SetupModule.family && familyCareLocked) &&
@@ -576,6 +586,10 @@ class SetupWizardController extends ChangeNotifier {
     )) {
       return;
     }
+    final current = module;
+    final previousNightscoutFields = requiredConfiguration.keys
+        .where((field) => field.module == SetupModule.nightscout)
+        .toSet();
     configurationRevision++;
     if (enabled) {
       state.enabledOptions.add(id);
@@ -587,17 +601,34 @@ class SetupWizardController extends ChangeNotifier {
     )) {
       state.configured.remove(feature.configurationModule);
     }
+    if (requiredConfiguration.keys.any(
+      (field) =>
+          field.module == SetupModule.nightscout &&
+          !previousNightscoutFields.contains(field),
+    )) {
+      state.configured.remove(SetupModule.nightscout);
+    }
     state.configured.removeWhere((module) => !configurationComplete(module));
+    state.moduleIndex = modules.isEmpty
+        ? 0
+        : modules
+              .indexOf(current ?? modules.first)
+              .clamp(0, modules.length - 1);
     changed();
   }
 
   void setConfig(DataSourceConfig config) {
     if (config == state.config) return;
+    final current = module;
     configurationRevision++;
     state.config = config;
     state.configured.remove(SetupModule.nightscout);
     state.moduleValidationFailed = false;
-    state.moduleIndex = 0;
+    state.moduleIndex = modules.isEmpty
+        ? 0
+        : modules
+              .indexOf(current ?? modules.first)
+              .clamp(0, modules.length - 1);
     changed();
   }
 
@@ -679,6 +710,13 @@ class SetupWizardController extends ChangeNotifier {
     final current = module;
     if (state.currentStep != SetupStep.configuration || current == null) {
       return next();
+    }
+    if (current != SetupModule.nightscout &&
+        modules.contains(SetupModule.nightscout) &&
+        !moduleReady(SetupModule.nightscout)) {
+      state.moduleIndex = modules.indexOf(SetupModule.nightscout);
+      changed();
+      return false;
     }
     final revision = configurationRevision;
     final session = pairingSession;

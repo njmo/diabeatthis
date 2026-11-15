@@ -113,9 +113,9 @@ class SetupWizardViewState extends State<SetupWizard>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.lang.setupNightscoutCannotSkip)),
       );
-      controller.state.moduleIndex = controller.modules.indexOf(
-        SetupModule.data,
-      );
+      controller.state.moduleIndex = controller.modules
+          .indexOf(SetupModule.data)
+          .clamp(0, controller.modules.length - 1);
       controller.goTo(SetupStep.configuration.index);
       return;
     }

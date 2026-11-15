@@ -1,5 +1,6 @@
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
+import 'package:diabeatthis/common/setup/domain/setup_feature_option.dart';
 import 'package:diabeatthis/common/setup/domain/setup_step.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_controller.dart';
@@ -26,19 +27,18 @@ void main() {
     () async {
       controller.goTo(SetupStep.configuration.index);
       expect(controller.modules, [
+        SetupModule.nightscout,
         SetupModule.data,
+        SetupModule.family,
         SetupModule.activity,
         SetupModule.lowTreatment,
-        SetupModule.family,
         SetupModule.mealAdvisor,
         SetupModule.ai,
-        SetupModule.nightscout,
       ]);
+      expect(controller.module, SetupModule.nightscout);
+      controller.setNightscout('https://example.com', '');
+      expect(await controller.validateAndNext(), isTrue);
       expect(controller.module, SetupModule.data);
-      expect(controller.next(), isTrue);
-      expect(controller.module, SetupModule.activity);
-      expect(controller.next(), isTrue);
-      expect(controller.module, SetupModule.lowTreatment);
       expect(controller.next(), isTrue);
       expect(controller.module, SetupModule.family);
       expect(controller.next(), isFalse);
@@ -46,28 +46,30 @@ void main() {
       controller.simulatePairing();
       expect(controller.next(), isTrue);
       expect(controller.state.step, SetupStep.configuration.index);
+      expect(controller.module, SetupModule.activity);
+      controller.next();
+      expect(controller.module, SetupModule.lowTreatment);
+      controller.next();
       expect(controller.module, SetupModule.mealAdvisor);
       controller.next();
       expect(controller.module, SetupModule.ai);
       controller.back();
       expect(controller.module, SetupModule.mealAdvisor);
       controller.back();
-      expect(controller.module, SetupModule.family);
+      expect(controller.module, SetupModule.lowTreatment);
       expect(controller.state.paired, isTrue);
       controller.next();
       controller.next();
       controller.simulateModule(SetupModule.ai);
-      controller.next();
-      controller.setNightscout('https://example.com', '');
       expect(await controller.validateAndNext(), isTrue);
       expect(controller.state.step, SetupStep.summary.index);
       controller.back();
-      expect(controller.module, SetupModule.nightscout);
+      expect(controller.module, SetupModule.ai);
       expect(controller.state.step, SetupStep.configuration.index);
     },
   );
   test(
-    'skipping AI deselects dependent features and continues at the next module',
+    'skipping the final AI module deselects dependent features and opens summary',
     () {
       controller.goTo(SetupStep.configuration.index);
       controller.state.moduleIndex = controller.modules.indexOf(SetupModule.ai);
@@ -80,8 +82,7 @@ void main() {
         controller.state.selected,
         isNot(contains(SetupFeatureId.aiAssistance)),
       );
-      expect(controller.module, SetupModule.nightscout);
-      expect(controller.state.step, SetupStep.configuration.index);
+      expect(controller.state.step, SetupStep.summary.index);
     },
   );
   test(
@@ -112,10 +113,10 @@ void main() {
         isFalse,
       );
       expect(controller.modules, [
+        SetupModule.nightscout,
         SetupModule.family,
         SetupModule.mealAdvisor,
         SetupModule.ai,
-        SetupModule.nightscout,
       ]);
       controller.select(SetupFeatureId.childOverview, false);
       controller.setMode(SetupDeviceMode.patient);
@@ -128,6 +129,78 @@ void main() {
         controller.state.selected.contains(SetupFeatureId.childOverview),
         isFalse,
       );
+    },
+  );
+
+  const localConfig = DataSourceConfig(
+    bgSource: BgSource.aaps,
+    treatmentsSource: TreatmentsSource.aaps,
+    pumpStatusSource: PumpStatusSource.aaps,
+    historySource: HistorySource.local,
+    mirrorToLocal: false,
+  );
+
+  test('source changes preserve the current module when Nightscout moves', () {
+    controller.state.moduleIndex = controller.modules.indexOf(SetupModule.data);
+    controller.setConfig(localConfig);
+    expect(controller.module, SetupModule.data);
+    expect(controller.modules, isNot(contains(SetupModule.nightscout)));
+    controller.setConfig(const DataSourceConfig.defaults());
+    expect(controller.module, SetupModule.data);
+    expect(controller.modules.first, SetupModule.nightscout);
+    expect(controller.modules.toSet().length, controller.modules.length);
+  });
+
+  test(
+    'new upload requirement invalidates a checked read-only connection',
+    () async {
+      controller.setNightscout('https://example.com', 'token');
+      controller.simulateModule(SetupModule.nightscout);
+      controller.state.moduleIndex = controller.modules.indexOf(
+        SetupModule.lowTreatment,
+      );
+      controller.selectOption(
+        SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
+        true,
+      );
+      expect(controller.module, SetupModule.lowTreatment);
+      expect(
+        controller.state.configured,
+        isNot(contains(SetupModule.nightscout)),
+      );
+      expect(
+        controller.incompleteRequiredConfigurationModule,
+        SetupModule.nightscout,
+      );
+      controller.goTo(SetupStep.configuration.index);
+      expect(await controller.validateAndNext(), isFalse);
+      expect(controller.module, SetupModule.nightscout);
+      expect(await controller.validateAndNext(), isTrue);
+      expect(controller.module, SetupModule.data);
+      expect(await controller.validateAndNext(), isTrue);
+      expect(controller.module, SetupModule.family);
+    },
+  );
+
+  test(
+    'options preserve the module when Nightscout is inserted and removed',
+    () {
+      controller.setConfig(localConfig);
+      controller.state.moduleIndex = controller.modules.indexOf(
+        SetupModule.lowTreatment,
+      );
+      controller.selectOption(
+        SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
+        true,
+      );
+      expect(controller.module, SetupModule.lowTreatment);
+      expect(controller.modules.first, SetupModule.nightscout);
+      controller.selectOption(
+        SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
+        false,
+      );
+      expect(controller.module, SetupModule.lowTreatment);
+      expect(controller.modules, isNot(contains(SetupModule.nightscout)));
     },
   );
 
