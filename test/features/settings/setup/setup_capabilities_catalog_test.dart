@@ -72,7 +72,7 @@ void main() {
           controller.select(SetupFeatureId.caregiverMealDecisions, false);
           expect(
             controller.modules,
-            [SetupModule.ai, SetupModule.nightscout],
+            [SetupModule.nightscout, SetupModule.ai],
             reason:
                 'Descriptive capabilities must not activate a family connection',
           );
@@ -108,7 +108,7 @@ void main() {
         expect(
           find.descendant(
             of: planning,
-            matching: find.byTooltip('Zawsze włączone'),
+            matching: find.text('Funkcja podstawowa'),
           ),
           findsOneWidget,
         );

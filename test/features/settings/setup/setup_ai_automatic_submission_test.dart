@@ -67,7 +67,9 @@ void main() {
       (tester) async {
         final ai = AutomaticSetupAiController()..failTest = failTest;
         final draft = accountChoiceDraft()
-          ..step = SetupStep.configuration.index;
+          ..step = SetupStep.configuration.index
+          ..nightscoutUrl = 'https://example.com'
+          ..configured.add(SetupModule.nightscout);
         final modules = SetupWizardController(draft);
         draft.moduleIndex = modules.modules.indexOf(SetupModule.ai);
         modules.dispose();
@@ -93,7 +95,8 @@ void main() {
         await tester.tap(nextAiButton());
         await tester.pumpAndSettle();
         expect(ai.calls, failTest ? ['test'] : ['test', 'save']);
-        expect(draft.moduleIndex, failTest ? index : index + 1);
+        expect(draft.currentStep, failTest ? SetupStep.configuration : SetupStep.summary);
+        expect(draft.moduleIndex, index);
         expect(draft.configured.contains(SetupModule.ai), !failTest);
         expect(tester.takeException(), isNull);
       },
@@ -103,7 +106,10 @@ void main() {
     'selecting ChatGPT starts sign-in and blocks Next until verified',
     (tester) async {
       final ai = AutomaticSetupAiController()..login = Completer<void>();
-      final draft = accountChoiceDraft()..step = SetupStep.configuration.index;
+      final draft = accountChoiceDraft()
+        ..step = SetupStep.configuration.index
+        ..nightscoutUrl = 'https://example.com'
+        ..configured.add(SetupModule.nightscout);
       final modules = SetupWizardController(draft);
       draft.moduleIndex = modules.modules.indexOf(SetupModule.ai);
       modules.dispose();

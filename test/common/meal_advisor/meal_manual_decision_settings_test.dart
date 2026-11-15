@@ -44,8 +44,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Allow manual decisions'));
-    await tester.tap(find.text('Allow manual decisions'));
+    await tester.ensureVisible(find.text('Allow manual decision change'));
+    await tester.tap(find.text('Allow manual decision change'));
     await tester.pumpAndSettle();
     final saved = MealDecisionPreferences.decode(
       prefs.getString(mealDecisionPreferencesKey),
