@@ -81,6 +81,50 @@ void main() {
     },
   );
 
+  test(
+    'local setup persists nightscout credentials when upload is enabled',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPrefsProvider.overrideWith((ref) async => prefs),
+          dataSourceOptionAvailabilityProvider.overrideWith(
+            (ref) async => const DataSourceOptionAvailability(
+              aapsInstalled: true,
+              xdripInstalled: true,
+            ),
+          ),
+          nightscoutConnectionCheckProvider.overrideWithValue(
+            ({required String url, required String token}) async {},
+          ),
+          dataReceiverActivationControllerProvider.overrideWithValue(
+            DataReceiverActivationController(
+              xdripReceiverController: RecordingDataReceiverController(),
+              aapsReceiverController: RecordingDataReceiverController(),
+            ),
+          ),
+          monitorServiceEnabledProvider.overrideWith((ref) => false),
+          appEventRouterProvider.overrideWithValue(
+            RecordingSettingsEventRouter(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(applyInitialConfigurationUseCaseProvider)(
+        config: local,
+        nightscoutUrl: '  https://local-upload.test/  ',
+        nightscoutToken: ' secret-token ',
+        childName: 'Child',
+        language: applicationLanguageByCode('en'),
+        tempTargetsEnabled: true,
+      );
+      expect(prefs.getString(nightscoutUrlKey), 'https://local-upload.test/');
+      expect(prefs.getString(nightscoutTokenKey), 'secret-token');
+      expect(prefs.getBool(nightscoutTempTargetsEnabledKey), isTrue);
+    },
+  );
+
   for (final flags in [
     (false, false),
     (true, false),

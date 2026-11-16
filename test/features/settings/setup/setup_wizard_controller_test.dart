@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/auth/google_account.dart';
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature.dart';
 import 'package:diabeatthis/common/setup/domain/setup_feature_option.dart';
@@ -6,6 +7,8 @@ import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_controller.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_state.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../helpers/regression/setup_live_services.dart';
 
 void main() {
   late SetupWizardController controller;
@@ -223,4 +226,42 @@ void main() {
     );
     expect(controller.state.nightscoutUrl, 'https://new.example');
   });
+
+  test(
+    'applying null Google account switches caregiver to patient and removes nightscout configured status',
+    () {
+      final auth = SetupGoogleAuthenticationTestRepository();
+      addTearDown(auth.dispose);
+      final testController = SetupWizardController(
+        SetupWizardState(
+          config: const DataSourceConfig.defaults(),
+          language: applicationLanguageByCode('pl'),
+          name: 'Child',
+          nightscoutUrl: 'https://caregiver.test',
+          nightscoutToken: '',
+        ),
+        authentication: auth,
+      );
+      addTearDown(testController.dispose);
+
+      testController.applyGoogleAccount(
+        const GoogleAccount(uid: 'caregiver-1', displayName: 'Parent'),
+      );
+      testController.setMode(SetupDeviceMode.caregiver);
+      expect(testController.state.mode, SetupDeviceMode.caregiver);
+      testController.simulateModule(SetupModule.nightscout);
+      expect(
+        testController.state.configured.contains(SetupModule.nightscout),
+        isTrue,
+      );
+
+      testController.applyGoogleAccount(null);
+
+      expect(testController.state.mode, SetupDeviceMode.patient);
+      expect(
+        testController.state.configured.contains(SetupModule.nightscout),
+        isFalse,
+      );
+    },
+  );
 }

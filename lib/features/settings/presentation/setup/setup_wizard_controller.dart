@@ -110,6 +110,7 @@ class SetupWizardController extends ChangeNotifier {
       state.moduleIndex = 0;
       configurationRevision++;
       state.nightscoutVerification = null;
+      state.configured.remove(SetupModule.nightscout);
     }
     state.familyMembers = const [];
     state.pairingInvitation = null;
