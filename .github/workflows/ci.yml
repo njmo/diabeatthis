@@ -10,11 +10,20 @@ on:
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Free disk space for Android build
+        shell: bash
+        run: |
+          df -h /
+          # This job builds Android only; keep Java, Android SDK and NDK.
+          sudo rm -rf /usr/share/dotnet /usr/local/.ghcup /opt/ghc
+          sudo docker image prune --all --force
+          df -h /
 
       - uses: ./.github/actions/setup-flutter-project
 
@@ -25,11 +34,19 @@ jobs:
         run: python3 -m unittest discover -s tool/testing -p 'test_*.py'
 
       - name: Build Android debug APK
-        run: flutter build apk --debug --no-pub
+        run: |
+          df -h /
+          flutter build apk --debug --no-pub
+
+      - name: Report disk usage after Android build
+        if: ${{ always() }}
+        run: |
+          df -h /
+          du -sh build "$HOME/.gradle" "$ANDROID_HOME" "$FLUTTER_ROOT" || true
 
   test:
     name: Tests (shard ${{ matrix.shard }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -55,7 +72,7 @@ jobs:
   flutter:
     needs: [checks, test]
     if: ${{ always() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Require successful checks and all test shards
         env:
