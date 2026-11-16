@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_design_tokens.dart';
 import 'icon_choice_button.dart';
 
 /// Shared two-action presentation used by meal start and caregiver invitations.
@@ -20,8 +21,16 @@ class IconChoicePair extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-    borderRadius: BorderRadius.circular(20),
+    color: Theme.of(context).colorScheme.surfaceContainerLowest,
+    shape: RoundedRectangleBorder(
+      borderRadius: AppRadius.cardBorderRadius,
+      side: BorderSide(
+        color: Theme.of(context).colorScheme.outlineVariant.withValues(
+              alpha: 0.25,
+            ),
+        width: 1.0,
+      ),
+    ),
     clipBehavior: Clip.antiAlias,
     child: IntrinsicHeight(
       child: Row(
@@ -48,3 +57,4 @@ class IconChoicePair extends StatelessWidget {
     ),
   );
 }
+

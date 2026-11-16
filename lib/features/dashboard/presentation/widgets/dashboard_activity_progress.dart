@@ -31,6 +31,7 @@ class DashboardActivityProgress extends StatelessWidget {
       startedAt: activity.startedAt,
       endsAt: end,
       now: now,
+      color: const Color(0xFF10B981),
       label: remaining <= 0
           ? context.lang.dashboardActivityTimePassed
           : context.lang.dashboardActivityEndsIn(remaining),

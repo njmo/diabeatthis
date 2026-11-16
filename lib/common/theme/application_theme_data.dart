@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'app_design_tokens.dart';
+
 final applicationLightThemeProvider = Provider<ThemeData>(
   (ref) => applicationThemeData(),
 );
@@ -16,36 +18,66 @@ ThemeData applicationThemeData({
 }) {
   final defaults = ThemeData(brightness: brightness, useMaterial3: true);
   final base = defaults.copyWith(
-    textTheme: textTheme ?? GoogleFonts.nunitoSansTextTheme(defaults.textTheme),
+    textTheme: textTheme ?? GoogleFonts.interTextTheme(defaults.textTheme),
   );
 
   final isDark = brightness == Brightness.dark;
   final seeded = ColorScheme.fromSeed(
-    seedColor: const Color(0xFF096785),
+    seedColor: const Color(0xFF00A3FF),
     brightness: brightness,
   );
   final colors = seeded.copyWith(
-    surface: isDark ? const Color(0xFF111E25) : const Color(0xFFFAF8F3),
-    surfaceContainerLow: isDark
-        ? const Color(0xFF111E25)
-        : const Color(0xFFFAF8F3),
-    surfaceContainerLowest: isDark
-        ? const Color(0xFF1A2930)
-        : const Color(0xFFFFFEFC),
-    surfaceContainerHigh: isDark
-        ? const Color(0xFF233139)
-        : const Color(0xFFF5F2ED),
+    primary: const Color(0xFF00A3FF),
+    onPrimary: Colors.white,
+    primaryContainer: isDark
+        ? const Color(0xFF00A3FF).withValues(alpha: 0.20)
+        : const Color(0xFFE0F2FE),
+    onPrimaryContainer:
+        isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1),
+    secondary: const Color(0xFF38BDF8),
+    onSecondary: isDark ? const Color(0xFF0F172A) : Colors.white,
+    secondaryContainer:
+        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+    onSecondaryContainer:
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+    surface: isDark ? const Color(0xFF0F172A) : const Color(0xFFFAF8F3),
+    surfaceContainerLow:
+        isDark ? const Color(0xFF0F172A) : const Color(0xFFFAF8F3),
+    surfaceContainer:
+        isDark ? const Color(0xFF1E293B) : Colors.white,
+    surfaceContainerLowest:
+        isDark ? const Color(0xFF1E293B) : const Color(0xFFFFFEFC),
+    surfaceContainerHigh:
+        isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+    surfaceContainerHighest:
+        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+    outline: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+    outlineVariant: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+    onSurface: isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+    onSurfaceVariant:
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
   );
   return base.copyWith(
     colorScheme: colors,
     primaryColor: colors.primary,
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: colors.surfaceContainerLowest,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+      fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
+      ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: colors.outlineVariant),
+        borderSide: BorderSide(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Color(0xFF00A3FF), width: 1.5),
       ),
     ),
     scaffoldBackgroundColor: Colors.transparent,
@@ -86,10 +118,67 @@ ThemeData applicationThemeData({
       color: colors.surfaceContainerLowest,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.25)),
+      margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadius.cardBorderRadius,
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: colors.surfaceContainerLowest,
+      surfaceTintColor: Colors.transparent,
+      elevation: 6,
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadius.cardBorderRadius,
+      ),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: colors.surfaceContainerLowest,
+      surfaceTintColor: Colors.transparent,
+      elevation: 8,
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadius.sheetBorderRadius,
+      ),
+      showDragHandle: true,
+      dragHandleColor: colors.outlineVariant.withValues(alpha: 0.5),
+      dragHandleSize: const Size(36, 4),
+      clipBehavior: Clip.antiAlias,
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(0, AppSizes.buttonHeight),
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppRadius.buttonBorderRadius,
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: 14,
+        ),
+        textStyle: base.textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.1,
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, AppSizes.buttonHeight),
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppRadius.buttonBorderRadius,
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: 14,
+        ),
+        side: BorderSide(
+          color: colors.outlineVariant.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
+        textStyle: base.textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.1,
+        ),
       ),
     ),
     tabBarTheme: TabBarThemeData(
@@ -103,10 +192,12 @@ ThemeData applicationThemeData({
       dividerColor: colors.outlineVariant.withValues(alpha: .35),
     ),
     chipTheme: base.chipTheme.copyWith(
-      backgroundColor: colors.surfaceContainerHighest,
+      backgroundColor: isDark
+          ? const Color(0xFF1E293B)
+          : colors.surfaceContainerHighest,
       selectedColor: colors.primaryContainer,
-      side: BorderSide.none,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      side: BorderSide(color: colors.outline),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     ),
     expansionTileTheme: base.expansionTileTheme.copyWith(
       shape: const Border(),

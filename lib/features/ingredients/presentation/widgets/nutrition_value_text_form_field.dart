@@ -12,6 +12,9 @@ class NutritionValueTextFormField extends StatelessWidget {
   final FormFieldValidator<String>? validator;
   final int? maxLength;
   final bool compact;
+  final String? helperText;
+  final String? suffixText;
+  final TextInputAction? textInputAction;
 
   const NutritionValueTextFormField({
     super.key,
@@ -23,6 +26,9 @@ class NutritionValueTextFormField extends StatelessWidget {
     this.validator,
     this.maxLength = 30,
     this.compact = false,
+    this.helperText,
+    this.suffixText,
+    this.textInputAction,
   }) : assert(
          controller == null || initialValue == null,
          'controller and initialValue cannot be used together.',
@@ -34,6 +40,7 @@ class NutritionValueTextFormField extends StatelessWidget {
       controller: controller,
       initialValue: controller == null ? initialValue : null,
       maxLength: maxLength,
+      textInputAction: textInputAction,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]'))],
       onChanged: onChanged,
@@ -41,6 +48,8 @@ class NutritionValueTextFormField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         counterText: compact ? '' : null,
+        helperText: helperText,
+        suffixText: suffixText,
         border: const OutlineInputBorder(),
         prefixIcon: icon == null ? null : Icon(icon),
       ),

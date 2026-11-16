@@ -384,6 +384,30 @@ void main() {
       expect(container.read(ingredientDraftProvider), photoDraft);
     },
   );
+
+  test(
+    'quickAddReferenceIngredient commits draft with 1 portion and returns without StateError',
+    () {
+      flow.startReferenceIngredient();
+      expect(
+        container.read(addMealIngredientStageProvider),
+        AddMealIngredientStage.referenceIngredientForm,
+      );
+      container
+          .read(ingredientDraftProvider.notifier)
+          .setName('Pierogi z jagodami');
+      container
+          .read(ingredientDraftProvider.notifier)
+          .setCarbsPer100g('45');
+
+      final result = flow.quickAddReferenceIngredient(amount: 1.0);
+      expect(result, isNotNull);
+      expect(result!.ingredient.name, 'Pierogi z jagodami');
+      expect(result.ingredient.isReference, isTrue);
+      expect(result.amount, 1.0);
+      expect(result.ingredient.carbsPer100g, 45.0);
+    },
+  );
 }
 
 IngredientDraft reviewIngredient({bool isReference = false}) =>

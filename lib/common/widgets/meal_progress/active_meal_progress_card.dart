@@ -38,109 +38,217 @@ class ActiveMealProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderColor =
+        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final numColor =
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final mutedColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
+      color: cardBg,
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 10, 0),
-            child: Row(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: borderColor),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Nagłówek: Chip statusu + harmonogram + przyciski
+            Row(
               children: [
-                Expanded(
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                  decoration: BoxDecoration(
+                    color: (quickMeal
+                            ? const Color(0xFFFF9500)
+                            : const Color(0xFF00A3FF))
+                        .withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                   child: Text(
                     quickMeal ? lang.mealProgressQuickMeal : status,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.primary,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: quickMeal
+                          ? const Color(0xFFFF9500)
+                          : const Color(0xFF00A3FF),
                     ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    schedule,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: mutedColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (onDelete != null)
                   IconButton(
                     tooltip: lang.commonDelete,
                     onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline, size: 20),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    color: mutedColor,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 28, minHeight: 28),
                   ),
                 IconButton(
                   tooltip: lang.mealProgressInterrupt,
                   onPressed: onInterrupt,
-                  icon: const Icon(Icons.close, size: 20),
+                  icon: const Icon(Icons.close, size: 18),
+                  color: mutedColor,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 28, minHeight: 28),
                 ),
               ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 8),
+            // Nazwa posiłku
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: numColor,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (quickMeal) ...[
+              const SizedBox(height: 2),
+              Text(
+                status,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: mutedColor,
+                ),
+              ),
+            ],
+            const SizedBox(height: 10),
+            // Paski kroków (steps)
+            steps,
+            if (progressAction != null) ...[
+              const SizedBox(height: 8),
+              progressAction!,
+            ],
+            const SizedBox(height: 12),
+            // Przyciski akcji (kompaktowe, wysokość 38px)
+            Row(
               children: [
-                Text(name, style: theme.textTheme.titleLarge),
-                const SizedBox(height: 5),
-                Text(schedule, style: theme.textTheme.bodySmall),
-                const SizedBox(height: 5),
-                if (quickMeal)
-                  Text(
-                    status,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                const SizedBox(height: 17),
-                steps,
-                if (progressAction != null) progressAction!,
-                const SizedBox(height: 16),
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        flex: 7,
-                        child: FilledButton(
-                          onPressed: onAction,
-                          child: Text(actionLabel, textAlign: TextAlign.center),
+                Expanded(
+                  flex: 7,
+                  child: SizedBox(
+                    height: 38,
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF00A3FF),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      if (onAddFood != null) ...[
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 3,
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                              ),
-                            ),
-                            onPressed: onAddFood,
-                            child: Text(
-                              addFoodLabel ?? lang.mealProgressAddFood,
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
+                      onPressed: onAction,
+                      child: Text(
+                        actionLabel,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
                         ),
-                      ],
-                    ],
+                      ),
+                    ),
                   ),
                 ),
-                if (onEarlierFinished != null)
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      if (onEarlierFinished != null)
-                        TextButton(
-                          onPressed: onEarlierFinished,
-                          child: Text(lang.mealEatingFinishedEarlier),
+                if (onAddFood != null) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 4,
+                    child: SizedBox(
+                      height: 38,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: isDark
+                              ? const Color(0xFFF8FAFC)
+                              : const Color(0xFF0F172A),
+                          side: BorderSide(color: borderColor),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
-                    ],
+                        onPressed: onAddFood,
+                        child: Text(
+                          addFoodLabel ?? lang.mealProgressAddFood,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
+                ],
               ],
             ),
-          ),
-          if (footer != null) footer!,
-        ],
+            if (onEarlierFinished != null) ...[
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  onPressed: onEarlierFinished,
+                  child: Text(
+                    lang.mealEatingFinishedEarlier,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: mutedColor,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            if (footer != null) ...[
+              const SizedBox(height: 8),
+              footer!,
+            ],
+          ],
+        ),
       ),
     );
   }

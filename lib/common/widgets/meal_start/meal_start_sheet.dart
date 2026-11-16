@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
+import '../../theme/app_design_tokens.dart';
 import '../keyboard_aware_bottom_sheet.dart';
 import 'meal_start_header.dart';
 
@@ -51,8 +52,8 @@ class MealStartSheet extends HookWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 640),
         child: Material(
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          color: Theme.of(context).colorScheme.surfaceContainerLowest,
+          borderRadius: AppRadius.sheetBorderRadius,
           clipBehavior: Clip.antiAlias,
           child: !scrollAll
               ? KeyboardAwareBottomSheet(

@@ -540,6 +540,33 @@ class AddMealIngredientStageNotifier extends Notifier<AddMealIngredientStage> {
     return ref.read(mealIngredientsDraftProvider);
   }
 
+  MealIngredientsDraft? quickAddReferenceIngredient({double amount = 1.0}) {
+    var ingredientDraft = ref.read(ingredientDraftProvider);
+    if (!_editingReference) {
+      _referenceDraft = ingredientDraft;
+    }
+    if (_editingReference &&
+        ingredientDraft != _originalReference &&
+        ingredientDraft.getIngredientIdOrNull() != null) {
+      ingredientDraft = ingredientDraft.asNewDraft();
+      ref
+          .read(ingredientDraftProvider.notifier)
+          .overrideDraft(ingredientDraft);
+    }
+    final mealIngredientsDraft = ref.read(
+      mealIngredientsDraftProvider.notifier,
+    );
+    mealIngredientsDraft.setIngredient(ingredientDraft);
+    mealIngredientsDraft.setIngredientPortion(const PortionSelection.empty());
+    prefetchIngredientIcon(ref, ingredientDraft);
+
+    mealIngredientsDraft.applyAmountForm(
+      amount: amount,
+      confidence: ref.read(mealIngredientConfidenceDraftProvider),
+    );
+    return ref.read(mealIngredientsDraftProvider);
+  }
+
   void toOppositeStage() {
     switch (state) {
       case AddMealIngredientStage.dismiss:

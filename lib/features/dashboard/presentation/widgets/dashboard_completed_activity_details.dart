@@ -10,56 +10,50 @@ class DashboardCompletedActivityDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final numColor =
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final mutedColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
     final heading = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
           activity.activityName,
-          maxLines: 2,
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleSmall,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: numColor,
+          ),
         ),
+        const SizedBox(height: 1),
         Text(
           context.lang.activitySummaryReady,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: mutedColor,
           ),
         ),
       ],
     );
-    final actions = Wrap(
-      spacing: 4,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        ActivitySummaryAction(
-          activityLogId: activity.id,
-          summarized: false,
-          intensity: activity.intensity,
-          notes: activity.notes,
-          compact: true,
-          emphasized: true,
-        ),
-      ],
+    final actions = ActivitySummaryAction(
+      activityLogId: activity.id,
+      summarized: false,
+      intensity: activity.intensity,
+      notes: activity.notes,
+      compact: true,
+      emphasized: true,
     );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        LayoutBuilder(
-          builder: (context, constraints) =>
-              constraints.maxWidth >= 240 &&
-                  MediaQuery.textScalerOf(context).scale(14) <= 16
-              ? Row(
-                  children: [
-                    Expanded(child: heading),
-                    const SizedBox(width: 8),
-                    actions,
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [heading, const SizedBox(height: 4), actions],
-                ),
-        ),
+        Expanded(child: heading),
+        const SizedBox(width: 8),
+        actions,
       ],
     );
   }

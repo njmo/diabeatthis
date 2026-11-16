@@ -27,6 +27,7 @@ class DashboardTargetProgress extends StatelessWidget {
       startedAt: target.createdAt,
       endsAt: end,
       now: now,
+      color: const Color(0xFF00A3FF),
       label: context.lang.dashboardActivityTargetRemaining(
         remaining,
         TimeOfDay.fromDateTime(end.toLocal()).format(context),

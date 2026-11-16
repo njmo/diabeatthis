@@ -72,7 +72,7 @@ class MealListToday extends ConsumerWidget {
         : null;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -141,17 +141,12 @@ class MealListToday extends ConsumerWidget {
               onOpen: () => openMealCompletion(context, mealId: meal.id),
               onDelete: deleteAction(meal),
             ),
-          if (groups.isNotEmpty)
-            MealProgressSectionHeading(title: lang.dashboardPlannedMealsTitle),
           for (final group in groups) ...[
             MealProgressSectionHeading(
-              title: mealScheduleDateLabel(context, group.date, now),
-              date:
-                  group.date == null ||
-                      mealScheduleDateLabel(context, group.date, now) ==
-                          mealScheduleFullDate(context, group.date!)
-                  ? null
-                  : mealScheduleFullDate(context, group.date!),
+              title: lang.dashboardPlannedMealsTitle,
+              date: group.date != null
+                  ? '${mealScheduleDateLabel(context, group.date, now)} • ${mealScheduleFullDate(context, group.date!)}'
+                  : null,
             ),
             for (final meal in group.meals)
               MealScheduleTile(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_design_tokens.dart';
+
 class NutritionMetricTile extends StatelessWidget {
   final IconData? icon;
   final Widget? leading;
@@ -28,28 +30,40 @@ class NutritionMetricTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final effectiveColor = accentColor ?? iconColor;
+    final backgroundColor = accentColor?.withValues(alpha: 0.12) ??
+        (emphasized
+            ? colorScheme.primaryContainer
+            : (isDark
+                ? const Color(0xFF1E293B)
+                : const Color(0xFFF8FAFC)));
+
+    final borderColor = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
+
+    final effectiveIconColor = iconColor ??
+        (emphasized
+            ? colorScheme.onPrimaryContainer
+            : colorScheme.onSurfaceVariant);
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color:
-            accentColor?.withValues(alpha: 0.12) ??
-            (emphasized
-                ? colorScheme.primaryContainer
-                : colorScheme.surfaceContainerHighest),
-        borderRadius: BorderRadius.circular(8),
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor, width: 1.0),
+        boxShadow: AppShadows.subtle,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: [
             IconTheme.merge(
               data: IconThemeData(
                 size: iconSize,
-                color:
-                    iconColor ??
-                    (emphasized
-                        ? colorScheme.onPrimaryContainer
-                        : colorScheme.onSurfaceVariant),
+                color: effectiveIconColor,
               ),
               child: leading ?? Icon(icon),
             ),
@@ -57,30 +71,29 @@ class NutritionMetricTile extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     label,
                     style: textTheme.labelSmall?.copyWith(
-                      color: emphasized
-                          ? colorScheme.onPrimaryContainer
-                          : colorScheme.onSurfaceVariant,
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     value,
-                    style:
-                        (accentColor == null
-                                ? textTheme.titleMedium
-                                : textTheme.headlineSmall)
-                            ?.copyWith(
-                              color:
-                                  accentColor ??
-                                  (emphasized
-                                      ? colorScheme.onPrimaryContainer
-                                      : null),
-                              fontWeight: emphasized ? FontWeight.w700 : null,
-                            ),
+                    style: (accentColor == null
+                            ? textTheme.titleMedium
+                            : textTheme.headlineSmall)
+                        ?.copyWith(
+                          color: isDark
+                              ? const Color(0xFFF1F5F9)
+                              : const Color(0xFF0F172A),
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                 ],
               ),
@@ -91,3 +104,4 @@ class NutritionMetricTile extends StatelessWidget {
     );
   }
 }
+

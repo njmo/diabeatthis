@@ -20,7 +20,9 @@ void main() {
             ),
           ),
         ],
-        child: localizedMaterialApp(home: const Scaffold(body: DashboardFAB())),
+        child: localizedMaterialApp(
+          home: const Scaffold(floatingActionButton: DashboardFAB()),
+        ),
       ),
     );
     await tester.pumpAndSettle();

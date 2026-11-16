@@ -35,7 +35,9 @@ class NightscoutPanel extends ConsumerWidget {
       readings: deviceStatusValue != null
           ? DeviceStatusDashboard(deviceStatus: deviceStatusValue)
           : glucoseValue != null
-          ? GlucoseDashboard(glucose: glucoseValue)
+          ? GlucoseDashboard(
+              glucose: glucoseValue,
+            )
           : DashboardGlucoseReading(
               value: null,
               color: Theme.of(context).colorScheme.onSurfaceVariant,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_design_tokens.dart';
+
 class IconChoiceButton extends StatelessWidget {
   const IconChoiceButton({
     super.key,
@@ -24,7 +26,7 @@ class IconChoiceButton extends StatelessWidget {
       enabled: onPressed != null,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadius.cardBorderRadius,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
           child: Column(
@@ -36,10 +38,12 @@ class IconChoiceButton extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: emphasized
                       ? colors.primary.withValues(alpha: 0.12)
-                      : colors.surface,
-                  border: emphasized
-                      ? Border.all(color: colors.primary.withValues(alpha: 0.6))
-                      : null,
+                      : colors.surfaceContainerHighest.withValues(alpha: 0.5),
+                  border: Border.all(
+                    color: (emphasized ? colors.primary : colors.outlineVariant)
+                        .withValues(alpha: emphasized ? 0.6 : 0.3),
+                    width: 1.2,
+                  ),
                 ),
                 child: Icon(icon, size: 32, color: foreground),
               ),
@@ -59,3 +63,4 @@ class IconChoiceButton extends StatelessWidget {
     );
   }
 }
+

@@ -17,6 +17,7 @@ class IngredientListFilter extends HookConsumerWidget {
   final EdgeInsetsGeometry padding;
   final List<Widget> trailingActions;
   final bool allowIngredientSelection;
+  final bool autofocus;
 
   const IngredientListFilter({
     super.key,
@@ -24,6 +25,7 @@ class IngredientListFilter extends HookConsumerWidget {
     this.initialQuery = '',
     this.trailingActions = const [],
     this.allowIngredientSelection = true,
+    this.autofocus = false,
     required this.onQueryChanged,
     this.padding = const EdgeInsets.fromLTRB(12, 8, 12, 6),
   });
@@ -68,6 +70,7 @@ class IngredientListFilter extends HookConsumerWidget {
                   child: SearchTextField(
                     controller: queryController,
                     hintText: hintText,
+                    autofocus: autofocus,
                     onChanged: onQueryChanged,
                   ),
                 ),

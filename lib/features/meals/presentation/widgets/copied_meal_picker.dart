@@ -23,18 +23,21 @@ class CopiedMealPicker extends HookConsumerWidget {
     final scrollController = useScrollController();
     final results = ref.watch(copiedFromMealByQueryProvider(query.value));
     final mediaQuery = MediaQuery.of(context);
+    final availableHeight = mediaQuery.size.height - mediaQuery.padding.top;
+    final keyboardInset = mediaQuery.viewInsets.bottom;
+    final maxSheetHeight = keyboardInset > 0
+        ? (availableHeight - keyboardInset).clamp(240.0, availableHeight)
+        : (availableHeight * 0.75).clamp(240.0, availableHeight);
 
     return SheetSurface(
-      child: Padding(
-        padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
+      child: AnimatedPadding(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.only(bottom: keyboardInset),
         child: SafeArea(
           top: false,
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight:
-                  (mediaQuery.size.height * 0.88 - mediaQuery.viewInsets.bottom)
-                      .clamp(200.0, mediaQuery.size.height),
-            ),
+            constraints: BoxConstraints(maxHeight: maxSheetHeight),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: Column(
@@ -61,6 +64,7 @@ class CopiedMealPicker extends HookConsumerWidget {
                           Offstage(
                             offstage: selected.value != null,
                             child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
@@ -80,12 +84,13 @@ class CopiedMealPicker extends HookConsumerWidget {
                                         ).colorScheme.onSurfaceVariant,
                                       ),
                                 ),
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 16),
                                 IngredientListFilter(
                                   allowIngredientSelection: ref
                                       .watch(mealFormActionsProvider)
                                       .allowLocalLookups,
                                   initialQuery: initialQuery,
+                                  autofocus: true,
                                   hintText: context.lang.copiedMealSearchHint,
                                   onQueryChanged: (value) =>
                                       query.value = value,
@@ -96,12 +101,19 @@ class CopiedMealPicker extends HookConsumerWidget {
                                   context.lang.copiedMealHistoryTab,
                                   style: Theme.of(context).textTheme.titleSmall,
                                 ),
-                                Expanded(
-                                  child: results.when(
-                                    loading: () => const Center(
+                                const SizedBox(height: 4),
+                                results.when(
+                                  loading: () => const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 24),
+                                    child: Center(
                                       child: CircularProgressIndicator(),
                                     ),
-                                    error: (error, stackTrace) => Center(
+                                  ),
+                                  error: (error, stackTrace) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
+                                    child: Center(
                                       child: TextButton(
                                         onPressed: () => ref.invalidate(
                                           copiedFromMealByQueryProvider(
@@ -113,19 +125,27 @@ class CopiedMealPicker extends HookConsumerWidget {
                                         ),
                                       ),
                                     ),
-                                    data: (items) {
-                                      final copiedMeals = [...items]
-                                        ..sort(
-                                          (a, b) => b.date.compareTo(a.date),
-                                        );
-                                      if (copiedMeals.isEmpty) {
-                                        return Center(
+                                  ),
+                                  data: (items) {
+                                    final copiedMeals = [...items]
+                                      ..sort(
+                                        (a, b) => b.date.compareTo(a.date),
+                                      );
+                                    if (copiedMeals.isEmpty) {
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 20,
+                                        ),
+                                        child: Center(
                                           child: Text(
                                             context.lang.copiedMealNoResults,
                                           ),
-                                        );
-                                      }
-                                      return ListView.builder(
+                                        ),
+                                      );
+                                    }
+                                    return Flexible(
+                                      child: ListView.builder(
+                                        shrinkWrap: true,
                                         controller: scrollController,
                                         itemCount: copiedMeals.length,
                                         itemBuilder: (context, index) =>
@@ -139,9 +159,9 @@ class CopiedMealPicker extends HookConsumerWidget {
                                                     copiedMeals[index];
                                               },
                                             ),
-                                      );
-                                    },
-                                  ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),

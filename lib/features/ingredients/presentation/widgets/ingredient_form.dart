@@ -49,6 +49,7 @@ class IngredientForm extends ConsumerWidget {
       maxLength: _ingredientNameMaxLength,
       minLines: 1,
       maxLines: sectioned ? 3 : 1,
+      textInputAction: TextInputAction.next,
       onChanged: draft.setName,
       validator: _validateName,
       decoration: InputDecoration(
@@ -76,6 +77,7 @@ class IngredientForm extends ConsumerWidget {
       TextFormField(
         initialValue: draft.getBrand(),
         maxLength: 30,
+        textInputAction: TextInputAction.next,
         onChanged: draft.setBrand,
         validator: _validateOptionalBrand,
         decoration: InputDecoration(

@@ -69,12 +69,27 @@ class AddMealIngredientActions extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
         ],
-        FilledButton(
-          onPressed: canContinue
-              ? () => IngredientFlowActionsController(ref).continueFlow(context)
-              : null,
-          child: Text(label, maxLines: 2, textAlign: TextAlign.center),
-        ),
+        if (stage == AddMealIngredientStage.referenceIngredientForm) ...[
+          FilledButton.icon(
+            onPressed: () =>
+                IngredientFlowActionsController(ref).quickAddReferenceDish(context),
+            icon: const Icon(Icons.check),
+            label: Text(lang.ingredientQuickAddOnePortion),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: () =>
+                IngredientFlowActionsController(ref).continueFlow(context),
+            child: Text(lang.ingredientCustomizePortion),
+          ),
+        ] else ...[
+          FilledButton(
+            onPressed: canContinue
+                ? () => IngredientFlowActionsController(ref).continueFlow(context)
+                : null,
+            child: Text(label, maxLines: 2, textAlign: TextAlign.center),
+          ),
+        ],
       ],
     );
   }

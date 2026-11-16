@@ -60,4 +60,16 @@ class IngredientFlowActionsController {
       }
     }
   }
+
+  Future<void> quickAddReferenceDish(BuildContext context) async {
+    final formKey = ref.read(ingredientFormKeyProvider);
+    if (!validateForm(formKey)) return;
+
+    FocusScope.of(context).unfocus();
+    final controller = ref.read(addMealIngredientStageProvider.notifier);
+    final result = controller.quickAddReferenceIngredient(amount: 1.0);
+    if (result != null && context.mounted) {
+      Navigator.of(context).pop(result);
+    }
+  }
 }

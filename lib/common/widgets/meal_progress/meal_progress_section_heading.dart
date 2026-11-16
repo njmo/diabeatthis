@@ -8,20 +8,42 @@ class MealProgressSectionHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor =
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final dateColor =
+        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+
     return Padding(
-      padding: const EdgeInsets.only(top: 14, bottom: 10),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 4,
-        crossAxisAlignment: WrapCrossAlignment.center,
+      padding: const EdgeInsets.only(top: 8, bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(title, style: theme.textTheme.titleMedium),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: titleColor,
+            ),
+          ),
           if (date != null)
-            Text(
-              date!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF334155)
+                    : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                date!,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: dateColor,
+                ),
               ),
             ),
         ],

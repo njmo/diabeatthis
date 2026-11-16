@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/language.dart';
+import '../../theme/app_design_tokens.dart';
 
 class MealStartActions extends StatelessWidget {
   const MealStartActions({
@@ -28,14 +29,8 @@ class MealStartActions extends StatelessWidget {
       if (showDecisionChange) ...[
         Tooltip(
           message: context.lang.uiChooseADecisionManually,
-          child: TextButton.icon(
+          child: OutlinedButton.icon(
             onPressed: onChangeDecision,
-            style: TextButton.styleFrom(
-              backgroundColor: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerHighest,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
             icon: const Icon(Icons.edit_outlined),
             label: Text(
               hasAdvice
@@ -59,3 +54,4 @@ class MealStartActions extends StatelessWidget {
     ],
   );
 }
+

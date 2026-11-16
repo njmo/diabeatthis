@@ -91,6 +91,7 @@ class IngredientSearch extends HookConsumerWidget {
             autovalidateMode: AutovalidateMode.disabled,
             child: TextFormField(
               controller: queryController,
+              autofocus: true,
               maxLength: _ingredientSearchMaxLength,
               onChanged: (value) {
                 ref
@@ -153,12 +154,15 @@ class IngredientSearch extends HookConsumerWidget {
             const SizedBox(height: 8),
           ],
           if (!isPhotoSearchActive)
-            SizedBox(
-              height: (MediaQuery.sizeOf(context).height * 0.42).clamp(
-                200.0,
-                440.0,
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: (MediaQuery.sizeOf(context).height * 0.32).clamp(
+                  140.0,
+                  280.0,
+                ),
               ),
               child: IngredientCatalogResults(
+                shrinkWrap: true,
                 query: query,
                 selectedLocalId: selectedIngredient.map(
                   draft: (_) => null,

@@ -197,7 +197,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Dodaj przez zdjęcia'), findsOneWidget);
       expect(find.text('Skanuj kod'), findsOneWidget);
-      expect(find.text('Danie referencyjne'), findsOneWidget);
+      expect(find.text('Gotowe danie'), findsOneWidget);
       await tester.tap(find.text('Wpisz ręcznie'));
       await tester.pumpAndSettle();
       expect(find.text('Nowy jogurt'), findsOneWidget);

@@ -54,7 +54,7 @@ class AddMealPage extends HookConsumerWidget {
     final draft = ref.watch(mealDraftProvider);
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) const SheetHeightRequest(0.9).dispatch(context);
+        if (context.mounted) const SheetHeightRequest(0.75).dispatch(context);
       });
       return null;
     }, const []);

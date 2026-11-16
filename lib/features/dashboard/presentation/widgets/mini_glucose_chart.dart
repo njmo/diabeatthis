@@ -99,9 +99,9 @@ class MiniGlucoseChartPainter extends CustomPainter {
   static const lowThreshold = 70.0;
   static const highThreshold = 180.0;
   static const veryHighThreshold = 250.0;
-  static const lowColor = Color(0xFFE53935);
-  static const targetColor = Color(0xFF43A047);
-  static const highColor = Color(0xFFFBC02D);
+  static const lowColor = Color(0xFFEF4444);
+  static const targetColor = Color(0xFF10B981);
+  static const highColor = Color(0xFFF59E0B);
 
   final List<Glucose> values;
   final Color? gridColor;
@@ -129,7 +129,42 @@ class MiniGlucoseChartPainter extends CustomPainter {
     final h = size.height - topPad - bottomPad;
     final w = size.width;
 
-    if (gridColor != null) {
+    Offset pointFor(double x, double value) {
+      final v = value.clamp(minY, maxY).toDouble();
+      final t = (v - minY) / (maxY - minY); // 0..1
+      final y = topPad + (1.0 - t) * h;
+      return Offset(x, y);
+    }
+
+    // Target range band (Mockup 2 style) - only when gridColor is provided
+    if (gridColor != null && maxY > lowThreshold && minY < highThreshold) {
+      final yLow = pointFor(0, lowThreshold).dy;
+      final yHigh = pointFor(0, math.min(highThreshold, maxY)).dy;
+      final bandTop = math.min(yLow, yHigh);
+      final bandBottom = math.max(yLow, yHigh);
+      if (bandBottom > bandTop) {
+        canvas.drawRect(
+          Rect.fromLTRB(0, bandTop, w, bandBottom),
+          Paint()..color = const Color(0xFF10B981).withValues(alpha: 0.08),
+        );
+        drawDashedChartLine(
+          canvas,
+          Offset(0, bandTop),
+          Offset(w, bandTop),
+          Paint()
+            ..color = const Color(0xFF10B981).withValues(alpha: 0.3)
+            ..strokeWidth = 0.8,
+        );
+        drawDashedChartLine(
+          canvas,
+          Offset(0, bandBottom),
+          Offset(w, bandBottom),
+          Paint()
+            ..color = const Color(0xFF10B981).withValues(alpha: 0.3)
+            ..strokeWidth = 0.8,
+        );
+      }
+    } else if (gridColor != null) {
       final gridPaint = Paint()
         ..color = gridColor!
         ..strokeWidth = 0.6;
@@ -139,16 +174,9 @@ class MiniGlucoseChartPainter extends CustomPainter {
       }
     }
 
-    Offset pointFor(double x, double value) {
-      final v = value.clamp(minY, maxY).toDouble();
-      final t = (v - minY) / (maxY - minY); // 0..1
-      final y = topPad + (1.0 - t) * h;
-      return Offset(x, y);
-    }
-
     Paint segPaint(Color c) => Paint()
       ..color = c
-      ..strokeWidth = 1.6
+      ..strokeWidth = 2.4
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
@@ -175,7 +203,7 @@ class MiniGlucoseChartPainter extends CustomPainter {
             timeline.fractionAt(reading.date) * w,
             reading.sgv.toDouble(),
           ),
-          2,
+          3,
           Paint()..color = _colorFor(reading.sgv.toDouble()),
         );
         continue;
@@ -222,6 +250,34 @@ class MiniGlucoseChartPainter extends CustomPainter {
           }
         }
       }
+    }
+
+    // Pulse dot on current reading (Mockup 2 indicator)
+    if (timeline.segments.isNotEmpty && timeline.segments.last.isNotEmpty) {
+      final latest = timeline.segments.last.last;
+      final latestOffset = pointFor(
+        timeline.fractionAt(latest.date) * w,
+        latest.sgv.toDouble(),
+      );
+      final c = _colorFor(latest.sgv.toDouble());
+      canvas.drawCircle(
+        latestOffset,
+        5.0,
+        Paint()..color = Colors.white,
+      );
+      canvas.drawCircle(
+        latestOffset,
+        5.0,
+        Paint()
+          ..color = c
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0,
+      );
+      canvas.drawCircle(
+        latestOffset,
+        2.5,
+        Paint()..color = c,
+      );
     }
   }
 

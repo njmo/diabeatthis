@@ -14,12 +14,14 @@ class IngredientCatalogResults extends ConsumerStatefulWidget {
     this.selectedLocalId,
     this.selectedItem,
     this.includeReferenceIngredients = true,
+    this.shrinkWrap = false,
     super.key,
   });
   final String query;
   final int? selectedLocalId;
   final IngredientSearchItem? selectedItem;
   final bool includeReferenceIngredients;
+  final bool shrinkWrap;
   final Future<void> Function(IngredientSearchItem item) onSelected;
   @override
   ConsumerState<IngredientCatalogResults> createState() =>
@@ -102,7 +104,59 @@ class IngredientCatalogResultsState
               (item) => widget.includeReferenceIngredients || !item.isReference,
             )
             .toList(growable: false);
+    final list = ListView.separated(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      shrinkWrap: widget.shrinkWrap,
+      itemCount: items.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 4),
+      itemBuilder: (context, index) {
+        final item = items[index];
+        final tile = IngredientCatalogResultTile(
+          item: item,
+          plain: selected != null,
+          selected:
+              (widget.selectedLocalId != null &&
+                  widget.selectedLocalId == item.localIngredientId) ||
+              widget.selectedItem?.identity == item.identity,
+          selecting: selectingIdentity == item.identity.stableKey,
+          onTap: selectingIdentity == null ? () => select(item) : null,
+        );
+        if (index != 0 ||
+            selected == null ||
+            item.identity != selected.identity) {
+          return tile;
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            tile,
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: Divider(),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Text(
+                lang.catalogOtherResults,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            if (items.length == 1 &&
+                !state.loadingLocal &&
+                !state.loadingRemote)
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(lang.ingredientSearchEmpty),
+              ),
+          ],
+        );
+      },
+    );
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (state.loadingLocal || state.loadingRemote)
@@ -118,57 +172,8 @@ class IngredientCatalogResultsState
             ),
           ),
         if (selectionFailed) Text(lang.catalogSelectFailed),
-        Expanded(
-          child: ListView.separated(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 4),
-            itemBuilder: (context, index) {
-              final item = items[index];
-              final tile = IngredientCatalogResultTile(
-                item: item,
-                plain: selected != null,
-                selected:
-                    (widget.selectedLocalId != null &&
-                        widget.selectedLocalId == item.localIngredientId) ||
-                    widget.selectedItem?.identity == item.identity,
-                selecting: selectingIdentity == item.identity.stableKey,
-                onTap: selectingIdentity == null ? () => select(item) : null,
-              );
-              if (index != 0 ||
-                  selected == null ||
-                  item.identity != selected.identity) {
-                return tile;
-              }
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  tile,
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                    child: Divider(),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                    child: Text(
-                      lang.catalogOtherResults,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  if (items.length == 1 &&
-                      !state.loadingLocal &&
-                      !state.loadingRemote)
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text(lang.ingredientSearchEmpty),
-                    ),
-                ],
-              );
-            },
-          ),
-        ),
+        if (items.isNotEmpty)
+          widget.shrinkWrap ? Flexible(child: list) : Expanded(child: list),
         if (!state.loadingLocal && !state.loadingRemote && items.isEmpty)
           Padding(
             padding: const EdgeInsets.all(12),

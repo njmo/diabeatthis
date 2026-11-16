@@ -15,23 +15,45 @@ class StatusInfoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderColor =
+        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final isActivity = icon == Icons.sports_score ||
+        icon == Icons.directions_run_rounded ||
+        icon == Icons.fitness_center_rounded;
+    final iconColor =
+        isActivity ? const Color(0xFF10B981) : const Color(0xFF00A3FF);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBg,
         borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, color: theme.colorScheme.primary),
-            const SizedBox(width: 12),
-            Expanded(child: child),
-            if (trailing != null) ...[const SizedBox(width: 8), trailing!],
-          ],
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, size: 17, color: iconColor),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: child),
+          if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+        ],
       ),
     );
   }

@@ -6,9 +6,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../app/router/app_router.dart' as routes;
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_category.dart';
+import '../../../../common/theme/app_design_tokens.dart';
 import '../../../../common/widgets/anchored_fab_menu.dart';
 import '../../../../common/widgets/fab_action_option.dart';
-import '../../../../common/widgets/responsive_metric_list.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../activity/data/providers/activity_provider.dart';
@@ -41,123 +41,6 @@ class DashboardFAB extends HookConsumerWidget with Logging {
       onDismiss: () => open.value = false,
       actions: [
         if (open.value) ...[
-          ResponsiveMetricList(
-            maxColumns: 2,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              FabActionOption(
-                tile: true,
-                accent: Theme.of(context).colorScheme.primary,
-                icon: Icons.bakery_dining_rounded,
-                label: context.lang.dashboardQuickMeal,
-                enabled: quickMealEnabled,
-                onTap: () async {
-                  open.value = false;
-                  final blockingMeal = await ref.refresh(
-                    currentMealBlockingActivationProvider.future,
-                  );
-                  if (blockingMeal != null) {
-                    return;
-                  }
-                  if (!context.mounted) {
-                    return;
-                  }
-                  ref.read(mealDraftProvider.notifier).reset();
-                  final mealIngredient =
-                      await showModalBottomSheet<MealIngredientsDraft>(
-                        context: context,
-                        useRootNavigator: false,
-                        isScrollControlled: true,
-                        builder: (_) => AddMealIngredient(),
-                      );
-                  if (mealIngredient != null) {
-                    final draft = ref.read(mealDraftProvider.notifier);
-                    draft.addMealIngredient(mealIngredient);
-                    draft.setCategory(MealCategory.snack);
-                    draft.setName("QM: ${mealIngredient.ingredient.name}");
-                    final quickMealDraft = ref.read(mealDraftProvider);
-                    late final Meal addedMeal;
-                    try {
-                      addedMeal = await ref
-                          .read(addMealUseCaseProvider)
-                          .call(quickMealDraft);
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(_addMealErrorMessage(context, e)),
-                          ),
-                        );
-                      }
-                      ref.read(mealDraftProvider.notifier).reset();
-                      return;
-                    }
-
-                    if (!context.mounted) {
-                      return;
-                    }
-
-                    final result = await showMealStatusDialog(
-                      context: context,
-                      meal: addedMeal,
-                    );
-                    if (result != null && context.mounted) {
-                      await handleMealStatusDialogResult(
-                        context: context,
-                        ref: ref,
-                        meal: addedMeal,
-                        result: result,
-                        openSummaryAfterEaten: false,
-                      );
-                    }
-                    ref.read(mealDraftProvider.notifier).reset();
-                  }
-                },
-              ),
-              FabActionOption(
-                tile: true,
-                accent: const Color(0xFFE4B65E),
-                icon: Icons.local_drink_outlined,
-                label: context.lang.dashboardRecordLowTreatment,
-                onTap: () async {
-                  open.value = false;
-                  await showLowTreatmentSheet(context);
-                },
-              ),
-              FabActionOption(
-                tile: true,
-                accent: const Color(0xFF62CBB2),
-                icon: Icons.directions_run,
-                label: context.lang.dashboardStartActivity,
-                onTap: () async {
-                  open.value = false;
-                  final action =
-                      await showModalBottomSheet<DashboardActivityAction>(
-                        context: context,
-                        useRootNavigator: false,
-                        isScrollControlled: true,
-                        builder: (_) => const DashboardActivitySheet(),
-                      );
-                  if (action == null) return;
-                  if (!context.mounted) return;
-
-                  await _saveActivityLog(context, ref, action);
-                },
-              ),
-              FabActionOption(
-                tile: true,
-                accent: const Color(0xFFB9A0DE),
-                icon: Icons.event_note_outlined,
-                label: context.lang.dashboardRegisterStress,
-                onTap: () async {
-                  open.value = false;
-                  await showManualEventSheet(context);
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
           MealPhotoAction(
             tile: true,
             horizontal: true,
@@ -167,7 +50,7 @@ class DashboardFAB extends HookConsumerWidget with Logging {
           FabActionOption(
             tile: true,
             horizontal: true,
-            accent: Theme.of(context).colorScheme.primary,
+            accent: AppColors.meal,
             icon: Icons.restaurant,
             label: context.lang.dashboardPlanMeal,
             onTap: () {
@@ -175,6 +58,138 @@ class DashboardFAB extends HookConsumerWidget with Logging {
               context.router.push(routes.AddMealRoute());
               open.value = false;
             },
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Divider(
+              height: 1,
+              thickness: 1,
+              color: Theme.of(context).colorScheme.outlineVariant.withValues(
+                    alpha: 0.25,
+                  ),
+            ),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: FabActionOption(
+                  compactCircle: true,
+                  accent: AppColors.hypo,
+                  icon: Icons.local_drink_outlined,
+                  label: context.lang.dashboardRecordLowTreatment,
+                  onTap: () async {
+                    open.value = false;
+                    await showLowTreatmentSheet(context);
+                  },
+                ),
+              ),
+              Expanded(
+                child: FabActionOption(
+                  compactCircle: true,
+                  accent: AppColors.quickSnack,
+                  icon: Icons.bakery_dining_rounded,
+                  label: context.lang.dashboardQuickMeal,
+                  enabled: quickMealEnabled,
+                  onTap: () async {
+                    open.value = false;
+                    final blockingMeal = await ref.refresh(
+                      currentMealBlockingActivationProvider.future,
+                    );
+                    if (blockingMeal != null) {
+                      return;
+                    }
+                    if (!context.mounted) {
+                      return;
+                    }
+                    ref.read(mealDraftProvider.notifier).reset();
+                    final mealIngredient =
+                        await showModalBottomSheet<MealIngredientsDraft>(
+                          context: context,
+                          useRootNavigator: false,
+                          isScrollControlled: true,
+                          builder: (_) => AddMealIngredient(),
+                        );
+                    if (mealIngredient != null) {
+                      final draft = ref.read(mealDraftProvider.notifier);
+                      draft.addMealIngredient(mealIngredient);
+                      draft.setCategory(MealCategory.snack);
+                      draft.setName("QM: ${mealIngredient.ingredient.name}");
+                      final quickMealDraft = ref.read(mealDraftProvider);
+                      late final Meal addedMeal;
+                      try {
+                        addedMeal = await ref
+                            .read(addMealUseCaseProvider)
+                            .call(quickMealDraft);
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(_addMealErrorMessage(context, e)),
+                            ),
+                          );
+                        }
+                        ref.read(mealDraftProvider.notifier).reset();
+                        return;
+                      }
+
+                      if (!context.mounted) {
+                        return;
+                      }
+
+                      final result = await showMealStatusDialog(
+                        context: context,
+                        meal: addedMeal,
+                      );
+                      if (result != null && context.mounted) {
+                        await handleMealStatusDialogResult(
+                          context: context,
+                          ref: ref,
+                          meal: addedMeal,
+                          result: result,
+                          openSummaryAfterEaten: false,
+                        );
+                      }
+                      ref.read(mealDraftProvider.notifier).reset();
+                    }
+                  },
+                ),
+              ),
+              Expanded(
+                child: FabActionOption(
+                  compactCircle: true,
+                  accent: AppColors.activity,
+                  icon: Icons.directions_run,
+                  label: context.lang.dashboardStartActivity,
+                  onTap: () async {
+                    open.value = false;
+                    final action =
+                        await showModalBottomSheet<DashboardActivityAction>(
+                          context: context,
+                          useRootNavigator: false,
+                          isScrollControlled: true,
+                          builder: (_) => const DashboardActivitySheet(),
+                        );
+                    if (action == null) return;
+                    if (!context.mounted) return;
+
+                    await _saveActivityLog(context, ref, action);
+                  },
+                ),
+              ),
+              Expanded(
+                child: FabActionOption(
+                  compactCircle: true,
+                  accent: AppColors.stress,
+                  icon: Icons.event_note_outlined,
+                  label: context.lang.dashboardRegisterStress,
+                  onTap: () async {
+                    open.value = false;
+                    await showManualEventSheet(context);
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ],

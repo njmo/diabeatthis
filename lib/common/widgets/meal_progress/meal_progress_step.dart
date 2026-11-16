@@ -14,7 +14,14 @@ class MealProgressStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const activeColor = Color(0xFF00A3FF);
+    final inactiveColor =
+        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final labelColor = current
+        ? (isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A))
+        : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -22,25 +29,23 @@ class MealProgressStep extends StatelessWidget {
           height: 3,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(3),
-            color: complete || current
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outlineVariant,
+            color: complete || current ? activeColor : inactiveColor,
           ),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 5),
         Row(
           children: [
             if (complete) ...[
-              Icon(Icons.check, size: 13, color: theme.colorScheme.primary),
+              const Icon(Icons.check, size: 12, color: Color(0xFF10B981)),
               const SizedBox(width: 3),
             ],
             Flexible(
               child: Text(
                 label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: current
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: current ? FontWeight.w700 : FontWeight.w500,
+                  color: labelColor,
                 ),
               ),
             ),

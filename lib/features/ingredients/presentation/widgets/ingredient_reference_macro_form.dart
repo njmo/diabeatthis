@@ -23,9 +23,10 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
       fatPer100g: ingredient.fatPer100g,
       proteinPer100g: ingredient.proteinPer100g,
     );
-    final extendedCarbsController = useTextEditingController(
+    final ecarbsController = useTextEditingController(
       text: formatReferenceMacroInput(extendedCarbs),
     );
+    final ecarbsState = useState(extendedCarbs);
     final fatShare = referenceFatShare(
       fatPer100g: ingredient.fatPer100g,
       proteinPer100g: ingredient.proteinPer100g,
@@ -39,6 +40,8 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
         compact: responsive,
         label: context.lang.ingredientSimpleCarbsLabel,
         initialValue: formatReferenceMacroInput(ingredient.carbsPer100g),
+        suffixText: 'g',
+        textInputAction: TextInputAction.next,
         icon: Icons.grain,
         onChanged: draft.setCarbsPer100g,
         validator: (value) => _validateRequiredEnergyMacro(value, ingredient),
@@ -46,10 +49,16 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
       NutritionValueTextFormField(
         compact: responsive,
         label: context.lang.ingredientExtendedCarbsLabel,
-        controller: extendedCarbsController,
+        controller: ecarbsController,
+        suffixText: 'g',
+        helperText: context.lang.ingredientWbtHelper(
+          (ecarbsState.value / 10.0).toStringAsFixed(1),
+        ),
+        textInputAction: TextInputAction.done,
         icon: Icons.schedule,
         onChanged: (value) {
           final ecarbs = parseReferenceMacroInput(value);
+          ecarbsState.value = ecarbs;
           draft.setFatPer100g(
             formatReferenceMacroInput(
               referenceFatPer100g(
@@ -100,7 +109,7 @@ class IngredientReferenceMacroForm extends HookConsumerWidget {
           label: context.lang.ingredientFatPercentLabel(fatPercent),
           onChanged: (value) {
             final ecarbs = parseReferenceMacroInput(
-              extendedCarbsController.text,
+              ecarbsController.text,
             );
             draft.setFatPer100g(
               formatReferenceMacroInput(

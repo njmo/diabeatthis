@@ -12,6 +12,7 @@ import '../../../../common/meal_advisor/presentation/remote/child_meal_decision_
 import '../../../../common/meal_advisor/remote/meal_decision_remote_controller.dart';
 import '../../../../common/meal_advisor/remote/meal_decision_remote_request.dart';
 import '../../../../common/nutrition/stable_macro_ceil.dart';
+import '../../../../common/theme/app_design_tokens.dart';
 import '../../../../common/widgets/ai_text_dialog.dart';
 import '../../../../common/widgets/manual_meal_decision_dialog.dart';
 import '../../../../common/widgets/meal_start/meal_advice_unavailable.dart';
@@ -354,7 +355,10 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
                   ? ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      minimumSize: const Size.fromHeight(48),
+                      minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: AppRadius.buttonBorderRadius,
+                      ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 14,

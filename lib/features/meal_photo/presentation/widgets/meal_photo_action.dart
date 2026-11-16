@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/theme/app_design_tokens.dart';
 import '../../../../common/widgets/fab_action_option.dart';
 
 class MealPhotoAction extends StatelessWidget {
@@ -19,6 +20,7 @@ class MealPhotoAction extends StatelessWidget {
   Widget build(BuildContext context) => FabActionOption(
     tile: tile,
     horizontal: horizontal,
+    accent: AppColors.photoMeal,
     icon: Icons.add_a_photo_outlined,
     label: context.lang.mealPhotoTitle,
     onTap: () {

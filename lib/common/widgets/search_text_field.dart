@@ -6,12 +6,14 @@ class SearchTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final ValueChanged<String> onChanged;
+  final bool autofocus;
 
   const SearchTextField({
     super.key,
     required this.controller,
     required this.hintText,
     required this.onChanged,
+    this.autofocus = false,
   });
 
   @override
@@ -22,6 +24,7 @@ class SearchTextField extends StatelessWidget {
         return TextField(
           controller: controller,
           onChanged: onChanged,
+          autofocus: autofocus,
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
             hintText: hintText,

@@ -59,10 +59,30 @@ class ActivitySummaryAction extends ConsumerWidget {
     }
 
     if (emphasized) {
-      return FilledButton.tonal(
-        style: style,
-        onPressed: controller.isLoading ? null : onPressed,
-        child: label,
+      return SizedBox(
+        height: 32,
+        child: FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF00A3FF),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          onPressed: controller.isLoading ? null : onPressed,
+          child: Text(
+            summarized
+                ? context.lang.activitySummaryEdit
+                : context.lang.activitySummaryAction,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
       );
     }
     return TextButton.icon(

@@ -538,8 +538,8 @@
   "activityTreatmentMeal": "Posiłek",
   "activityTreatmentCorrection": "Korekta",
   "activityTreatmentEvent": "Zdarzenie",
-  "ingredientReferenceDishTitle": "Danie referencyjne",
-  "ingredientReferenceDishSubtitle": "Używaj do restauracji/szkoły.",
+  "ingredientReferenceDishTitle": "Gotowe danie",
+  "ingredientReferenceDishSubtitle": "Używaj do potraw złożonych, restauracji i szkoły.",
   "ingredientEmptyTitle": "Brak pasujących składników",
   "ingredientEmptySubtitle": "Spróbuj wpisać inną nazwę albo markę.",
   "ingredientEditTitle": "Edycja składnika",
@@ -554,10 +554,28 @@
   "ingredientBrandLabel": "Producent",
   "ingredientSimpleCarbsLabel": "Węglowodany proste (carbs)",
   "ingredientExtendedCarbsLabel": "Węglowodany przedłużone (ecarbs)",
+  "ingredientWbtHelper": "= {wbt} WBT (1 WBT = 10 g)",
+  "@ingredientWbtHelper": {
+    "placeholders": {
+      "wbt": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientWbtEquivalent": "= {ecarbs} g eCarbs dla pompy",
+  "@ingredientWbtEquivalent": {
+    "placeholders": {
+      "ecarbs": {
+        "type": "int"
+      }
+    }
+  },
   "ingredientEcarbsSplit": "Podział ecarbs: białko {proteinPercent}% / tłuszcz {fatPercent}%",
   "ingredientFatPercentLabel": "{fatPercent}% tłuszcz",
-  "ingredientReferenceMacroRequired": "Uzupełnij carbs albo ecarbs",
-  "ingredientReferenceBadge": "Referencyjny",
+  "ingredientReferenceMacroRequired": "Uzupełnij węglowodany lub węglowodany przedłużone",
+  "ingredientReferenceBadge": "Gotowe danie",
+  "ingredientQuickAddOnePortion": "Dodaj do posiłku (1 porcja)",
+  "ingredientCustomizePortion": "Dostosuj porcję...",
   "ingredientBarcodeLabel": "Kod: {barcode}",
   "portionAmountTitle": "Zdefiniuj ilość porcji",
   "portionAmountLabel": "Ilość porcji",
@@ -2828,8 +2846,8 @@
   "ingredientDataTab": "Dane",
   "ingredientMealsTab": "Posiłki",
   "ingredientHistoryTab": "Historia",
-  "ingredientReferenceEditTitle": "Edycja referencyjnego",
-  "ingredientReferenceBrandOptional": "Miejsce lub producent (opcjonalnie)",
+  "ingredientReferenceEditTitle": "Edycja gotowego dania",
+  "ingredientReferenceBrandOptional": "Miejsce lub restauracja (opcjonalnie)",
   "ingredientNutritionUnchanged": "Wartości odżywcze bez zmian",
   "ingredientConfidenceScore": "{level} ({percent}%)",
   "@ingredientConfidenceScore": {
@@ -3276,14 +3294,14 @@
   "ingredientCreatePhotosHint": "Zdjęcie przodu opakowania i tabeli wartości odżywczych.",
   "ingredientCreateCode": "Skanuj kod",
   "ingredientCreateCodeHint": "Znajdź produkt lub użyj danych z sieci do utworzenia składnika.",
-  "ingredientCreateReferenceHint": "Zapisz węglowodany i eCarbs jednej porcji do ponownego użycia.",
+  "ingredientCreateReferenceHint": "Zapisz potrawę w porcjach (WW i WBT) bez ważenia pojedynczych składników.",
   "ingredientCreateManual": "Wpisz ręcznie",
   "ingredientCreateManualHint": "Uzupełnij nazwę, ikonę i wartości odżywcze.",
   "ingredientWithoutPortion": "Bez porcji",
   "ingredientReviewAmount": "Podsumowanie",
   "ingredientEditReferenceData": "Zmień dane referencyjne",
   "ingredientCombinedConfidence": "Łączna pewność",
-  "ingredientReferenceAmountHint": "Wartości dotyczą jednej porcji referencyjnej. Wybierz liczbę porcji.",
+  "ingredientReferenceAmountHint": "Wartości dotyczą jednej porcji. Wybierz liczbę porcji.",
   "ingredientQuickAddAmount": "+{amount} {unit}",
   "@ingredientQuickAddAmount": {
     "placeholders": {
@@ -3302,7 +3320,7 @@
   "ingredientCodeCreateTitle": "Dodać nowy składnik?",
   "ingredientCodeCreateMessage": "Brak produktu w Twojej bazie. Znaleźliśmy dane w sieci — sprawdź je przed dodaniem.",
   "ingredientSearchEmpty": "Brak pasujących składników. Możesz utworzyć nowy poniżej.",
-  "ingredientReferenceEditHint": "Zmiany dotyczą tego dodania. Zapiszemy je jako osobny wariant dania referencyjnego.",
+  "ingredientReferenceEditHint": "Zmiany dotyczą tego dodania. Zapiszemy je jako osobną wersję gotowego dania.",
   "ingredientPortionAndAmountTitle": "Porcja i ilość",
   "mealPreviewPartialChart": "Pokaż dotychczasowy przebieg",
   "mealPreviewResponseDetails": "Szczegóły przebiegu glikemii",
@@ -3707,7 +3725,7 @@
   "mealPhotoCreateReferenceVersion": "Utwórz nową wersję",
   "mealPhotoEditMealName": "Zmień nazwę posiłku",
   "mealPhotoMealNameRequired": "Podaj nazwę posiłku.",
-  "ingredientReferenceEditorHint": "Składnik referencyjny opisuje całość, bez porcji i przeliczania na gramy. Podaj węglowodany i eCarbs, a suwakiem ustaw udział energii z białka i tłuszczu.",
+  "ingredientReferenceEditorHint": "Gotowe danie opisuje całą potrawę, bez ważenia pojedynczych składników. Podaj węglowodany (WW) i węglowodany przedłużone (eCarbs / WBT), a suwakiem ustaw udział energii z białka i tłuszczu.",
   "mealPhotoTimeNow": "Teraz",
   "mealPhotoEditTime": "Zmień czas posiłku",
   "mealPhotoStartMeal": "Rozpocznij posiłek",

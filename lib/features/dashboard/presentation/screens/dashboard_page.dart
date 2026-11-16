@@ -61,11 +61,11 @@ class DashboardPage extends HookConsumerWidget {
                   : Builder(
                       builder: (context) => SingleChildScrollView(
                         padding: DashboardSpacing.homeScroll(context),
-                        child: Column(
+                        child: const Column(
                           children: [
                             NightscoutPanel(),
-                            const DashboardStatusCard(),
-                            const SizedBox(height: 8),
+                            DashboardStatusCard(),
+                            SizedBox(height: 8),
                             MealListToday(),
                           ],
                         ),

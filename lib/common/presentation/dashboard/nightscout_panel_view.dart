@@ -3,6 +3,25 @@ import 'package:flutter/material.dart';
 import '../../l10n/language.dart';
 import 'dashboard_spacing.dart';
 
+/// Provides [lastUpdate] down the widget tree so child readings can integrate
+/// the timestamp into their header layout (e.g., mockup 2 style).
+class NightscoutPanelScope extends InheritedWidget {
+  const NightscoutPanelScope({
+    super.key,
+    required this.lastUpdate,
+    required super.child,
+  });
+
+  final String? lastUpdate;
+
+  static NightscoutPanelScope? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<NightscoutPanelScope>();
+
+  @override
+  bool updateShouldNotify(NightscoutPanelScope oldWidget) =>
+      lastUpdate != oldWidget.lastUpdate;
+}
+
 /// Shared frame; the source supplies the same readings/metrics presentation.
 class NightscoutPanelView extends StatelessWidget {
   const NightscoutPanelView({
@@ -16,41 +35,70 @@ class NightscoutPanelView extends StatelessWidget {
   final Widget readings;
   final Widget? footer;
   final Widget? syncRibbon;
+
+  bool _hasIntegratedHeader(Widget widget) {
+    final typeName = widget.runtimeType.toString();
+    if (typeName.contains('GlucoseReading') ||
+        typeName.contains('DeviceStatusDashboard') ||
+        typeName.contains('GlucoseDashboard')) {
+      return true;
+    }
+    if (widget is RepaintBoundary && widget.child != null) {
+      return _hasIntegratedHeader(widget.child!);
+    }
+    return false;
+  }
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: DashboardSpacing.panel,
-    child: Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (syncRibbon != null) syncRibbon!,
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              12,
-              syncRibbon == null ? 12 : 8,
-              12,
-              12,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RepaintBoundary(
-                  child: Text(
-                    lastUpdate ?? context.lang.dashboardWaitingForData,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
+  Widget build(BuildContext context) {
+    final showStandaloneLastUpdate = !_hasIntegratedHeader(readings);
+
+    return Padding(
+      padding: DashboardSpacing.panel,
+      child: Card(
+        margin: EdgeInsets.zero,
+        elevation: 0,
+        color: Colors.transparent,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          side: BorderSide.none,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: NightscoutPanelScope(
+          lastUpdate: lastUpdate,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (syncRibbon != null) syncRibbon!,
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  0,
+                  syncRibbon == null ? 0 : 8,
+                  0,
+                  0,
                 ),
-                readings,
-                if (footer != null) footer!,
-              ],
-            ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showStandaloneLastUpdate)
+                      RepaintBoundary(
+                        child: Text(
+                          lastUpdate ?? context.lang.dashboardWaitingForData,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    readings,
+                    if (footer != null) footer!,
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
