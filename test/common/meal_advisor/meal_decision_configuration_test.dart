@@ -23,7 +23,7 @@ SetupWizardController decisionSetupController() => SetupWizardController(
 );
 
 void main() {
-  test('advisor is mandatory and follows family before AI and Nightscout', () {
+  test('advisor is mandatory and follows family before AI', () {
     final controller = decisionSetupController();
     addTearDown(controller.dispose);
     expect(
@@ -43,7 +43,8 @@ void main() {
       controller.modules.indexOf(SetupModule.mealAdvisor),
       lessThan(controller.modules.indexOf(SetupModule.ai)),
     );
-    expect(controller.modules.last, SetupModule.nightscout);
+    expect(controller.modules.first, SetupModule.nightscout);
+    expect(controller.modules.last, SetupModule.ai);
     expect(
       controller.state.mealDecisionPreferences.method,
       MealDecisionMethod.app,
@@ -54,6 +55,8 @@ void main() {
     () {
       final controller = decisionSetupController();
       addTearDown(controller.dispose);
+      controller.setNightscout('https://example.com', 'token');
+      controller.simulateModule(SetupModule.nightscout);
       controller.selectMealDecisionMethod(MealDecisionMethod.ai);
       controller.selectMealDecisionMethod(MealDecisionMethod.caregiver);
       expect(

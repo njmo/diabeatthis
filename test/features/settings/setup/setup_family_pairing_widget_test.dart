@@ -26,7 +26,7 @@ void main() {
               )
               ..step = SetupStep.configuration.index
               ..mode = mode
-              ..moduleIndex = mode == SetupDeviceMode.patient ? 3 : 0;
+              ..moduleIndex = mode == SetupDeviceMode.patient ? 2 : 1;
         await tester.pumpWidget(
           localizedMaterialApp(
             home: SetupWizard(
