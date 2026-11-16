@@ -69,10 +69,15 @@ class ApplyInitialConfigurationUseCase {
     )) {
       throw StateError('Patient mode was not saved.');
     }
+    final saveNightscoutCredentials =
+        config.usesCloud ||
+        tempTargetsEnabled ||
+        lowTreatmentsEnabled ||
+        nightscoutUrl.trim().isNotEmpty;
     await Future.wait([
-      if (config.usesCloud)
+      if (saveNightscoutCredentials)
         prefs.setString(nightscoutUrlKey, nightscoutUrl.trim()),
-      if (config.usesCloud)
+      if (saveNightscoutCredentials)
         prefs.setString(nightscoutTokenKey, nightscoutToken.trim()),
       prefs.setBool(nightscoutTempTargetsEnabledKey, tempTargetsEnabled),
       prefs.setBool(nightscoutLowTreatmentsEnabledKey, lowTreatmentsEnabled),

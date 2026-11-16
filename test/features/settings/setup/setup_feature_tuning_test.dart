@@ -104,84 +104,81 @@ void main() {
       isFalse,
     );
   });
-  testWidgets(
-    'activity and low treatment choices persist with Nightscout first',
-    (tester) async {
-      final draft = featureTuningDraft()
-        ..selected.add(SetupFeatureId.activityMonitor)
-        ..moduleIndex = 1;
-      await tester.pumpWidget(
-        localizedMaterialApp(
-          home: SetupWizard(
-            initialState: draft,
-            availability: const DataSourceOptionAvailability.none(),
-          ),
+  testWidgets('activity and low treatment choices persist with Data first', (
+    tester,
+  ) async {
+    final draft = featureTuningDraft()
+      ..selected.add(SetupFeatureId.activityMonitor)
+      ..moduleIndex = 1;
+    await tester.pumpWidget(
+      localizedMaterialApp(
+        home: SetupWizard(
+          initialState: draft,
+          availability: const DataSourceOptionAvailability.none(),
         ),
-      );
-      final wizard = tester.state<SetupWizardViewState>(
-        find.byType(SetupWizard),
-      );
-      expect(wizard.controller.module, SetupModule.activity);
-      const uploadTitle = 'Monitorowanie z zapisem do Nightscout';
-      const localTitle = 'Monitorowanie lokalne';
-      bool uploadSelected() => tester
-          .widget<SetupMonitoringChoiceCard>(
-            find.widgetWithText(SetupMonitoringChoiceCard, uploadTitle),
-          )
-          .selected;
-      expect(find.byType(SetupMonitoringChoiceCard), findsNWidgets(2));
-      expect(uploadSelected(), isFalse);
-      expect(find.byType(SetupConfigurationFieldChip), findsNothing);
-      await tester.tap(find.text(uploadTitle));
-      await tester.pumpAndSettle();
-      expect(draft.enabledOptions, {
-        SetupFeatureOptionId.activityTempTargetUpload,
-      });
-      expect(uploadSelected(), isTrue);
-      expect(find.byType(SetupConfigurationFieldChip), findsWidgets);
-      expect(wizard.controller.modules, [
-        SetupModule.nightscout,
-        SetupModule.data,
-        SetupModule.activity,
-        SetupModule.lowTreatment,
-        SetupModule.mealAdvisor,
-      ]);
-      await tester.tap(find.text(localTitle));
-      await tester.pumpAndSettle();
-      expect(draft.enabledOptions, isEmpty);
-      expect(uploadSelected(), isFalse);
-      expect(find.byType(SetupConfigurationFieldChip), findsNothing);
-      await tester.tap(find.text(uploadTitle));
-      await tester.pumpAndSettle();
-      // Navigate the modules directly to isolate choice retention from the
-      // Nightscout connection validation covered by integration tests.
-      wizard.controller.next();
-      await tester.pumpAndSettle();
-      expect(wizard.controller.module, SetupModule.lowTreatment);
-      expect(uploadSelected(), isFalse);
-      await tester.tap(find.text(uploadTitle));
-      await tester.pumpAndSettle();
-      expect(
-        draft.enabledOptions,
-        contains(SetupFeatureOptionId.lowTreatmentCarbohydrateUpload),
-      );
-      await tester.tap(find.text(localTitle));
-      await tester.pumpAndSettle();
-      expect(draft.enabledOptions, {
-        SetupFeatureOptionId.activityTempTargetUpload,
-      });
-      wizard.controller.next();
-      await tester.pumpAndSettle();
-      expect(wizard.controller.module, SetupModule.mealAdvisor);
-      await tester.tap(find.text('Poprzednia funkcja'));
-      await tester.pumpAndSettle();
-      expect(wizard.controller.module, SetupModule.lowTreatment);
-      expect(uploadSelected(), isFalse);
-      await tester.tap(find.text('Poprzednia funkcja'));
-      await tester.pumpAndSettle();
-      expect(wizard.controller.module, SetupModule.activity);
-      expect(uploadSelected(), isTrue);
-      expect(tester.takeException(), isNull);
-    },
-  );
+      ),
+    );
+    final wizard = tester.state<SetupWizardViewState>(find.byType(SetupWizard));
+    expect(wizard.controller.module, SetupModule.activity);
+    const uploadTitle = 'Monitorowanie z zapisem do Nightscout';
+    const localTitle = 'Monitorowanie lokalne';
+    bool uploadSelected() => tester
+        .widget<SetupMonitoringChoiceCard>(
+          find.widgetWithText(SetupMonitoringChoiceCard, uploadTitle),
+        )
+        .selected;
+    expect(find.byType(SetupMonitoringChoiceCard), findsNWidgets(2));
+    expect(uploadSelected(), isFalse);
+    expect(find.byType(SetupConfigurationFieldChip), findsNothing);
+    await tester.tap(find.text(uploadTitle));
+    await tester.pumpAndSettle();
+    expect(draft.enabledOptions, {
+      SetupFeatureOptionId.activityTempTargetUpload,
+    });
+    expect(uploadSelected(), isTrue);
+    expect(find.byType(SetupConfigurationFieldChip), findsWidgets);
+    expect(wizard.controller.modules, [
+      SetupModule.data,
+      SetupModule.nightscout,
+      SetupModule.activity,
+      SetupModule.lowTreatment,
+      SetupModule.mealAdvisor,
+    ]);
+    await tester.tap(find.text(localTitle));
+    await tester.pumpAndSettle();
+    expect(draft.enabledOptions, isEmpty);
+    expect(uploadSelected(), isFalse);
+    expect(find.byType(SetupConfigurationFieldChip), findsNothing);
+    await tester.tap(find.text(uploadTitle));
+    await tester.pumpAndSettle();
+    // Navigate the modules directly to isolate choice retention from the
+    // Nightscout connection validation covered by integration tests.
+    wizard.controller.next();
+    await tester.pumpAndSettle();
+    expect(wizard.controller.module, SetupModule.lowTreatment);
+    expect(uploadSelected(), isFalse);
+    await tester.tap(find.text(uploadTitle));
+    await tester.pumpAndSettle();
+    expect(
+      draft.enabledOptions,
+      contains(SetupFeatureOptionId.lowTreatmentCarbohydrateUpload),
+    );
+    await tester.tap(find.text(localTitle));
+    await tester.pumpAndSettle();
+    expect(draft.enabledOptions, {
+      SetupFeatureOptionId.activityTempTargetUpload,
+    });
+    wizard.controller.next();
+    await tester.pumpAndSettle();
+    expect(wizard.controller.module, SetupModule.mealAdvisor);
+    await tester.tap(find.text('Poprzednia funkcja'));
+    await tester.pumpAndSettle();
+    expect(wizard.controller.module, SetupModule.lowTreatment);
+    expect(uploadSelected(), isFalse);
+    await tester.tap(find.text('Poprzednia funkcja'));
+    await tester.pumpAndSettle();
+    expect(wizard.controller.module, SetupModule.activity);
+    expect(uploadSelected(), isTrue);
+    expect(tester.takeException(), isNull);
+  });
 }

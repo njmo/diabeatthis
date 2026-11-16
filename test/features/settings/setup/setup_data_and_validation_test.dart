@@ -30,7 +30,7 @@ SetupWizardState dataValidationDraft() =>
       ..selected.clear();
 
 void main() {
-  test('data and meals remain mandatory while Nightscout moves first', () {
+  test('data and meals remain mandatory and precede Nightscout', () {
     final controller = SetupWizardController(dataValidationDraft());
     addTearDown(controller.dispose);
     controller.select(SetupFeatureId.dataAndMeals, false);
@@ -41,12 +41,12 @@ void main() {
       contains(SetupFeatureId.dataAndMeals),
     );
     expect(controller.modules, [
-      SetupModule.nightscout,
       SetupModule.data,
+      SetupModule.nightscout,
       SetupModule.lowTreatment,
       SetupModule.mealAdvisor,
     ]);
-    expect(controller.module, SetupModule.nightscout);
+    expect(controller.module, SetupModule.data);
     expect(
       controller.requiredConfiguration[SetupConfigurationField.nightscoutUrl],
       {SetupFeatureId.dataAndMeals},
@@ -67,7 +67,7 @@ void main() {
         ..enabledOptions.add(
           SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
         )
-        ..moduleIndex = 0;
+        ..moduleIndex = 1;
       var calls = 0;
       final controller = SetupWizardController(
         state,
@@ -84,7 +84,7 @@ void main() {
       expect(await controller.validateAndNext(), isTrue);
       expect(calls, 1);
       expect(state.configured, contains(SetupModule.nightscout));
-      expect(state.moduleIndex, 1);
+      expect(state.moduleIndex, 2);
     },
   );
   test(
@@ -92,7 +92,7 @@ void main() {
     () async {
       final state = dataValidationDraft()
         ..nightscoutUrl = 'https://example.com'
-        ..moduleIndex = 0;
+        ..moduleIndex = 1;
       var calls = 0;
       final controller = SetupWizardController(
         state,
@@ -106,7 +106,7 @@ void main() {
       expect(state.moduleValidationFailed, isTrue);
       expect(state.configured, isNot(contains(SetupModule.nightscout)));
       expect(await controller.validateAndNext(), isTrue);
-      expect(state.moduleIndex, 1);
+      expect(state.moduleIndex, 2);
     },
   );
   test(
@@ -114,7 +114,7 @@ void main() {
     () async {
       final state = dataValidationDraft()
         ..nightscoutUrl = 'https://example.com'
-        ..moduleIndex = 0;
+        ..moduleIndex = 1;
       final controller = SetupWizardController(
         state,
         checkNightscoutConnection: (_, _, _) async =>
@@ -133,7 +133,7 @@ void main() {
       final pending = Completer<SetupNightscoutVerification>();
       final state = dataValidationDraft()
         ..nightscoutUrl = 'https://example.com'
-        ..moduleIndex = 0;
+        ..moduleIndex = 1;
       var calls = 0;
       final controller = SetupWizardController(
         state,
@@ -158,7 +158,7 @@ void main() {
     final pending = Completer<SetupNightscoutVerification>();
     final state = dataValidationDraft()
       ..nightscoutUrl = 'https://example.com'
-      ..moduleIndex = 0;
+      ..moduleIndex = 1;
     final controller = SetupWizardController(
       state,
       checkNightscoutConnection: (_, _, _) => pending.future,
@@ -195,6 +195,7 @@ void main() {
     final state = dataValidationDraft()
       ..nightscoutUrl = 'https://example.com'
       ..nightscoutToken = 'token'
+      ..moduleIndex = 1
       ..enabledOptions.add(SetupFeatureOptionId.lowTreatmentCarbohydrateUpload);
     final controller = SetupWizardController(
       state,
@@ -232,6 +233,7 @@ void main() {
     (tester) async {
       final pending = Completer<SetupNightscoutVerification>();
       final draft = dataValidationDraft()
+        ..moduleIndex = 1
         ..nightscoutUrl = 'https://example.com';
       await tester.pumpWidget(
         localizedMaterialApp(
@@ -251,7 +253,7 @@ void main() {
       pending.complete(SetupNightscoutVerification.readVerified);
       await tester.pumpAndSettle();
       expect(find.text('Połączono. Odczyt glukozy dostępny.'), findsOneWidget);
-      expect(draft.moduleIndex, 0);
+      expect(draft.moduleIndex, 1);
       expect(draft.configured, isNot(contains(SetupModule.nightscout)));
       expect(tester.takeException(), isNull);
     },
@@ -279,6 +281,9 @@ void main() {
       final controller = tester
           .state<SetupWizardViewState>(find.byType(SetupWizard))
           .controller;
+      expect(controller.module, SetupModule.data);
+      await tester.tap(find.text('Dalej'));
+      await tester.pumpAndSettle();
       expect(controller.module, SetupModule.nightscout);
       expect(find.text('Symuluj sprawdzenie dostępności'), findsNothing);
       final fields = find.byType(TextFormField);
@@ -297,9 +302,6 @@ void main() {
       expect(draft.currentStep, SetupStep.configuration);
       await tester.enterText(fields.first, 'https://example.com');
       await tester.enterText(fields.last, 'token');
-      await tester.tap(find.text('Dalej'));
-      await tester.pumpAndSettle();
-      expect(controller.module, SetupModule.data);
       await tester.tap(find.text('Dalej'));
       await tester.pumpAndSettle();
       expect(controller.module, SetupModule.lowTreatment);

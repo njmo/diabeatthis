@@ -46,7 +46,10 @@ void main() {
             : SetupFeatureOptionId.activityTempTargetUpload;
         controller.selectOption(option, true);
         state.moduleIndex = controller.modules.indexOf(SetupModule.nightscout);
-        expect(controller.modules.first, SetupModule.nightscout);
+        expect(controller.modules.take(2), [
+          SetupModule.data,
+          SetupModule.nightscout,
+        ]);
         expect(controller.missingConfiguration, {
           SetupConfigurationField.nightscoutToken,
         });
@@ -80,7 +83,7 @@ void main() {
         ..enabledOptions.add(
           SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
         )
-        ..moduleIndex = 0;
+        ..moduleIndex = 1;
       await tester.pumpWidget(
         localizedMaterialApp(
           home: SetupWizard(
@@ -110,7 +113,7 @@ void main() {
       final wizard = tester.state<SetupWizardViewState>(
         find.byType(SetupWizard),
       );
-      expect(wizard.controller.module, SetupModule.data);
+      expect(wizard.controller.module, SetupModule.lowTreatment);
       expect(tester.takeException(), isNull);
     },
   );
@@ -149,7 +152,7 @@ void main() {
     final draft = requiredConfigurationDraft()
       ..config = const DataSourceConfig.defaults()
       ..step = SetupStep.configuration.index
-      ..moduleIndex = 0;
+      ..moduleIndex = 1;
     await tester.pumpWidget(
       localizedMaterialApp(
         home: SetupWizard(

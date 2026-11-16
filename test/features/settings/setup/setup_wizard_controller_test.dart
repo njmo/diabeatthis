@@ -27,19 +27,19 @@ void main() {
     () async {
       controller.goTo(SetupStep.configuration.index);
       expect(controller.modules, [
-        SetupModule.nightscout,
         SetupModule.data,
+        SetupModule.nightscout,
         SetupModule.family,
         SetupModule.activity,
         SetupModule.lowTreatment,
         SetupModule.mealAdvisor,
         SetupModule.ai,
       ]);
+      expect(controller.module, SetupModule.data);
+      expect(await controller.validateAndNext(), isTrue);
       expect(controller.module, SetupModule.nightscout);
       controller.setNightscout('https://example.com', '');
       expect(await controller.validateAndNext(), isTrue);
-      expect(controller.module, SetupModule.data);
-      expect(controller.next(), isTrue);
       expect(controller.module, SetupModule.family);
       expect(controller.next(), isFalse);
       controller.simulateSignIn();
@@ -104,7 +104,12 @@ void main() {
       controller.select(SetupFeatureId.mealPhoto, false);
       controller.simulateSignIn();
       controller.simulatePairing();
+      controller.simulateModule(SetupModule.nightscout);
       controller.setMode(SetupDeviceMode.caregiver);
+      expect(
+        controller.state.configured,
+        isNot(contains(SetupModule.nightscout)),
+      );
       expect(controller.state.paired, isFalse);
       expect(
         controller.requirements.containsKey(
@@ -147,7 +152,10 @@ void main() {
     expect(controller.modules, isNot(contains(SetupModule.nightscout)));
     controller.setConfig(const DataSourceConfig.defaults());
     expect(controller.module, SetupModule.data);
-    expect(controller.modules.first, SetupModule.nightscout);
+    expect(controller.modules.take(2), [
+      SetupModule.data,
+      SetupModule.nightscout,
+    ]);
     expect(controller.modules.toSet().length, controller.modules.length);
   });
 
@@ -176,8 +184,6 @@ void main() {
       expect(await controller.validateAndNext(), isFalse);
       expect(controller.module, SetupModule.nightscout);
       expect(await controller.validateAndNext(), isTrue);
-      expect(controller.module, SetupModule.data);
-      expect(await controller.validateAndNext(), isTrue);
       expect(controller.module, SetupModule.family);
     },
   );
@@ -194,7 +200,10 @@ void main() {
         true,
       );
       expect(controller.module, SetupModule.lowTreatment);
-      expect(controller.modules.first, SetupModule.nightscout);
+      expect(controller.modules.take(2), [
+        SetupModule.data,
+        SetupModule.nightscout,
+      ]);
       controller.selectOption(
         SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
         false,

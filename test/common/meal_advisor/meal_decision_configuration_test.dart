@@ -43,7 +43,7 @@ void main() {
       controller.modules.indexOf(SetupModule.mealAdvisor),
       lessThan(controller.modules.indexOf(SetupModule.ai)),
     );
-    expect(controller.modules.first, SetupModule.nightscout);
+    expect(controller.modules.first, SetupModule.data);
     expect(controller.modules.last, SetupModule.ai);
     expect(
       controller.state.mealDecisionPreferences.method,

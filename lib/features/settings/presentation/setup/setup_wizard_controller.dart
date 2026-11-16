@@ -488,8 +488,9 @@ class SetupWizardController extends ChangeNotifier {
       included.add(SetupModule.nightscout);
     }
     return [
-      SetupModule.nightscout,
+      if (state.mode == SetupDeviceMode.caregiver) SetupModule.nightscout,
       SetupModule.data,
+      if (state.mode == SetupDeviceMode.patient) SetupModule.nightscout,
       SetupModule.family,
       SetupModule.activity,
       SetupModule.lowTreatment,
@@ -548,6 +549,7 @@ class SetupWizardController extends ChangeNotifier {
     state.familyMembersFailed = false;
     state.disconnectingMembers.clear();
     state.disconnectFailed = false;
+    state.configured.remove(SetupModule.nightscout);
     state.configured.remove(SetupModule.family);
     if (state.signedIn) {
       refreshFamilyMembers();
@@ -771,7 +773,8 @@ class SetupWizardController extends ChangeNotifier {
     if (state.currentStep != SetupStep.configuration || current == null) {
       return next();
     }
-    if (current != SetupModule.nightscout &&
+    if (current != SetupModule.data &&
+        current != SetupModule.nightscout &&
         modules.contains(SetupModule.nightscout) &&
         !moduleReady(SetupModule.nightscout)) {
       state.moduleIndex = modules.indexOf(SetupModule.nightscout);
