@@ -1,0 +1,118 @@
+DiaBeatThis Community License 1.0
+SPDX-License-Identifier: LicenseRef-DiaBeatThis-Community-1.0
+
+Copyright (c) 2026 the DiaBeatThis contributors.
+
+This is a custom source-available license. It is not the GNU AGPL, the MIT
+License, or an OSI-approved open-source license.
+
+1. Scope
+
+"Software" means the original DiaBeatThis code and accompanying project
+materials supplied under this license. "You" means a person or organization
+exercising the permissions below. A "Modified Version" is a version containing
+copyrightable parts of the Software with additions or changes.
+
+These terms apply only to material for which the relevant copyright holders
+have authority to grant these permissions. Third-party libraries, data and
+assets remain subject to their own licenses and notices. This license does
+not replace or restrict permissions granted under those third-party licenses.
+
+2. Permitted activities
+
+Subject to these terms, you may use, study, copy, build and modify the Software
+for personal, family, educational, research and other noncommercial purposes.
+You may share unmodified copies and Modified Versions without charging for
+them, subject to sections 3 and 4.
+
+Healthcare professionals and healthcare organizations may also use the
+Software internally in caring for patients, including in paid professional
+practice. Charging for medical consultations or care is permitted when the
+Software is an incidental tool of that care, access to the Software is not
+sold or separately charged for, and the Software is not offered as a paid
+software product or hosted service. This exception does not authorize a
+software vendor to sell the Software to a healthcare provider.
+
+Paying an independent provider for general-purpose infrastructure or AI API
+usage to run your own permitted copy does not, by itself, violate this license.
+It does not authorize that provider to commercialize the Software.
+
+3. Commercial exploitation requires separate permission
+
+Without prior written permission from the copyright holders of the material
+concerned, you may not commercially exploit the Software or a Modified Version,
+or a product or service containing copyrightable parts of either. In particular,
+you may not:
+
+(a) sell, rent, sublicense for a fee, or charge for copies, downloads,
+    distribution, installation or access;
+(b) provide paid hosting, subscriptions, paid features or other paid software
+    services based on the Software;
+(c) monetize the Software through advertising, affiliate commissions, sale
+    of user data, or sponsorship tied to promotion inside the Software; or
+(d) bundle the Software with a paid product or service to avoid these
+    restrictions, except for the healthcare use expressly permitted above.
+
+Optional donations that do not buy access, features, preferential service,
+advertising or other consideration are permitted.
+
+Permissions in this section may be granted only by holders authorized to
+license the material concerned. No recipient may grant commercial rights
+that they do not hold. For a commercial licensing inquiry, contact the project
+maintainer through https://github.com/njmo/diabeatthis/issues without posting
+confidential information.
+
+4. Sharing copies and Modified Versions
+
+When you share the Software or a Modified Version, you must:
+
+(a) retain this license and applicable copyright, attribution and third-party
+    license notices;
+(b) identify your changes and make clear that a Modified Version is not an
+    official DiaBeatThis release unless expressly authorized;
+(c) license your additions to that Modified Version under these same terms,
+    so that recipients receive these permissions and restrictions; and
+(d) provide recipients with the corresponding source code, including your
+    changes and the build scripts needed to build the version supplied,
+    without an additional charge. A clear link to the exact source version
+    is sufficient. Credentials, private patient data and general-purpose
+    third-party tools need not be included.
+
+If you let users interact remotely with a Modified Version over a network,
+you must also prominently offer those users free access to its corresponding
+source code under these terms. This source-code obligation does not authorize
+commercial hosting prohibited by section 3.
+
+5. Ownership and names
+
+Copyright remains with the respective copyright holders. No ownership is
+transferred. This license does not grant rights to use project names, logos
+or trademarks to imply endorsement of your version or service. Identifying
+the origin of the Software and retaining required notices are permitted.
+
+6. No warranty; limitation of liability
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE
+LAW, THE AUTHORS AND COPYRIGHT HOLDERS ARE NOT LIABLE FOR CLAIMS, DAMAGES
+OR OTHER LIABILITY ARISING FROM THE SOFTWARE OR ITS USE.
+
+The Software does not replace professional medical judgment. This license
+is not a medical certification or authorization to provide regulated services.
+Nothing here excludes rights or liability that applicable law does not allow
+to be excluded.
+
+7. Termination and reserved rights
+
+Permissions under this license terminate if you violate its terms. They are
+reinstated when the violation is cured within 30 days after you first receive
+written notice of it, unless you previously received a notice for the same
+kind of violation. Otherwise, reinstatement requires written permission from
+the relevant copyright holders. Recipients who comply with these terms do not
+lose their permissions solely because a distributor violated them.
+
+Rights not expressly granted are reserved. Nothing in these terms restricts
+exceptions or permissions that applicable law makes available independently
+of this license. These terms do not revoke permissions already granted for
+earlier copies under another license.

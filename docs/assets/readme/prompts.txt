@@ -1,0 +1,7 @@
+Generated with the built-in image_gen tool.
+
+INGREDIENTS
+Use case: stylized-concept. Asset type: standalone small README illustration for DiaBeatThis, a friendly diabetes meal planning app. Subject: ingredients icon, a charming small grocery cluster with a broccoli floret, carrot and red tomato. Style: polished soft clay 3D illustration, simple rounded forms, restrained fine detail, warm welcoming feel, a subtle cyan blue accent to fit a cyan-accented app. Centered square composition, generous transparent padding, objects fill 70% of frame, legible at 80 pixels. Real transparent background, no backdrop, no text, no letters, no border, no watermark, no medical symbols.
+
+MEALS
+Use case: stylized-concept. Asset type: standalone small README illustration for DiaBeatThis, a friendly diabetes meal planning app. Subject: meal icon, a single rounded ceramic plate with cyan blue rim holding a simple balanced lunch, rice, broccoli florets and a golden grilled chicken piece, with a small fork beside plate. Style: polished soft clay 3D illustration, simple rounded forms, restrained fine detail, warm welcoming feel. Centered square composition, three-quarter slightly top-down view, generous transparent padding, objects fill 70% of frame, legible at 80 pixels. Real transparent background, no backdrop, no text, no letters, no border, no watermark, no medical symbols. Match a soft clay grocery icon with broccoli carrot tomato and cyan accent.
