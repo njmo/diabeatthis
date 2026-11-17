@@ -1,4 +1,5 @@
 'use strict';
+process.env.PAIRING_HMAC_KEY = 'pairing-code-test-secret';
 const test=require('node:test'),assert=require('node:assert/strict');
 const {MemoryStore}=require('./memory_store.cjs');
 const {createFamilyService}=require('../common/family_service.cjs');

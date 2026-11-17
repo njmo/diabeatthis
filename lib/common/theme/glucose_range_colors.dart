@@ -7,11 +7,11 @@ class GlucoseRangeColors {
     : isDark = brightness == Brightness.dark;
 
   Color get inRange =>
-      isDark ? const Color(0xFF4ADE80) : const Color(0xFF21864A);
+      isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A);
   Color get aboveRange =>
-      isDark ? const Color(0xFFFBBF24) : const Color(0xFFB85B00);
+      isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
   Color get belowRange =>
-      isDark ? const Color(0xFFFB7185) : const Color(0xFFC62828);
+      isDark ? const Color(0xFFFB7185) : const Color(0xFFDC2626);
   Color get missing =>
-      isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280);
+      isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 }

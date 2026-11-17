@@ -4,7 +4,7 @@ import 'package:diabeatthis/common/auth/google_authentication_providers.dart';
 import 'package:diabeatthis/common/family/family_providers.dart';
 import 'package:diabeatthis/common/family_sync/family_planning_view.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
-import 'package:diabeatthis/common/presentation/day/day_history_statistics.dart';
+import 'package:diabeatthis/features/caregiver/presentation/widgets/day_presentations/caregiver_day_timeline_view.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/caregiver/presentation/widgets/caregiver_day_summary.dart';
@@ -57,7 +57,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byType(DayHistoryStatistics), findsOneWidget);
+      expect(find.byType(CaregiverDayTimelineView), findsOneWidget);
       final context = tester.element(find.byType(CaregiverDaySummary));
       expect(ns.glucoseWindows, hasLength(1));
       await tester.tap(find.byTooltip(context.lang.dayRefresh));
@@ -72,7 +72,7 @@ void main() {
       fixture.family.clear();
       fixture.family.notifyListeners();
       await tester.pumpAndSettle();
-      expect(find.byType(DayHistoryStatistics), findsOneWidget);
+      expect(find.byType(CaregiverDayTimelineView), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     },

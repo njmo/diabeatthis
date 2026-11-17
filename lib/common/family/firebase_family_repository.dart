@@ -9,6 +9,7 @@ import 'family_join_request.dart';
 import 'family_pairing_invitation.dart';
 import 'family_pairing_member.dart';
 import 'family_status.dart';
+import 'pairing_code.dart';
 import 'secure_family_repository.dart';
 
 /// No offline membership cache: authorization always comes from the server.
@@ -42,6 +43,12 @@ class FirebaseFamilyRepository
     final data = await transport.call('createFamilyInvite', {});
     return FamilyPairingInvitation(
       id: data['id'] as String,
+      shortCode: data['shortCode'] as String?,
+      expiresAt: data['expiresAt'] == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(
+              (data['expiresAt'] as num).toInt(),
+            ),
       revision: (data['revision'] as num).toInt(),
       code: jsonEncode({
         'v': 1,
@@ -71,6 +78,17 @@ class FirebaseFamilyRepository
   }
 
   @override
+  Future<void> requestJoinByCode(String code) async {
+    if (!isValidPairingCode(code)) {
+      throw const CallableFailure('invalid-argument');
+    }
+    await transport.call('requestFamilyJoinByCode', {
+      'code': code.trim().toUpperCase(),
+    });
+    await refresh();
+  }
+
+  @override
   Future<void> decide(String invitationId, {required bool approve}) async {
     await transport.call('decideFamilyJoin', {
       'inviteId': invitationId,
@@ -88,6 +106,7 @@ class FirebaseFamilyRepository
   @override
   Future<void> finalizeSetup() =>
       transport.call('finalizeFamilySetup', {}).then((_) {});
+  @override
   Future<void> refresh() async {
     if (disposed || !active || loading || !status.hasListener) return;
     timer?.cancel();

@@ -24,6 +24,7 @@ class DemoFamilyPairingRepository
     final invitation = FamilyPairingInvitation(
       id: 'demo-${++sequence}',
       code: 'DEMO-${sequence.toString().padLeft(4, '0')}',
+      shortCode: 'DEMO-${sequence.toString().padLeft(4, '0')}',
     );
     invitations[mode] = invitation;
     return invitation;
@@ -38,6 +39,11 @@ class DemoFamilyPairingRepository
       }
     });
     return channels[mode]!.stream;
+  }
+
+  Future<void> requestJoinByCode(String code) async {
+    await createInvitation(SetupDeviceMode.caregiver);
+    simulatePairing(SetupDeviceMode.caregiver);
   }
 
   void simulatePairing(SetupDeviceMode mode) {

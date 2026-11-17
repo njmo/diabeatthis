@@ -4,6 +4,7 @@ import '../../../../../common/auth/widgets/google_account_summary.dart';
 import '../../../../../common/auth/widgets/google_sign_in_button.dart';
 import '../../../../../common/l10n/language.dart';
 import '../setup_wizard_controller.dart';
+import 'setup_family_status_notice.dart';
 
 class SetupAccountChoicePanel extends StatelessWidget {
   const SetupAccountChoicePanel({
@@ -21,6 +22,13 @@ class SetupAccountChoicePanel extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (controller.familyCareLocked || controller.state.familyMembersFailed)
+          SetupFamilyStatusNotice(
+            isPending: controller.familyMembershipPending &&
+                !controller.state.familyMembersFailed,
+            hasFailed: controller.state.familyMembersFailed,
+            onRetry: controller.refreshFamilyMembers,
+          ),
         if (controller.state.googleAccount != null)
           GoogleAccountSummary(
             account: controller.state.googleAccount!,
@@ -34,12 +42,6 @@ class SetupAccountChoicePanel extends StatelessWidget {
                 ? null
                 : controller.signInGoogle,
             busy: controller.state.signingIn,
-          ),
-        if (controller.familyCareLocked)
-          Text(
-            controller.familyMembershipPending
-                ? context.lang.familyLoading
-                : context.lang.setupFamilyDisconnectBeforeDisable,
           ),
         if (controller.authentication?.isSupported == false)
           Text(context.lang.setupGoogleUnavailablePlatform),

@@ -12,6 +12,7 @@ import '../secure_family_repository.dart';
 import 'family_account_avatar.dart';
 import 'family_loading_state.dart';
 import 'family_pairing_qr_card.dart';
+import 'family_pairing_code_dialog.dart';
 import 'family_pending_request_card.dart';
 import 'family_qr_scanner_page.dart';
 
@@ -30,6 +31,7 @@ class SecureFamilyPanel extends StatefulWidget {
 class SecureFamilyPanelState extends State<SecureFamilyPanel> {
   late Stream<FamilyStatus> updates;
   FamilyPairingInvitation? invitation;
+  FamilyStatus? latestStatus;
   static const layoutAnimationDuration = Duration(milliseconds: 240);
   final invitationAnchor = GlobalKey();
   final approvalAnchor = GlobalKey();
@@ -68,6 +70,7 @@ class SecureFamilyPanelState extends State<SecureFamilyPanel> {
   }
 
   FamilyStatus observeStatus(FamilyStatus value) {
+    latestStatus = value;
     final invite = invitation;
     if (invite != null && !celebrating) {
       if (value.members.any((member) => member.invitationId == invite.id)) {
@@ -144,7 +147,18 @@ class SecureFamilyPanelState extends State<SecureFamilyPanel> {
     try {
       await action();
     } catch (_) {
-      if (mounted) setState(() => failed = true);
+      try {
+        await widget.repository.refresh();
+      } catch (_) {}
+      if (mounted) {
+        final status = latestStatus;
+        setState(
+          () => failed =
+              !(requested ||
+                  status?.joinState == 'pending' ||
+                  status?.pending != null),
+        );
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }
@@ -160,23 +174,41 @@ class SecureFamilyPanelState extends State<SecureFamilyPanel> {
         invitationEnded = false;
       });
       revealAfterExpansion(invitationAnchor);
-      expiry = Timer(const Duration(minutes: 5), () {
-        if (mounted) {
-          setState(() {
-            invitation = null;
-            invitationEnded = true;
-          });
-        }
-      });
+      expiry = Timer(
+        Duration(
+          milliseconds:
+              next.expiresAt?.difference(DateTime.now()).inMilliseconds ??
+              300000,
+        ),
+        () {
+          if (mounted) {
+            setState(() {
+              invitation = null;
+              invitationEnded = true;
+            });
+          }
+        },
+      );
     } else {
       final code = await Navigator.of(context).push<String>(
         MaterialPageRoute(builder: (_) => const FamilyQrScannerPage()),
       );
       if (code == null || !mounted) return;
-      await widget.repository.requestJoin(code);
+      if (code.startsWith('code:')) {
+        await widget.repository.requestJoinByCode(code.substring(5));
+      } else {
+        await widget.repository.requestJoin(code);
+      }
       if (mounted) setState(() => requested = true);
     }
   });
+  Future<void> _enterCodeDialog(BuildContext context) => run(() async {
+    final code = await showFamilyPairingCodeDialog(context);
+    if (code == null || !mounted) return;
+    await widget.repository.requestJoinByCode(code);
+    if (mounted) setState(() => requested = true);
+  });
+
   Future<void> disconnect(String memberId) => run(() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -240,6 +272,12 @@ class SecureFamilyPanelState extends State<SecureFamilyPanel> {
                   : context.lang.setupScanChildTitle,
             ),
           ),
+          if (widget.mode == SetupDeviceMode.caregiver)
+            OutlinedButton.icon(
+              onPressed: busy ? null : () => _enterCodeDialog(context),
+              icon: const Icon(Icons.dialpad),
+              label: Text(context.lang.familyEnterCodeManually),
+            ),
           if (busy) const LinearProgressIndicator(),
           if (failed || snapshot.hasError)
             Padding(
@@ -250,7 +288,11 @@ class SecureFamilyPanelState extends State<SecureFamilyPanel> {
               ),
             ),
           if (invitation != null && !used && !celebrating)
-            FamilyPairingQrCard(key: invitationAnchor, code: invitation!.code),
+            FamilyPairingQrCard(
+              key: invitationAnchor,
+              code: invitation!.code,
+              shortCode: invitation!.shortCode,
+            ),
           if (used || celebrating)
             Padding(
               padding: const EdgeInsets.all(12),

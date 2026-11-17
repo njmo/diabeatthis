@@ -42,6 +42,7 @@ class AuthenticatedCallableTransport {
     'fetchFamilyMirror',
     'createFamilyInvite',
     'requestFamilyJoin',
+    'requestFamilyJoinByCode',
     'decideFamilyJoin',
     'getFamilyStatus',
     'disconnectFamilyMember',

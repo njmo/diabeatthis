@@ -9,7 +9,9 @@ abstract interface class SecureFamilyRepository
   Future<FamilyPairingInvitation> createInvitation(SetupDeviceMode mode);
   Stream<FamilyStatus> watchStatus();
   Future<void> requestJoin(String qrCode);
+  Future<void> requestJoinByCode(String code);
   Future<void> decide(String invitationId, {required bool approve});
   Future<void> disconnect(String memberId);
   Future<void> finalizeSetup();
+  Future<void> refresh();
 }

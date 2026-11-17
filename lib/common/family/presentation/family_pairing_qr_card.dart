@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../l10n/language.dart';
 
 /// Keeps a light quiet zone and dark modules so themed codes remain scannable.
 class FamilyPairingQrCard extends StatelessWidget {
-  const FamilyPairingQrCard({super.key, required this.code});
+  const FamilyPairingQrCard({super.key, required this.code, this.shortCode});
   final String code;
+  final String? shortCode;
   static const codeSize = 168.0;
 
   @override
@@ -41,6 +43,27 @@ class FamilyPairingQrCard extends StatelessWidget {
               semanticsLabel: context.lang.setupPairingCodeTitle,
             ),
           ),
+          if (shortCode != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              shortCode!,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontFamily: 'monospace',
+                letterSpacing: 2,
+              ),
+            ),
+            TextButton.icon(
+              icon: const Icon(Icons.copy),
+              label: Text(context.lang.familyCopyCode),
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: shortCode!));
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(context.lang.familyCodeCopied)),
+                );
+              },
+            ),
+          ],
           const SizedBox(height: 12),
           Text(
             context.lang.familyQrExpiration,

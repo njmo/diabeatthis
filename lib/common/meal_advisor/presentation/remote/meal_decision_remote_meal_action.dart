@@ -7,9 +7,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../l10n/language.dart';
+import '../../demo/meal_decision_demo_controller.dart';
+import '../../demo/meal_decision_demo_request.dart';
 import '../../meal_decision_preferences_provider.dart';
 import '../../remote/caregiver_meal_decision_eligibility.dart';
 import '../../remote/meal_decision_remote_controller.dart';
+import '../demo/caregiver_meal_decision_demo_inbox.dart';
+import '../demo/show_meal_decision_demo.dart';
 import 'caregiver_meal_decision_sheet.dart';
 import 'meal_decision_answered_status.dart';
 
@@ -21,6 +25,10 @@ class MealDecisionRemoteMealAction extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final inbox = ref.watch(mealDecisionRemoteControllerProvider);
     final request = inbox.latestForMeal(mealId);
+    final demoInbox = ref.watch(mealDecisionDemoControllerProvider);
+    final demoRequest = demoInbox.values.where((r) => r.mealId == mealId).firstOrNull
+        ?? demoInbox[caregiverMealDecisionDemoKey];
+
     final deadlineTick = useState(0);
     useEffect(() {
       if (request == null) return null;
@@ -32,6 +40,7 @@ class MealDecisionRemoteMealAction extends HookConsumerWidget {
       );
       return timer.cancel;
     }, [request?.id, request?.deadline]);
+
     if (!ref.watch(mealDecisionPreferencesProvider).caregiverResponsesEnabled) {
       return const SizedBox.shrink();
     }
@@ -39,66 +48,141 @@ class MealDecisionRemoteMealAction extends HookConsumerWidget {
         inbox.accountUid != FirebaseAuth.instance.currentUser?.uid) {
       return const SizedBox.shrink();
     }
-    if (request == null) return const SizedBox.shrink();
+
     final now = DateTime.now();
-    if (request.timedOutAt(now)) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 18,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              context.lang.mealDecisionCaregiverTimedOut,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+
+    // 1. Sprawdzenie realnego zgłoszenia remote
+    if (request != null) {
+      if (request.timedOutAt(now)) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 18,
+              color: Theme.of(context).colorScheme.error,
             ),
-          ),
-        ],
-      );
-    }
-    if (!request.pending) return const SizedBox.shrink();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    final taken =
-        request.status == 'waiting' &&
-        request.claimedByUid != null &&
-        request.claimedByUid != uid &&
-        !request.claimAvailable;
-    if (request.status == 'answered' || request.status == 'accepting') {
-      return const MealDecisionAnsweredStatus();
-    }
-    final memberStatus = caregiverMealDecisionMemberStatus(request, uid);
-    if (memberStatus == 'declined' || memberStatus == 'disabled') {
-      return Text(
-        memberStatus == 'declined'
-            ? context.lang.mealDecisionRemoteDeclined
-            : context.lang.mealDecisionRemoteDisabled,
-      );
-    }
-    if (taken) {
-      final name = request.claimedByName?.trim();
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.person_outline, size: 18),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              name == null || name.isEmpty
-                  ? context.lang.mealDecisionRemoteAlreadyTaken
-                  : context.lang.mealDecisionClaimedBy(name),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                context.lang.mealDecisionCaregiverTimedOut,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ),
+          ],
+        );
+      }
+
+      if (request.status == 'answered' ||
+          request.status == 'accepting' ||
+          request.status == 'accepted' ||
+          request.decision != null) {
+        return MealDecisionAnsweredStatus(
+          answer: request.answer,
+          minutes: request.minutes,
+          message: request.message,
+          caregiverName: request.respondingCaregiverName,
+          isAccepted: request.status == 'accepted',
+        );
+      }
+
+      if (request.pending) {
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        final taken =
+            request.status == 'waiting' &&
+            request.claimedByUid != null &&
+            request.claimedByUid != uid &&
+            !request.claimAvailable;
+
+        final memberStatus = caregiverMealDecisionMemberStatus(request, uid);
+        if (memberStatus == 'declined' || memberStatus == 'disabled') {
+          return Text(
+            memberStatus == 'declined'
+                ? context.lang.mealDecisionRemoteDeclined
+                : context.lang.mealDecisionRemoteDisabled,
+          );
+        }
+        if (taken) {
+          final name = request.claimedByName?.trim();
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.person_outline, size: 18),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  name == null || name.isEmpty
+                      ? context.lang.mealDecisionRemoteAlreadyTaken
+                      : context.lang.mealDecisionClaimedBy(name),
+                ),
+              ),
+            ],
+          );
+        }
+        return FilledButton.tonalIcon(
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            visualDensity: VisualDensity.compact,
           ),
-        ],
-      );
+          onPressed: () => showCaregiverMealDecisionRequest(context, request.id),
+          icon: const Icon(Icons.mark_chat_unread_outlined, size: 16),
+          label: Text(context.lang.mealDecisionRemoteYourDecision),
+        );
+      }
     }
-    return TextButton.icon(
-      onPressed: () => showCaregiverMealDecisionRequest(context, request.id),
-      icon: const Icon(Icons.mark_chat_unread_outlined),
-      label: Text(context.lang.mealDecisionRemoteYourDecision),
-    );
+
+    // 2. Sprawdzenie zgłoszenia demo (np. symulacja w środowisku lokalnym/testowym)
+    if (demoRequest != null &&
+        (demoRequest.mealId == mealId || demoRequest.mealId == null)) {
+      if (demoRequest.status == MealDecisionDemoStatus.timedOut) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 18,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                context.lang.mealDecisionCaregiverTimedOut,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+          ],
+        );
+      }
+      if (demoRequest.status == MealDecisionDemoStatus.answered ||
+          demoRequest.status == MealDecisionDemoStatus.accepted ||
+          demoRequest.answer != null) {
+        return MealDecisionAnsweredStatus(
+          answer: demoRequest.answer,
+          minutes: demoRequest.waitMinutes,
+          message: demoRequest.message,
+          caregiverName: demoRequest.caregiverName,
+          isAccepted: demoRequest.status == MealDecisionDemoStatus.accepted,
+        );
+      }
+      if (demoRequest.status == MealDecisionDemoStatus.waiting) {
+        return FilledButton.tonalIcon(
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            visualDensity: VisualDensity.compact,
+          ),
+          onPressed: () => showCaregiverMealDecisionDemo(
+            context,
+            requestKey: demoRequest.key,
+            requestId: demoRequest.id,
+            caregiverName: demoRequest.caregiverName ??
+                context.lang.mealDecisionDemoCaregiver,
+          ),
+          icon: const Icon(Icons.mark_chat_unread_outlined, size: 16),
+          label: Text(context.lang.mealDecisionRemoteYourDecision),
+        );
+      }
+    }
+
+    return const SizedBox.shrink();
   }
 }

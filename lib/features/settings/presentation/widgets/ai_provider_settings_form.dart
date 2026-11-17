@@ -27,7 +27,7 @@ class AiProviderSettingsForm extends HookConsumerWidget {
     this.onSaved,
     this.submissionController,
     this.showActions = true,
-    this.hideFirebaseModel = false,
+    this.hideFirebaseModel = true,
     this.connectChatGptOnSelection = false,
   });
 
@@ -250,6 +250,50 @@ class AiProviderSettingsForm extends HookConsumerWidget {
               Text(context.lang.settingsAiFirebaseDescription),
               const SizedBox(height: 8),
               const AiAuthorFundedNotice(),
+              const SizedBox(height: 10),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHighest
+                      .withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outlineVariant
+                        .withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Model: ',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                    Text(
+                      draft.value.firebaseModel,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         if (draft.value.requiresApiKey)
@@ -301,7 +345,7 @@ class AiProviderSettingsForm extends HookConsumerWidget {
             },
           ),
         if (provider != AiProviderKind.chatGpt &&
-            !(hideFirebaseModel && provider == AiProviderKind.firebase))
+            provider != AiProviderKind.firebase)
           AiModelField(
             key: ValueKey(provider),
             value: draft.value.model,

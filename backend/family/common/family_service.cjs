@@ -1,6 +1,7 @@
 'use strict';
-const {FamilyError, id, exact, secret, hash, matches, profile} = require('./security.cjs');
+const {FamilyError, id, exact, secret, hash, matches, profile, randomCrockford8, normalizeCrockford, formatCrockford8, codeDigest} = require('./security.cjs');
 const INVITE_MS = 5 * 60 * 1000;
+const CODE_GRACE_MS = 60 * 60 * 1000;
 const MAX_MEMBERS = 6;
 const fail = code => { throw new FamilyError(code); };
 
@@ -8,6 +9,7 @@ function createFamilyService({store, auth, now = Date.now}) {
   const accountRef = uid => store.doc(`familyAccounts/${uid}`);
   const familyRef = fid => store.doc(`families/${fid}`);
   const inviteRef = iid => store.doc(`pairingInvites/${iid}`);
+  const codeRef = digest => store.doc(`pairingCodeIndex/${digest}`);
   const joinRef = uid => store.doc(`familyJoinRequests/${uid}`);
   const membersRef = fid => familyRef(fid).collection('members');
   const read = async (tx, ref) => (await tx.get(ref)).data();
@@ -49,6 +51,14 @@ function createFamilyService({store, auth, now = Date.now}) {
       }
       if (family.memberUids.length >= MAX_MEMBERS) fail('resource-exhausted');
       const previous = family.activeInviteId ? await read(tx, inviteRef(family.activeInviteId)) : null;
+      let shortCode, codeHash;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        shortCode = randomCrockford8();
+        codeHash = codeDigest(normalizeCrockford(shortCode));
+        const existing = await read(tx, codeRef(codeHash));
+        if (!existing || existing.expiresAt + CODE_GRACE_MS <= time) break;
+        if (attempt === 2) fail('resource-exhausted');
+      }
       if (!account) {
         tx.set(accountRef(uid), {familyId: fid, role: 'child'});
         tx.set(membersRef(fid).doc(uid), {...identity, role: 'child', invitationId: '', joinedAt: time});
@@ -57,7 +67,8 @@ function createFamilyService({store, auth, now = Date.now}) {
       const revision = (family.invitationRevision || 0) + 1;
       tx.set(familyRef(fid), {...family, activeInviteId: iid, invitationRevision: revision});
       tx.set(inviteRef(iid), {familyId: fid, childUid: uid, tokenHash: hash(token), expiresAt: time + INVITE_MS, state: 'open'});
-      return {id: iid, token, expiresAt: time + INVITE_MS, revision};
+      tx.set(codeRef(codeHash), {inviteId: iid, expiresAt: time + INVITE_MS});
+      return {id: iid, token, expiresAt: time + INVITE_MS, revision, shortCode: formatCrockford8(shortCode)};
     });
   }
   async function requestJoin(uid, data) {
@@ -80,6 +91,33 @@ function createFamilyService({store, auth, now = Date.now}) {
       tx.set(joinRef(uid), {inviteId: iid});
       tx.update(inviteRef(iid), {state: 'pending', candidateUid: uid, candidate: identity});
       // No membership, family details or messages are disclosed at this point.
+      return {pending: true};
+    });
+  }
+  async function requestJoinByCode(uid, data) {
+    exact(data, ['code']);
+    const code = normalizeCrockford(data.code);
+    await rate(uid, 'join', 10);
+    await rate('global', 'join_code_attempt', 300);
+    const identity = profile(await auth.getUser(uid));
+    const codeHash = codeDigest(code);
+    return store.runTransaction(async tx => {
+      const account = await read(tx, accountRef(uid));
+      if (account) fail('failed-precondition');
+      const index = await read(tx, codeRef(codeHash));
+      if (!index || index.expiresAt <= now()) fail('permission-denied');
+      const iid = index.inviteId;
+      const invite = await read(tx, inviteRef(iid));
+      if (!invite || invite.expiresAt <= now()) fail('permission-denied');
+      if (invite.state === 'pending' && invite.candidateUid === uid) return {pending: true};
+      if (invite.state !== 'open' || invite.childUid === uid) fail('permission-denied');
+      const family = await read(tx, familyRef(invite.familyId));
+      if (!family || family.activeInviteId !== iid || family.memberUids.length >= MAX_MEMBERS) fail('permission-denied');
+      const previous = await read(tx, joinRef(uid));
+      const previousInvite = previous?.inviteId && previous.inviteId !== iid ? await read(tx, inviteRef(previous.inviteId)) : null;
+      if (previousInvite?.candidateUid === uid && previousInvite.state === 'pending') tx.update(inviteRef(previous.inviteId), {state: 'cancelled'});
+      tx.set(joinRef(uid), {inviteId: iid});
+      tx.update(inviteRef(iid), {state: 'pending', candidateUid: uid, candidate: identity});
       return {pending: true};
     });
   }
@@ -166,6 +204,6 @@ function createFamilyService({store, auth, now = Date.now}) {
       return {locked: true};
     });
   }
-  return {createInvite, requestJoin, decide, status, disconnect, finalize};
+  return {createInvite, requestJoin, requestJoinByCode, decide, status, disconnect, finalize};
 }
 module.exports = {createFamilyService};

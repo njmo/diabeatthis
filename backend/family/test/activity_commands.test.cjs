@@ -1,4 +1,5 @@
 'use strict';
+process.env.PAIRING_HMAC_KEY = 'pairing-code-test-secret';
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const {PlanMemoryStore}=require('./plan_memory_store.cjs');

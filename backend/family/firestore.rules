@@ -28,6 +28,7 @@ service cloud.firestore {
     match /families/{document=**} { allow read, write: if false; }
     match /familyJoinRequests/{document=**} { allow read, write: if false; }
     match /familyAccounts/{document=**} { allow read, write: if false; }
+    match /pairingCodeIndex/{document=**} { allow read, write: if false; }
     match /pairingInvites/{document=**} { allow read, write: if false; }
     match /familyRateLimits/{document=**} { allow read, write: if false; }
     match /familyDevices/{document=**} { allow read, write: if false; }

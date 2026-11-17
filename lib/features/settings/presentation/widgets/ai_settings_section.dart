@@ -38,7 +38,7 @@ class AiSettingsSection extends ConsumerWidget {
               onSaved: onSaved,
               submissionController: submissionController,
               showActions: !wizardMode,
-              hideFirebaseModel: wizardMode,
+              hideFirebaseModel: true,
               connectChatGptOnSelection: wizardMode,
             ),
           ),

@@ -133,16 +133,16 @@ class CompactLoopGlucoseChart extends ConsumerWidget {
                               fontWeight: FontWeight.w700,
                               color: Color(0xFF00A3FF))),
                     ),
-                    const Text('+1h',
+                    Text('+1h',
                         style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF10B981))),
-                    const Text('+2h',
+                            color: mutedColor)),
+                    Text('+2h',
                         style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF10B981))),
+                            color: mutedColor)),
                   ],
                 ),
               ),
@@ -183,6 +183,19 @@ class _LoopPredictionChartPainter extends CustomPainter {
 
   static const lowThreshold = 70.0;
   static const highThreshold = 180.0;
+  static const veryHighThreshold = 250.0;
+
+  static Color colorForGlucose(double value) {
+    if (value < lowThreshold) {
+      return const Color(0xFFEF4444); // Czerwony poniżej 70
+    } else if (value <= highThreshold) {
+      return const Color(0xFF10B981); // Zielony 70-180
+    } else if (value <= veryHighThreshold) {
+      return const Color(0xFFF59E0B); // Żółty / bursztynowy 180-250
+    } else {
+      return const Color(0xFFDC2626); // Czerwony powyżej 250
+    }
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -201,6 +214,12 @@ class _LoopPredictionChartPainter extends CustomPainter {
       final v = val.clamp(minY, maxY).toDouble();
       final t = (v - minY) / (maxY - minY);
       return topPad + (1.0 - t) * h;
+    }
+
+    double valForY(double y) {
+      if (h <= 0) return minY;
+      final t = (1.0 - ((y - topPad) / h)).clamp(0.0, 1.0);
+      return minY + t * (maxY - minY);
     }
 
     // 1. Pasmo docelowe (70–180 mg/dl)
@@ -258,18 +277,19 @@ class _LoopPredictionChartPainter extends CustomPainter {
 
     final latestReading = data.last;
     final yNow = yFor(latestReading.sgv.toDouble());
+    final latestColor = colorForGlucose(latestReading.sgv.toDouble());
 
-    // 2. Pionowa linia "Teraz"
+    // 2. Pionowa linia "Teraz" w kolorze bieżącego odczytu
     drawDashedChartLine(
       canvas,
       Offset(xNow, topPad),
       Offset(xNow, topPad + h),
       Paint()
-        ..color = const Color(0xFF00A3FF).withValues(alpha: 0.45)
+        ..color = latestColor.withValues(alpha: 0.40)
         ..strokeWidth = 1.0,
     );
 
-    // 3. Rysowanie linii przeszłości z łagodnym Bezierem
+    // 3. Rysowanie linii przeszłości z dynamicznymi kolorami (norma zielona, >180 żółta, >250/<70 czerwona)
     if (pastPoints.isNotEmpty) {
       final pastPath = Path()..moveTo(pastPoints.first.dx, pastPoints.first.dy);
       for (var i = 1; i < pastPoints.length; i++) {
@@ -277,9 +297,31 @@ class _LoopPredictionChartPainter extends CustomPainter {
         final p1 = pastPoints[i];
         final midX = (p0.dx + p1.dx) / 2;
         pastPath.cubicTo(midX, p0.dy, midX, p1.dy, p1.dx, p1.dy);
+
+        final c0 = colorForGlucose(data[i - 1].sgv.toDouble());
+        final c1 = colorForGlucose(data[i].sgv.toDouble());
+
+        final segPath = Path()
+          ..moveTo(p0.dx, p0.dy)
+          ..cubicTo(midX, p0.dy, midX, p1.dy, p1.dx, p1.dy);
+
+        final segPaint = Paint()
+          ..strokeWidth = 2.4
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+
+        if (c0 == c1) {
+          segPaint.color = c1;
+        } else {
+          segPaint.shader = LinearGradient(
+            colors: [c0, c1],
+          ).createShader(Rect.fromPoints(p0, p1));
+        }
+
+        canvas.drawPath(segPath, segPaint);
       }
 
-      // Gradient pod przeszłością
+      // Gradient pod przeszłością w odcieniu bieżącego odczytu
       final fillPath = Path.from(pastPath)
         ..lineTo(xNow, topPad + h)
         ..lineTo(0, topPad + h)
@@ -292,27 +334,17 @@ class _LoopPredictionChartPainter extends CustomPainter {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF00A3FF).withValues(alpha: isDark ? 0.25 : 0.16),
-              const Color(0xFF00A3FF).withValues(alpha: 0.0),
+              latestColor.withValues(alpha: isDark ? 0.22 : 0.12),
+              latestColor.withValues(alpha: 0.0),
             ],
           ).createShader(Rect.fromLTRB(0, topPad, xNow, topPad + h)),
       );
 
-      // Linia przeszłości
-      canvas.drawPath(
-        pastPath,
-        Paint()
-          ..color = const Color(0xFF00A3FF)
-          ..strokeWidth = 2.4
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round,
-      );
-
-      // Punkt TERAZ (pulsujący pierścień)
+      // Punkt TERAZ (pulsujący pierścień w kolorze bieżącego odczytu)
       canvas.drawCircle(
         Offset(xNow, yNow),
         5.5,
-        Paint()..color = const Color(0xFF00A3FF),
+        Paint()..color = latestColor,
       );
       canvas.drawCircle(
         Offset(xNow, yNow),
@@ -328,29 +360,56 @@ class _LoopPredictionChartPainter extends CustomPainter {
         : (latestReading.sgv < 70 ? 105.0 : 110.0);
     final yTarget = yFor(targetVal);
 
-    final predPoints = [
-      Offset(xNow, yNow),
-      Offset(xNow + (w - xNow) * 0.35, yFor((latestReading.sgv + targetVal) / 2 + 10)),
-      Offset(xNow + (w - xNow) * 0.70, yFor(targetVal + 8)),
-      Offset(w, yTarget),
-    ];
+    // Gładka krzywa predykcji od punktu TERAZ do celu za 2h
+    final predPath = Path()..moveTo(xNow, yNow);
+    final dx = w - xNow;
+    final dy = yTarget - yNow;
+    // c1: łagodne rozpoczęcie z uwzględnieniem inercji (początkowy spadek/wzrost 12%)
+    final c1 = Offset(xNow + dx * 0.38, yNow + dy * 0.12);
+    // c2: płynne wypłaszczenie w kierunku poziomu docelowego
+    final c2 = Offset(xNow + dx * 0.72, yTarget + (yNow - yTarget) * 0.05);
+    predPath.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, w, yTarget);
 
-    for (var i = 1; i < predPoints.length; i++) {
-      drawDashedChartLine(
-        canvas,
-        predPoints[i - 1],
-        predPoints[i],
-        Paint()
-          ..color = const Color(0xFF10B981)
-          ..strokeWidth = 2.2,
-      );
+    // Rysowanie przerywanej linii predykcji – każda kreska przyjmuje kolor
+    // odpowiadający prognozowanemu poziomowi cukru w danym punkcie czasu:
+    // > 250: czerwony, > 180: żółty, 70-180: zielony, < 70: czerwony.
+    // Dzięki przerywanej linii prognoza jest natychmiast odróżnialna od linii ciągłej.
+    const dashLength = 3.5;
+    const gapLength = 4.5;
+    for (final metric in predPath.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final endDistance = math.min(distance + dashLength, metric.length);
+        final midDistance = (distance + endDistance) / 2;
+        final tangent = metric.getTangentForOffset(midDistance);
+        if (tangent != null) {
+          final glucoseAtDash = valForY(tangent.position.dy);
+          final dashColor = colorForGlucose(glucoseAtDash);
+          final dashPath = metric.extractPath(distance, endDistance);
+          canvas.drawPath(
+            dashPath,
+            Paint()
+              ..color = dashColor
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2.4
+              ..strokeCap = StrokeCap.round,
+          );
+        }
+        distance += dashLength + gapLength;
+      }
     }
 
-    // Punkt docelowy prognozy
+    // Punkt docelowy prognozy w kolorze docelowym (zielony dla 110)
+    final targetColor = colorForGlucose(targetVal);
     canvas.drawCircle(
-      predPoints.last,
-      4.0,
-      Paint()..color = const Color(0xFF10B981),
+      Offset(w, yTarget),
+      4.5,
+      Paint()..color = targetColor,
+    );
+    canvas.drawCircle(
+      Offset(w, yTarget),
+      2.0,
+      Paint()..color = isDark ? const Color(0xFF1E293B) : Colors.white,
     );
   }
 

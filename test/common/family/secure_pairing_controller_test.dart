@@ -27,6 +27,10 @@ class RecordingSecureFamilyRepository implements SecureFamilyRepository {
   @override
   Future<void> requestJoin(String code) async {}
   @override
+  Future<void> requestJoinByCode(String code) async {}
+  @override
+  Future<void> refresh() async {}
+  @override
   Future<void> decide(String id, {required bool approve}) async {}
   @override
   Future<void> disconnect(String id) async {}

@@ -4,8 +4,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../common/auth/google_authentication_providers.dart';
 import '../../../../common/l10n/language.dart';
-import '../../../../common/presentation/day/day_history_statistics.dart';
 import '../../data/caregiver_day_context_provider.dart';
+import 'day_presentations/caregiver_day_timeline_view.dart';
 
 class CaregiverDaySummary extends ConsumerWidget {
   const CaregiverDaySummary({
@@ -76,20 +76,31 @@ class CaregiverDaySummary extends ConsumerWidget {
               ),
             ],
           ),
-          data: (day) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                context.lang.dayAsOf(
-                  DateFormat(
-                    'dd.MM.yyyy HH:mm',
-                    context.lang.localeName,
-                  ).format(day.asOf),
+          data: (day) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    context.lang.dayAsOf(
+                      DateFormat(
+                        'dd.MM.yyyy HH:mm',
+                        context.lang.localeName,
+                      ).format(day.asOf),
+                    ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF64748B),
+                    ),
+                  ),
                 ),
-              ),
-              DayHistoryStatistics(day: day),
-            ],
-          ),
+                CaregiverDayTimelineView(day: day),
+              ],
+            );
+          },
         ),
       ],
     );

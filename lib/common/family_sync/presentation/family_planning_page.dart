@@ -24,6 +24,7 @@ import '../family_planning_controller.dart';
 import '../family_planning_view.dart';
 import 'family_activity_log_card.dart';
 import 'family_activity_plan_form.dart';
+import 'family_active_meal_card.dart';
 import 'family_collections_body.dart';
 import 'family_meal_photo_page.dart';
 import 'family_meal_plan_form.dart';
@@ -32,6 +33,7 @@ import 'family_planned_activity_card.dart';
 import 'family_planned_meal_card.dart';
 import 'family_record_page.dart';
 import 'family_scope_guard.dart';
+import '../../widgets/meal_progress/meal_progress_section_heading.dart';
 
 class FamilyPlanningPage extends ConsumerStatefulWidget {
   const FamilyPlanningPage({
@@ -441,6 +443,71 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     );
   }
 
+  Widget _buildPlannedMealCard(Map<String, dynamic> row) {
+    return DashboardCardPadding(
+      enabled: homeLayout,
+      child: FamilyPlannedMealCard(
+        decisionAction: MealDecisionRemoteMealAction(
+          mealId: (row['payload'] as Map)['id'] as int,
+        ),
+        onOpen: recordOpener(
+          context,
+          'meals',
+          (row['payload'] as Map)['id'] as int,
+        ),
+        onRetry: enabled
+            ? familyPlanRetryForRecord(
+                controller.plans,
+                'meals',
+                (row['payload'] as Map)['id'] as int,
+                edit,
+              )
+            : null,
+        requestStatusLabel: familyPlanRecordLabel(
+          context,
+          controller.plans,
+          'meals',
+          (row['payload'] as Map)['id'] as int,
+        ),
+        payload: row['payload'] as Map,
+        ingredients: controller.ofKind('ingredients'),
+        components: controller
+            .ofKind('mealIngredients')
+            .where(
+              (r) =>
+                  (r['payload'] as Map)['meal_id'] ==
+                  (row['payload'] as Map)['id'],
+            )
+            .toList(),
+        snapshots: controller
+            .ofKind('mealSnapshots')
+            .where(
+              (r) =>
+                  (r['payload'] as Map)['meal_id'] ==
+                  (row['payload'] as Map)['id'],
+            )
+            .toList(),
+        history: controller
+            .ofKind('mealHistory')
+            .where(
+              (r) =>
+                  (r['payload'] as Map)['meal_id'] ==
+                  (row['payload'] as Map)['id'],
+            )
+            .toList(),
+        monitoring: controller.monitored(
+          'meals',
+          (row['payload'] as Map)['id'] as int,
+        ),
+        locked: controller.locked(
+          'meals',
+          (row['payload'] as Map)['id'] as int,
+        ),
+        onEdit: mealEditor((row['payload'] as Map)['id'] as int),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(authenticatedFamilyTransportProvider);
@@ -605,75 +672,69 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                 ],
               ),
             if (showMeals && visibleMeals.isNotEmpty) ...[
-              if (!homeLayout) const SizedBox(height: 16),
-              if (widget.view != FamilyPlanningView.home)
-                Text(
-                  context.lang.familySyncMeals,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              for (final row in visibleMeals)
-                DashboardCardPadding(
-                  enabled: homeLayout,
-                  child: FamilyPlannedMealCard(
-                    decisionAction: MealDecisionRemoteMealAction(
-                      mealId: (row['payload'] as Map)['id'] as int,
+              if (homeLayout) ...[
+                const SizedBox(height: 8),
+                if (visibleMeals.any((row) => mealStatusBlocksAnotherMealActivation((row['payload'] as Map)['status'] as String?))) ...[
+                  DashboardCardPadding(
+                    enabled: true,
+                    child: MealProgressSectionHeading(
+                      title: context.lang.mealProgressCurrent,
                     ),
-                    onOpen: recordOpener(
-                      context,
-                      'meals',
-                      (row['payload'] as Map)['id'] as int,
-                    ),
-                    onRetry: enabled
-                        ? familyPlanRetryForRecord(
-                            controller.plans,
-                            'meals',
-                            (row['payload'] as Map)['id'] as int,
-                            edit,
-                          )
-                        : null,
-                    requestStatusLabel: familyPlanRecordLabel(
-                      context,
-                      controller.plans,
-                      'meals',
-                      (row['payload'] as Map)['id'] as int,
-                    ),
-                    payload: row['payload'] as Map,
-                    ingredients: controller.ofKind('ingredients'),
-                    components: controller
-                        .ofKind('mealIngredients')
-                        .where(
-                          (r) =>
-                              (r['payload'] as Map)['meal_id'] ==
-                              (row['payload'] as Map)['id'],
-                        )
-                        .toList(),
-                    snapshots: controller
-                        .ofKind('mealSnapshots')
-                        .where(
-                          (r) =>
-                              (r['payload'] as Map)['meal_id'] ==
-                              (row['payload'] as Map)['id'],
-                        )
-                        .toList(),
-                    history: controller
-                        .ofKind('mealHistory')
-                        .where(
-                          (r) =>
-                              (r['payload'] as Map)['meal_id'] ==
-                              (row['payload'] as Map)['id'],
-                        )
-                        .toList(),
-                    monitoring: controller.monitored(
-                      'meals',
-                      (row['payload'] as Map)['id'] as int,
-                    ),
-                    locked: controller.locked(
-                      'meals',
-                      (row['payload'] as Map)['id'] as int,
-                    ),
-                    onEdit: mealEditor((row['payload'] as Map)['id'] as int),
                   ),
-                ),
+                  for (final row in visibleMeals.where((r) => mealStatusBlocksAnotherMealActivation((r['payload'] as Map)['status'] as String?)))
+                    DashboardCardPadding(
+                      enabled: true,
+                      child: FamilyActiveMealCard(
+                        payload: row['payload'] as Map,
+                        now: DateTime.now(),
+                        monitoring: controller.monitored(
+                          'meals',
+                          (row['payload'] as Map)['id'] as int,
+                        ),
+                        decisionAction: MealDecisionRemoteMealAction(
+                          mealId: (row['payload'] as Map)['id'] as int,
+                        ),
+                        onOpen: recordOpener(
+                          context,
+                          'meals',
+                          (row['payload'] as Map)['id'] as int,
+                        ),
+                      ),
+                    ),
+                ],
+                if (visibleMeals.any((row) => mealStatusReadyToSummarize((row['payload'] as Map)['status'] as String?))) ...[
+                  const SizedBox(height: 4),
+                  DashboardCardPadding(
+                    enabled: true,
+                    child: MealProgressSectionHeading(
+                      title: context.lang.mealProgressToSummarize,
+                    ),
+                  ),
+                  for (final row in visibleMeals.where((r) => mealStatusReadyToSummarize((r['payload'] as Map)['status'] as String?)))
+                    _buildPlannedMealCard(row),
+                ],
+                if (visibleMeals.any((row) => !mealStatusBlocksAnotherMealActivation((row['payload'] as Map)['status'] as String?) && !mealStatusReadyToSummarize((row['payload'] as Map)['status'] as String?))) ...[
+                  const SizedBox(height: 4),
+                  if (visibleMeals.any((row) => mealStatusBlocksAnotherMealActivation((row['payload'] as Map)['status'] as String?) || mealStatusReadyToSummarize((row['payload'] as Map)['status'] as String?)))
+                    DashboardCardPadding(
+                      enabled: true,
+                      child: MealProgressSectionHeading(
+                        title: context.lang.familySyncMeals,
+                      ),
+                    ),
+                  for (final row in visibleMeals.where((r) => !mealStatusBlocksAnotherMealActivation((r['payload'] as Map)['status'] as String?) && !mealStatusReadyToSummarize((r['payload'] as Map)['status'] as String?)))
+                    _buildPlannedMealCard(row),
+                ],
+              ] else ...[
+                if (!homeLayout) const SizedBox(height: 16),
+                if (widget.view != FamilyPlanningView.home)
+                  Text(
+                    context.lang.familySyncMeals,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                for (final row in visibleMeals)
+                  _buildPlannedMealCard(row),
+              ],
             ],
             if (showActivities &&
                 (visibleOccurrences.isNotEmpty || visibleLogs.isNotEmpty)) ...[

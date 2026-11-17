@@ -62,17 +62,17 @@ class DashboardGlucoseReading extends ConsumerWidget {
         readings ?? ref.watch(bloodSugarReadingsListProvider).asData?.value;
     final effectiveValue = value ?? history?.firstOrNull?.sgv;
 
-    // Kolor statusu w palecie Loop
+    // Kolor statusu w palecie glikemii (poniżej 70 czerwony, 70-180 zielony, 180-250 żółty, powyżej 250 czerwony)
     final Color statusColor;
     if (effectiveValue != null) {
       if (effectiveValue < 70) {
         statusColor = const Color(0xFFEF4444); // hipoglikemia (czerwony)
-      } else if (effectiveValue < 180) {
-        statusColor = const Color(0xFF00A3FF); // norma (Loop cyan/blue)
-      } else if (effectiveValue < 250) {
-        statusColor = const Color(0xFFF59E0B); // hiperglikemia (bursztynowy)
+      } else if (effectiveValue <= 180) {
+        statusColor = const Color(0xFF10B981); // norma (zielony)
+      } else if (effectiveValue <= 250) {
+        statusColor = const Color(0xFFF59E0B); // hiperglikemia (żółty/bursztynowy)
       } else {
-        statusColor = const Color(0xFFDC2626); // znaczna hiperglikemia
+        statusColor = const Color(0xFFDC2626); // znaczna hiperglikemia (czerwony)
       }
     } else {
       statusColor = color;
@@ -346,8 +346,8 @@ class DashboardGlucoseReading extends ConsumerWidget {
                       Container(
                         width: 7,
                         height: 7,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF00A3FF),
+                        decoration: BoxDecoration(
+                          color: statusColor,
                           shape: BoxShape.circle,
                         ),
                       ),

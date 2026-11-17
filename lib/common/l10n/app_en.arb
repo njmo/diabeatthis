@@ -3954,6 +3954,8 @@
   "activityClearSelection": "Clear selected activity",
   "nightscoutHistoryUnavailable": "Could not load Nightscout history. Check the connection and try again.",
   "familyLoading": "Loading family…",
+  "familyLoadingTitle": "Loading family information…",
+  "familyLoadingExplanation": "Checking family group and linked accounts for this Google account.",
   "setupFamilyDisconnectBeforeDisable": "Linked accounts must disconnect before family care can be turned off.",
   "familyManageAction": "Manage family",
   "caregiverDaySummaryTitle": "Nightscout day summary",
@@ -4199,5 +4201,13 @@
   "setupMonitoringLocalTitle": "Local monitoring",
   "setupMonitoringLocalDescription": "Operates only on this phone without uploading data to Nightscout.",
   "setupMonitoringUploadTitle": "Monitoring with Nightscout upload",
-  "setupMonitoringUploadDescription": "Automatically uploads entries to your Nightscout instance."
+  "setupMonitoringUploadDescription": "Automatically uploads entries to your Nightscout instance.",
+  "familyEnterCodeManually": "Enter code manually",
+  "familyEnterPairingCode": "Enter pairing code",
+  "familyPairingCodeLabel": "Pairing code",
+  "familyPairingCodeHint": "Enter the 8-character code (XXXX-XXXX).",
+  "familyPairingCodeInvalid": "Enter a valid 8-character pairing code.",
+  "familyPairingCodeSubmit": "Continue",
+  "familyCopyCode": "Copy code",
+  "familyCodeCopied": "Code copied"
 }

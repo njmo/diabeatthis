@@ -6,9 +6,10 @@ import 'package:diabeatthis/common/family_sync/family_planning_view.dart';
 import 'package:diabeatthis/common/family_sync/presentation/family_activity_log_card.dart';
 import 'package:diabeatthis/common/family_sync/presentation/family_planned_activity_card.dart';
 import 'package:diabeatthis/common/family_sync/presentation/family_planned_meal_card.dart';
-import 'package:diabeatthis/common/presentation/day/day_history_statistics.dart';
+import 'package:diabeatthis/features/caregiver/presentation/widgets/day_presentations/caregiver_day_timeline_view.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
+import 'package:diabeatthis/features/caregiver/presentation/widgets/caregiver_day_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -59,7 +60,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byType(DayHistoryStatistics), findsOneWidget);
+      expect(find.byType(CaregiverDayTimelineView), findsOneWidget);
       await tester.drag(find.byType(ListView).first, const Offset(0, -10000));
       await tester.pumpAndSettle();
       expect(find.byType(FamilyActivityLogCard), findsNothing);
@@ -69,7 +70,7 @@ void main() {
       fixture.family.notifyListeners();
       await tester.pump();
       expect(find.byType(LinearProgressIndicator), findsNothing);
-      expect(find.byType(DayHistoryStatistics), findsOneWidget);
+      expect(find.byType(CaregiverDayTimelineView), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     },

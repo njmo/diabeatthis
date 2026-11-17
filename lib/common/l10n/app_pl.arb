@@ -4411,6 +4411,8 @@
   "activityClearSelection": "Usuń wybór aktywności",
   "nightscoutHistoryUnavailable": "Nie udało się pobrać historii Nightscout. Sprawdź połączenie i spróbuj ponownie.",
   "familyLoading": "Ładowanie rodziny…",
+  "familyLoadingTitle": "Ładowanie informacji o rodzinie…",
+  "familyLoadingExplanation": "Sprawdzanie grupy rodzinnej i powiązanych kont dla tego profilu Google.",
   "setupFamilyDisconnectBeforeDisable": "Przed wyłączeniem opieki trzeba odłączyć powiązane konta.",
   "familyManageAction": "Zarządzaj rodziną",
   "caregiverDaySummaryTitle": "Podsumowanie dnia z Nightscout",
@@ -4656,5 +4658,13 @@
   "setupMonitoringLocalTitle": "Monitorowanie lokalne",
   "setupMonitoringLocalDescription": "Działanie wyłącznie na tym telefonie, bez przesyłania danych do Nightscout.",
   "setupMonitoringUploadTitle": "Monitorowanie z zapisem do Nightscout",
-  "setupMonitoringUploadDescription": "Automatyczne przesyłanie wpisów do Twojej instancji Nightscout."
+  "setupMonitoringUploadDescription": "Automatyczne przesyłanie wpisów do Twojej instancji Nightscout.",
+  "familyEnterCodeManually": "Wpisz kod ręcznie",
+  "familyEnterPairingCode": "Wpisz kod parowania",
+  "familyPairingCodeLabel": "Kod parowania",
+  "familyPairingCodeHint": "Wpisz 8-znakowy kod (XXXX-XXXX).",
+  "familyPairingCodeInvalid": "Wpisz poprawny 8-znakowy kod parowania.",
+  "familyPairingCodeSubmit": "Dalej",
+  "familyCopyCode": "Kopiuj kod",
+  "familyCodeCopied": "Kod skopiowany"
 }

@@ -6,6 +6,8 @@ const {getMessaging} = require('firebase-admin/messaging');
 const {onDocumentCreated} = require('firebase-functions/v2/firestore');
 const {createDecisionNotifications} = require('./common/decision_notifications.cjs');
 const {createMealDecisionService} = require('./common/meal_decision_service.cjs');
+const {defineSecret} = require('firebase-functions/params');
+const pairingHmacKey = defineSecret('PAIRING_HMAC_KEY');
 const {onCall, HttpsError} = require('firebase-functions/v2/https');
 const {requireGoogle, profile, FamilyError} = require('./common/security.cjs');
 const {createFamilyService} = require('./common/family_service.cjs');
@@ -22,10 +24,10 @@ for (const [name, operation] of Object.entries({
   mealDecision: 'mealDecision', registerMealDecisionNotifications: 'registerMealDecisionNotifications',
   claimFamilyPlan:'claimPlan', submitFamilyPlan:'submitPlan', fetchFamilyPlans:'fetchPlans', acknowledgeFamilyPlan:'acknowledgePlan',
   registerFamilyMirror: 'registerMirror', publishFamilyMirror: 'publishMirror', fetchFamilyMirror: 'fetchMirror',
-  createFamilyInvite: 'createInvite', requestFamilyJoin: 'requestJoin', decideFamilyJoin: 'decide',
+  createFamilyInvite: 'createInvite', requestFamilyJoin: 'requestJoin', requestFamilyJoinByCode: 'requestJoinByCode', decideFamilyJoin: 'decide',
   getFamilyStatus: 'status', disconnectFamilyMember: 'disconnect', finalizeFamilySetup: 'finalize',
 })) {
-  exports[name] = onCall({region: 'europe-west1', enforceAppCheck: true, maxInstances: 4, concurrency: 20, timeoutSeconds: 20}, async request => {
+  exports[name] = onCall({secrets: [pairingHmacKey], region: 'europe-west1', enforceAppCheck: true, maxInstances: 4, concurrency: 20, timeoutSeconds: 20}, async request => {
     try {
       const uid = requireGoogle(request);
       // Check revocation and disabled accounts, not only the callable's cached token validation.

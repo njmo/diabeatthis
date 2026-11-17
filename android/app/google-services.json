@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "1018488815956-l65vcng8hr9fnas13tt7jkoqbfvi9jvv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "pl.diabeatthis.app",
+            "certificate_hash": "9b50f825aeb85c669fe704f2c775d3855973db64"
+          }
+        },
+        {
           "client_id": "1018488815956-bp0gq7bm2voc5j9tmvms5u8mvptaj9kd.apps.googleusercontent.com",
           "client_type": 3
         }

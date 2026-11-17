@@ -2,9 +2,11 @@ import 'ai_provider_capabilities.dart';
 import 'ai_provider_kind.dart';
 
 class AiConfiguration {
+  static const diabeatthisAiDefaultModel = 'gemini-2.5-flash';
+
   const AiConfiguration({
     this.provider = AiProviderKind.firebase,
-    this.firebaseModel = 'gemini-2.5-flash',
+    this.firebaseModel = diabeatthisAiDefaultModel,
     this.openAiModel = 'gpt-6-luna',
     this.chatGptModel = '',
     this.imageProvider,
@@ -82,7 +84,7 @@ class AiConfiguration {
               orElse: () =>
                   throw const FormatException('Unknown image provider'),
             ),
-      firebaseModel: json['firebaseModel'] as String? ?? 'gemini-2.5-flash',
+      firebaseModel: diabeatthisAiDefaultModel,
       openAiModel: json['openAiModel'] as String? ?? 'gpt-6-luna',
       chatGptModel: json['chatGptModel'] as String? ?? '',
     );

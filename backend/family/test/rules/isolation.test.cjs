@@ -15,3 +15,11 @@ test('all client identities are denied family reads, forged membership, messages
     await assertFails(getDocs(collection(db, 'families')));
   }
 });
+
+test('pairing code index denies unauthenticated and authenticated client reads and writes', async () => {
+  for (const context of [env.unauthenticatedContext(), env.authenticatedContext('parent')]) {
+    const ref = doc(context.firestore(), 'pairingCodeIndex/test');
+    await assertFails(getDoc(ref));
+    await assertFails(setDoc(ref, {inviteId: '1'}));
+  }
+});

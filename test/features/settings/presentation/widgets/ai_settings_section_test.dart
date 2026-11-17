@@ -105,6 +105,7 @@ void main() {
       final parentForm = GlobalKey<FormState>();
       await pumpAiSettings(tester, controller, parentFormKey: parentForm);
       expect(find.byType(Form), findsOneWidget);
+      await selectAiProvider(tester, 'OpenAI — własny klucz API');
       await tester.enterText(find.widgetWithText(TextField, 'Model AI'), '');
 
       expect(parentForm.currentState!.validate(), isTrue);

@@ -71,7 +71,7 @@ void main() {
                 theme: ThemeData(
                   brightness: dark ? Brightness.dark : Brightness.light,
                 ),
-                home: const Scaffold(body: CaregiverNightscoutPanel()),
+                home: const Scaffold(body: CaregiverNightscoutPanel(showMetrics: true)),
               ),
             ),
           );

@@ -1,4 +1,5 @@
 'use strict';
+process.env.PAIRING_HMAC_KEY = 'pairing-code-test-secret';
 const test=require('node:test');const assert=require('node:assert/strict');
 const {initializeApp,deleteApp}=require('firebase-admin/app');const {getFirestore}=require('firebase-admin/firestore');
 const {createFamilyService}=require('../../common/family_service.cjs');const {createMirrorService}=require('../../common/mirror_service.cjs');const {createPlanService}=require('../../common/plan_service.cjs');

@@ -7,6 +7,7 @@ import '../../../../../common/setup/domain/setup_feature.dart';
 import '../../widgets/google_account_card.dart';
 import '../setup_wizard_controller.dart';
 import '../widgets/setup_family_pairing_panel.dart';
+import '../widgets/setup_family_status_notice.dart';
 import '../widgets/setup_step_heading.dart';
 
 class SetupFamilyModule extends StatelessWidget {
@@ -25,6 +26,15 @@ class SetupFamilyModule extends StatelessWidget {
             : context.lang.setupFamilyLiveDescription,
       ),
       const SizedBox(height: 16),
+      if (controller.familyCareLocked ||
+          (controller.state.familyMembersFailed &&
+              controller.familyRepository is SecureFamilyRepository))
+        SetupFamilyStatusNotice(
+          isPending: controller.familyMembershipPending &&
+              !controller.state.familyMembersFailed,
+          hasFailed: controller.state.familyMembersFailed,
+          onRetry: controller.refreshFamilyMembers,
+        ),
       GoogleAccountCard(
         account: controller.state.googleAccount,
         signedIn: controller.state.signedIn,
@@ -37,12 +47,6 @@ class SetupFamilyModule extends StatelessWidget {
             ? null
             : controller.signOutGoogle,
       ),
-      if (controller.familyCareLocked)
-        Text(
-          controller.familyMembershipPending
-              ? context.lang.familyLoading
-              : context.lang.setupFamilyDisconnectBeforeDisable,
-        ),
       if (controller.state.signedIn) ...[
         const SizedBox(height: 16),
         if (controller.familyRepository

@@ -912,6 +912,9 @@ class SetupWizardController extends ChangeNotifier {
     }
 
     try {
+      if (familyRepository case final SecureFamilyRepository secureRepo) {
+        unawaited(secureRepo.refresh());
+      }
       familySubscription = watchFamilyMembers(state.mode).listen(
         (members) {
           if (disposed ||

@@ -8,11 +8,12 @@ import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_re
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/caregiver/presentation/widgets/caregiver_day_summary.dart';
+import 'package:diabeatthis/features/caregiver/presentation/widgets/day_presentations/caregiver_day_device_age_card.dart';
+import 'package:diabeatthis/features/caregiver/presentation/widgets/day_presentations/caregiver_day_glucose_chart.dart';
+import 'package:diabeatthis/features/caregiver/presentation/widgets/day_presentations/caregiver_day_timeline_view.dart';
+import 'package:diabeatthis/features/caregiver/presentation/widgets/day_presentations/caregiver_night_summary_card.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_activity_card.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_ai_button.dart';
-import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_device_age_card.dart';
-import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_glucose_card.dart';
-import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_insulin_card.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_meals_card.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_review_section.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +38,7 @@ class ControlledDayNightscout extends DayStatisticsNightscout {
 void main() {
   final selected = DateTime(2026, 11, 5);
   testWidgets(
-    'caregiver shows shared NS cards without local DB, links or AI; retry recovers one missing source',
+    'caregiver shows timeline view without local DB, links or AI; retry recovers one missing source',
     (tester) async {
       final repository = DayStatisticsNightscout(selected)..failGlucose = true;
       await tester.pumpWidget(
@@ -66,29 +67,21 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.byType(DayGlucoseCard), findsNWidgets(2));
-      expect(find.byType(DayInsulinCard), findsNWidgets(2));
-      expect(find.byType(DayDeviceAgeCard), findsOneWidget);
+      expect(find.byType(CaregiverDayTimelineView), findsOneWidget);
+      expect(find.byType(CaregiverDayDeviceAgeCard), findsOneWidget);
+      expect(find.byType(CaregiverNightSummaryCard), findsOneWidget);
+      expect(find.byType(CaregiverDayGlucoseChart), findsOneWidget);
       expect(find.byType(DayMealsCard), findsNothing);
       expect(find.byType(DayActivityCard), findsNothing);
       expect(find.byType(DayReviewSection), findsNothing);
       expect(find.byType(DayAiButton), findsNothing);
-      expect(
-        tester
-            .widgetList<DayGlucoseCard>(find.byType(DayGlucoseCard))
-            .every((card) => card.summary == null),
-        isTrue,
-      );
+      expect(find.text('--'), findsWidgets);
+
       repository.failGlucose = false;
       final context = tester.element(find.byType(CaregiverDaySummary));
       await tester.tap(find.byTooltip(context.lang.dayRefresh));
       await tester.pumpAndSettle();
-      expect(
-        tester
-            .widgetList<DayGlucoseCard>(find.byType(DayGlucoseCard))
-            .every((card) => card.summary!.mean == 120),
-        isTrue,
-      );
+      expect(find.text('120'), findsWidgets);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     },
@@ -165,16 +158,7 @@ void main() {
         ),
       ]);
       await tester.pumpAndSettle();
-      DayGlucoseCard dayCard() => tester
-          .widgetList<DayGlucoseCard>(find.byType(DayGlucoseCard))
-          .firstWhere(
-            (card) =>
-                card.title ==
-                AppLocalizations.of(
-                  tester.element(find.byType(CaregiverDaySummary)),
-                ).dayGlucoseTitle,
-          );
-      expect(dayCard().summary!.mean, 155);
+      expect(find.text('155'), findsWidgets);
       old.complete([
         Glucose(
           externalId: 'old',
@@ -185,7 +169,8 @@ void main() {
         ),
       ]);
       await tester.pumpAndSettle();
-      expect(dayCard().summary!.mean, 155);
+      expect(find.text('155'), findsWidgets);
+      expect(find.text('111'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
       container.dispose();

@@ -25,6 +25,7 @@ class DeviceStatusDashboard extends ConsumerWidget {
     this.glucose,
     this.useDeviceGlucose = true,
     this.showIobCob = false,
+    this.showDeviceCards = true,
   });
   final bool allowLocalActions;
   final Glucose? glucose;
@@ -32,6 +33,7 @@ class DeviceStatusDashboard extends ConsumerWidget {
   final bool? readingIsOld;
   final List<Glucose>? readings;
   final bool showIobCob;
+  final bool showDeviceCards;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,7 +54,7 @@ class DeviceStatusDashboard extends ConsumerWidget {
       device: deviceStatus.externalId,
     );
 
-    final showCards = allowLocalActions && !showIobCob;
+    final showCards = showDeviceCards && !showIobCob;
 
     return RepaintBoundary(
       child: Column(
@@ -76,7 +78,7 @@ class DeviceStatusDashboard extends ConsumerWidget {
               pumpType: detectedPump,
               showDeviceCards: showCards,
             ),
-          if (showIobCob || !allowLocalActions) ...[
+          if (showIobCob) ...[
             const SizedBox(height: 4),
             InsulinCarbohydrateMetrics(
               iob: deviceStatus.iob,
