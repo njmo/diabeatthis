@@ -42,21 +42,6 @@ class CaregiverDaySummary extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                context.lang.caregiverDaySummaryTitle,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ),
-            IconButton(
-              tooltip: context.lang.dayRefresh,
-              onPressed: state.isLoading ? null : refresh,
-              icon: const Icon(Icons.refresh),
-            ),
-          ],
-        ),
         state.when(
           skipLoadingOnRefresh: false,
           skipLoadingOnReload: false,
@@ -69,6 +54,11 @@ class CaregiverDaySummary extends ConsumerWidget {
           error: (_, _) => Column(
             children: [
               Text(context.lang.daySourceUnavailable),
+              IconButton(
+                tooltip: context.lang.dayRefresh,
+                onPressed: refresh,
+                icon: const Icon(Icons.refresh),
+              ),
               TextButton.icon(
                 onPressed: refresh,
                 icon: const Icon(Icons.refresh),
@@ -82,19 +72,33 @@ class CaregiverDaySummary extends ConsumerWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    context.lang.dayAsOf(
-                      DateFormat(
-                        'dd.MM.yyyy HH:mm',
-                        context.lang.localeName,
-                      ).format(day.asOf),
-                    ),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFF94A3B8)
-                          : const Color(0xFF64748B),
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        context.lang.dayAsOf(
+                          DateFormat(
+                            'dd.MM.yyyy HH:mm',
+                            context.lang.localeName,
+                          ).format(day.asOf),
+                        ),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFF94A3B8)
+                              : const Color(0xFF64748B),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: context.lang.dayRefresh,
+                        onPressed: state.isLoading ? null : refresh,
+                        icon: const Icon(Icons.refresh, size: 18),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
                   ),
                 ),
                 CaregiverDayTimelineView(day: day),

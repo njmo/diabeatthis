@@ -191,16 +191,24 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
                         fontWeight: FontWeight.w700,
                         color: numColor,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     if (minGlucose != null && maxGlucose != null)
-                      Text(
-                        'Min: $minGlucose · Max: $maxGlucose mg/dl · Śr: ${meanGlucose ?? '—'}',
-                        style: TextStyle(fontSize: 11, color: mutedColor),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Min: $minGlucose · Max: $maxGlucose mg/dl · Śr: ${meanGlucose ?? '—'}',
+                          style: TextStyle(fontSize: 11, color: mutedColor),
+                          maxLines: 1,
+                        ),
                       ),
                   ],
                 ),
               ),
-              if (readings.isNotEmpty)
+              if (readings.isNotEmpty) ...[
+                const SizedBox(width: 6),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -238,6 +246,7 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
                     ],
                   ),
                 ),
+              ],
             ],
           ),
 
@@ -338,24 +347,34 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
 
           const SizedBox(height: 8),
 
-          // 5. Legenda i czas w poszczególnych zakresach
+          // 5. Legenda i czas w poszczególnych zakresach (odporna na overflow)
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildLegendItem(
-                color: const Color(0xFFEF4444),
-                label: 'Nisko <70: $lowPercent% (${lowMinutes}m)',
-                mutedColor: mutedColor,
+              Expanded(
+                child: _buildLegendItem(
+                  color: const Color(0xFFEF4444),
+                  label: '<70: $lowPercent% (${lowMinutes}m)',
+                  mutedColor: mutedColor,
+                  alignment: Alignment.centerLeft,
+                ),
               ),
-              _buildLegendItem(
-                color: const Color(0xFF10B981),
-                label: 'W normie: $tirPercent% (${(inRangeMinutes / 60).toStringAsFixed(1)}h)',
-                mutedColor: mutedColor,
+              const SizedBox(width: 4),
+              Expanded(
+                child: _buildLegendItem(
+                  color: const Color(0xFF10B981),
+                  label: 'Norma: $tirPercent% (${(inRangeMinutes / 60).toStringAsFixed(1)}h)',
+                  mutedColor: mutedColor,
+                  alignment: Alignment.center,
+                ),
               ),
-              _buildLegendItem(
-                color: const Color(0xFFF59E0B),
-                label: 'Wysoko >180: $highPercent% (${(highMinutes / 60).toStringAsFixed(1)}h)',
-                mutedColor: mutedColor,
+              const SizedBox(width: 4),
+              Expanded(
+                child: _buildLegendItem(
+                  color: const Color(0xFFF59E0B),
+                  label: '>180: $highPercent% (${(highMinutes / 60).toStringAsFixed(1)}h)',
+                  mutedColor: mutedColor,
+                  alignment: Alignment.centerRight,
+                ),
               ),
             ],
           ),
@@ -413,21 +432,30 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
     required Color color,
     required String label,
     required Color mutedColor,
+    Alignment alignment = Alignment.center,
   }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 7,
-          height: 7,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: mutedColor),
-        ),
-      ],
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: alignment,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: mutedColor,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

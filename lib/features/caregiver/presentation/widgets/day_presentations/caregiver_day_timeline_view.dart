@@ -62,7 +62,7 @@ class CaregiverDayTimelineView extends StatelessWidget {
     Widget buildPill(String title, String value, Color color, IconData icon) {
       return Expanded(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           decoration: BoxDecoration(
             color: cardBg,
             borderRadius: BorderRadius.circular(14),
@@ -79,23 +79,31 @@ class CaregiverDayTimelineView extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 16, color: color),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: numColor,
+              const SizedBox(height: 3),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: numColor,
+                  ),
+                  maxLines: 1,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
-              Text(
-                title,
-                style: TextStyle(fontSize: 10, color: mutedColor),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: mutedColor,
+                  ),
+                  maxLines: 1,
+                ),
               ),
             ],
           ),
@@ -245,10 +253,7 @@ class CaregiverDayTimelineView extends StatelessWidget {
         // 1. Zwięzłe kafelki wieku sprzętu (Sensor & Pod)
         CaregiverDayDeviceAgeCard(day: day),
 
-        // 2. Karta podsumowania poprzedniej nocy (22:00 – 06:00) z dedykowanym wykresem
-        CaregiverNightSummaryCard(day: day),
-
-        // 3. Rząd 4 pigułek dobowych (Top Quick HUD)
+        // 2. Rząd 4 pigułek dobowych (Top Quick HUD)
         Row(
           children: [
             buildPill(
@@ -257,21 +262,21 @@ class CaregiverDayTimelineView extends StatelessWidget {
               (tir ?? 0) >= 70 ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
               Icons.track_changes_rounded,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             buildPill(
               'Średnia',
               mean != null ? '$mean' : '--',
               const Color(0xFF00A3FF),
               Icons.bloodtype_outlined,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             buildPill(
               'Hipo <70',
               lowMin != null ? '${lowMin}m' : '--',
               (lowMin ?? 0) > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981),
               Icons.warning_amber_rounded,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             buildPill(
               'Insulina',
               totalInsulin != null ? '${totalInsulin.toStringAsFixed(1)}j' : '--',
@@ -282,12 +287,15 @@ class CaregiverDayTimelineView extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // 4. Nowoczesny wykres glikemii 24h (płynna wstęga bez pinezek)
+        // 3. Nowoczesny wykres glikemii 24h (płynna wstęga bez pinezek)
         CaregiverDayGlucoseChart(
           day: day,
           initialStyle: CaregiverChartStyle.smoothSpline,
           showStyleSelector: false,
         ),
+
+        // 4. Karta podsumowania poprzedniej nocy (22:00 – 06:00) widoczna bezpośrednio z kafelkami
+        CaregiverNightSummaryCard(day: day),
 
         // 5. Oś czasu zdarzeń w ciągu dnia
         Container(

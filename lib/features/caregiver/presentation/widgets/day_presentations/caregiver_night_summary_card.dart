@@ -10,11 +10,9 @@ class CaregiverNightSummaryCard extends StatefulWidget {
   const CaregiverNightSummaryCard({
     super.key,
     required this.day,
-    this.initiallyExpanded = true,
   });
 
   final DayContext day;
-  final bool initiallyExpanded;
 
   @override
   State<CaregiverNightSummaryCard> createState() =>
@@ -22,14 +20,7 @@ class CaregiverNightSummaryCard extends StatefulWidget {
 }
 
 class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
-  late bool _isExpanded;
   Offset? _touchOffset;
-
-  @override
-  void initState() {
-    super.initState();
-    _isExpanded = widget.initiallyExpanded;
-  }
 
   @override
   void didUpdateWidget(CaregiverNightSummaryCard oldWidget) {
@@ -37,6 +28,67 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
     if (oldWidget.day.start != widget.day.start) {
       _touchOffset = null;
     }
+  }
+
+  Widget _buildNightPill({
+    required String title,
+    required String value,
+    required Color color,
+    required IconData icon,
+    required bool isDark,
+    required Color numColor,
+    required Color mutedColor,
+    required Color borderColor,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(height: 3),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: numColor,
+                ),
+                maxLines: 1,
+              ),
+            ),
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: mutedColor,
+                ),
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -88,25 +140,6 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
     final nightBasalUnits = day.nightBasal?.units;
     final hasData = readings.isNotEmpty || (n != null && n.window.observed > Duration.zero);
 
-    String statusLabel;
-    Color statusColor;
-    if (!hasData) {
-      statusLabel = 'Brak danych';
-      statusColor = mutedColor;
-    } else if (lowMinutes != null && lowMinutes > 0) {
-      statusLabel = '⚠️ Hipo ${lowMinutes}m';
-      statusColor = const Color(0xFFEF4444);
-    } else if (tirPercent != null && tirPercent >= 70) {
-      statusLabel = 'W normie ✅';
-      statusColor = const Color(0xFF10B981);
-    } else if (tirPercent != null) {
-      statusLabel = 'TIR $tirPercent%';
-      statusColor = const Color(0xFFF59E0B);
-    } else {
-      statusLabel = 'Baza nocna';
-      statusColor = const Color(0xFF6366F1);
-    }
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -121,312 +154,257 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 1. Nagłówek karty (kliknięcie zwija/rozwija)
-          InkWell(
-            onTap: () => setState(() => _isExpanded = !_isExpanded),
-            borderRadius: BorderRadius.circular(18),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 1. Nagłówek karty (zawsze widoczny, nierozwijany)
+            Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.nightlight_round,
+                    size: 18,
+                    color: Color(0xFF818CF8),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Poprzednia noc (22:00 – 06:00)',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: numColor,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        hasData
+                            ? 'Podsumowanie 8h snu'
+                            : 'Brak zarejestrowanych danych z poprzedniej nocy',
+                        style: TextStyle(fontSize: 11, color: mutedColor),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // 2. Kafelki metryk nocy w stylu pozostałych bloczków
+            Row(
+              children: [
+                _buildNightPill(
+                  title: 'TIR Nocy',
+                  value: tirPercent != null ? '$tirPercent%' : '--',
+                  color: (tirPercent ?? 0) >= 70
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFFF59E0B),
+                  icon: Icons.track_changes_rounded,
+                  isDark: isDark,
+                  numColor: numColor,
+                  mutedColor: mutedColor,
+                  borderColor: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0),
+                ),
+                const SizedBox(width: 6),
+                _buildNightPill(
+                  title: 'Średnia',
+                  value: meanGlucose != null ? '$meanGlucose' : '--',
+                  color: const Color(0xFF00A3FF),
+                  icon: Icons.bloodtype_outlined,
+                  isDark: isDark,
+                  numColor: numColor,
+                  mutedColor: mutedColor,
+                  borderColor: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0),
+                ),
+                const SizedBox(width: 6),
+                _buildNightPill(
+                  title: 'Min / Max',
+                  value: (minGlucose != null && maxGlucose != null)
+                      ? '$minGlucose–$maxGlucose'
+                      : '--',
+                  color: const Color(0xFF8B5CF6),
+                  icon: Icons.swap_vert_rounded,
+                  isDark: isDark,
+                  numColor: numColor,
+                  mutedColor: mutedColor,
+                  borderColor: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0),
+                ),
+                const SizedBox(width: 6),
+                _buildNightPill(
+                  title: 'Baza nocna',
+                  value: nightBasalUnits != null
+                      ? '${nightBasalUnits.toStringAsFixed(1)}j'
+                      : '--',
+                  color: const Color(0xFFEC4899),
+                  icon: Icons.medication_liquid_outlined,
+                  isDark: isDark,
+                  numColor: numColor,
+                  mutedColor: mutedColor,
+                  borderColor: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE2E8F0),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // 3. Etykieta wykresu nocy
+            Row(
+              children: [
+                const Icon(
+                  Icons.bedtime_rounded,
+                  size: 14,
+                  color: Color(0xFF818CF8),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Przebieg glikemii podczas snu (22:00 – 06:00)',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: numColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            // 4. 8-godzinny wykres nocny (CustomPaint)
+            GestureDetector(
+              onPanDown: (d) => setState(() => _touchOffset = d.localPosition),
+              onPanUpdate: (d) =>
+                  setState(() => _touchOffset = d.localPosition),
+              onPanEnd: (_) => setState(() => _touchOffset = null),
+              onPanCancel: () => setState(() => _touchOffset = null),
+              child: SizedBox(
+                height: 145,
+                width: double.infinity,
+                child: CustomPaint(
+                  painter: CaregiverNightGlucosePainter(
+                    readings: readings,
+                    nightStart: nightStart,
+                    nightEnd: nightEnd,
+                    isDark: isDark,
+                    touchOffset: _touchOffset,
+                  ),
+                ),
+              ),
+            ),
+
+            if (hasData && tirPercent != null) ...[
+              const SizedBox(height: 10),
+
+              // Pasek TIR nocy
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: SizedBox(
+                  height: 6,
+                  child: Row(
+                    children: [
+                      if ((lowPercent ?? 0) > 0)
+                        Expanded(
+                          flex: math.max(1, lowPercent!),
+                          child: Container(color: const Color(0xFFEF4444)),
+                        ),
+                      if (tirPercent! > 0)
+                        Expanded(
+                          flex: math.max(1, tirPercent!),
+                          child: Container(color: const Color(0xFF10B981)),
+                        ),
+                      if ((highPercent ?? 0) > 0)
+                        Expanded(
+                          flex: math.max(1, highPercent!),
+                          child: Container(color: const Color(0xFFF59E0B)),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              // Legenda zakresów nocy (odporna na overflow)
+              Row(
                 children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.35),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.nightlight_round,
-                      size: 18,
-                      color: Color(0xFF818CF8),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              'Poprzednia noc (22:00 – 06:00)',
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w700,
-                                color: numColor,
-                              ),
-                            ),
-                          ],
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '<70: ${lowPercent ?? 0}% (${lowMinutes ?? 0}m)',
+                        style: const TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFEF4444),
                         ),
-                        const SizedBox(height: 1),
-                        Text(
-                          hasData
-                              ? 'Sen 8h · Śr: ${meanGlucose != null ? '$meanGlucose mg/dl' : '--'} · TIR: ${tirPercent != null ? '$tirPercent%' : '--'} · Baza: ${nightBasalUnits != null ? '${nightBasalUnits.toStringAsFixed(1)} j.' : '--'}'
-                              : 'Brak zarejestrowanych danych z poprzedniej nocy',
-                          style: TextStyle(fontSize: 11, color: mutedColor),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: statusColor.withValues(alpha: 0.35),
-                      ),
-                    ),
-                    child: Text(
-                      statusLabel,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: statusColor,
                       ),
                     ),
                   ),
                   const SizedBox(width: 4),
-                  Icon(
-                    _isExpanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded,
-                    color: mutedColor,
-                    size: 20,
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Norma: $tirPercent% (${((480 * tirPercent!) / (60 * 100)).toStringAsFixed(1)}h)',
+                        style: const TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        '>180: ${highPercent ?? 0}%',
+                        style: const TextStyle(
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFF59E0B),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ),
-
-          // 2. Rozwinięta treść: Pigułki metryk nocy + 8-godzinny wykres nocny
-          if (_isExpanded) ...[
-            const Divider(height: 1, thickness: 0.8),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // 4 kafelki metryk nocy
-                  Row(
-                    children: [
-                      _buildNightPill(
-                        title: 'TIR Nocy',
-                        value: tirPercent != null ? '$tirPercent%' : '--',
-                        color: (tirPercent ?? 0) >= 70
-                            ? const Color(0xFF10B981)
-                            : const Color(0xFFF59E0B),
-                        icon: Icons.track_changes_rounded,
-                        isDark: isDark,
-                        numColor: numColor,
-                        mutedColor: mutedColor,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildNightPill(
-                        title: 'Średnia',
-                        value: meanGlucose != null ? '$meanGlucose' : '--',
-                        color: const Color(0xFF00A3FF),
-                        icon: Icons.bloodtype_outlined,
-                        isDark: isDark,
-                        numColor: numColor,
-                        mutedColor: mutedColor,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildNightPill(
-                        title: 'Min / Max',
-                        value: (minGlucose != null && maxGlucose != null)
-                            ? '$minGlucose–$maxGlucose'
-                            : '--',
-                        color: const Color(0xFF8B5CF6),
-                        icon: Icons.swap_vert_rounded,
-                        isDark: isDark,
-                        numColor: numColor,
-                        mutedColor: mutedColor,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildNightPill(
-                        title: 'Baza nocna',
-                        value: nightBasalUnits != null
-                            ? '${nightBasalUnits.toStringAsFixed(1)}j'
-                            : '--',
-                        color: const Color(0xFFEC4899),
-                        icon: Icons.medication_liquid_outlined,
-                        isDark: isDark,
-                        numColor: numColor,
-                        mutedColor: mutedColor,
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  // Etykieta wykresu nocy
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.bedtime_rounded,
-                        size: 14,
-                        color: Color(0xFF818CF8),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Przebieg glikemii podczas snu (22:00 – 06:00)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: numColor,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // 8-godzinny wykres nocny (CustomPaint)
-                  GestureDetector(
-                    onPanDown: (d) =>
-                        setState(() => _touchOffset = d.localPosition),
-                    onPanUpdate: (d) =>
-                        setState(() => _touchOffset = d.localPosition),
-                    onPanEnd: (_) => setState(() => _touchOffset = null),
-                    onPanCancel: () => setState(() => _touchOffset = null),
-                    child: SizedBox(
-                      height: 150,
-                      width: double.infinity,
-                      child: CustomPaint(
-                        painter: CaregiverNightGlucosePainter(
-                          readings: readings,
-                          nightStart: nightStart,
-                          nightEnd: nightEnd,
-                          isDark: isDark,
-                          touchOffset: _touchOffset,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  if (hasData && tirPercent != null) ...[
-                    const SizedBox(height: 10),
-
-                    // Pasek TIR nocy
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: SizedBox(
-                        height: 6,
-                        child: Row(
-                          children: [
-                            if ((lowPercent ?? 0) > 0)
-                              Expanded(
-                                flex: math.max(1, lowPercent!),
-                                child: Container(color: const Color(0xFFEF4444)),
-                              ),
-                            if (tirPercent! > 0)
-                              Expanded(
-                                flex: math.max(1, tirPercent!),
-                                child: Container(color: const Color(0xFF10B981)),
-                              ),
-                            if ((highPercent ?? 0) > 0)
-                              Expanded(
-                                flex: math.max(1, highPercent!),
-                                child: Container(color: const Color(0xFFF59E0B)),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    // Legenda zakresów nocy
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Hipo <70: ${lowPercent ?? 0}% (${lowMinutes ?? 0}m)',
-                          style: const TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFFEF4444),
-                          ),
-                        ),
-                        Text(
-                          'W normie 70–180: $tirPercent% (${((480 * tirPercent!) / (60 * 100)).toStringAsFixed(1)}h)',
-                          style: const TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF10B981),
-                          ),
-                        ),
-                        Text(
-                          'Wysoko >180: ${highPercent ?? 0}%',
-                          style: const TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFFF59E0B),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNightPill({
-    required String title,
-    required String value,
-    required Color color,
-    required IconData icon,
-    required bool isDark,
-    required Color numColor,
-    required Color mutedColor,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(height: 3),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                color: numColor,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 1),
-            Text(
-              title,
-              style: TextStyle(fontSize: 9.5, color: mutedColor),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            ],
           ],
         ),
       ),
