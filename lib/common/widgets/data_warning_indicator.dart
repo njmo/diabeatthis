@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 /// A compact, tappable explanation next to the affected data.
 class DataWarningIndicator extends StatelessWidget {
   final String message;
-  const DataWarningIndicator({super.key, required this.message});
+  final bool compact;
+  const DataWarningIndicator({
+    super.key,
+    required this.message,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,6 +19,12 @@ class DataWarningIndicator extends StatelessWidget {
       triggerMode: TooltipTriggerMode.manual,
       showDuration: const Duration(seconds: 8),
       child: IconButton(
+        padding: compact ? EdgeInsets.zero : null,
+        constraints: compact
+            ? const BoxConstraints.tightFor(width: 24, height: 24)
+            : null,
+        visualDensity: compact ? VisualDensity.compact : null,
+        iconSize: compact ? 16 : null,
         onPressed: () => tooltipKey.currentState?.ensureTooltipVisible(),
         icon: const Icon(Icons.warning_amber_rounded),
         color: Theme.of(context).brightness == Brightness.dark

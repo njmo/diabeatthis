@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/day/day_stat_formatter.dart';
 import '../../../../common/widgets/chart_color_label.dart';
 import '../../../meals/common/theme/analysis_chart_colors.dart';
-import '../formatters/day_stat_formatter.dart';
 
 class DayMacroLegend extends StatelessWidget {
   final double? netCarbs;

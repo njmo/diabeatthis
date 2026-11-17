@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../common/l10n/language.dart';
-import '../../../../common/widgets/data_warning_indicator.dart';
+import '../../l10n/language.dart';
+import '../../widgets/data_warning_indicator.dart';
 
 class DaySummaryCard extends StatelessWidget {
   final String title;

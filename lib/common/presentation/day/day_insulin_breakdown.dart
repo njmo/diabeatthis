@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../common/l10n/language.dart';
-import '../formatters/day_stat_formatter.dart';
+import '../../l10n/language.dart';
 import 'day_amount_breakdown.dart';
+import 'day_stat_formatter.dart';
 
 class DayInsulinBreakdown extends StatelessWidget {
   final double? basal;

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/day/day_summary_card.dart';
 import '../../domain/models/day_analysis_result.dart';
 import '../../domain/models/day_analysis_section.dart';
-import 'day_summary_card.dart';
 
 class DayAiResult extends StatelessWidget {
   final DayAnalysisResult result;

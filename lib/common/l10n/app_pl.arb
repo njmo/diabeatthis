@@ -1043,7 +1043,7 @@
   "dayAboveRange": "Powyżej 180 mg/dl",
   "dayCoverage": "Pokrycie odczytami CGM",
   "dayGlucoseMethod": "Procenty zakresów dotyczą czasu z odczytami. Próbka reprezentuje najwyżej 5 minut; luki pozostają nieznane.",
-  "dayInsulinTitle": "Insulina · zapisane podania",
+  "dayInsulinTitle": "Insulina",
   "dayRecordedBoluses": "Bolusy łącznie",
   "dayManualBoluses": "Bolusy ręczne",
   "dayCorrectionBoluses": "Bolusy korekcyjne",
@@ -4666,5 +4666,11 @@
   "familyPairingCodeInvalid": "Wpisz poprawny 8-znakowy kod parowania.",
   "familyPairingCodeSubmit": "Dalej",
   "familyCopyCode": "Kopiuj kod",
-  "familyCodeCopied": "Kod skopiowany"
+  "familyCodeCopied": "Kod skopiowany",
+  "dayInsulinCompactTotal": "Łącznie",
+  "dayInsulinCompactPartialTotal": "Suma częściowa",
+  "dayCompactTir": "TIR",
+  "dayCompactLow": "Poniżej 70",
+  "dayCompactNightBasal": "Baza nocna",
+  "dayNightGlucoseChart": "Glikemia w nocy · 22:00–06:00"
 }

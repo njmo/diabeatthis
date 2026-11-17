@@ -1,11 +1,11 @@
 import 'package:diabeatthis/common/history/glucose_period_summary.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
+import 'package:diabeatthis/common/presentation/day/day_amount_breakdown.dart';
+import 'package:diabeatthis/common/presentation/day/day_insulin_breakdown.dart';
 import 'package:diabeatthis/common/widgets/timeline_analysis_charts.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_summary_snapshot.dart';
-import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_amount_breakdown.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_glucose_card.dart';
-import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_insulin_breakdown.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_summary_facts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -1,15 +1,15 @@
 import 'package:diabeatthis/common/history/glucose_period_summary.dart';
 import 'package:diabeatthis/common/history/insulin_basal_summary.dart';
 import 'package:diabeatthis/common/history/insulin_bolus_summary.dart';
+import 'package:diabeatthis/common/presentation/day/day_basal_rows.dart';
+import 'package:diabeatthis/common/presentation/day/day_insulin_card.dart';
 import 'package:diabeatthis/common/widgets/data_warning_indicator.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_context.dart';
 import 'package:diabeatthis/features/day_analysis/domain/use_cases/build_day_context_use_case.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_activity_card.dart';
-import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_basal_rows.dart';
-import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_device_age_card.dart';
+import 'package:diabeatthis/common/presentation/day/day_device_age_card.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_glucose_card.dart';
-import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_insulin_card.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_meals_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -135,22 +135,24 @@ void main() {
           duration: const Duration(hours: 1),
           gaps: [],
         );
+        await tester.pumpWidget(const SizedBox.shrink());
         await show(
           tester,
           DayInsulinCard(summary: boluses, basal: basal, isNight: isNight),
         );
         if (covered == 30) {
-          final warning = tester.widget<DataWarningIndicator>(
-            find.byType(DataWarningIndicator),
-          );
-          expect(
-            warning.message,
-            contains('Brakuje danych z 30 min analizowanego okresu.'),
-          );
+          expect(find.byType(DataWarningIndicator), findsNothing);
+          expect(find.textContaining('Brakuje danych z 30 min'), findsNothing);
           final details = find.byType(ExpansionTile);
           await tester.ensureVisible(details);
           await tester.tap(details);
           await tester.pumpAndSettle();
+          expect(
+            find.textContaining(
+              'Brakuje danych z 30 min analizowanego okresu.',
+            ),
+            findsOneWidget,
+          );
           expect(
             find.descendant(
               of: find.byType(DayBasalRows),

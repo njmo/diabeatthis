@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../../common/history/glucose_window_summary.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/day/day_stat_formatter.dart';
 import '../../../../common/theme/glucose_range_colors.dart';
 import '../../../../common/utils/format_duration_label.dart';
 import '../../../../common/widgets/chart_color_label.dart';
 import '../../../../common/widgets/glucose_range_bar.dart';
-import '../formatters/day_stat_formatter.dart';
 
 class DayGlucoseRanges extends StatelessWidget {
   final GlucoseWindowSummary summary;

@@ -915,7 +915,7 @@
   "dayAboveRange": "Above 180 mg/dl",
   "dayCoverage": "CGM coverage",
   "dayGlucoseMethod": "Range percentages use observed time. Each sample covers at most 5 minutes; gaps remain unknown.",
-  "dayInsulinTitle": "Insulin · recorded deliveries",
+  "dayInsulinTitle": "Insulin",
   "dayRecordedBoluses": "Total boluses",
   "dayManualBoluses": "Manual boluses",
   "dayCorrectionBoluses": "Correction boluses",
@@ -4209,5 +4209,11 @@
   "familyPairingCodeInvalid": "Enter a valid 8-character pairing code.",
   "familyPairingCodeSubmit": "Continue",
   "familyCopyCode": "Copy code",
-  "familyCodeCopied": "Code copied"
+  "familyCodeCopied": "Code copied",
+  "dayInsulinCompactTotal": "Total",
+  "dayInsulinCompactPartialTotal": "Total · partial",
+  "dayCompactTir": "TIR",
+  "dayCompactLow": "Below 70",
+  "dayCompactNightBasal": "Night basal",
+  "dayNightGlucoseChart": "Night glucose · 22:00–06:00"
 }

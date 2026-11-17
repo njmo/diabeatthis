@@ -1,6 +1,6 @@
 import 'package:diabeatthis/common/history/insulin_basal_summary.dart';
 import 'package:diabeatthis/common/history/insulin_bolus_summary.dart';
-import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_basal_rows.dart';
+import 'package:diabeatthis/common/presentation/day/day_basal_rows.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

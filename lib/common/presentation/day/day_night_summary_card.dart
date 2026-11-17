@@ -2,28 +2,30 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../../../common/presentation/charts/draw_dashed_chart_line.dart';
-import '../../../../../core/domain/model/glucose.dart';
-import '../../../../day_analysis/domain/models/day_context.dart';
+import '../../../core/domain/model/glucose.dart';
+import '../../../features/day_analysis/domain/models/day_context.dart';
+import '../../l10n/language.dart';
+import '../../widgets/data_warning_indicator.dart';
+import '../../widgets/responsive_metric_list.dart';
+import '../charts/draw_dashed_chart_line.dart';
+import 'day_chart_time.dart';
+import 'day_glucose_details.dart';
+import 'day_insulin_summary.dart';
 
-class CaregiverNightSummaryCard extends StatefulWidget {
-  const CaregiverNightSummaryCard({
-    super.key,
-    required this.day,
-  });
+class DayNightSummaryCard extends StatefulWidget {
+  const DayNightSummaryCard({super.key, required this.day});
 
   final DayContext day;
 
   @override
-  State<CaregiverNightSummaryCard> createState() =>
-      _CaregiverNightSummaryCardState();
+  State<DayNightSummaryCard> createState() => _DayNightSummaryCardState();
 }
 
-class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
+class _DayNightSummaryCardState extends State<DayNightSummaryCard> {
   Offset? _touchOffset;
 
   @override
-  void didUpdateWidget(CaregiverNightSummaryCard oldWidget) {
+  void didUpdateWidget(DayNightSummaryCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.day.start != widget.day.start) {
       _touchOffset = null;
@@ -39,54 +41,63 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
     required Color numColor,
     required Color mutedColor,
     required Color borderColor,
+    String? warning,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 24,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 16, color: color),
+                if (warning != null)
+                  DataWarningIndicator(message: warning, compact: true),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(height: 3),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                value,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: numColor,
-                ),
-                maxLines: 1,
+          ),
+          const SizedBox(height: 3),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: numColor,
               ),
+              maxLines: 1,
             ),
-            const SizedBox(height: 2),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: mutedColor,
-                ),
-                maxLines: 1,
+          ),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: mutedColor,
               ),
+              maxLines: 1,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -100,45 +111,48 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
     final borderColor = isDark
         ? const Color(0xFF4338CA).withValues(alpha: 0.4)
         : const Color(0xFFE0E7FF);
-    final numColor =
-        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final mutedColor =
-        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final numColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final mutedColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
-    final nightStart =
-        DateTime(day.start.year, day.start.month, day.start.day - 1, 22);
-    final nightEnd = DateTime(day.start.year, day.start.month, day.start.day, 6);
+    final nightStart = DateTime(
+      day.start.year,
+      day.start.month,
+      day.start.day - 1,
+      22,
+    );
+    final nightEnd = DateTime(
+      day.start.year,
+      day.start.month,
+      day.start.day,
+      6,
+    );
 
     final n = day.nightGlucose;
-    List<Glucose> readings = n?.window.readings ?? [];
-
-    if (readings.isEmpty && day.glucose != null) {
-      readings = day.glucose!.window.readings
-          .where((r) => !r.date.isBefore(nightStart) && !r.date.isAfter(nightEnd))
-          .toList();
-    }
+    final readings = n?.window.readings ?? [];
 
     int? tirPercent;
-    int? lowPercent;
-    int? highPercent;
-    int? meanGlucose = n?.mean?.round();
-    int? lowMinutes;
-    int? minGlucose = readings.isNotEmpty ? readings.map((r) => r.sgv).reduce(math.min) : null;
-    int? maxGlucose = readings.isNotEmpty ? readings.map((r) => r.sgv).reduce(math.max) : null;
+    var meanGlucose = n?.mean?.round();
+    final minGlucose = readings.isNotEmpty
+        ? readings.map((r) => r.sgv).reduce(math.min)
+        : null;
+    final maxGlucose = readings.isNotEmpty
+        ? readings.map((r) => r.sgv).reduce(math.max)
+        : null;
 
     if (n != null && n.window.observed > Duration.zero) {
       final totalObs = n.window.observed.inMilliseconds;
       tirPercent = (n.window.inRange.inMilliseconds / totalObs * 100).round();
-      lowPercent =
-          (n.window.belowRange.inMilliseconds / totalObs * 100).round();
-      highPercent =
-          (n.window.aboveRange.inMilliseconds / totalObs * 100).round();
-      lowMinutes = n.window.belowRange.inMinutes;
       meanGlucose = n.mean?.round() ?? meanGlucose;
     }
 
-    final nightBasalUnits = day.nightBasal?.units;
-    final hasData = readings.isNotEmpty || (n != null && n.window.observed > Duration.zero);
+    final insulin = DayInsulinSummary(
+      boluses: day.nightBoluses,
+      basal: day.nightBasal,
+    );
+    final nightBasalUnits = insulin.basalUnits;
+    final insulinWarnings = insulin.warnings(context.lang, isNight: true);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -148,7 +162,9 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
         border: Border.all(color: borderColor, width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6366F1).withValues(alpha: isDark ? 0.2 : 0.06),
+            color: const Color(
+              0xFF6366F1,
+            ).withValues(alpha: isDark ? 0.2 : 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -184,23 +200,12 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Poprzednia noc (22:00 – 06:00)',
+                        context.lang.dayNightTitle,
                         style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w700,
                           color: numColor,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        hasData
-                            ? 'Podsumowanie 8h snu'
-                            : 'Brak zarejestrowanych danych z poprzedniej nocy',
-                        style: TextStyle(fontSize: 11, color: mutedColor),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -211,10 +216,15 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
             const SizedBox(height: 12),
 
             // 2. Kafelki metryk nocy w stylu pozostałych bloczków
-            Row(
+            ResponsiveMetricList(
+              maxColumns: 4,
+              minimumWidth: 64,
+              spacing: 6,
+              runSpacing: 8,
+              equalRowHeights: true,
               children: [
                 _buildNightPill(
-                  title: 'TIR Nocy',
+                  title: context.lang.dayCompactTir,
                   value: tirPercent != null ? '$tirPercent%' : '--',
                   color: (tirPercent ?? 0) >= 70
                       ? const Color(0xFF10B981)
@@ -227,9 +237,8 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
                       ? const Color(0xFF334155)
                       : const Color(0xFFE2E8F0),
                 ),
-                const SizedBox(width: 6),
                 _buildNightPill(
-                  title: 'Średnia',
+                  title: context.lang.dayGlucoseMean,
                   value: meanGlucose != null ? '$meanGlucose' : '--',
                   color: const Color(0xFF00A3FF),
                   icon: Icons.bloodtype_outlined,
@@ -240,9 +249,8 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
                       ? const Color(0xFF334155)
                       : const Color(0xFFE2E8F0),
                 ),
-                const SizedBox(width: 6),
                 _buildNightPill(
-                  title: 'Min / Max',
+                  title: context.lang.dayGlucoseExtremes,
                   value: (minGlucose != null && maxGlucose != null)
                       ? '$minGlucose–$maxGlucose'
                       : '--',
@@ -255,11 +263,13 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
                       ? const Color(0xFF334155)
                       : const Color(0xFFE2E8F0),
                 ),
-                const SizedBox(width: 6),
                 _buildNightPill(
-                  title: 'Baza nocna',
+                  title: context.lang.dayCompactNightBasal,
+                  warning: insulinWarnings.isEmpty
+                      ? null
+                      : insulinWarnings.join('\n'),
                   value: nightBasalUnits != null
-                      ? '${nightBasalUnits.toStringAsFixed(1)}j'
+                      ? '${nightBasalUnits.toStringAsFixed(1)} U'
                       : '--',
                   color: const Color(0xFFEC4899),
                   icon: Icons.medication_liquid_outlined,
@@ -286,14 +296,12 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Przebieg glikemii podczas snu (22:00 – 06:00)',
+                    context.lang.dayNightGlucoseChart,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: numColor,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -303,108 +311,29 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
 
             // 4. 8-godzinny wykres nocny (CustomPaint)
             GestureDetector(
-              onPanDown: (d) => setState(() => _touchOffset = d.localPosition),
-              onPanUpdate: (d) =>
+              onHorizontalDragDown: (d) =>
                   setState(() => _touchOffset = d.localPosition),
-              onPanEnd: (_) => setState(() => _touchOffset = null),
-              onPanCancel: () => setState(() => _touchOffset = null),
+              onHorizontalDragUpdate: (d) =>
+                  setState(() => _touchOffset = d.localPosition),
+              onHorizontalDragEnd: (_) => setState(() => _touchOffset = null),
+              onHorizontalDragCancel: () => setState(() => _touchOffset = null),
               child: SizedBox(
                 height: 145,
                 width: double.infinity,
                 child: CustomPaint(
-                  painter: CaregiverNightGlucosePainter(
+                  painter: DayNightGlucosePainter(
                     readings: readings,
                     nightStart: nightStart,
                     nightEnd: nightEnd,
                     isDark: isDark,
                     touchOffset: _touchOffset,
+                    noDataLabel: context.lang.dayNoGlucoseObservation,
                   ),
                 ),
               ),
             ),
 
-            if (hasData && tirPercent != null) ...[
-              const SizedBox(height: 10),
-
-              // Pasek TIR nocy
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: SizedBox(
-                  height: 6,
-                  child: Row(
-                    children: [
-                      if ((lowPercent ?? 0) > 0)
-                        Expanded(
-                          flex: math.max(1, lowPercent!),
-                          child: Container(color: const Color(0xFFEF4444)),
-                        ),
-                      if (tirPercent! > 0)
-                        Expanded(
-                          flex: math.max(1, tirPercent!),
-                          child: Container(color: const Color(0xFF10B981)),
-                        ),
-                      if ((highPercent ?? 0) > 0)
-                        Expanded(
-                          flex: math.max(1, highPercent!),
-                          child: Container(color: const Color(0xFFF59E0B)),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 6),
-
-              // Legenda zakresów nocy (odporna na overflow)
-              Row(
-                children: [
-                  Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        '<70: ${lowPercent ?? 0}% (${lowMinutes ?? 0}m)',
-                        style: const TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFEF4444),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.center,
-                      child: Text(
-                        'Norma: $tirPercent% (${((480 * tirPercent!) / (60 * 100)).toStringAsFixed(1)}h)',
-                        style: const TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF10B981),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        '>180: ${highPercent ?? 0}%',
-                        style: const TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFF59E0B),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            DayGlucoseDetails(summary: n, isNight: true),
           ],
         ),
       ),
@@ -412,19 +341,21 @@ class _CaregiverNightSummaryCardState extends State<CaregiverNightSummaryCard> {
   }
 }
 
-class CaregiverNightGlucosePainter extends CustomPainter {
+class DayNightGlucosePainter extends CustomPainter {
   final List<Glucose> readings;
   final DateTime nightStart;
   final DateTime nightEnd;
   final bool isDark;
   final Offset? touchOffset;
+  final String noDataLabel;
 
-  CaregiverNightGlucosePainter({
+  DayNightGlucosePainter({
     required this.readings,
     required this.nightStart,
     required this.nightEnd,
     required this.isDark,
     this.touchOffset,
+    required this.noDataLabel,
   });
 
   static const double lowThreshold = 70.0;
@@ -445,7 +376,7 @@ class CaregiverNightGlucosePainter extends CustomPainter {
       size.height - bottomPad,
     );
 
-    final double minY = 40.0;
+    final minY = 40.0;
     final double maxY = math.max(
       240.0,
       readings.isEmpty
@@ -454,8 +385,7 @@ class CaregiverNightGlucosePainter extends CustomPainter {
     );
 
     double xForTime(DateTime t) {
-      final diffMin = t.difference(nightStart).inSeconds / 60.0;
-      final ratio = (diffMin / 480.0).clamp(0.0, 1.0); // 8h = 480 min
+      final ratio = dayChartFraction(t, nightStart, nightEnd);
       return chartArea.left + ratio * chartArea.width;
     }
 
@@ -475,7 +405,9 @@ class CaregiverNightGlucosePainter extends CustomPainter {
         const Radius.circular(4),
       ),
       Paint()
-        ..color = const Color(0xFF6366F1).withValues(alpha: isDark ? 0.08 : 0.05),
+        ..color = const Color(
+          0xFF6366F1,
+        ).withValues(alpha: isDark ? 0.08 : 0.05),
     );
 
     // Strefa hipo < 70
@@ -485,7 +417,9 @@ class CaregiverNightGlucosePainter extends CustomPainter {
         const Radius.circular(4),
       ),
       Paint()
-        ..color = const Color(0xFFEF4444).withValues(alpha: isDark ? 0.08 : 0.05),
+        ..color = const Color(
+          0xFFEF4444,
+        ).withValues(alpha: isDark ? 0.08 : 0.05),
     );
 
     // Linie 180, 110, 70
@@ -549,28 +483,25 @@ class CaregiverNightGlucosePainter extends CustomPainter {
     );
 
     // 2. Oś czasu nocy co 2 godziny: 22:00, 00:00 (Północ), 02:00, 04:00, 06:00
-    final hours = [
-      (0, '22:00'),
-      (120, '00:00'),
-      (240, '02:00'),
-      (360, '04:00'),
-      (480, '06:00'),
-    ];
+    final hours = dayNightChartTicks(nightStart, nightEnd);
 
     for (final h in hours) {
-      final t = nightStart.add(Duration(minutes: h.$1));
+      final t = h.$1;
       final x = xForTime(t);
 
       // Północ ma specjalną subtelną linię
-      final isMidnight = h.$1 == 120;
+      final isMidnight = t.hour == 0;
       canvas.drawLine(
         Offset(x, chartArea.top),
         Offset(x, chartArea.bottom),
         Paint()
-          ..color = (isMidnight
-                  ? const Color(0xFF818CF8)
-                  : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)))
-              .withValues(alpha: isMidnight ? 0.4 : 0.5)
+          ..color =
+              (isMidnight
+                      ? const Color(0xFF818CF8)
+                      : (isDark
+                            ? const Color(0xFF334155)
+                            : const Color(0xFFF1F5F9)))
+                  .withValues(alpha: isMidnight ? 0.4 : 0.5)
           ..strokeWidth = isMidnight ? 0.9 : 0.6,
       );
 
@@ -588,32 +519,15 @@ class CaregiverNightGlucosePainter extends CustomPainter {
       );
     }
 
-    // 3. Płynna krzywa nocna Beziera z podziałem na luki > 15 min
+    // Each CGM sample covers at most five minutes.
     if (readings.isNotEmpty) {
       final sortedReadings = List<Glucose>.from(readings)
         ..sort((a, b) => a.date.compareTo(b.date));
 
-      final List<List<Offset>> segments = [];
-      List<Offset> currentSegment = [];
-
-      for (int i = 0; i < sortedReadings.length; i++) {
-        final r = sortedReadings[i];
-        final pt = Offset(xForTime(r.date), yForSgv(r.sgv.toDouble()));
-        if (currentSegment.isEmpty) {
-          currentSegment.add(pt);
-        } else {
-          final prev = sortedReadings[i - 1];
-          if (r.date.difference(prev.date).inMinutes.abs() > 15) {
-            segments.add(currentSegment);
-            currentSegment = [pt];
-          } else {
-            currentSegment.add(pt);
-          }
-        }
-      }
-      if (currentSegment.isNotEmpty) segments.add(currentSegment);
-
-      for (final segment in segments) {
+      for (final readingsSegment in dayChartSegments(sortedReadings)) {
+        final segment = readingsSegment
+            .map((r) => Offset(xForTime(r.date), yForSgv(r.sgv.toDouble())))
+            .toList();
         if (segment.length == 1) {
           // Pojedynczy punkt w luce
           canvas.drawCircle(
@@ -625,7 +539,7 @@ class CaregiverNightGlucosePainter extends CustomPainter {
           final path = Path();
           path.moveTo(segment.first.dx, segment.first.dy);
 
-          for (int i = 0; i < segment.length - 1; i++) {
+          for (var i = 0; i < segment.length - 1; i++) {
             final p0 = segment[i];
             final p1 = segment[i + 1];
             final midX = (p0.dx + p1.dx) / 2;
@@ -664,7 +578,7 @@ class CaregiverNightGlucosePainter extends CustomPainter {
     } else {
       _drawText(
         canvas,
-        'Brak zarejestrowanych odczytów glikemii z nocy',
+        noDataLabel,
         Offset(chartArea.center.dx - 110, chartArea.center.dy - 6),
         TextStyle(
           fontSize: 11,
@@ -679,7 +593,7 @@ class CaregiverNightGlucosePainter extends CustomPainter {
       final touchX = touchOffset!.dx.clamp(chartArea.left, chartArea.right);
 
       Glucose? nearest;
-      double minD = double.infinity;
+      var minD = double.infinity;
       for (final r in readings) {
         final ptX = xForTime(r.date);
         final d = (ptX - touchX).abs();
@@ -707,11 +621,7 @@ class CaregiverNightGlucosePainter extends CustomPainter {
           5.0,
           Paint()..color = const Color(0xFF818CF8),
         );
-        canvas.drawCircle(
-          Offset(rX, rY),
-          2.0,
-          Paint()..color = Colors.white,
-        );
+        canvas.drawCircle(Offset(rX, rY), 2.0, Paint()..color = Colors.white);
 
         final timeStr =
             '${nearest.date.hour.toString().padLeft(2, '0')}:${nearest.date.minute.toString().padLeft(2, '0')}';
@@ -753,8 +663,9 @@ class CaregiverNightGlucosePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CaregiverNightGlucosePainter oldDelegate) {
-    return oldDelegate.readings != readings ||
+  bool shouldRepaint(covariant DayNightGlucosePainter oldDelegate) {
+    return oldDelegate.noDataLabel != noDataLabel ||
+        oldDelegate.readings != readings ||
         oldDelegate.nightStart != nightStart ||
         oldDelegate.nightEnd != nightEnd ||
         oldDelegate.isDark != isDark ||

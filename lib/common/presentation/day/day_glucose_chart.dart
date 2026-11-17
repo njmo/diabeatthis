@@ -2,24 +2,23 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../../../common/presentation/charts/draw_dashed_chart_line.dart';
-import '../../../../../core/domain/model/glucose.dart';
-import '../../../../day_analysis/domain/models/day_context.dart';
+import '../../../core/domain/model/glucose.dart';
+import '../../../features/day_analysis/domain/models/day_context.dart';
+import '../../l10n/language.dart';
+import '../charts/draw_dashed_chart_line.dart';
+import 'day_chart_time.dart';
+import 'day_glucose_details.dart';
 
-enum CaregiverChartStyle {
-  smoothSpline,
-  eventPins,
-  clinicalDots,
-}
+enum DayChartStyle { smoothSpline, eventPins, clinicalDots }
 
-class CaregiverChartEvent {
+class DayChartEvent {
   final DateTime time;
   final String label;
   final String detail;
   final IconData icon;
   final Color color;
 
-  const CaregiverChartEvent({
+  const DayChartEvent({
     required this.time,
     required this.label,
     required this.detail,
@@ -28,25 +27,24 @@ class CaregiverChartEvent {
   });
 }
 
-class CaregiverDayGlucoseChart extends StatefulWidget {
-  const CaregiverDayGlucoseChart({
+class DayGlucoseChart extends StatefulWidget {
+  const DayGlucoseChart({
     super.key,
     required this.day,
-    this.initialStyle = CaregiverChartStyle.smoothSpline,
+    this.initialStyle = DayChartStyle.smoothSpline,
     this.showStyleSelector = false,
   });
 
   final DayContext day;
-  final CaregiverChartStyle initialStyle;
+  final DayChartStyle initialStyle;
   final bool showStyleSelector;
 
   @override
-  State<CaregiverDayGlucoseChart> createState() =>
-      _CaregiverDayGlucoseChartState();
+  State<DayGlucoseChart> createState() => _DayGlucoseChartState();
 }
 
-class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
-  late CaregiverChartStyle _style;
+class _DayGlucoseChartState extends State<DayGlucoseChart> {
+  late DayChartStyle _style;
   Offset? _touchOffset;
 
   @override
@@ -56,16 +54,16 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
   }
 
   @override
-  void didUpdateWidget(CaregiverDayGlucoseChart oldWidget) {
+  void didUpdateWidget(DayGlucoseChart oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.day.start != widget.day.start) {
       _touchOffset = null;
     }
   }
 
-  List<CaregiverChartEvent> _getEvents() {
+  List<DayChartEvent> _getEvents() {
     final day = widget.day;
-    final events = <CaregiverChartEvent>[];
+    final events = <DayChartEvent>[];
 
     // 1. Zdarzenia z Nightscout (jeśli istnieją w day)
     if (day.wizards != null && day.wizards!.isNotEmpty) {
@@ -76,28 +74,42 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
         if (carbs > 0 || insulin > 0) {
           final carbsStr = carbs > 0 ? '${carbs.round()}g' : '';
           final insStr = insulin > 0 ? '${insulin.toStringAsFixed(1)}j' : '';
-          final detail = [carbsStr, insStr].where((s) => s.isNotEmpty).join(' · ');
-          events.add(CaregiverChartEvent(
-            time: time,
-            label: carbs > 0 ? 'Posiłek' : 'Bolus',
-            detail: detail,
-            icon: carbs > 0 ? Icons.restaurant_rounded : Icons.vaccines_rounded,
-            color: carbs > 0 ? const Color(0xFFF59E0B) : const Color(0xFF6366F1),
-          ));
+          final detail = [
+            carbsStr,
+            insStr,
+          ].where((s) => s.isNotEmpty).join(' · ');
+          events.add(
+            DayChartEvent(
+              time: time,
+              label: carbs > 0 ? 'Posiłek' : 'Bolus',
+              detail: detail,
+              icon: carbs > 0
+                  ? Icons.restaurant_rounded
+                  : Icons.vaccines_rounded,
+              color: carbs > 0
+                  ? const Color(0xFFF59E0B)
+                  : const Color(0xFF6366F1),
+            ),
+          );
         }
       }
     }
 
     if (day.carbEntries != null && day.carbEntries!.isNotEmpty) {
       for (final t in day.carbEntries!) {
-        if (t.carbs > 0 && !events.any((e) => e.time.difference(t.createdAt).abs().inMinutes < 5)) {
-          events.add(CaregiverChartEvent(
-            time: t.createdAt,
-            label: 'Węglowodany',
-            detail: '${t.carbs}g',
-            icon: Icons.bakery_dining_rounded,
-            color: const Color(0xFFF59E0B),
-          ));
+        if (t.carbs > 0 &&
+            !events.any(
+              (e) => e.time.difference(t.createdAt).abs().inMinutes < 5,
+            )) {
+          events.add(
+            DayChartEvent(
+              time: t.createdAt,
+              label: 'Węglowodany',
+              detail: '${t.carbs}g',
+              icon: Icons.bakery_dining_rounded,
+              color: const Color(0xFFF59E0B),
+            ),
+          );
         }
       }
     }
@@ -112,41 +124,20 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
     final primary = Theme.of(context).colorScheme.primary;
 
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final borderColor =
-        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final numColor =
-        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final mutedColor =
-        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final borderColor = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
+    final numColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final mutedColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     final g = day.glucose;
     final readings = g?.window.readings ?? [];
 
-    int tirPercent = 0;
-    int lowPercent = 0;
-    int highPercent = 0;
-    int? meanGlucose;
-    int? minGlucose;
-    int? maxGlucose;
-    int lowMinutes = 0;
-    int highMinutes = 0;
-    int inRangeMinutes = 0;
-
-    if (g != null && g.window.observed > Duration.zero) {
-      meanGlucose = g.mean?.round();
-      final totalObs = g.window.observed.inMilliseconds;
-      tirPercent = (g.window.inRange.inMilliseconds / totalObs * 100).round();
-      lowPercent = (g.window.belowRange.inMilliseconds / totalObs * 100).round();
-      highPercent =
-          (g.window.aboveRange.inMilliseconds / totalObs * 100).round();
-      lowMinutes = g.window.belowRange.inMinutes;
-      highMinutes = g.window.aboveRange.inMinutes;
-      inRangeMinutes = g.window.inRange.inMinutes;
-      if (readings.isNotEmpty) {
-        minGlucose = readings.map((r) => r.sgv).reduce(math.min);
-        maxGlucose = readings.map((r) => r.sgv).reduce(math.max);
-      }
-    }
+    final meanGlucose = g?.mean?.round();
+    final minGlucose = g?.window.minimum?.sgv;
+    final maxGlucose = g?.window.peak?.sgv;
 
     final events = _getEvents();
 
@@ -185,7 +176,7 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Przebieg glikemii (24h)',
+                      context.lang.dayGlucoseTitle,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -199,7 +190,7 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Min: $minGlucose · Max: $maxGlucose mg/dl · Śr: ${meanGlucose ?? '—'}',
+                          '${context.lang.dayGlucoseExtremes}: $minGlucose–$maxGlucose mg/dl · ${context.lang.dayGlucoseMean}: ${meanGlucose ?? '—'}',
                           style: TextStyle(fontSize: 11, color: mutedColor),
                           maxLines: 1,
                         ),
@@ -210,15 +201,19 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
               if (readings.isNotEmpty) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: _colorForGlucose(readings.last.sgv.toDouble())
-                        .withValues(alpha: 0.12),
+                    color: _colorForGlucose(
+                      readings.last.sgv.toDouble(),
+                    ).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: _colorForGlucose(readings.last.sgv.toDouble())
-                          .withValues(alpha: 0.35),
+                      color: _colorForGlucose(
+                        readings.last.sgv.toDouble(),
+                      ).withValues(alpha: 0.35),
                     ),
                   ),
                   child: Row(
@@ -228,8 +223,7 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
                         width: 7,
                         height: 7,
                         decoration: BoxDecoration(
-                          color:
-                              _colorForGlucose(readings.last.sgv.toDouble()),
+                          color: _colorForGlucose(readings.last.sgv.toDouble()),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -239,8 +233,7 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
-                          color: _colorForGlucose(
-                              readings.last.sgv.toDouble()),
+                          color: _colorForGlucose(readings.last.sgv.toDouble()),
                         ),
                       ),
                     ],
@@ -256,26 +249,28 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
             Container(
               height: 32,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                color: isDark
+                    ? const Color(0xFF0F172A)
+                    : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(10),
               ),
               padding: const EdgeInsets.all(2),
               child: Row(
                 children: [
                   _buildStyleOption(
-                    style: CaregiverChartStyle.eventPins,
+                    style: DayChartStyle.eventPins,
                     label: '📍 Ze zdarzeniami',
                     isDark: isDark,
                     primary: primary,
                   ),
                   _buildStyleOption(
-                    style: CaregiverChartStyle.smoothSpline,
+                    style: DayChartStyle.smoothSpline,
                     label: '🌊 Płynna wstęga',
                     isDark: isDark,
                     primary: primary,
                   ),
                   _buildStyleOption(
-                    style: CaregiverChartStyle.clinicalDots,
+                    style: DayChartStyle.clinicalDots,
                     label: '🟢 Punkty CGM',
                     isDark: isDark,
                     primary: primary,
@@ -289,15 +284,17 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
 
           // 3. Płótno wykresu (CustomPaint) z obsługą dotyku (scrubbing)
           GestureDetector(
-            onPanDown: (d) => setState(() => _touchOffset = d.localPosition),
-            onPanUpdate: (d) => setState(() => _touchOffset = d.localPosition),
-            onPanEnd: (_) => setState(() => _touchOffset = null),
-            onPanCancel: () => setState(() => _touchOffset = null),
+            onHorizontalDragDown: (d) =>
+                setState(() => _touchOffset = d.localPosition),
+            onHorizontalDragUpdate: (d) =>
+                setState(() => _touchOffset = d.localPosition),
+            onHorizontalDragEnd: (_) => setState(() => _touchOffset = null),
+            onHorizontalDragCancel: () => setState(() => _touchOffset = null),
             child: SizedBox(
               height: 200,
               width: double.infinity,
               child: CustomPaint(
-                painter: CaregiverDayGlucosePainter(
+                painter: DayGlucosePainter(
                   readings: readings,
                   events: events,
                   dayStart: DateTime(
@@ -318,73 +315,14 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
 
           const SizedBox(height: 12),
 
-          // 4. Kompaktowy, zintegrowany pasek TIR (Target Range Breakdown)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: SizedBox(
-              height: 8,
-              child: Row(
-                children: [
-                  if (lowPercent > 0)
-                    Expanded(
-                      flex: math.max(1, lowPercent),
-                      child: Container(color: const Color(0xFFEF4444)),
-                    ),
-                  if (tirPercent > 0)
-                    Expanded(
-                      flex: math.max(1, tirPercent),
-                      child: Container(color: const Color(0xFF10B981)),
-                    ),
-                  if (highPercent > 0)
-                    Expanded(
-                      flex: math.max(1, highPercent),
-                      child: Container(color: const Color(0xFFF59E0B)),
-                    ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // 5. Legenda i czas w poszczególnych zakresach (odporna na overflow)
-          Row(
-            children: [
-              Expanded(
-                child: _buildLegendItem(
-                  color: const Color(0xFFEF4444),
-                  label: '<70: $lowPercent% (${lowMinutes}m)',
-                  mutedColor: mutedColor,
-                  alignment: Alignment.centerLeft,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: _buildLegendItem(
-                  color: const Color(0xFF10B981),
-                  label: 'Norma: $tirPercent% (${(inRangeMinutes / 60).toStringAsFixed(1)}h)',
-                  mutedColor: mutedColor,
-                  alignment: Alignment.center,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: _buildLegendItem(
-                  color: const Color(0xFFF59E0B),
-                  label: '>180: $highPercent% (${(highMinutes / 60).toStringAsFixed(1)}h)',
-                  mutedColor: mutedColor,
-                  alignment: Alignment.centerRight,
-                ),
-              ),
-            ],
-          ),
+          DayGlucoseDetails(summary: g),
         ],
       ),
     );
   }
 
   Widget _buildStyleOption({
-    required CaregiverChartStyle style,
+    required DayChartStyle style,
     required String label,
     required bool isDark,
     required Color primary,
@@ -403,7 +341,9 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.3 : 0.08,
+                      ),
                       blurRadius: 3,
                       offset: const Offset(0, 1),
                     ),
@@ -419,42 +359,11 @@ class _CaregiverDayGlucoseChartState extends State<CaregiverDayGlucoseChart> {
               color: isSelected
                   ? (isDark ? Colors.white : primary)
                   : (isDark
-                      ? const Color(0xFF94A3B8)
-                      : const Color(0xFF64748B)),
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF64748B)),
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLegendItem({
-    required Color color,
-    required String label,
-    required Color mutedColor,
-    Alignment alignment = Alignment.center,
-  }) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: alignment,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: mutedColor,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -472,16 +381,16 @@ Color _colorForGlucose(double value) {
   }
 }
 
-class CaregiverDayGlucosePainter extends CustomPainter {
+class DayGlucosePainter extends CustomPainter {
   final List<Glucose> readings;
-  final List<CaregiverChartEvent> events;
+  final List<DayChartEvent> events;
   final DateTime dayStart;
   final DateTime asOf;
-  final CaregiverChartStyle style;
+  final DayChartStyle style;
   final bool isDark;
   final Offset? touchOffset;
 
-  CaregiverDayGlucosePainter({
+  DayGlucosePainter({
     required this.readings,
     required this.events,
     required this.dayStart,
@@ -500,7 +409,7 @@ class CaregiverDayGlucosePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     const leftPad = 6.0;
     const rightPad = 34.0; // Na etykiety Y: 70, 110, 180, 250
-    final topPad = style == CaregiverChartStyle.eventPins ? 26.0 : 12.0;
+    final topPad = style == DayChartStyle.eventPins ? 26.0 : 12.0;
     const bottomPad = 22.0; // Na godziny: 00:00, 04:00, ...
 
     final chartArea = Rect.fromLTRB(
@@ -510,7 +419,7 @@ class CaregiverDayGlucosePainter extends CustomPainter {
       size.height - bottomPad,
     );
 
-    final double minY = 40.0;
+    final minY = 40.0;
     final double maxY = math.max(
       270.0,
       readings.isEmpty
@@ -519,8 +428,11 @@ class CaregiverDayGlucosePainter extends CustomPainter {
     );
 
     double xForTime(DateTime t) {
-      final diffMin = t.difference(dayStart).inSeconds / 60.0;
-      final ratio = (diffMin / 1440.0).clamp(0.0, 1.0);
+      final ratio = dayChartFraction(
+        t,
+        dayStart,
+        dayChartClock(dayStart, 0, dayOffset: 1),
+      );
       return chartArea.left + ratio * chartArea.width;
     }
 
@@ -541,8 +453,9 @@ class CaregiverDayGlucosePainter extends CustomPainter {
         const Radius.circular(4),
       ),
       Paint()
-        ..color = const Color(0xFF10B981)
-            .withValues(alpha: isDark ? 0.08 : 0.05),
+        ..color = const Color(
+          0xFF10B981,
+        ).withValues(alpha: isDark ? 0.08 : 0.05),
     );
 
     // Strefa hipo < 70 mg/dl (czerwony delikatny tint)
@@ -552,8 +465,9 @@ class CaregiverDayGlucosePainter extends CustomPainter {
         const Radius.circular(4),
       ),
       Paint()
-        ..color = const Color(0xFFEF4444)
-            .withValues(alpha: isDark ? 0.07 : 0.04),
+        ..color = const Color(
+          0xFFEF4444,
+        ).withValues(alpha: isDark ? 0.07 : 0.04),
     );
 
     // 2. LINIE REFERENCYJNE (70, 110, 180, 250)
@@ -645,8 +559,8 @@ class CaregiverDayGlucosePainter extends CustomPainter {
     );
 
     // 3. OŚ CZASU X (00:00, 04:00, 08:00, 12:00, 16:00, 20:00, 24:00)
-    for (int h = 0; h <= 24; h += 4) {
-      final hourTime = dayStart.add(Duration(hours: h));
+    for (var h = 0; h <= 24; h += 4) {
+      final hourTime = dayChartClock(dayStart, h);
       final x = xForTime(hourTime);
       final label = h == 24 ? '24:00' : '${h.toString().padLeft(2, '0')}:00';
 
@@ -673,36 +587,30 @@ class CaregiverDayGlucosePainter extends CustomPainter {
 
     // 4. KRZYWA LUB PUNKTY GLIKEMII
     if (readings.isNotEmpty) {
-      // Podział na ciągłe serie (gap > 15 min oznacza przerwę w CGM)
-      final List<List<Glucose>> segments = [];
-      List<Glucose> currentSegment = [readings.first];
-
-      for (int i = 1; i < readings.length; i++) {
-        final prev = readings[i - 1];
-        final curr = readings[i];
-        if (curr.date.difference(prev.date).inMinutes <= 15) {
-          currentSegment.add(curr);
-        } else {
-          segments.add(currentSegment);
-          currentSegment = [curr];
-        }
-      }
-      segments.add(currentSegment);
-
-      for (final seg in segments) {
+      // Each CGM sample covers at most five minutes.
+      for (final seg in dayChartSegments(readings)) {
         if (seg.isEmpty) continue;
 
         final points = seg
             .map((r) => Offset(xForTime(r.date), yForSgv(r.sgv.toDouble())))
             .toList();
 
-        if (style == CaregiverChartStyle.smoothSpline ||
-            style == CaregiverChartStyle.eventPins) {
+        if (points.length == 1) {
+          canvas.drawCircle(
+            points.single,
+            3.5,
+            Paint()..color = _colorForGlucose(seg.single.sgv.toDouble()),
+          );
+          continue;
+        }
+
+        if (style == DayChartStyle.smoothSpline ||
+            style == DayChartStyle.eventPins) {
           // Płynna krzywa Beziera
           final path = Path();
           path.moveTo(points.first.dx, points.first.dy);
 
-          for (int i = 0; i < points.length - 1; i++) {
+          for (var i = 0; i < points.length - 1; i++) {
             final p0 = points[i];
             final p1 = points[i + 1];
             final midX = (p0.dx + p1.dx) / 2;
@@ -720,8 +628,7 @@ class CaregiverDayGlucosePainter extends CustomPainter {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                const Color(0xFF10B981)
-                    .withValues(alpha: isDark ? 0.22 : 0.16),
+                const Color(0xFF10B981).withValues(alpha: isDark ? 0.22 : 0.16),
                 const Color(0xFF10B981).withValues(alpha: 0.0),
               ],
             ).createShader(chartArea);
@@ -740,21 +647,13 @@ class CaregiverDayGlucosePainter extends CustomPainter {
         }
 
         // Kropki CGM (zawsze w stylu clinicalDots lub subtelne w pozostałych)
-        if (style == CaregiverChartStyle.clinicalDots) {
+        if (style == DayChartStyle.clinicalDots) {
           for (final r in seg) {
             final pt = Offset(xForTime(r.date), yForSgv(r.sgv.toDouble()));
             final c = _colorForGlucose(r.sgv.toDouble());
 
-            canvas.drawCircle(
-              pt,
-              3.0,
-              Paint()..color = c,
-            );
-            canvas.drawCircle(
-              pt,
-              1.2,
-              Paint()..color = Colors.white,
-            );
+            canvas.drawCircle(pt, 3.0, Paint()..color = c);
+            canvas.drawCircle(pt, 1.2, Paint()..color = Colors.white);
           }
         }
       }
@@ -781,15 +680,11 @@ class CaregiverDayGlucosePainter extends CustomPainter {
           ..color = lastColor
           ..style = PaintingStyle.fill,
       );
-      canvas.drawCircle(
-        lastPt,
-        1.8,
-        Paint()..color = Colors.white,
-      );
+      canvas.drawCircle(lastPt, 1.8, Paint()..color = Colors.white);
     }
 
     // 5. PINY ZDARZEŃ NA OSI (Gdy aktywny styl eventPins)
-    if (style == CaregiverChartStyle.eventPins && events.isNotEmpty) {
+    if (style == DayChartStyle.eventPins && events.isNotEmpty) {
       for (final event in events) {
         final evX = xForTime(event.time);
         if (evX < chartArea.left || evX > chartArea.right) continue;
@@ -840,7 +735,7 @@ class CaregiverDayGlucosePainter extends CustomPainter {
 
       // Znajdź najbliższy odczyt do palca
       Glucose? nearestReading;
-      double minDistance = double.infinity;
+      var minDistance = double.infinity;
 
       for (final r in readings) {
         final ptX = xForTime(r.date);
@@ -871,16 +766,8 @@ class CaregiverDayGlucosePainter extends CustomPainter {
           7.0,
           Paint()..color = rColor.withValues(alpha: 0.3),
         );
-        canvas.drawCircle(
-          Offset(rX, rY),
-          4.5,
-          Paint()..color = rColor,
-        );
-        canvas.drawCircle(
-          Offset(rX, rY),
-          2.0,
-          Paint()..color = Colors.white,
-        );
+        canvas.drawCircle(Offset(rX, rY), 4.5, Paint()..color = rColor);
+        canvas.drawCircle(Offset(rX, rY), 2.0, Paint()..color = Colors.white);
 
         // Dymek tooltipa
         final timeStr =
@@ -889,8 +776,10 @@ class CaregiverDayGlucosePainter extends CustomPainter {
 
         final tooltipWidth = 110.0;
         final tooltipHeight = 24.0;
-        final tooltipX = (rX - tooltipWidth / 2)
-            .clamp(chartArea.left, chartArea.right - tooltipWidth);
+        final tooltipX = (rX - tooltipWidth / 2).clamp(
+          chartArea.left,
+          chartArea.right - tooltipWidth,
+        );
         final tooltipY = math.max(chartArea.top + 2, rY - 32);
 
         final tooltipRRect = RRect.fromRectAndRadius(
@@ -935,7 +824,7 @@ class CaregiverDayGlucosePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CaregiverDayGlucosePainter oldDelegate) {
+  bool shouldRepaint(covariant DayGlucosePainter oldDelegate) {
     return oldDelegate.readings != readings ||
         oldDelegate.events != events ||
         oldDelegate.dayStart != dayStart ||

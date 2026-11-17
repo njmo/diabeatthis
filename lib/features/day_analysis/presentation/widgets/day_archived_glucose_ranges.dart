@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/day/day_amount_breakdown.dart';
+import '../../../../common/presentation/day/day_stat_formatter.dart';
 import '../../../../common/theme/glucose_range_colors.dart';
-import '../formatters/day_stat_formatter.dart';
-import 'day_amount_breakdown.dart';
 
 /// Like the live range bar, widths cover the entire window, including gaps.
 /// Legend percentages continue to describe only the observed glucose history.

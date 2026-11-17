@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/day/day_summary_card.dart';
 import '../../domain/models/day_context.dart';
 import 'day_meals_overview.dart';
-import 'day_summary_card.dart';
 
 class DayMealsCard extends StatelessWidget {
   final DayContext day;

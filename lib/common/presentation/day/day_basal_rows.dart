@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../../common/history/insulin_basal_summary.dart';
-import '../../../../common/history/insulin_bolus_summary.dart';
-import '../../../../common/l10n/language.dart';
-import '../../../../common/widgets/analysis_metric.dart';
-import '../formatters/day_stat_formatter.dart';
+import '../../history/insulin_basal_summary.dart';
+import '../../history/insulin_bolus_summary.dart';
+import '../../l10n/language.dart';
+import '../../widgets/analysis_metric.dart';
+import 'day_insulin_summary.dart';
 import 'day_metric_grid.dart';
+import 'day_stat_formatter.dart';
 
 class DayBasalRows extends StatelessWidget {
   final InsulinBasalSummary? summary;
@@ -26,6 +27,7 @@ class DayBasalRows extends StatelessWidget {
     final data = summary;
     final covered = data != null && data.coveredDuration > Duration.zero;
     final units = format.insulin;
+    final insulin = DayInsulinSummary(boluses: boluses, basal: summary);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -60,12 +62,10 @@ class DayBasalRows extends StatelessWidget {
               value: units(covered ? data.reducedUnits : null),
             ),
             AnalysisMetric(
-              label: data != null && data.coverage == 1
-                  ? lang.dayInsulinSum
-                  : lang.dayInsulinPartialSum,
-              value: units(
-                covered && boluses != null ? data.units + boluses!.units : null,
-              ),
+              label: insulin.isPartial
+                  ? lang.dayInsulinPartialSum
+                  : lang.dayInsulinSum,
+              value: units(insulin.totalUnits),
             ),
           ],
         ),

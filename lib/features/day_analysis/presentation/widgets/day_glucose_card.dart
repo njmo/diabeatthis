@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../../common/history/glucose_period_summary.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/day/day_metric_grid.dart';
+import '../../../../common/presentation/day/day_stat_formatter.dart';
+import '../../../../common/presentation/day/day_summary_card.dart';
 import '../../../../common/widgets/analysis_metric.dart';
 import '../../../../common/widgets/timeline_analysis_charts.dart';
-import '../formatters/day_stat_formatter.dart';
 import 'day_glucose_ranges.dart';
-import 'day_metric_grid.dart';
-import 'day_summary_card.dart';
 
 class DayGlucoseCard extends StatelessWidget {
   final String title;

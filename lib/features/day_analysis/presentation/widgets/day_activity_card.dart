@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/day/day_metric_grid.dart';
+import '../../../../common/presentation/day/day_summary_card.dart';
 import '../../../../common/widgets/analysis_metric.dart';
 import '../../domain/models/day_activity_summary.dart';
-import 'day_metric_grid.dart';
-import 'day_summary_card.dart';
 
 class DayActivityCard extends StatelessWidget {
   final List<DayActivitySummary>? activities;

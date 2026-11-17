@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/presentation/day/day_history_statistics.dart';
 import '../../../../../common/widgets/data_warning_indicator.dart';
 import '../../../../day_analysis/domain/models/day_context.dart';
-import 'caregiver_day_device_age_card.dart';
-import 'caregiver_day_glucose_chart.dart';
-import 'caregiver_night_summary_card.dart';
 
 class _CaregiverTimelineItem {
   final DateTime time;
@@ -32,84 +30,13 @@ class CaregiverDayTimelineView extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
 
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final borderColor =
-        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final numColor =
-        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final mutedColor =
-        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-
-    final g = day.glucose;
-    int? tir;
-    int? mean = g?.mean?.round();
-    int? lowMin = g?.window.belowRange.inMinutes;
-
-    if (g != null && g.window.observed > Duration.zero) {
-      tir = (g.window.inRange.inMilliseconds /
-              g.window.observed.inMilliseconds *
-              100)
-          .round();
-    }
-
-    final hasBoluses = day.boluses != null;
-    final hasBasal = day.basal != null;
-    final totalBolus = (day.boluses?.manualUnits ?? 0) +
-        (day.boluses?.wizardUnits ?? 0) +
-        (day.boluses?.otherUnits ?? 0);
-    final totalBasal = day.basal?.units ?? 0;
-    final totalInsulin = (hasBoluses || hasBasal) ? totalBolus + totalBasal : null;
-
-    Widget buildPill(String title, String value, Color color, IconData icon) {
-      return Expanded(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          decoration: BoxDecoration(
-            color: cardBg,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(height: 3),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: numColor,
-                  ),
-                  maxLines: 1,
-                ),
-              ),
-              const SizedBox(height: 2),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: mutedColor,
-                  ),
-                  maxLines: 1,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+    final borderColor = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
+    final numColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final mutedColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     Widget buildTimelineNode({
       required String time,
@@ -136,12 +63,7 @@ class CaregiverDayTimelineView extends StatelessWidget {
                   child: Icon(icon, size: 16, color: iconColor),
                 ),
                 if (!isLast)
-                  Expanded(
-                    child: Container(
-                      width: 2,
-                      color: borderColor,
-                    ),
-                  ),
+                  Expanded(child: Container(width: 2, color: borderColor)),
               ],
             ),
             const SizedBox(width: 12),
@@ -200,17 +122,23 @@ class CaregiverDayTimelineView extends StatelessWidget {
         final insulin = w.insulin;
         final parts = <String>[];
         if (carbs > 0) parts.add('${carbs.toStringAsFixed(0)}g WW');
-        if (insulin > 0) parts.add('Sugestia bolusa: ${insulin.toStringAsFixed(1)}j');
+        if (insulin > 0) {
+          parts.add('Sugestia bolusa: ${insulin.toStringAsFixed(1)}j');
+        }
         if (w.glucose > 0) parts.add('Glikemia: ${w.glucose} mg/dl');
         if (w.notes != null && w.notes!.isNotEmpty) parts.add(w.notes!);
 
-        events.add(_CaregiverTimelineItem(
-          time: time,
-          title: carbs > 0 ? 'Kalkulator bolusa & posiłek' : 'Kalkulator bolusa',
-          subtitle: parts.isNotEmpty ? parts.join(' · ') : 'Wpis kalkulatora',
-          icon: Icons.calculate_outlined,
-          color: const Color(0xFFF59E0B),
-        ));
+        events.add(
+          _CaregiverTimelineItem(
+            time: time,
+            title: carbs > 0
+                ? 'Kalkulator bolusa & posiłek'
+                : 'Kalkulator bolusa',
+            subtitle: parts.isNotEmpty ? parts.join(' · ') : 'Wpis kalkulatora',
+            icon: Icons.calculate_outlined,
+            color: const Color(0xFFF59E0B),
+          ),
+        );
       }
     }
 
@@ -220,13 +148,15 @@ class CaregiverDayTimelineView extends StatelessWidget {
           (e) => (e.time.difference(treat.createdAt).inMinutes).abs() < 2,
         );
         if (!isDuplicate && treat.carbs > 0) {
-          events.add(_CaregiverTimelineItem(
-            time: treat.createdAt,
-            title: 'Wpis węglowodanów',
-            subtitle: '${treat.carbs}g WW',
-            icon: Icons.restaurant_outlined,
-            color: const Color(0xFF10B981),
-          ));
+          events.add(
+            _CaregiverTimelineItem(
+              time: treat.createdAt,
+              title: 'Wpis węglowodanów',
+              subtitle: '${treat.carbs}g WW',
+              icon: Icons.restaurant_outlined,
+              color: const Color(0xFF10B981),
+            ),
+          );
         }
       }
     }
@@ -234,68 +164,29 @@ class CaregiverDayTimelineView extends StatelessWidget {
     if (day.lowTreatments != null && day.lowTreatments!.isNotEmpty) {
       for (final lt in day.lowTreatments!) {
         final carbs = lt.historicalCarbs ?? lt.netCarbsGrams;
-        events.add(_CaregiverTimelineItem(
-          time: lt.eatenAt,
-          title: 'Leczenie hipoglikemii',
-          subtitle: '${carbs != null ? '${carbs.toStringAsFixed(0)}g WW' : ''} szybkich węglowodanów',
-          icon: Icons.medical_services_outlined,
-          color: const Color(0xFFEF4444),
-        ));
+        events.add(
+          _CaregiverTimelineItem(
+            time: lt.eatenAt,
+            title: 'Leczenie hipoglikemii',
+            subtitle:
+                '${carbs != null ? '${carbs.toStringAsFixed(0)}g WW' : ''} szybkich węglowodanów',
+            icon: Icons.medical_services_outlined,
+            color: const Color(0xFFEF4444),
+          ),
+        );
       }
     }
 
     events.sort((a, b) => a.time.compareTo(b.time));
-    final hasTreatmentsFailure = day.failedSources.contains(DayDataSource.treatments);
+    final hasTreatmentsFailure = day.failedSources.contains(
+      DayDataSource.treatments,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1. Zwięzłe kafelki wieku sprzętu (Sensor & Pod)
-        CaregiverDayDeviceAgeCard(day: day),
-
-        // 2. Rząd 4 pigułek dobowych (Top Quick HUD)
-        Row(
-          children: [
-            buildPill(
-              'TIR 24h',
-              tir != null ? '$tir%' : '--',
-              (tir ?? 0) >= 70 ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
-              Icons.track_changes_rounded,
-            ),
-            const SizedBox(width: 6),
-            buildPill(
-              'Średnia',
-              mean != null ? '$mean' : '--',
-              const Color(0xFF00A3FF),
-              Icons.bloodtype_outlined,
-            ),
-            const SizedBox(width: 6),
-            buildPill(
-              'Hipo <70',
-              lowMin != null ? '${lowMin}m' : '--',
-              (lowMin ?? 0) > 0 ? const Color(0xFFEF4444) : const Color(0xFF10B981),
-              Icons.warning_amber_rounded,
-            ),
-            const SizedBox(width: 6),
-            buildPill(
-              'Insulina',
-              totalInsulin != null ? '${totalInsulin.toStringAsFixed(1)}j' : '--',
-              const Color(0xFF8B5CF6),
-              Icons.medication_liquid_outlined,
-            ),
-          ],
-        ),
+        DayHistoryStatistics(day: day),
         const SizedBox(height: 12),
-
-        // 3. Nowoczesny wykres glikemii 24h (płynna wstęga bez pinezek)
-        CaregiverDayGlucoseChart(
-          day: day,
-          initialStyle: CaregiverChartStyle.smoothSpline,
-          showStyleSelector: false,
-        ),
-
-        // 4. Karta podsumowania poprzedniej nocy (22:00 – 06:00) widoczna bezpośrednio z kafelkami
-        CaregiverNightSummaryCard(day: day),
 
         // 5. Oś czasu zdarzeń w ciągu dnia
         Container(

@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 
-import '../../../../common/widgets/responsive_metric_list.dart';
+import '../../widgets/responsive_metric_list.dart';
 
 /// A shared visual surface for live and archived day statistics.
 class DayMetricGrid extends StatelessWidget {
   final List<Widget> children;
-  const DayMetricGrid({super.key, required this.children});
+  final bool equalRowHeights;
+  const DayMetricGrid({
+    super.key,
+    required this.children,
+    this.equalRowHeights = false,
+  });
 
   @override
   Widget build(BuildContext context) => ResponsiveMetricList(
     maxColumns: 2,
+    equalRowHeights: equalRowHeights,
     children: [
       for (final child in children)
         DecoratedBox(

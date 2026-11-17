@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/day/day_insulin_breakdown.dart';
+import '../../../../common/presentation/day/day_metric_grid.dart';
+import '../../../../common/presentation/day/day_stat_formatter.dart';
+import '../../../../common/presentation/day/day_summary_card.dart';
 import '../../../../common/widgets/analysis_metric.dart';
 import '../../domain/models/day_summary_snapshot.dart';
-import '../formatters/day_stat_formatter.dart';
 import 'day_archived_glucose_ranges.dart';
-import 'day_insulin_breakdown.dart';
 import 'day_meals_overview.dart';
-import 'day_metric_grid.dart';
-import 'day_summary_card.dart';
 
 class DaySummaryFacts extends StatelessWidget {
   final DaySummarySnapshot snapshot;

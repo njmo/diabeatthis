@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../common/widgets/chart_color_label.dart';
+import '../../widgets/chart_color_label.dart';
 
 /// A distribution of comparable quantities. Missing values never become zero.
 class DayAmountBreakdown extends StatelessWidget {

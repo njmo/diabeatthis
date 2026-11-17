@@ -1,4 +1,4 @@
-import 'package:diabeatthis/features/day_analysis/presentation/formatters/day_stat_formatter.dart';
+import 'package:diabeatthis/common/presentation/day/day_stat_formatter.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

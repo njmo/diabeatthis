@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/presentation/day/day_stat_formatter.dart';
 import '../../../../common/widgets/analysis_metric.dart';
 import '../../../../common/widgets/responsive_metric_list.dart';
 import '../../../meals/common/widgets/meal_macro_donut.dart';
-import '../formatters/day_stat_formatter.dart';
 import 'day_macro_legend.dart';
 
 /// Shared presentation of live and accepted meal totals; never reconstructs data.
