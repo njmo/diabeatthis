@@ -144,9 +144,9 @@ void main() {
         await tester.tap(finish);
         await tester.pumpAndSettle();
         expect(find.byType(MealCompletionChoiceSheet), findsOneWidget);
-        expect(find.text('Wszystko'), findsOneWidget);
-        expect(find.text('Inaczej'), findsOneWidget);
-        await tester.tap(find.text('Inaczej'));
+        expect(find.text('Zjadłem wszystko'), findsOneWidget);
+        expect(find.text('Zmień ilości'), findsOneWidget);
+        await tester.tap(find.text('Zmień ilości'));
         await tester.pumpAndSettle();
         expect(find.byType(MealCompletionView), findsOneWidget);
         final potatoes = find.byWidgetPredicate(

@@ -8,10 +8,7 @@ import '../../../helpers/localized_material_app.dart';
 
 void main() {
   final start = DateTime(2026, 11, 1, 20, 45);
-  final durationField = find.widgetWithText(
-    TextField,
-    'Ile trwało jedzenie? (min)',
-  );
+  final durationField = find.widgetWithText(TextField, 'Jedzenie trwało (min)');
   final continueButton = find.widgetWithText(
     FilledButton,
     'Dalej do podsumowania',

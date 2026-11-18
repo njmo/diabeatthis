@@ -120,18 +120,13 @@ class MealCompletionEntryState extends ConsumerState<MealCompletionEntry> {
                   : null,
             );
           }
-          final timeStep = MealEatingFinishTimeStep(
+          return MealEatingFinishTimeStep(
             timing: details.timing,
             chooseEarlier: chooseEarlier,
             mealName: mealDisplayName(details.meal.name),
             onConfirmed: (value) => setState(() => confirmedEnd = value),
+            compact: widget.compactChoice,
           );
-          return widget.compactChoice
-              ? SizedBox(
-                  height: MediaQuery.sizeOf(context).height * 0.8,
-                  child: timeStep,
-                )
-              : timeStep;
         },
       );
 }

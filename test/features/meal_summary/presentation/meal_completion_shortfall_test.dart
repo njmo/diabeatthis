@@ -123,7 +123,7 @@ void main() {
     );
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Inaczej'));
+    await tester.tap(find.text('Zmień ilości'));
     await tester.pumpAndSettle();
     final container = ProviderScope.containerOf(
       tester.element(find.byType(MealCompletionView)),

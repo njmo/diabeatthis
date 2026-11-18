@@ -109,6 +109,7 @@ class MealCompletionViewState extends ConsumerState<MealCompletionView> {
                   details.meal.status == 'eating-then-bolus',
               saving: saving || reviewing,
               error: error,
+              endedAt: endedAt,
               onEarlier: widget.onEarlierRequested,
               onClose: () => closeChoice(),
               onAsPlanned: () =>

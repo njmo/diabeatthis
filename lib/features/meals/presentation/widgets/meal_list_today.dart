@@ -144,9 +144,7 @@ class MealListToday extends ConsumerWidget {
           for (final group in groups) ...[
             MealProgressSectionHeading(
               title: lang.dashboardPlannedMealsTitle,
-              date: group.date != null
-                  ? '${mealScheduleDateLabel(context, group.date, now)} • ${mealScheduleFullDate(context, group.date!)}'
-                  : null,
+              date: groupDateText(context, group.date, now),
             ),
             for (final meal in group.meals)
               MealScheduleTile(
@@ -172,4 +170,12 @@ domain.Meal? firstMealBlockingActivation(Iterable<domain.Meal> meals) {
     if (mealStatusBlocksAnotherMealActivation(meal.status)) return meal;
   }
   return null;
+}
+
+/// "Today • 18.11.2026", or just the full date when the label already is one.
+String? groupDateText(BuildContext context, DateTime? date, DateTime now) {
+  if (date == null) return null;
+  final label = mealScheduleDateLabel(context, date, now);
+  final full = mealScheduleFullDate(context, date);
+  return label == full ? full : '$label • $full';
 }

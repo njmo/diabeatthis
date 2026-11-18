@@ -31,8 +31,11 @@ void main() {
         find.textContaining('nie zapisano gramatury porcji'),
         findsOneWidget,
       );
-      await tester.tap(find.text('Nie udało się wczytać. Spróbuj ponownie'));
-      expect(retries, 1);
+      expect(
+        find.text('Nie udało się wczytać. Spróbuj ponownie'),
+        findsNothing,
+      );
+      expect(retries, 0);
     },
   );
 }

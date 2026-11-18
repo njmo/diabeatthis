@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +9,6 @@ import '../../../../common/devices/presentation/pump_silhouette_icon.dart';
 import '../../../../common/devices/presentation/sensor_silhouette_icon.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/presentation/dashboard/nightscout_panel_view.dart';
-import '../../../../common/widgets/glucose_direction_icon.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../data/providers/blood_sugar_readings_list_provider.dart';
@@ -271,7 +269,7 @@ class DashboardGlucoseReading extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            sensorAgeText ?? '--',
+                            sensorAgeText,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
@@ -302,7 +300,7 @@ class DashboardGlucoseReading extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            cannulaAgeText ?? '--',
+                            cannulaAgeText,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,

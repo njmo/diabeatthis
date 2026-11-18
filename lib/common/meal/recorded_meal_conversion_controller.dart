@@ -15,9 +15,12 @@ class RecordedMealConversionController
     if (state.isLoading) return null;
     state = const AsyncLoading();
     try {
-      return await ref
+      final requests = await ref
           .read(reviewRecordedMealConversionUseCaseProvider)
           .load(mealId);
+      if (!ref.mounted) return null;
+      state = const AsyncData(null);
+      return requests;
     } catch (error, stack) {
       if (ref.mounted) state = AsyncError(error, stack);
       return null;
@@ -31,6 +34,8 @@ class RecordedMealConversionController
   Future<bool> confirm(
     Map<RecordedMealConversionRequest, double> reviewed,
   ) async {
+    if (state.isLoading) return false;
+    state = const AsyncLoading();
     try {
       await ref
           .read(reviewRecordedMealConversionUseCaseProvider)

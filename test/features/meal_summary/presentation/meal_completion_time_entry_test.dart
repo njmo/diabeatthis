@@ -160,7 +160,7 @@ void main() {
         await open(tester, id, 'eating-then-bolus', chooseEarlier: true);
         final duration = find.widgetWithText(
           TextField,
-          'Ile trwało jedzenie? (min)',
+          'Jedzenie trwało (min)',
         );
         expect(duration, findsOneWidget);
         await tester.enterText(duration, '15');

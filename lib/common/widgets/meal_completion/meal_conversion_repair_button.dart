@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/language.dart';
 import '../../meal/recorded_meal_conversion_controller.dart';
-import '../../meal/recorded_meal_conversion_request.dart';
-import 'recorded_meal_conversion_dialog.dart';
+import 'recorded_meal_conversion_review_page.dart';
 
 class MealConversionRepairButton extends ConsumerWidget {
   const MealConversionRepairButton({
@@ -21,22 +20,25 @@ class MealConversionRepairButton extends ConsumerWidget {
     );
     final requests = await controller.begin();
     if (requests == null || !context.mounted) return;
-    final confirmed = <RecordedMealConversionRequest, double>{};
-    for (final request in requests) {
-      if (!context.mounted) return;
-      final value = await showDialog<double>(
-        context: context,
-        builder: (_) => RecordedMealConversionDialog(request: request),
-      );
-      if (!context.mounted) return;
-      if (value == null) {
-        controller.cancel();
-        return;
-      }
-      confirmed[request] = value;
+    if (requests.isEmpty) {
+      onRepaired();
+      return;
     }
-    final repaired = await controller.confirm(confirmed);
-    if (repaired && context.mounted) onRepaired();
+    final repaired = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => RecordedMealConversionReviewPage(
+          mealId: mealId,
+          requests: requests,
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+    if (repaired == true) {
+      onRepaired();
+    } else {
+      controller.cancel();
+    }
   }
 
   @override

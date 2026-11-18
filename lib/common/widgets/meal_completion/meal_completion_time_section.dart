@@ -1,10 +1,10 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:intl/intl.dart';
 
 import '../../l10n/language.dart';
 import '../../meal/meal_completion_timing.dart';
+import 'meal_completion_time_format.dart';
 
 class MealCompletionTimeSection extends HookWidget {
   const MealCompletionTimeSection({
@@ -31,12 +31,15 @@ class MealCompletionTimeSection extends HookWidget {
     final lang = context.lang;
     final start = timing.startedAt;
     final controller = useTextEditingController();
-    final format = DateFormat('d MMM HH:mm', lang.localeName);
+    String format(DateTime value) =>
+        formatMealCompletionTime(value, now, lang.localeName);
     useEffect(() {
       if (!editing) {
         controller.clear();
       } else if (start != null && endedAt != null) {
-        final value = endedAt!.difference(start).inMinutes.toString();
+        // Display only: a picked finish time keeps its exact value.
+        final minutes = (endedAt!.difference(start).inSeconds / 60).round();
+        final value = minutes > 0 ? minutes.toString() : '';
         if (controller.text != value) controller.text = value;
       }
       return null;
@@ -46,7 +49,7 @@ class MealCompletionTimeSection extends HookWidget {
         contentPadding: EdgeInsets.zero,
         value: false,
         title: Text(lang.mealCompletionEarlier),
-        subtitle: endedAt == null ? null : Text(format.format(endedAt!)),
+        subtitle: endedAt == null ? null : Text(format(endedAt!)),
         onChanged: enabled ? (_) => onEditingChanged(true) : null,
       );
     }
@@ -66,11 +69,11 @@ class MealCompletionTimeSection extends HookWidget {
               start == null
                   ? lang.mealCompletionMissingStart
                   : timing.isAddOn
-                  ? lang.mealCompletionAddOnStartedAt(format.format(start))
-                  : lang.mealCompletionStartedAt(format.format(start)),
+                  ? lang.mealCompletionAddOnStartedAt(format(start))
+                  : lang.mealCompletionStartedAt(format(start)),
             ),
             const SizedBox(height: 12),
-            if (start != null)
+            if (start != null) ...[
               TextField(
                 controller: controller,
                 enabled: enabled,
@@ -86,23 +89,22 @@ class MealCompletionTimeSection extends HookWidget {
                         : start.add(Duration(minutes: minutes)),
                   );
                 },
-              )
-            else
-              OutlinedButton.icon(
-                onPressed: enabled ? () => selectEnd(context) : null,
-                icon: const Icon(Icons.schedule),
-                label: Text(lang.mealCompletionEndTime),
               ),
-            const SizedBox(height: 12),
-            Text(
-              start == null
-                  ? lang.mealCompletionEndTime
-                  : lang.mealCompletionCalculatedEnd,
+              const SizedBox(height: 8),
+            ],
+            OutlinedButton.icon(
+              onPressed: enabled ? () => selectEnd(context) : null,
+              icon: const Icon(Icons.schedule),
+              label: Text(lang.mealCompletionEndTime),
             ),
-            Text(
-              endedAt == null ? '—' : format.format(endedAt!),
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            if (endedAt != null) ...[
+              const SizedBox(height: 12),
+              Text(lang.mealCompletionCalculatedEnd),
+              Text(
+                format(endedAt!),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ],
             if (endedAt != null && !timing.isValidEnd(endedAt, now))
               Text(
                 endedAt!.isAfter(now)
@@ -131,12 +133,21 @@ class MealCompletionTimeSection extends HookWidget {
 
   Future<void> selectEnd(BuildContext context) async {
     final now = clock.now();
-    final initial = endedAt ?? now;
+    final start = timing.startedAt;
+    final lastDate = DateUtils.dateOnly(now);
+    final firstDate = start != null && !start.isAfter(now)
+        ? DateUtils.dateOnly(start)
+        : DateTime(2000);
+    var initial = endedAt ?? now;
+    if (initial.isAfter(now)) initial = now;
+    var initialDate = DateUtils.dateOnly(initial);
+    if (initialDate.isBefore(firstDate)) initialDate = firstDate;
+    if (initialDate.isAfter(lastDate)) initialDate = lastDate;
     final date = await showDatePicker(
       context: context,
-      initialDate: initial,
-      firstDate: timing.startedAt ?? DateTime(2000),
-      lastDate: now,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
     );
     if (date == null || !context.mounted) return;
     final time = await showTimePicker(

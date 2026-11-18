@@ -43,7 +43,8 @@ void main() {
       addTearDown(subscription.close);
       final controller = container.read(provider.notifier);
       expect(await controller.begin(), isEmpty);
-      expect(container.read(provider).isLoading, isTrue);
+      // Loading covers only fetching; the review page itself is not "loading".
+      expect(container.read(provider).isLoading, isFalse);
       controller.cancel();
       expect(container.read(provider).isLoading, isFalse);
       expect(useCase.writes, 0);

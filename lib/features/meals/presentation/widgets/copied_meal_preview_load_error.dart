@@ -44,10 +44,11 @@ class CopiedMealPreviewLoadError extends HookWidget {
             const SizedBox(height: 12),
             MealConversionRepairButton(mealId: mealId!, onRepaired: onRetry),
           ],
-          TextButton(
-            onPressed: onRetry,
-            child: Text(context.lang.copiedMealLoadRetry),
-          ),
+          if (!missingConversion)
+            TextButton(
+              onPressed: onRetry,
+              child: Text(context.lang.copiedMealLoadRetry),
+            ),
         ],
       ),
     );

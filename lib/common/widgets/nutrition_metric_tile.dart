@@ -32,7 +32,6 @@ class NutritionMetricTile extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final effectiveColor = accentColor ?? iconColor;
     final backgroundColor = accentColor?.withValues(alpha: 0.12) ??
         (emphasized
             ? colorScheme.primaryContainer

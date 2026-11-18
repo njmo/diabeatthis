@@ -35,9 +35,9 @@ void main() {
     try {
       await withClock(Clock.fixed(endedAt), () async {
         await _openCompletion(tester, harness, id, endedAt);
-        await tester.tap(find.text('Everything'));
+        await tester.tap(find.text('I ate everything'));
         await tester.pump();
-        await tester.tap(find.text('Everything'), warnIfMissed: false);
+        await tester.tap(find.text('I ate everything'), warnIfMissed: false);
         await tester.pump();
       });
 
@@ -80,7 +80,7 @@ void main() {
         try {
           await withClock(Clock.fixed(endedAt), () async {
             await _openCompletion(tester, harness, id, endedAt);
-            await tester.tap(find.text('Different'));
+            await tester.tap(find.text('Adjust amounts'));
             await _pumpUi(tester);
             expect(find.byType(FriendlyAmountSelector), findsOneWidget);
             for (var i = 0; i < 4; i++) {
@@ -185,7 +185,7 @@ void main() {
       try {
         await withClock(Clock.fixed(endedAt), () async {
           await _openCompletion(tester, harness, id, endedAt);
-          await tester.tap(find.text('Everything'));
+          await tester.tap(find.text('I ate everything'));
           await tester.pump();
         });
 
@@ -339,9 +339,9 @@ Future<void> _openCompletion(
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 5)),
     );
-    if (find.text('Everything').evaluate().isNotEmpty) return;
+    if (find.text('I ate everything').evaluate().isNotEmpty) return;
   }
-  expect(find.text('Everything'), findsOneWidget);
+  expect(find.text('I ate everything'), findsOneWidget);
 }
 
 Future<void> _pumpUi(WidgetTester tester) async {

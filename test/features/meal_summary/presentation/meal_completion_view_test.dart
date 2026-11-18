@@ -96,7 +96,7 @@ void main() {
         find.widgetWithText(FilledButton, 'Zapisz podsumowanie'),
         findsNothing,
       );
-      await tester.tap(find.text('Inaczej'));
+      await tester.tap(find.text('Zmień ilości'));
       await tester.pumpAndSettle();
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
@@ -117,10 +117,10 @@ void main() {
           saves: saves,
           confirmedEnd: start.add(const Duration(minutes: 15)),
         );
-        await tester.tap(find.text('Wszystko'));
+        await tester.tap(find.text('Zjadłem wszystko'));
         await tester.pumpAndSettle();
         expect(
-          find.widgetWithText(TextField, 'Ile trwało jedzenie? (min)'),
+          find.widgetWithText(TextField, 'Jedzenie trwało (min)'),
           findsNothing,
         );
         expect(saves, [start.add(const Duration(minutes: 15))]);
@@ -138,7 +138,7 @@ void main() {
         await open(tester, now: now, saves: saves);
         expect(find.text('Mniej'), findsNothing);
         expect(find.text('Więcej'), findsNothing);
-        await tester.tap(find.text('Inaczej'));
+        await tester.tap(find.text('Zmień ilości'));
         await tester.pumpAndSettle();
         expect(find.byType(FriendlyAmountSelector), findsOneWidget);
         expect(find.byType(MealSummaryExtraItemsSection), findsOneWidget);
@@ -155,7 +155,7 @@ void main() {
       final now = start.add(const Duration(minutes: 20));
       await withClock(Clock.fixed(now), () async {
         await open(tester, now: now, saves: saves, savedDrafts: savedDrafts);
-        await tester.tap(find.text('Inaczej'));
+        await tester.tap(find.text('Zmień ilości'));
         await tester.pumpAndSettle();
         final container = ProviderScope.containerOf(
           tester.element(find.byType(MealSummaryPage)),
@@ -172,11 +172,11 @@ void main() {
         expect(selector.value, 300);
         expect(selector.max, isNull);
         await tester.scrollUntilVisible(
-          find.text('Wszystko'),
+          find.text('Zjadłem wszystko'),
           -250,
           scrollable: mealList,
         );
-        await tester.tap(find.text('Wszystko'));
+        await tester.tap(find.text('Zjadłem wszystko'));
         await tester.pumpAndSettle();
         final draft = savedDrafts.single;
         expect(draft.itemsById[1]!.consumedAmount, 100);
@@ -194,7 +194,7 @@ void main() {
       final now = start.add(const Duration(minutes: 20));
       await withClock(Clock.fixed(now), () async {
         await open(tester, now: now, saves: saves, status: 'eating-then-bolus');
-        await tester.tap(find.text('Inaczej'));
+        await tester.tap(find.text('Zmień ilości'));
         await tester.pumpAndSettle();
         final container = ProviderScope.containerOf(
           tester.element(find.byType(MealSummaryPage)),
@@ -223,7 +223,7 @@ void main() {
         saves: saves,
         waitForSave: waitForSave.future,
       );
-      final action = find.text('Wszystko');
+      final action = find.text('Zjadłem wszystko');
       await tester.tap(action);
       await tester.pump();
       await tester.tap(action, warnIfMissed: false);
@@ -243,7 +243,7 @@ void main() {
     final now = start.add(const Duration(minutes: 20));
     await withClock(Clock.fixed(now), () async {
       await open(tester, now: now, saves: saves);
-      await tester.tap(find.text('Inaczej'));
+      await tester.tap(find.text('Zmień ilości'));
       await tester.pumpAndSettle();
       final container = ProviderScope.containerOf(
         tester.element(find.byType(MealSummaryPage)),

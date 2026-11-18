@@ -65,7 +65,7 @@ void main() {
   }
 
   Future<void> openAdjustedAmounts(WidgetTester tester) async {
-    final button = find.text('Inaczej');
+    final button = find.text('Zmień ilości');
     await tester.scrollUntilVisible(
       button,
       250,

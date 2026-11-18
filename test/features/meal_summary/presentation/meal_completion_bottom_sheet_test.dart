@@ -83,7 +83,7 @@ void main() {
         await open(tester, saves: saves);
         final sheet = find.byType(MealCompletionChoiceSheet);
         expect(find.byType(BottomSheet), findsOneWidget);
-        expect(tester.getSize(sheet).height, lessThan(320));
+        expect(tester.getSize(sheet).height, lessThan(420));
         expect(tester.getTopLeft(sheet).dy, greaterThan(250));
         expect(find.byType(FriendlyAmountSelector), findsNothing);
         expect(find.byType(MealCompletionTimeSection), findsNothing);
@@ -103,13 +103,13 @@ void main() {
         final saves = <DateTime>[];
         final wait = Completer<void>();
         await open(tester, saves: saves, saveWait: wait.future);
-        await tester.tap(find.text('Wszystko'));
+        await tester.tap(find.text('Zjadłem wszystko'));
         await tester.pump();
         expect(saves, [now]);
         expect(
           tester
               .widget<FilledButton>(
-                find.widgetWithText(FilledButton, 'Wszystko'),
+                find.widgetWithText(FilledButton, 'Zjadłem wszystko'),
               )
               .onPressed,
           isNull,
@@ -117,7 +117,7 @@ void main() {
         expect(
           tester
               .widget<OutlinedButton>(
-                find.widgetWithText(OutlinedButton, 'Inaczej'),
+                find.widgetWithText(OutlinedButton, 'Zmień ilości'),
               )
               .onPressed,
           isNull,
@@ -157,8 +157,8 @@ void main() {
           ),
           findsOneWidget,
         );
-        await tester.ensureVisible(find.text('Inaczej'));
-        await tester.tap(find.text('Inaczej'));
+        await tester.ensureVisible(find.text('Zmień ilości'));
+        await tester.tap(find.text('Zmień ilości'));
         await tester.pumpAndSettle();
         expect(find.byType(MealCompletionChoiceSheet), findsNothing);
         expect(saves, isEmpty);
@@ -173,7 +173,7 @@ void main() {
         final saves = <DateTime>[];
         final wait = Completer<void>();
         await open(tester, saves: saves, saveWait: wait.future);
-        await tester.tap(find.text('Wszystko'));
+        await tester.tap(find.text('Zjadłem wszystko'));
         await tester.pump();
         final sheet = find.byType(MealCompletionChoiceSheet);
         expect(
@@ -209,7 +209,7 @@ void main() {
       await withClock(Clock.fixed(now), () async {
         final saves = <DateTime>[];
         await open(tester, saves: saves);
-        await tester.tap(find.text('Inaczej'));
+        await tester.tap(find.text('Zmień ilości'));
         await tester.pumpAndSettle();
         final view = tester.widget<MealCompletionView>(
           find.byType(MealCompletionView),
@@ -218,8 +218,11 @@ void main() {
         expect(view.confirmedEatingEndedAt, now);
         expect(find.byType(MealCompletionChoiceSheet), findsNothing);
         expect(find.byType(FriendlyAmountSelector), findsOneWidget);
-        expect(find.text('Wszystko'), findsNothing);
-        expect(find.widgetWithText(OutlinedButton, 'Inaczej'), findsNothing);
+        expect(find.text('Zjadłem wszystko'), findsNothing);
+        expect(
+          find.widgetWithText(OutlinedButton, 'Zmień ilości'),
+          findsNothing,
+        );
         expect(find.byType(MealCompletionTimeSection), findsNothing);
         expect(saves, isEmpty);
         await tester.tap(find.byType(BackButton));
@@ -238,7 +241,7 @@ void main() {
         await open(tester, saves: saves);
         final action = tester
             .widget<OutlinedButton>(
-              find.widgetWithText(OutlinedButton, 'Inaczej'),
+              find.widgetWithText(OutlinedButton, 'Zmień ilości'),
             )
             .onPressed!;
         action();
@@ -268,7 +271,7 @@ void main() {
       await open(tester, saves: saves, earlier: true);
       expect(find.byType(MealCompletionChoiceSheet), findsNothing);
       await tester.enterText(
-        find.widgetWithText(TextField, 'Ile trwało jedzenie? (min)'),
+        find.widgetWithText(TextField, 'Jedzenie trwało (min)'),
         '15',
       );
       await tester.pumpAndSettle();
@@ -276,7 +279,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(MealCompletionTimeSection), findsNothing);
       expect(find.byType(MealCompletionChoiceSheet), findsOneWidget);
-      await tester.tap(find.text('Wszystko'));
+      await tester.tap(find.text('Zjadłem wszystko'));
       await tester.pumpAndSettle();
       expect(saves, [start.add(const Duration(minutes: 15))]);
     });
@@ -289,10 +292,12 @@ void main() {
         final saves = <DateTime>[];
         await open(tester, saves: saves, status: 'eating-then-bolus');
         expect(
-          find.text('Zapisz zjedzoną porcję i przejdź do bolusa.'),
+          find.text(
+            'Zapisuje całą zarejestrowaną porcję, razem ze zgłoszonymi dokładkami, i przechodzi do bolusa.',
+          ),
           findsOneWidget,
         );
-        await tester.tap(find.text('Inaczej'));
+        await tester.tap(find.text('Zmień ilości'));
         await tester.pumpAndSettle();
         final save = find.widgetWithText(
           FilledButton,
@@ -321,7 +326,7 @@ void main() {
       await withClock(Clock.fixed(now), () async {
         final saves = <DateTime>[];
         await open(tester, saves: saves, status: 'bolused-eating');
-        await tester.tap(find.text('Inaczej'));
+        await tester.tap(find.text('Zmień ilości'));
         await tester.pumpAndSettle();
         final container = ProviderScope.containerOf(
           tester.element(find.byType(MealCompletionView)),

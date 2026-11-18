@@ -2581,8 +2581,8 @@
   "mealCompletionHalf": "I ate half of the portion",
   "mealCompletionEditIngredients": "Ingredient quantities and confidence",
   "mealCompletionLateTitle": "You are confirming the meal later",
-  "mealCompletionDuration": "How long did eating take? (min)",
-  "mealCompletionEndTime": "Actual finish time",
+  "mealCompletionDuration": "Eating took (minutes)",
+  "mealCompletionEndTime": "Pick finish time",
   "mealCompletionNow": "I finished just now",
   "mealCompletionEarlier": "I finished earlier — change the time",
   "mealCompletionStartedAt": "Started: {time}",
@@ -2622,7 +2622,7 @@
     }
   },
   "mealCompletionTitle": "Meal summary",
-  "mealCompletionCalculatedEnd": "Finish time from the duration",
+  "mealCompletionCalculatedEnd": "Finish time",
   "mealCompletionFutureTime": "This time is still in the future. Shorten the eating duration or choose “I finished just now”.",
   "mealCompletionAsPlanned": "Eaten as planned",
   "mealCompletionAdjusted": "Change the amounts eaten",
@@ -2638,7 +2638,7 @@
   "mealCompletionNone": "None",
   "mealCompletionWhole": "Whole portion",
   "mealCompletionReportedAmount": "Recorded: {amount}",
-  "mealEatingFinishTitle": "When did you finish eating?",
+  "mealEatingFinishTitle": "When did you finish?",
   "mealEatingFinishedNow": "I finished just now",
   "mealEatingFinishedEarlier": "I finished earlier",
   "mealEatingContinue": "Continue to summary",
@@ -2667,8 +2667,8 @@
       }
     }
   },
-  "mealCompletionAsPlannedAction": "Everything",
-  "mealCompletionAdjustedAction": "Different",
+  "mealCompletionAsPlannedAction": "I ate everything",
+  "mealCompletionAdjustedAction": "Adjust amounts",
   "mealCompletionShortfallTitle": "Less eaten after a bolus",
   "mealCompletionShortfallNotice": "A bolus is recorded. Review the missing portion before finishing.",
   "mealCompletionRefill": "Complete the meal",
@@ -3352,25 +3352,17 @@
   "activityFirstLow": "First reading below 70 mg/dl",
   "activityNoLowRecorded": "Not found in available readings",
   "mealCompletionUnavailableTitle": "Meal cannot be completed right now",
-  "mealCompletionMissingConversion": "This meal is missing a recorded portion-to-grams conversion. You can accept the current conversion or enter the portion weight used for this meal. Completion stays blocked until confirmation. You can also view its saved data.",
+  "mealCompletionMissingConversion": "This meal was imported without saved portion weights. Confirm them to finish the meal.",
   "mealCompletionViewRecordedMeal": "View saved meal",
   "mealCompletionRetryLoad": "Try again",
-  "mealConversionRepairAction": "Review portion conversions",
-  "mealConversionReviewTitle": "How many grams were in one portion?",
-  "mealConversionReviewExplanation": "This old entry has no recorded conversion. Accept the current value or enter the weight used for this meal. It will be saved only for this entry; the portion definition will stay unchanged. Changes are saved after all missing conversions are confirmed.",
-  "mealConversionCurrentSuggestion": "Current conversion: {grams} g per portion (suggestion to confirm).",
-  "@mealConversionCurrentSuggestion": {
-    "placeholders": {
-      "grams": {
-        "type": "String"
-      }
-    }
-  },
+  "mealConversionRepairAction": "Confirm portion weights",
+  "mealConversionReviewTitle": "Confirm portion weights",
+  "mealConversionReviewExplanation": "The original portion weight wasn't saved for these items, and it affects this meal's carbs. Confirm the suggested value or enter the weight you used.",
   "mealConversionNoSuggestion": "No current conversion is available. Enter the grams in one portion.",
   "mealConversionGramsPerPortion": "Grams per portion",
   "mealConversionInvalidWeight": "Enter a weight greater than zero.",
-  "mealConversionConfirm": "Confirm conversion",
-  "mealConversionSaveFailed": "Could not save conversions. The data may have changed. Close this panel and try again.",
+  "mealConversionConfirm": "Save and continue",
+  "mealConversionSaveFailed": "Couldn't save. The meal may have changed — close and try again.",
   "activityCollectedReadings": "Collected readings: {count}",
   "@activityCollectedReadings": {
     "placeholders": {
@@ -4215,5 +4207,12 @@
   "dayCompactTir": "TIR",
   "dayCompactLow": "Below 70",
   "dayCompactNightBasal": "Night basal",
-  "dayNightGlucoseChart": "Night glucose · 22:00–06:00"
+  "dayNightGlucoseChart": "Night glucose · 22:00–06:00",
+  "mealConversionScopeNote": "Saved only for this meal. The product's portion definition stays unchanged.",
+  "mealConversionSuggestionHint": "Suggestion: current value",
+  "mealCompletionAsPlannedSavesNow": "Saves the recorded portion (including reported extras) right away.",
+  "mealCompletionAsPlannedSavesBeforeBolus": "Saves the recorded portion (including reported extras) and continues to the bolus.",
+  "mealCompletionFinishedAt": "Finished: {time}",
+  "glucoseChartNow": "Now",
+  "mealConversionMissingTitle": "Missing portion weights"
 }

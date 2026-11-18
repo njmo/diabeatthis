@@ -6,6 +6,7 @@ class RecordedMealConversionRequest {
   final int portionId;
   final String ingredientName;
   final String portionName;
+  final double amount;
   final double? currentGrams;
 
   const RecordedMealConversionRequest({
@@ -15,6 +16,7 @@ class RecordedMealConversionRequest {
     required this.portionId,
     required this.ingredientName,
     required this.portionName,
+    required this.amount,
     required this.currentGrams,
   });
 }

@@ -11,7 +11,7 @@ class RecordedMealConversionRepository {
   Future<List<RecordedMealConversionRequest>> missingForMeal(int mealId) async {
     final rows = await db
         .customSelect(
-          'SELECT mi.id, mi.meal_id, mi.ingredient_id, mi.portion_id, '
+          'SELECT mi.id, mi.meal_id, mi.ingredient_id, mi.portion_id, mi.amount, '
           'i.name AS ingredient_name, p.name AS portion_name, ip.grams_per_portion '
           'FROM meal_ingredients mi JOIN ingredient i ON i.id = mi.ingredient_id '
           'JOIN portion p ON p.id = mi.portion_id '
@@ -37,6 +37,7 @@ class RecordedMealConversionRepository {
           portionId: row.read<int>('portion_id'),
           ingredientName: row.read<String>('ingredient_name'),
           portionName: row.read<String>('portion_name'),
+          amount: row.read<double>('amount'),
           currentGrams: row.readNullable<double>('grams_per_portion'),
         ),
     ];

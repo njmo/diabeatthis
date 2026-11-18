@@ -37,7 +37,9 @@ class MealCompletionLoadError extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    lang.mealCompletionUnavailableTitle,
+                    missingConversion
+                        ? lang.mealConversionMissingTitle
+                        : lang.mealCompletionUnavailableTitle,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
@@ -70,11 +72,14 @@ class MealCompletionLoadError extends StatelessWidget {
                   router.push(routes.MealRoute(mealId: mealId));
                 },
               ),
-            TextButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh),
-              label: Text(lang.mealCompletionRetryLoad),
-            ),
+            // A successful repair reloads by itself; a bare retry would only
+            // show the same missing weights again.
+            if (!missingConversion)
+              TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh),
+                label: Text(lang.mealCompletionRetryLoad),
+              ),
           ],
         ),
       ),

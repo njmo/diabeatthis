@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/presentation/charts/draw_dashed_chart_line.dart';
 import '../../../../common/presentation/charts/glucose_chart_timeline.dart';
 import '../../../../core/domain/model/glucose.dart';
@@ -127,8 +127,8 @@ class CompactLoopGlucoseChart extends ConsumerWidget {
                         color: const Color(0xFF00A3FF).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text('Teraz',
-                          style: TextStyle(
+                      child: Text(context.lang.glucoseChartNow,
+                          style: const TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
                               color: Color(0xFF00A3FF))),

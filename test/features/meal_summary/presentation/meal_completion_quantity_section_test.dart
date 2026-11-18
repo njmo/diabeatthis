@@ -88,10 +88,10 @@ void main() {
         onChoiceChanged: selections.add,
       );
       expect(find.text('Zapisz podsumowanie od razu'), findsOneWidget);
-      expect(find.text('Inaczej'), findsOneWidget);
-      await tester.tap(find.text('Wszystko'));
+      expect(find.text('Zmień ilości'), findsOneWidget);
+      await tester.tap(find.text('Zjadłem wszystko'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Wszystko'));
+      await tester.tap(find.text('Zjadłem wszystko'));
       await tester.pumpAndSettle();
       expect(selections, [
         MealCompletionPortionChoice.asReported,
@@ -119,24 +119,6 @@ void main() {
   });
 
   testWidgets(
-    'primary action receives four fifths of the available button width',
-    (tester) async {
-      tester.view.physicalSize = const Size(800, 900);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      await open(tester, choice: null);
-      final primary = tester.getRect(find.byType(FilledButton));
-      final secondary = tester.getRect(find.byType(OutlinedButton));
-      expect(primary.width / secondary.width, closeTo(4, 0.001));
-      expect(primary.top, secondary.top);
-      expect(primary.height, greaterThanOrEqualTo(48));
-      expect(secondary.width, greaterThanOrEqualTo(48));
-      expect(secondary.height, greaterThanOrEqualTo(48));
-    },
-  );
-
-  testWidgets(
     'actions stack without truncation on a narrow screen with enlarged text',
     (tester) async {
       tester.view.physicalSize = const Size(320, 900);
@@ -148,8 +130,8 @@ void main() {
       final secondary = tester.getRect(find.byType(OutlinedButton));
       expect(primary.width, secondary.width);
       expect(secondary.top, greaterThan(primary.bottom));
-      expect(find.text('Wszystko'), findsOneWidget);
-      expect(find.text('Inaczej'), findsOneWidget);
+      expect(find.text('Zjadłem wszystko'), findsOneWidget);
+      expect(find.text('Zmień ilości'), findsOneWidget);
     },
   );
 

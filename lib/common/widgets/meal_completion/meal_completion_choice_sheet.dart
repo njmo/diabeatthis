@@ -1,7 +1,9 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 
 import '../../l10n/language.dart';
 import 'meal_completion_actions.dart';
+import 'meal_completion_time_format.dart';
 
 class MealCompletionChoiceSheet extends StatelessWidget {
   const MealCompletionChoiceSheet({
@@ -11,6 +13,7 @@ class MealCompletionChoiceSheet extends StatelessWidget {
     required this.saving,
     required this.onAsPlanned,
     required this.onDifferent,
+    this.endedAt,
     this.onEarlier,
     this.onClose,
     this.error,
@@ -21,6 +24,7 @@ class MealCompletionChoiceSheet extends StatelessWidget {
   final bool saving;
   final VoidCallback onAsPlanned;
   final VoidCallback onDifferent;
+  final DateTime? endedAt;
   final VoidCallback? onEarlier;
   final VoidCallback? onClose;
   final String? error;
@@ -56,23 +60,42 @@ class MealCompletionChoiceSheet extends StatelessWidget {
                 ],
               ),
               Text(mealName, style: Theme.of(context).textTheme.bodyMedium),
+              if (endedAt != null)
+                Row(
+                  children: [
+                    const Icon(Icons.schedule, size: 18),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        lang.mealCompletionFinishedAt(
+                          formatMealCompletionTime(
+                            endedAt!,
+                            clock.now(),
+                            lang.localeName,
+                            omitTodayDate: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (onEarlier != null)
+                      TextButton(
+                        onPressed: saving ? null : onEarlier,
+                        child: Text(lang.mealFlowChange),
+                      ),
+                  ],
+                ),
               const SizedBox(height: 20),
               MealCompletionActions(
                 primaryLabel: lang.mealCompletionAsPlannedAction,
-                primaryDescription: lang.mealCompletionAllHint,
+                primaryDescription: requiresBolus
+                    ? lang.mealCompletionAsPlannedSavesBeforeBolus
+                    : lang.mealCompletionAsPlannedSavesNow,
                 secondaryLabel: lang.mealCompletionAdjustedAction,
                 secondaryDescription: lang.mealCompletionAdjustedHint,
                 onPrimaryPressed: saving ? null : onAsPlanned,
                 onSecondaryPressed: saving ? null : onDifferent,
               ),
-              const SizedBox(height: 8),
-              Text(
-                requiresBolus
-                    ? lang.mealCompletionSaveImmediatelyBeforeBolus
-                    : lang.mealCompletionSaveImmediately,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              if (onEarlier != null)
+              if (endedAt == null && onEarlier != null)
                 Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(

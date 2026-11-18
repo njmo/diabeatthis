@@ -84,10 +84,15 @@ void main() {
   }
 
   Future<void> chooseEarlier(WidgetTester tester, int minutes) async {
-    await tester.tap(find.text('Zjadłem wcześniej'));
+    // The quick choice offers "change" next to the assumed time; a late
+    // report starts on the time step instead.
+    final change = find.widgetWithText(TextButton, 'Zmień');
+    await tester.tap(
+      change.evaluate().isNotEmpty ? change : find.text('Zjadłem wcześniej'),
+    );
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, 'Ile trwało jedzenie? (min)'),
+      find.widgetWithText(TextField, 'Jedzenie trwało (min)'),
       '$minutes',
     );
     await tester.pumpAndSettle();
@@ -145,12 +150,13 @@ void main() {
         );
         expect(find.byType(MealCompletionChoiceSheet), findsOneWidget);
         expect(find.byType(MealEatingFinishTimeStep), findsNothing);
-        expect(find.text('Zjadłem wcześniej'), findsOneWidget);
+        expect(find.textContaining('Zakończono: '), findsOneWidget);
+        expect(find.widgetWithText(TextButton, 'Zmień'), findsOneWidget);
         expect(saves, isEmpty);
         await chooseEarlier(tester, 15);
         expect(find.byType(MealCompletionChoiceSheet), findsOneWidget);
         expect(find.byType(MealCompletionTimeSection), findsNothing);
-        await tester.tap(find.text('Wszystko'));
+        await tester.tap(find.text('Zjadłem wszystko'));
         await tester.pumpAndSettle();
         expect(saves, [start.add(const Duration(minutes: 15))]);
         expect(drafts.single.itemsById[1]!.consumedConfidence, 0.75);
@@ -199,7 +205,7 @@ void main() {
           reportedMeatballs: 2,
           hasBolus: true,
         );
-        await tester.tap(find.text('Wszystko'));
+        await tester.tap(find.text('Zjadłem wszystko'));
         await tester.pumpAndSettle();
         expect(saves, [now]);
         expect(drafts.single.itemsById[1]!.consumedAmount, 2);
@@ -227,7 +233,7 @@ void main() {
           hasBolus: true,
         );
         await chooseEarlier(tester, 20);
-        await tester.tap(find.text('Inaczej'));
+        await tester.tap(find.text('Zmień ilości'));
         await tester.pumpAndSettle();
         final section = tester.widget<MealCompletionQuantitySection>(
           find.byType(MealCompletionQuantitySection),
@@ -286,7 +292,7 @@ void main() {
           notifications: FakeNotificationsController(),
           reportedMeatballs: 2,
         );
-        await tester.tap(find.text('Inaczej'));
+        await tester.tap(find.text('Zmień ilości'));
         await tester.pumpAndSettle();
         expect(
           tester

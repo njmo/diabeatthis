@@ -29,8 +29,7 @@ void main() {
       name: 'Test ingredient',
       portion: 'porcja',
       grams: 100.0,
-      expected:
-          'Wartości dotyczą jednej porcji referencyjnej. Wybierz liczbę porcji.',
+      expected: 'Wartości dotyczą jednej porcji. Wybierz liczbę porcji.',
     ),
     (
       isReference: false,

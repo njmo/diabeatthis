@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   for (final locale in ['pl', 'en']) {
     testWidgets(
-      'missing conversion has readable sheet with close and retry: $locale',
+      'missing conversion has readable sheet with close and repair: $locale',
       (tester) async {
         tester.view.physicalSize = const Size(390, 844);
         tester.view.devicePixelRatio = 1;
@@ -63,12 +63,12 @@ void main() {
         expect(find.text(lang.mealCompletionMissingConversion), findsOneWidget);
         expect(find.text(lang.mealCompletionViewRecordedMeal), findsOneWidget);
         expect(find.textContaining('Bad state:'), findsNothing);
-        final retry = find.text(lang.mealCompletionRetryLoad);
-        await tester.ensureVisible(retry);
-        expect(tester.getBottomRight(retry).dy, lessThan(844 - 48));
-        await tester.tap(retry);
-        await tester.pumpAndSettle();
-        expect(reads, 2);
+        // A bare retry would only show the same missing weights again.
+        expect(find.text(lang.mealCompletionRetryLoad), findsNothing);
+        final repair = find.text(lang.mealConversionRepairAction);
+        await tester.ensureVisible(repair);
+        expect(tester.getBottomRight(repair).dy, lessThan(844 - 48));
+        expect(reads, 1);
         expect(tester.takeException(), isNull);
         await tester.ensureVisible(find.byIcon(Icons.close));
         await tester.pumpAndSettle();

@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 class MealCompletionActions extends StatelessWidget {
@@ -22,62 +20,41 @@ class MealCompletionActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.labelLarge;
-    double labelWidth(String text) {
-      final painter = TextPainter(
-        text: TextSpan(text: text, style: textStyle),
-        textDirection: Directionality.of(context),
-        textScaler: MediaQuery.textScalerOf(context),
-      )..layout();
-      final width = painter.width;
-      painter.dispose();
-      return width;
-    }
-
-    final primary = Tooltip(
-      message: primaryDescription,
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(48, 56),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          textStyle: textStyle,
-        ),
-        onPressed: onPrimaryPressed,
-        child: Text(primaryLabel, textAlign: TextAlign.center),
-      ),
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.labelLarge;
+    final hintStyle = theme.textTheme.bodySmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
     );
-    final secondary = Tooltip(
-      message: secondaryDescription,
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(48, 56),
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
-          textStyle: textStyle,
-        ),
-        onPressed: onSecondaryPressed,
-        child: Text(secondaryLabel, textAlign: TextAlign.center),
-      ),
+    Widget hint(String text) => Padding(
+      padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
+      child: Text(text, style: hintStyle),
     );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final rowWidth = constraints.maxWidth - 8;
-        final primaryFits = rowWidth * 0.8 >= labelWidth(primaryLabel) + 32;
-        final secondaryFits =
-            rowWidth * 0.2 >= max(48, labelWidth(secondaryLabel) + 8);
-        if (primaryFits && secondaryFits) {
-          return Row(
-            children: [
-              Expanded(flex: 4, child: primary),
-              const SizedBox(width: 8),
-              Expanded(child: secondary),
-            ],
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [primary, const SizedBox(height: 8), secondary],
-        );
-      },
+    // Descriptions stay visible: tooltips are undiscoverable on touch screens.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FilledButton(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(48, 56),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            textStyle: textStyle,
+          ),
+          onPressed: onPrimaryPressed,
+          child: Text(primaryLabel, textAlign: TextAlign.center),
+        ),
+        hint(primaryDescription),
+        const SizedBox(height: 12),
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(48, 56),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            textStyle: textStyle,
+          ),
+          onPressed: onSecondaryPressed,
+          child: Text(secondaryLabel, textAlign: TextAlign.center),
+        ),
+        hint(secondaryDescription),
+      ],
     );
   }
 }
