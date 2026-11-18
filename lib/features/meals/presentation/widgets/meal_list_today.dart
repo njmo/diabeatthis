@@ -141,10 +141,12 @@ class MealListToday extends ConsumerWidget {
               onOpen: () => openMealCompletion(context, mealId: meal.id),
               onDelete: deleteAction(meal),
             ),
+          if (groups.isNotEmpty)
+            MealProgressSectionHeading(title: lang.dashboardPlannedMealsTitle),
           for (final group in groups) ...[
             MealProgressSectionHeading(
-              title: lang.dashboardPlannedMealsTitle,
-              date: groupDateText(context, group.date, now),
+              title: mealScheduleDateLabel(context, group.date, now),
+              date: groupFullDate(context, group.date, now),
             ),
             for (final meal in group.meals)
               MealScheduleTile(
@@ -172,10 +174,9 @@ domain.Meal? firstMealBlockingActivation(Iterable<domain.Meal> meals) {
   return null;
 }
 
-/// "Today • 18.11.2026", or just the full date when the label already is one.
-String? groupDateText(BuildContext context, DateTime? date, DateTime now) {
+/// The full date next to a relative label, omitted when it would repeat it.
+String? groupFullDate(BuildContext context, DateTime? date, DateTime now) {
   if (date == null) return null;
-  final label = mealScheduleDateLabel(context, date, now);
   final full = mealScheduleFullDate(context, date);
-  return label == full ? full : '$label • $full';
+  return mealScheduleDateLabel(context, date, now) == full ? null : full;
 }

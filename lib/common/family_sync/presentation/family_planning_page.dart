@@ -18,13 +18,14 @@ import '../../planning/planning_repository_provider.dart';
 import '../../presentation/dashboard/dashboard_card_padding.dart';
 import '../../presentation/dashboard/dashboard_spacing.dart';
 import '../../routing/form_bottom_sheet_route.dart';
+import '../../widgets/meal_progress/meal_progress_section_heading.dart';
 import '../family_access_scope.dart';
 import '../family_plan_submission_store.dart';
 import '../family_planning_controller.dart';
 import '../family_planning_view.dart';
+import 'family_active_meal_card.dart';
 import 'family_activity_log_card.dart';
 import 'family_activity_plan_form.dart';
-import 'family_active_meal_card.dart';
 import 'family_collections_body.dart';
 import 'family_meal_photo_page.dart';
 import 'family_meal_plan_form.dart';
@@ -33,7 +34,6 @@ import 'family_planned_activity_card.dart';
 import 'family_planned_meal_card.dart';
 import 'family_record_page.dart';
 import 'family_scope_guard.dart';
-import '../../widgets/meal_progress/meal_progress_section_heading.dart';
 
 class FamilyPlanningPage extends ConsumerStatefulWidget {
   const FamilyPlanningPage({

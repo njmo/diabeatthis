@@ -2,11 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/language.dart';
 
-/// A fixed-height slot: refreshes never move the readings beneath it.
-import 'package:flutter/material.dart';
-
-import '../../l10n/language.dart';
-
 /// A fixed-height compact chip: refreshes never move the readings beneath it.
 class FamilySyncRibbon extends StatefulWidget {
   const FamilySyncRibbon({

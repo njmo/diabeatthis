@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/devices/device_detection_service.dart';
-import '../../../../common/monitoring/widgets/insulin_carbohydrate_metrics.dart';
 import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../../low_treatment/data/providers/low_treatment_suggestion_visibility_provider.dart';
@@ -24,7 +23,6 @@ class DeviceStatusDashboard extends ConsumerWidget {
     this.readings,
     this.glucose,
     this.useDeviceGlucose = true,
-    this.showIobCob = false,
     this.showDeviceCards = true,
   });
   final bool allowLocalActions;
@@ -32,7 +30,6 @@ class DeviceStatusDashboard extends ConsumerWidget {
   final bool useDeviceGlucose;
   final bool? readingIsOld;
   final List<Glucose>? readings;
-  final bool showIobCob;
   final bool showDeviceCards;
 
   @override
@@ -48,13 +45,14 @@ class DeviceStatusDashboard extends ConsumerWidget {
 
     final sign = tick > 0 ? '+' : '';
 
-    final detectedSensor =
-        DeviceDetectionService.detectSensor(glucose?.notes ?? deviceStatus.externalId);
+    final detectedSensor = DeviceDetectionService.detectSensor(
+      glucose?.notes ?? deviceStatus.externalId,
+    );
     final detectedPump = DeviceDetectionService.detectPump(
       device: deviceStatus.externalId,
     );
 
-    final showCards = showDeviceCards && !showIobCob;
+    final showCards = showDeviceCards;
 
     return RepaintBoundary(
       child: Column(
@@ -78,17 +76,6 @@ class DeviceStatusDashboard extends ConsumerWidget {
               pumpType: detectedPump,
               showDeviceCards: showCards,
             ),
-          if (showIobCob) ...[
-            const SizedBox(height: 4),
-            InsulinCarbohydrateMetrics(
-              iob: deviceStatus.iob,
-              cob: deviceStatus.cob,
-              hasIob: deviceStatus.hasIob,
-              hasCob: deviceStatus.hasCob,
-              iconSize: 30,
-              iconSpacing: 16,
-            ),
-          ],
           if (allowLocalActions &&
               deviceStatus.carbsReq > 0 &&
               ref

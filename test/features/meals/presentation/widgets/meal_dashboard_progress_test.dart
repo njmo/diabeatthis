@@ -79,10 +79,11 @@ void main() {
       expect(find.text('Zjadłem teraz'), findsNothing);
       expect(find.text('Zjadłem wcześniej'), findsNothing);
       expect(find.byTooltip('Przerwij obsługę posiłku'), findsOneWidget);
-      expect(find.textContaining(RegExp(r'^Dzisiaj • ')), findsOneWidget);
-      expect(find.textContaining(RegExp(r'^Jutro • ')), findsOneWidget);
+      expect(find.text('Dzisiaj'), findsOneWidget);
+      expect(find.text('Jutro'), findsOneWidget);
       // A date without a relative label is not repeated.
       expect(find.text('4.11.2026'), findsOneWidget);
+      expect(find.text('Zaplanowane posiłki'), findsOneWidget);
       expect(
         tester.getTopLeft(find.text('Tortilla')).dy,
         lessThan(tester.getTopLeft(find.text('Dzisiaj plan')).dy),

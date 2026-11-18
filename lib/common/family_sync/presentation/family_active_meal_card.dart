@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../features/meals/presentation/widgets/meal_details/meal_detail_formatters.dart';
+import '../../../features/meals/presentation/widgets/meal_progress/meal_schedule_labels.dart';
 import '../../l10n/language.dart';
 import '../../meal/meal_display_name.dart';
 import '../../meal/meal_progress_plan.dart';
 import '../../widgets/meal_progress/meal_progress_steps.dart';
-import '../../../features/meals/presentation/widgets/meal_details/meal_detail_formatters.dart';
-import '../../../features/meals/presentation/widgets/meal_progress/meal_schedule_labels.dart';
 
 class FamilyActiveMealCard extends StatelessWidget {
   const FamilyActiveMealCard({

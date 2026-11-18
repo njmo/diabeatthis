@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/language.dart';
-
-import 'package:flutter/material.dart';
-
-import '../../../l10n/language.dart';
 import '../../demo/meal_decision_demo_answer.dart';
 
 class MealDecisionAnsweredStatus extends StatelessWidget {
@@ -35,7 +31,7 @@ class MealDecisionAnsweredStatus extends StatelessWidget {
         ? context.lang.mealDecisionRemoteAccepted
         : context.lang.mealDecisionStatusAnswered;
 
-    String decisionText = '';
+    var decisionText = '';
     if (answer != null) {
       decisionText = switch (answer!) {
         MealDecisionDemoAnswer.insulinThenWait => minutes > 0

@@ -35,13 +35,13 @@ void main() {
             matching: find.byType(TextFormField),
           );
 
-      expect(find.text('Węglowodany (WW)'), findsOneWidget);
-      expect(find.text('Węglowodany przedłużone (eCarbs)'), findsOneWidget);
+      expect(find.text('Węglowodany proste (carbs)'), findsOneWidget);
+      expect(find.text('Węglowodany przedłużone (ecarbs)'), findsOneWidget);
       expect(find.text('= 0.0 WBT (1 WBT = 10 g)'), findsOneWidget);
 
       // Enter 25 g of eCarbs
       await tester.enterText(
-        field('Węglowodany przedłużone (eCarbs)'),
+        field('Węglowodany przedłużone (ecarbs)'),
         '25',
       );
       await tester.pumpAndSettle();

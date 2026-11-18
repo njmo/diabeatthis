@@ -11,8 +11,8 @@ import '../family_status.dart';
 import '../secure_family_repository.dart';
 import 'family_account_avatar.dart';
 import 'family_loading_state.dart';
-import 'family_pairing_qr_card.dart';
 import 'family_pairing_code_dialog.dart';
+import 'family_pairing_qr_card.dart';
 import 'family_pending_request_card.dart';
 import 'family_qr_scanner_page.dart';
 
@@ -202,12 +202,15 @@ class SecureFamilyPanelState extends State<SecureFamilyPanel> {
       if (mounted) setState(() => requested = true);
     }
   });
-  Future<void> _enterCodeDialog(BuildContext context) => run(() async {
+  // Only the submission is busy work; typing the code must not show progress.
+  Future<void> _enterCodeDialog(BuildContext context) async {
     final code = await showFamilyPairingCodeDialog(context);
     if (code == null || !mounted) return;
-    await widget.repository.requestJoinByCode(code);
-    if (mounted) setState(() => requested = true);
-  });
+    await run(() async {
+      await widget.repository.requestJoinByCode(code);
+      if (mounted) setState(() => requested = true);
+    });
+  }
 
   Future<void> disconnect(String memberId) => run(() async {
     final confirmed = await showDialog<bool>(

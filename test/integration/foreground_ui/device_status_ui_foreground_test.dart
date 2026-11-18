@@ -105,8 +105,6 @@ void main() {
         () => scenario(tester, (harness, transport) async {
           await send(tester, harness, reading());
           expect(find.byType(DeviceStatusDashboard), findsOneWidget);
-          expect(find.text('1.25 U'), findsOneWidget);
-          expect(find.text('8.50 g'), findsOneWidget);
           expect(
             harness.foregroundContainer.read(deviceStatusValueProvider)?.iob,
             1.25,
@@ -124,7 +122,6 @@ void main() {
               ),
             );
             expect(transport.messages, hasLength(1));
-            expect(find.text('1.25 U'), findsOneWidget);
             expect(
               harness.foregroundContainer.read(deviceStatusValueProvider)?.iob,
               1.25,
@@ -143,7 +140,6 @@ void main() {
         Clock.fixed(now),
         () => scenario(tester, (harness, transport) async {
           await send(tester, harness, reading());
-          expect(find.text('1.25 U'), findsOneWidget);
           await send(tester, harness, reading(minutesAgo: age, iob: 9));
           expect(
             (
@@ -157,8 +153,6 @@ void main() {
             ),
             (1.25, 1.25),
           );
-          expect(find.text('1.25 U'), findsOneWidget);
-          expect(find.text('9.00 U'), findsNothing);
         }),
       ),
     ); // Regression: a delayed device status rolls IOB back or clears the foreground's current sample.

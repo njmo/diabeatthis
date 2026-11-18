@@ -1,7 +1,7 @@
 import 'package:diabeatthis/common/history/glucose_period_summary.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
-import 'package:diabeatthis/common/presentation/day/day_history_statistics.dart';
 import 'package:diabeatthis/common/presentation/day/day_glucose_chart.dart';
+import 'package:diabeatthis/common/presentation/day/day_history_statistics.dart';
 import 'package:diabeatthis/common/presentation/day/day_insulin_card.dart';
 import 'package:diabeatthis/common/widgets/data_warning_indicator.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';

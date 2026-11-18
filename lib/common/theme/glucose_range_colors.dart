@@ -6,10 +6,11 @@ class GlucoseRangeColors {
   const GlucoseRangeColors(Brightness brightness)
     : isDark = brightness == Brightness.dark;
 
+  // Light-mode shades keep >= 3:1 contrast on surfaces (WCAG graphics).
   Color get inRange =>
-      isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A);
+      isDark ? const Color(0xFF4ADE80) : const Color(0xFF15803D);
   Color get aboveRange =>
-      isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
+      isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309);
   Color get belowRange =>
       isDark ? const Color(0xFFFB7185) : const Color(0xFFDC2626);
   Color get missing =>

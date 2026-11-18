@@ -88,7 +88,8 @@ void main() {
       final saved = container.read(aiSettingsControllerProvider).requireValue;
       expect(saved.provider, AiProviderKind.openAi);
       expect(saved.model, 'openai-custom');
-      expect(saved.firebaseModel, 'gemini-custom');
+      // The DiabeatThis AI (Firebase) model is fixed, not user-selectable.
+      expect(saved.firebaseModel, AiConfiguration.diabeatthisAiDefaultModel);
       expect(saved.chatGptModel, 'chatgpt-custom');
       expect(credentials.values[openAiApiKeyStorageKey], 'private-key');
       expect(
@@ -108,7 +109,7 @@ void main() {
       final switched = container
           .read(aiSettingsControllerProvider)
           .requireValue;
-      expect(switched.model, 'gemini-custom');
+      expect(switched.model, AiConfiguration.diabeatthisAiDefaultModel);
       expect(switched.openAiModel, 'openai-custom');
       expect(switched.chatGptModel, 'chatgpt-custom');
     },
@@ -118,7 +119,7 @@ void main() {
     'tests draft settings with a synthetic prompt without saving key or provider',
     () async {
       final controller = container.read(aiSettingsControllerProvider.notifier);
-      const saved = AiConfiguration(firebaseModel: 'saved-firebase');
+      const saved = AiConfiguration();
       await controller.save(saved);
       final storedBefore = preferences.getString(aiConfigurationStorageKey);
       final draft = saved.copyWith(

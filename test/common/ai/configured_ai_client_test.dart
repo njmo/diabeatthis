@@ -232,7 +232,8 @@ void main() {
         document,
         language: 'pl',
       );
-      expect(second.modelId, 'firebase-selected');
+      // The DiabeatThis AI (Firebase) model is fixed, not user-selectable.
+      expect(second.modelId, AiConfiguration.diabeatthisAiDefaultModel);
       expect(factory.configurations.last.provider, AiProviderKind.firebase);
 
       // A previously obtained use case retains the configuration of that request.

@@ -18,12 +18,10 @@ class CaregiverNightscoutPanel extends ConsumerWidget {
     this.syncBusy = false,
     this.syncFailed = false,
     this.syncReady = false,
-    this.showMetrics = false,
   });
   final bool syncBusy;
   final bool syncFailed;
   final bool syncReady;
-  final bool showMetrics;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final snapshot = ref.watch(caregiverVisibleStateProvider).snapshot;
@@ -51,7 +49,6 @@ class CaregiverNightscoutPanel extends ConsumerWidget {
                   glucose == null ||
                   now.difference(glucose.date).inMinutes > 10,
               readings: readings,
-              showIobCob: showMetrics,
             )
           : glucose != null
           ? GlucoseDashboard(glucose: glucose, readings: readings)

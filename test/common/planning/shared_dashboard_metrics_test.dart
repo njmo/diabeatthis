@@ -22,7 +22,7 @@ void main() {
   for (final dark in [false, true]) {
     for (final hasGlucose in [false, true]) {
       testWidgets(
-        'shared caregiver metrics preserve colors and CGM source: dark=$dark glucose=$hasGlucose',
+        'shared caregiver dashboard keeps CGM source without IOB/COB: dark=$dark glucose=$hasGlucose',
         (tester) async {
           final now = DateTime.now();
           final device = testDeviceStatus(
@@ -71,7 +71,7 @@ void main() {
                 theme: ThemeData(
                   brightness: dark ? Brightness.dark : Brightness.light,
                 ),
-                home: const Scaffold(body: CaregiverNightscoutPanel(showMetrics: true)),
+                home: const Scaffold(body: CaregiverNightscoutPanel()),
               ),
             ),
           );
@@ -81,11 +81,8 @@ void main() {
             find.byType(DashboardGlucoseReading),
           );
           expect(reading.value, hasGlucose ? 123 : null);
-          final tiles = tester
-              .widgetList<NutritionMetricTile>(find.byType(NutritionMetricTile))
-              .toList();
-          expect(tiles[0].iconColor, Color(dark ? 0xFF80D8F7 : 0xFF08799E));
-          expect(tiles[1].iconColor, Color(dark ? 0xFFF3C96A : 0xFF986500));
+          // IOB and COB are not part of the dashboard for any role.
+          expect(find.byType(NutritionMetricTile), findsNothing);
           expect(tester.takeException(), isNull);
         },
       );
