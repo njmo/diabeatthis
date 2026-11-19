@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/l10n/language.dart';
+
 import '../../../day_analysis/presentation/widgets/day_date_selector.dart';
 import 'caregiver_day_summary.dart';
 
@@ -28,13 +30,25 @@ class CaregiverDayView extends StatelessWidget {
     child: ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
-        16,
-        16,
-        16,
+        12,
+        0,
+        12,
         112 + MediaQuery.paddingOf(context).bottom,
       ),
       children: [
-        DayDateSelector(date: date, today: today, onSelected: onDateSelected),
+        DayDateSelector(
+          date: date,
+          today: today,
+          onSelected: onDateSelected,
+          actions: [
+            IconButton(
+              tooltip: context.lang.dayRefresh,
+              onPressed: onRefresh,
+              icon: const Icon(Icons.refresh, size: 20),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
         CaregiverDaySummary(
           date: date,
           owner: owner,

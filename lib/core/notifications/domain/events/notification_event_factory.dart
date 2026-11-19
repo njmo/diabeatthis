@@ -20,6 +20,10 @@ class NotificationEventFactory {
     Map<String, dynamic> data,
   ) {
     switch (type) {
+      case NotificationEventType.familyChat:
+        throw UnsupportedError(
+          'Chat notifications require authenticated presentation',
+        );
       case NotificationEventType.activitySchedule:
         return ActivityScheduleNotificationEvent.fromPayload(data);
       case NotificationEventType.eatNow:

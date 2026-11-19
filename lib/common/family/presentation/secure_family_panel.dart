@@ -204,6 +204,7 @@ class SecureFamilyPanelState extends State<SecureFamilyPanel> {
   });
   // Only the submission is busy work; typing the code must not show progress.
   Future<void> _enterCodeDialog(BuildContext context) async {
+    if (busy) return;
     final code = await showFamilyPairingCodeDialog(context);
     if (code == null || !mounted) return;
     await run(() async {

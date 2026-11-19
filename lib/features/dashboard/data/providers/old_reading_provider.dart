@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../common/presentation/dashboard/glucose_freshness.dart';
 
 import 'device_status_ui_provider.dart';
 import 'time_now_provider.dart';
@@ -12,7 +13,5 @@ bool isReadingOld(Ref ref) {
 
   if (deviceStatus == null || timeNow == null) return false;
 
-  final lastUpdate = timeNow.difference(deviceStatus.date);
-
-  return lastUpdate.inMinutes > 10;
+  return dashboardGlucoseIsStale(deviceStatus.date, timeNow);
 }

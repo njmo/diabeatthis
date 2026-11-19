@@ -52,7 +52,8 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.text('Dzisiaj · wersja robocza'), findsOneWidget);
+        expect(find.text('11.09.2026 (dzisiaj)'), findsOneWidget);
+        expect(find.byKey(ValueKey(DateTime(2026, 9, 11))), findsOneWidget);
         expect(
           tester
               .widget<IconButton>(
@@ -71,18 +72,18 @@ void main() {
         await tester.tap(find.byTooltip('Poprzedni dzień'));
         await tester.pumpAndSettle();
         expect(find.text('09.09.2026'), findsOneWidget);
-        expect(find.text('Dane do 10.09.2026 00:00'), findsOneWidget);
-        expect(find.text('Dzień · wersja robocza'), findsOneWidget);
+        expect(find.byKey(ValueKey(older)), findsOneWidget);
         pending.complete(await builder(date: previous));
         await tester.pumpAndSettle();
-        expect(find.text('Dane do 10.09.2026 00:00'), findsOneWidget);
+        expect(find.byKey(ValueKey(older)), findsOneWidget);
+        expect(find.byKey(ValueKey(previous)), findsNothing);
         await tester.tap(find.byTooltip('Odśwież'));
         await tester.pumpAndSettle();
         expect(olderCalls, 2);
         await tester.tap(find.byTooltip('Wróć do dzisiaj'));
         await tester.pumpAndSettle();
-        expect(find.text('Dzisiaj · wersja robocza'), findsOneWidget);
-        expect(find.text('11.09.2026'), findsOneWidget);
+        expect(find.text('11.09.2026 (dzisiaj)'), findsOneWidget);
+        expect(find.byKey(ValueKey(DateTime(2026, 9, 11))), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
     },

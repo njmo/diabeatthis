@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
+    <exclude domain="file" path="family_chat_local_e2e.sqlite" />
+    <exclude domain="file" path="family_chat_local_e2e.sqlite-wal" />
+    <exclude domain="file" path="family_chat_local_e2e.sqlite-shm" />
+    <exclude domain="file" path="family_chat_local_e2e.sqlite-journal" />
+    <exclude domain="file" path="family_chat_guard_local_e2e.sqlite" />
+    <exclude domain="file" path="family_chat_guard_local_e2e.sqlite-wal" />
+    <exclude domain="file" path="family_chat_guard_local_e2e.sqlite-shm" />
+    <exclude domain="file" path="family_chat_guard_local_e2e.sqlite-journal" />
+    <exclude domain="file" path="family_chat_guard.sqlite" />
+    <exclude domain="file" path="family_chat_guard.sqlite-wal" />
+    <exclude domain="file" path="family_chat_guard.sqlite-shm" />
+    <exclude domain="file" path="family_chat_guard.sqlite-journal" />
+    <exclude domain="file" path="family_chat.sqlite" />
+    <exclude domain="file" path="family_chat.sqlite-wal" />
+    <exclude domain="file" path="family_chat.sqlite-shm" />
+    <exclude domain="file" path="family_chat.sqlite-journal" />
     <exclude domain="sharedpref" path="FlutterSecureStorage.xml" />
     <exclude domain="sharedpref" path="FlutterSecureKeyStorage.xml" />
 </full-backup-content>

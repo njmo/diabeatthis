@@ -5,7 +5,8 @@ part 'low_treatment_context.freezed.dart';
 enum LowTreatmentContextSource {
   manual('manual'),
   aapsSuggestion('aapsSuggestion'),
-  dashboardAction('dashboardAction');
+  dashboardAction('dashboardAction'),
+  familyChat('familyChat');
 
   const LowTreatmentContextSource(this.storageValue);
 

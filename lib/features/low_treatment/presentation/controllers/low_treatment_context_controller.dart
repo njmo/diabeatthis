@@ -6,20 +6,16 @@ import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/quick_low_treatment_item.dart';
-import '../../../../core/drift/providers/database_provider.dart';
 import '../../../activity/data/models/activity_log_summary_data.dart';
 import '../../../dashboard/data/providers/device_status_ui_provider.dart';
-import '../../../meals/data/domain/use_cases/add_meal_use_case.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
+import '../../application/save_recorded_low_treatment_use_case.dart';
 import '../../data/drafts/low_treatment_context_draft.dart';
 import '../../data/mappers/quick_low_treatment_item_mapper.dart';
 import '../../data/models/low_treatment_related_record.dart';
 import '../../data/models/low_treatment_sheet_state.dart';
-import '../../data/providers/low_treatment_handoff_provider.dart';
 import '../../data/providers/low_treatment_related_activity_provider.dart';
 import '../../data/providers/low_treatment_related_meal_provider.dart';
-import '../../data/providers/low_treatment_upload_provider.dart';
-import '../../domain/use_cases/add_low_treatment_context_entry_use_case.dart';
 
 part 'low_treatment_context_controller.g.dart';
 
@@ -28,13 +24,10 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
   LowTreatmentContextController({this.historicalAt});
   final DateTime? historicalAt;
   MealIngredientsDraft? quickIngredient;
-  late AddMealUseCase _addMealUseCase;
-  late AddLowTreatmentContextEntryUseCase _addContextUseCase;
 
   @override
   Future<LowTreatmentSheetState> build() async {
-    _addMealUseCase = ref.watch(addMealUseCaseProvider);
-    _addContextUseCase = ref.watch(addLowTreatmentContextEntryUseCaseProvider);
+    ref.watch(saveRecordedLowTreatmentUseCaseProvider);
 
     if (historicalAt != null) {
       return LowTreatmentSheetState(
@@ -305,46 +298,14 @@ class LowTreatmentContextController extends _$LowTreatmentContextController {
   }
 
   Future<LowTreatmentContext> save(LowTreatmentContextDraft draft) async {
-    if (draft.mealId != null) {
-      return _addContextUseCase.call(draft, mealId: draft.mealId!);
-    }
-
-    final db = ref.read(databaseProvider);
-    final result = await db.transaction(() async {
-      if (historicalAt?.isAfter(clock.now()) ?? false) {
-        throw ArgumentError('Historical low treatment cannot be in the future');
-      }
-      final mealDraft = draft.meal.copyWith(
-        plannedAt: historicalAt ?? clock.now(),
-      );
-      final meal = await _addMealUseCase.call(
-        mealDraft.copyWith(purpose: MealPurpose.lowTreatment),
-      );
-      final mealId = meal.id;
-      final contextDraft = draft.copyWith(mealId: mealId, meal: mealDraft);
-      final context = await _addContextUseCase.call(
-        contextDraft,
-        mealId: mealId,
-      );
-
-      if (historicalAt == null) {
-        await ref
-            .read(lowTreatmentHandoffUseCaseProvider)
-            .registerPending(
-              mealId: mealId,
-              savedAt: mealDraft.plannedAt,
-              suggestionAt: context.deviceStatusDate == null
-                  ? null
-                  : context.suggestionAt,
-            );
-        await ref.read(registerLowTreatmentUploadUseCaseProvider)(mealId);
-      }
-      return (context: context, contextDraft: contextDraft);
-    });
+    final result = await ref.read(saveRecordedLowTreatmentUseCaseProvider)(
+      draft,
+      historicalAt: historicalAt,
+    );
 
     final current = state.value;
     if (current?.contextDraft == draft) {
-      state = AsyncData(current!.copyWith(contextDraft: result.contextDraft));
+      state = AsyncData(current!.copyWith(contextDraft: result.draft));
     }
 
     return result.context;

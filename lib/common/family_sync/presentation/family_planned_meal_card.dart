@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/domain/model/meal.dart';
+import '../../../core/domain/model/meal_status_flow.dart';
+import '../../../features/meals/presentation/widgets/meal_progress/meal_schedule_tile.dart';
+
 import '../../l10n/language.dart';
 import '../../presentation/widgets/meal_entry_card.dart';
 import '../../widgets/meal_macro_summary.dart';
@@ -21,8 +25,10 @@ class FamilyPlannedMealCard extends StatelessWidget {
     this.components = const [],
     this.ingredients = const [],
     this.snapshots = const [],
+    this.compact = false,
   });
   final Widget? decisionAction;
+  final bool compact;
   final Map payload;
   final List<Map<String, dynamic>> history;
   final List<Map<String, dynamic>> components;
@@ -36,6 +42,54 @@ class FamilyPlannedMealCard extends StatelessWidget {
   final VoidCallback? onOpen;
   @override
   Widget build(BuildContext context) {
+    if (compact && onOpen != null) {
+      final status = payload['status'] as String;
+      return MealScheduleTile(
+        meal: Meal(
+          id: payload['id'] as int? ?? 0,
+          name: payload['name'] as String,
+          status: status,
+          plannedAt: DateTime.fromMillisecondsSinceEpoch(
+            payload['planned_at'] as int,
+          ),
+          carbs: (payload['carbs'] as num?)?.toInt(),
+          insulin: (payload['insulin'] as num?)?.toDouble(),
+        ),
+        enabled: true,
+        onOpen: onOpen!,
+        showDate: mealStatusReadyToSummarize(status),
+        statusLabel:
+            requestStatusLabel ??
+            (locked && !monitoring ? context.lang.familyPlanPending : null),
+        trailing: monitoring
+            ? Tooltip(
+                message: context.lang.uiMonitoringActive,
+                child: Icon(
+                  Icons.monitor_heart_outlined,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                  semanticLabel: context.lang.uiMonitoringActive,
+                ),
+              )
+            : null,
+        footer: decisionAction != null || onRetry != null
+            ? Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  if (decisionAction != null) decisionAction!,
+                  if (onRetry != null)
+                    TextButton.icon(
+                      onPressed: onRetry,
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: Text(context.lang.familyPlanRetry),
+                    ),
+                ],
+              )
+            : null,
+      );
+    }
     final card = MealEntryCard(
       onRetry: onRetry,
       name: payload['name'] as String,

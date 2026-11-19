@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -9,6 +10,7 @@ import '../../../../common/presentation/dashboard/dashboard_shell.dart';
 import '../../../../common/presentation/dashboard/dashboard_spacing.dart';
 import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../caregiver/presentation/widgets/caregiver_dashboard.dart';
+import '../../../day_analysis/presentation/widgets/day_summary_status.dart';
 import '../../../day_analysis/presentation/widgets/today_page.dart';
 import '../../../management/presentation/widgets/collection_content.dart';
 import '../../../meals/presentation/widgets/meal_list_today.dart';
@@ -24,6 +26,7 @@ class DashboardPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final destination = useState(0);
+    final dayDate = useState<DateTime?>(null);
     final historyCategory = useState(0);
     final catalogCategory = useState(0);
     final isCollection = destination.value >= 2;
@@ -40,6 +43,9 @@ class DashboardPage extends HookConsumerWidget {
 
     return DashboardShell(
       destination: destination.value,
+      dayStatus: DaySummaryStatus(
+        date: dayDate.value ?? DateUtils.dateOnly(clock.now().toLocal()),
+      ),
       category: category.value,
       onDestination: (value) => destination.value = value,
       onCategory: (value) => category.value = value,
@@ -52,7 +58,10 @@ class DashboardPage extends HookConsumerWidget {
           children: [
             Expanded(
               child: destination.value == 1
-                  ? const TodayPage()
+                  ? TodayPage(
+                      initialDate: dayDate.value,
+                      onDateSelected: (date) => dayDate.value = date,
+                    )
                   : isCollection
                   ? CollectionContent(
                       history: destination.value == 2,

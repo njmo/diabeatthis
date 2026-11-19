@@ -12,12 +12,10 @@ class CaregiverDashboardFab extends HookWidget {
     required this.onPhoto,
     required this.onMeal,
     required this.onActivity,
-    this.onSimulateRequest,
   });
   final VoidCallback onPhoto;
   final VoidCallback onMeal;
   final VoidCallback onActivity;
-  final VoidCallback? onSimulateRequest;
   @override
   Widget build(BuildContext context) {
     final open = useState(false);
@@ -62,16 +60,6 @@ class CaregiverDashboardFab extends HookWidget {
               ),
             ],
           ),
-          if (onSimulateRequest != null) ...[
-            const SizedBox(height: 8),
-            FabActionOption(
-              tile: true,
-              horizontal: true,
-              icon: Icons.science_outlined,
-              label: context.lang.mealDecisionDemoSimulateRequest,
-              onTap: () => run(onSimulateRequest!),
-            ),
-          ],
         ],
       ],
     );

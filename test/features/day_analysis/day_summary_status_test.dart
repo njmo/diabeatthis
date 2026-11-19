@@ -33,13 +33,13 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.text('Niepodsumowany · podsumuj dzień'), findsOneWidget);
+        expect(find.text('Podsumuj'), findsOneWidget);
         accepted = true;
         container.invalidate(acceptedDaySummaryProvider(date));
         await tester.pumpAndSettle();
-        expect(find.text('Niepodsumowany · podsumuj dzień'), findsNothing);
-        expect(find.text('Podsumowany · zobacz podsumowanie'), findsOneWidget);
-        expect(find.byIcon(Icons.check_circle), findsOneWidget);
+        expect(find.text('Podsumuj'), findsNothing);
+        expect(find.text('Podsumowanie'), findsOneWidget);
+        expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
       });
     },
   );
@@ -59,10 +59,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(
-        find.text('Dzień trwa · podsumowanie dostępne jutro'),
-        findsOneWidget,
-      );
+      expect(find.text('Dzień trwa'), findsOneWidget);
+      expect(find.byTooltip('Podsumowanie dostępne jutro'), findsOneWidget);
+      expect(find.byIcon(Icons.timelapse_rounded), findsOneWidget);
       expect(find.byType(FilledButton), findsNothing);
     });
   });

@@ -11,6 +11,7 @@ import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_re
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/caregiver/presentation/widgets/caregiver_day_summary.dart';
+import 'package:diabeatthis/features/caregiver/presentation/widgets/caregiver_day_view.dart';
 import 'package:diabeatthis/features/caregiver/presentation/widgets/day_presentations/caregiver_day_timeline_view.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_activity_card.dart';
 import 'package:diabeatthis/features/day_analysis/presentation/widgets/day_ai_button.dart';
@@ -41,6 +42,7 @@ void main() {
     'caregiver shows timeline view without local DB, links or AI; retry recovers one missing source',
     (tester) async {
       final repository = DayStatisticsNightscout(selected)..failGlucose = true;
+      var revision = 0;
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -59,8 +61,14 @@ void main() {
           ],
           child: localizedMaterialApp(
             home: Scaffold(
-              body: SingleChildScrollView(
-                child: CaregiverDaySummary(date: selected),
+              body: StatefulBuilder(
+                builder: (context, update) => CaregiverDayView(
+                  date: selected,
+                  today: selected,
+                  revision: revision,
+                  onDateSelected: (_) {},
+                  onRefresh: () async => update(() => revision++),
+                ),
               ),
             ),
           ),

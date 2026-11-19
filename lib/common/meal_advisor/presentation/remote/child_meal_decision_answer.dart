@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/language.dart';
 import '../../../meal/manual_meal_decision.dart';
-import '../../demo/meal_decision_demo_answer.dart';
+import '../../meal_decision_answer.dart';
 import '../../remote/meal_decision_remote_request.dart';
 import 'meal_decision_stage_chip.dart';
 
@@ -13,7 +13,7 @@ class ChildMealDecisionAnswer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final deferred = request.answer == MealDecisionDemoAnswer.deferMeal;
+    final deferred = request.answer == MealDecisionAnswer.deferMeal;
     final respondedAt = request.response?['respondedAt'] as num?;
     final deferredUntil = respondedAt == null
         ? null

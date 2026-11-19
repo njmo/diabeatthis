@@ -86,7 +86,7 @@ void main() {
           data: [TaskGlucoseSynchronization(data: historyGlucose)],
         ),
       ]);
-      expect(glucoseHistoryRepository.requestedRecentLimit, 10);
+      expect(glucoseHistoryRepository.requestedRecentLimit, 241);
       expect(
         container
             .read(synchronizationCacheControllerProvider)

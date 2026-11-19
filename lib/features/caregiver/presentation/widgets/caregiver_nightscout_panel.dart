@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/presentation/dashboard/family_sync_ribbon.dart';
+import '../../../../common/presentation/dashboard/glucose_freshness.dart';
 import '../../../../common/presentation/dashboard/nightscout_panel_view.dart';
 import '../../../dashboard/data/providers/time_now_provider.dart';
 import '../../../dashboard/data/utils/nightscout_utils.dart';
@@ -29,6 +30,7 @@ class CaregiverNightscoutPanel extends ConsumerWidget {
     final now = ref.watch(timeNowProvider).asData?.value ?? DateTime.now();
     return NightscoutPanelView(
       syncRibbon: FamilySyncRibbon(
+        compact: true,
         busy: syncBusy,
         failed: syncFailed,
         ready: syncReady,
@@ -42,9 +44,7 @@ class CaregiverNightscoutPanel extends ConsumerWidget {
               allowLocalActions: false,
               useDeviceGlucose: false,
               glucose: glucose,
-              readingIsOld:
-                  glucose == null ||
-                  now.difference(glucose.date).inMinutes > 10,
+              readingIsOld: dashboardGlucoseIsStale(glucose?.date, now),
               readings: readings,
             )
           : glucose != null

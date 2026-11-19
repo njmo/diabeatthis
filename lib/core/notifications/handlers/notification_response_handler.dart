@@ -4,12 +4,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../../../common/family_chat/notifications/family_chat_push.dart';
 import '../../../common/meal/pending_meal_completion_requests.dart';
 import '../../../common/meal_advisor/notifications/meal_decision_notification_intent.dart';
 
 Future<void> onDidReceiveNotificationResponse(
   NotificationResponse response,
 ) async {
+  if (familyChatNotificationPayload(response.payload) != null) {
+    await handleFamilyChatNotificationResponse(response);
+    return;
+  }
   final decisionIntent = MealDecisionNotificationIntent.parse(
     response.payload,
     response.actionId,
@@ -85,6 +90,10 @@ void replayFinishedEatingConfirmation(int mealId) {
 Future<void> onDidReceiveBackgroundNotificationResponse(
   NotificationResponse response,
 ) async {
+  if (familyChatNotificationPayload(response.payload) != null) {
+    await handleFamilyChatNotificationResponse(response);
+    return;
+  }
   debugPrint(
     'BG BACKGROUND RESPONSE: actionId=${response.actionId} data=${response.payload}',
   );

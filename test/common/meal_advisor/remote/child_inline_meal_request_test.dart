@@ -17,8 +17,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../demo/meal_decision_demo_real_workflow_test.dart'
-    show DemoRealMealTestController;
+import 'meal_decision_real_workflow_test.dart'
+    show MealDecisionWorkflowTestController;
 
 class InlineRequestInbox extends MealDecisionRemoteController {
   InlineRequestInbox(this.request);
@@ -76,7 +76,7 @@ void main() {
           ],
         });
         final inbox = InlineRequestInbox(request);
-        final mealController = DemoRealMealTestController();
+        final mealController = MealDecisionWorkflowTestController();
         final observer = RouteCounter();
         final container = ProviderContainer(
           overrides: [

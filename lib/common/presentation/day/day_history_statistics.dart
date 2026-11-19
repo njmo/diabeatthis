@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../features/day_analysis/domain/models/day_context.dart';
 import 'day_device_age_card.dart';
 import 'day_glucose_chart.dart';
+import 'day_glucose_coverage_warning.dart';
 import 'day_insulin_card.dart';
 import 'day_night_summary_card.dart';
 import 'day_quick_metrics.dart';
@@ -20,6 +21,7 @@ class DayHistoryStatistics extends StatelessWidget {
 
 /// Preserve the child's existing lazy ListView while sharing the same cards.
 List<Widget> dayHistoryStatisticCards(BuildContext context, DayContext day) => [
+  DayGlucoseCoverageWarning(day: day),
   DayDeviceAgeCard(day: day),
   DayQuickMetrics(day: day),
   const SizedBox(height: 12),

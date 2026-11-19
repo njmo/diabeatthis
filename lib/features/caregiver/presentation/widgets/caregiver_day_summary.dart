@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../common/auth/google_authentication_providers.dart';
 import '../../../../common/l10n/language.dart';
@@ -66,45 +65,7 @@ class CaregiverDaySummary extends ConsumerWidget {
               ),
             ],
           ),
-          data: (day) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        context.lang.dayAsOf(
-                          DateFormat(
-                            'dd.MM.yyyy HH:mm',
-                            context.lang.localeName,
-                          ).format(day.asOf),
-                        ),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? const Color(0xFF94A3B8)
-                              : const Color(0xFF64748B),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: context.lang.dayRefresh,
-                        onPressed: state.isLoading ? null : refresh,
-                        icon: const Icon(Icons.refresh, size: 18),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ],
-                  ),
-                ),
-                CaregiverDayTimelineView(day: day),
-              ],
-            );
-          },
+          data: (day) => CaregiverDayTimelineView(day: day),
         ),
       ],
     );

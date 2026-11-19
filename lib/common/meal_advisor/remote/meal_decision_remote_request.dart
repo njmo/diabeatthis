@@ -1,6 +1,6 @@
 import '../../../features/meal_advisor/domain/models/meal_advice.dart';
 import '../../../features/meal_advisor/domain/models/wait_suggestion.dart';
-import '../demo/meal_decision_demo_answer.dart';
+import '../meal_decision_answer.dart';
 
 /// Server-owned workflow metadata. Clinical context stays on the caregiver device.
 class MealDecisionRemoteRequest {
@@ -56,7 +56,7 @@ class MealDecisionRemoteRequest {
     );
   }
 
-  MealDecisionDemoAnswer? get answer => MealDecisionDemoAnswer.values
+  MealDecisionAnswer? get answer => MealDecisionAnswer.values
       .where((a) => a.name == decision?['type'])
       .firstOrNull;
   int get minutes => (decision?['minutes'] as num?)?.toInt() ?? 0;
@@ -67,7 +67,7 @@ class MealDecisionRemoteRequest {
       ? null
       : MealAdvice(
           answer!.decision,
-          answer == MealDecisionDemoAnswer.insulinThenWait
+          answer == MealDecisionAnswer.insulinThenWait
               ? WaitSuggestion(minutes, minutes, minutes)
               : null,
           source: 'caregiver',

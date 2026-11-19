@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../../common/family_chat/presentation/family_chat_configuration.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
 import '../../../../../common/setup/domain/setup_feature_group.dart';
@@ -42,6 +44,31 @@ class SetupFeaturesStep extends StatelessWidget {
                 : const {},
             onChanged: controller.select,
           ),
+      if (!kIsWeb &&
+          defaultTargetPlatform == TargetPlatform.android &&
+          (controller.state.mode == SetupDeviceMode.caregiver ||
+              controller.state.selected.contains(
+                SetupFeatureId.familyChat,
+              ))) ...[
+        const SizedBox(height: 12),
+        FamilyChatConfiguration(
+          value: controller.state.familyChatPreferences,
+          onChanged: controller.state.familyChatPreferencesReady
+              ? controller.setFamilyChatPreferences
+              : null,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          context.lang.familyChatExistingPolicyNote,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        if (controller.state.familyChatLoadFailed)
+          TextButton.icon(
+            onPressed: controller.retryChatPreferences,
+            icon: const Icon(Icons.refresh),
+            label: Text(context.lang.familyPlanRetry),
+          ),
+      ],
       const SizedBox(height: 16),
       SetupNotice(
         text: controller.state.mode == SetupDeviceMode.patient

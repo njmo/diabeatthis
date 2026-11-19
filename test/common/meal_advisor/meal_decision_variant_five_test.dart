@@ -9,7 +9,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'demo/meal_decision_demo_capture.dart';
+import 'support/meal_decision_preview_capture.dart';
 
 void main() {
   testWidgets(

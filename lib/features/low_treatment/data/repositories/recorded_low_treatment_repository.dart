@@ -1,7 +1,9 @@
 import 'package:drift/drift.dart';
 
+import '../../../../common/family_chat/domain/family_treatment_carbs.dart';
 import '../../../../common/meal/low_treatment_delivery_carbs.dart';
 import '../../../../common/meal/meal_snapshot_history_reader.dart';
+import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../../meals/data/mappers/meal_details_data_mapper.dart';
 import '../../domain/models/recorded_low_treatment.dart';
@@ -96,7 +98,14 @@ class RecordedLowTreatmentRepository {
         snapshotCarbs != null && snapshotCarbs.isFinite && snapshotCarbs >= 0
         ? snapshotCarbs
         : null;
+    // Provenance belongs to the exported clinical context. A retained private
+    // receipt can refer to an old ID reused by an unrelated restored meal.
+    final familyConsumption =
+        context?.source == LowTreatmentContextSource.familyChat;
     final historicalCarbs =
+        (familyConsumption && validSnapshotCarbs != null
+            ? familyTreatmentNutritionCarbs(validSnapshotCarbs)
+            : null) ??
         explicitCarbs ??
         validSnapshotCarbs ??
         (nutritionAvailable ? carbs : null);

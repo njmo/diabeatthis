@@ -1,6 +1,7 @@
 import '../../../../common/auth/google_account.dart';
 import '../../../../common/family/family_pairing_invitation.dart';
 import '../../../../common/family/family_pairing_member.dart';
+import '../../../../common/family_chat/domain/family_chat_preferences.dart';
 import '../../../../common/l10n/application_language.dart';
 import '../../../../common/meal_advisor/meal_decision_preferences.dart';
 import '../../../../common/setup/domain/setup_account_choice.dart';
@@ -18,12 +19,16 @@ class SetupWizardState {
     required this.nightscoutUrl,
     required this.nightscoutToken,
     this.mealDecisionPreferences = const MealDecisionPreferences(),
+    this.familyChatPreferences = const FamilyChatPreferences(),
     Set<SetupFeatureOptionId> initialOptions = const {},
   }) {
     enabledOptionsByMode[SetupDeviceMode.patient]!.addAll(initialOptions);
   }
 
   MealDecisionPreferences mealDecisionPreferences;
+  FamilyChatPreferences familyChatPreferences;
+  bool familyChatPreferencesReady = true;
+  bool familyChatLoadFailed = false;
   DataSourceConfig config;
   ApplicationLanguage language;
   String name;

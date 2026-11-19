@@ -3,7 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/meal/open_meal_completion.dart';
-import '../../../../../common/meal_advisor/presentation/demo/child_meal_decision_demo_action.dart';
+import '../../../../../common/meal_advisor/presentation/remote/child_meal_decision_meal_action.dart';
 import '../../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../dashboard/presentation/utils/meal_status_dialog_result_handler.dart';
 import '../../../../dashboard/presentation/utils/show_meal_status_dialog.dart';
@@ -30,7 +30,7 @@ class MealPreviewActions extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (meal.status == 'planned')
-            ChildMealDecisionDemoAction(mealId: meal.id, mealName: meal.name),
+            ChildMealDecisionMealAction(mealId: meal.id),
           FilledButton(
             onPressed: () async {
               if (canComplete) {

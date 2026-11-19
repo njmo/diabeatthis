@@ -10,4 +10,5 @@ enum NotificationEventType {
   aapsBolusSuggestion,
   aapsCarbsRequest,
   tempTargetDelivery,
+  familyChat,
 }

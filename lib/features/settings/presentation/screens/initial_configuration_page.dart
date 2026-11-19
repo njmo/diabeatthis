@@ -5,12 +5,15 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/auth/google_authentication_providers.dart';
 import '../../../../common/family/family_management_context.dart';
 import '../../../../common/family/family_providers.dart';
+import '../../../../common/family_chat/data/family_chat_preferences_provider.dart';
+import '../../../../common/family_chat/domain/family_chat_preferences.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal_advisor/meal_decision_preferences.dart';
 import '../../../../common/meal_advisor/meal_decision_preferences_provider.dart';
 import '../../../../common/setup/domain/setup_feature.dart';
 import '../../../../common/setup/domain/setup_feature_option.dart';
 import '../../../../common/setup/platform/native_setup_permission_gateway.dart';
+import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
 import '../../application/validate_setup_nightscout_use_case.dart';
 import '../controllers/initial_configuration_controller.dart';
@@ -42,6 +45,14 @@ class InitialConfigurationPage extends ConsumerWidget {
           ),
         ),
         data: (sources) => SetupWizard(
+          loadFamilyChatPreferences: (uid) async {
+            if (ref.read(sharedPrefsProvider).hasError) {
+              ref.invalidate(sharedPrefsProvider);
+            }
+            final prefs = await ref.read(sharedPrefsProvider.future);
+            final saved = prefs.getString(familyChatPreferencesKey(uid));
+            return saved == null ? null : FamilyChatPreferences.decode(saved);
+          },
           familyRepository: ref.watch(secureFamilyRepositoryProvider),
           familyContext: FamilyManagementContext.initialSetup,
           authentication: ref.read(googleAuthenticationRepositoryProvider),
@@ -51,6 +62,10 @@ class InitialConfigurationPage extends ConsumerWidget {
           saving: draft.isSaving,
           saveError: draft.submitError,
           initialState: SetupWizardState(
+            familyChatPreferences:
+                ref.watch(googleAccountProvider).asData?.value == null
+                ? const FamilyChatPreferences()
+                : ref.watch(familyChatPreferencesProvider).asDraft(),
             mealDecisionPreferences: ref.watch(mealDecisionPreferencesProvider),
             config: draft.config,
             language: draft.language,
@@ -70,18 +85,27 @@ class InitialConfigurationPage extends ConsumerWidget {
             );
             controller.setUserName(value.name);
             controller.setLanguage(value.language);
-            final saved = await controller.submitCaregiver(
-              mealDecisionPreferences: value.mealDecisionPreferences.copyWith(
-                method: MealDecisionMethod.app,
-                caregiverResponsesEnabled:
-                    value.selected.contains(
-                      SetupFeatureId.caregiverMealDecisions,
-                    ) &&
-                    value.mealDecisionPreferences.caregiverResponsesEnabled,
-              ),
-              url: value.nightscoutUrl,
-              token: value.nightscoutToken,
-            );
+            final saved =
+                await ref.read(configureFamilyChatPreferencesProvider)(
+                  value.familyChatPreferences,
+                  (binding) => controller.submitCaregiver(
+                    chatSetupBinding: binding,
+                    mealDecisionPreferences: value.mealDecisionPreferences
+                        .copyWith(
+                          method: MealDecisionMethod.app,
+                          caregiverResponsesEnabled:
+                              value.selected.contains(
+                                SetupFeatureId.caregiverMealDecisions,
+                              ) &&
+                              value
+                                  .mealDecisionPreferences
+                                  .caregiverResponsesEnabled,
+                        ),
+                    url: value.nightscoutUrl,
+                    token: value.nightscoutToken,
+                  ),
+                  expectedUid: value.googleAccount?.uid,
+                );
             if (saved && context.mounted) {
               context.router.replace(NamedRoute('DashboardRoute'));
             }
@@ -94,18 +118,24 @@ class InitialConfigurationPage extends ConsumerWidget {
             controller.setUserName(value.name);
             controller.setLanguage(value.language);
             controller.setDataSourceConfig(value.config);
-            final saved = await controller.submit(
-              mealDecisionPreferences: value.mealDecisionPreferences,
-              enableFamilySharing: value.shareData,
-              tempTargetsEnabled: value.enabledOptions.contains(
-                SetupFeatureOptionId.activityTempTargetUpload,
-              ),
-              lowTreatmentsEnabled: value.enabledOptions.contains(
-                SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
-              ),
-              nightscoutUrl: value.nightscoutUrl,
-              nightscoutToken: value.nightscoutToken,
-            );
+            final saved =
+                await ref.read(configureFamilyChatPreferencesProvider)(
+                  value.shareData ? value.familyChatPreferences : null,
+                  (binding) => controller.submit(
+                    chatSetupBinding: binding,
+                    mealDecisionPreferences: value.mealDecisionPreferences,
+                    enableFamilySharing: value.shareData,
+                    tempTargetsEnabled: value.enabledOptions.contains(
+                      SetupFeatureOptionId.activityTempTargetUpload,
+                    ),
+                    lowTreatmentsEnabled: value.enabledOptions.contains(
+                      SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
+                    ),
+                    nightscoutUrl: value.nightscoutUrl,
+                    nightscoutToken: value.nightscoutToken,
+                  ),
+                  expectedUid: value.googleAccount?.uid,
+                );
             if (saved && context.mounted) {
               context.router.replace(NamedRoute('DashboardRoute'));
             }

@@ -1,6 +1,33 @@
 {
   "indexes": [
     {
+      "collectionGroup": "chatMessageIndex", "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "conversationId", "order": "ASCENDING"},
+        {"fieldPath": "ownHistoryGeneration", "order": "ASCENDING"},
+        {"fieldPath": "unread", "order": "ASCENDING"},
+        {"fieldPath": "policyRevision", "order": "ASCENDING"},
+        {"fieldPath": "originalExpiresAt", "order": "ASCENDING"},
+        {"fieldPath": "sentAt", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "chatMessageIndex", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "conversationId", "order": "ASCENDING"}, {"fieldPath": "sequence", "order": "ASCENDING"}]
+    },
+    {
+      "collectionGroup": "chatMessageIndex", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "conversationId", "order": "ASCENDING"}, {"fieldPath": "sequence", "order": "DESCENDING"}]
+    },
+    {
+      "collectionGroup": "chatMessages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "conversationId", "order": "ASCENDING"},
+        {"fieldPath": "sequence", "order": "ASCENDING"}
+      ]
+    },
+    {
       "collectionGroup": "entities",
       "queryScope": "COLLECTION",
       "fields": [
@@ -15,5 +42,9 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {"collectionGroup": "chatOperationReceipts", "fieldPath": "deleteAfter", "ttl": true, "indexes": []},
+    {"collectionGroup": "familyChatNotificationJobs", "fieldPath": "deleteAfter", "ttl": true, "indexes": []},
+    {"collectionGroup": "familyRateLimits", "fieldPath": "deleteAfter", "ttl": true, "indexes": []}
+  ]
 }

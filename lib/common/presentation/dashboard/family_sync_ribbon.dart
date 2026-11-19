@@ -14,6 +14,7 @@ class FamilySyncRibbon extends StatefulWidget {
     this.failureLabel,
     this.failureIcon = Icons.cloud_off_outlined,
     this.syncIcon = Icons.cloud_download_outlined,
+    this.compact = false,
   });
 
   final bool busy;
@@ -21,6 +22,7 @@ class FamilySyncRibbon extends StatefulWidget {
   final bool ready;
   final String? busyLabel, readyLabel, failureLabel;
   final IconData failureIcon, syncIcon;
+  final bool compact;
 
   @override
   State<FamilySyncRibbon> createState() => _FamilySyncRibbonState();
@@ -79,14 +81,17 @@ class _FamilySyncRibbonState extends State<FamilySyncRibbon>
         : widget.busy
         ? colors.primary
         : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B));
+    final syncedIconColor = isDark
+        ? const Color(0xFF34D399)
+        : const Color(0xFF15803D);
 
     final bgColor = widget.failed
         ? colors.error.withValues(alpha: isDark ? 0.2 : 0.08)
         : widget.busy
         ? colors.primary.withValues(alpha: isDark ? 0.2 : 0.08)
         : (isDark
-            ? const Color(0xFF1E293B).withValues(alpha: 0.8)
-            : const Color(0xFFF1F5F9).withValues(alpha: 0.9));
+              ? const Color(0xFF1E293B).withValues(alpha: 0.8)
+              : const Color(0xFFF1F5F9).withValues(alpha: 0.9));
 
     final borderColor = widget.failed
         ? colors.error.withValues(alpha: 0.3)
@@ -100,13 +105,19 @@ class _FamilySyncRibbonState extends State<FamilySyncRibbon>
         liveRegion: true,
         label: text,
         child: Align(
-          alignment: Alignment.centerRight,
+          alignment: widget.compact
+              ? Alignment.centerLeft
+              : Alignment.centerRight,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: widget.compact
+                ? EdgeInsets.zero
+                : const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: bgColor,
+              color: widget.compact ? Colors.transparent : bgColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: borderColor),
+              border: Border.all(
+                color: widget.compact ? Colors.transparent : borderColor,
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -114,11 +125,7 @@ class _FamilySyncRibbonState extends State<FamilySyncRibbon>
                 if (widget.busy)
                   RotationTransition(
                     turns: _rotationController,
-                    child: Icon(
-                      Icons.sync_rounded,
-                      size: 13,
-                      color: fgColor,
-                    ),
+                    child: Icon(Icons.sync_rounded, size: 13, color: fgColor),
                   )
                 else
                   Icon(
@@ -128,7 +135,9 @@ class _FamilySyncRibbonState extends State<FamilySyncRibbon>
                         ? Icons.cloud_done_outlined
                         : Icons.cloud_outlined,
                     size: 13,
-                    color: fgColor,
+                    color: widget.ready && !widget.failed
+                        ? syncedIconColor
+                        : fgColor,
                   ),
                 const SizedBox(width: 5),
                 Flexible(

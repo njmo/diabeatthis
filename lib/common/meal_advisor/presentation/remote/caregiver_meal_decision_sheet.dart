@@ -9,22 +9,21 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../family/family_providers.dart';
-import '../../../family_sync/family_access_scope.dart';
 import '../../../family_sync/family_plan_submission_store.dart';
 import '../../../family_sync/family_planning_controller.dart';
 import '../../../l10n/language.dart';
 import '../../../routing/owned_route_registry.dart';
 import '../../../widgets/meal_start/meal_start_sheet.dart';
-import '../../demo/meal_decision_demo_answer.dart';
+import '../../meal_decision_answer.dart';
 import '../../meal_decision_preferences_provider.dart';
 import '../../notifications/meal_decision_push.dart';
 import '../../remote/caregiver_meal_decision_eligibility.dart';
 import '../../remote/meal_decision_presence_controller.dart';
 import '../../remote/meal_decision_remote_controller.dart';
 import '../caregiver_meal_local_context.dart';
-import '../demo/meal_decision_demo_options.dart';
 import '../meal_decision_deadline_panel.dart';
 import '../meal_decision_default_minutes.dart';
+import '../meal_decision_options.dart';
 import 'caregiver_meal_decision_invitation.dart';
 import 'caregiver_meal_decision_timeout.dart';
 import 'meal_decision_answered_status.dart';
@@ -146,7 +145,7 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
     final failed = useState(false);
     final stage = useState('context');
     final tick = useState(DateTime.now());
-    final answer = useState(MealDecisionDemoAnswer.insulinAndEat);
+    final answer = useState(MealDecisionAnswer.insulinAndEat);
     final minutes = useTextEditingController();
     final message = useTextEditingController();
     final family = useMemoized(
@@ -367,13 +366,9 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
       presence.update(enabled: locked, stage: stage.value);
       return null;
     }, [presence, locked, stage.value]);
-    final valid =
-        request != null &&
-        family.owner == request.ownerUid &&
-        family.source == request.sourceId &&
-        (family.complete || family.busy && family.source != null) &&
-        !family.failed &&
-        !mirrorUnavailable.value;
+    final contextScope = request == null || mirrorUnavailable.value
+        ? null
+        : caregiverMealDecisionContextScope(family, request);
     if (timedOut && request != null) {
       return CaregiverMealDecisionTimeout(
         request: request,
@@ -424,16 +419,16 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
                 '${context.lang.mealDecisionRemoteAlreadyTaken}\n${request.claimedByName ?? ''}',
               )
             else if (stage.value == 'context')
-              valid
+              contextScope != null
                   ? CaregiverMealLocalContext(
-                      scope: FamilyAccessScope(family),
+                      scope: contextScope,
                       mealId: request.mealId,
                     )
                   : family.failed || mirrorUnavailable.value
                   ? Text(context.lang.familyDataRefreshFailed)
                   : const LinearProgressIndicator()
             else ...[
-              MealDecisionDemoOptions(
+              MealDecisionOptions(
                 value: answer.value,
                 onChanged: busy.value
                     ? (_) {}
@@ -486,7 +481,7 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
                       )
                     else if (stage.value == 'context')
                       FilledButton(
-                        onPressed: valid
+                        onPressed: contextScope != null
                             ? () => stage.value = 'decision'
                             : null,
                         child: Text(context.lang.mealDecisionRemoteNext),

@@ -1,4 +1,12 @@
-enum NotificationActionType { eating, snooze, dismiss, skip, agree }
+enum NotificationActionType {
+  eating,
+  snooze,
+  dismiss,
+  skip,
+  agree,
+  familyChatReply,
+  familyChatConsume,
+}
 
 extension NotificationActionTypeExtension on NotificationActionType {
   String toDarwinString() {
@@ -13,6 +21,10 @@ extension NotificationActionTypeExtension on NotificationActionType {
         return 'snooze';
       case NotificationActionType.agree:
         return 'agree';
+      case NotificationActionType.familyChatReply:
+        return 'family_chat_reply';
+      case NotificationActionType.familyChatConsume:
+        return 'family_chat_consume';
     }
   }
 }

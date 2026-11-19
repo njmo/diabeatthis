@@ -50,6 +50,7 @@ class ChildFamilyCloudRibbon extends ConsumerWidget {
     final state = ref.watch(childFamilyCloudStateProvider).asData?.value;
     if (state?.enabled != true) return const SizedBox.shrink();
     return FamilySyncRibbon(
+      compact: true,
       busy: [
         FamilyMirrorStatus.syncing,
         FamilyMirrorStatus.waiting,

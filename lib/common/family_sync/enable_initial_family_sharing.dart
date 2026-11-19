@@ -49,7 +49,7 @@ final reconcileInitialFamilySharingProvider = Provider<Future<void> Function(boo
     final prefs = await ref.read(sharedPrefsProvider.future);
     final pending = prefs.getString(initialFamilySharingPendingKey);
     if (pending == null) return;
-    if (prefs.getBool(initialConfigurationDoneKey) == true) {
+    if (hasInitialConfiguration(prefs)) {
       try {
         await prefs.remove(initialFamilySharingPendingKey);
       } catch (_) {}

@@ -9,8 +9,6 @@ import '../../logger/logger.dart';
 import '../base/notifications_controller.dart';
 import '../domain/events/temp_target_notification.dart';
 import '../domain/models/notification_event.dart';
-import '../providers/local_notifications_plugin_provider.dart';
-import 'local_notifications_controller.dart';
 
 class NotificationsControllerImpl implements NotificationsController {
   final Ref _ref;
@@ -18,10 +16,12 @@ class NotificationsControllerImpl implements NotificationsController {
   final NotificationsController _inAppController;
   final Future<void> Function(NotificationEvent)? onShown;
 
-  NotificationsControllerImpl(this._ref, this._inAppController, {this.onShown})
-    : _localController = LocalNotificationsController(
-        _ref.read(localNotificationsPluginProvider),
-      );
+  NotificationsControllerImpl(
+    this._ref,
+    this._inAppController, {
+    required this._localController,
+    this.onShown,
+  });
 
   @override
   Future<void> init() async {

@@ -5,6 +5,7 @@ import 'package:diabeatthis/common/widgets/data_warning_indicator.dart';
 import 'package:diabeatthis/features/caregiver/presentation/widgets/day_presentations/caregiver_day_timeline_view.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_context.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/localized_material_app.dart';
@@ -92,10 +93,12 @@ void main() {
           failedSources: {},
         );
         await tester.pumpWidget(
-          localizedMaterialApp(
-            home: Scaffold(
-              body: SingleChildScrollView(
-                child: CaregiverDayTimelineView(day: day),
+          ProviderScope(
+            child: localizedMaterialApp(
+              home: Scaffold(
+                body: SingleChildScrollView(
+                  child: CaregiverDayTimelineView(day: day),
+                ),
               ),
             ),
           ),

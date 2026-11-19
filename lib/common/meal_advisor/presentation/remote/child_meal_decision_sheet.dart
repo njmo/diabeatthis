@@ -11,7 +11,7 @@ import '../../../../core/drift/providers/database_provider.dart';
 import '../../../auth/google_authentication_providers.dart';
 import '../../../l10n/language.dart';
 import '../../../widgets/meal_start/meal_start_sheet.dart';
-import '../../demo/meal_decision_demo_answer.dart';
+import '../../meal_decision_answer.dart';
 import '../../meal_decision_preferences.dart';
 import '../../meal_decision_preferences_provider.dart';
 import '../../remote/accept_remote_meal_decision.dart';
@@ -284,7 +284,7 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
                         failed.value = false;
                         try {
                           final advice =
-                              answer == MealDecisionDemoAnswer.deferMeal
+                              answer == MealDecisionAnswer.deferMeal
                               ? await ref.read(
                                   acceptRemoteMealDecisionProvider,
                                 )(request!)
@@ -295,7 +295,7 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
                                 advice: advice,
                                 request: request,
                                 deferred:
-                                    answer == MealDecisionDemoAnswer.deferMeal,
+                                    answer == MealDecisionAnswer.deferMeal,
                               ),
                             );
                           }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../common/auth/google_authentication_repository.dart';
 import '../../../../common/family/family_management_context.dart';
 import '../../../../common/family/family_pairing_repository.dart';
+import '../../../../common/family_chat/domain/family_chat_preferences.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/l10n/resolve_application_locale.dart';
 import '../../../../common/setup/domain/setup_account_choice.dart';
@@ -45,6 +46,7 @@ class SetupWizard extends StatefulWidget {
     this.authentication,
     this.permissions,
     this.checkNightscoutConnection,
+    this.loadFamilyChatPreferences,
   });
   final SetupWizardState initialState;
   final DataSourceOptionAvailability availability;
@@ -57,6 +59,8 @@ class SetupWizard extends StatefulWidget {
   final GoogleAuthenticationRepository? authentication;
   final SetupPermissionGateway? permissions;
   final SetupConnectionValidator? checkNightscoutConnection;
+  final Future<FamilyChatPreferences?> Function(String uid)?
+  loadFamilyChatPreferences;
 
   @override
   State<SetupWizard> createState() => SetupWizardViewState();
@@ -71,6 +75,7 @@ class SetupWizardViewState extends State<SetupWizard>
     authentication: widget.authentication,
     permissions: widget.permissions,
     checkNightscoutConnection: widget.checkNightscoutConnection,
+    loadFamilyChatPreferences: widget.loadFamilyChatPreferences,
   );
   final _accessCardKeys = <SetupRequirement, GlobalKey>{};
   bool allowExit = false;
@@ -180,27 +185,47 @@ class SetupWizardViewState extends State<SetupWizard>
       return;
     }
     if (controller.state.currentStep == SetupStep.summary) {
-      if (widget.onSavePatient != null &&
-          controller.state.mode == SetupDeviceMode.patient) {
-        await widget.onSavePatient!(controller.state);
-      } else if (widget.onSaveCaregiver != null &&
-          controller.state.mode == SetupDeviceMode.caregiver) {
-        await widget.onSaveCaregiver!(controller.state);
-      } else {
-        await showLocalizedDialog<void>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(context.lang.setupPreviewFinished),
-            content: Text(context.lang.setupLiveConfigurationFinished),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(context.lang.setupUnderstood),
-              ),
-            ],
+      if (!controller.state.familyChatPreferencesReady) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.lang.familyChatSaveFailed),
+            action: SnackBarAction(
+              label: context.lang.familyPlanRetry,
+              onPressed: controller.retryChatPreferences,
+            ),
           ),
         );
-        if (mounted) await exitPreview();
+        return;
+      }
+      try {
+        if (widget.onSavePatient != null &&
+            controller.state.mode == SetupDeviceMode.patient) {
+          await widget.onSavePatient!(controller.state);
+        } else if (widget.onSaveCaregiver != null &&
+            controller.state.mode == SetupDeviceMode.caregiver) {
+          await widget.onSaveCaregiver!(controller.state);
+        } else {
+          await showLocalizedDialog<void>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(context.lang.setupPreviewFinished),
+              content: Text(context.lang.setupLiveConfigurationFinished),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(context.lang.setupUnderstood),
+                ),
+              ],
+            ),
+          );
+          if (mounted) await exitPreview();
+        }
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.lang.familyChatSaveFailed)),
+          );
+        }
       }
       return;
     }
@@ -298,7 +323,11 @@ class SetupWizardViewState extends State<SetupWizard>
     final inModule =
         state.currentStep == SetupStep.configuration &&
         controller.module != null;
-    final busy = widget.saving || controller.isValidating || state.signingIn;
+    final busy =
+        widget.saving ||
+        controller.isValidating ||
+        state.signingIn ||
+        (!state.familyChatPreferencesReady && !state.familyChatLoadFailed);
     final savePatient =
         widget.onSavePatient != null && state.mode == SetupDeviceMode.patient;
     final header = inModule

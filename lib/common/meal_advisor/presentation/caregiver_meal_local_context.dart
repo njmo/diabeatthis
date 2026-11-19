@@ -10,6 +10,7 @@ import '../../../core/domain/model/treatment_base.dart';
 import '../../../features/caregiver/data/caregiver_visible_state_provider.dart';
 import '../../../features/meals/presentation/models/meal_page_state.dart';
 import '../../family_sync/family_access_scope.dart';
+import '../../family_sync/family_planning_controller.dart';
 import '../../family_sync/presentation/family_record_page.dart';
 import '../../family_sync/presentation/models/family_meal_details.dart';
 import '../../l10n/language.dart';
@@ -17,10 +18,26 @@ import '../../presentation/details/nightscout_record_history.dart';
 import '../../widgets/carbohydrate_totals_summary.dart';
 import '../context/caregiver_meal_context_history.dart';
 import '../context/meal_decision_activity_context.dart';
+import '../remote/meal_decision_remote_request.dart';
 import 'caregiver_meal_context_history_view.dart';
 import 'meal_decision_activity_card.dart';
 import 'meal_decision_activity_glucose_preview.dart';
 import 'meal_decision_context_status.dart';
+
+/// Pins local context to the owner and mirror source of the remote request.
+FamilyAccessScope? caregiverMealDecisionContextScope(
+  FamilyPlanningController family,
+  MealDecisionRemoteRequest request,
+) {
+  final scope = FamilyAccessScope(family);
+  if (!scope.isCurrent ||
+      scope.owner != request.ownerUid ||
+      scope.source != request.sourceId ||
+      !family.complete && !family.busy) {
+    return null;
+  }
+  return scope;
+}
 
 /// Reads the caregiver's pinned mirror and configured history. No child request
 /// payload is used as a source of glucose, nutrition, targets or activity state.

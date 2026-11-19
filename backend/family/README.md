@@ -33,7 +33,24 @@ Do not enable production callables while older permissive Firestore rules are de
 
 ## Messages and notifications
 
-Neither feature has a public endpoint in this increment. Direct message writes, device-token changes and notification jobs are denied. No arbitrary recipient UID, push token or FCM topic is accepted by a pairing callable. When messaging is added, authorize every operation and derive recipients from the current family roster server-side, checking revocation again at dispatch. Previously viewed data cannot be recalled from another device.
+### Family chat implementation (source only, not deployed)
+
+The chat service adds `getFamilyChatConfig`, `configureFamilyChat`,
+`reserveFamilyChatOperations`, `sendFamilyChatMessage`,
+`fetchFamilyChatMessages`, `fetchFamilyChatConversations` and
+`acknowledgeFamilyChatMessage`. These retain verified Google, revocation and App
+Check checks in the common callable entrypoint. Family membership, message
+participant epochs, account/family opt-in, server expiry and bounded operation
+tickets are checked by the service; no direct Firestore chat access is granted.
+
+This is an incremental implementation. Push dispatch, physical cleanup and the
+production client integration have later gates in
+`docs/family-messaging-implementation-plan.md` at the repository root. Do not
+roll out the feature before those gates pass. No Firebase deployment is implied
+by a source commit. Test with Node 22 and Java 21 or newer; `npm run test:rules`
+uses the isolated `demo-diabeatthis-family` emulator project.
+
+The previously deployed pairing increment has no public chat endpoint. Direct message writes, device-token changes and notification jobs are denied. No arbitrary recipient UID, push token or FCM topic is accepted by a pairing callable. Messaging derives recipients from the current family roster server-side and must check revocation again at dispatch. Previously viewed data cannot be recalled from another device.
 
 ## Deployment record — 6 November 2026
 

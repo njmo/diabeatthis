@@ -15,6 +15,7 @@ import '../../auth/google_authentication_providers.dart';
 import '../../auth/load_firebase_callable_identity.dart';
 import '../../backend/authenticated_callable_transport.dart';
 import '../../family/family_providers.dart';
+import '../../notifications/firebase_background_handler.dart';
 import '../meal_decision_eligibility.dart';
 import '../meal_decision_preferences_provider.dart';
 import '../remote/meal_decision_remote_controller.dart';
@@ -104,9 +105,7 @@ class MealDecisionNotificationsRuntime {
       scheduleRegistration();
       return;
     }
-    FirebaseMessaging.onBackgroundMessage(
-      mealDecisionFirebaseBackgroundHandler,
-    );
+    FirebaseMessaging.onBackgroundMessage(familyFirebaseBackgroundHandler);
     messageSubscription = FirebaseMessaging.onMessage.listen((message) {
       unawaited(() async {
         await showMealDecisionPush(message);

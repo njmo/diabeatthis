@@ -1,22 +1,21 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/presentation/day/day_history_statistics.dart';
 import '../../data/providers/day_context_provider.dart';
 import '../../data/providers/day_meal_review_provider.dart';
-import '../../data/providers/day_summary_provider.dart';
 import 'day_activity_card.dart';
 import 'day_ai_button.dart';
 import 'day_date_selector.dart';
 import 'day_meals_card.dart';
 import 'day_review_section.dart';
-import 'day_summary_status.dart';
 
 class TodayPage extends ConsumerStatefulWidget {
-  const TodayPage({super.key});
+  const TodayPage({super.key, this.onDateSelected, this.initialDate});
+  final ValueChanged<DateTime?>? onDateSelected;
+  final DateTime? initialDate;
 
   @override
   ConsumerState<TodayPage> createState() => TodayPageState();
@@ -24,6 +23,11 @@ class TodayPage extends ConsumerStatefulWidget {
 
 class TodayPageState extends ConsumerState<TodayPage> {
   DateTime? selectedDate;
+  @override
+  void initState() {
+    super.initState();
+    selectedDate = widget.initialDate;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +37,6 @@ class TodayPageState extends ConsumerState<TodayPage> {
     final state = ref.watch(provider);
     final today = DateUtils.dateOnly(clock.now().toLocal());
     final lang = context.lang;
-    final accepted = ref.watch(
-      acceptedDaySummaryProvider(selectedDate ?? today),
-    );
     Future<void> refresh() async {
       ref.invalidate(provider);
       ref.invalidate(dayMealReviewProvider(selectedDate ?? today));
@@ -50,33 +51,23 @@ class TodayPageState extends ConsumerState<TodayPage> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  accepted.asData?.value != null
-                      ? lang.dayAcceptedTitle
-                      : selectedDate == null
-                      ? lang.dayDraftTitle
-                      : lang.dayHistoricalDraftTitle,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: DayDateSelector(
+            date: selectedDate ?? today,
+            today: today,
+            onSelected: (date) {
+              setState(() => selectedDate = date);
+              widget.onDateSelected?.call(date);
+            },
+            actions: [
               DayAiButton(date: selectedDate ?? today),
-              const SizedBox(width: 4),
               IconButton(
                 tooltip: lang.dayRefresh,
                 onPressed: state.isLoading ? null : refresh,
-                icon: const Icon(Icons.refresh),
+                icon: const Icon(Icons.refresh, size: 20),
               ),
             ],
           ),
-        ),
-        DayDateSelector(
-          date: selectedDate ?? today,
-          today: today,
-          onSelected: (date) => setState(() => selectedDate = date),
         ),
         Expanded(
           child: state.when(
@@ -95,12 +86,6 @@ class TodayPageState extends ConsumerState<TodayPage> {
                 ),
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  Text(
-                    lang.dayAsOf(
-                      DateFormat('dd.MM.yyyy HH:mm').format(day.asOf),
-                    ),
-                  ),
-                  DaySummaryStatus(date: day.start),
                   ...dayHistoryStatisticCards(context, day),
                   DayMealsCard(day: day),
                   DayReviewSection(date: day.start),

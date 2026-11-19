@@ -1,18 +1,16 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/notifications/bootstrap/local_notifications_bootstrap.dart'
     as bootstrap;
-import '../../../firebase_options.dart';
 import '../../app_mode/application_device_mode.dart';
 import '../../l10n/application_language.dart';
 import '../../l10n/language.dart';
+import '../../notifications/firebase_background_handler.dart';
 import '../meal_decision_eligibility.dart';
 import '../meal_decision_preference_keys.dart';
 import '../meal_decision_preferences.dart';
@@ -85,13 +83,7 @@ Future<void> showMealDecisionPush(RemoteMessage message) async {
 Future<void> mealDecisionFirebaseBackgroundHandler(
   RemoteMessage message,
 ) async {
-  WidgetsFlutterBinding.ensureInitialized();
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  }
-  await showMealDecisionPush(message);
+  await familyFirebaseBackgroundHandler(message);
 }
 
 int mealDecisionNotificationId(String requestId) {

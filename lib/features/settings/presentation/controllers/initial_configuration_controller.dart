@@ -8,6 +8,7 @@ import '../../../../common/meal_advisor/meal_decision_preferences.dart';
 import '../../../../common/meal_advisor/meal_decision_preferences_provider.dart';
 import '../../../../common/notifier_provider/simple_provider.dart';
 import '../../../../common/platform/external_app_installation_checker.dart';
+import '../../../../core/data/provider/initial_configuration_provider.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
@@ -94,6 +95,7 @@ class InitialConfigurationController extends _$InitialConfigurationController
   }
 
   Future<bool> submit({
+    InitialConfigurationBinding? chatSetupBinding,
     String? nightscoutUrl,
     String? nightscoutToken,
     bool enableFamilySharing = false,
@@ -121,6 +123,7 @@ class InitialConfigurationController extends _$InitialConfigurationController
             ? ref.read(applyInitialFamilyConfigurationProvider)
             : _applyInitialConfigurationUseCase;
         await apply(
+          chatSetupBinding: chatSetupBinding,
           tempTargetsEnabled: tempTargetsEnabled ?? current.tempTargetsEnabled,
           lowTreatmentsEnabled:
               lowTreatmentsEnabled ?? current.lowTreatmentsEnabled,
@@ -163,6 +166,7 @@ class InitialConfigurationController extends _$InitialConfigurationController
   }
 
   Future<bool> submitCaregiver({
+    InitialConfigurationBinding? chatSetupBinding,
     required String url,
     required String token,
     MealDecisionPreferences? mealDecisionPreferences,
@@ -175,6 +179,7 @@ class InitialConfigurationController extends _$InitialConfigurationController
         mealDecisionPreferences,
         () async {
           await ref.read(applyCaregiverConfigurationProvider)(
+            chatSetupBinding: chatSetupBinding,
             url: url,
             token: token,
             userName: current.userName,

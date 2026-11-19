@@ -7,7 +7,7 @@ import '../../../core/drift/providers/database_provider.dart';
 import '../../../features/meal_advisor/domain/models/meal_advice.dart';
 import '../../app_mode/application_device_mode.dart';
 import '../../auth/google_authentication_providers.dart';
-import '../demo/meal_decision_demo_answer.dart';
+import '../meal_decision_answer.dart';
 import 'accept_remote_meal_decision.dart';
 import 'meal_decision_remote_request.dart';
 
@@ -37,7 +37,7 @@ Future<void> storeMealDecisionFallback(
   MealAdvice advice, {
   String? acceptanceToken,
 }) async {
-  final answer = MealDecisionDemoAnswer.values
+  final answer = MealDecisionAnswer.values
       .where((a) => a.decision == advice.decision)
       .first;
   await db.customStatement(

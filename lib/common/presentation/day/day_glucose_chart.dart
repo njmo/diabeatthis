@@ -1,12 +1,18 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/model/glucose.dart';
+import '../../../features/dashboard/data/providers/time_now_provider.dart';
 import '../../../features/day_analysis/domain/models/day_context.dart';
+import '../../history/history_coverage_gap.dart';
 import '../../l10n/language.dart';
 import '../charts/draw_dashed_chart_line.dart';
+import '../dashboard/glucose_freshness.dart';
+import '../dashboard/glucose_freshness_provider.dart';
 import 'day_chart_time.dart';
+import 'day_glucose_coverage_warning.dart';
 import 'day_glucose_details.dart';
 
 enum DayChartStyle { smoothSpline, eventPins, clinicalDots }
@@ -27,7 +33,7 @@ class DayChartEvent {
   });
 }
 
-class DayGlucoseChart extends StatefulWidget {
+class DayGlucoseChart extends ConsumerStatefulWidget {
   const DayGlucoseChart({
     super.key,
     required this.day,
@@ -40,10 +46,10 @@ class DayGlucoseChart extends StatefulWidget {
   final bool showStyleSelector;
 
   @override
-  State<DayGlucoseChart> createState() => _DayGlucoseChartState();
+  ConsumerState<DayGlucoseChart> createState() => _DayGlucoseChartState();
 }
 
-class _DayGlucoseChartState extends State<DayGlucoseChart> {
+class _DayGlucoseChartState extends ConsumerState<DayGlucoseChart> {
   late DayChartStyle _style;
   Offset? _touchOffset;
 
@@ -133,7 +139,31 @@ class _DayGlucoseChartState extends State<DayGlucoseChart> {
         : const Color(0xFF64748B);
 
     final g = day.glucose;
-    final readings = g?.window.readings ?? [];
+    ref.watch(timeNowProvider);
+    final now = ref.watch(dashboardWallClockProvider)();
+    final window = visibleDayGlucoseWindow(day, now);
+    final readings = window?.readings ?? [];
+    final isToday =
+        !now.isBefore(day.start) &&
+        now.isBefore(dayChartClock(day.start, 0, dayOffset: 1));
+    final stale =
+        isToday &&
+        (ref
+                .watch(dashboardGlucoseStaleProvider(readings.lastOrNull?.date))
+                .asData
+                ?.value ??
+            dashboardGlucoseIsStale(readings.lastOrNull?.date, now));
+    final lastColor = stale
+        ? mutedColor
+        : readings.isEmpty
+        ? mutedColor
+        : _colorForGlucose(readings.last.sgv.toDouble());
+    final lastTime = day.start.isUtc
+        ? readings.lastOrNull?.date.toUtc()
+        : readings.lastOrNull?.date.toLocal();
+    final lastTimeLabel = lastTime == null
+        ? ''
+        : '${lastTime.hour.toString().padLeft(2, '0')}:${lastTime.minute.toString().padLeft(2, '0')}';
 
     final meanGlucose = g?.mean?.round();
     final minGlucose = g?.window.minimum?.sgv;
@@ -201,19 +231,22 @@ class _DayGlucoseChartState extends State<DayGlucoseChart> {
               if (readings.isNotEmpty) ...[
                 const SizedBox(width: 6),
                 Container(
+                  key: ValueKey(
+                    isToday
+                        ? stale
+                              ? 'day-glucose-stale'
+                              : 'day-glucose-current'
+                        : 'day-glucose-historical',
+                  ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _colorForGlucose(
-                      readings.last.sgv.toDouble(),
-                    ).withValues(alpha: 0.12),
+                    color: lastColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: _colorForGlucose(
-                        readings.last.sgv.toDouble(),
-                      ).withValues(alpha: 0.35),
+                      color: lastColor.withValues(alpha: 0.35),
                     ),
                   ),
                   child: Row(
@@ -223,18 +256,33 @@ class _DayGlucoseChartState extends State<DayGlucoseChart> {
                         width: 7,
                         height: 7,
                         decoration: BoxDecoration(
-                          color: _colorForGlucose(readings.last.sgv.toDouble()),
+                          color: lastColor,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 5),
-                      Text(
-                        '${readings.last.sgv} mg/dl',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: _colorForGlucose(readings.last.sgv.toDouble()),
-                        ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${readings.last.sgv} mg/dl',
+                            semanticsLabel: stale
+                                ? '${context.lang.beforeMealStale}, ${readings.last.sgv} mg/dl, $lastTimeLabel'
+                                : null,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: lastColor,
+                              decoration: stale
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
+                          Text(
+                            lastTimeLabel,
+                            style: TextStyle(fontSize: 10, color: mutedColor),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -305,6 +353,16 @@ class _DayGlucoseChartState extends State<DayGlucoseChart> {
                     0,
                   ),
                   asOf: day.asOf,
+                  gaps: window?.gaps ?? const [],
+                  now:
+                      !now.isBefore(day.start) &&
+                          now.isBefore(
+                            dayChartClock(day.start, 0, dayOffset: 1),
+                          )
+                      ? now
+                      : null,
+                  nowLabel: context.lang.dashboardActivityStartNow,
+                  latestStale: stale,
                   style: _style,
                   isDark: isDark,
                   touchOffset: _touchOffset,
@@ -389,6 +447,10 @@ class DayGlucosePainter extends CustomPainter {
   final DayChartStyle style;
   final bool isDark;
   final Offset? touchOffset;
+  final List<HistoryCoverageGap> gaps;
+  final DateTime? now;
+  final String nowLabel;
+  final bool? latestStale;
 
   DayGlucosePainter({
     required this.readings,
@@ -398,6 +460,10 @@ class DayGlucosePainter extends CustomPainter {
     required this.style,
     required this.isDark,
     this.touchOffset,
+    this.gaps = const [],
+    this.now,
+    this.nowLabel = 'Now',
+    this.latestStale,
   });
 
   static const double lowThreshold = 70.0;
@@ -469,6 +535,31 @@ class DayGlucosePainter extends CustomPainter {
           0xFFEF4444,
         ).withValues(alpha: isDark ? 0.07 : 0.04),
     );
+
+    // Missing data is unknown, not a normal-glucose corridor.
+    for (final gap in gaps) {
+      final left = xForTime(gap.start), right = xForTime(gap.end);
+      final area = Rect.fromLTRB(left, chartArea.top, right, chartArea.bottom);
+      canvas.drawRect(
+        area,
+        Paint()
+          ..color = const Color(
+            0xFFF59E0B,
+          ).withValues(alpha: isDark ? .18 : .14),
+      );
+      canvas.save();
+      canvas.clipRect(area);
+      for (var x = left - chartArea.height; x < right; x += 9) {
+        canvas.drawLine(
+          Offset(x, chartArea.bottom),
+          Offset(x + chartArea.height, chartArea.top),
+          Paint()
+            ..color = const Color(0xFFF59E0B).withValues(alpha: .28)
+            ..strokeWidth = 1,
+        );
+      }
+      canvas.restore();
+    }
 
     // 2. LINIE REFERENCYJNE (70, 110, 180, 250)
     final gridLinePaint = Paint()
@@ -585,6 +676,28 @@ class DayGlucosePainter extends CustomPainter {
       );
     }
 
+    if (now != null) {
+      final x = xForTime(now!);
+      drawDashedChartLine(
+        canvas,
+        Offset(x, chartArea.top),
+        Offset(x, chartArea.bottom),
+        Paint()
+          ..color = const Color(0xFF00A3FF)
+          ..strokeWidth = 1.5,
+      );
+      _drawText(
+        canvas,
+        nowLabel,
+        Offset((x - 16).clamp(chartArea.left, chartArea.right - 32), 0),
+        const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF00A3FF),
+        ),
+      );
+    }
+
     // 4. KRZYWA LUB PUNKTY GLIKEMII
     if (readings.isNotEmpty) {
       // Each CGM sample covers at most five minutes.
@@ -664,7 +777,11 @@ class DayGlucosePainter extends CustomPainter {
         xForTime(lastReading.date),
         yForSgv(lastReading.sgv.toDouble()),
       );
-      final lastColor = _colorForGlucose(lastReading.sgv.toDouble());
+      final lastColor =
+          latestStale == true ||
+              now != null && dashboardGlucoseIsStale(lastReading.date, now!)
+          ? (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B))
+          : _colorForGlucose(lastReading.sgv.toDouble());
 
       canvas.drawCircle(
         lastPt,
@@ -826,6 +943,10 @@ class DayGlucosePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant DayGlucosePainter oldDelegate) {
     return oldDelegate.readings != readings ||
+        oldDelegate.gaps != gaps ||
+        oldDelegate.now != now ||
+        oldDelegate.nowLabel != nowLabel ||
+        oldDelegate.latestStale != latestStale ||
         oldDelegate.events != events ||
         oldDelegate.dayStart != dayStart ||
         oldDelegate.asOf != asOf ||

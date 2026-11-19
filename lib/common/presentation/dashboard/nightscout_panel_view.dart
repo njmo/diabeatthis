@@ -9,17 +9,19 @@ class NightscoutPanelScope extends InheritedWidget {
   const NightscoutPanelScope({
     super.key,
     required this.lastUpdate,
+    this.syncRibbon,
     required super.child,
   });
 
   final String? lastUpdate;
+  final Widget? syncRibbon;
 
   static NightscoutPanelScope? of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<NightscoutPanelScope>();
 
   @override
   bool updateShouldNotify(NightscoutPanelScope oldWidget) =>
-      lastUpdate != oldWidget.lastUpdate;
+      lastUpdate != oldWidget.lastUpdate || syncRibbon != oldWidget.syncRibbon;
 }
 
 /// Shared frame; the source supplies the same readings/metrics presentation.
@@ -61,20 +63,19 @@ class NightscoutPanelView extends StatelessWidget {
         color: Colors.transparent,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(
-          side: BorderSide.none,
-        ),
+        shape: const RoundedRectangleBorder(side: BorderSide.none),
         clipBehavior: Clip.antiAlias,
         child: NightscoutPanelScope(
           lastUpdate: lastUpdate,
+          syncRibbon: showStandaloneLastUpdate ? null : syncRibbon,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (syncRibbon != null) syncRibbon!,
+              if (syncRibbon != null && showStandaloneLastUpdate) syncRibbon!,
               Padding(
                 padding: EdgeInsets.fromLTRB(
                   0,
-                  syncRibbon == null ? 0 : 8,
+                  syncRibbon == null || !showStandaloneLastUpdate ? 0 : 8,
                   0,
                   0,
                 ),
@@ -85,9 +86,12 @@ class NightscoutPanelView extends StatelessWidget {
                       RepaintBoundary(
                         child: Text(
                           lastUpdate ?? context.lang.dashboardWaitingForData,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                       ),
                     readings,
