@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,6 +17,8 @@ import '../data/family_chat_database_provider.dart';
 import '../data/family_chat_notification_platform.dart';
 import '../data/family_chat_preferences_provider.dart';
 import '../data/family_chat_remote.dart';
+import '../notifications/family_chat_presenter_provider.dart';
+import 'family_chat_background.dart';
 import 'family_chat_session.dart';
 import 'family_chat_settings_controller.dart';
 import 'family_chat_settings_runtime.dart';
@@ -24,10 +27,11 @@ export '../data/family_chat_database_provider.dart';
 
 /// Shared lifecycle barrier: an old UID must finish purging before reuse.
 class FamilyChatRuntime extends ChangeNotifier with WidgetsBindingObserver {
-  FamilyChatRuntime(this.db) {
+  FamilyChatRuntime(this.db, {this.notificationPresenter}) {
     WidgetsBinding.instance.addObserver(this);
   }
   final FamilyChatDatabase db;
+  final FamilyChatPushPresenter? notificationPresenter;
   FamilyChatSession? _session;
   bool _identityKnown = true;
   bool _chatVisible = false;
@@ -108,6 +112,7 @@ class FamilyChatRuntime extends ChangeNotifier with WidgetsBindingObserver {
         api: api,
         db: db,
         expectedScope: scope,
+        notificationPresenter: notificationPresenter,
         isCurrentAccount: () =>
             !_disposed &&
             _identityKnown &&
@@ -118,7 +123,10 @@ class FamilyChatRuntime extends ChangeNotifier with WidgetsBindingObserver {
       );
       _session = next;
       next.addListener(_changed);
-      await next.start();
+      await next.start(
+        foreground: _foreground && _identityKnown,
+        chatVisible: _chatVisible,
+      );
       if (!_disposed && revision == _revision) {
         next.setForeground(
           _foreground && _identityKnown,
@@ -190,7 +198,13 @@ class FamilyChatRuntime extends ChangeNotifier with WidgetsBindingObserver {
 }
 
 final familyChatRuntimeProvider = Provider<FamilyChatRuntime>((ref) {
-  final runtime = FamilyChatRuntime(ref.watch(familyChatDatabaseProvider));
+  final runtime = FamilyChatRuntime(
+    ref.watch(familyChatDatabaseProvider),
+    notificationPresenter:
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+        ? ref.watch(familyChatUiPresenterProvider)
+        : null,
+  );
   ref.onDispose(runtime.dispose);
   if (Firebase.apps.isEmpty) return runtime;
   ref.listen(networkConnectionProvider, (_, next) {

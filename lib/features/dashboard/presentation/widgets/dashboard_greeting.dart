@@ -25,18 +25,19 @@ class DashboardGreeting extends ConsumerWidget {
           photoPath: account == null ? photoPath : null,
           photoUrl: account?.photoUrl,
           name: name,
-          size: 40,
+          size: 34,
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
         Expanded(
           child: Text(
             name != null && name.isNotEmpty
                 ? name
                 : context.lang.dashboardGreetingShort,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500),
-            maxLines: 1,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontSize: 23,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         ),

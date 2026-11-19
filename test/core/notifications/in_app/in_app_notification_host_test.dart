@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/notifications/domain/events/eat_now_event_notification.dart';
+import 'package:diabeatthis/core/notifications/domain/events/family_chat_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/temp_target_delivery_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/models/hash_notification_id_factory.dart';
 import 'package:diabeatthis/core/notifications/in_app/in_app_notification_center.dart';
@@ -68,6 +69,48 @@ void main() {
           inApp: inApp,
         ),
       );
+
+  testWidgets('chat reply opens and focuses the inline composer on demand', (
+    tester,
+  ) async {
+    final container = await pumpApp(tester);
+    final event = FamilyChatNotificationEvent(
+      id: 42,
+      tag: 'chat',
+      title: 'Family chat',
+      body: 'Question?',
+      payload: const {},
+      replyChoices: const ['Yes'],
+      message: (
+        recipientId: 'child',
+        recipientName: 'Child',
+        senderId: 'caregiver',
+        senderName: 'Caregiver',
+        conversationTitle: 'Family',
+        groupConversation: false,
+        sentAt: clock.now(),
+      ),
+    );
+    await tester.runAsync(
+      () => container
+          .read(inAppNotificationCenterProvider.notifier)
+          .present(event),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('Yes'), findsNothing);
+
+    await tester.tap(find.text('Odpowiedz'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('Yes'), findsOneWidget);
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
+      isTrue,
+    );
+  });
 
   testWidgets('banner shows the definition buttons and answers like the '
       'system notification', (tester) async {

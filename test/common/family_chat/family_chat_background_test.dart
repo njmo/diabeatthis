@@ -231,6 +231,93 @@ void main() {
     'epoch': 'epoch',
     'messageId': 'question',
   };
+  test('notification reply updates the running chat badge offline', () async {
+    final db = FamilyChatDatabase(NativeDatabase.memory());
+    final api = _Api();
+    api.sent['other'] = {
+      ...Map<String, dynamic>.from(jsonDecode(jsonEncode(api.message)) as Map),
+      'id': 'other',
+      'sequence': 2,
+    };
+    final presenter = _Presenter();
+    DateTime clock() => DateTime.fromMillisecondsSinceEpoch(1000);
+    final session = FamilyChatSession(
+      uid: 'child',
+      api: api,
+      db: db,
+      isCurrentAccount: () => true,
+      notificationPresenter: presenter,
+      clock: clock,
+    );
+    addTearDown(db.close);
+    addTearDown(session.dispose);
+    await session.start(foreground: true);
+    expect(session.unreadCount, 2);
+
+    final badgeChanged = Completer<void>();
+    session.addListener(() {
+      if (session.unreadCount == 1 && !badgeChanged.isCompleted) {
+        badgeChanged.complete();
+      }
+    });
+    api.offline = true;
+    final worker = FamilyChatBackground(
+      db: db,
+      api: api,
+      currentUid: () => 'child',
+      presenter: presenter,
+      clock: clock,
+    );
+    final notice = presenter.shown.singleWhere(
+      (view) => view.message['id'] == 'question',
+    );
+    expect(await worker.reply(notice.payload, 'Mam'), isTrue);
+    await badgeChanged.future.timeout(const Duration(seconds: 2));
+    expect(await db.locallyRead(scope, 'question'), isTrue);
+    expect(await db.locallyRead(scope, 'other'), isFalse);
+  });
+
+  test(
+    'foreground sync presents incoming questions and answers without push',
+    () async {
+      final db = FamilyChatDatabase(NativeDatabase.memory());
+      final api = _Api();
+      final presenter = _Presenter();
+      final session = FamilyChatSession(
+        uid: 'child',
+        api: api,
+        db: db,
+        isCurrentAccount: () => true,
+        notificationPresenter: presenter,
+        clock: () => DateTime.fromMillisecondsSinceEpoch(1000),
+      );
+      addTearDown(db.close);
+      addTearDown(session.dispose);
+      await session.start(foreground: true);
+      expect(presenter.shown.map((view) => view.message['kind']), ['question']);
+
+      final push = FamilyChatBackground(
+        db: db,
+        api: api,
+        currentUid: () => 'child',
+        presenter: presenter,
+      );
+      await push.receive(data);
+      expect(presenter.shown, hasLength(1));
+
+      api.message
+        ..['id'] = 'answer'
+        ..['kind'] = 'answer'
+        ..['sequence'] = 2;
+      api.message['receipts']['child']['deliveredAt'] = null;
+      await session.synchronize();
+      expect(presenter.shown.map((view) => view.message['kind']), [
+        'question',
+        'answer',
+      ]);
+    },
+  );
+
   test(
     'retention shortening durably cancels a notice and suppresses late delivery',
     () async {

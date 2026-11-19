@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/router/providers/app_router_provider.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/theme/app_design_tokens.dart';
+import '../../domain/events/family_chat_notification.dart';
+import '../../domain/models/notification_action_type.dart';
 import '../in_app_notification_center.dart';
 import 'notification_inbox.dart';
 import 'notification_visuals.dart';
@@ -14,8 +17,8 @@ import 'notification_visuals.dart';
 /// Draws in-app notification banners above every route, dialog and sheet.
 ///
 /// Placed in `MaterialApp.builder`, so it sits outside the navigator: it has
-/// theme, localizations and media query, but no Overlay of its own (no
-/// tooltips here) and asks for text input through the navigator's context.
+/// theme, localizations and media query. The banner overlay supports inline
+/// text editing while modal actions still use the app navigator.
 class InAppNotificationHost extends StatelessWidget {
   const InAppNotificationHost({super.key, required this.child});
 
@@ -23,12 +26,14 @@ class InAppNotificationHost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        child,
-        const Positioned(top: 0, left: 0, right: 0, child: _BannerSlot()),
-      ],
+    return Overlay.wrap(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          child,
+          const Positioned(top: 0, left: 0, right: 0, child: _BannerSlot()),
+        ],
+      ),
     );
   }
 }
@@ -113,10 +118,29 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
   void initState() {
     super.initState();
     unawaited(HapticFeedback.lightImpact());
+    if (widget.banner.event case FamilyChatNotificationEvent(
+      message: final message?,
+      silent: false,
+    ) when message.senderId != message.recipientId) {
+      unawaited(_playChatSound());
+    }
     // Informational banners leave on their own; anything awaiting an answer
     // stays until the user acts on it or closes it.
     if (_informational) {
       _autoDismiss = Timer(_autoDismissAfter, _dismiss);
+    }
+  }
+
+  Future<void> _playChatSound() async {
+    if (defaultTargetPlatform != TargetPlatform.android || kIsWeb) return;
+    try {
+      await const MethodChannel(
+        'pl.diabeatthis.app/notification_sound',
+      ).invokeMethod<void>('playFamilyChat');
+    } on PlatformException {
+      // Keep delivery visible when Android cannot play the sound.
+    } on MissingPluginException {
+      // Other hosts can render the banner without the Android channel.
     }
   }
 
@@ -141,6 +165,13 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
     final scheme = theme.colorScheme;
     final banner = widget.banner;
     final event = banner.event;
+    final reply = banner.actions
+        .where(
+          (action) => action.type == NotificationActionType.familyChatReply,
+        )
+        .firstOrNull;
+    final buttons = banner.actions.where((action) => action != reply).toList();
+    final center = ref.read(inAppNotificationCenterProvider.notifier);
 
     return Dismissible(
       key: ValueKey('dismiss-${banner.id}'),
@@ -243,7 +274,23 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
                         ),
                       ],
                     ),
-                    if (banner.actions.isNotEmpty || widget.queued > 0)
+                    if (reply != null)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: AppSpacing.sm,
+                          right: AppSpacing.sm,
+                        ),
+                        child: NotificationInlineReply(
+                          choices: banner.inputChoices,
+                          onReply: (input) => center.respond(
+                            id: banner.id,
+                            event: event,
+                            action: reply,
+                            input: input,
+                          ),
+                        ),
+                      ),
+                    if (buttons.isNotEmpty || widget.queued > 0)
                       Padding(
                         padding: const EdgeInsets.only(
                           top: AppSpacing.sm,
@@ -267,7 +314,7 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
                               ),
                             Expanded(
                               child: NotificationActionButtons(
-                                actions: banner.actions,
+                                actions: buttons,
                                 choices: banner.inputChoices,
                                 dialogContext: () => ref
                                     .read(appRouterProvider)

@@ -13,6 +13,7 @@ import 'package:http/http.dart' as http;
 import '../../../core/drift/database_impl.dart';
 import '../../../core/drift/providers/database_provider.dart';
 import '../../../core/firebase/firebase_app_check_provider.dart';
+import '../../../core/logger/logger.dart';
 import '../../../firebase_options.dart';
 import '../../auth/load_firebase_callable_identity.dart';
 import '../../backend/authenticated_callable_transport.dart';
@@ -107,8 +108,12 @@ Future<void> _withWorker(
       ),
       presenter: presenter,
     );
-  } catch (_) {
+  } catch (error) {
     // Outbox/ACKs remain in the private DB. Never log notification contents.
+    Log.w(
+      'FamilyChatPush',
+      'Notification worker failed (${error.runtimeType})',
+    );
   } finally {
     client.close();
     await db.close();
@@ -189,11 +194,14 @@ Future<void> handleFamilyChatNotificationResponse(
       if (guard['enabled'] == true &&
           guard['uid'] == payload['uid'] &&
           guard['scope'] == payload['scope']) {
-        await db.withChatGuard(guard, () async {
-          if (FirebaseAuth.instance.currentUser?.uid != payload['uid']) return;
+        final saved = await db.withChatGuard(guard, () async {
+          if (FirebaseAuth.instance.currentUser?.uid != payload['uid']) {
+            return false;
+          }
           await db.setMetadata('chatOpen', payload);
-          familyChatOpenEvents.add(null);
+          return true;
         });
+        if (saved == true) familyChatOpenEvents.add(null);
       }
     }
   });

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
+import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/models/hash_notification_id_factory.dart';
 import '../../../core/notifications/domain/models/notification_event_type.dart';
 import '../../../core/notifications/domain/models/notification_key.dart';
@@ -86,6 +88,11 @@ class FamilyChatBackground {
     this.clock = DateTime.now,
     this.shouldPresent,
   });
+  static final _replyReads = StreamController<String>.broadcast();
+
+  /// Notifies sessions in this isolate after the local read receipt commits.
+  static Stream<String> get replyReads => _replyReads.stream;
+
   final bool rolloutEnabled;
   final DateTime Function() clock;
   final bool Function(String target)? shouldPresent;
@@ -228,35 +235,7 @@ class FamilyChatBackground {
       );
     }
     if (saved != true) return false;
-    final cached = await db.message(scope, id);
-    final locallyRead = await db.locallyRead(scope, id);
-    if (cached != null &&
-        cached['_notificationSuppressed'] != true &&
-        cached['receipts']?[uid]?['readAt'] == null &&
-        (cached['kind'] != 'question' ||
-            !await db.hasAuthoredReply(scope, uid, id)) &&
-        !locallyRead &&
-        (shouldPresent?.call(view.target) ?? true)) {
-      await db.presentNotification(
-        guard,
-        view.notice,
-        show: () async {
-          final latest = await db.message(scope, id);
-          if (currentUid() != uid ||
-              latest == null ||
-              latest['_notificationSuppressed'] == true ||
-              latest['receipts']?[uid]?['readAt'] != null ||
-              latest['expiresAt'] != view.message['expiresAt'] ||
-              (latest['kind'] == 'question' &&
-                  await db.hasAuthoredReply(scope, uid, id)) ||
-              await db.locallyRead(scope, id)) {
-            return;
-          }
-          await presenter.show(view);
-        },
-        cancel: () => presenter.cancel(view.notice),
-      );
-    }
+    await presentIncoming(view);
     if (currentUid() == uid &&
         await db.historyAllows(scope, guard['historyGeneration'] as int)) {
       final capturedUid = uid;
@@ -280,6 +259,57 @@ class FamilyChatBackground {
       await db.withChatGuard(guard, () => db.completeReceipt(scope, id, false));
     }
     return true;
+  }
+
+  /// Uses the same journal for push and authenticated foreground sync.
+  Future<void> presentIncoming(FamilyChatPushView view) async {
+    final guard = view.guard;
+    final scope = guard['scope'] as String;
+    final uid = guard['uid'] as String;
+    final id = view.message['id'] as String;
+    if (currentUid() != uid ||
+        view.message['senderUid'] == uid ||
+        view.message['participants']?[uid] != view.config['epoch'] ||
+        view.message['receipts']?[uid] == null ||
+        view.message['kind'] == 'lowTreatment' &&
+            view.message['treatmentResult'] != null ||
+        view.remainingLifetime == 0) {
+      return;
+    }
+    final cached = await db.message(scope, id);
+    final locallyRead = await db.locallyRead(scope, id);
+    if (cached != null &&
+        cached['expiresAt'] == view.message['expiresAt'] &&
+        cached['_notificationSuppressed'] != true &&
+        cached['receipts']?[uid]?['readAt'] == null &&
+        (cached['kind'] != 'question' ||
+            !await db.hasAuthoredReply(scope, uid, id)) &&
+        !locallyRead &&
+        (shouldPresent?.call(view.target) ?? true)) {
+      final presented = await db.presentNotification(
+        guard,
+        view.notice,
+        show: () async {
+          final latest = await db.message(scope, id);
+          if (currentUid() != uid ||
+              !(shouldPresent?.call(view.target) ?? true) ||
+              latest == null ||
+              latest['_notificationSuppressed'] == true ||
+              latest['receipts']?[uid]?['readAt'] != null ||
+              latest['expiresAt'] != view.message['expiresAt'] ||
+              (latest['kind'] == 'question' &&
+                  await db.hasAuthoredReply(scope, uid, id)) ||
+              await db.locallyRead(scope, id)) {
+            return;
+          }
+          await presenter.show(view);
+        },
+        cancel: () => presenter.cancel(view.notice),
+      );
+      if (!presented) {
+        Log.d('FamilyChatPush', 'Notification journal skipped presentation');
+      }
+    }
   }
 
   /// The reply is durable before HTTP and uses the existing ticket ID on retry.
@@ -371,6 +401,7 @@ class FamilyChatBackground {
       return true;
     });
     if (queued != true) return false;
+    _replyReads.add(scope);
     Future<void> cancelCompleted({bool acknowledge = false}) async {
       if (currentUid() != uid) return;
       final tag = cached.notice.tag;
