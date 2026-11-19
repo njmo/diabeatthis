@@ -12,6 +12,7 @@ import 'package:diabeatthis/core/notifications/controllers/local_notifications_c
 import 'package:diabeatthis/core/notifications/domain/models/notification_event.dart';
 import 'package:diabeatthis/core/notifications/providers/local_notifications_controller_provider.dart';
 import 'package:diabeatthis/core/notifications/providers/local_notifications_plugin_provider.dart';
+import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -406,7 +407,7 @@ void main() {
             expect(
               identical(
                 presenter.controller,
-                ownedContainer!.read(localNotificationsControllerProvider),
+                ownedContainer!.read(notificationsControllerHeadlessProvider),
               ),
               true,
             );

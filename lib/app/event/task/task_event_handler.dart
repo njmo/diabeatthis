@@ -12,7 +12,7 @@ import '../../../core/drift/providers/database_provider.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/notification_event_factory.dart';
 import '../../../core/notifications/handlers/notification_response_handler.dart';
-import '../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../../core/notifications/in_app/in_app_notification_center.dart';
 import '../../../features/low_treatment/data/providers/low_treatment_suggestion_visibility_provider.dart';
 import '../../../features/low_treatment/presentation/controllers/low_treatment_sheet_launcher.dart';
 import '../../providers/foreground_task_state_provider.dart';
@@ -76,7 +76,23 @@ class TaskEventHandler with Logging {
           payload.type,
           payload.data,
         );
-        _ref.read(notificationsControllerUiProvider).show(event);
+        // The service already prepared, recorded and acknowledged the event;
+        // the UI only renders it.
+        unawaited(
+          _ref.read(inAppNotificationCenterProvider.notifier).present(event),
+        );
+        break;
+      case TaskNotificationInboxChangedEvent(data: final payload):
+        final center = _ref.read(inAppNotificationCenterProvider.notifier);
+        if (payload.dismissAll) {
+          unawaited(center.cancelAll());
+        } else if (payload.dismissedIds.isEmpty) {
+          unawaited(center.refresh());
+        } else {
+          for (final id in payload.dismissedIds) {
+            unawaited(center.cancel(id));
+          }
+        }
         break;
       case TaskDataSynchronizationEvent(data: final payload):
         synchronizationDataBridge.handle(payload);

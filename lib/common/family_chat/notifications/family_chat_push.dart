@@ -127,12 +127,15 @@ Future<void> showFamilyChatPush(
   presenter: presenter,
 );
 
+/// [presenter] is the app's own presenter when the answer came from an in-app
+/// banner, so its follow-up status is shown in-app as well.
 Future<void> handleFamilyChatNotificationResponse(
-  NotificationResponse response,
-) async {
+  NotificationResponse response, {
+  AndroidFamilyChatPresenter? presenter,
+}) async {
   final payload = familyChatNotificationPayload(response.payload);
   if (payload == null) return;
-  await _withWorker((worker, db, presenter) async {
+  await _withWorker(presenter: presenter, (worker, db, presenter) async {
     if (FirebaseAuth.instance.currentUser?.uid != payload['uid']) return;
     if (response.actionId == 'family_chat_consume') {
       DatabaseImpl? medical;

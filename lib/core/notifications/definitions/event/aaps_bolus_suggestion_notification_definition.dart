@@ -8,4 +8,6 @@ const aapsBolusSuggestionNotificationDefinition = NotificationDefinition(
   categoryId: 'aaps_bolus_suggestion',
   actions: <NotificationActionDef>[],
   channelType: NotificationChannelType.aapsSuggestion,
+  // Shown right before AAPS is opened, so it must survive leaving the app.
+  presentInApp: false,
 );

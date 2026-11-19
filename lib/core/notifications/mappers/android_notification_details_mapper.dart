@@ -8,6 +8,7 @@ import '../domain/events/family_chat_notification.dart';
 import '../domain/models/notification_action_def.dart';
 import '../domain/models/notification_action_type.dart';
 import '../domain/models/notification_event.dart';
+import '../domain/models/notification_event_actions.dart';
 import '../domain/models/notification_event_type.dart';
 import 'android_notification_action_mapper.dart';
 
@@ -63,10 +64,8 @@ class AndroidNotificationDetailsMapper {
           ],
         ),
         actions: [
-          for (final action in eventDefinition.actions)
-            if (action.type != NotificationActionType.familyChatConsume ||
-                event.allowConsumption)
-              _familyChatAction(action, event.replyChoices),
+          for (final action in notificationActionsFor(event, eventDefinition))
+            _familyChatAction(action, notificationInputChoicesFor(event)),
         ],
       );
     }

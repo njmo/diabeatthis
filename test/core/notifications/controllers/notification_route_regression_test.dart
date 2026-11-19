@@ -2,6 +2,7 @@ import 'package:diabeatthis/common/events/data/task/task_in_app_notification_pay
 import 'package:diabeatthis/core/notifications/controllers/foreground_task_notification_controller.dart';
 import 'package:diabeatthis/core/notifications/controllers/in_app_notifications_controller.dart';
 import 'package:diabeatthis/core/notifications/domain/events/aaps_carbs_request_notification.dart';
+import 'package:diabeatthis/core/notifications/in_app/in_app_notification_center.dart';
 import 'package:diabeatthis/foreground/providers/task_event_router_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,8 +33,12 @@ void main() {
       expect(payload.data, {'episodeId': 'episode-regression', 'carbs': 12.5});
     },
   );
-  test('in-app logging does not mutate notification payload', () async {
-    final controller = InAppNotificationsController();
+  test('in-app banner keeps the notification payload intact', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final controller = container.read(
+      Provider(InAppNotificationsController.new),
+    );
     const event = AapsCarbsRequestNotificationEvent(
       episodeId: 'local',
       carbs: 7.5,
@@ -41,5 +46,7 @@ void main() {
     await controller.init();
     await controller.show(event);
     expect(event.toJson(), {'episodeId': 'local', 'carbs': 7.5});
+    final banner = container.read(inAppNotificationCenterProvider).current;
+    expect(banner?.event, same(event));
   });
 }

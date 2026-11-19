@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/notifications/in_app/widgets/notification_inbox.dart';
 import '../../../features/dashboard/presentation/widgets/dashboard_bottom_bar.dart';
 import '../../../features/dashboard/presentation/widgets/dashboard_greeting.dart';
 import '../../../features/dashboard/presentation/widgets/dashboard_user_menu.dart';
@@ -75,7 +76,10 @@ class DashboardShell extends StatelessWidget {
             selectedIndex: category,
             onSelected: onCategory,
           ),
-        if (destination == 0) const DashboardUserMenu(),
+        if (destination == 0) ...const [
+          NotificationInboxButton(),
+          DashboardUserMenu(),
+        ],
         const SizedBox(width: 8),
       ],
     ),

@@ -1,4 +1,4 @@
-import '../../../core/notifications/controllers/local_notifications_controller.dart';
+import '../../../core/notifications/base/notifications_controller.dart';
 import '../../../core/notifications/domain/events/family_chat_notification.dart';
 import '../../l10n/language.dart';
 import '../application/family_chat_background.dart';
@@ -7,9 +7,17 @@ import '../data/family_chat_database.dart';
 import '../presentation/family_treatment_text.dart';
 
 class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
-  AndroidFamilyChatPresenter({required this.controller});
+  AndroidFamilyChatPresenter({
+    required this.controller,
+    required this._prepare,
+  });
 
-  final LocalNotificationsController controller;
+  /// Shared delivery: an in-app banner while the app is on screen, otherwise
+  /// a system notification, mirrored into the notification inbox either way.
+  final NotificationsController controller;
+
+  /// Sets up language and channels without replaying an app-launch action.
+  final Future<void> Function() _prepare;
 
   static FamilyChatNotificationEvent messageEvent(FamilyChatPushView view) {
     final uid = view.guard['uid'] as String;
@@ -67,7 +75,7 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
 
   @override
   Future<void> show(FamilyChatPushView view) async {
-    await controller.initializeDelivery();
+    await _prepare();
     if (view.remainingLifetime == 0) {
       await cancel(view.notice);
       return;
@@ -98,7 +106,7 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
     FamilyChatNotice notice,
     FamilyChatPushView view,
   ) async {
-    await controller.initializeDelivery();
+    await _prepare();
     await _show(replyCompletedEvent(notice, view));
   }
 
@@ -147,7 +155,7 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
     Map<String, dynamic> payload,
     FamilyConsumptionNotice state,
   ) async {
-    await controller.initializeDelivery();
+    await _prepare();
     await _show(consumptionEvent(notice, payload, state));
   }
 
@@ -156,7 +164,7 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
     FamilyChatPushView view, {
     required bool needsTicket,
   }) async {
-    await controller.initializeDelivery();
+    await _prepare();
     await _show(
       FamilyChatNotificationEvent(
         id: view.notice.id,

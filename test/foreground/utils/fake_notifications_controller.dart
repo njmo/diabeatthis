@@ -69,7 +69,7 @@ class FakeNotificationsController implements NotificationsController {
   }
 
   @override
-  Future<void> cancel(int id) async {
+  Future<void> cancel(int id, {String? tag}) async {
     cancelledIds.add(id);
 
     if (_cancelResponses.isEmpty) return;

@@ -1,37 +1,35 @@
-import '../../logger/logger.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../base/notifications_controller.dart';
 import '../domain/models/notification_event.dart';
+import '../in_app/in_app_notification_center.dart';
 
-class InAppNotificationsController with Logging implements NotificationsController {
-  InAppNotificationsController();
+/// In-app delivery inside the UI isolate: renders the event as a banner.
+class InAppNotificationsController implements NotificationsController {
+  InAppNotificationsController(this._ref);
+
+  final Ref _ref;
+
+  InAppNotificationCenter get _center =>
+      _ref.read(inAppNotificationCenterProvider.notifier);
 
   @override
   Future<void> init() async {}
 
   @override
-  Future<void> show(NotificationEvent event) async {
-    logI("IN APP NOTIFICATION: ${event.title}, ${event.toPayload().toString()}");
-  }
+  Future<void> show(NotificationEvent event) => _center.present(event);
 
   @override
-  Future<void> cancel(int id) {
-    // TODO: implement cancel
-    throw UnimplementedError();
-  }
+  Future<void> cancel(int id, {String? tag}) => _center.cancel(id);
 
   @override
-  Future<void> cancelAll() {
-    // TODO: implement cancelAll
-    throw UnimplementedError();
-  }
+  Future<void> cancelAll() => _center.cancelAll();
 
   @override
-  // TODO: implement pending
-  Future<Iterable<int>> get pending => throw UnimplementedError();
+  Future<Iterable<int>> get pending async => const [];
 
   @override
   Future<void> schedule(NotificationEvent event, Duration when) {
-    // TODO: implement schedule
-    throw UnimplementedError();
+    throw UnsupportedError('In-app notifications cannot be scheduled');
   }
 }

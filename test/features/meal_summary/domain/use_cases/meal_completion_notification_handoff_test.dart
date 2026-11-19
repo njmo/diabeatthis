@@ -92,7 +92,7 @@ class InterleavedCompletionNotifications extends FakeNotificationsController {
   }
 
   @override
-  Future<void> cancel(int id) async {
+  Future<void> cancel(int id, {String? tag}) async {
     if (!startedCleanup) {
       startedCleanup = true;
       await onFirstCancel();

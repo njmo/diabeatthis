@@ -4941,6 +4941,46 @@
   "setupMonitoringLocalDescription": "Działanie wyłącznie na tym telefonie, bez przesyłania danych do Nightscout.",
   "setupMonitoringUploadTitle": "Monitorowanie z zapisem do Nightscout",
   "setupMonitoringUploadDescription": "Automatyczne przesyłanie wpisów do Twojej instancji Nightscout.",
+  "inAppNotificationClose": "Zamknij",
+  "inAppNotificationMore": "+{count} kolejne",
+  "@inAppNotificationMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationInboxTitle": "Powiadomienia",
+  "notificationInboxUnreadTooltip": "Powiadomienia, nieprzeczytane: {count}",
+  "@notificationInboxUnreadTooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationInboxEmpty": "Brak powiadomień",
+  "notificationInboxEmptyHint": "Tutaj pojawią się przypomnienia i prośby o decyzję, także te z czasu, gdy aplikacja była zamknięta.",
+  "notificationInboxClear": "Wyczyść",
+  "notificationInboxInactive": "Nieaktualne",
+  "notificationInboxJustNow": "Przed chwilą",
+  "notificationInboxMinutesAgo": "{minutes} min temu",
+  "@notificationInboxMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationInboxHoursAgo": "{hours} godz. temu",
+  "@notificationInboxHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationInputSend": "Wyślij",
   "familyEnterCodeManually": "Wpisz kod ręcznie",
   "familyEnterPairingCode": "Wpisz kod parowania",
   "familyPairingCodeLabel": "Kod parowania",

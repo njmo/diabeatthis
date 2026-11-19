@@ -23,6 +23,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +40,8 @@ void main() {
 
   setUp(() async {
     now = DateTime(2026, 10, 29, 12);
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.empty();
     SharedPreferences.setMockInitialValues({
       nightscoutUrlKey: 'https://example.com',
       nightscoutTokenKey: 'write-token',
@@ -106,7 +110,7 @@ void main() {
       final offer = (await service.activityOffer(logId))!;
       await preferences.setBool(nightscoutTempTargetsEnabledKey, false);
 
-      await notifications.show(offer, temporary: true);
+      await notifications.show(offer);
 
       expect(inAppNotifications.shown, isEmpty);
       final operation = (await operations.get(offer.requestId!))!;
@@ -117,7 +121,7 @@ void main() {
       now = now.add(const Duration(minutes: 1));
       final recovered = (await service.activityOffer(logId))!;
       expect(recovered.requestId, offer.requestId);
-      await notifications.show(recovered, temporary: true);
+      await notifications.show(recovered);
       expect(inAppNotifications.shown, [recovered]);
       expect(
         (await operations.get(offer.requestId!))!.status,
@@ -131,7 +135,7 @@ void main() {
     () => withClock(Clock(() => now), () async {
       final offer = (await service.activityOffer(logId))!;
 
-      await notifications.show(offer, temporary: true);
+      await notifications.show(offer);
 
       expect(inAppNotifications.shown, [offer]);
       final operation = (await operations.get(offer.requestId!))!;
@@ -147,10 +151,7 @@ void main() {
       final offer = (await service.activityOffer(logId))!;
       inAppNotifications.failShow = true;
 
-      await expectLater(
-        notifications.show(offer, temporary: true),
-        throwsStateError,
-      );
+      await expectLater(notifications.show(offer), throwsStateError);
 
       final operation = (await operations.get(offer.requestId!))!;
       expect(operation.status, TempTargetOperationStatus.pendingDelivery);
@@ -159,7 +160,7 @@ void main() {
       expect(retry.requestId, offer.requestId);
 
       inAppNotifications.failShow = false;
-      await notifications.show(retry, temporary: true);
+      await notifications.show(retry);
       expect(inAppNotifications.shown, [retry]);
       expect(
         (await operations.get(offer.requestId!))!.status,
@@ -183,7 +184,7 @@ class RecordingTargetNotificationController implements NotificationsController {
   Future<void> init() async {}
 
   @override
-  Future<void> cancel(int id) async {}
+  Future<void> cancel(int id, {String? tag}) async {}
 
   @override
   Future<void> cancelAll() async {}
