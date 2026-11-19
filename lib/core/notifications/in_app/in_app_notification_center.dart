@@ -17,6 +17,7 @@ import '../domain/models/notification_action_type.dart';
 import '../domain/models/notification_definition.dart';
 import '../domain/models/notification_event.dart';
 import '../domain/models/notification_event_actions.dart';
+import '../domain/models/notification_event_type.dart';
 import '../domain/models/notification_identity.dart';
 import '../handlers/notification_response_handler.dart';
 import '../inbox/notification_inbox_entry.dart';
@@ -100,6 +101,7 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
   /// Banners the user or the app already took down in this session; a refresh
   /// that raced with persisting that decision must not bring them back.
   final _suppressed = <int>{};
+  final _handingOver = <int>{};
 
   NotificationInboxStore get _store => ref.read(notificationInboxStoreProvider);
 
@@ -108,6 +110,7 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
 
   @override
   InAppNotificationState build() {
+    ref.listen(familyChatInboxAccountProvider, (_, _) => _queueRefresh());
     ref.listen(appLifecycleProvider, (_, next) {
       switch (next) {
         case AppLifecycleState.resumed:
@@ -139,18 +142,27 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
   /// Shows [event] as a banner, or as a system notification when the app is
   /// no longer visible by the time the event arrives.
   Future<void> present(NotificationEvent event) async {
-    if (!_isVisible) {
-      await _local.show(event);
-      await refresh();
-      return;
-    }
     final id = notificationIdentity(event).id;
+    if (_handingOver.contains(id)) return;
     // The service records a delivery before announcing it. If the user already
     // handled that delivery through a banner restored from the inbox, a late
     // announcement must not bring it back.
-    final recorded = await _store.get(id);
+    final recorded = event is FamilyChatNotificationEvent && event.transient
+        ? null
+        : await _store.get(id);
+    if (!ref.mounted) return;
     if (recorded != null && (recorded.read || !recorded.active)) {
       await refresh();
+      return;
+    }
+    if (!_isVisible) {
+      _handingOver.add(id);
+      try {
+        await _postSystem(event, id, wasRecorded: recorded != null);
+      } finally {
+        _handingOver.remove(id);
+      }
+      if (ref.mounted) await refresh();
       return;
     }
     _suppressed.remove(id);
@@ -262,23 +274,51 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
 
   Future<void> refresh() async {
     final generation = ++_refreshGeneration;
-    final inbox = await _store.visible();
+    final stored = await _store.visible();
+    if (!ref.mounted) return;
+    final chat = stored
+        .where((entry) => entry.type == NotificationEventType.familyChat)
+        .toList();
+    var allowedChatIds = <int>{};
+    if (chat.isNotEmpty) {
+      try {
+        final allowed = await ref.read(familyChatInboxVisibilityProvider)(chat);
+        allowedChatIds = allowed.map((entry) => entry.id).toSet();
+      } catch (error) {
+        logW('Could not verify chat inbox access (${error.runtimeType})');
+      }
+    }
+    final denied = chat
+        .map((entry) => entry.id)
+        .toSet()
+        .difference(allowedChatIds);
+    final inbox = stored.where((entry) => !denied.contains(entry.id)).toList();
     final nextDue = await _store.nextDueAt();
     // A newer refresh may have started meanwhile; keep the latest snapshot.
-    if (generation != _refreshGeneration) return;
-    state = state.copyWith(inbox: inbox, banners: _reconcile(inbox));
+    if (!ref.mounted || generation != _refreshGeneration) return;
+    state = state.copyWith(inbox: inbox, banners: _reconcile(inbox, denied));
     _scheduleDueRefresh(nextDue);
   }
 
   /// Drops banners whose notification is no longer pending and restores
   /// pending in-app entries that have no banner (e.g. their message was lost).
-  List<InAppBanner> _reconcile(List<NotificationInboxEntry> inbox) {
+  List<InAppBanner> _reconcile(
+    List<NotificationInboxEntry> inbox,
+    Set<int> denied,
+  ) {
     final byId = {for (final entry in inbox) entry.id: entry};
+    final previouslyStored = {for (final entry in state.inbox) entry.id};
     final banners = state.banners.where((banner) {
+      if (denied.contains(banner.id)) return false;
+      if (banner.event case FamilyChatNotificationEvent(transient: true)) {
+        return true;
+      }
       final entry = byId[banner.id];
       // Not persisted yet (or storage unavailable): keep what was presented.
       // Answered, withdrawn or already seen in the inbox: take it down.
-      return entry == null || (entry.active && !entry.read);
+      return entry == null
+          ? !previouslyStored.contains(banner.id)
+          : entry.active && !entry.read;
     }).toList();
     if (!_isVisible) return banners;
     final shown = banners.map((banner) => banner.id).toSet();
@@ -288,6 +328,7 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
           entry.read ||
           !entry.active ||
           shown.contains(entry.id) ||
+          _handingOver.contains(entry.id) ||
           _suppressed.contains(entry.id)) {
         continue;
       }
@@ -317,6 +358,7 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
   }
 
   void _queueRefresh() {
+    _refreshGeneration++;
     if (_refreshQueued) return;
     _refreshQueued = true;
     scheduleMicrotask(() {
@@ -352,29 +394,52 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
     );
   }
 
+  Future<void> _postSystem(
+    NotificationEvent event,
+    int id, {
+    required bool wasRecorded,
+  }) async {
+    await _local.show(event);
+    if (!ref.mounted) return;
+    final after = wasRecorded ? await _store.get(id) : null;
+    if (!ref.mounted) return;
+    if (_isVisible ||
+        (wasRecorded && (after == null || !after.active || after.read))) {
+      await _withdrawSystemCopy(event);
+    }
+  }
+
   /// Banners that still expect an answer must not vanish when the user leaves
   /// the app, so they are re-posted as system notifications.
   Future<void> _handOverBannersToSystem() async {
-    final pending = state.banners;
-    if (pending.isEmpty) return;
+    final banners = state.banners;
+    if (banners.isEmpty) return;
+    final pending = banners
+        .where((banner) => banner.actions.isNotEmpty)
+        .toList();
+    _handingOver.addAll(pending.map((banner) => banner.id));
     state = state.copyWith(banners: const []);
     for (final banner in pending) {
-      if (banner.actions.isEmpty) continue;
       try {
-        // Skip anything answered or withdrawn meanwhile, and withdraw again
-        // if that happened while the system notification was being posted.
-        if ((await _store.get(banner.id))?.active == false) continue;
-        await _local.show(banner.event);
-        if ((await _store.get(banner.id))?.active == false) {
-          await _withdrawSystemCopy(banner.event);
+        final before = await _store.get(banner.id);
+        if (!ref.mounted ||
+            _isVisible ||
+            before == null ||
+            !before.active ||
+            before.read) {
+          continue;
         }
+        await _postSystem(banner.event, banner.id, wasRecorded: true);
       } catch (error, stackTrace) {
         logE(
           'Could not hand banner ${banner.id} over to the system',
           error: error,
           stackTrace: stackTrace,
         );
+      } finally {
+        _handingOver.remove(banner.id);
       }
     }
+    if (ref.mounted && _isVisible) await refresh();
   }
 }

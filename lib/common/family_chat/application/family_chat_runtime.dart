@@ -74,15 +74,25 @@ class FamilyChatRuntime extends ChangeNotifier with WidgetsBindingObserver {
             (_session?.scope != null && _session!.scope != scope));
     if (_desiredUid == uid && _desiredEnabled == enabled && !scopeChanged) {
       if (wasUnknown) {
-        final retry = _guardBarrier.then((_) async {
+        final retry = Future.wait<void>([_transition, _guardBarrier]).then((
+          _,
+        ) async {
+          if (_disposed || !_identityKnown || _desiredUid != uid) return;
           _session?.setForeground(
             _foreground && _identityKnown,
             chatVisible: _chatVisible,
           );
-          await _session?.synchronize();
+          await _session?.synchronize(enqueueAgain: true);
         });
         _changed();
         return Future.wait<void>([_transition, retry]).then((_) {});
+      }
+      final session = _session;
+      if (scope != null &&
+          session != null &&
+          !session.serverVerified &&
+          !session.busy) {
+        return session.synchronize();
       }
       return _transition;
     }
@@ -170,6 +180,7 @@ class FamilyChatRuntime extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void suspendIdentity() {
+    if (!_identityKnown) return;
     _identityKnown = false;
     unawaited(
       _disableBackground().catchError((Object _) {

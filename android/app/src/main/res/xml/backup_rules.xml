@@ -17,5 +17,6 @@
     <exclude domain="file" path="family_chat.sqlite-shm" />
     <exclude domain="file" path="family_chat.sqlite-journal" />
     <exclude domain="sharedpref" path="FlutterSecureStorage.xml" />
+    <exclude domain="sharedpref" path="family_chat_notification_inbox.xml" />
     <exclude domain="sharedpref" path="FlutterSecureKeyStorage.xml" />
 </full-backup-content>

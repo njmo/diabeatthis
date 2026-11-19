@@ -6,11 +6,13 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/common.dart' show SqliteException;
 
+import '../../../core/notifications/inbox/notification_inbox_entry.dart';
+import '../../../core/notifications/inbox/notification_inbox_store.dart';
 import '../domain/family_question_reply_state.dart';
 import 'family_chat_guard_fence.dart';
 
 typedef FamilyChatNotice = ({int id, String tag});
-const familyChatReplyAcknowledgmentTimeoutMs = 3000;
+const familyChatReplyAcknowledgmentTimeoutMs = 1000;
 
 String familyChatNotificationTagPrefix(String scope) =>
     'family-chat:${base64Url.encode(utf8.encode(scope))}:';
@@ -40,7 +42,11 @@ class FamilyChatDatabase extends GeneratedDatabase {
   FamilyChatDatabase([
     QueryExecutor? executor,
     FamilyChatGuardFence? guardFence,
-  ]) : fence =
+    NotificationInboxStore? notificationInbox,
+  ]) : _notificationInbox =
+           notificationInbox ??
+           (executor == null ? NotificationInboxStore() : null),
+       fence =
            guardFence ??
            (executor == null ? SqliteChatGuardFence() : MemoryChatGuardFence()),
        super(
@@ -53,6 +59,7 @@ class FamilyChatDatabase extends GeneratedDatabase {
              ),
        );
   final FamilyChatGuardFence fence;
+  final NotificationInboxStore? _notificationInbox;
   Future<int> _retentionNow(String scope, int candidate) async {
     final saved = (await metadata('purgedAt:$scope'))?['time'] as int? ?? 0;
     return candidate > saved ? candidate : saved;
@@ -614,6 +621,10 @@ class FamilyChatDatabase extends GeneratedDatabase {
     }
     if (generation > previous) {
       state['minimum'] = generation;
+      await _notificationInbox?.purgeFamilyChat(
+        scope: scope,
+        beforeHistoryGeneration: generation,
+      );
       if ((await metadata('chatOpen'))?['scope'] == scope) {
         await customStatement("DELETE FROM chat_metadata WHERE key='chatOpen'");
       }
@@ -1313,8 +1324,68 @@ class FamilyChatDatabase extends GeneratedDatabase {
       [scope, serverNow],
     );
   });
+  String _inboxScopeKey(String scope) => 'inboxRevisionScope:$scope';
+  String _inboxAccountKey(String uid) => 'inboxRevisionAccount:$uid';
+
+  Future<int> _inboxRevision(String key) async =>
+      (await metadata(key))?['revision'] as int? ?? 0;
+
+  Future<void> _advanceInboxRevision(String key) async {
+    await setMetadata(key, {'revision': await _inboxRevision(key) + 1});
+  }
+
+  Future<String> notificationInboxRevision(String uid, String scope) async {
+    final account = await _inboxRevision(_inboxAccountKey(uid));
+    final membership = await _inboxRevision(_inboxScopeKey(scope));
+    return '$account:$membership';
+  }
+
+  /// Verifies the durable barriers even if Android restores a preference
+  /// deletion that had not reached disk when the process stopped.
+  Future<List<NotificationInboxEntry>> authorizedInbox(
+    String uid,
+    List<NotificationInboxEntry> entries,
+  ) async {
+    final guard = await activeChat();
+    final scope = guard['scope'];
+    if (guard['enabled'] != true || guard['uid'] != uid || scope is! String) {
+      return const [];
+    }
+    final historyKey = 'history:$scope';
+    final accountKey = _inboxAccountKey(uid);
+    final scopeKey = _inboxScopeKey(scope);
+    // One query reads all three barriers from the same SQLite snapshot.
+    final rows = await customSelect(
+      'SELECT key, value FROM chat_metadata WHERE key IN (?, ?, ?)',
+      variables: [Variable(historyKey), Variable(accountKey), Variable(scopeKey)],
+    ).get();
+    final barriers = {
+      for (final row in rows)
+        row.read<String>('key'): jsonDecode(row.read<String>('value')) as Map,
+    };
+    final minimum = barriers[historyKey]?['minimum'] as int? ?? 0;
+    final account = barriers[accountKey]?['revision'] as int? ?? 0;
+    final membership = barriers[scopeKey]?['revision'] as int? ?? 0;
+    final revision = '$account:$membership';
+    final latestGuard = await activeChat();
+    if (latestGuard['stamp'] != guard['stamp']) return const [];
+    return entries.where((entry) {
+      final payload = entry.data['payload'];
+      if (payload is! Map ||
+          payload['uid'] != uid ||
+          payload['scope'] != scope) {
+        return false;
+      }
+      return payload['inboxRevision'] == revision &&
+          ((payload['historyGeneration'] as int?) ?? 0) >= minimum;
+    }).toList();
+  }
+
   Future<void> clearScope(String scope, {bool preserveHistory = false}) =>
       transaction(() async {
+        await _lockActive();
+        await _notificationInbox?.purgeFamilyChat(scope: scope);
+        await _advanceInboxRevision(_inboxScopeKey(scope));
         if (!preserveHistory) {
           await customStatement('DELETE FROM chat_metadata WHERE key=?', [
             'history:$scope',
@@ -1379,6 +1450,9 @@ class FamilyChatDatabase extends GeneratedDatabase {
     String uid, {
     bool preserveHistory = false,
   }) => transaction(() async {
+    await _lockActive();
+    await _notificationInbox?.purgeFamilyChat(uid: uid);
+    await _advanceInboxRevision(_inboxAccountKey(uid));
     if ((await metadata('chatOpen'))?['uid'] == uid) {
       await customStatement("DELETE FROM chat_metadata WHERE key='chatOpen'");
     }

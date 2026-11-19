@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:clock/clock.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_android/shared_preferences_android.dart';
 
 import '../../logger/logger.dart';
+import '../domain/models/notification_event_type.dart';
 import 'notification_inbox_entry.dart';
 
 /// Notification history shared by the UI, foreground-service and
@@ -19,9 +23,11 @@ import 'notification_inbox_entry.dart';
 class NotificationInboxStore {
   NotificationInboxStore({
     SharedPreferencesAsync? preferences,
+    SharedPreferencesAsync? chatPreferences,
     this.maxEntries = 40,
     this.retention = const Duration(days: 3),
-  }) : _injected = preferences;
+  }) : _injected = preferences,
+       _injectedChat = chatPreferences;
 
   static const keyPrefix = 'notification_inbox:';
   static const readPrefix = 'notification_inbox.read:';
@@ -36,8 +42,29 @@ class NotificationInboxStore {
   void _changed() => _changes.add(null);
 
   final SharedPreferencesAsync? _injected;
+  final SharedPreferencesAsync? _injectedChat;
   late final SharedPreferencesAsync _prefs =
       _injected ?? SharedPreferencesAsync();
+
+  late final SharedPreferencesAsync _chatPrefs =
+      _injectedChat ??
+      (_injected == null && !kIsWeb && Platform.isAndroid
+          ? SharedPreferencesAsync(
+              options: const SharedPreferencesAsyncAndroidOptions(
+                backend:
+                    SharedPreferencesAndroidBackendLibrary.SharedPreferences,
+                originalSharedPreferencesOptions:
+                    AndroidSharedPreferencesStoreOptions(
+                      fileName: 'family_chat_notification_inbox',
+                    ),
+              ),
+            )
+          : _prefs);
+
+  Set<SharedPreferencesAsync> get _stores => {_chatPrefs, _prefs};
+
+  SharedPreferencesAsync _preferencesFor(NotificationInboxEntry entry) =>
+      entry.type == NotificationEventType.familyChat ? _chatPrefs : _prefs;
 
   final int maxEntries;
   final Duration retention;
@@ -49,11 +76,12 @@ class NotificationInboxStore {
   /// Records a new delivery. Returns false when it could not be persisted.
   Future<bool> put(NotificationInboxEntry entry) async {
     try {
-      await _prefs.remove(_readKey(entry.id));
-      await _prefs.remove(_inactiveKey(entry.id));
-      await _prefs.setString(_key(entry.id), jsonEncode(entry.toJson()));
-      if (entry.read) await _prefs.setBool(_readKey(entry.id), true);
-      if (!entry.active) await _prefs.setBool(_inactiveKey(entry.id), true);
+      final prefs = _preferencesFor(entry);
+      await prefs.remove(_readKey(entry.id));
+      await prefs.remove(_inactiveKey(entry.id));
+      await prefs.setString(_key(entry.id), jsonEncode(entry.toJson()));
+      if (entry.read) await prefs.setBool(_readKey(entry.id), true);
+      if (!entry.active) await prefs.setBool(_inactiveKey(entry.id), true);
     } catch (error) {
       Log.w('NotificationInbox', 'Inbox put failed ($error)');
       return false;
@@ -87,13 +115,11 @@ class NotificationInboxStore {
 
   Future<NotificationInboxEntry?> get(int id) async {
     try {
-      final raw = await _prefs.getString(_key(id));
-      if (raw == null) return null;
-      return await _withMarkers(
-        NotificationInboxEntry.tryParse(
-          jsonDecode(raw) as Map<String, dynamic>,
-        ),
-      );
+      for (final prefs in _stores) {
+        final entry = await _readEntry(prefs, _key(id));
+        if (entry != null) return entry;
+      }
+      return null;
     } catch (error) {
       Log.w('NotificationInbox', 'Could not read entry $id ($error)');
       return null;
@@ -107,9 +133,9 @@ class NotificationInboxStore {
     final entry = await get(id);
     if (entry == null) return;
     if (entry.createdAt.isAfter(clock.now())) {
-      await _remove(id);
+      await _remove(_preferencesFor(entry), id);
     } else {
-      await _prefs.setBool(_inactiveKey(id), true);
+      await _preferencesFor(entry).setBool(_inactiveKey(id), true);
     }
   });
 
@@ -117,77 +143,124 @@ class NotificationInboxStore {
     final now = clock.now();
     for (final entry in await _all()) {
       if (entry.createdAt.isAfter(now)) {
-        await _remove(entry.id);
+        await _remove(_preferencesFor(entry), entry.id);
       } else if (entry.active) {
-        await _prefs.setBool(_inactiveKey(entry.id), true);
+        await _preferencesFor(entry).setBool(_inactiveKey(entry.id), true);
       }
     }
   });
 
   /// The user answered one of the notification's actions.
   Future<void> resolve(int id) => _guard('resolve', () async {
-    if (await _prefs.getString(_key(id)) == null) return;
-    await _prefs.setBool(_inactiveKey(id), true);
-    await _prefs.setBool(_readKey(id), true);
+    final entry = await get(id);
+    if (entry == null) return;
+    final prefs = _preferencesFor(entry);
+    await prefs.setBool(_inactiveKey(id), true);
+    await prefs.setBool(_readKey(id), true);
   });
 
   Future<void> markRead(Iterable<int> ids) => _guard('markRead', () async {
     for (final id in ids) {
-      if (await _prefs.getString(_key(id)) == null) continue;
-      await _prefs.setBool(_readKey(id), true);
+      final entry = await get(id);
+      if (entry != null) {
+        await _preferencesFor(entry).setBool(_readKey(id), true);
+      }
     }
   });
+
+  /// Erases the chat copy when its account, scope or history is erased.
+  Future<void> purgeFamilyChat({
+    String? uid,
+    String? scope,
+    int? beforeHistoryGeneration,
+  }) async {
+    try {
+      for (final key in await _chatPrefs.getKeys()) {
+        if (!key.startsWith(keyPrefix)) continue;
+        final entry = await _readEntry(_chatPrefs, key);
+        if (entry?.type != NotificationEventType.familyChat) continue;
+        final payload = entry!.data['payload'] as Map?;
+        if (uid != null && payload?['uid'] != uid) continue;
+        if (scope != null && payload?['scope'] != scope) continue;
+        if (beforeHistoryGeneration != null &&
+            ((payload?['historyGeneration'] as int?) ?? 0) >=
+                beforeHistoryGeneration) {
+          continue;
+        }
+        await _remove(_chatPrefs, entry.id);
+      }
+    } finally {
+      _changed();
+    }
+  }
 
   /// Clears the visible history. Scheduled entries are kept so they still
   /// appear once they fire.
   Future<void> clear() => _guard('clear', () async {
     for (final entry in await visible()) {
-      await _remove(entry.id);
+      await _remove(_preferencesFor(entry), entry.id);
     }
   });
 
-  Future<void> _remove(int id) async {
-    await _prefs.remove(_key(id));
-    await _prefs.remove(_readKey(id));
-    await _prefs.remove(_inactiveKey(id));
+  Future<void> _remove(SharedPreferencesAsync prefs, int id) async {
+    await prefs.remove(_key(id));
+    await prefs.remove(_readKey(id));
+    await prefs.remove(_inactiveKey(id));
   }
 
-  Future<NotificationInboxEntry?> _withMarkers(
-    NotificationInboxEntry? entry,
+  Future<NotificationInboxEntry?> _readEntry(
+    SharedPreferencesAsync prefs,
+    String key,
   ) async {
-    if (entry == null) return null;
-    final read = await _prefs.getBool(_readKey(entry.id)) ?? false;
-    final inactive = await _prefs.getBool(_inactiveKey(entry.id)) ?? false;
+    final raw = await prefs.getString(key);
+    if (raw == null) return null;
+    final json = jsonDecode(raw);
+    final entry = json is Map<String, dynamic>
+        ? NotificationInboxEntry.tryParse(json)
+        : null;
+    if (entry == null) {
+      await prefs.remove(key);
+      return null;
+    }
+    if (prefs != _preferencesFor(entry)) {
+      // Older Android builds wrote full chat content to the default DataStore.
+      // Remove it on first access; it may belong to a revoked account.
+      await _remove(prefs, entry.id);
+      return null;
+    }
+    final read = await prefs.getBool(_readKey(entry.id)) ?? false;
+    final inactive = await prefs.getBool(_inactiveKey(entry.id)) ?? false;
     return entry.copyWith(read: read, active: !inactive);
   }
 
   Future<List<NotificationInboxEntry>> _all() async {
+    final Set<SharedPreferencesAsync> stores;
     try {
-      final keys = await _prefs.getKeys();
-      final entries = <NotificationInboxEntry>[];
-      for (final key in keys) {
-        if (!key.startsWith(keyPrefix)) continue;
-        final raw = await _prefs.getString(key);
-        if (raw == null) continue;
-        NotificationInboxEntry? entry;
-        try {
-          entry = NotificationInboxEntry.tryParse(
-            jsonDecode(raw) as Map<String, dynamic>,
-          );
-        } on FormatException {
-          entry = null;
-        }
-        if (entry == null) {
-          await _prefs.remove(key);
-          continue;
-        }
-        entries.add((await _withMarkers(entry))!);
-      }
-      return entries;
+      stores = _stores;
     } catch (error) {
-      Log.w('NotificationInbox', 'Could not read inbox ($error)');
+      Log.w('NotificationInbox', 'Inbox unavailable (${error.runtimeType})');
       return const [];
     }
+    final entries = <NotificationInboxEntry>[];
+    for (final prefs in stores) {
+      try {
+        for (final key in await prefs.getKeys()) {
+          if (!key.startsWith(keyPrefix)) continue;
+          try {
+            final entry = await _readEntry(prefs, key);
+            if (entry != null) entries.add(entry);
+          } on FormatException {
+            await prefs.remove(key);
+          }
+        }
+      } catch (error) {
+        Log.w(
+          'NotificationInbox',
+          'Could not read inbox (${error.runtimeType})',
+        );
+      }
+    }
+    return entries;
   }
 
   Future<void> _prune() async {
@@ -199,7 +272,7 @@ class NotificationInboxStore {
     for (var index = 0; index < due.length; index++) {
       final entry = due[index];
       if (index >= maxEntries || entry.createdAt.isBefore(cutoff)) {
-        await _remove(entry.id);
+        await _remove(_preferencesFor(entry), entry.id);
       }
     }
   }

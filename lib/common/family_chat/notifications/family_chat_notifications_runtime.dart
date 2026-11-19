@@ -43,7 +43,7 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
   final transport = ref.watch(authenticatedFamilyTransportProvider);
   final presenter = ref.watch(familyChatUiPresenterProvider);
   var disposed = false, running = false, again = false;
-  String? lastKey;
+  String? lastKey, lastRegistration;
   Timer? retry;
   Future<void> register({bool force = false}) async {
     if (disposed) return;
@@ -76,7 +76,15 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
         return;
       }
       final key = jsonEncode([uid, enabled, session?.scope, token]);
-      if (!force && key == lastKey) return;
+      if (!force && key == lastKey) {
+        final registration = lastRegistration;
+        if (!enabled ||
+            registration != null &&
+                (await runtime.db.metadata(registration))?['confirmed'] ==
+                    true) {
+          return;
+        }
+      }
       final sequence = await runtime.db.fence.nextRegistration();
       if (disposed || FirebaseAuth.instance.currentUser?.uid != uid) return;
       final registration = {
@@ -97,6 +105,7 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
       if (prepared != null) await journal.confirm(prepared);
       if (!disposed) {
         lastKey = key;
+        lastRegistration = prepared;
         retry?.cancel();
       }
     } catch (error) {
@@ -149,7 +158,7 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
           'Foreground delivery failed (${error.runtimeType})',
         );
       }
-      if (!disposed) await runtime.session?.synchronize();
+      if (!disposed) await runtime.session?.synchronize(enqueueAgain: true);
     }());
   });
   // Queued replies and ACKs are retried by the session's single bounded retry
@@ -215,12 +224,16 @@ class _FamilyChatNotificationRuntimeState
     try {
       final db = ref.read(familyChatDatabaseProvider);
       final settings = ref.read(familyChatSettingsRuntimeProvider);
-      final enabled =
-          settings?.allowSession == true && settings?.cachedOnly == false;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      // Temporary admission holds close local delivery, but the same account
+      // can still receive an FCM wake-up with identifiers only.
+      final retainRegistration =
+          ref.read(initialConfigurationDoneProvider).asData?.value == true &&
+          settings?.controller.admission != FamilyChatSettingsAdmission.revoked;
       final active = await db.activeChat();
       await FamilyChatRegistrationJournal(db).revokeObsolete(
-        currentUid: FirebaseAuth.instance.currentUser?.uid,
-        enabled: enabled,
+        currentUid: uid,
+        enabled: retainRegistration,
         currentScope: active['enabled'] == true
             ? active['scope'] as String?
             : null,
@@ -277,6 +290,12 @@ class _FamilyChatNotificationRuntimeState
         return;
       }
       final scope = session.scope!;
+      final guard = await runtime.db.activeChat();
+      if (guard['enabled'] != true ||
+          guard['uid'] != uid ||
+          guard['scope'] != scope) {
+        return;
+      }
       final id = intent['messageId'];
       final generation = intent['historyGeneration'] ?? 0;
       if (id is! String ||

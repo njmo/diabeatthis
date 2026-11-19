@@ -231,6 +231,33 @@ void main() {
     'epoch': 'epoch',
     'messageId': 'question',
   };
+  test(
+    'foreground recovery presents a saved push before flushing its receipt',
+    () async {
+      final db = FamilyChatDatabase(NativeDatabase.memory());
+      final api = _Api();
+      final presenter = _Presenter();
+      addTearDown(db.close);
+      await db.saveMessage(scope, 'mom', api.message, serverNow: 1000);
+      await db.queueReceipt(scope, 'question', false);
+      final session = FamilyChatSession(
+        uid: 'child',
+        api: api,
+        db: db,
+        isCurrentAccount: () => true,
+        notificationPresenter: presenter,
+        clock: () => DateTime.fromMillisecondsSinceEpoch(1000),
+      );
+      addTearDown(session.dispose);
+
+      await session.start(foreground: true);
+
+      expect(presenter.shown.single.message['id'], 'question');
+      expect(api.message['receipts']['child']['deliveredAt'], 1000);
+      expect(session.unreadCount, 1);
+    },
+  );
+
   test('notification reply updates the running chat badge offline', () async {
     final db = FamilyChatDatabase(NativeDatabase.memory());
     final api = _Api();
@@ -1208,7 +1235,10 @@ void main() {
         expect(completed.id, view.notice.id);
         expect(completedDetails.tag, view.notice.tag);
         expect(completedDetails.silent, true);
-        expect(completedDetails.timeoutAfter, 3000);
+        expect(
+          completedDetails.timeoutAfter,
+          familyChatReplyAcknowledgmentTimeoutMs,
+        );
         expect(completedDetails.actions, isEmpty);
         expect(completedDetails.styleInformation, isNull);
       }

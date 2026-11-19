@@ -132,6 +132,40 @@ Future<void> showFamilyChatPush(
   presenter: presenter,
 );
 
+Future<void> _queueConversationOpen(Map<String, dynamic> payload) async {
+  await _initialize();
+  final uid = payload['uid'];
+  final scope = payload['scope'];
+  final messageId = payload['messageId'];
+  final generation = payload['historyGeneration'] ?? 0;
+  if (uid is! String ||
+      FirebaseAuth.instance.currentUser?.uid != uid ||
+      scope is! String ||
+      messageId is! String ||
+      generation is! int) {
+    return;
+  }
+  final db = FamilyChatDatabase();
+  try {
+    // This is only a navigation request. The UI validates the current
+    // admission, membership, history and message before opening the chat.
+    await db.setMetadata('chatOpen', {
+      'uid': uid,
+      'scope': scope,
+      'messageId': messageId,
+      'historyGeneration': generation,
+    });
+    familyChatOpenEvents.add(null);
+  } catch (error) {
+    Log.w(
+      'FamilyChatPush',
+      'Could not queue conversation (${error.runtimeType})',
+    );
+  } finally {
+    await db.close();
+  }
+}
+
 /// [presenter] is the app's own presenter when the answer came from an in-app
 /// banner, so its follow-up status is shown in-app as well.
 Future<void> handleFamilyChatNotificationResponse(
@@ -140,6 +174,10 @@ Future<void> handleFamilyChatNotificationResponse(
 }) async {
   final payload = familyChatNotificationPayload(response.payload);
   if (payload == null) return;
+  if (response.actionId == null || response.actionId!.isEmpty) {
+    await _queueConversationOpen(payload);
+    return;
+  }
   await _withWorker(presenter: presenter, (worker, db, presenter) async {
     if (FirebaseAuth.instance.currentUser?.uid != payload['uid']) return;
     if (response.actionId == 'family_chat_consume') {
@@ -188,21 +226,6 @@ Future<void> handleFamilyChatNotificationResponse(
     } else if (response.actionId == 'family_chat_reply' &&
         response.input != null) {
       await worker.reply(payload, response.input!);
-    } else if (response.actionId == null || response.actionId!.isEmpty) {
-      // Opening carries only IDs. The foreground route reauthorizes content.
-      final guard = await db.activeChat();
-      if (guard['enabled'] == true &&
-          guard['uid'] == payload['uid'] &&
-          guard['scope'] == payload['scope']) {
-        final saved = await db.withChatGuard(guard, () async {
-          if (FirebaseAuth.instance.currentUser?.uid != payload['uid']) {
-            return false;
-          }
-          await db.setMetadata('chatOpen', payload);
-          return true;
-        });
-        if (saved == true) familyChatOpenEvents.add(null);
-      }
     }
   });
 }

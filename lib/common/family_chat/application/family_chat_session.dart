@@ -82,7 +82,7 @@ class FamilyChatSession extends ChangeNotifier {
   final _latestFirst = <String, int>{};
   final _pageRevisions = <String, int>{};
   Map<String, dynamic> _unread = {'count': 0};
-  StreamSubscription<String>? _notificationReplyReads;
+  StreamSubscription<String>? _notificationUnreadChanges;
   int get unreadCount => enabled ? _unread['count'] as int : 0;
   String? get unreadSender => enabled ? _unread['senderUid'] as String? : null;
 
@@ -871,6 +871,29 @@ class FamilyChatSession extends ChangeNotifier {
         unawaited(synchronize(enqueueAgain: true));
       });
 
+  Future<void> _presentQueuedIncoming(String currentScope) async {
+    if (!_appForeground || notificationPresenter == null) return;
+    for (final receipt in await db.receipts(currentScope)) {
+      if (!enabled || scope != currentScope) return;
+      if (receipt.read<int>('is_read') != 0) continue;
+      final message = await db.message(
+        currentScope,
+        receipt.read<String>('id'),
+      );
+      if (message == null || message['senderUid'] == uid) continue;
+      final participants = message['participants'] as Map?;
+      final target = message['conversationId'] == 'family'
+          ? 'family'
+          : participants?.keys
+                .whereType<String>()
+                .where((id) => id != uid)
+                .singleOrNull;
+      if (target != null) {
+        await _presentSyncedMessages(currentScope, target, [message]);
+      }
+    }
+  }
+
   Future<void> _presentSyncedMessages(
     String currentScope,
     String target,
@@ -965,7 +988,7 @@ class FamilyChatSession extends ChangeNotifier {
   Future<void> start({bool foreground = false, bool chatVisible = false}) {
     _appForeground = foreground;
     _chatVisible = chatVisible;
-    _notificationReplyReads ??= FamilyChatBackground.replyReads.listen((
+    _notificationUnreadChanges ??= FamilyChatBackground.unreadChanges.listen((
       changedScope,
     ) {
       if (scope == changedScope) unawaited(_refreshUnread());
@@ -1260,6 +1283,8 @@ class FamilyChatSession extends ChangeNotifier {
           scope == currentScope &&
           _generation == currentGeneration &&
           enabled;
+      await _presentQueuedIncoming(currentScope);
+      if (!valid()) return;
       await _flushReceipts(currentScope, valid);
       final list = <Map<String, dynamic>>[];
       final cached = await db.metadata('threads:$currentScope');
@@ -2304,7 +2329,7 @@ class FamilyChatSession extends ChangeNotifier {
 
   @override
   void dispose() {
-    unawaited(_notificationReplyReads?.cancel());
+    unawaited(_notificationUnreadChanges?.cancel());
     _disposed = true;
     _generation++;
     _timer?.cancel();

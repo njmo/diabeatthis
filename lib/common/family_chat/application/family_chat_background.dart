@@ -56,6 +56,14 @@ class FamilyChatPushView {
               .clamp(0, 2147483647);
   }
 
+  FamilyChatPushView withInboxRevision(String revision) => FamilyChatPushView(
+    {...guard, 'inboxRevision': revision},
+    config,
+    message,
+    target,
+    elapsedMilliseconds: elapsedMilliseconds,
+  );
+
   Map<String, dynamic> get payload => {
     'type': 'familyChat',
     ...guard,
@@ -88,10 +96,10 @@ class FamilyChatBackground {
     this.clock = DateTime.now,
     this.shouldPresent,
   });
-  static final _replyReads = StreamController<String>.broadcast();
+  static final _unreadChanges = StreamController<String>.broadcast();
 
-  /// Notifies sessions in this isolate after the local read receipt commits.
-  static Stream<String> get replyReads => _replyReads.stream;
+  /// Notifies sessions after an incoming message or local read receipt commits.
+  static Stream<String> get unreadChanges => _unreadChanges.stream;
 
   final bool rolloutEnabled;
   final DateTime Function() clock;
@@ -226,6 +234,7 @@ class FamilyChatBackground {
       await db.queueReceipt(scope, id, false);
       return true;
     });
+    if (saved == true) _unreadChanges.add(scope);
     if (currentUid() == uid) {
       await FamilyChatNotificationPlatform.cancel(
         db,
@@ -302,7 +311,11 @@ class FamilyChatBackground {
               await db.locallyRead(scope, id)) {
             return;
           }
-          await presenter.show(view);
+          await presenter.show(
+            view.withInboxRevision(
+              await db.notificationInboxRevision(uid, scope),
+            ),
+          );
         },
         cancel: () => presenter.cancel(view.notice),
       );
@@ -401,7 +414,7 @@ class FamilyChatBackground {
       return true;
     });
     if (queued != true) return false;
-    _replyReads.add(scope);
+    _unreadChanges.add(scope);
     Future<void> cancelCompleted({bool acknowledge = false}) async {
       if (currentUid() != uid) return;
       final tag = cached.notice.tag;
@@ -449,7 +462,12 @@ class FamilyChatBackground {
             latest?['_notificationSuppressed'] != true &&
             latest?['receipts']?[uid]?['readAt'] == null &&
             !await db.notificationCancelling(scope, cached.notice.tag)) {
-          await presenter.pending(cached, needsTicket: needsTicket);
+          await presenter.pending(
+            cached.withInboxRevision(
+              await db.notificationInboxRevision(uid, scope),
+            ),
+            needsTicket: needsTicket,
+          );
         }
       });
     }

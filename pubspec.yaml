@@ -58,6 +58,7 @@ dependencies:
   path_provider: ^2.0.15
   path: ^1.9.1
   shared_preferences: ^2.2.2
+  shared_preferences_android: ^2.4.28
   flutter_foreground_task: ^11.0.3
   calculator_handoff:
     path: packages/calculator_handoff
