@@ -254,11 +254,13 @@ class NotificationInlineReply extends StatefulWidget {
 
 class _NotificationInlineReplyState extends State<NotificationInlineReply> {
   final _controller = TextEditingController();
+  final _focusNode = FocusNode();
   bool _expanded = false;
   bool _sending = false;
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -280,7 +282,12 @@ class _NotificationInlineReplyState extends State<NotificationInlineReply> {
       return Align(
         alignment: AlignmentDirectional.centerEnd,
         child: TextButton(
-          onPressed: () => setState(() => _expanded = true),
+          onPressed: () {
+            setState(() => _expanded = true);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _focusNode.requestFocus();
+            });
+          },
           child: Text(context.lang.notificationReplyAction),
         ),
       );
@@ -305,7 +312,7 @@ class _NotificationInlineReplyState extends State<NotificationInlineReply> {
           listenable: _controller,
           builder: (context, _) => TextField(
             controller: _controller,
-            autofocus: true,
+            focusNode: _focusNode,
             enabled: !_sending,
             textInputAction: TextInputAction.send,
             onSubmitted: _submit,
