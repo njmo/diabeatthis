@@ -1,7 +1,11 @@
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/domain/model/quick_low_treatment_item.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart'
-    show DatabaseImpl, IngredientCompanion;
+    show
+        DatabaseImpl,
+        IngredientCompanion,
+        IngredientPortionsCompanion,
+        PortionCompanion;
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/low_treatment/data/models/quick_low_treatment_items_state.dart';
 import 'package:diabeatthis/features/low_treatment/data/models/quick_low_treatment_slot.dart';
@@ -24,7 +28,7 @@ void main() {
     'shortcut save error is visible above the treatment sheet and can be closed',
     (tester) async {
       final db = DatabaseImpl(NativeDatabase.memory());
-      await db
+      final ingredientId = await db
           .into(db.ingredient)
           .insert(
             IngredientCompanion.insert(
@@ -35,6 +39,18 @@ void main() {
               proteinPer100g: 0,
               nutritionConfidence: 1,
               iconAssetPath: const Value('assets/icons/food/prepared_meal.png'),
+            ),
+          );
+      final portionId = await db
+          .into(db.portion)
+          .insert(PortionCompanion.insert(name: 'butelka', unitHint: 'szt.'));
+      await db
+          .into(db.ingredientPortions)
+          .insert(
+            IngredientPortionsCompanion.insert(
+              ingredientId: ingredientId,
+              portionId: portionId,
+              gramsPerPortion: 100,
             ),
           );
       final failingController = FailingShortcutSaveController();

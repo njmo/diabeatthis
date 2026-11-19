@@ -101,14 +101,15 @@ class QuickLowTreatmentSelection extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                SizedBox(
-                  height: 48,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
                   child: Row(
                     children: [
                       IngredientIcon(assetPath: amount.iconAssetPath, size: 36),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

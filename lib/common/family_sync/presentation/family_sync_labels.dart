@@ -22,5 +22,6 @@ String familySyncIntegrationLabel(BuildContext context, String kind) =>
       'activityLogs' => context.lang.familySyncActivityLogs,
       'mealTemplates' => context.lang.familySyncMealTemplates,
       'mealTemplateIngredients' => context.lang.familySyncTemplateIngredients,
+      'quickLowTreatmentItems' => context.lang.quickLowTreatmentItemsTitle,
       _ => throw ArgumentError.value(kind, 'kind'),
     };
