@@ -69,6 +69,8 @@ The compact themed QR is automatically revealed after expansion. An actual emula
 
 The source additionally exports registerFamilyMirror, publishFamilyMirror, fetchFamilyMirror, submitFamilyPlan, fetchFamilyPlans, claimFamilyPlan and acknowledgeFamilyPlan. These seven endpoints and the metadata-only read exceptions for familyMirrorSignals/familyPlanSignals were deployed on 6 November 2026 after explicit approval. All document content stays callable-only, with verified Google, App Check and server-derived family authorization.
 
+`searchFamilyMirrorIngredients` uses the Firestore single-field array index on `entities.ingredientSearchPrefixes`. After deploying the updated `publishFamilyMirror`, run `node tools/backfill_ingredient_search.cjs PROJECT_ID` from `backend/family` to count older ingredient records missing the field, then rerun with `--apply` to index them before releasing the chat client. A concurrent write causes the precondition to fail, so rerun the same command to finish the remaining rows. The search function returns up to 20 results from the authenticated managing caregiver's paired child's mirror.
+
 Plan proposals use per-record locks, bounded typed payloads/aggregate versions and a durable child journal before canonical publication and final ACK. Claim authorization permits only a bounded in-flight lease; claim tokens remain stable for journal recovery. Pending operations are capped at 50 per child, and submissions/reads/claims/ACKs have server-side budgets. No caregiver endpoint accepts execution states or arbitrary notification recipients. See the implementation plan for acceptance gates and limitations.
 
 

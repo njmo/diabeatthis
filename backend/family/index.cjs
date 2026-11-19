@@ -43,7 +43,7 @@ exports.revokeFamilyChatNotifications = onCall({region: 'europe-west1', enforceA
     throw new HttpsError('unavailable', 'Device registration is temporarily unavailable');
   }
 });
-const service = {mealDecision: decisions.execute, registerMealDecisionNotifications: notifications.register, claimPlan:plans.claim,submitPlan:plans.submit,fetchPlans:plans.fetch,acknowledgePlan:plans.acknowledge,...createFamilyService({store: getFirestore(), auth}), registerMirror: mirror.register, publishMirror: mirror.publish, fetchMirror: mirror.fetch};
+const service = {mealDecision: decisions.execute, registerMealDecisionNotifications: notifications.register, claimPlan:plans.claim,submitPlan:plans.submit,fetchPlans:plans.fetch,acknowledgePlan:plans.acknowledge,...createFamilyService({store: getFirestore(), auth}), registerMirror: mirror.register, publishMirror: mirror.publish, fetchMirror: mirror.fetch, searchMirrorIngredients: mirror.searchIngredients};
 for (const [name, operation] of Object.entries({
   registerFamilyChatNotifications: 'chatNotifications',
   claimFamilyChatTreatment: 'chatTreatmentClaim', completeFamilyChatTreatment: 'chatTreatmentComplete',
@@ -52,6 +52,7 @@ for (const [name, operation] of Object.entries({
   mealDecision: 'mealDecision', registerMealDecisionNotifications: 'registerMealDecisionNotifications',
   claimFamilyPlan:'claimPlan', submitFamilyPlan:'submitPlan', fetchFamilyPlans:'fetchPlans', acknowledgeFamilyPlan:'acknowledgePlan',
   registerFamilyMirror: 'registerMirror', publishFamilyMirror: 'publishMirror', fetchFamilyMirror: 'fetchMirror',
+  searchFamilyMirrorIngredients: 'searchMirrorIngredients',
   createFamilyInvite: 'createInvite', requestFamilyJoin: 'requestJoin', requestFamilyJoinByCode: 'requestJoinByCode', decideFamilyJoin: 'decide',
   getFamilyStatus: 'status', disconnectFamilyMember: 'disconnect', finalizeFamilySetup: 'finalize',
 })) {

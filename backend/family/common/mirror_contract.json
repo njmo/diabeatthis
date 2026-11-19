@@ -1,4 +1,9 @@
 {
+  "quickLowTreatmentItems": {
+    "table": "quick_low_treatment_item",
+    "keys": ["id"],
+    "columns": ["id", "name", "ingredient_id", "portion_id", "amount", "sort_order"]
+  },
   "ingredients": {
     "table": "ingredient",
     "keys": [

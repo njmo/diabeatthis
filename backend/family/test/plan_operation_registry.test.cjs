@@ -8,6 +8,7 @@ const activity={name:'Training',percentagePre:20,percentagePost:30,durationMinut
 const schedule={weekdays:[1],startMinute:1020,durationMinutes:43,confirmationMode:'before',previousDayMinute:1140,validFrom:now,validUntil:null};
 const meal={name:'Lunch',category:'lunch',plannedAt:future,notes:'',ingredients:[{ingredientId:6,catalogId:null,catalogRevision:null,grams:100}]};
 const cases={
+ replaceQuickTreatmentItems:[null,{items:[]},6,'quick_treatment_items','quickTreatmentItem','quickLowTreatmentItems'],
  createMeal:[null,meal,0,'new_', 'meal', 'meals'],
  updateMeal:[5,meal,0,'meal_', 'meal','meals'],
  planActivity:[null,{activityId:1,startedAt:future,durationMinutes:43},0,'new_','occurrence','activityOccurrences'],
@@ -37,8 +38,8 @@ for(const [type,[targetId,values,protocol,lockPrefix,resultPrefix,resultKind]] o
  test(`${type}: one contract drives protocol, locks, payload and both scope readers`,async()=>{
   const plan={id:'a'.repeat(32),sourceId:'b'.repeat(32),type,targetId,expected:[],values};
   assert.doesNotThrow(()=>validatePlan(plan));assert.equal(requiredProtocol(plan),protocol);
-  for(let version=0;version<=4;version++)assert.equal(supportsPlan(plan,version),version>=protocol);
-  const key=primaryLock(plan);assert.equal(key,lockPrefix==='activity_start'?lockPrefix:lockPrefix+(lockPrefix==='new_'?plan.id:targetId));
+  for(let version=0;version<=6;version++)assert.equal(supportsPlan(plan,version),version>=protocol);
+  const key=primaryLock(plan);assert.equal(key,['activity_start','quick_treatment_items'].includes(lockPrefix)?lockPrefix:lockPrefix+(lockPrefix==='new_'?plan.id:targetId));
   assert.equal(resultLock(plan,99),`${resultPrefix}_99`);assert.equal(resultLock(plan,null),null);
   assert.deepEqual(canonicalReferences(plan,99)[0],{kind:resultKind,id:99});
   const store=scopeStore(rows);assert.deepEqual(await loadRows(store.tx,store.entities,plan),scopeRows(rows,plan));
@@ -49,7 +50,7 @@ test('registry is complete, immutable and denies unknown/prototype operations',(
  assert.deepEqual(Object.keys(operations).sort(),Object.keys(cases).sort());
  for(const op of Object.values(operations))assert.equal(Object.isFrozen(op),true);
  for(const type of ['constructor','toString','__proto__','unexpected'])assert.throws(()=>operationFor(type));
- for(const version of [-1,0,6,'4',null])assert.throws(()=>validateProtocol({activityCommandsVersion:version}));
+ for(const version of [-1,0,7,'4',null])assert.throws(()=>validateProtocol({activityCommandsVersion:version}));
  assert.doesNotThrow(()=>validateProtocol({}));
 });
 test('inline definition and recurrence consistently increase protocol in every reader',()=>{

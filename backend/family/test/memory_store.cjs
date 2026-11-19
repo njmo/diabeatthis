@@ -25,6 +25,7 @@ class MemoryStore {
             if (filter.operator === '<') return actual < filter.value;
             if (filter.operator === '<=') return actual <= filter.value;
             if (filter.operator === 'in') return filter.value.includes(actual);
+            if (filter.operator === 'array-contains') return Array.isArray(actual) && actual.includes(filter.value);
             throw new Error('Unsupported test query operator: ' + filter.operator);
           }));
           if (ref.ordering?.field === '__name__') {

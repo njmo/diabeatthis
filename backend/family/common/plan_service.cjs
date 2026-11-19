@@ -129,7 +129,9 @@ function createPlanService({store}) {
         tx.update(ref,{resultId:data.resultId,resultLockKey:aliasKey});
         return {id:data.id,status:'pending'};
       }
-      if(data.outcome==='applied' && (plan.resultId!==data.resultId || alias?.operationId!==data.id))fail('failed-precondition');
+      const listReplacement = plan.type === 'replaceQuickTreatmentItems';
+      if(data.outcome==='applied' && (listReplacement ? data.resultId !== null :
+          plan.resultId!==data.resultId || alias?.operationId!==data.id))fail('failed-precondition');
       const resultLockRef=plan.resultLockKey && plan.resultLockKey!==plan.lockKey?store.doc(`userMirrors/${uid}/planLocks/${plan.resultLockKey}`):null;
       // ACK must not depend on the size of a later-growing aggregate.
       // Keep a bounded comparison; the full canonical projection is fetched separately.

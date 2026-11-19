@@ -4,6 +4,7 @@ const values=require('./plan_value_validators.cjs');
 
 // The operation contract is the only source of protocol, scope and record kinds.
 const operations=Object.freeze({
+  replaceQuickTreatmentItems:{target:null,result:'quickLowTreatmentItems',scope:'quickTreatmentItems',protocol:6,validate:values.quickTreatmentItems,eligibility:'none',globalLock:'quick_treatment_items'},
   createMeal:{target:null,result:'meals',scope:'meal',protocol:0,validate:values.meal,eligibility:'none'},
   updateMeal:{target:'meals',result:'meals',scope:'meal',protocol:0,validate:values.meal,eligibility:'plannedMeal'},
   planActivity:{target:null,result:'activityOccurrences',scope:'activityReference',protocol:0,validate:values.plannedActivity,eligibility:'none'},
@@ -18,8 +19,8 @@ const operations=Object.freeze({
   setActivityScheduleEnabled:{target:'activitySchedules',result:'activitySchedules',scope:'schedule',protocol:4,validate:values.activation,eligibility:'scheduleActivation'},
 });
 for(const operation of Object.values(operations))Object.freeze(operation);
-const prefixes=Object.freeze({meals:'meal',activities:'activity',activityLogs:'activityLog',activityOccurrences:'occurrence',activitySchedules:'schedule'});
-const maximumProtocol=5;
+const prefixes=Object.freeze({meals:'meal',activities:'activity',activityLogs:'activityLog',activityOccurrences:'occurrence',activitySchedules:'schedule',quickLowTreatmentItems:'quickTreatmentItem'});
+const maximumProtocol=6;
 function operationFor(type){
   if(typeof type!=='string'||!Object.hasOwn(operations,type))throw new FamilyError('invalid-argument');
   return operations[type];

@@ -13,6 +13,16 @@ function* occurrenceDependencies(payload){
 function* scopeRequests(plan){
   const op=operationFor(plan.type);
   switch(op.scope){
+    case 'quickTreatmentItems':
+      yield related('quickTreatmentItems');
+      for (const item of plan.values.items) {
+        yield entity('ingredients', item.ingredientId);
+        if (item.portionId !== null) {
+          yield entity('portions', item.portionId);
+          yield entity('ingredientPortions', `${item.ingredientId}_${item.portionId}`);
+        }
+      }
+      return;
     case 'definition':
       if(op.target)yield entity(op.target,plan.targetId);
       return;
@@ -48,6 +58,7 @@ function* scopeRequests(plan){
 }
 function matchesRelation(row,request){
   if(row.deleted)return false;
+  if(request.relation==='quickTreatmentItems')return row.kind==='quickLowTreatmentItems';
   if(request.relation==='schedule')return row.kind==='activityOccurrences'&&row.payload.schedule_id===request.id&&row.payload.started_at>request.cutoff;
   return ['mealIngredients','mealHistory','mealSnapshots'].includes(row.kind)&&row.payload.meal_id===request.id;
 }
@@ -76,7 +87,9 @@ async function loadRows(tx,entities,plan){
   while(!step.done){
     const request=step.value;
     if(request.relation){
-      let query=request.relation==='schedule'
+      let query=request.relation==='quickTreatmentItems'
+        ?entities.where('kind','==','quickLowTreatmentItems').where('deleted','==',false)
+        :request.relation==='schedule'
         ?entities.where('payload.schedule_id','==',request.id).where('payload.started_at','>',request.cutoff)
         :entities.where('payload.meal_id','==',request.id);
       const snapshot=await tx.get(query.limit(251));

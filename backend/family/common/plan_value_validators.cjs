@@ -43,4 +43,17 @@ function startedActivity(v,checkTime){exact(v,[...referenceKeys(v),'startedAt'])
 function loggedActivity(v,checkTime){exact(v,[...referenceKeys(v),'startedAt','endedAt']);activityReference(v);inlineSchedule(v);if(!positive(v.startedAt)||!positive(v.endedAt)||v.endedAt<=v.startedAt||v.endedAt-v.startedAt>1440*60000||(checkTime&&v.endedAt>Date.now()))fail();}
 function movedActivity(v,checkTime){exact(v,['startedAt']);if(!future(v.startedAt,checkTime))fail();}
 const empty=v=>exact(v,[]);
-module.exports={meal,definition,schedule,activation,plannedActivity,startedActivity,loggedActivity,movedActivity,empty};
+function quickTreatmentItems(values) {
+  exact(values, ['items']);
+  if (!Array.isArray(values.items) || values.items.length > 6) fail();
+  const ids = new Set();
+  for (const item of values.items) {
+    exact(item, ['id', 'ingredientId', 'portionId', 'name', 'amount']);
+    if ((item.id !== null && (!positive(item.id) || ids.has(item.id))) ||
+        !positive(item.ingredientId) || (item.portionId !== null && !positive(item.portionId)) ||
+        typeof item.name !== 'string' || !item.name.trim() || item.name.length > 60 ||
+        typeof item.amount !== 'number' || !Number.isFinite(item.amount) || item.amount <= 0 || item.amount > 10000) fail();
+    if (item.id !== null) ids.add(item.id);
+  }
+}
+module.exports={meal,definition,schedule,activation,plannedActivity,startedActivity,loggedActivity,movedActivity,empty,quickTreatmentItems};
