@@ -31,6 +31,7 @@ class DashboardShell extends StatelessWidget {
     extendBody: true,
     appBar: AppBar(
       automaticallyImplyLeading: false,
+      titleSpacing: destination == 0 ? 8 : null,
       bottom: destination == 0
           ? const PreferredSize(
               preferredSize: Size.fromHeight(8),
@@ -38,7 +39,13 @@ class DashboardShell extends StatelessWidget {
             )
           : null,
       title: destination == 0
-          ? const DashboardGreeting()
+          ? const Row(
+              children: [
+                Expanded(child: DashboardGreeting()),
+                NotificationInboxButton(),
+                DashboardUserMenu(),
+              ],
+            )
           : Row(
               children: [
                 Flexible(
@@ -76,11 +83,7 @@ class DashboardShell extends StatelessWidget {
             selectedIndex: category,
             onSelected: onCategory,
           ),
-        if (destination == 0) ...const [
-          NotificationInboxButton(),
-          DashboardUserMenu(),
-        ],
-        const SizedBox(width: 8),
+        if (destination != 0) const SizedBox(width: 8),
       ],
     ),
     floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

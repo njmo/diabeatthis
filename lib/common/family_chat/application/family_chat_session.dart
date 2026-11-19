@@ -5,13 +5,14 @@ import 'dart:math' as math;
 import 'package:drift/drift.dart' show QueryRow;
 import 'package:flutter/foundation.dart';
 
+import '../../../core/logger/logger.dart';
 import '../../backend/authenticated_callable_transport.dart';
 import '../data/family_chat_database.dart';
 import '../data/family_chat_guard_fence.dart';
 import '../data/family_chat_notification_platform.dart';
 import '../data/family_chat_remote.dart';
 import '../domain/family_question_reply_state.dart';
-import 'family_chat_background.dart' show familyChatNotice;
+import 'family_chat_background.dart';
 import 'queue_family_chat_message.dart';
 
 /// One authenticated account and membership generation per live session.
@@ -22,6 +23,7 @@ class FamilyChatSession extends ChangeNotifier {
     required this.db,
     required this.isCurrentAccount,
     this.expectedScope,
+    this.notificationPresenter,
     DateTime Function()? clock,
   }) : clock = clock ?? DateTime.now;
   final String uid;
@@ -29,6 +31,7 @@ class FamilyChatSession extends ChangeNotifier {
   final FamilyChatDatabase db;
   final bool Function() isCurrentAccount;
   final String? expectedScope;
+  final FamilyChatPushPresenter? notificationPresenter;
   final DateTime Function() clock;
   Map<String, dynamic>? config;
   String? scope;
@@ -79,6 +82,7 @@ class FamilyChatSession extends ChangeNotifier {
   final _latestFirst = <String, int>{};
   final _pageRevisions = <String, int>{};
   Map<String, dynamic> _unread = {'count': 0};
+  StreamSubscription<String>? _notificationReplyReads;
   int get unreadCount => enabled ? _unread['count'] as int : 0;
   String? get unreadSender => enabled ? _unread['senderUid'] as String? : null;
 
@@ -671,6 +675,27 @@ class FamilyChatSession extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
+  Future<void> _refreshUnread() async {
+    final currentScope = scope;
+    final generation = _generation;
+    if (currentScope == null || !enabled || !active) return;
+    try {
+      final unread = await db.unread(currentScope, uid);
+      if (active &&
+          enabled &&
+          scope == currentScope &&
+          _generation == generation &&
+          !mapEquals(_unread, unread)) {
+        _unread = unread;
+        _notify();
+      }
+    } catch (error) {
+      if (active) {
+        Log.w('FamilyChatPush', 'Unread refresh failed (${error.runtimeType})');
+      }
+    }
+  }
+
   void setForeground(bool foreground, {bool chatVisible = true}) {
     final resumed = foreground && !_appForeground;
     _appForeground = foreground;
@@ -681,6 +706,8 @@ class FamilyChatSession extends ChangeNotifier {
       _cancelQueuedRetry(reset: true);
       return;
     }
+    // An Android reply action may run in a different isolate.
+    if (resumed) unawaited(_refreshUnread());
     if (chatVisible) {
       _cancelQueuedRetry(reset: true);
       unawaited(synchronize());
@@ -844,6 +871,49 @@ class FamilyChatSession extends ChangeNotifier {
         unawaited(synchronize(enqueueAgain: true));
       });
 
+  Future<void> _presentSyncedMessages(
+    String currentScope,
+    String target,
+    List<Map<String, dynamic>> messages,
+  ) async {
+    final guard = await db.activeChat();
+    final currentConfig = config;
+    if (guard['scope'] != currentScope ||
+        guard['uid'] != uid ||
+        currentConfig == null) {
+      return;
+    }
+    final worker = FamilyChatBackground(
+      db: db,
+      api: api,
+      presenter: notificationPresenter!,
+      currentUid: () => active && enabled && scope == currentScope ? uid : null,
+      shouldPresent: (target) =>
+          _appForeground && !(_chatVisible && visibleTarget == target),
+    );
+    final elapsedAtSync = _elapsed.elapsedMilliseconds;
+    final notificationConfig = {...currentConfig, 'serverTime': serverNow};
+    for (final message in messages) {
+      try {
+        await worker.presentIncoming(
+          FamilyChatPushView(
+            {...guard, 'historyGeneration': message['historyGeneration'] ?? 0},
+            notificationConfig,
+            message,
+            target,
+            elapsedMilliseconds: () =>
+                _elapsed.elapsedMilliseconds - elapsedAtSync,
+          ),
+        );
+      } catch (error) {
+        Log.w(
+          'FamilyChatPush',
+          'Sync presentation failed (${error.runtimeType})',
+        );
+      }
+    }
+  }
+
   Future<void> _cancelClearedNotices(String currentScope) async {
     final notices = await db.historyCancellationIntents(currentScope);
     if (notices.isEmpty) return;
@@ -892,7 +962,17 @@ class FamilyChatSession extends ChangeNotifier {
     return generation != null;
   }
 
-  Future<void> start() => _serial(_start);
+  Future<void> start({bool foreground = false, bool chatVisible = false}) {
+    _appForeground = foreground;
+    _chatVisible = chatVisible;
+    _notificationReplyReads ??= FamilyChatBackground.replyReads.listen((
+      changedScope,
+    ) {
+      if (scope == changedScope) unawaited(_refreshUnread());
+    });
+    return _serial(_start);
+  }
+
   Future<void> _start() async {
     _cachedDraftVersion = (await db.fence.read())['version'] as String;
     final cached = await db.metadata('account:$uid');
@@ -1264,6 +1344,7 @@ class FamilyChatSession extends ChangeNotifier {
           final rows = (page['messages'] as List).map(
             (v) => Map<String, dynamic>.from(v as Map),
           );
+          final incoming = <Map<String, dynamic>>[];
           if (!await _store(currentScope, () async {
             for (final message in rows) {
               if (!await db.historyAllows(
@@ -1282,6 +1363,9 @@ class FamilyChatSession extends ChangeNotifier {
               if (saved &&
                   message['senderUid'] != uid &&
                   (message['receipts'] as Map?)?[uid]?['deliveredAt'] == null) {
+                if (_appForeground && notificationPresenter != null) {
+                  incoming.add(message);
+                }
                 await db.queueReceipt(
                   currentScope,
                   message['id'] as String,
@@ -1295,6 +1379,9 @@ class FamilyChatSession extends ChangeNotifier {
             });
           })) {
             return;
+          }
+          if (incoming.isNotEmpty && valid()) {
+            await _presentSyncedMessages(currentScope, target, incoming);
           }
           if (page['hasMore'] != true) break;
         }
@@ -2217,6 +2304,7 @@ class FamilyChatSession extends ChangeNotifier {
 
   @override
   void dispose() {
+    unawaited(_notificationReplyReads?.cancel());
     _disposed = true;
     _generation++;
     _timer?.cancel();

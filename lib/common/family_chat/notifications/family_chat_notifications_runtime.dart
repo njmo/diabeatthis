@@ -11,9 +11,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/router/providers/app_router_provider.dart';
 import '../../../core/data/provider/initial_configuration_provider.dart';
+import '../../../core/logger/logger.dart';
 import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../notifications/firebase_background_handler.dart';
+import '../application/family_chat_background.dart';
 import '../application/family_chat_runtime.dart';
 import '../application/family_chat_settings_controller.dart';
 import '../application/family_chat_settings_runtime.dart';
@@ -97,7 +99,8 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
         lastKey = key;
         retry?.cancel();
       }
-    } catch (_) {
+    } catch (error) {
+      Log.w('FamilyChatPush', 'Registration failed (${error.runtimeType})');
       if (!disposed) {
         retry?.cancel();
         retry = Timer(const Duration(seconds: 30), () {
@@ -126,13 +129,26 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
   final messages = FirebaseMessaging.onMessage.listen((message) {
     if (message.data['type'] != 'familyChat') return;
     unawaited(() async {
-      await showFamilyChatPush(
-        message,
-        presenter: presenter,
-        shouldPresent: (target) =>
-            !(runtime.conversationVisible &&
-                runtime.session?.visibleTarget == target),
-      );
+      try {
+        final received = await FamilyChatBackground(
+          db: runtime.db,
+          api: FamilyChatRemote(transport, uid),
+          currentUid: () =>
+              disposed ? null : FirebaseAuth.instance.currentUser?.uid,
+          presenter: presenter,
+          shouldPresent: (target) =>
+              !(runtime.conversationVisible &&
+                  runtime.session?.visibleTarget == target),
+        ).receive(Map<String, dynamic>.from(message.data));
+        if (!received) {
+          Log.d('FamilyChatPush', 'Foreground push was not accepted');
+        }
+      } catch (error) {
+        Log.w(
+          'FamilyChatPush',
+          'Foreground delivery failed (${error.runtimeType})',
+        );
+      }
       if (!disposed) await runtime.session?.synchronize();
     }());
   });
@@ -260,21 +276,54 @@ class _FamilyChatNotificationRuntimeState
         );
         return;
       }
-      final result =
-          await FamilyChatRemote(
-            ref.read(authenticatedFamilyTransportProvider),
-            uid!,
-          ).call('fetchFamilyChatMessageStates', {
-            'ids': [intent['messageId']],
-          });
-      if (!mounted || runtime.session != session || !session.enabled) return;
-      if ((result['messages'] as List).isEmpty) {
+      final scope = session.scope!;
+      final id = intent['messageId'];
+      final generation = intent['historyGeneration'] ?? 0;
+      if (id is! String ||
+          generation is! int ||
+          !await runtime.db.historyAllows(scope, generation)) {
         await runtime.db.customStatement(
           "DELETE FROM chat_metadata WHERE key='chatOpen'",
         );
         return;
       }
-      await session.synchronize();
+      var message = await runtime.db.message(scope, id);
+      if (message == null) {
+        final result =
+            await FamilyChatRemote(
+              ref.read(authenticatedFamilyTransportProvider),
+              uid!,
+            ).call('fetchFamilyChatMessageStates', {
+              'ids': [id],
+            });
+        final rows = result['messages'] as List;
+        if (rows.length == 1) {
+          message = Map<String, dynamic>.from(rows.single as Map);
+        }
+      }
+      if (!mounted || runtime.session != session || !session.enabled) return;
+      final participants = message?['participants'] as Map?;
+      final validMessage =
+          message?['id'] == id &&
+          (message?['historyGeneration'] ?? 0) == generation &&
+          participants?[uid] == session.config?['epoch'] &&
+          (message?['expiresAt'] == null ||
+              (message!['expiresAt'] as int) > session.serverNow) &&
+          await runtime.db.historyAllows(scope, generation);
+      final target = !validMessage
+          ? null
+          : message!['conversationId'] == 'family'
+          ? 'family'
+          : participants!.keys
+                .whereType<String>()
+                .where((id) => id != uid)
+                .singleOrNull;
+      if (target == null) {
+        await runtime.db.customStatement(
+          "DELETE FROM chat_metadata WHERE key='chatOpen'",
+        );
+        return;
+      }
       final navigator = ref.read(appRouterProvider).navigatorKey.currentState;
       if (navigator == null) {
         _retry?.cancel();
@@ -291,13 +340,16 @@ class _FamilyChatNotificationRuntimeState
         unawaited(
           navigator.push<void>(
             MaterialPageRoute(
-              builder: (_) =>
-                  FamilyChatPage(initialTarget: intent['target'] as String?),
+              builder: (_) => FamilyChatPage(initialTarget: target),
             ),
           ),
         );
       }
-    } catch (_) {
+    } catch (error) {
+      Log.w(
+        'FamilyChatPush',
+        'Conversation routing failed (${error.runtimeType})',
+      );
       if (mounted) {
         _retry?.cancel();
         _retry = Timer(const Duration(seconds: 3), _changed);

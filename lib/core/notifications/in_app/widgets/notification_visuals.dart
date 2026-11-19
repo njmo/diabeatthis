@@ -235,3 +235,100 @@ class _NotificationInputDialogState extends State<_NotificationInputDialog> {
     );
   }
 }
+
+/// Reply directly below a chat notification, including its preset answers.
+class NotificationInlineReply extends StatefulWidget {
+  const NotificationInlineReply({
+    super.key,
+    required this.choices,
+    required this.onReply,
+  });
+
+  final List<String> choices;
+  final Future<void> Function(String) onReply;
+
+  @override
+  State<NotificationInlineReply> createState() =>
+      _NotificationInlineReplyState();
+}
+
+class _NotificationInlineReplyState extends State<NotificationInlineReply> {
+  final _controller = TextEditingController();
+  bool _expanded = false;
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit(String input) async {
+    final text = input.trim();
+    if (_sending || text.isEmpty) return;
+    setState(() => _sending = true);
+    try {
+      await widget.onReply(text);
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_expanded) {
+      return Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: TextButton(
+          onPressed: () => setState(() => _expanded = true),
+          child: Text(context.lang.notificationReplyAction),
+        ),
+      );
+    }
+
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.choices.isNotEmpty)
+          Wrap(
+            spacing: AppSpacing.xs,
+            children: [
+              for (final choice in widget.choices)
+                ActionChip(
+                  label: Text(choice),
+                  onPressed: _sending ? null : () => _submit(choice),
+                ),
+            ],
+          ),
+        ListenableBuilder(
+          listenable: _controller,
+          builder: (context, _) => TextField(
+            controller: _controller,
+            autofocus: true,
+            enabled: !_sending,
+            textInputAction: TextInputAction.send,
+            onSubmitted: _submit,
+            decoration: InputDecoration(
+              hintText: context.lang.familyChatComposerHintChild,
+              isDense: true,
+              filled: true,
+              fillColor: scheme.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(18),
+                borderSide: BorderSide(color: scheme.outlineVariant),
+              ),
+              suffixIcon: IconButton(
+                tooltip: context.lang.notificationInputSend,
+                onPressed: _sending || _controller.text.trim().isEmpty
+                    ? null
+                    : () => _submit(_controller.text),
+                icon: const Icon(Icons.send_rounded),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

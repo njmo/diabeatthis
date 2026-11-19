@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/theme/app_design_tokens.dart';
+import '../../domain/events/family_chat_notification.dart';
+import '../../domain/models/notification_action_type.dart';
 import '../../domain/models/notification_event_actions.dart';
 import '../../inbox/notification_inbox_entry.dart';
 import '../in_app_notification_center.dart';
@@ -33,6 +35,7 @@ class NotificationInboxButton extends ConsumerWidget {
           unread > 0
               ? Icons.notifications_active_outlined
               : Icons.notifications_none_rounded,
+          size: 26,
         ),
       ),
     );
@@ -199,6 +202,17 @@ class _InboxEntryCard extends ConsumerWidget {
         : notificationActionsFor(event, definition);
     final actionable = event != null && entry.active && actions.isNotEmpty;
     final expired = !actionable && actions.isNotEmpty;
+    final opensChat =
+        event is FamilyChatNotificationEvent && event.message != null;
+    final reply = actionable
+        ? actions
+              .where(
+                (action) =>
+                    action.type == NotificationActionType.familyChatReply,
+              )
+              .firstOrNull
+        : null;
+    final buttons = actions.where((action) => action != reply).toList();
 
     return Container(
       padding: const EdgeInsets.fromLTRB(
@@ -216,69 +230,90 @@ class _InboxEntryCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Opacity(
-                opacity: expired ? 0.55 : 1,
-                child: NotificationChannelBadge(
-                  channel: definition.channelType,
-                  size: 36,
+          InkWell(
+            onTap: opensChat
+                ? () {
+                    Navigator.of(context).pop();
+                    unawaited(center.open(entry.id, event));
+                  }
+                : null,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Opacity(
+                  opacity: expired ? 0.55 : 1,
+                  child: NotificationChannelBadge(
+                    channel: definition.channelType,
+                    size: 36,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md - AppSpacing.xs),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            entry.title,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
+                const SizedBox(width: AppSpacing.md - AppSpacing.xs),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              entry.title,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            _relativeTime(context, entry.createdAt),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (entry.body.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.xxs),
                         Text(
-                          _relativeTime(context, entry.createdAt),
-                          style: theme.textTheme.labelSmall?.copyWith(
+                          entry.body,
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             color: scheme.onSurfaceVariant,
                           ),
                         ),
                       ],
-                    ),
-                    if (entry.body.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.xxs),
-                      Text(
-                        entry.body,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
+                      if (expired) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          context.lang.notificationInboxInactive,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: scheme.outline,
+                          ),
                         ),
-                      ),
+                      ],
                     ],
-                    if (expired) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        context.lang.notificationInboxInactive,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: scheme.outline,
-                        ),
-                      ),
-                    ],
-                  ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (reply != null)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: NotificationInlineReply(
+                choices: notificationInputChoicesFor(event!),
+                onReply: (input) => center.respond(
+                  id: entry.id,
+                  event: event,
+                  action: reply,
+                  input: input,
                 ),
               ),
-            ],
-          ),
-          if (actionable)
+            ),
+          if (actionable && buttons.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.xs),
               child: NotificationActionButtons(
-                actions: actions,
+                actions: buttons,
                 choices: notificationInputChoicesFor(event),
                 dialogContext: () => context.mounted ? context : null,
                 onAction: (action, input) async {
