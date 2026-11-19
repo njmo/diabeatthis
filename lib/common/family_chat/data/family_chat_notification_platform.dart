@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/notifications/controllers/local_notifications_controller.dart';
-import '../../../core/notifications/providers/local_notifications_controller_provider.dart';
+import '../../../core/notifications/base/notifications_controller.dart';
+import '../../../core/notifications/providers/notifications_controller_provider.dart';
 
 import 'family_chat_database.dart';
 
@@ -12,7 +12,7 @@ class FamilyChatNotificationPlatform {
     Iterable<FamilyChatNotice> notices, {
     bool Function()? keepTrying,
     Future<void> Function(FamilyChatNotice)? operation,
-    LocalNotificationsController? controller,
+    NotificationsController? controller,
   }) async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
     ProviderContainer? container;
@@ -27,8 +27,8 @@ class FamilyChatNotificationPlatform {
               final delivery =
                   controller ??
                   (container ??= ProviderContainer())
-                      .read<LocalNotificationsController>(
-                        localNotificationsControllerProvider,
+                      .read<NotificationsController>(
+                        notificationsControllerHeadlessProvider,
                       );
               await delivery.cancel(
                 notice.id,

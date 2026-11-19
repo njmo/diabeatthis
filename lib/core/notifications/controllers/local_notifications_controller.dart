@@ -7,10 +7,10 @@ import '../../../common/l10n/application_language.dart';
 import '../../../common/notifications/android_notification_delivery.dart';
 import '../base/notifications_controller.dart';
 import '../bootstrap/local_notifications_bootstrap.dart' as bootstrap;
-import '../domain/events/family_chat_notification.dart';
 import '../domain/models/hash_notification_id_factory.dart';
 import '../domain/models/notification_event.dart';
 import '../domain/models/notification_event_type.dart';
+import '../domain/models/notification_identity.dart';
 import '../handlers/notification_response_handler.dart';
 import '../mappers/android_notification_details_mapper.dart';
 import '../mappers/darwin_notification_details_mapper.dart';
@@ -54,9 +54,7 @@ class LocalNotificationsController implements NotificationsController {
       );
     }
     final iosDetails = event.toDarwinNotificationDetails();
-    final id = event is FamilyChatNotificationEvent
-        ? event.id
-        : _idFactory.create(event.key);
+    final id = notificationIdentity(event).id;
     return _plugin.show(
       id: id,
       title: event.title,
@@ -65,7 +63,7 @@ class LocalNotificationsController implements NotificationsController {
         android: androidDetails,
         iOS: iosDetails,
       ),
-      payload: jsonEncode(event.toPayload()),
+      payload: jsonEncode({...event.toPayload(), notificationIdPayloadKey: id}),
     );
   }
 
@@ -89,7 +87,7 @@ class LocalNotificationsController implements NotificationsController {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       title: event.title,
       body: event.body,
-      payload: jsonEncode(event.toPayload()),
+      payload: jsonEncode({...event.toPayload(), notificationIdPayloadKey: id}),
     );
   }
 

@@ -20,6 +20,7 @@ import '../common/widgets/application_backdrop.dart';
 import '../core/data/provider/initial_configuration_provider.dart';
 import '../core/data/provider/monitor_service_enabled_provider.dart';
 import '../core/logger/logger.dart';
+import '../core/notifications/in_app/widgets/in_app_notification_host.dart';
 import '../core/notifications/providers/notifications_controller_provider.dart';
 import '../features/caregiver/application/caregiver_ui_refresh_provider.dart';
 import '../features/dashboard/data/providers/blood_sugar_readings_list_provider.dart';
@@ -205,9 +206,11 @@ class _MyAppState extends ConsumerState<MyApp>
         .maybeWhen(data: (language) => language, orElse: () => null);
 
     return MaterialApp.router(
-      builder: (context, child) => ApplicationBackdrop(
-        child: FamilyChatNotificationRuntime(
-          child: MealDecisionRuntime(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => InAppNotificationHost(
+        child: ApplicationBackdrop(
+          child: FamilyChatNotificationRuntime(
+            child: MealDecisionRuntime(child: child ?? const SizedBox.shrink()),
+          ),
         ),
       ),
       locale: selectedLanguage?.locale,

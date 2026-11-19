@@ -31,7 +31,7 @@ class PausedActivityCancellation extends FakeNotificationsController {
   final entered = Completer<void>();
   final release = Completer<void>();
   @override
-  Future<void> cancel(int id) async {
+  Future<void> cancel(int id, {String? tag}) async {
     if (!entered.isCompleted) {
       entered.complete();
       await release.future;

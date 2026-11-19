@@ -39,7 +39,7 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
       settings?.allowSession == true && settings?.cachedOnly == false;
   final runtime = ref.watch(familyChatRuntimeProvider);
   final transport = ref.watch(authenticatedFamilyTransportProvider);
-  final presenter = ref.watch(familyChatPresenterProvider);
+  final presenter = ref.watch(familyChatUiPresenterProvider);
   var disposed = false, running = false, again = false;
   String? lastKey;
   Timer? retry;

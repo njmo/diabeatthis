@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../common/events/data/task/task_in_app_notification_payload.dart';
+import '../../../common/events/data/task/task_notification_inbox_changed_payload.dart';
 import '../../../common/events/data/task/task_open_low_treatment_payload.dart';
 import '../../../common/events/data/task/task_open_meal_completion_payload.dart';
 import '../../../common/events/data/task/task_state_synchronization_payload.dart';
@@ -17,6 +18,10 @@ sealed class TaskEvent with _$TaskEvent {
   const factory TaskEvent.taskInAppNotification({
     required TaskInAppNotificationPayload data,
   }) = TaskInAppNotificationEvent;
+
+  const factory TaskEvent.taskNotificationInboxChanged({
+    required TaskNotificationInboxChangedPayload data,
+  }) = TaskNotificationInboxChangedEvent;
 
   const factory TaskEvent.taskDataSynchronization({
     required TaskDataSynchronizationPayload data,

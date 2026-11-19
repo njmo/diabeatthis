@@ -154,7 +154,7 @@ class SilentMealNotifications implements NotificationsController {
   @override
   Future<void> schedule(NotificationEvent event, Duration when) async {}
   @override
-  Future<void> cancel(int id) async {}
+  Future<void> cancel(int id, {String? tag}) async {}
   @override
   Future<void> cancelAll() async {}
   @override

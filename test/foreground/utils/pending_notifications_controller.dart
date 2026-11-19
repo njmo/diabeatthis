@@ -16,7 +16,7 @@ class PendingNotificationsController extends FakeNotificationsController {
   }
 
   @override
-  Future<void> cancel(int id) async {
+  Future<void> cancel(int id, {String? tag}) async {
     await super.cancel(id);
     activeIds.remove(id);
   }
