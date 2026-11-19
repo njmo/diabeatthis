@@ -305,7 +305,7 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
                   ? null
                   : () async {
                       if (!s.skipMeal) {
-                        await c.cancelAllMealNotifications();
+                        await c.cancelPendingAdviceReminder();
                       }
                       if (context.mounted) {
                         Navigator.of(context).pop();
@@ -323,7 +323,7 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
                       saving.value = true;
                       if (context.mounted) {
                         if (!s.skipMeal) {
-                          await c.cancelAllMealNotifications();
+                          await c.cancelPendingAdviceReminder();
 
                           try {
                             final accepted = await c.confirmAdvice();
@@ -454,7 +454,6 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
           return [
             TextButton(
               onPressed: () async {
-                await c.cancelAllMealNotifications();
                 if (context.mounted) {
                   Navigator.of(
                     context,
@@ -486,7 +485,7 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
           );
       Future<void> close() async {
         saving.value = true;
-        if (confirming && !s.skipMeal) await c.cancelAllMealNotifications();
+        if (confirming && !s.skipMeal) await c.cancelPendingAdviceReminder();
         if (context.mounted) Navigator.of(context).pop();
       }
 

@@ -6,6 +6,7 @@ import '../../../core/notifications/inbox/notification_inbox_entry.dart';
 import '../../../core/notifications/providers/local_notifications_controller_provider.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../data/family_chat_database_provider.dart';
+import '../data/family_chat_guard_fence.dart';
 import 'family_chat_presenter.dart';
 
 /// Presenter for headless work (push handlers, notification responses):
@@ -45,8 +46,11 @@ final familyChatInboxVisibilityProvider =
         final uid = auth.currentUser?.uid;
         if (uid == null) return const [];
         final db = ref.read(familyChatDatabaseProvider);
+        if (await db.fence.blocked()) return const [];
         final allowed = await db.authorizedInbox(uid, entries);
-        return auth.currentUser?.uid == uid ? allowed : const [];
+        return !await db.fence.blocked() && auth.currentUser?.uid == uid
+            ? allowed
+            : const [];
       },
     );
 

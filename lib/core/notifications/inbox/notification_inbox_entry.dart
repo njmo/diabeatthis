@@ -16,6 +16,10 @@ class NotificationInboxEntry {
     this.read = false,
     this.active = true,
     this.inApp = false,
+    this.retryAt,
+    this.retriesRemaining = 0,
+    this.retryDelivery = false,
+    this.retryClaim,
   });
 
   factory NotificationInboxEntry.fromEvent(
@@ -23,6 +27,8 @@ class NotificationInboxEntry {
     required int id,
     required DateTime createdAt,
     bool inApp = false,
+    DateTime? retryAt,
+    int retriesRemaining = 0,
   }) => NotificationInboxEntry(
     id: id,
     type: event.type,
@@ -31,6 +37,8 @@ class NotificationInboxEntry {
     data: Map<String, dynamic>.from(event.toJson()),
     createdAt: createdAt,
     inApp: inApp,
+    retryAt: retryAt,
+    retriesRemaining: retriesRemaining,
   );
 
   final int id;
@@ -51,19 +59,34 @@ class NotificationInboxEntry {
   /// in-app entries are re-shown as banners until the user handles them, so a
   /// banner lost between isolates still reaches the user.
   final bool inApp;
+  final DateTime? retryAt;
+  final int retriesRemaining;
+  final bool retryDelivery;
+  final int? retryClaim;
 
-  NotificationInboxEntry copyWith({bool? read, bool? active}) =>
-      NotificationInboxEntry(
-        id: id,
-        type: type,
-        title: title,
-        body: body,
-        data: data,
-        createdAt: createdAt,
-        read: read ?? this.read,
-        active: active ?? this.active,
-        inApp: inApp,
-      );
+  NotificationInboxEntry copyWith({
+    bool? read,
+    bool? active,
+    bool? inApp,
+    DateTime? retryAt,
+    int? retriesRemaining,
+    bool? retryDelivery,
+    int? retryClaim,
+  }) => NotificationInboxEntry(
+    id: id,
+    type: type,
+    title: title,
+    body: body,
+    data: data,
+    createdAt: createdAt,
+    read: read ?? this.read,
+    active: active ?? this.active,
+    inApp: inApp ?? this.inApp,
+    retryAt: retryAt ?? this.retryAt,
+    retriesRemaining: retriesRemaining ?? this.retriesRemaining,
+    retryDelivery: retryDelivery ?? this.retryDelivery,
+    retryClaim: retryClaim,
+  );
 
   Map<String, Object?> toJson() => {
     'id': id,
@@ -75,6 +98,8 @@ class NotificationInboxEntry {
     'read': read,
     'active': active,
     'inApp': inApp,
+    if (retryAt case final due?) 'retryAt': due.millisecondsSinceEpoch,
+    if (retryAt != null) 'retriesRemaining': retriesRemaining,
   };
 
   static NotificationInboxEntry? tryParse(Map<String, dynamic> json) {
@@ -95,6 +120,10 @@ class NotificationInboxEntry {
         read: json['read'] as bool? ?? false,
         active: json['active'] as bool? ?? true,
         inApp: json['inApp'] as bool? ?? false,
+        retryAt: json['retryAt'] is int
+            ? DateTime.fromMillisecondsSinceEpoch(json['retryAt'] as int)
+            : null,
+        retriesRemaining: json['retriesRemaining'] as int? ?? 0,
       );
     } catch (_) {
       return null;

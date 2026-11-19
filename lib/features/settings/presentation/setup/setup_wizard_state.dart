@@ -19,6 +19,7 @@ class SetupWizardState {
     required this.nightscoutUrl,
     required this.nightscoutToken,
     this.mealDecisionPreferences = const MealDecisionPreferences(),
+    this.initialNotificationRetriesEnabled = true,
     this.familyChatPreferences = const FamilyChatPreferences(),
     Set<SetupFeatureOptionId> initialOptions = const {},
   }) {
@@ -26,6 +27,10 @@ class SetupWizardState {
   }
 
   MealDecisionPreferences mealDecisionPreferences;
+  final bool initialNotificationRetriesEnabled;
+  bool? notificationRetrySelection;
+  bool get notificationRetriesEnabled =>
+      notificationRetrySelection ?? initialNotificationRetriesEnabled;
   FamilyChatPreferences familyChatPreferences;
   bool familyChatPreferencesReady = true;
   bool familyChatLoadFailed = false;

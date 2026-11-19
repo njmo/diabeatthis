@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
+import '../../widgets/notification_retry_switch.dart';
+import '../../widgets/settings_section_card.dart';
 import '../setup_labels.dart';
 import '../setup_wizard_controller.dart';
 import '../widgets/setup_access_card.dart';
@@ -55,6 +57,17 @@ class SetupAccessStep extends StatelessWidget {
               onGrant: () => controller.grant(entry.key),
             ),
           ),
+        SettingsSectionCard(
+          title: context.lang.notificationSettingsTitle,
+          icon: Icons.notifications_outlined,
+          children: [
+            NotificationRetrySwitch(
+              value: controller.state.notificationRetriesEnabled,
+              onChanged: controller.setNotificationRetriesEnabled,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
         SetupNotice(
           text: controller.permissions == null
               ? context.lang.setupDemoNotice

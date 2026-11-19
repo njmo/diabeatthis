@@ -10,6 +10,7 @@ import 'package:diabeatthis/foreground/event/external/external_event_handler.dar
 import 'package:diabeatthis/foreground/providers/task_event_router_provider.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -21,6 +22,20 @@ import '../../helpers/foreground_ui/pump_database_streams.dart';
 import '../../helpers/foreground_ui/recording_navigator_observer.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const channel = MethodChannel('flutter_foreground_task/methods');
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+  final replies = <String>[];
+  setUp(() {
+    replies.clear();
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'sendData') replies.add(call.arguments as String);
+      return null;
+    });
+  });
+  tearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
   testWidgets(
     'late Agree opens the real completion sheet and cancel preserves meal',
     (tester) async {
@@ -69,6 +84,7 @@ void main() {
               .pending(),
         );
         expect(pending, isEmpty);
+        expect(replies, [contains('"action":"confirmation_dismissed"')]);
       } finally {
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.runAsync(harness.close);

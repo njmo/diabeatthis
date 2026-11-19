@@ -18,6 +18,8 @@ import '../../common/meal_advisor/meal_decision_preferences_provider.dart';
 import '../../core/data/provider/shared_prefs_provider.dart';
 import '../../core/drift/providers/database_provider.dart';
 import '../../core/logger/logger.dart';
+import '../../core/notifications/controllers/notifications_controller_impl.dart';
+import '../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../features/activity/data/services/activity_schedule_service.dart';
 import '../collector/device_status_collector.dart';
 import '../collector/foreground_collector.dart';
@@ -136,7 +138,16 @@ class MyTaskHandler extends TaskHandler with Logging {
   }
 
   @override
-  Future<void> onRepeatEvent(DateTime timestamp) async {}
+  Future<void> onRepeatEvent(DateTime timestamp) async {
+    final container = _container;
+    if (_isStopping || container == null) return;
+    final controller = container.read(
+      notificationsControllerForegroundProvider,
+    );
+    if (controller is NotificationsControllerImpl) {
+      await controller.processDueRetries();
+    }
+  }
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {

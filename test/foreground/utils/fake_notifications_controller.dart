@@ -21,6 +21,10 @@ class FakeNotificationsController implements NotificationsController {
   final Queue<Future<void> Function()> _cancelResponses = Queue();
   Future<Iterable<int>> pendingResult = Future.value(const []);
 
+  void enqueueShowFuture(Future<void> result) {
+    _showResponses.add(() => result);
+  }
+
   void enqueueShowSuccess() {
     _showResponses.add(() async {});
   }

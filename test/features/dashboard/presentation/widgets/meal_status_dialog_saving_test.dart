@@ -105,7 +105,7 @@ class PendingDecisionController extends MealDialogController {
       ).copyWith(advice: MealAdvice(MealDecision.bolusAndEatNow, null));
 
   @override
-  Future<void> cancelAllMealNotifications() async {}
+  Future<void> cancelPendingAdviceReminder() async {}
 
   @override
   Future<bool> confirmAdvice() {

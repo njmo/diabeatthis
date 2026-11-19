@@ -181,7 +181,9 @@ void main() {
       final id = await eatingMeal(const Duration(hours: 5));
       await agree(id);
       expect(router.sent, hasLength(1));
-      expect(harness.emittedEvents, isEmpty);
+      expect(harness.emittedEvents, [
+        FinishedEatingResponseEvent.confirmationPending(mealId: id),
+      ]);
       expect(await recover(), [id]);
     },
   );

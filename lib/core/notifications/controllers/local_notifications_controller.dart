@@ -7,7 +7,6 @@ import '../../../common/l10n/application_language.dart';
 import '../../../common/notifications/android_notification_delivery.dart';
 import '../base/notifications_controller.dart';
 import '../bootstrap/local_notifications_bootstrap.dart' as bootstrap;
-import '../domain/models/hash_notification_id_factory.dart';
 import '../domain/models/notification_event.dart';
 import '../domain/models/notification_event_type.dart';
 import '../domain/models/notification_identity.dart';
@@ -16,11 +15,9 @@ import '../mappers/android_notification_details_mapper.dart';
 import '../mappers/darwin_notification_details_mapper.dart';
 
 class LocalNotificationsController implements NotificationsController {
-  LocalNotificationsController(this._plugin)
-    : _idFactory = HashNotificationIdFactory();
+  LocalNotificationsController(this._plugin);
 
   final FlutterLocalNotificationsPlugin _plugin;
-  final NotificationIdFactory _idFactory;
 
   @override
   Future<void> init() async {
@@ -45,8 +42,12 @@ class LocalNotificationsController implements NotificationsController {
   }
 
   @override
-  Future<void> show(NotificationEvent event) async {
-    final androidDetails = event.toAndroidNotificationDetails();
+  Future<void> show(NotificationEvent event) => _show(event, retry: false);
+
+  Future<void> showRetry(NotificationEvent event) => _show(event, retry: true);
+
+  Future<void> _show(NotificationEvent event, {required bool retry}) async {
+    final androidDetails = event.toAndroidNotificationDetails(retry: retry);
     if (event.type == NotificationEventType.aapsBolusSuggestion) {
       await ensureAndroidNotificationDeliveryEnabled(
         _plugin,
@@ -73,7 +74,7 @@ class LocalNotificationsController implements NotificationsController {
 
     final androidDetails = event.toAndroidNotificationDetails();
     final iosDetails = event.toDarwinNotificationDetails();
-    final id = _idFactory.create(event.key);
+    final id = notificationIdentity(event).id;
 
     final when = tz.TZDateTime.now(tz.local).add(duration);
 

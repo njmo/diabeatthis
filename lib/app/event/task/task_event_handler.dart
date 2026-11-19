@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../common/events/data/task/task_in_app_notification_payload.dart';
 import '../../../common/events/data/task/task_state_synchronization_payload.dart';
 import '../../../common/meal/open_meal_completion.dart';
 import '../../../common/meal/pending_meal_completion_recovery.dart';
@@ -60,7 +61,11 @@ class TaskEventHandler with Logging {
         (revision) => revision + 1,
         ifAbsent: () => 1,
       );
-      await requests.acknowledge(mealId);
+      try {
+        await requests.acknowledge(mealId);
+      } finally {
+        if (!_disposed) notifyFinishedEatingConfirmationDismissed(mealId);
+      }
     },
   );
 
@@ -79,7 +84,13 @@ class TaskEventHandler with Logging {
         // The service already prepared, recorded and acknowledged the event;
         // the UI only renders it.
         unawaited(
-          _ref.read(inAppNotificationCenterProvider.notifier).present(event),
+          _ref
+              .read(inAppNotificationCenterProvider.notifier)
+              .present(
+                event,
+                retryOf: payload.data[notificationRetryOfKey] as int?,
+                retryClaim: payload.data[notificationRetryClaimKey] as int?,
+              ),
         );
         break;
       case TaskNotificationInboxChangedEvent(data: final payload):

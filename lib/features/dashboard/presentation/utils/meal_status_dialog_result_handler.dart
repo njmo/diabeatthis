@@ -5,12 +5,15 @@ import '../../../../common/meal/meal_add_on_bolus_context.dart';
 import '../../../../common/meal/meal_extended_carbs.dart';
 import '../../../../common/meal/open_meal_add_on_editor.dart';
 import '../../../../common/meal/open_meal_completion.dart';
+import '../../../../common/notifications/meal_notification_cancellation.dart';
 import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../common/platform/aaps_suggestion_prompt.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/drift/providers/database_provider.dart';
+import '../../../../core/logger/logger.dart';
 import '../../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
+import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../meal_advisor/data/providers/get_meal_activity_advice_use_case_provider.dart';
 import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../meals/data/domain/use_cases/complete_bolus_wait_use_case.dart';
@@ -44,6 +47,30 @@ Future<void> handleMealStatusDialogResult({
         return;
       }
 
+      if (!alreadySaved && status == 'skipped') {
+        final notifications = ref.read(notificationsControllerUiProvider);
+        final saved = await ref
+            .read(databaseProvider)
+            .mealDao
+            .tryUpdateMealStatus(meal.id, status);
+        if (saved) {
+          try {
+            await notifications.cancelMealNotifications(
+              meal.id,
+              includeTargetConsent: true,
+              includeBolusInstructions: true,
+            );
+          } catch (error, stackTrace) {
+            Log.e(
+              'MealStatusDialog',
+              'Could not clear notifications for skipped meal ${meal.id}',
+              error: error,
+              stackTrace: stackTrace,
+            );
+          }
+        }
+        return;
+      }
       if (!alreadySaved) {
         await ref.read(updateMealProvider(meal, status).future);
       }

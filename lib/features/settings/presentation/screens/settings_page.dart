@@ -31,6 +31,7 @@ import '../widgets/database_settings_section.dart';
 import '../widgets/google_account_settings_section.dart';
 import '../widgets/meal_advisor_settings_section.dart';
 import '../widgets/nightscout_settings_section.dart';
+import '../widgets/notification_retry_settings_section.dart';
 import '../widgets/residence_country_setting.dart';
 import '../widgets/settings_section_card.dart';
 
@@ -143,6 +144,8 @@ class SettingsPage extends HookConsumerWidget with Logging {
                       const SizedBox(height: 16),
                     ],
                     const ApplicationThemeSettingsSection(),
+                    const SizedBox(height: 16),
+                    const NotificationRetrySettingsSection(),
                     const SizedBox(height: 16),
                     SettingsSectionCard(
                       icon: Icons.language_outlined,

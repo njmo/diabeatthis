@@ -145,14 +145,22 @@ Future<void> dispatchNotificationResponse({
   FlutterForegroundTask.sendDataToTask(jsonEncode(json));
 }
 
+void notifyFinishedEatingConfirmationDismissed(int mealId) {
+  _sendFinishedEatingResponse(mealId, 'confirmation_dismissed');
+}
+
 /// Replays a durable fresh confirmation after the service has finished starting.
 void replayFinishedEatingConfirmation(int mealId) {
+  _sendFinishedEatingResponse(mealId, 'agree');
+}
+
+void _sendFinishedEatingResponse(int mealId, String action) {
   FlutterForegroundTask.sendDataToTask(
     jsonEncode({
       'external_event': 'notification_event',
       'data': {
         'notification_response_event': 'finished_eating_response',
-        'data': {'action': 'agree', 'mealId': mealId},
+        'data': {'action': action, 'mealId': mealId},
       },
     }),
   );

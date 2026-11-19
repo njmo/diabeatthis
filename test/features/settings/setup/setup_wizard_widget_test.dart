@@ -26,6 +26,27 @@ SetupWizardState setupDraft() => SetupWizardState(
 );
 
 void main() {
+  testWidgets('notification retries are a global option on the access step', (
+    tester,
+  ) async {
+    final draft = setupDraft()..step = SetupStep.access.index;
+    await tester.pumpWidget(
+      localizedMaterialApp(
+        home: SetupWizard(
+          initialState: draft,
+          availability: const DataSourceOptionAvailability.none(),
+        ),
+      ),
+    );
+
+    final retry = find.text('Ponawiaj powiadomienia');
+    await tester.ensureVisible(retry);
+    expect(draft.notificationRetriesEnabled, isTrue);
+    await tester.tap(retry);
+    await tester.pumpAndSettle();
+    expect(draft.notificationRetrySelection, isFalse);
+  });
+
   testWidgets('core features show an informational badge without a switch', (
     tester,
   ) async {

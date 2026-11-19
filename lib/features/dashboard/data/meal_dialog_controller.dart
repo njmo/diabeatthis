@@ -384,7 +384,7 @@ class MealDialogController extends _$MealDialogController with Logging {
           extendedCarbsGrams: 0,
           unavailableReason: unavailableReason,
         );
-        await cancelAllMealNotifications();
+        await cancelPendingAdviceReminder();
         throw const MealAdviceUnavailableException();
       }
     }
@@ -526,18 +526,6 @@ class MealDialogController extends _$MealDialogController with Logging {
       await notificationsPluginController.cancel(id);
     } catch (e) {
       logE('Error cancelling pending meal advice reminder: $e');
-    }
-  }
-
-  Future<void> cancelAllMealNotifications() async {
-    final notificationsPluginController = ref.read(
-      notificationsControllerUiProvider,
-    );
-
-    try {
-      await notificationsPluginController.cancelAll();
-    } catch (e) {
-      logE('Error cancelling meal notifications: $e');
     }
   }
 }

@@ -30,6 +30,7 @@ class NotificationInboxStore {
        _injectedChat = chatPreferences;
 
   static const keyPrefix = 'notification_inbox:';
+  static const retryPrefix = 'notification_inbox.retry:';
   static const readPrefix = 'notification_inbox.read:';
   static const inactivePrefix = 'notification_inbox.inactive:';
 
@@ -72,6 +73,7 @@ class NotificationInboxStore {
   final Duration retention;
 
   String _key(int id) => '$keyPrefix$id';
+  String _retryKey(int id) => '$retryPrefix$id';
   String _readKey(int id) => '$readPrefix$id';
   String _inactiveKey(int id) => '$inactivePrefix$id';
 
@@ -81,7 +83,17 @@ class NotificationInboxStore {
       final prefs = _preferencesFor(entry);
       await prefs.remove(_readKey(entry.id));
       await prefs.remove(_inactiveKey(entry.id));
+      await prefs.remove(_retryKey(entry.id));
       await prefs.setString(_key(entry.id), jsonEncode(entry.toJson()));
+      if (entry.retryAt case final due?) {
+        await _writeRetryProgress(
+          prefs,
+          entry,
+          nextDue: due,
+          remaining: entry.retriesRemaining,
+          inApp: entry.inApp,
+        );
+      }
       if (entry.read) await prefs.setBool(_readKey(entry.id), true);
       if (!entry.active) await prefs.setBool(_inactiveKey(entry.id), true);
     } catch (error) {
@@ -131,6 +143,102 @@ class NotificationInboxStore {
     }
   }
 
+  Future<List<NotificationInboxEntry>> retriesDue(DateTime now) async {
+    final pending = <NotificationInboxEntry>[];
+    await _guard('retriesDue', () async {
+      for (final prefs in _stores) {
+        for (final key in await prefs.getKeys()) {
+          if (!key.startsWith(retryPrefix)) continue;
+          final id = int.tryParse(key.substring(retryPrefix.length));
+          if (id == null) continue;
+          final raw = await prefs.getString(key);
+          if (raw == null) continue;
+          final progress = jsonDecode(raw);
+          if (progress is! Map ||
+              progress['remaining'] is! int ||
+              (progress['remaining'] as int) <= 0 ||
+              progress['retryAt'] is! int ||
+              (progress['retryAt'] as int) > now.millisecondsSinceEpoch ||
+              ((progress['leaseUntil'] as int?) ?? 0) >
+                  now.millisecondsSinceEpoch) {
+            continue;
+          }
+          final entry = await _readEntry(prefs, _key(id));
+          if (entry != null &&
+              entry.active &&
+              entry.createdAt.millisecondsSinceEpoch == progress['createdAt']) {
+            pending.add(entry);
+          }
+        }
+      }
+    }, notify: false);
+    return pending;
+  }
+
+  /// Progress belongs to the original delivery and never resets its answer
+  /// marker. Only the foreground runtime advances a due retry.
+  Future<bool> advanceRetry(
+    NotificationInboxEntry entry, {
+    required DateTime nextDue,
+    required int remaining,
+    required bool inApp,
+    required bool resetRead,
+    bool? retryDelivery,
+    DateTime? leaseUntil,
+    bool notify = true,
+  }) async {
+    try {
+      final prefs = _preferencesFor(entry);
+      final latest = await _readEntry(prefs, _key(entry.id));
+      if (latest == null ||
+          !latest.active ||
+          latest.createdAt != entry.createdAt ||
+          latest.retryAt != entry.retryAt ||
+          latest.retryClaim != entry.retryClaim ||
+          latest.retriesRemaining != entry.retriesRemaining) {
+        return false;
+      }
+      await _writeRetryProgress(
+        prefs,
+        entry,
+        nextDue: nextDue,
+        remaining: remaining,
+        inApp: inApp,
+        retryDelivery: retryDelivery ?? latest.retryDelivery,
+        leaseUntil: leaseUntil,
+      );
+      if (resetRead) await prefs.remove(_readKey(entry.id));
+      if (notify) _changed();
+      return true;
+    } catch (error) {
+      Log.w(
+        'NotificationInbox',
+        'Could not advance retry (${error.runtimeType})',
+      );
+      return false;
+    }
+  }
+
+  Future<void> _writeRetryProgress(
+    SharedPreferencesAsync prefs,
+    NotificationInboxEntry entry, {
+    required DateTime nextDue,
+    required int remaining,
+    required bool inApp,
+    bool retryDelivery = false,
+    DateTime? leaseUntil,
+  }) => prefs.setString(
+    _retryKey(entry.id),
+    jsonEncode({
+      'createdAt': entry.createdAt.millisecondsSinceEpoch,
+      'retryAt': nextDue.millisecondsSinceEpoch,
+      'remaining': remaining,
+      'inApp': inApp,
+      if (retryDelivery) 'retryDelivery': true,
+      if (leaseUntil != null) 'leaseUntil': leaseUntil.millisecondsSinceEpoch,
+    }),
+  );
+
   /// Marks a cancelled notification as no longer actionable. A cancelled
   /// notification that was only scheduled never reached the user, so it is
   /// removed instead of being kept as history.
@@ -140,7 +248,9 @@ class NotificationInboxStore {
     if (entry.createdAt.isAfter(clock.now())) {
       await _remove(_preferencesFor(entry), id);
     } else {
-      await _preferencesFor(entry).setBool(_inactiveKey(id), true);
+      final prefs = _preferencesFor(entry);
+      await prefs.setBool(_inactiveKey(id), true);
+      await prefs.remove(_retryKey(id));
     }
   });
 
@@ -150,7 +260,9 @@ class NotificationInboxStore {
       if (entry.createdAt.isAfter(now)) {
         await _remove(_preferencesFor(entry), entry.id);
       } else if (entry.active) {
-        await _preferencesFor(entry).setBool(_inactiveKey(entry.id), true);
+        final prefs = _preferencesFor(entry);
+        await prefs.setBool(_inactiveKey(entry.id), true);
+        await prefs.remove(_retryKey(entry.id));
       }
     }
   });
@@ -161,6 +273,7 @@ class NotificationInboxStore {
     if (entry == null) return;
     final prefs = _preferencesFor(entry);
     await prefs.setBool(_inactiveKey(id), true);
+    await prefs.remove(_retryKey(id));
     await prefs.setBool(_readKey(id), true);
   });
 
@@ -211,6 +324,7 @@ class NotificationInboxStore {
     await prefs.remove(_key(id));
     await prefs.remove(_readKey(id));
     await prefs.remove(_inactiveKey(id));
+    await prefs.remove(_retryKey(id));
   }
 
   Future<NotificationInboxEntry?> _readEntry(
@@ -235,7 +349,24 @@ class NotificationInboxStore {
     }
     final read = await prefs.getBool(_readKey(entry.id)) ?? false;
     final inactive = await prefs.getBool(_inactiveKey(entry.id)) ?? false;
-    return entry.copyWith(read: read, active: !inactive);
+    var current = entry.copyWith(read: read, active: !inactive);
+    if (entry.retryAt != null) {
+      final rawProgress = await prefs.getString(_retryKey(entry.id));
+      final progress = rawProgress == null ? null : jsonDecode(rawProgress);
+      if (progress is Map &&
+          progress['createdAt'] == entry.createdAt.millisecondsSinceEpoch) {
+        current = current.copyWith(
+          retryAt: DateTime.fromMillisecondsSinceEpoch(
+            progress['retryAt'] as int,
+          ),
+          retriesRemaining: progress['remaining'] as int,
+          inApp: progress['inApp'] as bool,
+          retryDelivery: progress['retryDelivery'] == true,
+          retryClaim: progress['leaseUntil'] as int?,
+        );
+      }
+    }
+    return current;
   }
 
   Future<List<NotificationInboxEntry>> _all() async {
@@ -282,12 +413,16 @@ class NotificationInboxStore {
     }
   }
 
-  Future<void> _guard(String operation, Future<void> Function() body) async {
+  Future<void> _guard(
+    String operation,
+    Future<void> Function() body, {
+    bool notify = true,
+  }) async {
     try {
       await body();
     } catch (error) {
       Log.w('NotificationInbox', 'Inbox $operation failed ($error)');
     }
-    if (operation != 'prune') _changed();
+    if (notify && operation != 'prune') _changed();
   }
 }

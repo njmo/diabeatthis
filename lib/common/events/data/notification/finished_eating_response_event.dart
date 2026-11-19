@@ -8,20 +8,26 @@ part 'finished_eating_response_event.g.dart';
 
 @Freezed(unionKey: 'action', unionValueCase: FreezedUnionCase.snake)
 sealed class FinishedEatingResponseEvent
-    with _$FinishedEatingResponseEvent, NotificationEventData implements ForegroundEvent {
+    with _$FinishedEatingResponseEvent, NotificationEventData
+    implements ForegroundEvent {
   const FinishedEatingResponseEvent._();
 
-  const factory FinishedEatingResponseEvent.agree({
-    required int mealId,
-  }) = _FinishedEatingResponseEatingEvent;
+  const factory FinishedEatingResponseEvent.agree({required int mealId}) =
+      _FinishedEatingResponseEatingEvent;
 
-  const factory FinishedEatingResponseEvent.snooze({
-    required int mealId,
-  }) = _FinishedEatingResponseSnoozeEvent;
+  const factory FinishedEatingResponseEvent.snooze({required int mealId}) =
+      _FinishedEatingResponseSnoozeEvent;
 
-  const factory FinishedEatingResponseEvent.empty({
+  const factory FinishedEatingResponseEvent.confirmationPending({
     required int mealId,
-  }) = _FinishedEatingResponseEmptyEvent;
+  }) = _FinishedEatingConfirmationPendingEvent;
+
+  const factory FinishedEatingResponseEvent.confirmationDismissed({
+    required int mealId,
+  }) = _FinishedEatingConfirmationDismissedEvent;
+
+  const factory FinishedEatingResponseEvent.empty({required int mealId}) =
+      _FinishedEatingResponseEmptyEvent;
 
   factory FinishedEatingResponseEvent.fromJson(Map<String, dynamic> json) =>
       _$FinishedEatingResponseEventFromJson(json);

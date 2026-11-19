@@ -1921,16 +1921,29 @@ class FamilyChatSession extends ChangeNotifier {
       if ((ids == null || ids.contains(message['id'])) &&
           message['senderUid'] != uid &&
           (message['receipts'] as Map?)?[uid]?['readAt'] == null) {
+        final answers = message['answers'];
         final queued = await _write(currentScope, () async {
+          final keepNotification =
+              message['kind'] == 'question' &&
+              answers is List &&
+              answers.isNotEmpty &&
+              await db.hasPendingNotificationRetry(
+                currentScope,
+                message['id'] as String,
+              );
           await db.queueReceipt(currentScope, message['id'] as String, true);
-          await db.markMessageNotificationForCancellation(
-            currentScope,
-            message['id'] as String,
-          );
-          return true;
+          if (!keepNotification) {
+            await db.markMessageNotificationForCancellation(
+              currentScope,
+              message['id'] as String,
+            );
+          }
+          return keepNotification;
         });
-        if (queued != true) return false;
-        notices.add(familyChatNotice(currentScope, message['id'] as String));
+        if (queued == null) return false;
+        if (!queued) {
+          notices.add(familyChatNotice(currentScope, message['id'] as String));
+        }
       }
     }
     if (!active || scope != currentScope) return false;

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:clock/clock.dart';
+import 'package:diabeatthis/common/family_chat/notifications/family_chat_presenter_provider.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/notifications/domain/events/eat_now_event_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/family_chat_notification.dart';
@@ -40,7 +41,13 @@ void main() {
   });
 
   Future<ProviderContainer> pumpApp(WidgetTester tester) async {
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [
+        familyChatInboxVisibilityProvider.overrideWithValue(
+          (entries) async => entries,
+        ),
+      ],
+    );
     addTearDown(container.dispose);
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -91,11 +98,19 @@ void main() {
         sentAt: clock.now(),
       ),
     );
-    await tester.runAsync(
-      () => container
+    await tester.runAsync(() async {
+      await NotificationInboxStore().put(
+        NotificationInboxEntry.fromEvent(
+          event,
+          id: event.id,
+          createdAt: clock.now(),
+          inApp: true,
+        ),
+      );
+      await container
           .read(inAppNotificationCenterProvider.notifier)
-          .present(event),
-    );
+          .present(event);
+    });
     await tester.pumpAndSettle();
 
     expect(find.byType(TextField), findsNothing);

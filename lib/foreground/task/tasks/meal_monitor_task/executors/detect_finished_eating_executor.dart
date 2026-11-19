@@ -1,8 +1,11 @@
+import 'dart:collection';
+
 import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/finished_eating_response_event.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../common/notifications/meal_notification_cancellation.dart';
+import '../../../../../common/notifications/scoped_notification_cancellation.dart';
 import '../../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/logger/logger.dart';
@@ -43,6 +46,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
 
   @override
   List<Type> get interruptableEvents => [
+    MealSkippedEvent,
     MealEatingThenBolus,
     MealWaitingForBolusEvent,
     MealEatingExtraEvent,
@@ -133,40 +137,70 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
     await runtimeContext.waitForDuration(Duration(minutes: 5));
     logI("Ended waiting for user to end his meal");
 
-    var shouldContinue = true;
-    while (shouldContinue) {
-      mealMonitorContext.throwIfStopped(runtimeContext);
-      logI("Showing user notification if he finished eating");
-      await notificationProvider.show(
-        FinishedEatingNotificationEvent(
-          mealId: mealMonitorContext.activeMeal!.id,
-          isAddOn: isAddOn,
-        ),
-      );
-      mealMonitorContext.throwIfStopped(runtimeContext);
-      logI("Notification shown, waiting for user response");
-      final response = await runtimeContext
-          .waitForEvent<FinishedEatingResponseEvent>(
-            predicate: (event) =>
-                event.mealId == mealMonitorContext.activeMeal!.id,
-          );
-      logI("Got response from user");
-
-      await response.when<Future<void>>(
-        agree: (int mealId) async {
-          logI("User agreed he finished eating");
-          shouldContinue = false;
-        },
-        snooze: (int mealId) async {
-          logI("Snoozing for 5 more minutes");
-          await runtimeContext.waitForDuration(Duration(minutes: 5));
-        },
-        empty: (int mealId) async {
-          logI("User clicked on notification probably by mistake, show again");
-        },
-      );
+    final notification = FinishedEatingNotificationEvent(
+      mealId: mealMonitorContext.activeMeal!.id,
+      isAddOn: isAddOn,
+    );
+    const retryDelay = Duration(minutes: 5);
+    final inbox = runtimeContext.openEventInbox<FinishedEatingResponseEvent>();
+    final responses = Queue<FinishedEatingResponseEvent>();
+    Future<FinishedEatingResponseEvent> nextResponse({
+      required bool confirming,
+    }) async {
+      while (true) {
+        if (responses.isEmpty) responses.addAll(await inbox.nextBatch());
+        while (responses.isNotEmpty) {
+          final response = responses.removeFirst();
+          if (response.mealId != notification.mealId) continue;
+          if (response.maybeWhen(
+            agree: (_) => true,
+            snooze: (_) => !confirming,
+            confirmationPending: (_) => !confirming,
+            confirmationDismissed: (_) => confirming,
+            orElse: () => false,
+          )) {
+            return response;
+          }
+        }
+      }
     }
 
+    try {
+      while (true) {
+        final pendingResponse = nextResponse(confirming: false);
+        pendingResponse.ignore();
+        late final FinishedEatingResponseEvent response;
+        try {
+          mealMonitorContext.throwIfStopped(runtimeContext);
+          await notificationProvider.show(notification);
+          response = await runtimeContext.interruptController.race(
+            pendingResponse,
+          );
+        } finally {
+          try {
+            await notificationProvider.cancelNotification(notification.key);
+          } catch (error) {
+            logW('Could not clear finished eating notification: $error');
+          }
+        }
+
+        var answer = response;
+        if (answer.maybeWhen(
+          confirmationPending: (_) => true,
+          orElse: () => false,
+        )) {
+          answer = await runtimeContext.interruptController.race(
+            nextResponse(confirming: true),
+          );
+        }
+        if (answer.maybeWhen(agree: (_) => true, orElse: () => false)) break;
+        await runtimeContext.waitForDuration(retryDelay);
+      }
+    } finally {
+      inbox.close();
+    }
+
+    mealMonitorContext.throwIfStopped(runtimeContext);
     final mealStatus = isAddOn ? 'eaten-extra' : 'eaten';
 
     if (shouldBolus) {

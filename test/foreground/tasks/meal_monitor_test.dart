@@ -50,6 +50,7 @@ import 'package:diabeatthis/foreground/event/internal/monitoring_status_changed.
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/providers/device_status_value_provider.dart';
 import 'package:diabeatthis/foreground/providers/latest_bolus_wizard_provider.dart';
+import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/bolus_then_wait_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/detect_finished_eating_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/finalize_meal_executor.dart';
@@ -754,6 +755,85 @@ void main() {
         });
       },
     );
+    for (final responseDuringShow in [true, false]) {
+      test(
+        responseDuringShow
+            ? 'finished eating retains snooze received while showing the first alert'
+            : 'late confirmation pauses finished eating retries until dismissed',
+        () {
+          fakeAsync((async) {
+            withFakeClock(async, DateTime(2026, 3, 23, 12), () {
+              final notifications = FakeNotificationsController();
+              final container = ProviderContainer(
+                overrides: [
+                  notificationsControllerForegroundProvider.overrideWithValue(
+                    notifications,
+                  ),
+                  getNearestMealProvider.overrideWithValue(AsyncData(null)),
+                  getMealByIdProvider(
+                    1,
+                  ).overrideWithValue(AsyncData(Meal(id: 1, name: 'Lunch'))),
+                ],
+              );
+              final harness = FakeRuntimeHarness(container: container);
+              final task = MealMonitorTask();
+              final showingAlert = Completer<void>();
+              if (responseDuringShow) {
+                notifications.enqueueShowFuture(showingAlert.future);
+              }
+
+              unawaited(
+                task
+                    .run(harness.runtimeContext)
+                    .onError<TaskCancelledException>((_, _) {}),
+              );
+              _settle(async);
+              harness.dispatchEventToTask(
+                task,
+                MealStartedEatingEvent(mealId: 1),
+              );
+              _settle(async);
+              _advanceMinutes(harness, async, 5);
+              const shown = 1;
+              expect(notifications.shownEvents, hasLength(shown));
+
+              harness.dispatchEventToTask(
+                task,
+                responseDuringShow
+                    ? FinishedEatingResponseEvent.snooze(mealId: 1)
+                    : FinishedEatingResponseEvent.confirmationPending(
+                        mealId: 1,
+                      ),
+              );
+              _settle(async);
+              if (responseDuringShow) showingAlert.complete();
+              _settle(async);
+              expect(notifications.cancelledIds, hasLength(1));
+
+              if (!responseDuringShow) {
+                _advanceMinutes(harness, async, 15);
+                expect(notifications.shownEvents, hasLength(shown));
+                expect(task.state, isA<DetectFinishedEatingExecutor>());
+                harness.dispatchEventToTask(
+                  task,
+                  FinishedEatingResponseEvent.confirmationDismissed(mealId: 1),
+                );
+                _settle(async);
+              }
+
+              _advanceMinutes(harness, async, 4);
+              expect(notifications.shownEvents, hasLength(shown));
+              _advanceMinutes(harness, async, 1);
+              expect(notifications.shownEvents, hasLength(shown + 1));
+              harness.cancel();
+              _settle(async);
+              container.dispose();
+            });
+          });
+        },
+      );
+    }
+
     test('finished eating snooze waits before showing notification again', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);

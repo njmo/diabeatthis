@@ -446,6 +446,11 @@ class SetupWizardController extends ChangeNotifier {
     changed();
   }
 
+  void setNotificationRetriesEnabled(bool enabled) {
+    state.notificationRetrySelection = enabled;
+    changed();
+  }
+
   void setAllowManualDecision(bool allowed) {
     state.mealDecisionPreferences = state.mealDecisionPreferences.copyWith(
       allowManualDecision: allowed,

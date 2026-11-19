@@ -15,6 +15,7 @@ import '../../../../common/setup/domain/setup_feature_option.dart';
 import '../../../../common/setup/platform/native_setup_permission_gateway.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_option_availability.dart';
+import '../../../../core/notifications/providers/notification_retry_preferences.dart';
 import '../../application/validate_setup_nightscout_use_case.dart';
 import '../controllers/initial_configuration_controller.dart';
 import '../setup/setup_wizard.dart';
@@ -28,6 +29,34 @@ class InitialConfigurationPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(initialConfigurationControllerProvider);
     final availability = ref.watch(dataSourceOptionAvailabilityProvider);
+    final retryPreference = ref.watch(notificationRetriesEnabledProvider);
+    if (retryPreference.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    Future<bool> saveWithRetries(
+      SetupWizardState value,
+      Future<bool> Function() apply,
+    ) async {
+      try {
+        final saved = await configureNotificationRetries(
+          value.notificationRetrySelection,
+          apply,
+        );
+        if (saved && context.mounted) {
+          ref.invalidate(notificationRetriesEnabledProvider);
+        }
+        return saved;
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.lang.notificationRetrySaveError)),
+          );
+        }
+        return false;
+      }
+    }
+
     return state.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -62,6 +91,8 @@ class InitialConfigurationPage extends ConsumerWidget {
           saving: draft.isSaving,
           saveError: draft.submitError,
           initialState: SetupWizardState(
+            initialNotificationRetriesEnabled:
+                retryPreference.asData?.value ?? true,
             familyChatPreferences:
                 ref.watch(googleAccountProvider).asData?.value == null
                 ? const FamilyChatPreferences()
@@ -85,27 +116,29 @@ class InitialConfigurationPage extends ConsumerWidget {
             );
             controller.setUserName(value.name);
             controller.setLanguage(value.language);
-            final saved =
-                await ref.read(configureFamilyChatPreferencesProvider)(
-                  value.familyChatPreferences,
-                  (binding) => controller.submitCaregiver(
-                    chatSetupBinding: binding,
-                    mealDecisionPreferences: value.mealDecisionPreferences
-                        .copyWith(
-                          method: MealDecisionMethod.app,
-                          caregiverResponsesEnabled:
-                              value.selected.contains(
-                                SetupFeatureId.caregiverMealDecisions,
-                              ) &&
-                              value
-                                  .mealDecisionPreferences
-                                  .caregiverResponsesEnabled,
-                        ),
-                    url: value.nightscoutUrl,
-                    token: value.nightscoutToken,
-                  ),
-                  expectedUid: value.googleAccount?.uid,
-                );
+            final saved = await saveWithRetries(
+              value,
+              () => ref.read(configureFamilyChatPreferencesProvider)(
+                value.familyChatPreferences,
+                (binding) => controller.submitCaregiver(
+                  chatSetupBinding: binding,
+                  mealDecisionPreferences: value.mealDecisionPreferences
+                      .copyWith(
+                        method: MealDecisionMethod.app,
+                        caregiverResponsesEnabled:
+                            value.selected.contains(
+                              SetupFeatureId.caregiverMealDecisions,
+                            ) &&
+                            value
+                                .mealDecisionPreferences
+                                .caregiverResponsesEnabled,
+                      ),
+                  url: value.nightscoutUrl,
+                  token: value.nightscoutToken,
+                ),
+                expectedUid: value.googleAccount?.uid,
+              ),
+            );
             if (saved && context.mounted) {
               context.router.replace(NamedRoute('DashboardRoute'));
             }
@@ -118,24 +151,26 @@ class InitialConfigurationPage extends ConsumerWidget {
             controller.setUserName(value.name);
             controller.setLanguage(value.language);
             controller.setDataSourceConfig(value.config);
-            final saved =
-                await ref.read(configureFamilyChatPreferencesProvider)(
-                  value.shareData ? value.familyChatPreferences : null,
-                  (binding) => controller.submit(
-                    chatSetupBinding: binding,
-                    mealDecisionPreferences: value.mealDecisionPreferences,
-                    enableFamilySharing: value.shareData,
-                    tempTargetsEnabled: value.enabledOptions.contains(
-                      SetupFeatureOptionId.activityTempTargetUpload,
-                    ),
-                    lowTreatmentsEnabled: value.enabledOptions.contains(
-                      SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
-                    ),
-                    nightscoutUrl: value.nightscoutUrl,
-                    nightscoutToken: value.nightscoutToken,
+            final saved = await saveWithRetries(
+              value,
+              () => ref.read(configureFamilyChatPreferencesProvider)(
+                value.shareData ? value.familyChatPreferences : null,
+                (binding) => controller.submit(
+                  chatSetupBinding: binding,
+                  mealDecisionPreferences: value.mealDecisionPreferences,
+                  enableFamilySharing: value.shareData,
+                  tempTargetsEnabled: value.enabledOptions.contains(
+                    SetupFeatureOptionId.activityTempTargetUpload,
                   ),
-                  expectedUid: value.googleAccount?.uid,
-                );
+                  lowTreatmentsEnabled: value.enabledOptions.contains(
+                    SetupFeatureOptionId.lowTreatmentCarbohydrateUpload,
+                  ),
+                  nightscoutUrl: value.nightscoutUrl,
+                  nightscoutToken: value.nightscoutToken,
+                ),
+                expectedUid: value.googleAccount?.uid,
+              ),
+            );
             if (saved && context.mounted) {
               context.router.replace(NamedRoute('DashboardRoute'));
             }

@@ -22,7 +22,10 @@ class AndroidNotificationDetailsMapper {
   final AndroidNotificationActionMapper _actionMapper =
       AndroidNotificationActionMapper();
 
-  AndroidNotificationDetails map(NotificationEvent event) {
+  AndroidNotificationDetails map(
+    NotificationEvent event, {
+    bool retry = false,
+  }) {
     final eventDefinition = _catalog.byType(event.type);
     final channelDefinition = _channelCatalog.byType(
       eventDefinition.channelType,
@@ -52,7 +55,7 @@ class AndroidNotificationDetailsMapper {
         priority: Priority.high,
         visibility: NotificationVisibility.private,
         category: AndroidNotificationCategory.message,
-        onlyAlertOnce: true,
+        onlyAlertOnce: !retry,
         timeoutAfter: event.timeoutAfter,
         silent: event.silent,
         styleInformation: MessagingStyleInformation(
@@ -125,6 +128,7 @@ class AndroidNotificationDetailsMapper {
 }
 
 extension NotificationEventExtensions on NotificationEvent {
-  AndroidNotificationDetails toAndroidNotificationDetails() =>
-      AndroidNotificationDetailsMapper().map(this);
+  AndroidNotificationDetails toAndroidNotificationDetails({
+    bool retry = false,
+  }) => AndroidNotificationDetailsMapper().map(this, retry: retry);
 }

@@ -49,7 +49,6 @@ void main() {
     expect(find.byType(BottomSheet), findsNothing);
     expect(results, [null]);
     expect(controller.saves, 0);
-    expect(controller.cancelledNotifications, 0);
     expect(controller.pendingReminderCancellations, 0);
     expect(tester.takeException(), isNull);
   });
@@ -70,7 +69,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Zjem'), findsOneWidget);
       expect(controller.pendingReminderCancellations, 1);
-      expect(controller.cancelledNotifications, 0);
 
       await tester.tap(find.text('Pomijam'));
       await tester.pumpAndSettle();
@@ -78,11 +76,26 @@ void main() {
       await tester.pumpAndSettle();
       expect(results, [null]);
       expect(controller.pendingReminderCancellations, 1);
-      expect(controller.cancelledNotifications, 0);
       expect(controller.saves, 0);
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('closing advice only cancels its pending reminder', (
+    tester,
+  ) async {
+    final controller = MealSheetTestController(
+      initialState: mealSheetAdviceState(),
+    );
+    final results = <MealStatusDialogResult?>[];
+    await openMealSheet(tester, controller: controller, onResult: results.add);
+
+    await tester.tap(find.text('Anuluj'));
+    await tester.pumpAndSettle();
+
+    expect(results, [null]);
+    expect(controller.pendingReminderCancellations, 1);
+  });
 
   testWidgets('confirming skip returns only a skipped status', (tester) async {
     final controller = MealSheetTestController();
@@ -371,18 +384,12 @@ class MealSheetTestController extends MealDialogController {
   final MealDialogState? initialState;
   final Completer<bool>? saveCompletion;
   int saves = 0;
-  int cancelledNotifications = 0;
   int pendingReminderCancellations = 0;
 
   @override
   MealDialogState build(int mId, MealDialogStep initialStep) {
     mealId = mId;
     return initialState ?? MealDialogState.initial(initialStep);
-  }
-
-  @override
-  Future<void> cancelAllMealNotifications() async {
-    cancelledNotifications++;
   }
 
   @override

@@ -118,6 +118,9 @@ class NotificationResponseEventHandler with Logging {
     int mealId,
     RuntimeContext context,
   ) async {
+    context.emitEvent(
+      FinishedEatingResponseEvent.confirmationPending(mealId: mealId),
+    );
     try {
       await context.container
           .read(pendingMealCompletionRequestsProvider)

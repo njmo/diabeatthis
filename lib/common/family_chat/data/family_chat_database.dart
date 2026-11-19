@@ -8,6 +8,7 @@ import 'package:sqlite3/common.dart' show SqliteException;
 
 import '../../../core/notifications/inbox/notification_inbox_entry.dart';
 import '../../../core/notifications/inbox/notification_inbox_store.dart';
+import '../../../core/notifications/providers/notification_retry_preferences.dart';
 import '../domain/family_question_reply_state.dart';
 import 'family_chat_guard_fence.dart';
 
@@ -469,20 +470,65 @@ class FamilyChatDatabase extends GeneratedDatabase {
     [scope, '${familyChatNotificationTagPrefix(scope)}$id'],
   );
 
+  Future<bool> hasPendingNotificationRetry(
+    String scope,
+    String messageId,
+  ) async {
+    final inbox = _notificationInbox;
+    if (inbox == null) return false;
+    final rows = await customSelect(
+      "SELECT id FROM chat_notifications WHERE scope=? AND tag=? AND status='shown'",
+      variables: [
+        Variable(scope),
+        Variable('${familyChatNotificationTagPrefix(scope)}$messageId'),
+      ],
+    ).get();
+    if (rows.isEmpty) return false;
+    final entry = await inbox.get(rows.single.read<int>('id'));
+    if (entry == null ||
+        !entry.active ||
+        entry.retryAt == null ||
+        entry.retriesRemaining == 0) {
+      return false;
+    }
+    try {
+      return await readNotificationRetriesEnabled();
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> markLocallyReadNotificationsForCancellation(String scope) =>
-      customStatement(
-        r'''
-        UPDATE chat_notifications SET status='cancel'
-        WHERE scope=? AND status<>'cancel' AND tag IN (
-          SELECT ? || reads.id FROM chat_local_reads AS reads
-          WHERE reads.scope=? AND NOT EXISTS (
-            SELECT 1 FROM chat_outbox
-            WHERE scope=reads.scope AND json_extract(payload,'$.replyTo')=reads.id
-          )
-        )
-        ''',
-        [scope, familyChatNotificationTagPrefix(scope), scope],
-      );
+      transaction(() async {
+        final rows = await customSelect(
+          r'''
+      SELECT reads.id,
+        json_extract(message.payload,'$.kind')='question'
+          AND json_array_length(message.payload,'$.answers')>0 AS question
+      FROM chat_local_reads AS reads
+      JOIN chat_notifications AS notice ON
+        notice.scope=reads.scope AND notice.tag=(? || reads.id)
+      LEFT JOIN chat_messages AS message ON
+        message.scope=reads.scope AND message.id=reads.id
+      WHERE reads.scope=? AND notice.status<>'cancel' AND NOT EXISTS (
+        SELECT 1 FROM chat_outbox
+        WHERE scope=reads.scope AND json_extract(payload,'$.replyTo')=reads.id
+      )
+      ''',
+          variables: [
+            Variable(familyChatNotificationTagPrefix(scope)),
+            Variable(scope),
+          ],
+        ).get();
+        for (final row in rows) {
+          final id = row.read<String>('id');
+          if (row.readNullable<bool>('question') == true &&
+              await hasPendingNotificationRetry(scope, id)) {
+            continue;
+          }
+          await markMessageNotificationForCancellation(scope, id);
+        }
+      });
 
   Future<void> deferReplyCancellation(String tag) =>
       setMetadata('replyAcknowledgment:$tag', {
@@ -762,7 +808,17 @@ class FamilyChatDatabase extends GeneratedDatabase {
     value['expiresAt'] = until;
     final now = await _retentionNow(scope, serverNow ?? 0);
     final ownRead = ((value['receipts'] as Map?)?[account] as Map?)?['readAt'];
-    if (account != null && value['senderUid'] != account && ownRead != null ||
+    final answers = value['answers'];
+    final keepNotification =
+        ownRead != null &&
+        value['kind'] == 'question' &&
+        answers is List &&
+        answers.isNotEmpty &&
+        await hasPendingNotificationRetry(scope, id);
+    if (account != null &&
+            value['senderUid'] != account &&
+            ownRead != null &&
+            !keepNotification ||
         until != null &&
             (until <= now ||
                 cached != null && (oldUntil == null || until < oldUntil))) {
@@ -1379,7 +1435,11 @@ class FamilyChatDatabase extends GeneratedDatabase {
     // One query reads all three barriers from the same SQLite snapshot.
     final rows = await customSelect(
       'SELECT key, value FROM chat_metadata WHERE key IN (?, ?, ?)',
-      variables: [Variable(historyKey), Variable(accountKey), Variable(scopeKey)],
+      variables: [
+        Variable(historyKey),
+        Variable(accountKey),
+        Variable(scopeKey),
+      ],
     ).get();
     final barriers = {
       for (final row in rows)

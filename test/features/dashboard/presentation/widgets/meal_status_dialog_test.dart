@@ -3,6 +3,7 @@ import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/meal_macro_summary.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_advice_pending_notification.dart';
+import 'package:diabeatthis/core/notifications/domain/models/notification_identity.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/meal_dialog_controller.dart';
 import 'package:diabeatthis/features/dashboard/data/meal_dialog_state.dart';
@@ -198,7 +199,9 @@ void main() {
     expect(find.text('Podaję bolusa'), findsOneWidget);
   });
 
-  testWidgets('accepting advice cancels meal notifications', (tester) async {
+  testWidgets('accepting advice cancels only its pending reminder', (
+    tester,
+  ) async {
     final notifications = FakeNotificationsController();
     final meal = Meal(
       id: 1,
@@ -244,7 +247,10 @@ void main() {
     await tester.tap(find.text('Podaję bolusa'));
     await tester.pumpAndSettle();
 
-    expect(notifications.cancelAllCalled, isTrue);
+    expect(notifications.cancelAllCalled, isFalse);
+    expect(notifications.cancelledIds, [
+      notificationIdentity(MealAdvicePendingNotificationEvent(mealId: 1)).id,
+    ]);
     expect(notifications.scheduledEvents, hasLength(1));
     expect(
       notifications.scheduledEvents.single.event,
@@ -252,7 +258,9 @@ void main() {
     );
   });
 
-  testWidgets('cancelling advice cancels meal notifications', (tester) async {
+  testWidgets('cancelling advice cancels only its pending reminder', (
+    tester,
+  ) async {
     final notifications = FakeNotificationsController();
     final meal = Meal(
       id: 1,
@@ -292,7 +300,10 @@ void main() {
     await tester.tap(find.text('Anuluj'));
     await tester.pumpAndSettle();
 
-    expect(notifications.cancelAllCalled, isTrue);
+    expect(notifications.cancelAllCalled, isFalse);
+    expect(notifications.cancelledIds, [
+      notificationIdentity(MealAdvicePendingNotificationEvent(mealId: 1)).id,
+    ]);
   });
 
   testWidgets('cancelling skip confirmation does not cancel notifications', (
@@ -326,7 +337,9 @@ void main() {
     expect(notifications.cancelAllCalled, isFalse);
   });
 
-  testWidgets('waiting for bolus can cancel meal', (tester) async {
+  testWidgets('waiting for bolus returns skip without cancelling before save', (
+    tester,
+  ) async {
     final notifications = FakeNotificationsController();
     final meal = Meal(
       id: 1,
@@ -369,7 +382,8 @@ void main() {
     await tester.tap(find.text('Anuluj posiłek'));
     await tester.pumpAndSettle();
 
-    expect(notifications.cancelAllCalled, isTrue);
+    expect(notifications.cancelAllCalled, isFalse);
+    expect(notifications.cancelledIds, isEmpty);
     expect(dialogResult, isA<MealStatusUpdateResult>());
     expect((dialogResult as MealStatusUpdateResult).status, 'skipped');
   });

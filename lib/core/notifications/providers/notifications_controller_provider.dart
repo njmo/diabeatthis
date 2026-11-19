@@ -1,15 +1,22 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../common/family_chat/data/family_chat_database_provider.dart';
+import '../../../common/family_chat/notifications/family_chat_retry_guard.dart';
 import '../../../common/meal/calculator/calculator_instruction_event.dart';
 import '../../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
+import '../../domain/model/meal_status_flow.dart';
+import '../../drift/providers/database_provider.dart';
 import '../base/notifications_controller.dart';
 import '../controllers/foreground_task_notification_controller.dart';
 import '../controllers/in_app_notifications_controller.dart';
 import '../controllers/notifications_controller_impl.dart';
+import '../domain/events/finished_eating_event_notification.dart';
 import '../domain/models/notification_event.dart';
 import '../in_app/in_app_notification_center.dart';
 import 'local_notifications_controller_provider.dart';
@@ -31,11 +38,34 @@ NotificationsController notificationsControllerUi(Ref ref) {
 
 @Riverpod(keepAlive: true)
 NotificationsController notificationsControllerForeground(Ref ref) {
+  final local = ref.watch(localNotificationsControllerProvider);
   final inApp = ForegroundTaskNotificationController(ref);
   final notificationsController = NotificationsControllerImpl(
     ref,
     inApp,
-    localController: ref.watch(localNotificationsControllerProvider),
+    localController: local,
+    showSystemRetry: local.showRetry,
+    showInAppRetry: inApp.showRetry,
+    retryStillRelevant: (event) async {
+      if (event is! FinishedEatingNotificationEvent) return true;
+      final meal = await ref
+          .read(databaseProvider)
+          .mealDao
+          .getMealById(event.mealId);
+      return event.isAddOn
+          ? meal?.status == 'eating-extra'
+          : mealStatusesStartingEating.contains(meal?.status);
+    },
+    withAuthorizedChatRetry: (entry, event, deliver) async {
+      if (Firebase.apps.isEmpty) return;
+      await withAuthorizedFamilyChatRetry(
+        db: ref.read(familyChatDatabaseProvider),
+        currentUid: () => FirebaseAuth.instance.currentUser?.uid,
+        entry: entry,
+        event: event,
+        deliver: deliver,
+      );
+    },
     // The service isolate only learns the UI lifecycle through messages, which
     // stop arriving when the UI process dies; confirm with the platform.
     isAppVisible: () => FlutterForegroundTask.isAppOnForeground,

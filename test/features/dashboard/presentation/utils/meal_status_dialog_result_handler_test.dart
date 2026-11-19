@@ -1,14 +1,105 @@
 import 'package:diabeatthis/core/domain/model/meal.dart';
+import 'package:diabeatthis/core/drift/database_impl.dart' as drift;
+import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
+import 'package:diabeatthis/core/notifications/domain/events/activity_finished_notification.dart';
+import 'package:diabeatthis/core/notifications/domain/events/finished_eating_event_notification.dart';
+import 'package:diabeatthis/core/notifications/domain/events/temp_target_notification.dart';
+import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import 'package:diabeatthis/features/dashboard/presentation/utils/meal_status_dialog_result_handler.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/meal_status_dialog_result.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_database_provider.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../foreground/utils/pending_notifications_controller.dart';
+
 void main() {
+  for (final persistedStatus in ['waiting-for-bolus', 'interrupted']) {
+    testWidgets('skip scopes cleanup with stored status $persistedStatus', (
+      tester,
+    ) async {
+      final db = drift.DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      final mealId = (await tester.runAsync(
+        () => db
+            .into(db.meal)
+            .insert(
+              drift.MealCompanion.insert(
+                name: 'Obiad',
+                plannedAt: const Value(0),
+              ),
+            ),
+      ))!;
+      await tester.runAsync(
+        () => db.mealDao.tryUpdateMealStatus(mealId, persistedStatus),
+      );
+      final meal = Meal(id: mealId, name: 'Obiad', status: 'waiting-for-bolus');
+      final notifications = PendingNotificationsController();
+      final current = FinishedEatingNotificationEvent(mealId: mealId);
+      final consent = TempTargetNotificationEvent.meal(entityId: mealId);
+      final instructions = AapsBolusSuggestionNotificationEvent(
+        mealId: mealId,
+        carbs: 45,
+      );
+      final other = FinishedEatingNotificationEvent(mealId: mealId + 1);
+      final activity = ActivityFinishedNotificationEvent(
+        activityLogId: mealId,
+        activityName: 'Spacer',
+      );
+      await notifications.show(current);
+      await notifications.show(consent);
+      await notifications.show(instructions);
+      await notifications.show(other);
+      await notifications.show(activity);
+
+      late BuildContext context;
+      late WidgetRef ref;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            databaseProvider.overrideWithValue(db),
+            notificationsControllerUiProvider.overrideWithValue(notifications),
+          ],
+          child: Consumer(
+            builder: (widgetContext, widgetRef, _) {
+              context = widgetContext;
+              ref = widgetRef;
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+
+      await tester.runAsync(
+        () => handleMealStatusDialogResult(
+          context: context,
+          ref: ref,
+          meal: meal,
+          result: const MealStatusUpdateResult('skipped'),
+        ),
+      );
+
+      final rejected = persistedStatus == 'interrupted';
+      final stored = await tester.runAsync(
+        () => db.mealDao.getMealById(mealId),
+      );
+      expect(stored?.status, rejected ? 'interrupted' : 'skipped');
+      expect(notifications.contains(current), rejected);
+      expect(notifications.contains(consent), rejected);
+      expect(notifications.contains(instructions), rejected);
+      expect(notifications.contains(other), isTrue);
+      expect(notifications.contains(activity), isTrue);
+      expect(notifications.cancelAllCalled, isFalse);
+      if (rejected) expect(notifications.cancelledIds, isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final alreadySaved in [true, false]) {
     testWidgets(
       'handles status without repeating a completed write: $alreadySaved',

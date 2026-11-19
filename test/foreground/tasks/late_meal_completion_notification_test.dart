@@ -93,7 +93,9 @@ void main() {
         final id = await eatingMeal(elapsed);
         final before = await db.select(db.mealStatusHistory).get();
         await agree(id);
-        expect(harness.emittedEvents, isEmpty);
+        expect(harness.emittedEvents, [
+          FinishedEatingResponseEvent.confirmationPending(mealId: id),
+        ]);
         expect(router.sent, hasLength(1));
         expect(
           (router.sent.single as TaskOpenMealCompletionPayload).mealId,

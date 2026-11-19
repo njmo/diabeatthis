@@ -11,13 +11,18 @@ import 'package:diabeatthis/common/family_chat/data/family_chat_notification_pla
 import 'package:diabeatthis/common/family_chat/data/family_chat_remote.dart';
 import 'package:diabeatthis/common/family_chat/notifications/family_chat_presenter.dart';
 import 'package:diabeatthis/common/family_chat/notifications/family_chat_registration.dart';
+import 'package:diabeatthis/common/family_chat/notifications/family_chat_retry_guard.dart';
 import 'package:diabeatthis/common/notifications/firebase_background_handler.dart';
 import 'package:diabeatthis/core/notifications/domain/events/family_chat_notification.dart';
+import 'package:diabeatthis/core/notifications/inbox/notification_inbox_entry.dart';
+import 'package:diabeatthis/core/notifications/inbox/notification_inbox_store.dart';
 import 'package:diabeatthis/core/notifications/mappers/android_notification_details_mapper.dart';
 import 'package:drift/native.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 
 class _Api implements FamilyChatApi {
   bool enabled = true, failSend = false;
@@ -253,24 +258,85 @@ void main() {
     expect(api.message['receipts']['child']['deliveredAt'], 1000);
   });
 
-  test('reading schedules tray cleanup and recovers older read notices', () async {
-    final db = FamilyChatDatabase(NativeDatabase.memory());
+  test('read questions can retry until a reply or access withdrawal', () async {
+    final previousPlatform = SharedPreferencesAsyncPlatform.instance;
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.empty();
+    addTearDown(
+      () => SharedPreferencesAsyncPlatform.instance = previousPlatform,
+    );
+    final inbox = NotificationInboxStore();
+    final db = FamilyChatDatabase(NativeDatabase.memory(), null, inbox);
     addTearDown(db.close);
-    final notice = familyChatNotice(scope, 'question');
-    await db.activateChat('child', scope, 'one');
-    await db.rememberNotification(scope, notice.id, 'one', tag: notice.tag);
-    await db.queueReceipt(scope, 'question', false);
-    expect(await db.historyCancellationIntents(scope), isEmpty);
+    final api = _Api();
+    final presenter = _Presenter();
+    var uid = 'child';
+    await db.activateChat(uid, scope, 'one');
+    final worker = FamilyChatBackground(
+      db: db,
+      api: api,
+      currentUid: () => uid,
+      presenter: presenter,
+    );
+    await worker.receive(data);
+    final event = AndroidFamilyChatPresenter.messageEvent(
+      presenter.shown.single,
+    );
+    final entry = NotificationInboxEntry.fromEvent(
+      event,
+      id: event.id,
+      createdAt: DateTime(2026, 11, 20),
+      retryAt: DateTime(2026, 11, 20, 0, 5),
+      retriesRemaining: 2,
+    );
+    expect(await inbox.put(entry), isTrue);
+    var retries = 0;
+    Future<void> retry() => withAuthorizedFamilyChatRetry(
+      db: db,
+      currentUid: () => uid,
+      entry: entry,
+      event: event,
+      deliver: () async {
+        retries++;
+      },
+    );
 
     await db.queueReceipt(scope, 'question', true);
-    await db.markMessageNotificationForCancellation(scope, 'question');
-    expect(await db.historyCancellationIntents(scope), [notice]);
-
-    await db.confirmCancelled(notice);
-    await db.rememberNotification(scope, notice.id, 'one', tag: notice.tag);
     await db.markLocallyReadNotificationsForCancellation(scope);
-    expect(await db.historyCancellationIntents(scope), [notice]);
+    expect(await db.historyCancellationIntents(scope), isEmpty);
+    await retry();
+    expect(retries, 1);
+
+    uid = 'someone-else';
+    await retry();
+    expect(retries, 1);
+    uid = 'child';
+    expect(await worker.reply(event.payload, 'Mam'), isTrue);
+    await retry();
+    expect(retries, 1);
   });
+
+  test(
+    'reading schedules tray cleanup and recovers older read notices',
+    () async {
+      final db = FamilyChatDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      final notice = familyChatNotice(scope, 'question');
+      await db.activateChat('child', scope, 'one');
+      await db.rememberNotification(scope, notice.id, 'one', tag: notice.tag);
+      await db.queueReceipt(scope, 'question', false);
+      expect(await db.historyCancellationIntents(scope), isEmpty);
+
+      await db.queueReceipt(scope, 'question', true);
+      await db.markMessageNotificationForCancellation(scope, 'question');
+      expect(await db.historyCancellationIntents(scope), [notice]);
+
+      await db.confirmCancelled(notice);
+      await db.rememberNotification(scope, notice.id, 'one', tag: notice.tag);
+      await db.markLocallyReadNotificationsForCancellation(scope);
+      expect(await db.historyCancellationIntents(scope), [notice]);
+    },
+  );
   test(
     'foreground recovery presents a saved push before flushing its receipt',
     () async {

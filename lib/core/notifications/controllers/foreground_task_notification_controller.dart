@@ -16,10 +16,26 @@ class ForegroundTaskNotificationController implements NotificationsController {
   Future<void> init() async {}
 
   @override
-  Future<void> show(NotificationEvent event) async {
+  Future<void> show(NotificationEvent event) => _show(event);
+
+  Future<void> showRetry(
+    NotificationEvent event,
+    int retryOf,
+    int retryClaim,
+  ) => _show(event, retryOf: retryOf, retryClaim: retryClaim);
+
+  Future<void> _show(
+    NotificationEvent event, {
+    int? retryOf,
+    int? retryClaim,
+  }) async {
     final payload = TaskInAppNotificationPayload(
       type: event.type,
-      data: event.toJson(),
+      data: {
+        ...event.toJson(),
+        if (retryOf != null) notificationRetryOfKey: retryOf,
+        if (retryClaim != null) notificationRetryClaimKey: retryClaim,
+      },
     );
     _ref.read(taskEventRouterProvider).send(payload);
   }

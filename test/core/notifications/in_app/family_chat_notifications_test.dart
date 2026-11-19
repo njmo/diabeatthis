@@ -30,13 +30,21 @@ class _LocalController extends LocalNotificationsController {
   _LocalController() : super(FlutterLocalNotificationsPlugin());
 
   final shown = <NotificationEvent>[];
+  final retries = <NotificationEvent>[];
   final cancelled = <(int, String?)>[];
   Future<void> Function()? beforeShow;
+  Future<void> Function()? beforeRetry;
 
   @override
   Future<void> show(NotificationEvent event) async {
     await beforeShow?.call();
     shown.add(event);
+  }
+
+  @override
+  Future<void> showRetry(NotificationEvent event) async {
+    await beforeRetry?.call();
+    retries.add(event);
   }
 
   @override
@@ -107,16 +115,18 @@ void main() {
     expect(actions.last.inputs.single.choices, isEmpty);
   });
 
-  ProviderContainer createContainer({List<Override> overrides = const []}) =>
-      ProviderContainer.test(
-        overrides: [
-          localNotificationsControllerProvider.overrideWithValue(local),
-          familyChatInboxVisibilityProvider.overrideWithValue(
-            (entries) async => entries,
-          ),
-          ...overrides,
-        ],
-      );
+  ProviderContainer createContainer({
+    List<Override> overrides = const [],
+    bool allowChat = true,
+  }) => ProviderContainer.test(
+    overrides: [
+      localNotificationsControllerProvider.overrideWithValue(local),
+      familyChatInboxVisibilityProvider.overrideWithValue(
+        (entries) async => allowChat ? entries : [],
+      ),
+      ...overrides,
+    ],
+  );
 
   test('foreground delivery shows only a banner', () async {
     final container = createContainer();
@@ -158,6 +168,14 @@ void main() {
     'pausing during the inbox read sends the notification to Android',
     () async {
       final store = _PausedInboxRead();
+      await store.put(
+        NotificationInboxEntry.fromEvent(
+          message,
+          id: message.id,
+          createdAt: clock.now(),
+          inApp: true,
+        ),
+      );
       final container = createContainer(
         overrides: [notificationInboxStoreProvider.overrideWithValue(store)],
       );
@@ -171,6 +189,249 @@ void main() {
       await presenting;
       expect(local.shown, [message]);
       expect(container.read(inAppNotificationCenterProvider).current, isNull);
+    },
+  );
+
+  for (final paused in [false, true]) {
+    test('purged chat retries are dropped even while paused=$paused', () async {
+      final container = createContainer();
+      final store = container.read(notificationInboxStoreProvider);
+      final createdAt = clock.now();
+      await store.put(
+        NotificationInboxEntry.fromEvent(
+          message,
+          id: message.id,
+          createdAt: createdAt,
+          inApp: true,
+        ),
+      );
+      await store.purgeFamilyChat();
+      if (paused) {
+        container
+            .read(appLifecycleProvider.notifier)
+            .setState(AppLifecycleState.paused);
+      }
+      final center = container.read(inAppNotificationCenterProvider.notifier);
+      await center.present(message, retryOf: createdAt.millisecondsSinceEpoch);
+      expect(container.read(inAppNotificationCenterProvider).current, isNull);
+      expect(local.shown, isEmpty);
+      expect(local.retries, isEmpty);
+    });
+  }
+
+  test(
+    'retained chat data is not presented when authorization is denied',
+    () async {
+      final container = createContainer(allowChat: false);
+      final store = container.read(notificationInboxStoreProvider);
+      final createdAt = clock.now();
+      await store.put(
+        NotificationInboxEntry.fromEvent(
+          message,
+          id: message.id,
+          createdAt: createdAt,
+          inApp: true,
+        ),
+      );
+      container
+          .read(appLifecycleProvider.notifier)
+          .setState(AppLifecycleState.paused);
+      await container
+          .read(inAppNotificationCenterProvider.notifier)
+          .present(message, retryOf: createdAt.millisecondsSinceEpoch);
+      expect(local.shown, isEmpty);
+      expect(local.retries, isEmpty);
+    },
+  );
+
+  test(
+    'a retry handed over after a pause asks Android to alert again',
+    () async {
+      final container = createContainer();
+      final store = container.read(notificationInboxStoreProvider);
+      final createdAt = clock.now();
+      await store.put(
+        NotificationInboxEntry.fromEvent(
+          message,
+          id: message.id,
+          createdAt: createdAt,
+          inApp: true,
+        ),
+      );
+      final center = container.read(inAppNotificationCenterProvider.notifier);
+      container
+          .read(appLifecycleProvider.notifier)
+          .setState(AppLifecycleState.paused);
+      await center.present(message, retryOf: createdAt.millisecondsSinceEpoch);
+      expect(local.shown, isEmpty);
+      expect(local.retries, [message]);
+    },
+  );
+
+  test(
+    'only a successful retry handoff advances the durable attempt',
+    () async {
+      final container = createContainer();
+      final store = container.read(notificationInboxStoreProvider);
+      final now = clock.now();
+      final due = now.subtract(const Duration(seconds: 1));
+      await store.put(
+        NotificationInboxEntry.fromEvent(
+          message,
+          id: message.id,
+          createdAt: due.subtract(const Duration(minutes: 5)),
+          retryAt: due,
+          retriesRemaining: 2,
+        ),
+      );
+      final claimDeadline = now.add(const Duration(seconds: 30));
+      final entry = (await store.get(message.id))!;
+      expect(
+        await store.advanceRetry(
+          entry,
+          nextDue: due,
+          remaining: 2,
+          inApp: false,
+          resetRead: false,
+          leaseUntil: claimDeadline,
+        ),
+        isTrue,
+      );
+      final center = container.read(inAppNotificationCenterProvider.notifier);
+      container
+          .read(appLifecycleProvider.notifier)
+          .setState(AppLifecycleState.paused);
+      Future<void> deliver() => center.present(
+        message,
+        retryOf: entry.createdAt.millisecondsSinceEpoch,
+        retryClaim: claimDeadline.millisecondsSinceEpoch,
+      );
+
+      local.beforeRetry = () async => throw StateError('Android unavailable');
+      await deliver();
+      expect(local.retries, isEmpty);
+      expect((await store.get(message.id))?.retriesRemaining, 2);
+
+      local.beforeRetry = null;
+      await deliver();
+      expect(local.retries, [message]);
+      expect((await store.get(message.id))?.retriesRemaining, 1);
+
+      await deliver();
+      expect(local.retries, [message]);
+    },
+  );
+
+  test('a late UI message cannot present a superseded claim', () async {
+    final container = createContainer();
+    final store = container.read(notificationInboxStoreProvider);
+    final now = clock.now();
+    final due = now.subtract(const Duration(seconds: 1));
+    final firstClaim = now.add(const Duration(seconds: 25));
+    final latestClaim = now.add(const Duration(seconds: 30));
+    await store.put(
+      NotificationInboxEntry.fromEvent(
+        message,
+        id: message.id,
+        createdAt: due.subtract(const Duration(minutes: 5)),
+        retryAt: due,
+        retriesRemaining: 2,
+      ),
+    );
+    Future<void> claim(DateTime deadline) async {
+      expect(
+        await store.advanceRetry(
+          (await store.get(message.id))!,
+          nextDue: due,
+          remaining: 2,
+          inApp: false,
+          resetRead: false,
+          leaseUntil: deadline,
+        ),
+        isTrue,
+      );
+    }
+
+    await claim(firstClaim);
+    await claim(latestClaim);
+    final entry = (await store.get(message.id))!;
+    final center = container.read(inAppNotificationCenterProvider.notifier);
+    container
+        .read(appLifecycleProvider.notifier)
+        .setState(AppLifecycleState.paused);
+
+    await center.present(
+      message,
+      retryOf: entry.createdAt.millisecondsSinceEpoch,
+      retryClaim: firstClaim.millisecondsSinceEpoch,
+    );
+    expect(local.retries, isEmpty);
+    expect((await store.get(message.id))?.retriesRemaining, 2);
+
+    await center.present(
+      message,
+      retryOf: entry.createdAt.millisecondsSinceEpoch,
+      retryClaim: latestClaim.millisecondsSinceEpoch,
+    );
+    expect(local.retries, [message]);
+    expect((await store.get(message.id))?.retriesRemaining, 1);
+  });
+
+  test(
+    'a delayed Android post restores the newer notification generation',
+    () async {
+      final container = createContainer();
+      final store = container.read(notificationInboxStoreProvider);
+      final createdAt = clock.now().subtract(const Duration(seconds: 1));
+      await store.put(
+        NotificationInboxEntry.fromEvent(
+          message,
+          id: message.id,
+          createdAt: createdAt,
+          inApp: true,
+        ),
+      );
+      final entered = Completer<void>();
+      final finish = Completer<void>();
+      local.beforeRetry = () async {
+        entered.complete();
+        await finish.future;
+      };
+      final center = container.read(inAppNotificationCenterProvider.notifier);
+      container
+          .read(appLifecycleProvider.notifier)
+          .setState(AppLifecycleState.paused);
+      final older = center.present(
+        message,
+        retryOf: createdAt.millisecondsSinceEpoch,
+      );
+      await entered.future;
+
+      final replacement = FamilyChatNotificationEvent(
+        id: message.id,
+        tag: message.tag,
+        title: 'Reply sent',
+        body: 'New status',
+        payload: message.payload,
+        silent: true,
+      );
+      await store.put(
+        NotificationInboxEntry.fromEvent(
+          replacement,
+          id: replacement.id,
+          createdAt: clock.now(),
+        ),
+      );
+      await local.show(replacement);
+      finish.complete();
+      await older;
+
+      expect(local.retries, [message]);
+      expect(local.cancelled, contains((message.id, message.tag)));
+      expect(local.shown.map((event) => event.body), [
+        'New status',
+        'New status',
+      ]);
     },
   );
 

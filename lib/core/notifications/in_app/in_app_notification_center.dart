@@ -19,6 +19,7 @@ import '../domain/models/notification_event.dart';
 import '../domain/models/notification_event_actions.dart';
 import '../domain/models/notification_event_type.dart';
 import '../domain/models/notification_identity.dart';
+import '../domain/models/notification_retry_policy.dart';
 import '../handlers/notification_response_handler.dart';
 import '../inbox/notification_inbox_entry.dart';
 import '../inbox/notification_inbox_store.dart';
@@ -30,11 +31,13 @@ class InAppBanner {
     required this.id,
     required this.event,
     required this.definition,
+    this.retry = false,
   });
 
   final int id;
   final NotificationEvent event;
   final NotificationDefinition definition;
+  final bool retry;
 
   /// The buttons this delivery offers, as on the system notification.
   List<NotificationActionDef> get actions =>
@@ -141,24 +144,47 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
 
   /// Shows [event] as a banner, or as a system notification when the app is
   /// no longer visible by the time the event arrives.
-  Future<void> present(NotificationEvent event) async {
+  Future<void> present(
+    NotificationEvent event, {
+    int? retryOf,
+    int? retryClaim,
+  }) async {
     final id = notificationIdentity(event).id;
     if (_handingOver.contains(id)) return;
-    // The service records a delivery before announcing it. If the user already
-    // handled that delivery through a banner restored from the inbox, a late
-    // announcement must not bring it back.
     final recorded = event is FamilyChatNotificationEvent && event.transient
         ? null
         : await _store.get(id);
     if (!ref.mounted) return;
-    if (recorded != null && (recorded.read || !recorded.active)) {
-      await refresh();
+    if (!await _canPresent(
+      event,
+      recorded,
+      retryOf: retryOf,
+      retryClaim: retryClaim,
+    )) {
+      if (ref.mounted) await refresh();
       return;
     }
+    if (!ref.mounted || _handingOver.contains(id)) return;
+    final retry = retryOf != null || recorded?.retryDelivery == true;
     if (!_isVisible) {
       _handingOver.add(id);
       try {
-        await _postSystem(event, id, wasRecorded: recorded != null);
+        final posted = await _postSystem(
+          event,
+          id,
+          recorded: recorded,
+          retry: retry,
+          retryClaim: retryClaim,
+        );
+        if (posted && recorded != null && retryClaim != null) {
+          await _completeRetry(recorded, inApp: false);
+        }
+      } catch (error, stackTrace) {
+        logE(
+          'Could not hand over notification',
+          error: error,
+          stackTrace: stackTrace,
+        );
       } finally {
         _handingOver.remove(id);
       }
@@ -171,9 +197,88 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
         id: id,
         event: event,
         definition: _catalog.byType(event.type),
+        retry: retry,
       ),
     );
-    await refresh();
+    if (recorded != null && retryClaim != null) {
+      await _completeRetry(recorded, inApp: true);
+    }
+    if (ref.mounted) await refresh();
+  }
+
+  Future<void> _completeRetry(
+    NotificationInboxEntry entry, {
+    required bool inApp,
+  }) => _store.advanceRetry(
+    entry,
+    nextDue: clock.now().add(notificationRetryDelay),
+    remaining: entry.retriesRemaining - 1,
+    inApp: inApp,
+    resetRead: false,
+    retryDelivery: true,
+  );
+
+  Future<bool> _canPresent(
+    NotificationEvent event,
+    NotificationInboxEntry? entry, {
+    int? retryOf,
+    int? retryClaim,
+  }) async {
+    if (retryClaim != null &&
+        (entry == null ||
+            entry.retryClaim != retryClaim ||
+            retryClaim <= clock.now().millisecondsSinceEpoch ||
+            entry.retriesRemaining <= 0)) {
+      return false;
+    }
+    if (retryOf != null && entry?.createdAt.millisecondsSinceEpoch != retryOf) {
+      return false;
+    }
+    if (entry != null && (!entry.active || entry.read)) return false;
+    if (event is! FamilyChatNotificationEvent || event.transient) return true;
+    final payload = entry?.data['payload'];
+    if (entry == null ||
+        entry.type != NotificationEventType.familyChat ||
+        entry.data['tag'] != event.tag ||
+        payload is! Map ||
+        const [
+          'uid',
+          'scope',
+          'stamp',
+          'messageId',
+          'historyGeneration',
+          'inboxRevision',
+        ].any((key) => payload[key] != event.payload[key])) {
+      return false;
+    }
+
+    final expiresAt = entry.data['expiresAt'];
+    if (retryOf != null &&
+        expiresAt is int &&
+        expiresAt <= clock.now().millisecondsSinceEpoch) {
+      return false;
+    }
+
+    try {
+      final allowed = await ref.read(familyChatInboxVisibilityProvider)([
+        entry,
+      ]);
+      if (!ref.mounted || !allowed.any((allowed) => allowed.id == entry.id)) {
+        return false;
+      }
+      final current = await _store.get(entry.id);
+      return ref.mounted &&
+          current != null &&
+          current.createdAt == entry.createdAt &&
+          (retryClaim == null ||
+              (current.retryClaim == retryClaim &&
+                  clock.now().millisecondsSinceEpoch < retryClaim)) &&
+          current.active &&
+          !current.read;
+    } catch (error) {
+      logW('Could not authorize chat banner (${error.runtimeType})');
+      return false;
+    }
   }
 
   /// The user closed the banner. The notification stays in the inbox and its
@@ -317,7 +422,8 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
       // Not persisted yet (or storage unavailable): keep what was presented.
       // Answered, withdrawn or already seen in the inbox: take it down.
       return entry == null
-          ? !previouslyStored.contains(banner.id)
+          ? banner.event is! FamilyChatNotificationEvent &&
+                !previouslyStored.contains(banner.id)
           : entry.active && !entry.read;
     }).toList();
     if (!_isVisible) return banners;
@@ -339,6 +445,7 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
           id: entry.id,
           event: event,
           definition: definitionFor(entry),
+          retry: entry.retryDelivery,
         ),
       );
       // It may have been handed to the system tray while the app was in the
@@ -394,19 +501,52 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
     );
   }
 
-  Future<void> _postSystem(
+  Future<bool> _postSystem(
     NotificationEvent event,
     int id, {
-    required bool wasRecorded,
+    required NotificationInboxEntry? recorded,
+    required bool retry,
+    int? retryClaim,
   }) async {
-    await _local.show(event);
-    if (!ref.mounted) return;
-    final after = wasRecorded ? await _store.get(id) : null;
-    if (!ref.mounted) return;
-    if (_isVisible ||
-        (wasRecorded && (after == null || !after.active || after.read))) {
-      await _withdrawSystemCopy(event);
+    final retryOf = recorded?.createdAt.millisecondsSinceEpoch;
+    final before = recorded == null ? null : await _store.get(id);
+    if (!ref.mounted ||
+        !await _canPresent(
+          event,
+          before,
+          retryOf: retryOf,
+          retryClaim: retryClaim,
+        )) {
+      return false;
     }
+    if (!ref.mounted) return false;
+    if (retry) {
+      await _local.showRetry(event);
+    } else {
+      await _local.show(event);
+    }
+    if (!ref.mounted) return true;
+    final after = recorded == null ? null : await _store.get(id);
+    if (!ref.mounted) return true;
+    if (recorded != null &&
+        after != null &&
+        after.createdAt != recorded.createdAt) {
+      // The older platform call may have finished after the replacement.
+      await _withdrawSystemCopy(event);
+      if (ref.mounted && !_isVisible) {
+        final replacement = eventFor(after);
+        if (replacement != null) {
+          await _postSystem(replacement, id, recorded: after, retry: false);
+        }
+      }
+      return true;
+    }
+    if (_isVisible ||
+        (recorded != null &&
+            !await _canPresent(event, after, retryOf: retryOf))) {
+      if (ref.mounted) await _withdrawSystemCopy(event);
+    }
+    return true;
   }
 
   /// Banners that still expect an answer must not vanish when the user leaves
@@ -429,7 +569,12 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
             before.read) {
           continue;
         }
-        await _postSystem(banner.event, banner.id, wasRecorded: true);
+        await _postSystem(
+          banner.event,
+          banner.id,
+          recorded: before,
+          retry: banner.retry || before.retryDelivery,
+        );
       } catch (error, stackTrace) {
         logE(
           'Could not hand banner ${banner.id} over to the system',
