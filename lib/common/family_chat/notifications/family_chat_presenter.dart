@@ -99,6 +99,7 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
     payload: view.payload,
     silent: true,
     timeoutAfter: familyChatReplyAcknowledgmentTimeoutMs,
+    transient: true,
   );
 
   @override

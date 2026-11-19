@@ -28,8 +28,7 @@ class DashboardUserMenu extends StatelessWidget {
           const _FamilyChatButton(),
         IconButton(
           tooltip: context.lang.settingsTitle,
-          iconSize: 26,
-          icon: const Icon(Icons.settings_outlined),
+          icon: const Icon(LucideIcons.settings, size: 21),
           onPressed: () => context.router.pushPath('/settings'),
         ),
       ],
@@ -140,7 +139,7 @@ class _FamilyChatButtonState extends ConsumerState<_FamilyChatButton> {
             isLabelVisible: hasUnread,
             label: Text(senderName.isEmpty ? '' : senderName.characters.first),
             backgroundColor: const Color(0xFF0EA5E9),
-            child: const Icon(LucideIcons.messagesSquare, size: 26),
+            child: const Icon(LucideIcons.messagesSquare, size: 21),
           ),
           onPressed: () {
             Navigator.of(context).push(

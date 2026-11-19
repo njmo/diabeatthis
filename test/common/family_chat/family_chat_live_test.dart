@@ -327,7 +327,7 @@ void main() {
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
       final list = tester.widget<ListView>(find.byType(ListView));
-      list.controller!.jumpTo(0);
+      list.controller!.jumpTo(list.controller!.position.maxScrollExtent);
       await tester.pumpAndSettle();
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pumpWidget(app());
@@ -335,7 +335,7 @@ void main() {
       await _pumpSync(tester, session);
       expect(api.readIds, contains('long-question'));
       expect(api.readIds, isNot(contains('inline-answer')));
-      list.controller!.jumpTo(list.controller!.position.maxScrollExtent);
+      list.controller!.jumpTo(list.controller!.position.minScrollExtent);
       await tester.pumpAndSettle();
       await _pumpSync(tester, session);
       expect(api.readIds, contains('inline-answer'));

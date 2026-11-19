@@ -209,6 +209,34 @@ void main() {
     await tester.runAsync(() => Future<void>.delayed(Duration.zero));
     await tester.pumpAndSettle();
     expect(container.read(inAppNotificationCenterProvider).unreadCount, 0);
+    expect(
+      tester.getSize(find.byType(BottomSheet)).height,
+      tester.view.physicalSize.height / tester.view.devicePixelRatio / 2,
+    );
+    expect(find.byType(ListView), findsOneWidget);
+  });
+
+  testWidgets('empty inbox is a compact sheet with a clear message', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    expect(
+      find.descendant(
+        of: find.byType(NotificationInboxButton),
+        matching: find.byType(IconButton),
+      ),
+      findsNothing,
+    );
+    final scaffold = tester.element(find.byType(Scaffold));
+    showNotificationInbox(scaffold);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getSize(find.byType(BottomSheet)).height,
+      tester.view.physicalSize.height / tester.view.devicePixelRatio / 5,
+    );
+    expect(find.text('Brak powiadomień'), findsOneWidget);
+    expect(find.byType(ListView), findsNothing);
   });
 
   testWidgets('an in-app notification whose message never reached the UI is '

@@ -25,7 +25,7 @@ class DashboardGreeting extends ConsumerWidget {
           photoPath: account == null ? photoPath : null,
           photoUrl: account?.photoUrl,
           name: name,
-          size: 34,
+          size: 28,
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -34,8 +34,8 @@ class DashboardGreeting extends ConsumerWidget {
                 ? name
                 : context.lang.dashboardGreetingShort,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontSize: 23,
-              fontWeight: FontWeight.w600,
+              fontSize: 19,
+              fontWeight: FontWeight.w700,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,

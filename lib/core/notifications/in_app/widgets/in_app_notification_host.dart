@@ -127,7 +127,13 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
     // Informational banners leave on their own; anything awaiting an answer
     // stays until the user acts on it or closes it.
     if (_informational) {
-      _autoDismiss = Timer(_autoDismissAfter, _dismiss);
+      final event = widget.banner.event;
+      final duration = switch (event) {
+        FamilyChatNotificationEvent(transient: true, timeoutAfter: final ms?) =>
+          Duration(milliseconds: ms),
+        _ => _autoDismissAfter,
+      };
+      _autoDismiss = Timer(duration, _dismiss);
     }
   }
 
@@ -191,10 +197,12 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: AppRadius.cardBorderRadius,
-              side: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: 0.6),
-                width: 0.5,
-              ),
+              side: theme.brightness == Brightness.light
+                  ? BorderSide(color: scheme.outline.withValues(alpha: 0.55))
+                  : BorderSide(
+                      color: scheme.outlineVariant.withValues(alpha: 0.6),
+                      width: 0.5,
+                    ),
             ),
             clipBehavior: Clip.antiAlias,
             child: InkWell(

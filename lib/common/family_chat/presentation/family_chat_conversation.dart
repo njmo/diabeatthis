@@ -546,7 +546,9 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
   }
 
   List<String> get _recipients => widget._session.targets;
-  String _recipientName(String id) => widget._session.name(id);
+  String _recipientName(String id) => id == 'family'
+      ? context.lang.familyChatRecipientFamily
+      : widget._session.name(id);
   bool get _group => _recipient == 'family';
 
   /// The child whose answer can close a question in [target]. Unresolvable
@@ -783,24 +785,11 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
     _initialScrollPending = true;
     _scrollingToLatest = false;
     final revision = ++_scrollJumpRevision;
-    var attempts = 0;
-    void settle(Duration _) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || revision != _scrollJumpRevision) return;
-      if (_scroll.hasClients) _scroll.jumpTo(_scroll.position.maxScrollExtent);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || revision != _scrollJumpRevision) return;
-        if (_scroll.hasClients &&
-            _scroll.position.extentAfter > 1 &&
-            attempts++ < 20) {
-          settle(Duration.zero);
-        } else {
-          setState(() => _initialScrollPending = false);
-        }
-      });
-      WidgetsBinding.instance.scheduleFrame();
-    }
-
-    WidgetsBinding.instance.addPostFrameCallback(settle);
+      if (_scroll.hasClients) _scroll.jumpTo(_scroll.position.minScrollExtent);
+      setState(() => _initialScrollPending = false);
+    });
   }
 
   Future<bool> _sendRemote(
@@ -914,7 +903,7 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted && _scroll.hasClients) {
         await _scroll.animateTo(
-          _scroll.position.maxScrollExtent,
+          _scroll.position.minScrollExtent,
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOut,
         );
@@ -1428,78 +1417,140 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
     if (last != _lastRenderedMessage &&
         !_initialScrollPending &&
         _scroll.hasClients &&
-        _scroll.position.extentAfter < 60) {
+        _scroll.position.extentBefore < 60) {
       _toBottom();
     }
     _lastRenderedMessage = last;
     _scheduleRead();
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final dark = theme.brightness == Brightness.dark;
+    final chrome = dark
+        ? colors.surfaceContainer
+        : colors.surfaceContainerLowest;
+    final accent = dark ? colors.primary : colors.onPrimaryContainer;
+    final divider = BorderSide(color: colors.outlineVariant);
+    final composerBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(24),
+      borderSide: BorderSide(color: colors.outline),
+    );
+    final recipients = _recipients;
     return Scaffold(
-      backgroundColor: dark ? const Color(0xFF0F172A) : const Color(0xFFF6F8FA),
+      backgroundColor: colors.surface,
       appBar: AppBar(
+        backgroundColor: chrome,
+        systemOverlayStyle: theme.appBarTheme.systemOverlayStyle?.copyWith(
+          systemNavigationBarColor: chrome,
+          systemNavigationBarContrastEnforced: false,
+        ),
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: colors.onSurface,
         titleSpacing: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.lang.familyChatNavTitle),
-            Text(
-              widget._session.error == null
-                  ? context.lang.familyChatRecipientFamily
-                  : context.lang.familyChatOfflineQueued,
-              style: theme.textTheme.labelSmall?.copyWith(color: _accent),
-            ),
-          ],
+        toolbarHeight: 66,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(height: 1, color: divider.color),
+        ),
+        title: LayoutBuilder(
+          builder: (context, constraints) {
+            final visibleCount = math.min(recipients.length, 3);
+            final stripWidth = math.min(
+              visibleCount * 62.0,
+              constraints.maxWidth * 0.66,
+            );
+            final cellWidth = visibleCount == 0
+                ? 0.0
+                : stripWidth / visibleCount;
+            return Row(
+              children: [
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.lang.familyChatNavTitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (widget._session.error != null)
+                        Text(
+                          context.lang.familyChatOfflineQueued,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: accent,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: stripWidth,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        for (final (index, recipient) in recipients.indexed)
+                          SizedBox(
+                            width: cellWidth,
+                            child: _ConversationAvatar(
+                              key: ValueKey('chat-target-$recipient'),
+                              colorIndex: index,
+                              name: _recipientName(
+                                recipient,
+                              ).trim().split(RegExp(r'\s+')).first,
+                              selected: _recipient == recipient,
+                              family: recipient == 'family',
+                              hasUnread:
+                                  widget._session.hasUnreadIn(recipient) ==
+                                  true,
+                              photoUrl:
+                                  widget._session.members
+                                          .where(
+                                            (member) =>
+                                                member['uid'] == recipient,
+                                          )
+                                          .firstOrNull?['photoUrl']
+                                      as String?,
+                              onTap: () => setState(() {
+                                _draftTimer?.cancel();
+                                unawaited(
+                                  _persistDraft(_recipient, _input.text),
+                                );
+                                _recipient = recipient;
+                                _jumpToLatest();
+                                _draftTimer?.cancel();
+                                _input.text = widget._session.draft(recipient);
+                              }),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
         actions: [
           IconButton(
             tooltip: context.lang.familyChatConversationOptionsTooltip,
-            icon: const Icon(Icons.more_horiz),
+            icon: const Icon(Icons.more_vert_rounded),
+            color: accent,
             onPressed: _options,
           ),
         ],
       ),
       body: SafeArea(
+        bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  for (final recipient in _recipients)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _ConversationAvatar(
-                        key: ValueKey('chat-target-$recipient'),
-                        name: _recipientName(
-                          recipient,
-                        ).trim().split(RegExp(r'\s+')).first,
-                        selected: _recipient == recipient,
-                        family: recipient == 'family',
-                        hasUnread:
-                            widget._session.hasUnreadIn(recipient) == true,
-                        photoUrl:
-                            widget._session.members
-                                    .where(
-                                      (member) => member['uid'] == recipient,
-                                    )
-                                    .firstOrNull?['photoUrl']
-                                as String?,
-                        onTap: () => setState(() {
-                          _draftTimer?.cancel();
-                          unawaited(_persistDraft(_recipient, _input.text));
-                          _recipient = recipient;
-                          _jumpToLatest();
-                          _draftTimer?.cancel();
-                          _input.text = widget._session.draft(recipient);
-                        }),
-                      ),
-                    ),
-                ],
-              ),
-            ),
             if (widget._session.historyClearPending ||
                 widget._session.historyClearConflict)
               Padding(
@@ -1554,6 +1605,7 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton.icon(
+                  style: TextButton.styleFrom(foregroundColor: accent),
                   icon: const Icon(Icons.history, size: 18),
                   label: Text(context.lang.familyChatOlderMessages),
                   onPressed: () async {
@@ -1574,6 +1626,7 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                 ),
                 if (widget._session.showingOlder(_recipient))
                   TextButton(
+                    style: TextButton.styleFrom(foregroundColor: accent),
                     child: Text(context.lang.familyChatLatestMessages),
                     onPressed: () async {
                       try {
@@ -1601,30 +1654,52 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
               child: ListView.builder(
                 key: _messageViewport,
                 controller: _scroll,
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                itemCount: messages.length + 1,
+                reverse: true,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+                itemCount: messages.length,
                 itemBuilder: (context, itemIndex) {
-                  if (itemIndex == 0) {
-                    return const SizedBox(height: 12);
-                  }
-                  final index = itemIndex - 1;
+                  final index = messages.length - 1 - itemIndex;
                   final message = messages[index];
+                  final previous = index == 0 ? null : messages[index - 1];
+                  final newDay =
+                      previous == null ||
+                      !DateUtils.isSameDay(
+                        previous.createdAt,
+                        message.createdAt,
+                      );
+                  final newGroup =
+                      newDay ||
+                      previous.mine != message.mine ||
+                      previous.sender != message.sender;
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if ((index == 0 ||
-                          !DateUtils.isSameDay(
-                            messages[index - 1].createdAt,
-                            message.createdAt,
-                          )))
+                      if (newDay)
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Center(
-                            child: Text(
-                              DateFormat(
-                                'dd.MM.yyyy',
-                              ).format(message.createdAt),
-                              style: theme.textTheme.labelSmall,
-                            ),
+                          padding: const EdgeInsets.only(top: 8, bottom: 14),
+                          child: Row(
+                            children: [
+                              Expanded(child: Divider(color: divider.color)),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                child: Text(
+                                  DateUtils.isSameDay(
+                                        message.createdAt,
+                                        DateTime.now(),
+                                      )
+                                      ? context.lang.familyChatToday
+                                      : DateFormat(
+                                          'dd.MM.yyyy',
+                                        ).format(message.createdAt),
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: colors.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                              Expanded(child: Divider(color: divider.color)),
+                            ],
                           ),
                         ),
                       KeyedSubtree(
@@ -1634,129 +1709,111 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                                 message.id!,
                                 GlobalKey.new,
                               ),
-                        child: _bubble(message, dark),
+                        child: _bubble(message, startsGroup: newGroup),
                       ),
                     ],
                   );
                 },
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      ...[
-                        GestureDetector(
-                          onLongPress: !widget._session.serverVerified
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              decoration: BoxDecoration(
+                color: chrome,
+                border: Border(top: divider),
+              ),
+              child: SafeArea(
+                top: false,
+                left: false,
+                right: false,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    ...[
+                      GestureDetector(
+                        onLongPress: !widget._session.serverVerified
+                            ? null
+                            : widget.isCaregiver
+                            ? _quickQuestions
+                            : _quickReplyMenu,
+                        child: IconButton(
+                          tooltip: widget.isCaregiver
+                              ? context.lang.familyChatQuickQuestionTooltip
+                              : context.lang.familyChatQuickReplyTooltip,
+                          onPressed: !widget._session.serverVerified
                               ? null
                               : widget.isCaregiver
                               ? _quickQuestions
                               : _quickReplyMenu,
-                          child: IconButton(
-                            tooltip: widget.isCaregiver
-                                ? context.lang.familyChatQuickQuestionTooltip
-                                : context.lang.familyChatQuickReplyTooltip,
-                            onPressed: !widget._session.serverVerified
-                                ? null
-                                : widget.isCaregiver
-                                ? _quickQuestions
-                                : _quickReplyMenu,
-                            style: IconButton.styleFrom(
-                              foregroundColor: _accent,
-                              minimumSize: const Size(36, 40),
-                              padding: const EdgeInsets.all(6),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            icon: const Icon(Icons.bolt_rounded, size: 22),
+                          style: IconButton.styleFrom(
+                            foregroundColor: accent,
+                            minimumSize: const Size(36, 40),
+                            padding: const EdgeInsets.all(6),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
+                          icon: const Icon(Icons.bolt_rounded, size: 22),
                         ),
-                        const SizedBox(width: 2),
-                        if (widget.isCaregiver) ...[
-                          IconButton(
-                            tooltip:
-                                context.lang.familyChatSendLowTreatmentTooltip,
-                            onPressed: !widget._session.serverVerified
-                                ? null
-                                : _composeLowTreatment,
-                            style: IconButton.styleFrom(
-                              minimumSize: const Size(36, 40),
-                              padding: const EdgeInsets.all(6),
-                              foregroundColor: _accent,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            icon: const Icon(Icons.cookie_outlined, size: 22),
+                      ),
+                      const SizedBox(width: 2),
+                      if (widget.isCaregiver) ...[
+                        IconButton(
+                          tooltip:
+                              context.lang.familyChatSendLowTreatmentTooltip,
+                          onPressed: !widget._session.serverVerified
+                              ? null
+                              : _composeLowTreatment,
+                          style: IconButton.styleFrom(
+                            minimumSize: const Size(36, 40),
+                            padding: const EdgeInsets.all(6),
+                            foregroundColor: accent,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          const SizedBox(width: 6),
-                        ],
+                          icon: const Icon(Icons.cookie_outlined, size: 22),
+                        ),
+                        const SizedBox(width: 6),
                       ],
-                      Expanded(
-                        child: TextField(
-                          controller: _input,
-                          minLines: 1,
-                          maxLines: 3,
-                          maxLength: 500,
-                          style: const TextStyle(fontSize: 14),
-                          decoration: InputDecoration(
-                            isDense: true,
-                            counterText: '',
-                            hintText: widget.isCaregiver
-                                ? context.lang.familyChatComposerHintCaregiver
-                                : context.lang.familyChatComposerHintChild,
-                            filled: true,
-                            fillColor: dark
-                                ? const Color(0xFF1E293B)
-                                : Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(24),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            suffixIconConstraints: const BoxConstraints(
-                              minWidth: 40,
-                              minHeight: 40,
-                            ),
-                            suffixIcon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (widget.isCaregiver)
-                                  IconButton(
-                                    tooltip: context
-                                        .lang
-                                        .familyChatSendQuestionTooltip,
-                                    onPressed:
-                                        _sendingComposer ||
-                                            !widget._session.canQueueComposer
-                                        ? null
-                                        : () => _sendComposer(question: true),
-                                    style: IconButton.styleFrom(
-                                      minimumSize: const Size(40, 40),
-                                      padding: const EdgeInsets.all(8),
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    icon: Icon(
-                                      Icons.help_outline_rounded,
-                                      color: _accent,
-                                      size: 20,
-                                    ),
-                                  ),
+                    ],
+                    Expanded(
+                      child: TextField(
+                        controller: _input,
+                        minLines: 1,
+                        maxLines: 3,
+                        maxLength: 500,
+                        style: theme.textTheme.bodyLarge,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          counterText: '',
+                          hintText: widget.isCaregiver
+                              ? context.lang.familyChatComposerHintCaregiver
+                              : context.lang.familyChatComposerHintChild,
+                          filled: true,
+                          fillColor: colors.surface,
+                          border: composerBorder,
+                          enabledBorder: composerBorder,
+                          focusedBorder: composerBorder.copyWith(
+                            borderSide: BorderSide(color: accent, width: 1.5),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          suffixIconConstraints: const BoxConstraints(
+                            minWidth: 40,
+                            minHeight: 40,
+                          ),
+                          suffixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (widget.isCaregiver)
                                 IconButton(
-                                  tooltip: _input.text.trim().isEmpty
-                                      ? context.lang.familyChatSendOkTooltip
-                                      : context
-                                            .lang
-                                            .familyChatSendMessageTooltip,
+                                  tooltip: context
+                                      .lang
+                                      .familyChatSendQuestionTooltip,
                                   onPressed:
                                       _sendingComposer ||
-                                          (!widget._session.canQueueComposer)
+                                          !widget._session.canQueueComposer
                                       ? null
-                                      : _sendComposer,
+                                      : () => _sendComposer(question: true),
                                   style: IconButton.styleFrom(
                                     minimumSize: const Size(40, 40),
                                     padding: const EdgeInsets.all(8),
@@ -1764,21 +1821,41 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                                         MaterialTapTargetSize.shrinkWrap,
                                   ),
                                   icon: Icon(
-                                    _input.text.trim().isEmpty
-                                        ? Icons.thumb_up_alt_outlined
-                                        : Icons.send_rounded,
-                                    color: _accent,
+                                    Icons.help_outline_rounded,
+                                    color: accent,
                                     size: 20,
                                   ),
                                 ),
-                              ],
-                            ),
+                              IconButton(
+                                tooltip: _input.text.trim().isEmpty
+                                    ? context.lang.familyChatSendOkTooltip
+                                    : context.lang.familyChatSendMessageTooltip,
+                                onPressed:
+                                    _sendingComposer ||
+                                        (!widget._session.canQueueComposer)
+                                    ? null
+                                    : _sendComposer,
+                                style: IconButton.styleFrom(
+                                  minimumSize: const Size(40, 40),
+                                  padding: const EdgeInsets.all(8),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                icon: Icon(
+                                  _input.text.trim().isEmpty
+                                      ? Icons.thumb_up_alt_outlined
+                                      : Icons.send_rounded,
+                                  color: accent,
+                                  size: 20,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -1794,7 +1871,7 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Text(time, style: TextStyle(fontSize: 10, color: muted)),
+        Text(time, style: TextStyle(fontSize: 11, color: muted)),
         if (message.mine && receipts != null) ...[
           const SizedBox(width: 4),
           _groupReceiptIndicator(message, receipts, muted),
@@ -1945,8 +2022,21 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
     );
   }
 
-  Widget _bubble(_Message message, bool dark) {
+  Widget _bubble(_Message message, {required bool startsGroup}) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+    final fill = message.mine
+        ? Color.alphaBlend(
+            colors.primary.withValues(alpha: dark ? .22 : .17),
+            colors.surface,
+          )
+        : dark
+        ? colors.surfaceContainer
+        : Color.alphaBlend(
+            colors.onSurface.withValues(alpha: .075),
+            colors.surface,
+          );
     final groupReceipts = message.groupReceipts;
     final failed = groupReceipts != null
         ? groupReceipts.any((receipt) => receipt.state == _DeliveryState.failed)
@@ -1956,37 +2046,41 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 340),
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 16),
+          padding: EdgeInsets.only(top: startsGroup ? 10 : 0, bottom: 5),
           child: Column(
             crossAxisAlignment: message.mine
                 ? CrossAxisAlignment.end
                 : CrossAxisAlignment.start,
             children: [
+              if (startsGroup && !message.mine && message.sender.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(
+                    start: 8,
+                    bottom: 4,
+                  ),
+                  child: Text(
+                    message.sender,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
               IntrinsicWidth(
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
                   decoration: BoxDecoration(
-                    color: message.mine
-                        ? (dark
-                              ? const Color(0xFF123A50)
-                              : const Color(0xFFE0F2FE))
-                        : (dark ? const Color(0xFF1E293B) : Colors.white),
-                    borderRadius: BorderRadius.circular(20),
+                    color: fill,
+                    borderRadius: BorderRadiusDirectional.only(
+                      topStart: const Radius.circular(17),
+                      topEnd: const Radius.circular(17),
+                      bottomStart: Radius.circular(message.mine ? 17 : 6),
+                      bottomEnd: Radius.circular(message.mine ? 6 : 17),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (!message.mine && message.sender.isNotEmpty) ...[
-                        Text(
-                          message.sender,
-                          style: const TextStyle(
-                            color: _accent,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                      ],
                       if (message.lowTreatment != null) ...[
                         Row(
                           children: [
@@ -3106,6 +3200,7 @@ class _ConversationAvatar extends StatelessWidget {
   const _ConversationAvatar({
     super.key,
     required this.name,
+    required this.colorIndex,
     required this.selected,
     required this.family,
     required this.hasUnread,
@@ -3114,6 +3209,7 @@ class _ConversationAvatar extends StatelessWidget {
   });
 
   final String name;
+  final int colorIndex;
   final bool selected, family, hasUnread;
   final String? photoUrl;
   final VoidCallback onTap;
@@ -3122,6 +3218,16 @@ class _ConversationAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final accent = theme.brightness == Brightness.dark
+        ? colors.primary
+        : colors.onPrimaryContainer;
+    final (background, foreground) = family
+        ? (colors.secondaryContainer, colors.onSecondaryContainer)
+        : switch (colorIndex % 3) {
+            0 => (colors.primaryContainer, colors.onPrimaryContainer),
+            1 => (colors.tertiaryContainer, colors.onTertiaryContainer),
+            _ => (colors.secondaryContainer, colors.onSecondaryContainer),
+          };
     final url = Uri.tryParse(photoUrl ?? '');
     final image = !family && url?.scheme == 'https' && url!.host.isNotEmpty
         ? NetworkImage(url.toString())
@@ -3137,7 +3243,7 @@ class _ConversationAvatar extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: SizedBox(
-          width: 80,
+          width: double.infinity,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Column(
@@ -3149,36 +3255,39 @@ class _ConversationAvatar extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: selected ? colors.primary : Colors.transparent,
+                      color: selected ? accent : Colors.transparent,
                       width: 2,
                     ),
                   ),
                   child: Badge(
                     isLabelVisible: hasUnread,
                     child: CircleAvatar(
-                      radius: 23,
-                      backgroundColor: colors.primaryContainer,
-                      foregroundColor: colors.onPrimaryContainer,
+                      radius: 15,
+                      backgroundColor: background,
+                      foregroundColor: foreground,
                       foregroundImage: image,
                       onForegroundImageError: image == null ? null : (_, _) {},
                       child: family
-                          ? const Icon(Icons.groups_rounded, size: 26)
+                          ? const Icon(Icons.groups_rounded, size: 18)
                           : Text(
                               name.trim().isEmpty
                                   ? '?'
                                   : name.trim().characters.first.toUpperCase(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: selected ? colors.primary : colors.onSurfaceVariant,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: selected ? accent : colors.onSurfaceVariant,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),

@@ -9,6 +9,7 @@ import '../../data_sources/nightscout/temporary_targets/temp_target_service.dart
 import '../../logger/logger.dart';
 import '../base/notifications_controller.dart';
 import '../definitions/notification_definition_catalog_impl.dart';
+import '../domain/events/family_chat_notification.dart';
 import '../domain/events/temp_target_notification.dart';
 import '../domain/models/notification_event.dart';
 import '../domain/models/notification_identity.dart';
@@ -79,6 +80,10 @@ class NotificationsControllerImpl implements NotificationsController {
 
     try {
       var inApp = await _shouldPresentInApp(event);
+      if (event is FamilyChatNotificationEvent && event.transient) {
+        await (inApp ? _inAppController : _localController).show(event);
+        return;
+      }
       // Record before handing the event over: the UI re-shows unread in-app
       // entries from the inbox, so a banner message lost between isolates
       // still reaches the user.

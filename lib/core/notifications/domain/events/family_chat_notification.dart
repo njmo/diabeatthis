@@ -28,6 +28,7 @@ class FamilyChatNotificationEvent implements NotificationEvent {
     this.allowConsumption = false,
     this.timeoutAfter,
     this.silent = false,
+    this.transient = false,
   });
 
   final int id;
@@ -42,6 +43,7 @@ class FamilyChatNotificationEvent implements NotificationEvent {
   final bool allowConsumption;
   final int? timeoutAfter;
   final bool silent;
+  final bool transient;
 
   @override
   NotificationEventType get type => NotificationEventType.familyChat;
@@ -67,6 +69,7 @@ class FamilyChatNotificationEvent implements NotificationEvent {
     'replyChoices': replyChoices,
     'allowConsumption': allowConsumption,
     'silent': silent,
+    if (transient) 'transient': true,
     if (timeoutAfter != null)
       'expiresAt': clock
           .now()
@@ -117,6 +120,7 @@ class FamilyChatNotificationEvent implements NotificationEvent {
           !expired && (json['allowConsumption'] as bool? ?? false),
       timeoutAfter: expired ? null : remaining,
       silent: json['silent'] as bool? ?? false,
+      transient: json['transient'] as bool? ?? false,
     );
   }
 }

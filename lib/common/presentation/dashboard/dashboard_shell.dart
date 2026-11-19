@@ -29,13 +29,17 @@ class DashboardShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     extendBody: true,
+    backgroundColor: destination == 0
+        ? Theme.of(context).colorScheme.surface
+        : null,
     appBar: AppBar(
       automaticallyImplyLeading: false,
-      titleSpacing: destination == 0 ? 8 : null,
+      toolbarHeight: destination == 0 ? kMinInteractiveDimension : null,
+      titleSpacing: destination == 0 ? 10 : null,
       bottom: destination == 0
           ? const PreferredSize(
-              preferredSize: Size.fromHeight(8),
-              child: SizedBox(height: 8),
+              preferredSize: Size.fromHeight(4),
+              child: SizedBox(height: 4),
             )
           : null,
       title: destination == 0

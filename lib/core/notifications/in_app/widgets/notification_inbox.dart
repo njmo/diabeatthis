@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/theme/app_design_tokens.dart';
@@ -20,9 +21,12 @@ class NotificationInboxButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unread = ref.watch(
-      inAppNotificationCenterProvider.select((state) => state.unreadCount),
+    final (hasEntries, unread) = ref.watch(
+      inAppNotificationCenterProvider.select(
+        (state) => (state.inbox.isNotEmpty, state.unreadCount),
+      ),
     );
+    if (!hasEntries) return const SizedBox.shrink();
     return IconButton(
       tooltip: unread == 0
           ? context.lang.notificationInboxTitle
@@ -32,10 +36,8 @@ class NotificationInboxButton extends ConsumerWidget {
         isLabelVisible: unread > 0,
         label: Text(unread > 9 ? '9+' : '$unread'),
         child: Icon(
-          unread > 0
-              ? Icons.notifications_active_outlined
-              : Icons.notifications_none_rounded,
-          size: 26,
+          unread > 0 ? LucideIcons.bellRing : LucideIcons.bell,
+          size: 21,
         ),
       ),
     );
@@ -43,11 +45,20 @@ class NotificationInboxButton extends ConsumerWidget {
 }
 
 Future<void> showNotificationInbox(BuildContext context) {
+  final theme = Theme.of(context);
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    showDragHandle: true,
+    showDragHandle: false,
+    shape: theme.brightness == Brightness.light
+        ? RoundedRectangleBorder(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            side: BorderSide(
+              color: theme.colorScheme.outline.withValues(alpha: 0.55),
+            ),
+          )
+        : null,
     builder: (_) => const _NotificationInboxSheet(),
   );
 }
@@ -85,101 +96,69 @@ class _NotificationInboxSheetState
     final inbox = ref.watch(
       inAppNotificationCenterProvider.select((state) => state.inbox),
     );
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.6,
-      minChildSize: 0.35,
-      maxChildSize: 0.95,
-      builder: (context, scrollController) => Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              0,
-              AppSpacing.md,
-              AppSpacing.sm,
-            ),
-            child: Row(
-              children: [
-                Expanded(
+    return FractionallySizedBox(
+      heightFactor: inbox.isEmpty ? 0.2 : 0.5,
+      widthFactor: 1,
+      child: SafeArea(
+        top: false,
+        child: inbox.isEmpty
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   child: Text(
-                    context.lang.notificationInboxTitle,
-                    style: theme.textTheme.titleLarge,
+                    context.lang.notificationInboxEmpty,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium,
                   ),
                 ),
-                if (inbox.isNotEmpty)
-                  TextButton(
-                    onPressed: () => ref
-                        .read(inAppNotificationCenterProvider.notifier)
-                        .clear(),
-                    child: Text(context.lang.notificationInboxClear),
-                  ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: inbox.isEmpty
-                ? _EmptyInbox(scrollController: scrollController)
-                : ListView.separated(
-                    controller: scrollController,
+              )
+            : Column(
+                children: [
+                  Padding(
                     padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      0,
-                      AppSpacing.md,
                       AppSpacing.lg,
+                      AppSpacing.sm,
+                      AppSpacing.md,
+                      AppSpacing.sm,
                     ),
-                    itemCount: inbox.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.sm),
-                    itemBuilder: (context, index) => _InboxEntryCard(
-                      key: ValueKey(inbox[index].id),
-                      entry: inbox[index],
-                      fresh: _freshIds.contains(inbox[index].id),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            context.lang.notificationInboxTitle,
+                            style: theme.textTheme.titleLarge,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => ref
+                              .read(inAppNotificationCenterProvider.notifier)
+                              .clear(),
+                          child: Text(context.lang.notificationInboxClear),
+                        ),
+                      ],
                     ),
                   ),
-          ),
-        ],
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        0,
+                        AppSpacing.md,
+                        AppSpacing.lg,
+                      ),
+                      itemCount: inbox.length,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: AppSpacing.sm),
+                      itemBuilder: (context, index) => _InboxEntryCard(
+                        key: ValueKey(inbox[index].id),
+                        entry: inbox[index],
+                        fresh: _freshIds.contains(inbox[index].id),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
       ),
-    );
-  }
-}
-
-class _EmptyInbox extends StatelessWidget {
-  const _EmptyInbox({required this.scrollController});
-
-  final ScrollController scrollController;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return ListView(
-      controller: scrollController,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: AppSpacing.xl,
-      ),
-      children: [
-        Icon(
-          Icons.notifications_none_rounded,
-          size: 48,
-          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          context.lang.notificationInboxEmpty,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.titleMedium,
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          context.lang.notificationInboxEmptyHint,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: scheme.onSurfaceVariant,
-          ),
-        ),
-      ],
     );
   }
 }

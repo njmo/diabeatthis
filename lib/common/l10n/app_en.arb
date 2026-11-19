@@ -142,6 +142,7 @@
   "familyChatShortcutPending": "Shortcut changes saved on device · waiting to sync",
   "familyChatLoadSavedShortcuts": "Load saved",
   "familyChatKeepMyShortcuts": "Keep mine",
+  "familyChatToday": "Today",
   "familyChatOlderMessages": "Older",
   "familyChatLatestMessages": "Latest",
   "familyChatRecipientFamily": "Family",
