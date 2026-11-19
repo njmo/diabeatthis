@@ -320,6 +320,11 @@ class NotificationInboxStore {
     }
   });
 
+  Future<void> remove(int id) => _guard('remove', () async {
+    final entry = await get(id);
+    if (entry != null) await _remove(_preferencesFor(entry), id);
+  });
+
   Future<void> _remove(SharedPreferencesAsync prefs, int id) async {
     await prefs.remove(_key(id));
     await prefs.remove(_readKey(id));

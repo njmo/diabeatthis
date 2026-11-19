@@ -167,6 +167,96 @@ Finder _field(String label) => find.byWidgetPredicate(
 );
 
 void main() {
+  testWidgets('child shortcut uses the same half-portion stepper in chat', (
+    tester,
+  ) async {
+    final api = FamilyChatTestApi('parent', caregiver: true);
+    final session = await _session(api);
+    final text = _expectations['pl']!;
+    await tester.pumpWidget(
+      _app(
+        'pl',
+        session,
+        caregiver: true,
+        loadFoods: () async => const [
+          FamilyChatFoodChoice(
+            name: 'Sok',
+            unit: 'piece',
+            gramsPerUnit: 100,
+            carbsPerUnit: 10,
+            initialAmount: 1,
+            quickShortcut: true,
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip(text.sendTreatment));
+    await tester.pumpAndSettle();
+    expect(find.text('Sok'), findsNWidgets(2));
+    await tester.tap(find.byTooltip('Zmniejsz ilość'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, text.sendRequest));
+    await tester.pumpAndSettle();
+    final treatment = api.messages.single['treatment'] as Map;
+    expect(treatment['quantity'], .5);
+    expect(treatment['foodName'], 'Sok');
+  });
+
+  testWidgets(
+    'the dashboard sends a weighed request without navigating to chat',
+    (tester) async {
+      final api = FamilyChatTestApi('parent', caregiver: true);
+      final session = await _session(api);
+      final text = _expectations['pl']!;
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('pl'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => showFamilyLowTreatmentComposer(
+                  context,
+                  session: session,
+                  target: session.targets.first,
+                  foods: const [
+                    FamilyChatFoodChoice(
+                      name: 'Borówki',
+                      unit: 'g',
+                      carbsPerUnit: .15,
+                    ),
+                  ],
+                ),
+                child: const Text('Dashboard'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byTooltip(text.sendTreatment), findsNothing);
+      await tester.tap(find.text('Dashboard'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Borówki'));
+      await tester.pumpAndSettle();
+      await tester.enterText(_field('Masa jednej sztuki (g)'), '2');
+      await tester.enterText(_field(text.quantityPieces), '5');
+      final send = find.widgetWithText(FilledButton, text.sendRequest);
+      await tester.ensureVisible(send);
+      await tester.tap(send);
+      await tester.pumpAndSettle();
+      final treatment = api.messages.single['treatment'] as Map;
+      expect(treatment['unit'], 'piece');
+      expect(treatment['quantity'], 5);
+      expect(treatment['gramsPerUnit'], 2);
+      expect(treatment['carbsPerUnit'], .3);
+      expect(find.text('Dashboard'), findsOneWidget);
+      expect(find.byType(FamilyChatConversation), findsNothing);
+    },
+  );
+
   for (final MapEntry(key: locale, value: text) in _expectations.entries) {
     final other = _expectations.entries
         .firstWhere((entry) => entry.key != locale)
@@ -278,7 +368,7 @@ void main() {
 
       // A food choice that still carries a legacy Polish unit is shown in
       // the active locale.
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Juice'));
+      await tester.tap(find.text('Juice'));
       await tester.pumpAndSettle();
       expect(_field(text.quantityPieces), findsOneWidget);
       expect(tester.takeException(), isNull);

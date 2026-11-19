@@ -76,6 +76,26 @@ class _PausedInboxRead extends NotificationInboxStore {
 }
 
 void main() {
+  test(
+    'request confirmation uses the local notification open-request action',
+    () {
+      const event = FamilyChatNotificationEvent(
+        id: 7,
+        tag: 'sent',
+        title: 'Request added',
+        body: '',
+        payload: {'type': 'familyChat', 'messageId': 'request'},
+        openRequest: true,
+        transient: true,
+      );
+      final restored = FamilyChatNotificationEvent.fromJson(event.toJson());
+      final actions = AndroidNotificationDetailsMapper().map(restored).actions!;
+      expect(actions.single.id, 'family_chat_open_request');
+      expect(actions.single.showsUserInterface, isTrue);
+      expect(restored.payload['messageId'], 'request');
+    },
+  );
+
   final sentAt = DateTime(2026, 11, 19);
   final message = FamilyChatNotificationEvent(
     id: 42,
@@ -104,16 +124,20 @@ void main() {
     local = _LocalController();
   });
 
-  test('Android treatment notification shows two actions without suggestion chips', () {
-    final details = AndroidNotificationDetailsMapper().map(message);
-    final actions = details.actions!;
-    expect(actions.map((action) => action.id), [
-      NotificationActionType.familyChatConsume.toDarwinString(),
-      NotificationActionType.familyChatReply.toDarwinString(),
-    ]);
-    expect(actions.last.allowGeneratedReplies, isFalse);
-    expect(actions.last.inputs.single.choices, isEmpty);
-  });
+  test(
+    'Android treatment notification shows dedicated actions without suggestion chips',
+    () {
+      final details = AndroidNotificationDetailsMapper().map(message);
+      final actions = details.actions!;
+      expect(actions.map((action) => action.id), [
+        NotificationActionType.familyChatConsume.toDarwinString(),
+        NotificationActionType.familyChatTreatmentUnavailable.toDarwinString(),
+        NotificationActionType.familyChatTreatmentFeelsWell.toDarwinString(),
+      ]);
+      expect(actions.last.allowGeneratedReplies, isFalse);
+      expect(actions.last.inputs, isEmpty);
+    },
+  );
 
   ProviderContainer createContainer({
     List<Override> overrides = const [],
@@ -582,7 +606,7 @@ void main() {
   );
 
   test(
-    'reply resolves the original before showing a status with the same ID',
+    'treatment decline resolves the original before showing a status with the same ID',
     () async {
       final store = NotificationInboxStore();
       final status = FamilyChatNotificationEvent(
@@ -608,9 +632,10 @@ void main() {
             });
             expect(
               actionId,
-              NotificationActionType.familyChatReply.toDarwinString(),
+              NotificationActionType.familyChatTreatmentUnavailable
+                  .toDarwinString(),
             );
-            expect(input, 'Yes');
+            expect(input, isNull);
             expect(
               familyChatPresenter,
               same(container.read(familyChatUiPresenterProvider)),
@@ -630,9 +655,10 @@ void main() {
         id: banner.id,
         event: banner.event,
         action: banner.actions.singleWhere(
-          (action) => action.type == NotificationActionType.familyChatReply,
+          (action) =>
+              action.type ==
+              NotificationActionType.familyChatTreatmentUnavailable,
         ),
-        input: 'Yes',
       );
 
       final current = container.read(inAppNotificationCenterProvider).current;
@@ -641,6 +667,7 @@ void main() {
       final stored = await store.get(message.id);
       expect(stored?.active, isFalse);
       expect(stored?.title, message.title);
+      expect(container.read(inAppNotificationCenterProvider).inbox, isEmpty);
       expect(local.shown, isEmpty);
     },
   );

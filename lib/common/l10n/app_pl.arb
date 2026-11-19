@@ -28,7 +28,10 @@
   "familyChatTreatmentAlreadyConfirmed": "Dosłodzenie zostało już potwierdzone",
   "familyChatTreatmentOtherDeviceTitle": "Potwierdzenie obsługuje inne urządzenie",
   "familyChatTreatmentNotRecorded": "Nie zapisano dosłodzenia",
-  "familyChatNotificationRecordedBody": "Zapis został potwierdzony przez serwer.",
+  "familyChatTreatmentAddedToConversation": "Prośba o dosłodzenie dodana do rozmowy.",
+  "familyChatOpenTreatmentRequest": "Przejdź do prośby",
+  "familyChatChildTreatmentConfirmed": "{name} · Dosłodzenie potwierdzone",
+  "@familyChatChildTreatmentConfirmed": {"placeholders": {"name": {"type": "String"}}},
   "familyChatNotificationAwaitingAckBody": "Wpis jest zapisany na urządzeniu. Potwierdzenie oczekuje na połączenie.",
   "familyChatNotificationCompletedElsewhereBody": "Nie utworzono dodatkowego wpisu na tym urządzeniu.",
   "familyChatNotificationConsumptionPendingBody": "Spożycie nie jest zapisane. Otwórz aplikację, aby sprawdzić prośbę.",
@@ -58,6 +61,16 @@
   "familyChatEmojiCategoryFlags": "🏳️ Flagi",
   "familyChatEmojiCategoryRecent": "Ostatnie",
   "familyChatCloseForm": "Zamknij formularz",
+  "familyChatTreatmentNotificationRequest": "Zjedz {quantity} {unit} · {product}",
+  "@familyChatTreatmentNotificationRequest": {
+    "placeholders": {
+      "quantity": {"type": "String"},
+      "unit": {"type": "String"},
+      "product": {"type": "String"}
+    }
+  },
+  "familyChatPieceWeightGrams": "Masa jednej sztuki (g)",
+  "familyQuickTreatmentChoosePortion": "Wybierz produkt z listy dziecka i zapisaną porcję.",
   "familyChatLowTreatmentMessage": "Proszę, zjedz: {quantity} {unit} · {product}.\nŁącznie {grams} g węglowodanów. Wpis dosłodzenia: {deliveryCarbs} g.",
   "@familyChatLowTreatmentMessage": {
     "placeholders": {
@@ -176,6 +189,7 @@
   "familyChatLowTreatmentLabel": "Dosłodzenie",
   "familyChatSelectedReply": "Wybrana odpowiedź",
   "notificationReplyAction": "Odpowiedz",
+  "notificationWriteReplyAction": "Napisz odpowiedź",
   "familyChatReply": "Odpowiedź",
   "familyChatAteRetry": "Zjadłem {quantity} {unit} — ponów",
   "@familyChatAteRetry": {
@@ -283,9 +297,11 @@
   "familyChatSendQuestion": "Wyślij pytanie",
   "familyChatSaveQuestion": "Zapisz pytanie",
   "familyChatUnitPiece": "szt.",
+  "familyChatUnitOnePiece": "szt.",
   "familyChatUnitPortion": "porcji",
   "familyChatTreatmentAnswerAte": "Zjadłem",
   "familyChatTreatmentAnswerNone": "Nie mam",
+  "familyChatTreatmentAnswerFeelsWell": "Czuję się dobrze",
   "aapsSuggestionTitle": "Diabeatthis — propozycja",
   "aapsSuggestionClose": "Zamknij propozycję",
   "aapsPipAdditionalExtendedCarbs": "Dodatkowe e-carbs",

@@ -1,6 +1,6 @@
 import '../backend/authenticated_callable_transport.dart';
 
-const familyPlanningProtocolVersion = 5;
+const familyPlanningProtocolVersion = 6;
 
 /// Explicit protocol negotiation keeps new commands out of legacy child runners.
 /// A legacy server still supports the original mirror/planning operations.

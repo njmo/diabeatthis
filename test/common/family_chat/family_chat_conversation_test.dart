@@ -12,6 +12,73 @@ import '../../helpers/localized_material_app.dart';
 import 'support/family_chat_test_api.dart';
 
 void main() {
+  testWidgets('treatment replies quote the exact request they answer', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final sent = DateTime(now.year, now.month, now.day, 12, 10);
+    final fixture = await _ConversationFixture.create(
+      caregiver: true,
+      seed: (api) {
+        for (var i = 0; i < 2; i++) {
+          api.messages.add({
+            'id': 'request-$i',
+            'kind': 'lowTreatment',
+            'senderUid': 'parent',
+            'conversationId': 'direct',
+            'sequence': i + 1,
+            'text': 'Prośba o jogurt',
+            'sentAt': sent.add(Duration(minutes: i)).millisecondsSinceEpoch,
+            'expiresAt': now
+                .add(const Duration(days: 1))
+                .millisecondsSinceEpoch,
+            'receipts': {'mom': <String, dynamic>{}},
+            'treatment': {
+              'foodName': 'Jogurt',
+              'quantity': 1,
+              'unit': 'portion',
+              'carbsPerUnit': 8,
+              'validUntil': now
+                  .add(const Duration(minutes: 30))
+                  .millisecondsSinceEpoch,
+            },
+          });
+        }
+        for (var i = 0; i < 2; i++) {
+          api.messages.add({
+            'id': 'answer-$i',
+            'kind': 'answer',
+            'senderUid': 'mom',
+            'conversationId': 'direct',
+            'sequence': i + 3,
+            'text': i == 0 ? 'Nie mam' : 'Czuję się dobrze',
+            'replyTo': 'request-$i',
+            'sentAt': sent.add(Duration(minutes: i + 2)).millisecondsSinceEpoch,
+            'expiresAt': now
+                .add(const Duration(days: 1))
+                .millisecondsSinceEpoch,
+            'receipts': {'parent': <String, dynamic>{}},
+          });
+        }
+      },
+    );
+    await tester.pumpWidget(localizedMaterialApp(home: fixture.view()));
+    await tester.pumpAndSettle();
+    for (final (answer, time) in [
+      ('Nie mam', '12:10'),
+      ('Czuję się dobrze', '12:11'),
+    ]) {
+      final bubble = find.ancestor(
+        of: find.text(answer),
+        matching: find.byType(IntrinsicWidth),
+      );
+      expect(
+        find.descendant(of: bubble, matching: find.textContaining('$time ·')),
+        findsOneWidget,
+      );
+    }
+  });
+
   testWidgets('family and direct circles use their independent server badges', (
     tester,
   ) async {
@@ -311,7 +378,7 @@ void main() {
       );
       await tester.tap(find.byTooltip('Wyślij dosłodzenie'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Produkt testowy'));
+      await tester.tap(find.text('Produkt testowy'));
       await tester.pumpAndSettle();
       await tester.enterText(
         find.byWidgetPredicate(

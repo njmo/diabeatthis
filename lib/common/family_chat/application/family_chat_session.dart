@@ -24,6 +24,7 @@ class FamilyChatSession extends ChangeNotifier {
     required this.isCurrentAccount,
     this.expectedScope,
     this.notificationPresenter,
+    this.isChatVisible,
     DateTime Function()? clock,
   }) : clock = clock ?? DateTime.now;
   final String uid;
@@ -32,6 +33,7 @@ class FamilyChatSession extends ChangeNotifier {
   final bool Function() isCurrentAccount;
   final String? expectedScope;
   final FamilyChatPushPresenter? notificationPresenter;
+  final bool Function()? isChatVisible;
   final DateTime Function() clock;
   Map<String, dynamic>? config;
   String? scope;
@@ -910,7 +912,8 @@ class FamilyChatSession extends ChangeNotifier {
       api: api,
       presenter: notificationPresenter!,
       currentUid: () => active && enabled && scope == currentScope ? uid : null,
-      shouldPresent: (_) => _appForeground && !_chatVisible,
+      shouldPresent: (_) =>
+          _appForeground && !(isChatVisible?.call() ?? _chatVisible),
     );
     final elapsedAtSync = _elapsed.elapsedMilliseconds;
     final notificationConfig = {...currentConfig, 'serverTime': serverNow};
@@ -1791,6 +1794,8 @@ class FamilyChatSession extends ChangeNotifier {
     if (valid()) _receiptsPending = false;
   }
 
+  int get historyGeneration => _historyMinimum;
+
   Future<void> send(
     String target,
     String text, {
@@ -1800,6 +1805,7 @@ class FamilyChatSession extends ChangeNotifier {
     int? answerIndex,
     String? composerDraft,
     Map<String, Object?>? treatment,
+    void Function(String id)? onQueued,
   }) {
     final submittedScope = scope;
     final submittedHistory = _historyMinimum;
@@ -1817,6 +1823,7 @@ class FamilyChatSession extends ChangeNotifier {
         answerIndex: answerIndex,
         composerDraft: composerDraft,
         treatment: treatment,
+        onQueued: onQueued,
       ),
     );
   }
@@ -1833,6 +1840,7 @@ class FamilyChatSession extends ChangeNotifier {
     int? answerIndex,
     String? composerDraft,
     Map<String, Object?>? treatment,
+    void Function(String id)? onQueued,
   }) async {
     if (!canQueueComposer ||
         submittedScope == null ||
@@ -1882,6 +1890,7 @@ class FamilyChatSession extends ChangeNotifier {
       familyOffGeneration: _familyOffGeneration,
       now: () => serverNow,
       clearSubmittedDraft: clearSubmittedDraft,
+      onQueued: onQueued,
     );
     if (signed == null) throw StateError('Chat unavailable or no valid ticket');
     if (!allowed()) return;

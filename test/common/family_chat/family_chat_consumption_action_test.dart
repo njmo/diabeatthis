@@ -273,10 +273,11 @@ void main() {
       );
       expect(consume.inputs, isEmpty);
       expect(consume.cancelNotification, false);
-      final reply = treatment.actions!.singleWhere(
-        (action) => action.id == 'family_chat_reply',
+      final unavailable = treatment.actions!.singleWhere(
+        (action) => action.id == 'family_chat_treatment_unavailable',
       );
-      expect(reply.inputs.single.choices, isEmpty);
+      expect(unavailable.inputs, isEmpty);
+      expect(treatment.actions, hasLength(3));
       expect(
         details(
           'managingCaregiver',

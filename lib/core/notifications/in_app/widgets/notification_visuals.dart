@@ -242,10 +242,12 @@ class NotificationInlineReply extends StatefulWidget {
     super.key,
     required this.choices,
     required this.onReply,
+    this.onEditing,
   });
 
   final List<String> choices;
   final Future<void> Function(String) onReply;
+  final VoidCallback? onEditing;
 
   @override
   State<NotificationInlineReply> createState() =>
@@ -278,21 +280,6 @@ class _NotificationInlineReplyState extends State<NotificationInlineReply> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_expanded) {
-      return Align(
-        alignment: AlignmentDirectional.centerEnd,
-        child: TextButton(
-          onPressed: () {
-            setState(() => _expanded = true);
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _focusNode.requestFocus();
-            });
-          },
-          child: Text(context.lang.notificationReplyAction),
-        ),
-      );
-    }
-
     final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,33 +295,48 @@ class _NotificationInlineReplyState extends State<NotificationInlineReply> {
                 ),
             ],
           ),
-        ListenableBuilder(
-          listenable: _controller,
-          builder: (context, _) => TextField(
-            controller: _controller,
-            focusNode: _focusNode,
-            enabled: !_sending,
-            textInputAction: TextInputAction.send,
-            onSubmitted: _submit,
-            decoration: InputDecoration(
-              hintText: context.lang.familyChatComposerHintChild,
-              isDense: true,
-              filled: true,
-              fillColor: scheme.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
-                borderSide: BorderSide(color: scheme.outlineVariant),
-              ),
-              suffixIcon: IconButton(
-                tooltip: context.lang.notificationInputSend,
-                onPressed: _sending || _controller.text.trim().isEmpty
-                    ? null
-                    : () => _submit(_controller.text),
-                icon: const Icon(Icons.send_rounded),
+        if (!_expanded)
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton(
+              onPressed: _sending
+                  ? null
+                  : () {
+                      setState(() => _expanded = true);
+                      widget.onEditing?.call();
+                      _focusNode.requestFocus();
+                    },
+              child: Text(context.lang.notificationWriteReplyAction),
+            ),
+          )
+        else
+          ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) => TextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              enabled: !_sending,
+              textInputAction: TextInputAction.send,
+              onSubmitted: _submit,
+              decoration: InputDecoration(
+                hintText: context.lang.familyChatComposerHintChild,
+                isDense: true,
+                filled: true,
+                fillColor: scheme.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  borderSide: BorderSide(color: scheme.outlineVariant),
+                ),
+                suffixIcon: IconButton(
+                  tooltip: context.lang.notificationInputSend,
+                  onPressed: _sending || _controller.text.trim().isEmpty
+                      ? null
+                      : () => _submit(_controller.text),
+                  icon: const Icon(Icons.send_rounded),
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
   }

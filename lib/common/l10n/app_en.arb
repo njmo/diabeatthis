@@ -28,7 +28,10 @@
   "familyChatTreatmentAlreadyConfirmed": "Treatment already confirmed",
   "familyChatTreatmentOtherDeviceTitle": "Another device is handling confirmation",
   "familyChatTreatmentNotRecorded": "Low treatment not recorded",
-  "familyChatNotificationRecordedBody": "The entry has been confirmed by the server.",
+  "familyChatTreatmentAddedToConversation": "Low treatment request added to the conversation.",
+  "familyChatOpenTreatmentRequest": "Open request",
+  "familyChatChildTreatmentConfirmed": "{name} · Low treatment confirmed",
+  "@familyChatChildTreatmentConfirmed": {"placeholders": {"name": {"type": "String"}}},
   "familyChatNotificationAwaitingAckBody": "The entry is saved on this device. Confirmation is waiting for a connection.",
   "familyChatNotificationCompletedElsewhereBody": "No additional entry was created on this device.",
   "familyChatNotificationConsumptionPendingBody": "Consumption has not been recorded. Open the app to check the request.",
@@ -58,6 +61,16 @@
   "familyChatEmojiCategoryFlags": "🏳️ Flags",
   "familyChatEmojiCategoryRecent": "Recent",
   "familyChatCloseForm": "Close form",
+  "familyChatTreatmentNotificationRequest": "Eat {quantity} {unit} · {product}",
+  "@familyChatTreatmentNotificationRequest": {
+    "placeholders": {
+      "quantity": {"type": "String"},
+      "unit": {"type": "String"},
+      "product": {"type": "String"}
+    }
+  },
+  "familyChatPieceWeightGrams": "Weight of one piece (g)",
+  "familyQuickTreatmentChoosePortion": "Choose a product from the child’s list and a saved portion.",
   "familyChatLowTreatmentMessage": "Please eat: {quantity} {unit} · {product}.\nTotal {grams} g carbohydrates. Low treatment entry: {deliveryCarbs} g.",
   "@familyChatLowTreatmentMessage": {
     "placeholders": {
@@ -176,6 +189,7 @@
   "familyChatLowTreatmentLabel": "Low treatment",
   "familyChatSelectedReply": "Selected reply",
   "notificationReplyAction": "Reply",
+  "notificationWriteReplyAction": "Write a reply",
   "familyChatReply": "Reply",
   "familyChatAteRetry": "I ate {quantity} {unit} — retry",
   "@familyChatAteRetry": {
@@ -283,9 +297,11 @@
   "familyChatSendQuestion": "Send question",
   "familyChatSaveQuestion": "Save question",
   "familyChatUnitPiece": "pcs",
+  "familyChatUnitOnePiece": "pc",
   "familyChatUnitPortion": "portions",
   "familyChatTreatmentAnswerAte": "I ate it",
   "familyChatTreatmentAnswerNone": "I don't have it",
+  "familyChatTreatmentAnswerFeelsWell": "I feel fine",
   "aapsSuggestionTitle": "Diabeatthis — suggestion",
   "aapsSuggestionClose": "Close suggestion",
   "aapsPipAdditionalExtendedCarbs": "Additional e-carbs",

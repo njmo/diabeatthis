@@ -196,6 +196,7 @@ Future<void> _addOrEditQuickLowTreatmentItem({
     context: context,
     ref: ref,
     initialDraft: initialDraft,
+    allowGramAmounts: false,
   );
   if (mealIngredient == null || !ref.context.mounted) {
     return;

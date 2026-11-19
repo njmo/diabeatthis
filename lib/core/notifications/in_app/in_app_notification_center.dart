@@ -104,6 +104,8 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
   /// Banners the user or the app already took down in this session; a refresh
   /// that raced with persisting that decision must not bring them back.
   final _suppressed = <int>{};
+  final _removing = <int>{};
+  int? _replyingTo;
   final _handingOver = <int>{};
 
   NotificationInboxStore get _store => ref.read(notificationInboxStoreProvider);
@@ -289,6 +291,9 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
     await refresh();
   }
 
+  /// Ends the on-screen preview while leaving the inbox entry actionable.
+  void hideBanner(int id) => _takeDown(id);
+
   /// The notification was withdrawn by the app.
   Future<void> cancel(int id) async {
     _takeDown(id);
@@ -377,6 +382,30 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
     await refresh();
   }
 
+  Future<void> removeFromInbox(int id, {NotificationEvent? event}) async {
+    if (!_removing.add(id)) return;
+    _takeDown(id);
+    state = state.copyWith(
+      inbox: state.inbox.where((item) => item.id != id).toList(),
+    );
+    try {
+      if (event == null) {
+        final entry = await _store.get(id);
+        if (entry != null) event = eventFor(entry);
+      }
+      await _store.markRead([id]);
+      await _store.remove(id);
+      if (event != null) await _withdrawSystemCopy(event);
+    } finally {
+      _removing.remove(id);
+      if (ref.mounted) await refresh();
+    }
+  }
+
+  void keepBannerWhileReplying(int id) {
+    _replyingTo = id;
+  }
+
   Future<void> refresh() async {
     final generation = ++_refreshGeneration;
     final stored = await _store.visible();
@@ -397,7 +426,17 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
         .map((entry) => entry.id)
         .toSet()
         .difference(allowedChatIds);
-    final inbox = stored.where((entry) => !denied.contains(entry.id)).toList();
+    final inbox = stored.where((entry) {
+      if (denied.contains(entry.id) || _removing.contains(entry.id)) {
+        return false;
+      }
+      final familyChat = entry.type == NotificationEventType.familyChat;
+      final treatmentRequest =
+          familyChat &&
+          (entry.data['lowTreatment'] == true ||
+              entry.data['allowConsumption'] == true);
+      return entry.active || (!treatmentRequest && !(familyChat && entry.read));
+    }).toList();
     final nextDue = await _store.nextDueAt();
     // A newer refresh may have started meanwhile; keep the latest snapshot.
     if (!ref.mounted || generation != _refreshGeneration) return;
@@ -488,12 +527,20 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
   /// Newest first, so a fresh notification is never hidden behind an older,
   /// unanswered one.
   void _pushBanner(InAppBanner banner) {
+    final reply = state.banners
+        .where((item) => item.id == _replyingTo && item.id != banner.id)
+        .firstOrNull;
     state = state.copyWith(
-      banners: [banner, ...state.banners.where((item) => item.id != banner.id)],
+      banners: [
+        if (reply != null) reply,
+        banner,
+        ...state.banners.where((item) => item.id != banner.id && item != reply),
+      ],
     );
   }
 
   void _takeDown(int id) {
+    if (_replyingTo == id) _replyingTo = null;
     _suppressed.add(id);
     if (state.banners.every((banner) => banner.id != id)) return;
     state = state.copyWith(

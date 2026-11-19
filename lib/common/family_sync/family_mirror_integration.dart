@@ -9,6 +9,12 @@ class FamilyMirrorIntegration {
 
 const familyMirrorIntegrations = <FamilyMirrorIntegration>[
   FamilyMirrorIntegration(
+    'quickLowTreatmentItems',
+    'quick_low_treatment_item',
+    ['id'],
+    ['id', 'name', 'ingredient_id', 'portion_id', 'amount', 'sort_order'],
+  ),
+  FamilyMirrorIntegration(
     'activityOccurrenceReschedules',
     'activity_occurrence_reschedule',
     ['occurrence_id'],

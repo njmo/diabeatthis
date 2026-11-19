@@ -17,7 +17,9 @@ import 'amount_form.dart';
 import 'meal_ingredient_review.dart';
 
 class AddMealIngredientBody extends ConsumerWidget {
-  const AddMealIngredientBody({super.key});
+  const AddMealIngredientBody({super.key, this.allowGramAmounts = true});
+
+  final bool allowGramAmounts;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -66,6 +68,7 @@ class AddMealIngredientBody extends ConsumerWidget {
             .setIngredientPortionAmount,
       ),
       AddMealIngredientStage.amountForm => AmountForm(
+        allowGramAmounts: allowGramAmounts,
         onEditReference: draft.ingredient.isReference
             ? controller.editReferenceIngredient
             : null,

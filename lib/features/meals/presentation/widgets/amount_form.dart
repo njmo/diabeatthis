@@ -16,8 +16,14 @@ import 'ingredient_amount_portions.dart';
 import 'meal_ingredient_review_header.dart';
 
 class AmountForm extends ConsumerWidget {
-  const AmountForm({super.key, this.onEditReference, this.bindings});
+  const AmountForm({
+    super.key,
+    this.onEditReference,
+    this.bindings,
+    this.allowGramAmounts = true,
+  });
   final MealAmountBindings? bindings;
+  final bool allowGramAmounts;
 
   final VoidCallback? onEditReference;
 
@@ -97,7 +103,7 @@ class AmountForm extends ConsumerWidget {
                 bindings!.portionChoices!,
               ] else if (bindings == null && !draft.ingredient.isReference) ...[
                 const SizedBox(height: 16),
-                const IngredientAmountPortions(),
+                IngredientAmountPortions(allowGramAmounts: allowGramAmounts),
               ],
               if (draft.ingredient.isReference && onEditReference != null)
                 TextButton.icon(
@@ -106,55 +112,56 @@ class AmountForm extends ConsumerWidget {
                   label: Text(context.lang.ingredientEditReferenceData),
                 ),
               const SizedBox(height: 16),
-              FormField<double>(
-                validator: (_) =>
-                    amount.isFinite &&
-                        amount > 0 &&
-                        !isLoadingPortionAmount &&
-                        gramsPerPortion != null &&
-                        gramsPerPortion > 0
-                    ? null
-                    : '',
-                builder: (field) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      FriendlyAmountSelector(
-                        value: amount,
-                        preservePrecision: bindings != null,
-                        min: 0,
-                        step: draft.usesGramAmount ? 5 : 1,
-                        innerStep: draft.usesGramAmount ? 1 : 0.5,
-                        additiveOptions: true,
-                        options: AmountFormOptions.quickOptions(
-                          unitLabel: unitLabel,
-                          isGramAmount: draft.usesGramAmount,
+              if (allowGramAmounts || !draft.usesGramAmount)
+                FormField<double>(
+                  validator: (_) =>
+                      amount.isFinite &&
+                          amount > 0 &&
+                          !isLoadingPortionAmount &&
+                          gramsPerPortion != null &&
+                          gramsPerPortion > 0
+                      ? null
+                      : '',
+                  builder: (field) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        FriendlyAmountSelector(
+                          value: amount,
+                          preservePrecision: bindings != null,
+                          min: 0,
+                          step: draft.usesGramAmount ? 5 : 1,
+                          innerStep: draft.usesGramAmount ? 1 : 0.5,
+                          additiveOptions: true,
+                          options: AmountFormOptions.quickOptions(
+                            unitLabel: unitLabel,
+                            isGramAmount: draft.usesGramAmount,
+                          ),
+                          valueLabel: (value) =>
+                              '${bindings == null ? value.formattedAmount : formatPreciseAmount(value, context.lang.localeName)} ${unitLabelForAmount(value, unitLabel)}',
+                          onChanged: (value) {
+                            (bindings?.onAmount ?? amountNotifier!.setValue)(
+                              value,
+                            );
+                            field.didChange(value);
+                          },
                         ),
-                        valueLabel: (value) =>
-                            '${bindings == null ? value.formattedAmount : formatPreciseAmount(value, context.lang.localeName)} ${unitLabelForAmount(value, unitLabel)}',
-                        onChanged: (value) {
-                          (bindings?.onAmount ?? amountNotifier!.setValue)(
-                            value,
-                          );
-                          field.didChange(value);
-                        },
-                      ),
-                      if (field.hasError) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          gramsPerPortion == null || gramsPerPortion <= 0
-                              ? context.lang.amountMissingPortionWeight
-                              : context.lang.amountGreaterThanZero,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                        ),
+                        if (field.hasError) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            gramsPerPortion == null || gramsPerPortion <= 0
+                                ? context.lang.amountMissingPortionWeight
+                                : context.lang.amountGreaterThanZero,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                          ),
+                        ],
                       ],
-                    ],
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
               const SizedBox(height: 20),
               ConfidenceSlider(
                 value: confidence,

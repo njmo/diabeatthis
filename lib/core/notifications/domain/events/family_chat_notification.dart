@@ -26,6 +26,8 @@ class FamilyChatNotificationEvent implements NotificationEvent {
     this.message,
     this.replyChoices = const [],
     this.allowConsumption = false,
+    this.lowTreatment = false,
+    this.openRequest = false,
     this.timeoutAfter,
     this.silent = false,
     this.transient = false,
@@ -41,6 +43,8 @@ class FamilyChatNotificationEvent implements NotificationEvent {
   final FamilyChatNotificationMessage? message;
   final List<String> replyChoices;
   final bool allowConsumption;
+  final bool lowTreatment;
+  final bool openRequest;
   final int? timeoutAfter;
   final bool silent;
   final bool transient;
@@ -68,6 +72,8 @@ class FamilyChatNotificationEvent implements NotificationEvent {
     'payload': payload,
     'replyChoices': replyChoices,
     'allowConsumption': allowConsumption,
+    if (lowTreatment) 'lowTreatment': true,
+    if (openRequest) 'openRequest': true,
     'silent': silent,
     if (transient) 'transient': true,
     if (timeoutAfter != null)
@@ -118,6 +124,9 @@ class FamilyChatNotificationEvent implements NotificationEvent {
           : List<String>.from(json['replyChoices'] as List? ?? const []),
       allowConsumption:
           !expired && (json['allowConsumption'] as bool? ?? false),
+      lowTreatment:
+          json['lowTreatment'] == true || json['allowConsumption'] == true,
+      openRequest: !expired && json['openRequest'] == true,
       timeoutAfter: expired ? null : remaining,
       silent: json['silent'] as bool? ?? false,
       transient: json['transient'] as bool? ?? false,

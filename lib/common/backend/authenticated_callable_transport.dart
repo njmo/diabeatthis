@@ -57,6 +57,7 @@ class AuthenticatedCallableTransport {
     'registerFamilyMirror',
     'publishFamilyMirror',
     'fetchFamilyMirror',
+    'searchFamilyMirrorIngredients',
     'createFamilyInvite',
     'requestFamilyJoin',
     'requestFamilyJoinByCode',

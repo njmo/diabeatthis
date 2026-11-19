@@ -203,7 +203,7 @@ class ApplyFamilyPlanUseCase {
       throw StateError('Expired plan claim');
     }
     await db.customStatement(
-      'INSERT INTO family_plan_journal(operation_id,claim_token,owner_uid,source_id,outcome,reason,result_id,required_revisions,cancel_occurrence_id) VALUES(?,?,?,?,?,?,?,?,?)',
+      'INSERT INTO family_plan_journal(operation_id,claim_token,owner_uid,source_id,outcome,reason,result_id,required_revisions,cancel_occurrence_id,result_bound) VALUES(?,?,?,?,?,?,?,?,?,?)',
       [
         plan['id'],
         plan['claimToken'],
@@ -221,6 +221,7 @@ class ApplyFamilyPlanUseCase {
                 outcome == 'applied'
             ? plan['targetId']
             : null,
+        plan['type'] == 'replaceQuickTreatmentItems' ? 1 : 0,
       ],
     );
   });
@@ -397,12 +398,75 @@ class ApplyFamilyPlanUseCase {
     );
   }
 
+  Future<void> _replaceQuickTreatmentItems(List items) async {
+    final existing = await db.select(db.quickLowTreatmentItem).get();
+    final retained = <int>{};
+    for (final (index, raw) in items.indexed) {
+      final item = raw as Map;
+      final id = item['id'] as int?;
+      final ingredientId = item['ingredientId'] as int;
+      final portionId = item['portionId'] as int?;
+      final ingredient = await (db.select(
+        db.ingredient,
+      )..where((row) => row.id.equals(ingredientId))).getSingleOrNull();
+      if (ingredient == null) throw StateError('Shortcut ingredient missing');
+      if (portionId == null &&
+          ingredient.isReference != 1 &&
+          !existing.any(
+            (row) =>
+                row.id == id &&
+                row.ingredientId == ingredientId &&
+                row.portionId == null,
+          )) {
+        throw StateError('Shortcut requires a portion');
+      }
+      if (portionId != null) {
+        final link =
+            await (db.select(db.ingredientPortions)..where(
+                  (row) =>
+                      row.ingredientId.equals(ingredientId) &
+                      row.portionId.equals(portionId),
+                ))
+                .getSingleOrNull();
+        if (link == null ||
+            !link.gramsPerPortion.isFinite ||
+            link.gramsPerPortion <= 0) {
+          throw StateError('Shortcut portion has no weight');
+        }
+      }
+      final shortcut = QuickLowTreatmentItemCompanion.insert(
+        ingredientId: ingredientId,
+        portionId: Value(portionId),
+        name: item['name'] as String,
+        amount: (item['amount'] as num).toDouble(),
+        sortOrder: Value(index + 1),
+      );
+      if (id == null) {
+        await db.into(db.quickLowTreatmentItem).insert(shortcut);
+      } else {
+        if (!existing.any((row) => row.id == id) || !retained.add(id)) {
+          throw StateError('Shortcut changed');
+        }
+        await (db.update(
+          db.quickLowTreatmentItem,
+        )..where((row) => row.id.equals(id))).write(shortcut);
+      }
+    }
+    for (final row in existing.where((row) => !retained.contains(row.id))) {
+      await db.quickLowTreatmentItemDao.deleteQuickLowTreatmentItem(row.id);
+    }
+  }
+
   Future<int?> applyDomainPlan(
     Map<String, dynamic> plan,
     Map<String, CatalogIngredient> catalogIngredients,
   ) async {
     final v = plan['values'] as Map;
     final type = plan['type'];
+    if (type == 'replaceQuickTreatmentItems') {
+      await _replaceQuickTreatmentItems(v['items'] as List);
+      return null;
+    }
     final now = clock.now().millisecondsSinceEpoch;
     final service = ActivityScheduleService(db);
     if (type == 'setActivityScheduleEnabled') {

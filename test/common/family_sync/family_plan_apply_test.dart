@@ -59,6 +59,70 @@ Future<void> seedPlanIngredient(DatabaseImpl db) => db.customStatement(
 );
 void main() {
   test(
+    'shared shortcut updates preserve row identity and publish revisions',
+    () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      await seedPlanIngredient(db);
+      await db.customStatement(
+        "INSERT INTO portion(name,unit_hint) VALUES('sztuka','szt.')",
+      );
+      await db.customStatement(
+        'INSERT INTO ingredient_portions(ingredient_id,portion_id,grams_per_portion) VALUES(1,1,25)',
+      );
+      await db.customStatement(
+        "INSERT INTO quick_low_treatment_item(name,ingredient_id,portion_id,amount,sort_order) VALUES('Bread',1,1,1,1)",
+      );
+      final plan = await localPlan(
+        db,
+        'replaceQuickTreatmentItems',
+        values: {
+          'items': [
+            {
+              'id': 1,
+              'name': 'Bread',
+              'ingredientId': 1,
+              'portionId': 1,
+              'amount': .5,
+            },
+          ],
+        },
+      );
+      await ApplyFamilyPlanUseCase(db)('child', plan);
+      final saved = await db.select(db.quickLowTreatmentItem).getSingle();
+      expect(saved.id, 1);
+      expect(saved.amount, .5);
+      final journal = await db
+          .customSelect('SELECT * FROM family_plan_journal')
+          .getSingle();
+      expect(journal.read<String>('outcome'), 'applied');
+      expect(journal.read<int>('result_bound'), 1);
+      expect(
+        journal.read<String>('required_revisions'),
+        contains('quickLowTreatmentItems'),
+      );
+
+      final stale = await localPlan(
+        db,
+        'replaceQuickTreatmentItems',
+        values: {'items': []},
+      );
+      stale['id'] = 'c' * 32;
+      await db.customStatement(
+        'UPDATE quick_low_treatment_item SET amount=2 WHERE id=1',
+      );
+      await ApplyFamilyPlanUseCase(db)('child', stale);
+      expect((await db.select(db.quickLowTreatmentItem).getSingle()).amount, 2);
+      final rejection = await db
+          .customSelect(
+            "SELECT reason FROM family_plan_journal WHERE outcome='rejected'",
+          )
+          .getSingle();
+      expect(rejection.read<String>('reason'), 'conflict');
+    },
+  );
+
+  test(
     'applying an untimed caregiver plan keeps its day and no alarm',
     () async {
       final db = DatabaseImpl(NativeDatabase.memory());

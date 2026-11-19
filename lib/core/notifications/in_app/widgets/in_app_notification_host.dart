@@ -109,8 +109,9 @@ class _InAppBannerCard extends ConsumerStatefulWidget {
 }
 
 class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
-  static const _autoDismissAfter = Duration(seconds: 6);
+  static const _maxPreviewMilliseconds = 5000;
   Timer? _autoDismiss;
+  bool _editing = false;
 
   bool get _informational => widget.banner.actions.isEmpty;
 
@@ -124,17 +125,32 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
     ) when message.senderId != message.recipientId) {
       unawaited(_playChatSound());
     }
-    // Informational banners leave on their own; anything awaiting an answer
-    // stays until the user acts on it or closes it.
-    if (_informational) {
-      final event = widget.banner.event;
-      final duration = switch (event) {
-        FamilyChatNotificationEvent(transient: true, timeoutAfter: final ms?) =>
-          Duration(milliseconds: ms),
-        _ => _autoDismissAfter,
-      };
-      _autoDismiss = Timer(duration, _dismiss);
+    _schedulePreviewEnd();
+  }
+
+  @override
+  void didUpdateWidget(covariant _InAppBannerCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.banner.event != widget.banner.event) {
+      _schedulePreviewEnd();
     }
+  }
+
+  void _schedulePreviewEnd() {
+    _autoDismiss?.cancel();
+    if (_editing) return;
+    final duration = switch (widget.banner.event) {
+      FamilyChatNotificationEvent(timeoutAfter: final ms?) => ms.clamp(
+        0,
+        _maxPreviewMilliseconds,
+      ),
+      _ => _maxPreviewMilliseconds,
+    };
+    _autoDismiss = Timer(Duration(milliseconds: duration), () {
+      ref
+          .read(inAppNotificationCenterProvider.notifier)
+          .hideBanner(widget.banner.id);
+    });
   }
 
   Future<void> _playChatSound() async {
@@ -271,7 +287,9 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
                           label: context.lang.inAppNotificationClose,
                           excludeSemantics: true,
                           child: IconButton(
-                            onPressed: _dismiss,
+                            onPressed: () => unawaited(
+                              center.removeFromInbox(banner.id, event: event),
+                            ),
                             visualDensity: VisualDensity.compact,
                             icon: Icon(
                               Icons.close_rounded,
@@ -290,6 +308,11 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
                         ),
                         child: NotificationInlineReply(
                           choices: banner.inputChoices,
+                          onEditing: () {
+                            _editing = true;
+                            _autoDismiss?.cancel();
+                            center.keepBannerWhileReplying(banner.id);
+                          },
                           onReply: (input) => center.respond(
                             id: banner.id,
                             event: event,

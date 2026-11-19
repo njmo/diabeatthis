@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:drift/isolate.dart' show DriftRemoteException;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqlite3/common.dart' show SqliteException;
 
 import '../../../app/router/providers/app_router_provider.dart';
 import '../../../core/data/provider/initial_configuration_provider.dart';
@@ -137,6 +139,7 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
   });
   final messages = FirebaseMessaging.onMessage.listen((message) {
     if (message.data['type'] != 'familyChat') return;
+    Log.d('FamilyChatPush', 'Foreground chat push received');
     unawaited(() async {
       try {
         final received = await FamilyChatBackground(
@@ -150,10 +153,19 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
         if (!received) {
           Log.d('FamilyChatPush', 'Foreground push was not accepted');
         }
-      } catch (error) {
+      } catch (error, stackTrace) {
+        final cause = error is DriftRemoteException ? error.remoteCause : error;
+        final sqliteCode = cause is SqliteException
+            ? ', SQLite code ${cause.extendedResultCode}'
+            : '';
+        // Exception messages can include SQL arguments with chat data.
+        final chatFrames = RegExp(
+          r'package:[\w]+/common/family_chat/[\w/]+\.dart:\d+:\d+',
+        ).allMatches(stackTrace.toString()).take(4).map((m) => m[0]).join(' ');
         Log.w(
           'FamilyChatPush',
-          'Foreground delivery failed (${error.runtimeType})',
+          'Foreground delivery failed (${error.runtimeType}, '
+              'cause ${cause.runtimeType}$sqliteCode) $chatFrames',
         );
       }
       if (!disposed) await runtime.session?.synchronize(enqueueAgain: true);
@@ -304,37 +316,56 @@ class _FamilyChatNotificationRuntimeState
         );
         return;
       }
-      var message = await runtime.db.message(scope, id);
-      if (message == null) {
-        final result =
-            await FamilyChatRemote(
-              ref.read(authenticatedFamilyTransportProvider),
-              uid!,
-            ).call('fetchFamilyChatMessageStates', {
-              'ids': [id],
-            });
-        final rows = result['messages'] as List;
-        if (rows.length == 1) {
-          message = Map<String, dynamic>.from(rows.single as Map);
+      // A just-queued outgoing request can still be in the local outbox
+      // when its confirmation banner is tapped.
+      var target = session.isCaregiver
+          ? session.targets
+                .where(
+                  (target) => session
+                      .messages(target)
+                      .any(
+                        (message) =>
+                            message['id'] == id &&
+                            message['kind'] == 'lowTreatment' &&
+                            message['senderUid'] == uid &&
+                            message['operationSigned'] == true,
+                      ),
+                )
+                .firstOrNull
+          : null;
+      if (target == null) {
+        var message = await runtime.db.message(scope, id);
+        if (message == null) {
+          final result =
+              await FamilyChatRemote(
+                ref.read(authenticatedFamilyTransportProvider),
+                uid!,
+              ).call('fetchFamilyChatMessageStates', {
+                'ids': [id],
+              });
+          final rows = result['messages'] as List;
+          if (rows.length == 1) {
+            message = Map<String, dynamic>.from(rows.single as Map);
+          }
         }
+        if (!mounted || runtime.session != session || !session.enabled) return;
+        final participants = message?['participants'] as Map?;
+        final validMessage =
+            message?['id'] == id &&
+            (message?['historyGeneration'] ?? 0) == generation &&
+            participants?[uid] == session.config?['epoch'] &&
+            (message?['expiresAt'] == null ||
+                (message!['expiresAt'] as int) > session.serverNow) &&
+            await runtime.db.historyAllows(scope, generation);
+        target = !validMessage
+            ? null
+            : message!['conversationId'] == 'family'
+            ? 'family'
+            : participants!.keys
+                  .whereType<String>()
+                  .where((id) => id != uid)
+                  .singleOrNull;
       }
-      if (!mounted || runtime.session != session || !session.enabled) return;
-      final participants = message?['participants'] as Map?;
-      final validMessage =
-          message?['id'] == id &&
-          (message?['historyGeneration'] ?? 0) == generation &&
-          participants?[uid] == session.config?['epoch'] &&
-          (message?['expiresAt'] == null ||
-              (message!['expiresAt'] as int) > session.serverNow) &&
-          await runtime.db.historyAllows(scope, generation);
-      final target = !validMessage
-          ? null
-          : message!['conversationId'] == 'family'
-          ? 'family'
-          : participants!.keys
-                .whereType<String>()
-                .where((id) => id != uid)
-                .singleOrNull;
       if (target == null) {
         await runtime.db.customStatement(
           "DELETE FROM chat_metadata WHERE key='chatOpen'",

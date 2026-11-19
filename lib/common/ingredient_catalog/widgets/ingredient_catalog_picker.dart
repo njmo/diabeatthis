@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../l10n/language.dart';
@@ -39,6 +41,7 @@ class IngredientCatalogPicker extends StatefulWidget {
     this.ingredientName,
     this.searchOnly = false,
     this.onScanBarcode,
+    this.queryDebounce = Duration.zero,
     super.key,
   });
   final bool includeReferenceIngredients;
@@ -48,6 +51,7 @@ class IngredientCatalogPicker extends StatefulWidget {
   final String? referenceLabel;
   final String? ingredientName;
   final bool searchOnly;
+  final Duration queryDebounce;
   final Future<void> Function(BuildContext)? onScanBarcode;
   @override
   State<IngredientCatalogPicker> createState() =>
@@ -58,6 +62,7 @@ class IngredientCatalogPickerState extends State<IngredientCatalogPicker> {
   late String query;
   bool scanning = false;
   late final TextEditingController search;
+  Timer? queryTimer;
   @override
   void initState() {
     super.initState();
@@ -67,8 +72,25 @@ class IngredientCatalogPickerState extends State<IngredientCatalogPicker> {
 
   @override
   void dispose() {
+    queryTimer?.cancel();
     search.dispose();
     super.dispose();
+  }
+
+  void updateQuery(String value) {
+    queryTimer?.cancel();
+    if (widget.queryDebounce == Duration.zero ||
+        value.trim().isEmpty ||
+        value == query) {
+      setState(() => query = value);
+    } else {
+      setState(() {
+        queryTimer = Timer(
+          widget.queryDebounce,
+          () => setState(() => query = value),
+        );
+      });
+    }
   }
 
   @override
@@ -114,7 +136,7 @@ class IngredientCatalogPickerState extends State<IngredientCatalogPicker> {
                     controller: search,
                     textInputAction: TextInputAction.search,
                     maxLength: 120,
-                    onChanged: (value) => setState(() => query = value),
+                    onChanged: updateQuery,
                     decoration: InputDecoration(
                       labelText: context.lang.ingredientSearchLabel,
                       counterText: '',
@@ -161,9 +183,10 @@ class IngredientCatalogPickerState extends State<IngredientCatalogPicker> {
               ),
             Expanded(
               child:
-                  widget.searchOnly &&
-                      query.trim().isEmpty &&
-                      widget.selectedItem == null
+                  queryTimer?.isActive == true ||
+                      (widget.searchOnly &&
+                          query.trim().isEmpty &&
+                          widget.selectedItem == null)
                   ? const SizedBox.expand()
                   : IngredientCatalogResults(
                       query: query,

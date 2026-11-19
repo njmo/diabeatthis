@@ -6,6 +6,7 @@ import 'package:diabeatthis/features/dashboard/presentation/widgets/compact_loop
 import 'package:diabeatthis/features/dashboard/presentation/widgets/dashboard_glucose_reading.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/mini_glucose_chart.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/responsive_glucose_chart.dart';
+import 'package:diabeatthis/features/low_treatment/presentation/widgets/low_treatment_suggestion_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,6 +47,11 @@ void main() {
                     ),
                   ],
                 ),
+                footer: LowTreatmentSuggestionCard(
+                  carbsReq: 10,
+                  carbsReqWithin: 15,
+                  onAdd: () {},
+                ),
               ),
             ),
           ),
@@ -64,6 +70,10 @@ void main() {
       lessThan(tester.getTopLeft(find.byType(CompactLoopGlucoseChart)).dy),
     );
     expect(find.text('Glukoza & Predykcja Loop'), findsNothing);
+    expect(
+      tester.getTopLeft(find.byType(LowTreatmentSuggestionCard)).dy,
+      greaterThanOrEqualTo(tester.getBottomLeft(find.byType(CompactLoopGlucoseChart)).dy),
+    );
     expect(tester.takeException(), isNull);
   });
   for (final width in [320.0, 420.0, 600.0]) {

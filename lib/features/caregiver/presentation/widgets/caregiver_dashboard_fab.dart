@@ -12,10 +12,12 @@ class CaregiverDashboardFab extends HookWidget {
     required this.onPhoto,
     required this.onMeal,
     required this.onActivity,
+    this.onLowTreatment,
   });
   final VoidCallback onPhoto;
   final VoidCallback onMeal;
   final VoidCallback onActivity;
+  final VoidCallback? onLowTreatment;
   @override
   Widget build(BuildContext context) {
     final open = useState(false);
@@ -41,6 +43,7 @@ class CaregiverDashboardFab extends HookWidget {
           const SizedBox(height: 8),
           ResponsiveMetricList(
             maxColumns: 2,
+            equalRowHeights: true,
             spacing: 8,
             runSpacing: 8,
             children: [
@@ -60,6 +63,16 @@ class CaregiverDashboardFab extends HookWidget {
               ),
             ],
           ),
+          if (onLowTreatment case final action?) ...[
+            const SizedBox(height: 8),
+            FabActionOption(
+              tile: true,
+              horizontal: true,
+              icon: Icons.cookie_outlined,
+              label: context.lang.familyChatSendLowTreatmentTooltip,
+              onTap: () => run(action),
+            ),
+          ],
         ],
       ],
     );

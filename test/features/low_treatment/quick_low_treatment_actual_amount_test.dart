@@ -13,7 +13,7 @@ import '../../helpers/localized_material_app.dart';
 void main() {
   for (final portionBased in [true, false]) {
     testWidgets(
-      'controls actual ${portionBased ? 'portions' : 'grams'} instead of a shortcut multiplier',
+      'controls ${portionBased ? 'named portions' : 'multiples of the saved amount'}',
       (tester) async {
         final item = QuickLowTreatmentItem(
           id: 1,
@@ -58,16 +58,23 @@ void main() {
         var stepper = tester.widget<QuickLowTreatmentQuantityStepper>(
           find.byType(QuickLowTreatmentQuantityStepper),
         );
-        expect(stepper.value, item.amount);
-        expect(stepper.unit, portionBased ? 'szklanka' : 'g');
+        final startingValue = portionBased ? item.amount : 1;
+        expect(stepper.value, startingValue);
+        expect(stepper.unit, portionBased ? 'szklanka' : '×');
         expect(amount, item.amount);
         await tester.tap(find.byTooltip('Zwiększ ilość'));
         await tester.pumpAndSettle();
-        expect(amount, closeTo(item.amount + 0.5, 0.0000001));
+        expect(
+          amount,
+          closeTo(
+            portionBased ? item.amount + .5 : item.amount * 1.5,
+            .0000001,
+          ),
+        );
         stepper = tester.widget<QuickLowTreatmentQuantityStepper>(
           find.byType(QuickLowTreatmentQuantityStepper),
         );
-        expect(stepper.value, closeTo(item.amount + 0.5, 0.0000001));
+        expect(stepper.value, closeTo(startingValue + .5, .0000001));
         await tester.tap(
           find.descendant(
             of: find.byType(QuickLowTreatmentQuantityStepper),
@@ -78,7 +85,10 @@ void main() {
         await tester.enterText(find.byType(TextFormField), '3,5');
         await tester.tap(find.text('Zatwierdź'));
         await tester.pumpAndSettle();
-        expect(amount, closeTo(3.5, 0.0000001));
+        expect(
+          amount,
+          closeTo(portionBased ? 3.5 : item.amount * 3.5, .0000001),
+        );
         expect(tester.takeException(), isNull);
       },
     );

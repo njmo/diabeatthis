@@ -23,39 +23,47 @@ class QueueFamilyChatMessage {
     required int familyOffGeneration,
     required int Function() now,
     required bool Function() clearSubmittedDraft,
-  }) => db.withComposerQueueAdmission<bool?>(
-    uid: uid,
-    scope: scope,
-    expectedVersion: expectedVersion,
-    expectedStamp: expectedStamp,
-    expectedHistoryGeneration: expectedHistoryGeneration,
-    allowed: allowed,
-    action: () async {
-      final signed =
-          preferSigned &&
-          await db.enqueue(scope, target, payload, now()) != null;
-      if (!signed) {
-        if (!allowUnsigned) return null;
-        final id = 'local-${now()}-${Random.secure().nextInt(1 << 32)}';
-        final queued = await db.enqueueUnsignedComposerMessage(
-          scope,
-          id,
-          target,
-          {
-            ...payload,
-            '_admission': {
-              'accountOffGeneration': accountOffGeneration,
-              'familyOffGeneration': familyOffGeneration,
+    void Function(String id)? onQueued,
+  }) async {
+    String? queuedId;
+    final signed = await db.withComposerQueueAdmission<bool?>(
+      uid: uid,
+      scope: scope,
+      expectedVersion: expectedVersion,
+      expectedStamp: expectedStamp,
+      expectedHistoryGeneration: expectedHistoryGeneration,
+      allowed: allowed,
+      action: () async {
+        queuedId = preferSigned
+            ? await db.enqueue(scope, target, payload, now())
+            : null;
+        final signed = queuedId != null;
+        if (!signed) {
+          if (!allowUnsigned) return null;
+          final id = 'local-${now()}-${Random.secure().nextInt(1 << 32)}';
+          final queued = await db.enqueueUnsignedComposerMessage(
+            scope,
+            id,
+            target,
+            {
+              ...payload,
+              '_admission': {
+                'accountOffGeneration': accountOffGeneration,
+                'familyOffGeneration': familyOffGeneration,
+              },
             },
-          },
-          now(),
-        );
-        if (queued == null) return null;
-      }
-      if (clearSubmittedDraft()) {
-        await db.saveDraft(scope, target, '', serverNow: now());
-      }
-      return signed;
-    },
-  );
+            now(),
+          );
+          if (queued == null) return null;
+          queuedId = id;
+        }
+        if (clearSubmittedDraft()) {
+          await db.saveDraft(scope, target, '', serverNow: now());
+        }
+        return signed;
+      },
+    );
+    if (signed != null && queuedId != null) onQueued?.call(queuedId!);
+    return signed;
+  }
 }

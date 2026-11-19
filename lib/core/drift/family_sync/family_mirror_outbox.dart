@@ -43,6 +43,7 @@ class FamilyMirrorOutbox {
   /// A batch and its journal gate must share the same SQLite snapshot.
   Future<List<FamilyMirrorRecord>> publishable({
     int limit = 25,
+    bool includeQuickLowTreatment = true,
   }) => db.transaction(() async {
     final unbound = await db
         .customSelect(
@@ -50,13 +51,19 @@ class FamilyMirrorOutbox {
         )
         .get();
     if (unbound.isNotEmpty) return <FamilyMirrorRecord>[];
-    return pending(limit: limit);
+    return pending(
+      limit: limit,
+      includeQuickLowTreatment: includeQuickLowTreatment,
+    );
   });
-  Future<List<FamilyMirrorRecord>> pending({int limit = 25}) async {
+  Future<List<FamilyMirrorRecord>> pending({
+    int limit = 25,
+    bool includeQuickLowTreatment = true,
+  }) async {
     final rows = await db
         .customSelect(
-          'SELECT * FROM family_sync_outbox WHERE revision>acknowledged_revision AND failed_revision<>revision ORDER BY kind,entity_id LIMIT ?',
-          variables: [Variable(limit)],
+          "SELECT * FROM family_sync_outbox WHERE revision>acknowledged_revision AND failed_revision<>revision AND (? OR kind<>'quickLowTreatmentItems') ORDER BY kind,entity_id LIMIT ?",
+          variables: [Variable(includeQuickLowTreatment), Variable(limit)],
         )
         .get();
     return rows

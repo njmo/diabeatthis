@@ -104,7 +104,9 @@ class _NotificationInboxSheetState
         child: inbox.isEmpty
             ? Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
                   child: Text(
                     context.lang.notificationInboxEmpty,
                     textAlign: TextAlign.center,
@@ -130,9 +132,15 @@ class _NotificationInboxSheetState
                           ),
                         ),
                         TextButton(
-                          onPressed: () => ref
-                              .read(inAppNotificationCenterProvider.notifier)
-                              .clear(),
+                          onPressed: () async {
+                            await ref
+                                .read(inAppNotificationCenterProvider.notifier)
+                                .clear();
+                            if (context.mounted &&
+                                ModalRoute.of(context)?.isCurrent == true) {
+                              Navigator.of(context).pop();
+                            }
+                          },
                           child: Text(context.lang.notificationInboxClear),
                         ),
                       ],
@@ -149,11 +157,40 @@ class _NotificationInboxSheetState
                       itemCount: inbox.length,
                       separatorBuilder: (_, _) =>
                           const SizedBox(height: AppSpacing.sm),
-                      itemBuilder: (context, index) => _InboxEntryCard(
-                        key: ValueKey(inbox[index].id),
-                        entry: inbox[index],
-                        fresh: _freshIds.contains(inbox[index].id),
-                      ),
+                      itemBuilder: (context, index) {
+                        final entry = inbox[index];
+                        final colors = theme.colorScheme;
+                        return Dismissible(
+                          key: ValueKey(entry.id),
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (_) => unawaited(
+                            ref
+                                .read(inAppNotificationCenterProvider.notifier)
+                                .removeFromInbox(entry.id),
+                          ),
+                          background: Container(
+                            alignment: AlignmentDirectional.centerEnd,
+                            padding: const EdgeInsetsDirectional.only(
+                              end: AppSpacing.md,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.errorContainer,
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(AppRadius.md + 4),
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.delete_outline,
+                              color: colors.onErrorContainer,
+                              semanticLabel: context.lang.commonDelete,
+                            ),
+                          ),
+                          child: _InboxEntryCard(
+                            entry: entry,
+                            fresh: _freshIds.contains(entry.id),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -164,7 +201,7 @@ class _NotificationInboxSheetState
 }
 
 class _InboxEntryCard extends ConsumerWidget {
-  const _InboxEntryCard({super.key, required this.entry, required this.fresh});
+  const _InboxEntryCard({required this.entry, required this.fresh});
 
   final NotificationInboxEntry entry;
   final bool fresh;

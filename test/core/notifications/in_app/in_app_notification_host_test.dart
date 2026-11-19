@@ -77,6 +77,65 @@ void main() {
         ),
       );
 
+  testWidgets('swiping left clears only the selected inbox notification', (
+    tester,
+  ) async {
+    final container = await pumpApp(tester);
+    final first = EatNowNotificationEvent(mealId: 7, minutes: 15);
+    final second = EatNowNotificationEvent(mealId: 8, minutes: 10);
+    const ids = HashNotificationIdFactory();
+    final firstId = ids.create(first.key);
+    final secondId = ids.create(second.key);
+    await tester.runAsync(() async {
+      await record(first);
+      await record(second);
+      await container.read(inAppNotificationCenterProvider.notifier).refresh();
+    });
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NotificationInboxButton),
+        matching: find.byType(IconButton),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.drag(find.byKey(ValueKey(firstId)), const Offset(-550, 0));
+    await tester.pumpAndSettle();
+    expect(find.byKey(ValueKey(firstId)), findsNothing);
+    expect(find.byKey(ValueKey(secondId)), findsOneWidget);
+    expect(container.read(inAppNotificationCenterProvider).unreadCount, 0);
+    await tester.runAsync(() async {
+      final store = NotificationInboxStore();
+      expect(await store.get(firstId), isNull);
+      expect(await store.get(secondId), isNotNull);
+    });
+  });
+
+  testWidgets(
+    'an actionable banner hides after five seconds and stays unread',
+    (tester) async {
+      final container = await pumpApp(tester);
+      final event = EatNowNotificationEvent(mealId: 7, minutes: 15);
+      final id = const HashNotificationIdFactory().create(event.key);
+      await tester.runAsync(() async {
+        await record(event, inApp: true);
+        await container
+            .read(inAppNotificationCenterProvider.notifier)
+            .present(event);
+      });
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 4999));
+      expect(container.read(inAppNotificationCenterProvider).current?.id, id);
+      await tester.pump(const Duration(milliseconds: 1));
+      expect(container.read(inAppNotificationCenterProvider).current, isNull);
+      await tester.runAsync(() async {
+        final stored = await NotificationInboxStore().get(id);
+        expect(stored?.active, isTrue);
+        expect(stored?.read, isFalse);
+      });
+    },
+  );
+
   testWidgets('chat reply opens and focuses the inline composer on demand', (
     tester,
   ) async {
@@ -114,9 +173,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(TextField), findsNothing);
-    expect(find.text('Yes'), findsNothing);
+    expect(find.text('Yes'), findsOneWidget);
 
-    await tester.tap(find.text('Odpowiedz'));
+    await tester.tap(find.text('Napisz odpowiedź'));
     await tester.pumpAndSettle();
 
     expect(find.byType(TextField), findsOneWidget);
@@ -125,6 +184,9 @@ void main() {
       tester.widget<EditableText>(find.byType(EditableText)).focusNode.hasFocus,
       isTrue,
     );
+    await tester.enterText(find.byType(TextField), 'Własna odpowiedź');
+    await tester.pump(const Duration(seconds: 6));
+    expect(find.text('Własna odpowiedź'), findsOneWidget);
   });
 
   testWidgets('banner shows the definition buttons and answers like the '
@@ -164,8 +226,7 @@ void main() {
     expect(stored!.active, isFalse);
   });
 
-  testWidgets('closing a banner keeps the notification answerable from the '
-      'inbox', (tester) async {
+  testWidgets('closing a banner removes its inbox entry', (tester) async {
     final container = await pumpApp(tester);
     final event = EatNowNotificationEvent(mealId: 8, minutes: 10);
     await tester.runAsync(() async {
@@ -182,11 +243,7 @@ void main() {
     expect(find.text(event.title), findsNothing);
     expect(sentToTask, isEmpty);
 
-    await tester.tap(find.byType(NotificationInboxButton));
-    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
-    await tester.pumpAndSettle();
-    expect(find.text(event.title), findsOneWidget);
-    expect(find.text('Zaczynam jeść'), findsOneWidget);
+    expect(container.read(inAppNotificationCenterProvider).inbox, isEmpty);
   });
 
   testWidgets('informational banners dismiss themselves', (tester) async {
@@ -229,6 +286,15 @@ void main() {
       tester.view.physicalSize.height / tester.view.devicePixelRatio / 2,
     );
     expect(find.byType(ListView), findsOneWidget);
+    await tester.tap(
+      find.text(
+        AppLocalizations.of(
+          tester.element(find.byType(BottomSheet)),
+        ).notificationInboxClear,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsNothing);
   });
 
   testWidgets('empty inbox is a compact sheet with a clear message', (

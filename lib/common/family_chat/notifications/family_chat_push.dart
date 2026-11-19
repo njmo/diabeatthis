@@ -14,9 +14,11 @@ import '../../../core/drift/database_impl.dart';
 import '../../../core/drift/providers/database_provider.dart';
 import '../../../core/firebase/firebase_app_check_provider.dart';
 import '../../../core/logger/logger.dart';
+import '../../../features/low_treatment/data/providers/low_treatment_aaps_provider.dart';
 import '../../../firebase_options.dart';
 import '../../auth/load_firebase_callable_identity.dart';
 import '../../backend/authenticated_callable_transport.dart';
+import '../../l10n/language.dart';
 import '../application/confirm_family_treatment.dart';
 import '../application/family_chat_background.dart';
 import '../application/family_chat_consumption_action.dart';
@@ -174,7 +176,9 @@ Future<void> handleFamilyChatNotificationResponse(
 }) async {
   final payload = familyChatNotificationPayload(response.payload);
   if (payload == null) return;
-  if (response.actionId == null || response.actionId!.isEmpty) {
+  if (response.actionId == null ||
+      response.actionId!.isEmpty ||
+      response.actionId == 'family_chat_open_request') {
     await _queueConversationOpen(payload);
     return;
   }
@@ -212,7 +216,25 @@ Future<void> handleFamilyChatNotificationResponse(
           api: worker.api,
           payload: payload,
           currentUid: worker.currentUid,
-          confirm: (id, guard) => executor(guard).confirm(id),
+          confirm: (id, guard) => executor(guard).confirm(
+            id,
+            onSaved: (mealId) async {
+              if (WidgetsBinding.instance.lifecycleState !=
+                  AppLifecycleState.resumed) {
+                return;
+              }
+              try {
+                await container!
+                    .read(lowTreatmentAapsControllerProvider)
+                    .open(mealId, lang);
+              } catch (error) {
+                Log.w(
+                  'FamilyChatPush',
+                  'Could not open AAPS (${error.runtimeType})',
+                );
+              }
+            },
+          ),
           lookup: (id, guard) => executor(guard).lookup(id),
           show: (notice, state) =>
               presenter.consumptionStatus(notice, payload, state),
@@ -223,6 +245,14 @@ Future<void> handleFamilyChatNotificationResponse(
         container?.dispose();
         await medical?.close();
       }
+    } else if (response.actionId == 'family_chat_treatment_unavailable') {
+      await worker.reply(payload, 'Nie mam', treatmentUnavailable: true);
+    } else if (response.actionId == 'family_chat_treatment_feels_well') {
+      await worker.reply(
+        payload,
+        'Czuję się dobrze',
+        treatmentUnavailable: true,
+      );
     } else if (response.actionId == 'family_chat_reply' &&
         response.input != null) {
       await worker.reply(payload, response.input!);

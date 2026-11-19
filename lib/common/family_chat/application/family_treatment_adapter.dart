@@ -11,7 +11,9 @@ import '../../../features/ingredients/data/drafts/ingredient_draft.dart';
 import '../../../features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../features/low_treatment/application/save_recorded_low_treatment_use_case.dart';
 import '../../../features/low_treatment/data/drafts/low_treatment_context_draft.dart';
+import '../../../features/low_treatment/data/providers/aaps_carbs_request_episode_store_provider.dart';
 import '../../../features/low_treatment/data/repositories/family_treatment_journal.dart';
+import '../../../features/low_treatment/domain/models/aaps_carbs_request_episode.dart';
 import '../../../features/meals/data/drafts/meal_draft.dart';
 import '../../../features/portions/data/drafts/portion_draft.dart';
 import '../../app_mode/application_device_mode.dart';
@@ -55,6 +57,7 @@ ConfirmFamilyTreatment createFamilyTreatmentExecutor(
 }) {
   final medical = ref.watch(databaseProvider);
   final save = ref.watch(saveRecordedLowTreatmentUseCaseProvider);
+  final requests = ref.watch(aapsCarbsRequestEpisodeStoreProvider);
   return ConfirmFamilyTreatment(
     chatDb: chatDb,
     journal: FamilyTreatmentJournal(medical),
@@ -121,12 +124,28 @@ ConfirmFamilyTreatment createFamilyTreatmentExecutor(
           'Server carbohydrate record does not match the frozen conversion',
         );
       }
+      final time = DateTime.fromMillisecondsSinceEpoch(confirmedAt);
+      var draft = familyTreatmentDraft(snapshot, time);
+      final episode = await requests.load().catchError(
+        (Object _) => const AapsCarbsRequestEpisode.empty(),
+      );
+      final observedAt = episode.lastAcceptedStatusAt;
+      if (!episode.acknowledged &&
+          (episode.activeCarbsReq ?? 0) > 0 &&
+          observedAt != null &&
+          !observedAt.isAfter(time) &&
+          time.difference(observedAt) <= const Duration(minutes: 5) &&
+          episode.matchesSuggestionAt(observedAt)) {
+        draft = draft.copyWith(
+          reason: LowTreatmentReason.carbsReq,
+          suggestedCarbs: episode.activeCarbsReq,
+          suggestionAt: observedAt,
+          deviceStatusDate: observedAt,
+        );
+      }
       final result = await save(
-        familyTreatmentDraft(
-          snapshot,
-          DateTime.fromMillisecondsSinceEpoch(confirmedAt),
-        ),
-        eatenAt: DateTime.fromMillisecondsSinceEpoch(confirmedAt),
+        draft,
+        eatenAt: time,
         logContent: false,
         suggestMissingIcons: false,
         carbohydrateRecord: (nutrition: nutrition, delivery: delivery),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/family_chat/presentation/family_chat_page.dart';
 import '../../../../common/family_sync/family_planning_view.dart';
 import '../../../../common/family_sync/presentation/family_planning_page.dart';
 import '../../../../common/presentation/dashboard/dashboard_shell.dart';
@@ -19,6 +20,18 @@ class CaregiverDashboardState extends ConsumerState<CaregiverDashboard> {
   int destination = 0;
   int historyCategory = 0;
   int catalogCategory = 0;
+
+  bool _requestOpen = false;
+
+  Future<void> _requestLowTreatment() async {
+    if (_requestOpen) return;
+    _requestOpen = true;
+    try {
+      await showFamilyLowTreatmentFromDashboard(context, ref);
+    } finally {
+      _requestOpen = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +63,7 @@ class CaregiverDashboardState extends ConsumerState<CaregiverDashboard> {
         onPhoto: () => planning.currentState?.planFromPhoto(),
         onMeal: () => planning.currentState?.edit('createMeal'),
         onActivity: () => planning.currentState?.edit('planActivity'),
+        onLowTreatment: _requestLowTreatment,
       ),
       body: FamilyPlanningPage(
         key: planning,
@@ -63,6 +77,7 @@ class CaregiverDashboardState extends ConsumerState<CaregiverDashboard> {
                     syncBusy: busy,
                     syncFailed: failed,
                     syncReady: ready,
+                    onLowTreatment: _requestLowTreatment,
                   ),
                 ],
               )

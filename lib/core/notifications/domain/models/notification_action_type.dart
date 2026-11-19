@@ -6,6 +6,9 @@ enum NotificationActionType {
   agree,
   familyChatReply,
   familyChatConsume,
+  familyChatTreatmentUnavailable,
+  familyChatTreatmentFeelsWell,
+  familyChatOpenRequest,
 }
 
 extension NotificationActionTypeExtension on NotificationActionType {
@@ -25,6 +28,12 @@ extension NotificationActionTypeExtension on NotificationActionType {
         return 'family_chat_reply';
       case NotificationActionType.familyChatConsume:
         return 'family_chat_consume';
+      case NotificationActionType.familyChatTreatmentUnavailable:
+        return 'family_chat_treatment_unavailable';
+      case NotificationActionType.familyChatTreatmentFeelsWell:
+        return 'family_chat_treatment_feels_well';
+      case NotificationActionType.familyChatOpenRequest:
+        return 'family_chat_open_request';
     }
   }
 }

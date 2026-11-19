@@ -15,6 +15,8 @@ import '../../../features/caregiver/presentation/widgets/caregiver_day_view.dart
 import '../../../features/dashboard/data/providers/dashboard_activity_clock_provider.dart';
 import '../../../features/dashboard/domain/use_cases/build_dashboard_status_use_case.dart';
 import '../../../features/dashboard/presentation/widgets/dashboard_status_card.dart';
+import '../../../features/meals/presentation/widgets/meal_progress/meal_schedule_labels.dart';
+import '../../../features/meals/presentation/widgets/meal_progress/meal_schedule_tile.dart';
 import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../l10n/language.dart';
@@ -817,6 +819,28 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
         ? const <Map<String, dynamic>>[]
         : visibleLogs(now);
 
+    final meals = showMeals ? visibleMeals : const <Map<String, dynamic>>[];
+    final activeMeals = <Map<String, dynamic>>[];
+    final summaryMeals = <Map<String, dynamic>>[];
+    final plannedMeals = <Map<String, dynamic>>[];
+    if (homeLayout) {
+      for (final row in meals) {
+        final status = (row['payload'] as Map)['status'] as String?;
+        if (mealStatusBlocksAnotherMealActivation(status)) {
+          activeMeals.add(row);
+        } else if (mealStatusReadyToSummarize(status)) {
+          summaryMeals.add(row);
+        } else {
+          plannedMeals.add(row);
+        }
+      }
+    }
+    final loadingPlannedMeals =
+        homeLayout &&
+        controller.busy &&
+        !controller.complete &&
+        plannedMeals.isEmpty;
+
     final content = SafeArea(
       bottom: !widget.embedded,
       child: RefreshIndicator(
@@ -895,91 +919,55 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                         occurrence,
                       ),
               ),
-            if (showMeals && visibleMeals.isNotEmpty) ...[
-              if (homeLayout) ...[
+            if (homeLayout) ...[
+              if (activeMeals.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                if (visibleMeals.any(
-                  (row) => mealStatusBlocksAnotherMealActivation(
-                    (row['payload'] as Map)['status'] as String?,
+                DashboardCardPadding(
+                  enabled: true,
+                  child: MealProgressSectionHeading(
+                    title: context.lang.mealProgressCurrent,
                   ),
-                )) ...[
-                  DashboardCardPadding(
-                    enabled: true,
-                    child: MealProgressSectionHeading(
-                      title: context.lang.mealProgressCurrent,
-                    ),
-                  ),
-                  for (final row in visibleMeals.where(
-                    (r) => mealStatusBlocksAnotherMealActivation(
-                      (r['payload'] as Map)['status'] as String?,
-                    ),
-                  ))
-                    _buildActiveMealCard(row['payload'] as Map),
-                ],
-                if (visibleMeals.any(
-                  (row) => mealStatusReadyToSummarize(
-                    (row['payload'] as Map)['status'] as String?,
-                  ),
-                )) ...[
-                  const SizedBox(height: 4),
-                  DashboardCardPadding(
-                    enabled: true,
-                    child: MealProgressSectionHeading(
-                      title: context.lang.mealProgressToSummarize,
-                    ),
-                  ),
-                  for (final row in visibleMeals.where(
-                    (r) => mealStatusReadyToSummarize(
-                      (r['payload'] as Map)['status'] as String?,
-                    ),
-                  ))
-                    _buildPlannedMealCard(row),
-                ],
-                if (visibleMeals.any(
-                  (row) =>
-                      !mealStatusBlocksAnotherMealActivation(
-                        (row['payload'] as Map)['status'] as String?,
-                      ) &&
-                      !mealStatusReadyToSummarize(
-                        (row['payload'] as Map)['status'] as String?,
-                      ),
-                )) ...[
-                  const SizedBox(height: 4),
-                  if (visibleMeals.any(
-                    (row) =>
-                        mealStatusBlocksAnotherMealActivation(
-                          (row['payload'] as Map)['status'] as String?,
-                        ) ||
-                        mealStatusReadyToSummarize(
-                          (row['payload'] as Map)['status'] as String?,
-                        ),
-                  ))
-                    DashboardCardPadding(
-                      enabled: true,
-                      child: MealProgressSectionHeading(
-                        title: context.lang.familySyncMeals,
-                      ),
-                    ),
-                  for (final row in visibleMeals.where(
-                    (r) =>
-                        !mealStatusBlocksAnotherMealActivation(
-                          (r['payload'] as Map)['status'] as String?,
-                        ) &&
-                        !mealStatusReadyToSummarize(
-                          (r['payload'] as Map)['status'] as String?,
-                        ),
-                  ))
-                    _buildPlannedMealCard(row),
-                ],
-              ] else ...[
-                if (!homeLayout) const SizedBox(height: 16),
-                if (widget.view != FamilyPlanningView.home)
-                  Text(
-                    context.lang.familySyncMeals,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                for (final row in visibleMeals) _buildPlannedMealCard(row),
+                ),
+                for (final row in activeMeals)
+                  _buildActiveMealCard(row['payload'] as Map),
               ],
+              if (summaryMeals.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                DashboardCardPadding(
+                  enabled: true,
+                  child: MealProgressSectionHeading(
+                    title: context.lang.mealProgressToSummarize,
+                  ),
+                ),
+                for (final row in summaryMeals) _buildPlannedMealCard(row),
+              ],
+              if (plannedMeals.isNotEmpty || loadingPlannedMeals) ...[
+                const SizedBox(height: 4),
+                DashboardCardPadding(
+                  enabled: true,
+                  child: Column(
+                    children: [
+                      MealProgressSectionHeading(
+                        title: context.lang.dashboardPlannedMealsTitle,
+                      ),
+                      MealProgressSectionHeading(
+                        title: context.lang.mealProgressToday,
+                        date: mealScheduleFullDate(context, now),
+                      ),
+                      if (loadingPlannedMeals) const MealScheduleLoadingTile(),
+                    ],
+                  ),
+                ),
+                for (final row in plannedMeals) _buildPlannedMealCard(row),
+              ],
+            ] else if (meals.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              if (!home)
+                Text(
+                  context.lang.familySyncMeals,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              for (final row in meals) _buildPlannedMealCard(row),
             ],
             if (showActivities &&
                 (occurrences.isNotEmpty || historyLogs.isNotEmpty)) ...[

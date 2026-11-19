@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:intl/intl.dart';
 
+import '../../../features/low_treatment/presentation/widgets/quick_low_treatment_selection.dart';
+import '../../../features/low_treatment/presentation/widgets/quick_low_treatment_tile.dart';
 import '../../backend/authenticated_callable_transport.dart';
 import '../../l10n/language.dart';
 import '../application/confirm_family_treatment.dart';
@@ -24,12 +26,16 @@ const _accent = Color(0xFF0EA5E9);
 /// tokens and must stay stable; only their on-screen label is localized.
 const _treatmentAteAnswer = 'Zjadłem';
 const _treatmentNoneAnswer = 'Nie mam';
+const _treatmentFeelsWellAnswer = 'Czuję się dobrze';
 
 String _answerLabel(_Message message, String answer, AppLocalizations lang) {
-  if (message.lowTreatment == null) return answer;
+  if (message.lowTreatment == null && message.treatmentReplyIcon == null) {
+    return answer;
+  }
   return switch (answer) {
     _treatmentAteAnswer => lang.familyChatTreatmentAnswerAte,
     _treatmentNoneAnswer => lang.familyChatTreatmentAnswerNone,
+    _treatmentFeelsWellAnswer => lang.familyChatTreatmentAnswerFeelsWell,
     _ => answer,
   };
 }
@@ -264,12 +270,16 @@ class FamilyChatFoodChoice {
     required this.carbsPerUnit,
     this.initialAmount,
     this.gramsPerUnit,
+    this.iconAssetPath,
+    this.quickShortcut = false,
   });
   final String name;
   final String unit;
   final double carbsPerUnit;
   final double? initialAmount;
   final double? gramsPerUnit;
+  final String? iconAssetPath;
+  final bool quickShortcut;
 }
 
 enum _DeliveryState { pending, sent, delivered, read, failed }
@@ -323,6 +333,8 @@ class _Message {
   List<_RecipientReceipt>? groupReceipts;
   String? reply;
   bool? selectedReply;
+  IconData? treatmentReplyIcon;
+  ({String text, Object? treatment, DateTime sentAt})? replyContext;
 }
 
 class _RecipientReceipt {
@@ -347,7 +359,7 @@ class FamilyChatConversation extends StatefulWidget {
     super.key,
     required this.isCaregiver,
     this.loadFoods,
-    this.pickIngredient,
+    this.showTreatmentAction = true,
     required this._session,
     this.initialTarget,
     this.confirmTreatment,
@@ -358,6 +370,7 @@ class FamilyChatConversation extends StatefulWidget {
   });
 
   final bool isCaregiver;
+  final bool showTreatmentAction;
   final FamilyChatSession _session;
   final String? initialTarget;
   final Future<FamilyTreatmentResult> Function(String id)? confirmTreatment;
@@ -372,7 +385,6 @@ class FamilyChatConversation extends StatefulWidget {
   final Future<FamilyTreatmentResult?> Function(String id)? loadTreatmentResult;
   final Future<double?> Function(String id)? loadTreatmentQuantity;
   final Future<List<FamilyChatFoodChoice>> Function()? loadFoods;
-  final Future<FamilyChatFoodChoice?> Function(BuildContext, String)? pickIngredient;
 
   @override
   State<FamilyChatConversation> createState() => _FamilyChatConversationState();
@@ -576,106 +588,159 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
       for (final row in rows)
         if (row['id'] is String) row['id'] as String: row,
     };
-    final messages = rows.map((row) {
-      final receipts = row['receipts'] as Map? ?? {};
-      _DeliveryState state(Map receipt) => receipt['readAt'] != null
-          ? _DeliveryState.read
-          : receipt['deliveredAt'] != null
-          ? _DeliveryState.delivered
-          : _DeliveryState.sent;
-      final values = receipts.values.map((v) => state(v as Map)).toList();
-      final delivery = row['delivery'] == 'pending'
-          ? _DeliveryState.pending
-          : row['delivery'] == 'failed'
-          ? _DeliveryState.failed
-          : values.isNotEmpty && values.every((v) => v == _DeliveryState.read)
-          ? _DeliveryState.read
-          : values.isNotEmpty &&
-                values.every(
-                  (v) =>
-                      v == _DeliveryState.delivered || v == _DeliveryState.read,
-                )
-          ? _DeliveryState.delivered
-          : _DeliveryState.sent;
-      final message = _Message(
-        row['text'] as String,
-        id: row['id'] as String,
-        authorization: familyTreatmentAuthorizationFromConfig(
-          session.config ?? {},
-        ),
-        mine: row['senderUid'] == session.uid,
-        sender:
-            (row['names'] as Map?)?[row['senderUid']] as String? ??
-            session.name(row['senderUid'] as String),
-        answers: row['kind'] == 'lowTreatment'
-            ? const [_treatmentAteAnswer, _treatmentNoneAnswer]
-            : (row['answers'] as List? ?? []).cast<String>(),
-        isQuestion: row['kind'] == 'question',
-        lowTreatment: row['treatment'] is Map
-            ? _LowTreatmentRequest.fromSnapshot(row['treatment'] as Map)
-            : null,
-        treatmentComplete: row['treatmentResult'] != null,
-        treatmentSnapshot:
-            row['kind'] == 'lowTreatment' && row['treatment'] is Map
-            ? row['treatment'] as Map
-            : null,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(row['sentAt'] as int),
-        delivery: delivery,
-        sendOutcomeUnknown: row['sendOutcomeUnknown'] == true,
-        redactedOutcome: row['redactedOutcome'] == true,
-        wasRead:
-            row['_localRead'] == true ||
-            (row['receipts'] as Map?)?[session.uid]?['readAt'] != null,
-      );
-      if (message.lowTreatment != null &&
-          !widget.isCaregiver &&
-          widget.loadTreatmentResult != null &&
-          _treatmentLookups.add(message.id!)) {
-        unawaited(
-          _reloadTreatmentResult(message.id!).catchError((Object _) {
-            _treatmentLookups.remove(message.id);
-          }),
-        );
-      }
-      if (message.mine &&
-          _group &&
-          delivery != _DeliveryState.pending &&
-          delivery != _DeliveryState.failed) {
-        message.groupReceipts = receipts.entries.map((entry) {
-          final value = entry.value as Map;
-          return _RecipientReceipt(
-            (row['names'] as Map?)?[entry.key] as String? ??
-                session.name(entry.key as String),
-            state(value),
-            isChild: (row['roles'] as Map?)?[entry.key] == 'child',
-            readAt: value['readAt'] == null
-                ? null
-                : DateTime.fromMillisecondsSinceEpoch(value['readAt'] as int),
-          );
-        }).toList();
-      }
-      if (row['kind'] == 'question') {
-        // Shared policy: only the child's confirmed, pending or ambiguous
-        // answer closes the question; a definitively failed one reopens it.
-        final state = questionStates[row['id']];
-        message.reply = state != null && state.blocksNewAnswer
-            ? (rowsById[state.replyId]?['text'] as String? ?? '')
-            : null;
-      } else {
-        // Clinical requests keep their own reply/consumption policy.
-        message.reply =
-            rows
-                    .where(
-                      (reply) =>
-                          reply['replyTo'] == row['id'] &&
-                          reply['redactedOutcome'] != true,
+    final shownTreatmentAnswers = <(Object?, Object?, Object?)>{};
+    final messages = rows
+        .where((row) {
+          final parent = rowsById[row['replyTo']];
+          if (parent?['kind'] != 'lowTreatment' ||
+              row['kind'] != 'answer' ||
+              row['delivery'] == 'failed' ||
+              row['redactedOutcome'] == true) {
+            return true;
+          }
+          return shownTreatmentAnswers.add((
+            row['replyTo'],
+            row['senderUid'],
+            row['text'],
+          ));
+        })
+        .map((row) {
+          final receipts = row['receipts'] as Map? ?? {};
+          _DeliveryState state(Map receipt) => receipt['readAt'] != null
+              ? _DeliveryState.read
+              : receipt['deliveredAt'] != null
+              ? _DeliveryState.delivered
+              : _DeliveryState.sent;
+          final values = receipts.values.map((v) => state(v as Map)).toList();
+          final delivery = row['delivery'] == 'pending'
+              ? _DeliveryState.pending
+              : row['delivery'] == 'failed'
+              ? _DeliveryState.failed
+              : values.isNotEmpty &&
+                    values.every((v) => v == _DeliveryState.read)
+              ? _DeliveryState.read
+              : values.isNotEmpty &&
+                    values.every(
+                      (v) =>
+                          v == _DeliveryState.delivered ||
+                          v == _DeliveryState.read,
                     )
-                    .lastOrNull?['text']
-                as String?;
-      }
-      message.selectedReply = replies[message.id]?.selected;
-      return message;
-    }).toList();
+              ? _DeliveryState.delivered
+              : _DeliveryState.sent;
+          final message = _Message(
+            row['text'] as String,
+            id: row['id'] as String,
+            authorization: familyTreatmentAuthorizationFromConfig(
+              session.config ?? {},
+            ),
+            mine: row['senderUid'] == session.uid,
+            sender:
+                (row['names'] as Map?)?[row['senderUid']] as String? ??
+                session.name(row['senderUid'] as String),
+            answers: row['kind'] == 'lowTreatment'
+                ? const [
+                    _treatmentAteAnswer,
+                    _treatmentNoneAnswer,
+                    _treatmentFeelsWellAnswer,
+                  ]
+                : (row['answers'] as List? ?? []).cast<String>(),
+            isQuestion: row['kind'] == 'question',
+            lowTreatment: row['treatment'] is Map
+                ? _LowTreatmentRequest.fromSnapshot(row['treatment'] as Map)
+                : null,
+            treatmentComplete: row['treatmentResult'] != null,
+            treatmentSnapshot:
+                row['kind'] == 'lowTreatment' && row['treatment'] is Map
+                ? row['treatment'] as Map
+                : null,
+            createdAt: DateTime.fromMillisecondsSinceEpoch(
+              row['sentAt'] as int,
+            ),
+            delivery: delivery,
+            sendOutcomeUnknown: row['sendOutcomeUnknown'] == true,
+            redactedOutcome: row['redactedOutcome'] == true,
+            wasRead:
+                row['_localRead'] == true ||
+                (row['receipts'] as Map?)?[session.uid]?['readAt'] != null,
+          );
+          if (message.lowTreatment != null &&
+              !widget.isCaregiver &&
+              widget.loadTreatmentResult != null &&
+              _treatmentLookups.add(message.id!)) {
+            unawaited(
+              _reloadTreatmentResult(message.id!).catchError((Object _) {
+                _treatmentLookups.remove(message.id);
+              }),
+            );
+          }
+          if (message.mine &&
+              _group &&
+              delivery != _DeliveryState.pending &&
+              delivery != _DeliveryState.failed) {
+            message.groupReceipts = receipts.entries.map((entry) {
+              final value = entry.value as Map;
+              return _RecipientReceipt(
+                (row['names'] as Map?)?[entry.key] as String? ??
+                    session.name(entry.key as String),
+                state(value),
+                isChild: (row['roles'] as Map?)?[entry.key] == 'child',
+                readAt: value['readAt'] == null
+                    ? null
+                    : DateTime.fromMillisecondsSinceEpoch(
+                        value['readAt'] as int,
+                      ),
+              );
+            }).toList();
+          }
+          if (row['kind'] == 'question') {
+            // Shared policy: only the child's confirmed, pending or ambiguous
+            // answer closes the question; a definitively failed one reopens it.
+            final state = questionStates[row['id']];
+            message.reply = state != null && state.blocksNewAnswer
+                ? (rowsById[state.replyId]?['text'] as String? ?? '')
+                : null;
+          } else {
+            // Clinical requests keep their own reply/consumption policy.
+            message.reply =
+                rows
+                        .where(
+                          (reply) =>
+                              reply['replyTo'] == row['id'] &&
+                              reply['redactedOutcome'] != true,
+                        )
+                        .lastOrNull?['text']
+                    as String?;
+          }
+          final parent = rowsById[row['replyTo']];
+          final treatmentAnswer =
+              row['kind'] == 'answer' && parent?['kind'] == 'lowTreatment';
+          final treatmentResult = row['kind'] == 'treatmentResult';
+          if (treatmentResult || treatmentAnswer) {
+            message.treatmentReplyIcon = switch (row['text']) {
+              _treatmentNoneAnswer => Icons.cancel_outlined,
+              _treatmentFeelsWellAnswer => Icons.sentiment_satisfied_alt,
+              _ => Icons.check_circle_rounded,
+            };
+          }
+          message.selectedReply = treatmentAnswer || treatmentResult
+              ? false
+              : replies[message.id]?.selected;
+          if (message.selectedReply != null &&
+              parent != null &&
+              parent['redactedOutcome'] != true &&
+              parent['text'] is String &&
+              parent['sentAt'] is int) {
+            message.replyContext = (
+              text: parent['text'] as String,
+              treatment: parent['treatment'],
+              sentAt: DateTime.fromMillisecondsSinceEpoch(
+                parent['sentAt'] as int,
+              ),
+            );
+          }
+          return message;
+        })
+        .toList();
     return messages;
   }
 
@@ -1112,22 +1177,13 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
       );
     }
     if (!mounted) return;
-    final request = await _showChatForm<_LowTreatmentRequest>(
+    final saved = await showFamilyLowTreatmentComposer(
       context,
-      builder: (_) => _LowTreatmentRequestEditor(
-        foods: foods,
-        pickIngredient: widget.pickIngredient == null
-            ? null
-            : (context) => widget.pickIngredient!(context, target),
-      ),
+      session: widget._session,
+      target: target,
+      foods: foods,
     );
-    if (!mounted || request == null) return;
-    await _sendRemote(
-      request.textFor(context.lang),
-      kind: 'lowTreatment',
-      targetUid: target,
-      treatment: request.snapshot(widget._session.serverNow),
-    );
+    if (saved != null && mounted) _toBottom();
   }
 
   Future<void> _sendText({String? snapshotRaw, String? snapshotTarget}) async {
@@ -1754,7 +1810,7 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                         ),
                       ),
                       const SizedBox(width: 2),
-                      if (widget.isCaregiver) ...[
+                      if (widget.isCaregiver && widget.showTreatmentAction) ...[
                         IconButton(
                           tooltip:
                               context.lang.familyChatSendLowTreatmentTooltip,
@@ -2084,7 +2140,7 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                         Row(
                           children: [
                             const Icon(
-                              Icons.cookie_outlined,
+                              Icons.restaurant_rounded,
                               color: _accent,
                               size: 18,
                             ),
@@ -2109,6 +2165,32 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
+                        if (message.replyContext case final quote?) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                              8,
+                              4,
+                              8,
+                              4,
+                            ),
+                            decoration: BoxDecoration(
+                              border: BorderDirectional(
+                                start: BorderSide(color: _accent, width: 2),
+                              ),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: .06,
+                              ),
+                            ),
+                            child: Text(
+                              '${_receiptTime(quote.sentAt)} · '
+                              '${familyTreatmentSnapshotText(quote.treatment, context.lang, compact: true) ?? quote.text}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 4),
                       ],
                       Row(
@@ -2119,7 +2201,8 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                             Icon(
                               message.isQuestion
                                   ? Icons.help_outline_rounded
-                                  : Icons.check_circle_rounded,
+                                  : message.treatmentReplyIcon ??
+                                        Icons.check_circle_rounded,
                               size: 18,
                               color: _accent,
                             ),
@@ -2131,7 +2214,11 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                                     message.treatmentSnapshot,
                                     context.lang,
                                   ) ??
-                                  message.text,
+                                  _answerLabel(
+                                    message,
+                                    message.text,
+                                    context.lang,
+                                  ),
                               style: const TextStyle(fontSize: 16, height: 1.4),
                             ),
                           ),
@@ -2152,8 +2239,9 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                         ),
                       ],
                       if (message.answers.isNotEmpty &&
-                          (message.lowTreatment != null ||
-                              message.reply == null)) ...[
+                          (message.lowTreatment == null
+                              ? message.reply == null
+                              : !widget.isCaregiver && !message.mine)) ...[
                         const SizedBox(height: 14),
                         Wrap(
                           spacing: 6,
@@ -2253,29 +2341,6 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                             ),
                             style: theme.textTheme.bodySmall,
                           ),
-                      ],
-                      if (message.reply != null &&
-                          message.lowTreatment != null) ...[
-                        const SizedBox(height: 12),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.check_circle_rounded,
-                              size: 18,
-                              color: _accent,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                message.reply!,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
                       ],
                       const SizedBox(height: 3),
                       _messageReceipt(message),
@@ -2936,10 +3001,66 @@ class _ConsumedQuantityEditorState extends State<_ConsumedQuantityEditor> {
   }
 }
 
+/// Opens the same request form from a conversation or from the dashboard.
+Future<String?> showFamilyLowTreatmentComposer(
+  BuildContext context, {
+  required FamilyChatSession session,
+  required String target,
+  required List<FamilyChatFoodChoice> foods,
+  Future<void> Function()? onEdit,
+  Future<FamilyChatFoodChoice?> Function(BuildContext)? pickIngredient,
+}) async {
+  final scope = session.scope;
+  final request = await _showChatForm<_LowTreatmentRequest>(
+    context,
+    builder: (_) => _LowTreatmentRequestEditor(
+      foods: foods,
+      onEdit: onEdit,
+      pickIngredient: pickIngredient,
+    ),
+  );
+  if (!context.mounted ||
+      request == null ||
+      !session.serverVerified ||
+      !session.isCurrentAccount() ||
+      scope == null ||
+      session.scope != scope ||
+      !session.targets.contains(target)) {
+    return null;
+  }
+  try {
+    String? id;
+    await session.send(
+      target,
+      request.textFor(context.lang),
+      kind: 'lowTreatment',
+      treatment: request.snapshot(session.serverNow),
+      onQueued: (queued) => id = queued,
+    );
+    return context.mounted &&
+            session.scope == scope &&
+            session.isCurrentAccount()
+        ? id
+        : null;
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.lang.familyChatEnqueueFailed)),
+      );
+    }
+    return null;
+  }
+}
+
 class _LowTreatmentRequestEditor extends StatefulWidget {
-  const _LowTreatmentRequestEditor({required this.foods, this.pickIngredient});
+  const _LowTreatmentRequestEditor({
+    required this.foods,
+    this.pickIngredient,
+    this.onEdit,
+  });
   final List<FamilyChatFoodChoice> foods;
   final Future<FamilyChatFoodChoice?> Function(BuildContext)? pickIngredient;
+  final Future<void> Function()? onEdit;
   @override
   State<_LowTreatmentRequestEditor> createState() =>
       _LowTreatmentRequestEditorState();
@@ -2950,9 +3071,36 @@ class _LowTreatmentRequestEditorState
   final _form = GlobalKey<FormState>();
   final _product = TextEditingController();
   final _quantity = TextEditingController(text: '1');
+  final _pieceWeight = TextEditingController();
   final _carbs = TextEditingController();
   FamilyChatFoodChoice? _selected;
   bool _picking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final first = widget.foods
+        .where((food) => food.quickShortcut && food.carbsPerUnit > 0)
+        .firstOrNull;
+    if (first != null) _applyFood(first);
+  }
+
+  bool get _needsPieceWeight => _selected?.unit == 'g';
+
+  double? get _gramsPerPiece => _needsPieceWeight
+      ? double.tryParse(_pieceWeight.text.trim().replaceAll(',', '.'))
+      : _selected?.gramsPerUnit;
+
+  double? get _carbsPerPiece {
+    final selected = _selected;
+    if (selected == null) return null;
+    final weight = _gramsPerPiece;
+    return _needsPieceWeight
+        ? weight == null || !weight.isFinite || weight <= 0
+              ? null
+              : weight * selected.carbsPerUnit
+        : selected.carbsPerUnit;
+  }
 
   void _select(FamilyChatFoodChoice food) {
     if (!food.carbsPerUnit.isFinite || food.carbsPerUnit <= 0) {
@@ -2961,13 +3109,28 @@ class _LowTreatmentRequestEditorState
       );
       return;
     }
-    setState(() {
-      _selected = food;
-      _product.text = food.name;
-      _quantity.text = food.initialAmount?.toString() ?? '';
-      _recalculate();
-    });
+    setState(() => _applyFood(food));
   }
+
+  void _applyFood(FamilyChatFoodChoice food) {
+    _selected = food;
+    _product.text = food.name;
+    _quantity.text = _needsPieceWeight
+        ? '1'
+        : food.initialAmount?.toString() ?? '';
+    _pieceWeight.text = _needsPieceWeight
+        ? food.gramsPerUnit?.toString() ?? ''
+        : '';
+    _recalculate();
+  }
+
+  void _clearFood() => setState(() {
+    _selected = null;
+    _product.clear();
+    _quantity.text = '1';
+    _pieceWeight.clear();
+    _carbs.clear();
+  });
 
   void _recalculate() {
     if (_selected == null) return;
@@ -2978,8 +3141,9 @@ class _LowTreatmentRequestEditorState
       _carbs.clear();
       return;
     }
-    final exact = quantity * _selected!.carbsPerUnit;
-    if (!exact.isFinite || exact <= 0 || exact > 10000) {
+    final perPiece = _carbsPerPiece;
+    final exact = perPiece == null ? null : quantity * perPiece;
+    if (exact == null || !exact.isFinite || exact <= 0 || exact > 10000) {
       _carbs.clear();
       return;
     }
@@ -3013,6 +3177,7 @@ class _LowTreatmentRequestEditorState
   void dispose() {
     _product.dispose();
     _quantity.dispose();
+    _pieceWeight.dispose();
     _carbs.dispose();
     super.dispose();
   }
@@ -3038,90 +3203,127 @@ class _LowTreatmentRequestEditorState
                 icon: Icons.cookie_outlined,
                 subtitle: context.lang.familyChatLowTreatmentEditorSubtitle,
               ),
-              if (widget.foods.isNotEmpty) ...[
+              if (widget.foods.isNotEmpty || widget.pickIngredient != null) ...[
                 const SizedBox(height: 10),
-                Text(context.lang.familyChatQuickTreatmentsOnDevice),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
+                QuickLowTreatmentSelection(
+                  enabled: !_picking,
+                  actionLabel: _picking
+                      ? context.lang.familyChatOpeningPicker
+                      : context.lang.familyChatPickIngredientFromList,
+                  actionIcon: Icons.search,
+                  onAction: widget.pickIngredient == null ? null : _pick,
+                  onEdit: widget.onEdit,
+                  choices: [
                     for (final food in widget.foods)
-                      ChoiceChip(
-                        label: Text(food.name),
+                      QuickLowTreatmentTile(
+                        name: food.name,
+                        iconAssetPath: food.iconAssetPath,
                         selected: identical(food, _selected),
-                        onSelected: (_) => _select(food),
+                        onTap: _picking ? null : () => _select(food),
                       ),
                   ],
-                ),
-              ],
-              if (widget.pickIngredient != null) ...[
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: _picking ? null : _pick,
-                  icon: const Icon(Icons.search),
-                  label: Text(
-                    _picking
-                        ? context.lang.familyChatOpeningPicker
-                        : context.lang.familyChatPickIngredientFromList,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _product,
-                readOnly: _selected != null,
-                maxLength: 60,
-                decoration: InputDecoration(
-                  labelText: context.lang.familyChatProductLabel,
-                  hintText: context.lang.familyChatProductHint,
-                  counterText: '',
-                  suffixIcon: _selected == null
+                  selected: _selected?.quickShortcut != true
                       ? null
-                      : IconButton(
-                          tooltip:
-                              context.lang.familyChatTypeProductManuallyTooltip,
-                          icon: const Icon(Icons.close),
-                          onPressed: () => setState(() {
-                            _selected = null;
-                            _product.clear();
-                            _quantity.text = '1';
-                            _carbs.clear();
+                      : QuickLowTreatmentAmount(
+                          name: _selected!.name,
+                          iconAssetPath: _selected!.iconAssetPath,
+                          unit: _unitLabel(_selected!.unit, context.lang),
+                          quantity: double.parse(_quantity.text),
+                          onClear: _clearFood,
+                          onChanged: (value) => setState(() {
+                            _quantity.text = value.toString();
+                            _recalculate();
                           }),
                         ),
                 ),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? context.lang.familyChatProductRequired
-                    : null,
-              ),
+              ],
+              const SizedBox(height: 10),
+              if (_selected?.quickShortcut != true)
+                TextFormField(
+                  controller: _product,
+                  readOnly: _selected != null,
+                  maxLength: 60,
+                  decoration: InputDecoration(
+                    labelText: context.lang.familyChatProductLabel,
+                    hintText: context.lang.familyChatProductHint,
+                    counterText: '',
+                    suffixIcon: _selected == null
+                        ? null
+                        : IconButton(
+                            tooltip: context
+                                .lang
+                                .familyChatTypeProductManuallyTooltip,
+                            icon: const Icon(Icons.close),
+                            onPressed: _clearFood,
+                          ),
+                  ),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? context.lang.familyChatProductRequired
+                      : null,
+                ),
               const SizedBox(height: 12),
+              if (_needsPieceWeight) ...[
+                TextFormField(
+                  controller: _pieceWeight,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: context.lang.familyChatPieceWeightGrams,
+                  ),
+                  onChanged: (_) => setState(_recalculate),
+                  validator: (_) {
+                    final weight = _gramsPerPiece;
+                    final quantity = double.tryParse(
+                      _quantity.text.replaceAll(',', '.'),
+                    );
+                    final total = weight == null || quantity == null
+                        ? null
+                        : weight * quantity;
+                    return weight == null ||
+                            !weight.isFinite ||
+                            weight <= 0 ||
+                            (total != null && (total < .001 || total > 10000))
+                        ? context.lang.familyChatPositiveNumberRequired
+                        : null;
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
               Row(
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _quantity,
-                      onChanged: (_) => setState(_recalculate),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                  if (_selected?.quickShortcut != true)
+                    Expanded(
+                      child: TextFormField(
+                        controller: _quantity,
+                        onChanged: (_) => setState(_recalculate),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: _selected == null
+                              ? context.lang.familyChatPortionCountLabel
+                              : context.lang.familyChatQuantityWithUnitLabel(
+                                  _unitLabel(
+                                    _needsPieceWeight
+                                        ? 'piece'
+                                        : _selected!.unit,
+                                    context.lang,
+                                  ),
+                                ),
+                        ),
+                        validator: (value) {
+                          final count = double.tryParse(
+                            (value?.trim() ?? '').replaceAll(',', '.'),
+                          );
+                          return count == null || !count.isFinite || count <= 0
+                              ? context.lang.familyChatPositiveNumberRequired
+                              : null;
+                        },
                       ),
-                      decoration: InputDecoration(
-                        labelText: _selected == null
-                            ? context.lang.familyChatPortionCountLabel
-                            : context.lang.familyChatQuantityWithUnitLabel(
-                                _unitLabel(_selected!.unit, context.lang),
-                              ),
-                      ),
-                      validator: (value) {
-                        final count = double.tryParse(
-                          (value?.trim() ?? '').replaceAll(',', '.'),
-                        );
-                        return count == null || !count.isFinite || count <= 0
-                            ? context.lang.familyChatPositiveNumberRequired
-                            : null;
-                      },
                     ),
-                  ),
-                  const SizedBox(width: 12),
+                  if (_selected?.quickShortcut != true)
+                    const SizedBox(width: 12),
                   Expanded(
                     child: TextFormField(
                       controller: _carbs,
@@ -3180,9 +3382,11 @@ class _LowTreatmentRequestEditorState
                       _product.text.trim(),
                       double.parse(_quantity.text.trim().replaceAll(',', '.')),
                       familyTreatmentNutritionCarbs(_grams!),
-                      unit: _selected?.unit ?? 'portion',
-                      gramsPerUnit: _selected?.gramsPerUnit,
-                      sourceCarbsPerUnit: _selected?.carbsPerUnit,
+                      unit: _needsPieceWeight
+                          ? 'piece'
+                          : _selected?.unit ?? 'portion',
+                      gramsPerUnit: _gramsPerPiece,
+                      sourceCarbsPerUnit: _carbsPerPiece,
                     ),
                   );
                 },

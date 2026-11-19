@@ -45,7 +45,11 @@ String familyTreatmentText(
 /// Renders a verified structured snapshot, or returns null when the snapshot
 /// is missing or malformed so callers keep the original message text.
 /// Never parses message text.
-String? familyTreatmentSnapshotText(Object? snapshot, AppLocalizations lang) {
+String? familyTreatmentSnapshotText(
+  Object? snapshot,
+  AppLocalizations lang, {
+  bool compact = false,
+}) {
   if (snapshot is! Map) return null;
   final product = snapshot['foodName'];
   final quantity = snapshot['quantity'];
@@ -74,6 +78,15 @@ String? familyTreatmentSnapshotText(Object? snapshot, AppLocalizations lang) {
           ? null
           : quantity * grams * per100 / 100);
   if (carbs == null || carbs < .5 || carbs > 10000) return null;
+  if (compact) {
+    return lang.familyChatTreatmentNotificationRequest(
+      NumberFormat('0.############', lang.localeName).format(quantity),
+      unit == 'piece' && quantity == 1
+          ? lang.familyChatUnitOnePiece
+          : familyTreatmentUnitLabel(unit, lang),
+      product,
+    );
+  }
   return familyTreatmentText(
     lang,
     product: product,

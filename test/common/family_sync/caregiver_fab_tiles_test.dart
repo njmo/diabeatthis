@@ -18,9 +18,16 @@ void main() {
         var activities = 0;
         await tester.pumpWidget(
           MaterialApp(
-            locale: const Locale('en'),
+            locale: const Locale('pl'),
+            theme: ThemeData(
+              textTheme: const TextTheme(labelLarge: TextStyle(height: 2)),
+            ),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
+            builder: (context, child) => MediaQuery.withClampedTextScaling(
+              maxScaleFactor: width == 390 ? 0.58 : 1,
+              child: child!,
+            ),
             home: Scaffold(
               floatingActionButtonLocation:
                   FloatingActionButtonLocation.centerFloat,
@@ -39,9 +46,21 @@ void main() {
         final photo = tester.getRect(tiles.at(0));
         final meal = tester.getRect(tiles.at(1));
         final activity = tester.getRect(tiles.at(2));
+        if (width == 390) {
+          expect(activity.height, greaterThan(80));
+          expect(
+            tester.getSize(find.text('Zaplanuj aktywność')).height,
+            greaterThan(tester.getSize(find.text('Zaplanuj posiłek')).height),
+          );
+        }
         expect(photo.width, greaterThan(meal.width * 1.8));
         expect(meal.top, activity.top);
         expect(meal.width, activity.width);
+        expect(meal.bottom, activity.bottom);
+        expect(
+          tester.getTopLeft(find.byIcon(Icons.restaurant_outlined)).dy,
+          tester.getTopLeft(find.byIcon(Icons.directions_run)).dy,
+        );
         expect(photo.bottom, lessThan(meal.top));
         for (var i = 0; i < 3; i++) {
           if (i > 0) {

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/domain/model/quick_low_treatment_item.dart';
 import '../../../ingredients/presentation/widgets/ingredient_icon.dart';
 
 class QuickLowTreatmentTile extends StatelessWidget {
   const QuickLowTreatmentTile({
     super.key,
-    required this.item,
+    required this.name,
+    this.iconAssetPath,
     required this.selected,
     required this.onTap,
   });
 
-  final QuickLowTreatmentItem item;
+  final String name;
+  final String? iconAssetPath;
   final bool selected;
   final VoidCallback? onTap;
 
@@ -44,13 +45,10 @@ class QuickLowTreatmentTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                IngredientIcon(
-                  assetPath: item.ingredient.iconAssetPath,
-                  size: 48,
-                ),
+                IngredientIcon(assetPath: iconAssetPath, size: 48),
                 const SizedBox(height: 4),
                 Text(
-                  item.name,
+                  name,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.labelLarge,
                 ),

@@ -13,6 +13,7 @@ import '../family_sync/presentation/models/family_ingredient_view.dart';
 import '../family_sync/presentation/show_family_ingredient_picker.dart';
 import '../ingredient_catalog/ingredient_catalog_repository.dart';
 import '../ingredient_catalog/ingredient_identity.dart';
+import '../ingredient_catalog/ingredient_search_item.dart';
 import '../l10n/language.dart';
 import '../routing/form_route_guard.dart';
 import 'meal_form_actions.dart';
@@ -49,14 +50,17 @@ class CaregiverMealFormActions extends MealFormActions {
     BuildContext context,
     WidgetRef ref, {
     MealIngredientsDraft? initial,
+    IngredientSearchItem? selection,
   }) async {
     var draft = initial;
     if (draft == null || !draft.catalogReviewed) {
-      final selected = await showFamilyIngredientPicker(
-        context,
-        rows: rows,
-        catalog: catalog,
-      );
+      final selected =
+          selection ??
+          await showFamilyIngredientPicker(
+            context,
+            rows: rows,
+            catalog: catalog,
+          );
       if (selected == null || !context.mounted) return null;
       IngredientDraft ingredient;
       String? catalogId;

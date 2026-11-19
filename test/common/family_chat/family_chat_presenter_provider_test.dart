@@ -234,8 +234,7 @@ void main() {
                   : 'Nie zapisano dosłodzenia',
           };
           final expectedBody = switch (state) {
-            FamilyConsumptionNotice.recorded =>
-              english ? 'confirmed by the server' : 'potwierdzony przez serwer',
+            FamilyConsumptionNotice.recorded => '',
             FamilyConsumptionNotice.recordedAwaitingAck =>
               english ? 'waiting for a connection' : 'oczekuje na połączenie',
             FamilyConsumptionNotice.completedElsewhere =>
@@ -252,13 +251,18 @@ void main() {
               english ? 'could not be recorded' : 'Nie udało się zapisać',
           };
           expect(plugin.shown.last.title, expectedTitle);
-          expect(plugin.shown.last.body, contains(expectedBody));
+          expect(
+            plugin.shown.last.body,
+            expectedBody.isEmpty ? isEmpty : contains(expectedBody),
+          );
           expect(plugin.shown.last.android!.silent, true);
           expect(plugin.shown.last.android!.actions, isEmpty);
-          expect(
-            plugin.shown.last.android!.timeoutAfter,
-            state == FamilyConsumptionNotice.pending ? 30000 : 86400000,
-          );
+          expect(plugin.shown.last.android!.timeoutAfter, switch (state) {
+            FamilyConsumptionNotice.recorded ||
+            FamilyConsumptionNotice.completedElsewhere => 5000,
+            FamilyConsumptionNotice.pending => 30000,
+            _ => 86400000,
+          });
           expect(plugin.shown.last.id, notice.id);
           expect(plugin.shown.last.tag, notice.tag);
         }
@@ -297,12 +301,11 @@ void main() {
           'family',
         );
         await presenter.show(treatmentView);
-        expect(plugin.shown.last.body, contains('Frozen product'));
-        expect(plugin.shown.last.body, contains(english ? '6.5' : '6,5'));
-        expect(plugin.shown.last.body, contains('7'));
         expect(
           plugin.shown.last.body,
-          contains(english ? 'Please eat:' : 'Proszę, zjedz:'),
+          english
+              ? 'Eat 1 pc · Frozen product'
+              : 'Zjedz 1 szt. · Frozen product',
         );
         expect(
           message['text'],
@@ -311,13 +314,42 @@ void main() {
         final actions = plugin.shown.last.android!.actions!;
         expect(
           AndroidFamilyChatPresenter.messageEvent(treatmentView).replyChoices,
-          english ? ["I'll eat it", "I don't have it"] : ['Zjem', 'Nie mam'],
+          isEmpty,
         );
         expect(
           actions.map((action) => action.title),
-          english ? ['I ate it', 'Reply'] : ['Zjadłem', 'Odpowiedź'],
+          english
+              ? ['I ate it', "I don't have it", 'I feel fine']
+              : ['Zjadłem', 'Nie mam', 'Czuję się dobrze'],
         );
-        expect(actions.last.inputs.single.choices, isEmpty);
+        expect(actions.last.inputs, isEmpty);
+
+        final confirmed = AndroidFamilyChatPresenter.messageEvent(
+          FamilyChatPushView(
+            view.guard,
+            {
+              ...config,
+              'members': [
+                {'uid': view.guard['uid'], 'role': 'managingCaregiver'},
+              ],
+            },
+            {
+              ...message,
+              'kind': 'treatmentResult',
+              'replyTo': 'request',
+              'names': {message['senderUid']: 'Nemo'},
+            },
+            'family',
+          ),
+        );
+        expect(confirmed.openRequest, isTrue);
+        expect(confirmed.body, isEmpty);
+        expect(
+          confirmed.title,
+          english
+              ? 'Nemo · Low treatment confirmed'
+              : 'Nemo · Dosłodzenie potwierdzone',
+        );
 
         await presenter.show(
           FamilyChatPushView(view.guard, config, {

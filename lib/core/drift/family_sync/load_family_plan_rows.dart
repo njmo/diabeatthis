@@ -38,7 +38,25 @@ Future<List<Map<String, dynamic>>> loadFamilyPlanRows(
 
   final type = plan['type'] as String;
   final values = plan['values'] as Map;
-  if (type == 'setActivityScheduleEnabled') {
+  if (type == 'replaceQuickTreatmentItems') {
+    collect(
+      await db
+          .customSelect(
+            "SELECT * FROM family_sync_outbox WHERE kind='quickLowTreatmentItems' AND deleted=0",
+          )
+          .get(),
+    );
+    for (final item in values['items'] as List) {
+      await add('ingredients', item['ingredientId']);
+      if (item['portionId'] != null) {
+        await add('portions', item['portionId']);
+        await add(
+          'ingredientPortions',
+          '${item['ingredientId']}_${item['portionId']}',
+        );
+      }
+    }
+  } else if (type == 'setActivityScheduleEnabled') {
     final schedule = await add('activitySchedules', plan['targetId']);
     if (schedule != null) await add('activities', schedule['activity_id']);
     final occurrences = await db

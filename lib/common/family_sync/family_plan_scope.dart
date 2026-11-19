@@ -14,7 +14,24 @@ List<Map<String, dynamic>> familyPlanScope(
 
   final type = plan['type'] as String;
   final values = plan['values'] as Map;
-  if (type == 'setActivityScheduleEnabled') {
+  if (type == 'replaceQuickTreatmentItems') {
+    for (final row in rows.where(
+      (row) =>
+          row['kind'] == 'quickLowTreatmentItems' && row['deleted'] != true,
+    )) {
+      add('quickLowTreatmentItems', row['id']);
+    }
+    for (final item in values['items'] as List) {
+      add('ingredients', item['ingredientId']);
+      if (item['portionId'] != null) {
+        add('portions', item['portionId']);
+        add(
+          'ingredientPortions',
+          '${item['ingredientId']}_${item['portionId']}',
+        );
+      }
+    }
+  } else if (type == 'setActivityScheduleEnabled') {
     final schedule = add('activitySchedules', plan['targetId']);
     add('activities', schedule['activity_id']);
     for (final row in rows.where(

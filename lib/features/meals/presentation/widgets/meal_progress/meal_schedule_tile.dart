@@ -70,9 +70,186 @@ class MealScheduleTile extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
     );
 
+    return _MealScheduleCard(
+      child: ListTile(
+        dense: true,
+        contentPadding: const EdgeInsets.only(left: 0, right: 12),
+        minLeadingWidth: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: borderColor),
+        ),
+        tileColor: cardBg,
+        enabled: enabled,
+        onTap: enabled ? onOpen : null,
+        leading: Tooltip(
+          message: meal.plannedAt == null
+              ? ''
+              : mealScheduleLabel(context, meal.plannedAt, DateTime.now()),
+          child: SizedBox(
+            width: 58,
+            height: 48,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    timeString,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                      height: 1.1,
+                      fontWeight: FontWeight.w800,
+                      color: statusColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    showDate && meal.plannedAt != null
+                        ? mealScheduleCompactDateLabel(
+                            context,
+                            meal.plannedAt!,
+                            DateTime.now(),
+                          )
+                        : (status == 'planned'
+                              ? 'PLAN'
+                              : mealStatusLabel(status).toUpperCase()),
+                    style: TextStyle(
+                      fontSize: 10,
+                      height: 1.1,
+                      fontWeight: FontWeight.w500,
+                      color: mutedColor,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        title: Text(
+          mealDisplayName(meal.name),
+          style: TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
+            color: enabled ? numColor : mutedColor,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: cardDetails == null
+            ? subtitle
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [subtitle, cardDetails!],
+              ),
+        trailing:
+            trailing ??
+            (onDelete != null
+                ? IconButton(
+                    tooltip: lang.commonDelete,
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    color: mutedColor,
+                  )
+                : Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFF1F5F9),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: Color(0xFF94A3B8),
+                      ),
+                    ),
+                  )),
+      ),
+    );
+  }
+}
+
+class MealScheduleLoadingTile extends StatelessWidget {
+  const MealScheduleLoadingTile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    Widget placeholder(double width) => Container(
+      width: width,
+      height: 8,
+      decoration: BoxDecoration(
+        color: colors.onSurface.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(4),
+      ),
+    );
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return _MealScheduleCard(
+      child: Material(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            children: [
+              SizedBox(
+                width: 58,
+                child: Center(
+                  child: SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      semanticsLabel: context.lang.uiLoadingMealsAndActivities,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    placeholder(132),
+                    const SizedBox(height: 8),
+                    placeholder(76),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MealScheduleCard extends StatelessWidget {
+  const _MealScheduleCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
@@ -83,112 +260,7 @@ class MealScheduleTile extends StatelessWidget {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
-          child: ListTile(
-            dense: true,
-            contentPadding: const EdgeInsets.only(left: 0, right: 12),
-            minLeadingWidth: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-              side: BorderSide(color: borderColor),
-            ),
-            tileColor: cardBg,
-            enabled: enabled,
-            onTap: enabled ? onOpen : null,
-            leading: Tooltip(
-              message: meal.plannedAt == null
-                  ? ''
-                  : mealScheduleLabel(context, meal.plannedAt, DateTime.now()),
-              child: SizedBox(
-                width: 58,
-                height: 48,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        timeString,
-                        style: TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 13,
-                          height: 1.1,
-                          fontWeight: FontWeight.w800,
-                          color: statusColor,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        showDate && meal.plannedAt != null
-                            ? mealScheduleCompactDateLabel(
-                                context,
-                                meal.plannedAt!,
-                                DateTime.now(),
-                              )
-                            : (status == 'planned'
-                                  ? 'PLAN'
-                                  : mealStatusLabel(status).toUpperCase()),
-                        style: TextStyle(
-                          fontSize: 10,
-                          height: 1.1,
-                          fontWeight: FontWeight.w500,
-                          color: mutedColor,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        softWrap: false,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            title: Text(
-              mealDisplayName(meal.name),
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: enabled ? numColor : mutedColor,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: cardDetails == null
-                ? subtitle
-                : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [subtitle, cardDetails!],
-                  ),
-            trailing:
-                trailing ??
-                (onDelete != null
-                    ? IconButton(
-                        tooltip: lang.commonDelete,
-                        onPressed: onDelete,
-                        icon: const Icon(Icons.delete_outline, size: 20),
-                        color: mutedColor,
-                      )
-                    : Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isDark
-                              ? const Color(0xFF334155)
-                              : const Color(0xFFF1F5F9),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.chevron_right_rounded,
-                            size: 16,
-                            color: Color(0xFF94A3B8),
-                          ),
-                        ),
-                      )),
-          ),
-        ),
+        child: ClipRRect(borderRadius: BorderRadius.circular(18), child: child),
       ),
     );
   }

@@ -7,10 +7,14 @@ import '../../../ingredients/data/providers/ingredient_provider.dart';
 import '../../../ingredients/presentation/controllers/ingredient_photo_scan_controller.dart';
 import '../../../ingredients/presentation/widgets/ingredient_search.dart';
 import '../../data/providers/add_ingredients_provider.dart';
+import '../../data/providers/meal_draft_provider.dart';
 import '../controllers/ingredient_flow_actions_controller.dart';
+import '../utils/meal_ingredient_portion_formatters.dart';
 
 class AddMealIngredientActions extends ConsumerWidget {
-  const AddMealIngredientActions({super.key});
+  const AddMealIngredientActions({super.key, this.allowGramAmounts = true});
+
+  final bool allowGramAmounts;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,7 +32,13 @@ class AddMealIngredientActions extends ConsumerWidget {
     final scanState = ref.watch(ingredientPhotoScanControllerProvider);
     final photos = ref.watch(ingredientPhotoScanCaptureControllerProvider);
     final selected = ref.watch(ingredientDraftProvider);
+    final needsPortion =
+        !allowGramAmounts &&
+        (stage == AddMealIngredientStage.amountForm ||
+            stage == AddMealIngredientStage.summary) &&
+        ref.watch(mealIngredientsDraftProvider).usesGramAmount;
     final canContinue =
+        !needsPortion &&
         (!isSearch || selected.hasSearchSelection) &&
         (!isPhotoScan || (!scanState.isLoading && photos.hasRequiredPhotos));
     final label = switch (stage) {
@@ -56,7 +66,7 @@ class AddMealIngredientActions extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
         ],
-        if (isPortionSearch) ...[
+        if (isPortionSearch && allowGramAmounts) ...[
           const Divider(),
           Text(
             lang.ingredientWithoutPortion,
@@ -71,8 +81,9 @@ class AddMealIngredientActions extends ConsumerWidget {
         ],
         if (stage == AddMealIngredientStage.referenceIngredientForm) ...[
           FilledButton.icon(
-            onPressed: () =>
-                IngredientFlowActionsController(ref).quickAddReferenceDish(context),
+            onPressed: () => IngredientFlowActionsController(
+              ref,
+            ).quickAddReferenceDish(context),
             icon: const Icon(Icons.check),
             label: Text(lang.ingredientQuickAddOnePortion),
           ),
@@ -85,7 +96,8 @@ class AddMealIngredientActions extends ConsumerWidget {
         ] else ...[
           FilledButton(
             onPressed: canContinue
-                ? () => IngredientFlowActionsController(ref).continueFlow(context)
+                ? () =>
+                      IngredientFlowActionsController(ref).continueFlow(context)
                 : null,
             child: Text(label, maxLines: 2, textAlign: TextAlign.center),
           ),

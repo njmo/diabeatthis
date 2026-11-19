@@ -28,6 +28,10 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
         view.message['names']?[sender] as String? ??
         lang.familyChatRecipientFamily;
     final treatment = view.message['kind'] == 'lowTreatment';
+    final treatmentConfirmed =
+        own['role'] == 'managingCaregiver' &&
+        view.message['kind'] == 'treatmentResult' &&
+        view.message['replyTo'] is String;
     final actionable =
         own['role'] == 'child' &&
         treatment &&
@@ -35,23 +39,25 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
         view.message['treatmentResult'] == null &&
         (view.message['treatment']?['validUntil'] as int? ?? 0) >
             (view.config['serverTime'] as int);
-    final answers = own['role'] == 'child'
-        ? treatment
-              ? [
-                  lang.familyChatTreatmentWillEat,
-                  lang.familyChatTreatmentAnswerNone,
-                ]
-              : List<String>.from(view.message['answers'] as List? ?? [])
+    final answers = own['role'] == 'child' && !treatment
+        ? List<String>.from(view.message['answers'] as List? ?? [])
         : <String>[];
     return FamilyChatNotificationEvent(
       id: view.notice.id,
       tag: view.notice.tag,
-      title: lang.familyChatTitle,
-      body:
-          (treatment
-              ? familyTreatmentSnapshotText(view.message['treatment'], lang)
-              : null) ??
-          view.message['text'] as String,
+      title: treatmentConfirmed
+          ? lang.familyChatChildTreatmentConfirmed(name)
+          : lang.familyChatTitle,
+      body: treatmentConfirmed
+          ? ''
+          : (treatment
+                    ? familyTreatmentSnapshotText(
+                        view.message['treatment'],
+                        lang,
+                        compact: true,
+                      )
+                    : null) ??
+                view.message['text'] as String,
       payload: view.payload,
       timeoutAfter: view.remainingLifetime?.clamp(1, 2147483647),
       message: (
@@ -70,6 +76,8 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
       ),
       replyChoices: answers,
       allowConsumption: actionable,
+      lowTreatment: treatment,
+      openRequest: treatmentConfirmed,
     );
   }
 
@@ -116,6 +124,9 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
     Map<String, dynamic> payload,
     FamilyConsumptionNotice state,
   ) {
+    final completed =
+        state == FamilyConsumptionNotice.recorded ||
+        state == FamilyConsumptionNotice.completedElsewhere;
     final title = switch (state) {
       FamilyConsumptionNotice.recorded ||
       FamilyConsumptionNotice.recordedAwaitingAck =>
@@ -127,8 +138,7 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
       _ => lang.familyChatTreatmentNotRecorded,
     };
     final body = switch (state) {
-      FamilyConsumptionNotice.recorded =>
-        lang.familyChatNotificationRecordedBody,
+      FamilyConsumptionNotice.recorded => '',
       FamilyConsumptionNotice.recordedAwaitingAck =>
         lang.familyChatNotificationAwaitingAckBody,
       FamilyConsumptionNotice.completedElsewhere =>
@@ -147,7 +157,12 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
       body: body,
       payload: payload,
       silent: true,
-      timeoutAfter: state == FamilyConsumptionNotice.pending ? 30000 : 86400000,
+      timeoutAfter: completed
+          ? 5000
+          : state == FamilyConsumptionNotice.pending
+          ? 30000
+          : 86400000,
+      transient: completed,
     );
   }
 

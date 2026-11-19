@@ -23,6 +23,7 @@ Future<MealIngredientsDraft?> showAddMealIngredientSheet({
   required BuildContext context,
   required WidgetRef ref,
   MealIngredientsDraft? initialDraft,
+  bool allowGramAmounts = true,
 }) {
   ref.invalidate(addMealIngredientStageProvider);
   ref.invalidate(mealIngredientsDraftProvider);
@@ -50,12 +51,14 @@ Future<MealIngredientsDraft?> showAddMealIngredientSheet({
     context: context,
     useRootNavigator: false,
     isScrollControlled: true,
-    builder: (_) => const AddMealIngredient(),
+    builder: (_) => AddMealIngredient(allowGramAmounts: allowGramAmounts),
   );
 }
 
 class AddMealIngredient extends ConsumerWidget {
-  const AddMealIngredient({super.key});
+  const AddMealIngredient({super.key, this.allowGramAmounts = true});
+
+  final bool allowGramAmounts;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -88,9 +91,9 @@ class AddMealIngredient extends ConsumerWidget {
         ),
         body: KeyedSubtree(
           key: ValueKey(stage),
-          child: const AddMealIngredientBody(),
+          child: AddMealIngredientBody(allowGramAmounts: allowGramAmounts),
         ),
-        actions: const AddMealIngredientActions(),
+        actions: AddMealIngredientActions(allowGramAmounts: allowGramAmounts),
       ),
     );
   }

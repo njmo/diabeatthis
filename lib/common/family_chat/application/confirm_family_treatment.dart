@@ -141,6 +141,7 @@ class ConfirmFamilyTreatment {
     Map<String, dynamic>? recoveryGuard,
     bool Function()? recoveryAdmitted,
     FamilyTreatmentAuthorization? acceptedAuthorization,
+    Future<void> Function(int mealId)? onSaved,
   }) async {
     // Capture the version attached to the explicit action before any await.
     final observed = acceptedAuthorization ?? observedAuthorization?.call();
@@ -336,16 +337,25 @@ class ConfirmFamilyTreatment {
         snapshot['quantity'] != operation.actualQuantity) {
       throw StateError('Claim changed the confirmed quantity');
     }
+    var savedHere = false;
     final mealId = await journal.apply(
       operation,
       authorized: () => _allowed(guard, admitted: recoveryAdmitted),
-      save: () => save(snapshot, operation.confirmedAt),
+      save: () async {
+        final id = await save(snapshot, operation.confirmedAt);
+        savedHere = true;
+        return id;
+      },
       elapsedMilliseconds: () => watch.elapsedMilliseconds,
       // Starting before HTTP conservatively includes the whole round trip.
       deadlineMilliseconds: until - serverTime,
       appliedAt: serverTime,
     );
-    return (mealId: mealId, acknowledged: await finish(operation));
+    final acknowledged = await finish(operation);
+    if (savedHere && !recovery && currentUid() == uid) {
+      await onSaved?.call(mealId);
+    }
+    return (mealId: mealId, acknowledged: acknowledged);
   }
 
   Future<FamilyTreatmentResult?> lookup(String messageId) async {

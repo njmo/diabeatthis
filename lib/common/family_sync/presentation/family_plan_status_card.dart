@@ -84,7 +84,8 @@ bool showFamilyPlanStatus(
   Iterable<Map<String, dynamic>> rows,
 ) {
   // Edits of existing records expose pending status on that record's card.
-  if (plan['targetId'] != null ||
+  if (plan['type'] == 'replaceQuickTreatmentItems' ||
+      plan['targetId'] != null ||
       plan['status'] == 'applied' && plan['resultId'] == null) {
     return false;
   }

@@ -35,7 +35,9 @@ class FamilyChatRuntime extends ChangeNotifier with WidgetsBindingObserver {
   FamilyChatSession? _session;
   bool _identityKnown = true;
   bool _chatVisible = false;
-  bool get conversationVisible => _chatVisible && _foreground && _identityKnown;
+  ModalRoute<dynamic>? _chatRoute;
+  bool get conversationVisible =>
+      (_chatRoute?.isCurrent ?? _chatVisible) && _foreground && _identityKnown;
   FamilyChatSession? get session => _identityKnown ? _session : null;
   String? _desiredUid;
   bool _desiredEnabled = false;
@@ -123,6 +125,7 @@ class FamilyChatRuntime extends ChangeNotifier with WidgetsBindingObserver {
         db: db,
         expectedScope: scope,
         notificationPresenter: notificationPresenter,
+        isChatVisible: () => conversationVisible,
         isCurrentAccount: () =>
             !_disposed &&
             _identityKnown &&
@@ -177,6 +180,17 @@ class FamilyChatRuntime extends ChangeNotifier with WidgetsBindingObserver {
     if (_chatVisible == value) return;
     _chatVisible = value;
     _session?.setForeground(_foreground && _identityKnown, chatVisible: value);
+  }
+
+  void trackChatRoute(ModalRoute<dynamic> route) {
+    _chatRoute = route;
+    setChatVisible(route.isCurrent);
+  }
+
+  void forgetChatRoute(ModalRoute<dynamic> route) {
+    if (!identical(_chatRoute, route)) return;
+    _chatRoute = null;
+    setChatVisible(false);
   }
 
   void suspendIdentity() {

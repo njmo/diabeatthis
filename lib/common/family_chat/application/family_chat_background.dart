@@ -293,8 +293,11 @@ class FamilyChatBackground {
         cached['receipts']?[uid]?['readAt'] == null &&
         (cached['kind'] != 'question' ||
             !await db.hasAuthoredReply(scope, uid, id)) &&
-        !locallyRead &&
-        (shouldPresent?.call(view.target) ?? true)) {
+        !locallyRead) {
+      if (shouldPresent?.call(view.target) == false) {
+        Log.d('FamilyChatPush', 'Notification suppressed by UI visibility');
+        return;
+      }
       final presented = await db.presentNotification(
         guard,
         view.notice,
@@ -316,6 +319,7 @@ class FamilyChatBackground {
               await db.notificationInboxRevision(uid, scope),
             ),
           );
+          Log.d('FamilyChatPush', 'Notification handed to presenter');
         },
         cancel: () => presenter.cancel(view.notice),
       );
@@ -326,7 +330,11 @@ class FamilyChatBackground {
   }
 
   /// The reply is durable before HTTP and uses the existing ticket ID on retry.
-  Future<bool> reply(Map<String, dynamic> payload, String input) async {
+  Future<bool> reply(
+    Map<String, dynamic> payload,
+    String input, {
+    bool treatmentUnavailable = false,
+  }) async {
     if (!rolloutEnabled) return false;
     final text = input.trim();
     if (text.isEmpty ||
@@ -342,6 +350,13 @@ class FamilyChatBackground {
     };
     final cached = await _cachedReply(payload, required);
     if (cached == null) return false;
+    if (treatmentUnavailable &&
+        (cached.message['kind'] != 'lowTreatment' ||
+            cached.message['treatmentResult'] != null ||
+            (cached.message['treatment']?['validUntil'] as int? ?? 0) <=
+                (cached.config['serverTime'] as int))) {
+      return false;
+    }
     final guard = cached.guard,
         uid = guard['uid'] as String,
         scope = guard['scope'] as String;

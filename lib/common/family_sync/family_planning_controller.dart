@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 
@@ -10,12 +9,19 @@ import 'family_plan_record_kind.dart';
 import 'family_plan_scope.dart';
 import 'family_plan_submission_store.dart';
 import 'family_workflow_phase.dart';
+import 'submit_family_plan_use_case.dart';
 
 class FamilyPlanningController extends ChangeNotifier {
   FamilyPlanningController(this.transport, this.currentUid, this.submissions);
   final AuthenticatedCallableTransport transport;
   final FamilyPlanSubmissionStore submissions;
   final String? Function() currentUid;
+  late final _submitPlan = SubmitFamilyPlanUseCase(
+    transport,
+    submissions,
+    (uid) => !disposed && currentUid() == uid,
+  );
+
   final rows = <String, Map<String, dynamic>>{};
   List<Map<String, dynamic>> plans = [];
   String? uid;
@@ -218,20 +224,14 @@ class FamilyPlanningController extends ChangeNotifier {
         failed) {
       throw StateError('Family changed');
     }
-    final id = List.generate(
-      16,
-      (_) => Random.secure().nextInt(256).toRadixString(16).padLeft(2, '0'),
-    ).join();
-    final plan = <String, dynamic>{
-      'id': id,
-      'sourceId': expectedSource,
-      'type': type,
-      'targetId': targetId,
-      'values': values,
-    };
-    plan['expected'] = familyPlanVersions(familyPlanScope(baseRows, plan));
-    final reserved = await submissions.reserve(expectedUid, plan);
-    final receipt = await sendReserved(expectedUid, reserved);
+    final (plan: reserved, :receipt) = await _submitPlan(
+      type: type,
+      targetId: targetId,
+      values: values,
+      baseRows: baseRows,
+      expectedSource: expectedSource,
+      expectedUid: expectedUid,
+    );
     if (!disposed &&
         currentUid() == expectedUid &&
         uid == expectedUid &&
@@ -255,33 +255,7 @@ class FamilyPlanningController extends ChangeNotifier {
   Future<Map<String, dynamic>> sendReserved(
     String account,
     Map<String, dynamic> plan,
-  ) async {
-    if (disposed) throw StateError('Family controller is closed');
-    try {
-      final result = await transport.call(
-        'submitFamilyPlan',
-        plan,
-        expectedUid: account,
-        allowRequest: () async => !disposed && currentUid() == account,
-      );
-      if (result['id'] != plan['id'] ||
-          !['pending', 'applied', 'rejected'].contains(result['status'])) {
-        throw StateError('Invalid submission receipt');
-      }
-      await submissions.clear(account, plan['id'] as String);
-      return result;
-    } on CallableFailure catch (error) {
-      if ([
-        'invalid-argument',
-        'permission-denied',
-        'failed-precondition',
-        'already-exists',
-      ].contains(error.rejectionCode ?? error.code)) {
-        await submissions.clear(account, plan['id'] as String);
-      }
-      rethrow;
-    }
-  }
+  ) => _submitPlan.sendReserved(account, plan);
 
   @override
   void dispose() {

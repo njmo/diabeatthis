@@ -13,6 +13,11 @@ const familyChatNotificationDefinition = NotificationDefinition(
     NotificationActionDef.plain(
       type: NotificationActionType.familyChatConsume,
       label: 'Zjadłem',
+      openApp: true,
+    ),
+    NotificationActionDef.plain(
+      type: NotificationActionType.familyChatTreatmentUnavailable,
+      label: 'Nie mam',
       openApp: false,
     ),
     NotificationActionDef.text(

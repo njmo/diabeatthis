@@ -43,7 +43,7 @@ class PublishFamilyMirrorUseCase {
         .get();
     if (unbound.isNotEmpty) return 0;
     final source = await outbox.sourceForOwner(uid);
-    await registerFamilyMirror(
+    final registration = await registerFamilyMirror(
       transport: transport,
       source: source,
       uid: uid,
@@ -55,7 +55,10 @@ class PublishFamilyMirrorUseCase {
     for (var batch = 0; batch < 10; batch++) {
       if (currentUid() != uid) throw const CallableFailure('unauthenticated');
       if (!await permitted()) break;
-      final pending = await outbox.publishable();
+      final pending = await outbox.publishable(
+        includeQuickLowTreatment:
+            registration['quickLowTreatmentItems'] == true,
+      );
       if (pending.isEmpty) break;
       final records = <FamilyMirrorRecord>[];
       for (final record in pending) {

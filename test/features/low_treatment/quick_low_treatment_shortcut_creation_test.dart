@@ -20,7 +20,7 @@ void main() {
 
   setUp(() async {
     db = DatabaseImpl(NativeDatabase.memory());
-    await db
+    final ingredientId = await db
         .into(db.ingredient)
         .insert(
           IngredientCompanion.insert(
@@ -33,9 +33,21 @@ void main() {
             iconAssetPath: const Value('assets/icons/food/prepared_meal.png'),
           ),
         );
+    final portionId = await db
+        .into(db.portion)
+        .insert(PortionCompanion.insert(name: 'butelka', unitHint: 'szt.'));
     await db
         .into(db.portion)
         .insert(PortionCompanion.insert(name: 'piece', unitHint: 'g'));
+    await db
+        .into(db.ingredientPortions)
+        .insert(
+          IngredientPortionsCompanion.insert(
+            ingredientId: ingredientId,
+            portionId: portionId,
+            gramsPerPortion: 100,
+          ),
+        );
     container = ProviderContainer(
       overrides: [
         databaseProvider.overrideWithValue(db),
@@ -86,6 +98,7 @@ void main() {
     expect(items, hasLength(1));
     expect(items.single.name, name);
     expect(items.single.amount, greaterThan(0));
+    expect(items.single.portion, isNotNull);
   }
 
   testWidgets('adding an existing ingredient creates a visible shortcut', (
@@ -95,6 +108,9 @@ void main() {
     await tester.tap(find.text('TEST Juice'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Wybierz TEST Juice'));
+    await tester.pumpAndSettle();
+    expect(find.text('Dodaj w gramach'), findsNothing);
+    await tester.tap(find.text('butelka').first);
     await tester.pumpAndSettle();
     await confirmShortcut(tester, 'TEST Juice');
   });

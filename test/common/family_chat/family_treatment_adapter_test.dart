@@ -21,6 +21,7 @@ import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/low_treatment/application/nightscout_low_treatment_settings.dart';
 import 'package:diabeatthis/features/low_treatment/application/open_low_treatment_aaps_use_case.dart';
 import 'package:diabeatthis/features/low_treatment/data/providers/low_treatment_upload_provider.dart';
+import 'package:diabeatthis/features/low_treatment/data/repositories/aaps_carbs_request_episode_store.dart';
 import 'package:diabeatthis/features/low_treatment/data/repositories/recorded_low_treatment_repository.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/widgets.dart';
@@ -417,10 +418,16 @@ void main() {
                   'sentAt': 1000,
                 });
             final output = <String>[];
+            final episode = SharedPreferencesAapsCarbsRequestEpisodeStore(loadPreferences: () async => prefs);
+            final observedAt = now.subtract(const Duration(minutes: 1));
+            await episode.start('${observedAt.microsecondsSinceEpoch}:test');
+            await episode.acceptStatus(observedAt, 8);
+            final handoffs = <int>[];
             final result = await runZoned(
               () => subscription.read().confirm(
                 'request',
                 actualQuantity: example.actual,
+                onSaved: (id) async { handoffs.add(id); },
                 acceptedAuthorization: (
                   epoch: 'epoch',
                   accountOffGeneration: 0,
@@ -432,6 +439,7 @@ void main() {
               ),
             );
             expect(result.mealId, isNotNull);
+            expect(handoffs, [result.mealId]);
             final record = await RecordedLowTreatmentRepository(
               medical,
             ).fetchByMealId(result.mealId!);
@@ -451,6 +459,10 @@ void main() {
                   .single
                   .expectedCarbs,
               example.delivery,
+            );
+            expect(
+              (await medical.select(medical.lowTreatmentHandoff).getSingle()).suggestionAt,
+              observedAt.millisecondsSinceEpoch,
             );
             final gateway = LowTreatmentGatewayFake(),
                 launcher = LowTreatmentLauncherFake();
@@ -475,9 +487,10 @@ void main() {
               result.mealId,
             );
             expect(
-              (await subscription.read().confirm('request')).mealId,
+              (await subscription.read().confirm('request', onSaved: (id) async { handoffs.add(id); })).mealId,
               result.mealId,
             );
+            expect(handoffs, [result.mealId]);
             expect(await medical.select(medical.meal).get(), hasLength(1));
           } finally {
             subscription.close();

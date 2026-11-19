@@ -973,7 +973,7 @@ void main() {
         );
         await tester.tap(find.byTooltip('Wyślij dosłodzenie'));
         await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(ChoiceChip, 'Candy'));
+        await tester.tap(find.text('Candy'));
         await tester.pumpAndSettle();
         final declaredText = tester
             .widget<TextField>(
@@ -2242,6 +2242,35 @@ void main() {
     runtime.dispose();
     await db.close();
   });
+  testWidgets(
+    'a popped conversation stops suppressing dashboard notifications immediately',
+    (tester) async {
+      final db = FamilyChatDatabase(NativeDatabase.memory());
+      final runtime = FamilyChatRuntime(db);
+      addTearDown(() async {
+        runtime.dispose();
+        await db.close();
+      });
+      final navigator = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: navigator,
+          home: const Scaffold(body: Text('Dashboard')),
+        ),
+      );
+      final route = MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('Conversation')),
+      );
+      unawaited(navigator.currentState!.push(route));
+      await tester.pumpAndSettle();
+      runtime.trackChatRoute(route);
+      expect(runtime.conversationVisible, isTrue);
+
+      navigator.currentState!.pop();
+      expect(runtime.conversationVisible, isFalse);
+      await tester.pumpAndSettle();
+    },
+  );
   testWidgets(
     'connected history labels actual dates instead of marking every message today',
     (tester) async {

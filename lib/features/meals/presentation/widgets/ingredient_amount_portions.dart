@@ -12,7 +12,9 @@ import '../../data/providers/meal_draft_provider.dart';
 import '../utils/meal_ingredient_portion_formatters.dart';
 
 class IngredientAmountPortions extends HookConsumerWidget {
-  const IngredientAmountPortions({super.key});
+  const IngredientAmountPortions({super.key, this.allowGramAmounts = true});
+
+  final bool allowGramAmounts;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -93,29 +95,30 @@ class IngredientAmountPortions extends HookConsumerWidget {
             },
           ),
         ),
-        const SizedBox(height: 8),
-        SegmentedButton<bool>(
-          segments: [
-            ButtonSegment(
-              value: false,
-              label: Text(context.lang.ingredientPortionsTitle),
-            ),
-            ButtonSegment(
-              value: true,
-              label: Text(context.lang.addIngredientAddInGrams),
-            ),
-          ],
-          selected: {draft.usesGramAmount},
-          onSelectionChanged: (values) {
-            if (values.single) {
-              controller.selectInlinePortion(const PortionSelection.empty());
-            } else if (selections.isNotEmpty) {
-              controller.selectInlinePortion(selections.first);
-            } else {
-              controller.defineInlinePortion();
-            }
-          },
-        ),
+        if (allowGramAmounts) const SizedBox(height: 8),
+        if (allowGramAmounts)
+          SegmentedButton<bool>(
+            segments: [
+              ButtonSegment(
+                value: false,
+                label: Text(context.lang.ingredientPortionsTitle),
+              ),
+              ButtonSegment(
+                value: true,
+                label: Text(context.lang.addIngredientAddInGrams),
+              ),
+            ],
+            selected: {draft.usesGramAmount},
+            onSelectionChanged: (values) {
+              if (values.single) {
+                controller.selectInlinePortion(const PortionSelection.empty());
+              } else if (selections.isNotEmpty) {
+                controller.selectInlinePortion(selections.first);
+              } else {
+                controller.defineInlinePortion();
+              }
+            },
+          ),
       ],
     );
   }

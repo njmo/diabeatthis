@@ -33,7 +33,7 @@ class AndroidNotificationDetailsMapper {
 
     if (event is FamilyChatNotificationEvent) {
       final message = event.message;
-      if (message == null) {
+      if (message == null || event.openRequest) {
         return AndroidNotificationDetails(
           channelDefinition.id,
           channelDefinition.name,
@@ -43,7 +43,20 @@ class AndroidNotificationDetailsMapper {
           onlyAlertOnce: true,
           timeoutAfter: event.timeoutAfter,
           silent: event.silent,
-          actions: event.silent ? const [] : null,
+          styleInformation: event.openRequest
+              ? BigTextStyleInformation(event.body)
+              : null,
+          actions: event.openRequest
+              ? [
+                  for (final action in notificationActionsFor(
+                    event,
+                    eventDefinition,
+                  ))
+                    _familyChatAction(action, const []),
+                ]
+              : event.silent
+              ? const []
+              : null,
         );
       }
       return AndroidNotificationDetails(
@@ -110,9 +123,8 @@ class AndroidNotificationDetailsMapper {
     List<String> choices,
   ) => AndroidNotificationAction(
     action.type.toDarwinString(),
-    action.type == NotificationActionType.familyChatConsume
-        ? lang.familyChatTreatmentAnswerAte
-        : lang.familyChatReply,
+    action is TextNotificationActionDef ? lang.familyChatReply : action.label,
+    showsUserInterface: action.openApp,
     cancelNotification: false,
     semanticAction: action is TextNotificationActionDef
         ? SemanticAction.reply
