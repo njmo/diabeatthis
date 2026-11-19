@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/language.dart';
 import '../../../meal/manual_meal_decision.dart';
-import '../../demo/meal_decision_demo_answer.dart';
+import '../../meal_decision_answer.dart';
 import '../../remote/meal_decision_remote_request.dart';
 
 class MealDecisionRemoteOutcome extends StatelessWidget {
@@ -11,7 +11,7 @@ class MealDecisionRemoteOutcome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final outcome = request.data['outcome'] as Map?;
-    final answer = MealDecisionDemoAnswer.values
+    final answer = MealDecisionAnswer.values
         .where((a) => a.name == outcome?['decision'])
         .firstOrNull;
     return Column(

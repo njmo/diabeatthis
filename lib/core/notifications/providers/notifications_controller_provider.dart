@@ -6,6 +6,7 @@ import '../base/notifications_controller.dart';
 import '../controllers/foreground_task_notification_controller.dart';
 import '../controllers/in_app_notifications_controller.dart';
 import '../controllers/notifications_controller_impl.dart';
+import 'local_notifications_controller_provider.dart';
 
 part 'notifications_controller_provider.g.dart';
 
@@ -14,6 +15,7 @@ NotificationsController notificationsControllerUi(Ref ref) {
   final notificationsController = NotificationsControllerImpl(
     ref,
     InAppNotificationsController(),
+    localController: ref.watch(localNotificationsControllerProvider),
   );
 
   return notificationsController;
@@ -24,6 +26,7 @@ NotificationsController notificationsControllerForeground(Ref ref) {
   final notificationsController = NotificationsControllerImpl(
     ref,
     ForegroundTaskNotificationController(ref),
+    localController: ref.watch(localNotificationsControllerProvider),
     onShown: (event) async {
       final instruction = calculatorInstructionEvent(event);
       if (instruction == null ||

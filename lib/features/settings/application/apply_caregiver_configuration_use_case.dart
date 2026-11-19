@@ -28,6 +28,7 @@ class ApplyCaregiverConfigurationUseCase {
     required String token,
     required String userName,
     required ApplicationLanguage language,
+    InitialConfigurationBinding? chatSetupBinding,
   }) async {
     final account = await ref
         .read(googleAuthenticationRepositoryProvider)
@@ -81,9 +82,7 @@ class ApplyCaregiverConfigurationUseCase {
     )) {
       throw StateError('Device mode was not saved.');
     }
-    if (!await prefs.setBool(initialConfigurationDoneKey, true)) {
-      throw StateError('Configuration completion was not saved.');
-    }
+    await completeInitialConfiguration(prefs, binding: chatSetupBinding);
     setLanguageStringsFromCode(language.code);
     if (!ref.mounted) return;
     ref.invalidate(sharedPrefsProvider);

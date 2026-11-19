@@ -5,6 +5,38 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../helpers/localized_material_app.dart';
 
 void main() {
+  testWidgets('today label fits alongside actions on a small phone', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      localizedMaterialApp(
+        home: Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: DayDateSelector(
+              date: DateTime(2026, 9, 11),
+              today: DateTime(2026, 9, 11),
+              onSelected: (_) {},
+              actions: [
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.auto_awesome),
+                ),
+                IconButton(onPressed: () {}, icon: const Icon(Icons.refresh)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('11.09.2026 (dzisiaj)'), findsOneWidget);
+    expect(find.byIcon(Icons.refresh), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets(
     'calendar selects historical dates, rejects future dates and cancellation keeps selection',
     (tester) async {
@@ -20,7 +52,7 @@ void main() {
           ),
         ),
       );
-      await tester.tap(find.text('11.09.2026'));
+      await tester.tap(find.text('11.09.2026 (dzisiaj)'));
       await tester.pumpAndSettle();
       final picker = tester.widget<DatePickerDialog>(
         find.byType(DatePickerDialog),
@@ -30,7 +62,7 @@ void main() {
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
       expect(selected, [DateTime(2026, 9, 9)]);
-      await tester.tap(find.text('11.09.2026'));
+      await tester.tap(find.text('11.09.2026 (dzisiaj)'));
       await tester.pumpAndSettle();
       Navigator.of(tester.element(find.byType(DatePickerDialog))).pop();
       await tester.pumpAndSettle();

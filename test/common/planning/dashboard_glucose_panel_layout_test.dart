@@ -1,6 +1,8 @@
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/presentation/dashboard/family_sync_ribbon.dart';
 import 'package:diabeatthis/common/presentation/dashboard/nightscout_panel_view.dart';
+import 'package:diabeatthis/core/domain/model/glucose.dart';
+import 'package:diabeatthis/features/dashboard/presentation/widgets/compact_loop_glucose_chart.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/dashboard_glucose_reading.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/mini_glucose_chart.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/responsive_glucose_chart.dart';
@@ -9,6 +11,61 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('sync status is inside chart header below the glucose value', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              width: 320,
+              child: NightscoutPanelView(
+                lastUpdate: '2 min',
+                syncRibbon: const FamilySyncRibbon(
+                  compact: true,
+                  busy: false,
+                  failed: true,
+                  ready: true,
+                ),
+                readings: DashboardGlucoseReading(
+                  value: 123,
+                  color: Colors.green,
+                  trendIcon: null,
+                  showDeviceCards: false,
+                  readings: [
+                    Glucose(
+                      externalId: null,
+                      source: GlucoseSource.cloud,
+                      date: DateTime.now(),
+                      sgv: 123,
+                      direction: 'Flat',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final sync = find.byType(FamilySyncRibbon);
+    expect(sync, findsOneWidget);
+    expect(
+      tester.getTopLeft(sync).dy,
+      greaterThan(tester.getTopLeft(find.text('123')).dy),
+    );
+    expect(
+      tester.getBottomLeft(sync).dy,
+      lessThan(tester.getTopLeft(find.byType(CompactLoopGlucoseChart)).dy),
+    );
+    expect(find.text('Glukoza & Predykcja Loop'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
   for (final width in [320.0, 420.0, 600.0]) {
     testWidgets(
       'chart scales with panel and ribbon content is vertically centered at $width',

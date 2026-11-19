@@ -5,6 +5,52 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets(
+    'compact caregiver summary keeps pending state, monitoring and retry action',
+    (tester) async {
+      var opened = 0;
+      var retried = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SizedBox(
+              width: 320,
+              child: FamilyPlannedMealCard(
+                compact: true,
+                payload: {
+                  'id': 1,
+                  'name': 'Lunch',
+                  'status': 'eaten',
+                  'planned_at': DateTime.now().millisecondsSinceEpoch,
+                  'carbs': 23,
+                  'insulin': 2,
+                },
+                history: const [],
+                locked: true,
+                monitoring: true,
+                requestStatusLabel: 'Pending change',
+                decisionAction: const Text('Meal request'),
+                onOpen: () => opened++,
+                onRetry: () => retried++,
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(find.textContaining('Pending change'), findsOneWidget);
+      expect(find.textContaining('23g WW'), findsOneWidget);
+      expect(find.byIcon(Icons.monitor_heart_outlined), findsOneWidget);
+      expect(find.text('Meal request'), findsOneWidget);
+      await tester.tap(find.text('Lunch'));
+      expect(opened, 1);
+      await tester.tap(find.text('Review and retry'));
+      expect(retried, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
   test('dashboard excludes terminal meals and preserves actionable states', () {
     for (final status in ['interrupted', 'skipped', 'summarized', 'unknown']) {
       expect(mealStatusAppearsOnDashboard(status), isFalse, reason: status);

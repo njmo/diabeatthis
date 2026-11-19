@@ -1,13 +1,14 @@
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../common/monitoring/glucose_history_limits.dart';
 import '../../../../core/domain/model/glucose.dart';
 
 part 'blood_sugar_readings_list_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class BloodSugarReadingsListNotifier extends _$BloodSugarReadingsListNotifier {
-  static const _maxSize = 10;
+  static const _maxSize = dashboardGlucoseHistoryLimit;
   final List<Glucose> _readings = [];
 
   @override
@@ -41,7 +42,7 @@ class BloodSugarReadingsListNotifier extends _$BloodSugarReadingsListNotifier {
 
   bool syncNeeded() {
     final last = _readings.firstOrNull;
-    return _readings.length < _maxSize ||
+    return _readings.length < 10 ||
         last == null ||
         last.date.isBefore(clock.now().subtract(const Duration(minutes: 5)));
   }

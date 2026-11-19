@@ -16,6 +16,7 @@ class DashboardShell extends StatelessWidget {
     required this.onCategory,
     required this.actions,
     required this.body,
+    this.dayStatus,
   });
   final int destination;
   final int category;
@@ -23,6 +24,7 @@ class DashboardShell extends StatelessWidget {
   final ValueChanged<int> onCategory;
   final Widget actions;
   final Widget body;
+  final Widget? dayStatus;
   @override
   Widget build(BuildContext context) => Scaffold(
     extendBody: true,
@@ -36,14 +38,24 @@ class DashboardShell extends StatelessWidget {
           : null,
       title: destination == 0
           ? const DashboardGreeting()
-          : Text(
-              destination == 1
-                  ? context.lang.dashboardDayTab
-                  : destination == 2
-                  ? context.lang.dashboardHistoryTab
-                  : context.lang.dashboardCatalogTab,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          : Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    destination == 1
+                        ? context.lang.dashboardDayTab
+                        : destination == 2
+                        ? context.lang.dashboardHistoryTab
+                        : context.lang.dashboardCatalogTab,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (destination == 1 && dayStatus != null) ...[
+                  const SizedBox(width: 12),
+                  Flexible(child: dayStatus!),
+                ],
+              ],
             ),
       actions: [
         if (destination >= 2)

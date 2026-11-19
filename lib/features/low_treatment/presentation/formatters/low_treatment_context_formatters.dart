@@ -26,6 +26,7 @@ String lowTreatmentSourceLabel(
   final lang = localizations ?? LanguageStrings.current;
   return switch (source) {
     LowTreatmentContextSource.manual => lang.lowTreatmentReasonManual,
+    LowTreatmentContextSource.familyChat => lang.familyChatTitle,
     LowTreatmentContextSource.aapsSuggestion => lang.lowTreatmentReasonCarbsReq,
     LowTreatmentContextSource.dashboardAction =>
       lang.lowTreatmentSourceDashboard,

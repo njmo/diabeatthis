@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../family_chat/presentation/family_chat_settings_section.dart';
 import '../../family_sync/presentation/family_sync_settings_section.dart';
 import '../../l10n/language.dart';
 import '../../routing/form_bottom_sheet_route.dart';
@@ -25,6 +26,7 @@ class FamilySettingsSection extends StatelessWidget {
         ),
       ),
       const FamilySyncSettingsSection(),
+      const FamilyChatSettingsSection(),
     ],
   );
 }

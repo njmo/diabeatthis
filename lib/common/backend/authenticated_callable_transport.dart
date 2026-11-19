@@ -11,11 +11,12 @@ class CallableIdentity {
 }
 
 class CallableFailure implements Exception {
-  const CallableFailure(this.code, {this.rejectionCode});
+  const CallableFailure(this.code, {this.rejectionCode, this.rejectionReason});
   final String code;
 
   /// Whitelisted definitive server refusal; absent for ambiguous transport errors.
   final String? rejectionCode;
+  final String? rejectionReason;
 }
 
 /// Authenticated calls never accept an identity, family or recipient override.
@@ -31,6 +32,22 @@ class AuthenticatedCallableTransport {
   final Future<CallableIdentity> Function() identity;
   final String? Function() currentUid;
   static const functions = {
+    'getFamilyChatConfig',
+    'configureFamilyChat',
+    'clearFamilyChatHistory',
+    'reserveFamilyChatOperations',
+    'sendFamilyChatMessage',
+    'fetchFamilyChatMessages',
+    'fetchFamilyChatConversations',
+    'acknowledgeFamilyChatMessage',
+    'acknowledgeFamilyChatMessages',
+    'fetchFamilyChatMessageStates',
+    'fetchFamilyChatShortcuts',
+    'saveFamilyChatShortcuts',
+    'orderFamilyChatShortcuts',
+    'registerFamilyChatNotifications',
+    'claimFamilyChatTreatment',
+    'completeFamilyChatTreatment',
     'mealDecision',
     'registerMealDecisionNotifications',
     'claimFamilyPlan',
@@ -108,7 +125,31 @@ class AuthenticatedCallableTransport {
                 error is Map
             ? rejections[error['status']]
             : null;
-        throw CallableFailure('unavailable', rejectionCode: rejection);
+        final details = error is Map ? error['details'] : null;
+        final reason = details is Map ? details['reason'] : null;
+        final consumptionReason =
+            function == 'claimFamilyChatTreatment' &&
+                response.statusCode == 404 &&
+                rejection == 'not-found' &&
+                const {
+                  'consumption-request-expired',
+                  'consumption-request-unavailable',
+                }.contains(reason)
+            ? reason as String
+            : null;
+        final safeReason =
+            consumptionReason ??
+            (function == 'sendFamilyChatMessage' &&
+                    response.statusCode == 400 &&
+                    rejection == 'failed-precondition' &&
+                    reason == 'chat-send-outcome-unknown'
+                ? reason as String
+                : null);
+        throw CallableFailure(
+          'unavailable',
+          rejectionCode: rejection,
+          rejectionReason: safeReason,
+        );
       }
       return Map<String, dynamic>.from(body['result'] as Map);
     } on CallableFailure {

@@ -7,6 +7,7 @@ import 'package:diabeatthis/core/domain/model/device_status.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
 import 'package:diabeatthis/core/domain/model/treatment_base.dart';
+import 'package:diabeatthis/features/dashboard/data/providers/blood_sugar_readings_list_provider.dart';
 import 'package:diabeatthis/foreground/synchronization/synchronization_cache_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,6 +15,89 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../helpers/device_status_factory.dart';
 
 void main() {
+  test(
+    'overlapping full refresh deduplicates before limiting and preserves cached live provenance',
+    () async {
+      final now = DateTime(2026, 11, 18, 12);
+      final rows = List.generate(
+        241,
+        (index) => Glucose(
+          externalId: '$index',
+          source: GlucoseSource.cloud,
+          date: now.subtract(Duration(seconds: index * 30)),
+          sgv: 120,
+          direction: 'Flat',
+        ),
+      );
+      final repository = _ObservedGlucoseHistoryRepository(rows);
+      final container = ProviderContainer(
+        overrides: [
+          glucoseHistoryRepositoryProvider.overrideWith(
+            (ref) async => repository,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final controller = SynchronizationCacheController();
+      controller.cacheGlucose(
+        rows.first.copyWith(source: GlucoseSource.xdrip, sgv: 130),
+      );
+      for (var refresh = 0; refresh < 2; refresh++) {
+        await controller.ensureGlucoseReadingsReady(container, minCount: 242);
+        final actual = controller.cache.glucoseReadingsCache.toList();
+        expect(actual.length, 241);
+        expect(actual.map((row) => row.date).toSet().length, 241);
+        expect(actual.first.sgv, 130);
+        expect(actual.first.source, GlucoseSource.xdrip);
+        expect(actual.last.date, now.subtract(const Duration(hours: 2)));
+        container
+            .read(bloodSugarReadingsListProvider.notifier)
+            .replaceAll(actual);
+        expect(
+          container.read(bloodSugarReadingsListProvider).requireValue.length,
+          241,
+        );
+      }
+    },
+  );
+  test(
+    'history fetch, foreground buffer and real UI provider retain the full two hours',
+    () async {
+      final now = DateTime(2026, 11, 18, 12);
+      final rows = List.generate(
+        25,
+        (index) => Glucose(
+          externalId: '$index',
+          source: GlucoseSource.cloud,
+          date: now.subtract(Duration(minutes: index * 5)),
+          sgv: 120,
+          direction: 'Flat',
+        ),
+      );
+      final repository = _ObservedGlucoseHistoryRepository(rows);
+      final container = ProviderContainer(
+        overrides: [
+          glucoseHistoryRepositoryProvider.overrideWith(
+            (ref) async => repository,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final controller = SynchronizationCacheController();
+      await controller.ensureGlucoseReadingsReady(container);
+      expect(repository.limit, greaterThanOrEqualTo(25));
+      expect(controller.cache.glucoseReadingsCache.length, 25);
+      container
+          .read(bloodSugarReadingsListProvider.notifier)
+          .replaceAll(controller.cache.glucoseReadingsCache);
+      final values = container
+          .read(bloodSugarReadingsListProvider)
+          .requireValue;
+      expect(values.length, 25);
+      expect(values.first.date, now);
+      expect(values.last.date, now.subtract(const Duration(hours: 2)));
+    },
+  );
   test('init does not fail when history sources are unavailable', () async {
     final container = ProviderContainer(
       overrides: [
@@ -150,6 +234,23 @@ class _ThrowingGlucoseHistoryRepository implements GlucoseHistoryRepository {
   Future<List<Glucose>> fetchRecentGlucose(int limit) {
     throw StateError('history unavailable');
   }
+}
+
+class _ObservedGlucoseHistoryRepository implements GlucoseHistoryRepository {
+  _ObservedGlucoseHistoryRepository(this.rows);
+  final List<Glucose> rows;
+  int limit = 0;
+  @override
+  Future<List<Glucose>> fetchRecentGlucose(int count) async {
+    limit = count;
+    return rows.take(count).toList();
+  }
+
+  @override
+  Future<List<Glucose>> fetchGlucoseBetween(
+    DateTime start,
+    DateTime end,
+  ) async => rows;
 }
 
 class _FakeGlucoseHistoryRepository implements GlucoseHistoryRepository {

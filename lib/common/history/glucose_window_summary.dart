@@ -1,4 +1,5 @@
 import '../../core/domain/model/glucose.dart';
+import 'history_coverage_gap.dart';
 import 'nearest_cgm_reading.dart';
 import 'time_series_coverage.dart';
 
@@ -89,6 +90,28 @@ class GlucoseWindowSummary {
   );
 
   Duration get observed => belowRange + inRange + aboveRange;
+  List<HistoryCoverageGap> get gaps {
+    final result = <HistoryCoverageGap>[];
+    var coveredUntil = start;
+    for (final reading in [
+      if (baseline != null && baseline!.date.isBefore(start)) baseline!,
+      ...readings,
+    ]) {
+      final from = reading.date.isBefore(start) ? start : reading.date;
+      final limit = reading.date.add(readingInterval);
+      final until = limit.isAfter(end) ? end : limit;
+      if (!until.isAfter(from)) continue;
+      if (from.isAfter(coveredUntil)) {
+        result.add(HistoryCoverageGap(start: coveredUntil, end: from));
+      }
+      if (until.isAfter(coveredUntil)) coveredUntil = until;
+    }
+    if (coveredUntil.isBefore(end)) {
+      result.add(HistoryCoverageGap(start: coveredUntil, end: end));
+    }
+    return result;
+  }
+
   Duration get missing {
     final duration = end.difference(start) - observed;
     return duration.isNegative ? Duration.zero : duration;

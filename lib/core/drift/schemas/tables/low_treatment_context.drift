@@ -9,7 +9,7 @@ CREATE TABLE low_treatment_context (
   related_activity_log_id INTEGER
     REFERENCES activity_log(id) ON DELETE SET NULL,
 
-  source TEXT NOT NULL CHECK (source IN ('manual', 'aapsSuggestion', 'dashboardAction')),
+  source TEXT NOT NULL CHECK (source IN ('manual', 'aapsSuggestion', 'dashboardAction', 'familyChat')),
   recorded_carbs INTEGER CHECK (recorded_carbs >= 0),
   suggested_carbs REAL,
   suggested_within_minutes INTEGER,

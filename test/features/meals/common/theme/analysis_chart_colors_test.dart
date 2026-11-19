@@ -30,6 +30,7 @@ void main() {
             expect(
               (math.max(a, b) + .05) / (math.min(a, b) + .05),
               greaterThanOrEqualTo(3),
+              reason: '$color on $background in $brightness',
             );
           }
         }

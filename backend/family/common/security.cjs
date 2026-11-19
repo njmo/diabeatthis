@@ -1,7 +1,7 @@
 'use strict';
 const { createHash, createHmac, randomBytes, timingSafeEqual } = require('node:crypto');
 class FamilyError extends Error {
-  constructor(code, message = 'Family operation is not permitted') { super(message); this.code = code; }
+  constructor(code, message = 'Family operation is not permitted', details) { super(message); this.code = code; if (details !== undefined) this.details = details; }
 }
 function requireGoogle(request) {
   const auth = request.auth;

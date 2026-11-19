@@ -72,7 +72,7 @@ void main() {
   );
 
   test(
-    'switches provider and persists separate normalized model choices',
+    'switches provider, pins the managed Firebase model and preserves private model choices',
     () async {
       final controller = container.read(aiSettingsControllerProvider.notifier);
       const original = AiConfiguration(
@@ -129,7 +129,12 @@ void main() {
 
       await controller.testConnection(draft, apiKey: 'draft-private-key');
 
-      expect(factory.configurations.single.toJson(), draft.toJson());
+      expect(
+        factory.configurations.single.toJson(),
+        draft
+            .copyWith(firebaseModel: AiConfiguration.diabeatthisAiDefaultModel)
+            .toJson(),
+      );
       expect(factory.keys.single, 'draft-private-key');
       expect(factory.outputLimits.single, 512);
       expect(factory.thinkingBudgets.single, 0);
@@ -151,7 +156,9 @@ void main() {
       expect(preferences.getString(aiConfigurationStorageKey), storedBefore);
       expect(
         container.read(aiSettingsControllerProvider).requireValue.toJson(),
-        saved.toJson(),
+        saved
+            .copyWith(firebaseModel: AiConfiguration.diabeatthisAiDefaultModel)
+            .toJson(),
       );
     },
   );

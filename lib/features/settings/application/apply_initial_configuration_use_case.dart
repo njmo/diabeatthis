@@ -43,6 +43,7 @@ class ApplyInitialConfigurationUseCase {
     required ApplicationLanguage language,
     bool tempTargetsEnabled = false,
     bool lowTreatmentsEnabled = false,
+    InitialConfigurationBinding? chatSetupBinding,
   }) async {
     final availability = await _ref.read(
       dataSourceOptionAvailabilityProvider.future,
@@ -101,9 +102,7 @@ class ApplyInitialConfigurationUseCase {
     if (!_ref.mounted) return;
     _sendStartupSync(config);
     await _beforeCompletion?.call();
-    if (!await prefs.setBool(initialConfigurationDoneKey, true)) {
-      throw StateError('Initial configuration completion was not saved.');
-    }
+    await completeInitialConfiguration(prefs, binding: chatSetupBinding);
     _ref.invalidate(initialConfigurationDoneProvider);
     _ref.invalidate(sharedPrefsProvider);
   }

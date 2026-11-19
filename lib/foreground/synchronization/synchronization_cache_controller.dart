@@ -2,6 +2,7 @@ import 'package:circular_buffer/circular_buffer.dart';
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../common/monitoring/glucose_history_limits.dart';
 import '../../common/monitoring/live_reading_order.dart';
 import '../../core/data_sources/providers/source_repository_providers.dart';
 import '../../core/domain/model/device_status.dart';
@@ -17,7 +18,9 @@ class SynchronizationCache {
   TemporaryTarget? targetCache;
 
   SynchronizationCache({this.deviceStatusCache, this.targetCache})
-    : glucoseReadingsCache = CircularBuffer<Glucose>(10);
+    : glucoseReadingsCache = CircularBuffer<Glucose>(
+        dashboardGlucoseHistoryLimit,
+      );
 
   void cacheGlucose(Glucose glucose) {
     final lastReading = glucoseReadingsCache.firstOrNull;
@@ -29,7 +32,9 @@ class SynchronizationCache {
   }
 
   void replaceGlucoseReadings(Iterable<Glucose> readings) {
-    glucoseReadingsCache = CircularBuffer<Glucose>(10);
+    glucoseReadingsCache = CircularBuffer<Glucose>(
+      dashboardGlucoseHistoryLimit,
+    );
     readings.forEach(cacheGlucose);
   }
 
@@ -141,11 +146,19 @@ class SynchronizationCacheController with Logging {
       final repository = await container.read(
         glucoseHistoryRepositoryProvider.future,
       );
-      final glucoseReadings = await repository.fetchRecentGlucose(10);
+      final glucoseReadings = await repository.fetchRecentGlucose(
+        dashboardGlucoseHistoryLimit,
+      );
       if (generation != _generation) return;
-      final latestReadings = [...glucoseReadings, ...cache.glucoseReadingsCache]
-        ..sort((a, b) => b.date.compareTo(a.date));
-      final limitedReadings = latestReadings.take(10).toList();
+      // A cached live sample wins over fetched history at the same timestamp.
+      // Deduplicate before limiting so a refresh cannot evict half the window.
+      final latestReadings = {
+        for (final row in [...glucoseReadings, ...cache.glucoseReadingsCache])
+          row.date.millisecondsSinceEpoch: row,
+      }.values.toList()..sort((a, b) => b.date.compareTo(a.date));
+      final limitedReadings = latestReadings
+          .take(dashboardGlucoseHistoryLimit)
+          .toList();
 
       logI(
         _describeGlucoseReadings(

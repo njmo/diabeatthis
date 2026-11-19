@@ -47,7 +47,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Dane do 26.10.2026 00:00'), findsOneWidget);
+      expect(find.text('Statystyki do 26.10.2026 00:00'), findsOneWidget);
       expect(find.text('Noc: 24.10 22:00–25.10 06:00'), findsOneWidget);
     },
   );

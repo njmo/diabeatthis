@@ -7,6 +7,7 @@ import 'package:diabeatthis/common/widgets/data_warning_indicator.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/features/day_analysis/domain/models/day_context.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -53,16 +54,18 @@ void main() {
       for (final locale in ['pl', 'en']) {
         for (final brightness in Brightness.values) {
           await tester.pumpWidget(
-            MaterialApp(
-              locale: Locale(locale),
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              theme: ThemeData(brightness: brightness),
-              home: MediaQuery(
-                data: const MediaQueryData(textScaler: TextScaler.linear(2)),
-                child: Scaffold(
-                  body: SingleChildScrollView(
-                    child: DayHistoryStatistics(day: day),
+            ProviderScope(
+              child: MaterialApp(
+                locale: Locale(locale),
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                theme: ThemeData(brightness: brightness),
+                home: MediaQuery(
+                  data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+                  child: Scaffold(
+                    body: SingleChildScrollView(
+                      child: DayHistoryStatistics(day: day),
+                    ),
                   ),
                 ),
               ),

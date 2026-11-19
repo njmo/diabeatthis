@@ -30,11 +30,11 @@ void main() {
     },
   );
 
-  test('tolerates six minutes and keeps isolated readings visible', () {
+  test('tolerates seven minutes and keeps isolated readings visible', () {
     final timeline = GlucoseChartTimeline([
       reading(0),
-      reading(6),
-      reading(13),
+      reading(7),
+      reading(15),
     ]);
     expect(timeline.segments.map((s) => s.length), [2, 1]);
   });

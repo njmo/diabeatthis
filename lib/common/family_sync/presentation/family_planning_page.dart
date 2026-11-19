@@ -447,6 +447,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     return DashboardCardPadding(
       enabled: homeLayout,
       child: FamilyPlannedMealCard(
+        compact: homeLayout,
         decisionAction: MealDecisionRemoteMealAction(
           mealId: (row['payload'] as Map)['id'] as int,
         ),
@@ -674,14 +675,22 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
             if (showMeals && visibleMeals.isNotEmpty) ...[
               if (homeLayout) ...[
                 const SizedBox(height: 8),
-                if (visibleMeals.any((row) => mealStatusBlocksAnotherMealActivation((row['payload'] as Map)['status'] as String?))) ...[
+                if (visibleMeals.any(
+                  (row) => mealStatusBlocksAnotherMealActivation(
+                    (row['payload'] as Map)['status'] as String?,
+                  ),
+                )) ...[
                   DashboardCardPadding(
                     enabled: true,
                     child: MealProgressSectionHeading(
                       title: context.lang.mealProgressCurrent,
                     ),
                   ),
-                  for (final row in visibleMeals.where((r) => mealStatusBlocksAnotherMealActivation((r['payload'] as Map)['status'] as String?)))
+                  for (final row in visibleMeals.where(
+                    (r) => mealStatusBlocksAnotherMealActivation(
+                      (r['payload'] as Map)['status'] as String?,
+                    ),
+                  ))
                     DashboardCardPadding(
                       enabled: true,
                       child: FamilyActiveMealCard(
@@ -702,7 +711,11 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                       ),
                     ),
                 ],
-                if (visibleMeals.any((row) => mealStatusReadyToSummarize((row['payload'] as Map)['status'] as String?))) ...[
+                if (visibleMeals.any(
+                  (row) => mealStatusReadyToSummarize(
+                    (row['payload'] as Map)['status'] as String?,
+                  ),
+                )) ...[
                   const SizedBox(height: 4),
                   DashboardCardPadding(
                     enabled: true,
@@ -710,19 +723,47 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                       title: context.lang.mealProgressToSummarize,
                     ),
                   ),
-                  for (final row in visibleMeals.where((r) => mealStatusReadyToSummarize((r['payload'] as Map)['status'] as String?)))
+                  for (final row in visibleMeals.where(
+                    (r) => mealStatusReadyToSummarize(
+                      (r['payload'] as Map)['status'] as String?,
+                    ),
+                  ))
                     _buildPlannedMealCard(row),
                 ],
-                if (visibleMeals.any((row) => !mealStatusBlocksAnotherMealActivation((row['payload'] as Map)['status'] as String?) && !mealStatusReadyToSummarize((row['payload'] as Map)['status'] as String?))) ...[
+                if (visibleMeals.any(
+                  (row) =>
+                      !mealStatusBlocksAnotherMealActivation(
+                        (row['payload'] as Map)['status'] as String?,
+                      ) &&
+                      !mealStatusReadyToSummarize(
+                        (row['payload'] as Map)['status'] as String?,
+                      ),
+                )) ...[
                   const SizedBox(height: 4),
-                  if (visibleMeals.any((row) => mealStatusBlocksAnotherMealActivation((row['payload'] as Map)['status'] as String?) || mealStatusReadyToSummarize((row['payload'] as Map)['status'] as String?)))
+                  if (visibleMeals.any(
+                    (row) =>
+                        mealStatusBlocksAnotherMealActivation(
+                          (row['payload'] as Map)['status'] as String?,
+                        ) ||
+                        mealStatusReadyToSummarize(
+                          (row['payload'] as Map)['status'] as String?,
+                        ),
+                  ))
                     DashboardCardPadding(
                       enabled: true,
                       child: MealProgressSectionHeading(
                         title: context.lang.familySyncMeals,
                       ),
                     ),
-                  for (final row in visibleMeals.where((r) => !mealStatusBlocksAnotherMealActivation((r['payload'] as Map)['status'] as String?) && !mealStatusReadyToSummarize((r['payload'] as Map)['status'] as String?)))
+                  for (final row in visibleMeals.where(
+                    (r) =>
+                        !mealStatusBlocksAnotherMealActivation(
+                          (r['payload'] as Map)['status'] as String?,
+                        ) &&
+                        !mealStatusReadyToSummarize(
+                          (r['payload'] as Map)['status'] as String?,
+                        ),
+                  ))
                     _buildPlannedMealCard(row),
                 ],
               ] else ...[
@@ -732,8 +773,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                     context.lang.familySyncMeals,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
-                for (final row in visibleMeals)
-                  _buildPlannedMealCard(row),
+                for (final row in visibleMeals) _buildPlannedMealCard(row),
               ],
             ],
             if (showActivities &&

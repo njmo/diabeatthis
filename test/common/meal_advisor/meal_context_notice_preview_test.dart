@@ -8,7 +8,7 @@ import 'package:diabeatthis/core/domain/model/treat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'demo/meal_decision_demo_capture.dart';
+import 'support/meal_decision_preview_capture.dart';
 
 void main() {
   testWidgets('both carbohydrate types include the window endpoint', (

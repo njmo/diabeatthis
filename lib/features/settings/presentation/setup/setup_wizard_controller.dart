@@ -13,6 +13,7 @@ import '../../../../common/family/use_cases/create_family_invitation_use_case.da
 import '../../../../common/family/use_cases/disconnect_family_member_use_case.dart';
 import '../../../../common/family/use_cases/simulate_family_pairing_use_case.dart';
 import '../../../../common/family/use_cases/watch_family_members_use_case.dart';
+import '../../../../common/family_chat/domain/family_chat_preferences.dart';
 import '../../../../common/forms/form_submission_controller.dart';
 import '../../../../common/meal_advisor/meal_decision_preferences.dart';
 import '../../../../common/setup/domain/collect_setup_configuration_fields_use_case.dart';
@@ -39,6 +40,7 @@ class SetupWizardController extends ChangeNotifier {
     this.checkNightscoutConnection,
     this.authentication,
     this.permissions,
+    this.loadFamilyChatPreferences,
   }) : familyRepository = familyRepository ?? DemoFamilyPairingRepository(),
        ownsFamilyRepository = familyRepository == null {
     aiSubmission.addListener(changed);
@@ -63,6 +65,46 @@ class SetupWizardController extends ChangeNotifier {
   final FormSubmissionController aiSubmission = FormSubmissionController();
   final GoogleAuthenticationRepository? authentication;
   final SetupPermissionGateway? permissions;
+  final Future<FamilyChatPreferences?> Function(String uid)?
+  loadFamilyChatPreferences;
+  final _chatDrafts = <String, FamilyChatPreferences>{};
+  int _chatLoadRevision = 0;
+
+  void retryChatPreferences() =>
+      unawaited(_loadChatPreferences(state.googleAccount?.uid));
+
+  void setFamilyChatPreferences(FamilyChatPreferences value) {
+    state.familyChatPreferences = value;
+    _chatDrafts[state.googleAccount?.uid ?? ''] = value;
+    changed();
+  }
+
+  Future<void> _loadChatPreferences(String? uid) async {
+    final revision = ++_chatLoadRevision;
+    state.familyChatLoadFailed = false;
+    state.familyChatPreferences =
+        _chatDrafts[uid ?? ''] ??
+        _chatDrafts[''] ??
+        const FamilyChatPreferences();
+    state.familyChatPreferencesReady =
+        uid == null || loadFamilyChatPreferences == null;
+    if (state.familyChatPreferencesReady) return;
+    changed();
+    try {
+      final saved = await loadFamilyChatPreferences!(uid!);
+      if (disposed || revision != _chatLoadRevision) return;
+      state.familyChatPreferences =
+          _chatDrafts[uid] ?? saved?.asDraft() ?? state.familyChatPreferences;
+      state.familyChatPreferencesReady = true;
+      changed();
+    } catch (_) {
+      if (disposed || revision != _chatLoadRevision) return;
+      state.familyChatPreferencesReady = false;
+      state.familyChatLoadFailed = true;
+      changed();
+    }
+  }
+
   StreamSubscription<GoogleAccount?>? accountSubscription;
   final permissionRevisions = <SetupRequirement, int>{};
   String? nameBeforeGoogle;
@@ -79,6 +121,7 @@ class SetupWizardController extends ChangeNotifier {
       }
       return;
     }
+    unawaited(_loadChatPreferences(account?.uid));
     pairingSession++;
     unawaited(familySubscription?.cancel());
     familySubscription = null;

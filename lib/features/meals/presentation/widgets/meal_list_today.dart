@@ -6,7 +6,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_display_name.dart';
 import '../../../../common/meal/open_meal_add_on.dart';
 import '../../../../common/meal/open_meal_completion.dart';
-import '../../../../common/meal_advisor/presentation/demo/child_meal_decision_demo_action.dart';
+import '../../../../common/meal_advisor/presentation/remote/child_meal_decision_meal_action.dart';
 import '../../../../common/widgets/meal_progress/active_meal_progress_card.dart';
 import '../../../../common/widgets/meal_progress/meal_progress_section_heading.dart';
 import '../../../../common/widgets/meal_progress/show_meal_interruption_dialog.dart';
@@ -153,11 +153,7 @@ class MealListToday extends ConsumerWidget {
                 meal: meal,
                 enabled: blockingMeal == null || blockingMeal.id == meal.id,
                 onOpen: () => openExistingActions(meal),
-                footer: ChildMealDecisionDemoAction(
-                  mealId: meal.id,
-                  mealName: mealDisplayName(meal.name),
-                  enabled: blockingMeal == null || blockingMeal.id == meal.id,
-                ),
+                footer: ChildMealDecisionMealAction(mealId: meal.id),
                 onDelete: deleteAction(meal),
               ),
           ],

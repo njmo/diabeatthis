@@ -13,6 +13,7 @@ import 'package:diabeatthis/core/notifications/base/notifications_controller.dar
 import 'package:diabeatthis/core/notifications/controllers/notifications_controller_impl.dart';
 import 'package:diabeatthis/core/notifications/domain/events/temp_target_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/models/notification_event.dart';
+import 'package:diabeatthis/core/notifications/providers/local_notifications_controller_provider.dart';
 import 'package:diabeatthis/core/notifications/providers/local_notifications_plugin_provider.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
@@ -74,7 +75,11 @@ void main() {
         );
     inAppNotifications = RecordingTargetNotificationController();
     final controllerProvider = Provider(
-      (ref) => NotificationsControllerImpl(ref, inAppNotifications),
+      (ref) => NotificationsControllerImpl(
+        ref,
+        inAppNotifications,
+        localController: ref.watch(localNotificationsControllerProvider),
+      ),
     );
     container = ProviderContainer(
       overrides: [

@@ -1,4 +1,5 @@
 import 'package:diabeatthis/common/l10n/application_language.dart';
+import 'package:diabeatthis/core/data/provider/initial_configuration_provider.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/features/settings/application/apply_initial_configuration_use_case.dart';
 
@@ -18,6 +19,7 @@ class ScriptedInitialConfigurationUseCase
     required ApplicationLanguage language,
     bool tempTargetsEnabled = false,
     bool lowTreatmentsEnabled = false,
+    InitialConfigurationBinding? chatSetupBinding,
   }) => writes([
     config,
     nightscoutUrl,

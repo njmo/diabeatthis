@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/language.dart';
-import '../../demo/meal_decision_demo_answer.dart';
+import '../../meal_decision_answer.dart';
 
 class MealDecisionAnsweredStatus extends StatelessWidget {
   const MealDecisionAnsweredStatus({
@@ -13,7 +13,7 @@ class MealDecisionAnsweredStatus extends StatelessWidget {
     this.isAccepted = false,
   });
 
-  final MealDecisionDemoAnswer? answer;
+  final MealDecisionAnswer? answer;
   final int minutes;
   final String message;
   final String? caregiverName;
@@ -34,14 +34,14 @@ class MealDecisionAnsweredStatus extends StatelessWidget {
     var decisionText = '';
     if (answer != null) {
       decisionText = switch (answer!) {
-        MealDecisionDemoAnswer.insulinThenWait => minutes > 0
+        MealDecisionAnswer.insulinThenWait => minutes > 0
             ? '${context.lang.manualMealInsulinWaitEat} (${context.lang.mealDecisionDuration(minutes)})'
             : context.lang.manualMealInsulinWaitEat,
-        MealDecisionDemoAnswer.insulinAndEat =>
+        MealDecisionAnswer.insulinAndEat =>
           context.lang.manualMealInsulinAndEat,
-        MealDecisionDemoAnswer.eatThenInsulin =>
+        MealDecisionAnswer.eatThenInsulin =>
           context.lang.manualMealEatThenInsulin,
-        MealDecisionDemoAnswer.deferMeal =>
+        MealDecisionAnswer.deferMeal =>
           context.lang.mealDecisionDeferAction(minutes),
       };
     }

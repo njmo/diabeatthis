@@ -14,7 +14,7 @@ import '../../app_mode/application_device_mode.dart';
 import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../meal/meal_activation_guard.dart';
-import '../demo/meal_decision_demo_answer.dart';
+import '../meal_decision_answer.dart';
 import 'meal_decision_remote_controller.dart';
 import 'meal_decision_remote_request.dart';
 
@@ -66,7 +66,7 @@ class AcceptRemoteMealDecision {
             ? null
             : MealAdvice(
                 answer!.decision,
-                answer == MealDecisionDemoAnswer.insulinThenWait
+                answer == MealDecisionAnswer.insulinThenWait
                     ? WaitSuggestion(
                         request.minutes,
                         request.minutes,
@@ -135,7 +135,7 @@ class AcceptRemoteMealDecision {
               DriftMealAdvisorResultStore(dao: db.mealAdvisorResultDao),
             ).saveMealAdvice(request.mealId, advice);
           }
-        } else if (answer == MealDecisionDemoAnswer.deferMeal) {
+        } else if (answer == MealDecisionAnswer.deferMeal) {
           final responded = request.response?['respondedAt'] as int;
           await (db.update(
             db.meal,

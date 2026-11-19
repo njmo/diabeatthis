@@ -18,6 +18,7 @@ import 'dao/portion_dao.dart';
 import 'dao/quick_low_treatment_item_dao.dart';
 import 'database.dart';
 import 'family_sync/install_family_mirror_schema.dart';
+import 'family_sync/install_family_treatment_journal.dart';
 import 'migrations/migrate_activity_rescheduling.dart';
 import 'migrations/migrate_activity_summary.dart';
 import 'migrations/migrate_ingredient_origin.dart';
@@ -77,7 +78,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 50;
+  int get schemaVersion => 51;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -393,6 +394,12 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
           );
         }
       }
+      if (from < 51) {
+        await m.alterTable(
+          // ignore: experimental_member_use
+          TableMigration(lowTreatmentContext),
+        );
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -406,6 +413,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
       await customStatement(createIngredientPortionsUnsyncedTrigger);
       await installFamilyMirrorSchema(this);
+      await installFamilyTreatmentJournal(this);
     },
   );
 

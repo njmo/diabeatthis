@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../common/monitoring/glucose_history_limits.dart';
 
 import '../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import '../../../core/domain/model/device_status.dart';
@@ -26,7 +27,7 @@ class RefreshCaregiverNightscoutUseCase {
         try {
           glucose =
               (await repository
-                      .fetchLastGlucoseWithLimit(10)
+                      .fetchLastGlucoseWithLimit(dashboardGlucoseHistoryLimit)
                       .timeout(const Duration(seconds: 15)))
                   .where(
                     (reading) =>

@@ -31,7 +31,11 @@ class AddMealUseCase with Logging {
 
   const AddMealUseCase({required this.ref});
 
-  Future<Meal> call(MealDraft draft, {bool suggestMissingIcons = true}) async {
+  Future<Meal> call(
+    MealDraft draft, {
+    bool suggestMissingIcons = true,
+    bool logContent = true,
+  }) async {
     await _validateMealDraft(draft);
 
     final db = ref.read(databaseProvider);
@@ -39,9 +43,9 @@ class AddMealUseCase with Logging {
     final icons = ref.read(ingredientIconServiceProvider);
     final savedIngredients = <IngredientDraft, domain.Ingredient>{};
     final result = await db.transaction(() async {
-      logI('Adding ${draft.name}');
+      if (logContent) logI('Adding ${draft.name}');
       final meal = await insertMealDraft(db, draft);
-      logI('Added ${meal.name}');
+      if (logContent) logI('Added ${meal.name}');
 
       for (final mealIngredient in draft.mealIngredients) {
         final ingredientDraft = mealIngredient.ingredient;
@@ -56,13 +60,13 @@ class AddMealUseCase with Logging {
               ),
             );
         savedIngredients[ingredientDraft] = ingredient;
-        logI('Added ${ingredient.name}');
+        if (logContent) logI('Added ${ingredient.name}');
 
         final portion = await resolvePortionSelection(
           db,
           mealIngredient.ingredientPortion.portion,
         );
-        logI('Added ${portion?.name ?? 'no portion'}');
+        if (logContent) logI('Added ${portion?.name ?? 'no portion'}');
 
         if (portion != null) {
           final currentConversion = await db.portionDao.getGramsPerPortion(

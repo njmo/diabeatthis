@@ -60,6 +60,7 @@ class DeviceStatusDashboard extends ConsumerWidget {
           if (glucose != null)
             GlucoseDashboard(
               glucose: glucose!,
+              aapsPredictionsJson: deviceStatus.aapsPredictionsJson,
               readings: readings,
               sensorType: detectedSensor,
               pumpType: detectedPump,
@@ -68,6 +69,7 @@ class DeviceStatusDashboard extends ConsumerWidget {
           else
             DashboardGlucoseReading(
               value: useDeviceGlucose ? bg : null,
+              aapsPredictionsJson: deviceStatus.aapsPredictionsJson,
               readings: readings,
               color: bgColor,
               trendIcon: useDeviceGlucose ? trendIcon : null,

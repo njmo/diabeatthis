@@ -7,6 +7,7 @@ import '../../../common/l10n/application_language.dart';
 import '../../../common/notifications/android_notification_delivery.dart';
 import '../base/notifications_controller.dart';
 import '../bootstrap/local_notifications_bootstrap.dart' as bootstrap;
+import '../domain/events/family_chat_notification.dart';
 import '../domain/models/hash_notification_id_factory.dart';
 import '../domain/models/notification_event.dart';
 import '../domain/models/notification_event_type.dart';
@@ -23,10 +24,15 @@ class LocalNotificationsController implements NotificationsController {
 
   @override
   Future<void> init() async {
-    await initializeLanguageStringsFromPreferences();
-    await bootstrap.init(_plugin);
+    await initializeDelivery();
 
     await _handleLaunchNotification();
+  }
+
+  /// Sets up delivery in either isolate without replaying an app-launch action.
+  Future<void> initializeDelivery() async {
+    await initializeLanguageStringsFromPreferences();
+    await bootstrap.init(_plugin);
   }
 
   Future<void> _handleLaunchNotification() async {
@@ -48,7 +54,9 @@ class LocalNotificationsController implements NotificationsController {
       );
     }
     final iosDetails = event.toDarwinNotificationDetails();
-    final id = _idFactory.create(event.key);
+    final id = event is FamilyChatNotificationEvent
+        ? event.id
+        : _idFactory.create(event.key);
     return _plugin.show(
       id: id,
       title: event.title,
@@ -92,8 +100,8 @@ class LocalNotificationsController implements NotificationsController {
   }
 
   @override
-  Future<void> cancel(int id) async {
-    await _plugin.cancel(id: id);
+  Future<void> cancel(int id, {String? tag}) async {
+    await _plugin.cancel(id: id, tag: tag);
   }
 
   @override

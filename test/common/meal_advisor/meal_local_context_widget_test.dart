@@ -1,13 +1,9 @@
-import 'package:diabeatthis/common/auth/google_account.dart';
-import 'package:diabeatthis/common/auth/google_authentication_providers.dart';
 import 'package:diabeatthis/common/backend/authenticated_callable_transport.dart';
-import 'package:diabeatthis/common/family_sync/family_access_scope.dart';
 import 'package:diabeatthis/common/family_sync/family_plan_submission_store.dart';
 import 'package:diabeatthis/common/family_sync/family_planning_controller.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
-import 'package:diabeatthis/common/meal_advisor/demo/meal_decision_demo_controller.dart';
 import 'package:diabeatthis/common/meal_advisor/presentation/caregiver_meal_local_context.dart';
-import 'package:diabeatthis/common/meal_advisor/presentation/demo/show_meal_decision_demo.dart';
+import 'package:diabeatthis/common/meal_advisor/remote/meal_decision_remote_request.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
@@ -58,10 +54,6 @@ void main() {
         final nightscout = StatisticsNightscout();
         final container = ProviderContainer(
           overrides: [
-            googleAccountProvider.overrideWith(
-              (ref) => Stream.value(const GoogleAccount(uid: 'parent')),
-            ),
-            mealDecisionDemoDelayProvider.overrideWithValue(() async {}),
             caregiverVisibleStateProvider.overrideWithValue(
               const CaregiverRefreshState(),
             ),
@@ -73,29 +65,14 @@ void main() {
             ),
           ],
         );
-        var disposed = false;
-        addTearDown(() {
-          if (!disposed) container.dispose();
+        addTearDown(container.dispose);
+        final request = MealDecisionRemoteRequest({
+          'id': 'request-a',
+          'mealId': '2',
+          'mealName': 'Untrusted request name',
+          'ownerUid': 'child-a',
+          'sourceId': 'source-a',
         });
-        final accountSubscription = container.listen(
-          googleAccountProvider,
-          (_, _) {},
-        );
-        addTearDown(accountSubscription.close);
-        await tester.pump();
-        final controller = container.read(
-          mealDecisionDemoControllerProvider.notifier,
-        );
-        await controller.send(
-          'meal',
-          'Untrusted request name',
-          mealId: 2,
-          childOwner: 'child-a',
-          mirrorSource: 'source-a',
-        );
-        final id = container
-            .read(mealDecisionDemoControllerProvider)['meal']!
-            .id;
         await tester.pumpWidget(
           UncontrolledProviderScope(
             container: container,
@@ -104,33 +81,33 @@ void main() {
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(
-                body: Builder(
-                  builder: (context) => TextButton(
-                    onPressed: () => showCaregiverMealDecisionDemo(
-                      context,
-                      requestKey: 'meal',
-                      requestId: id,
-                      caregiverName: 'Anna',
-                      familyScope: FamilyAccessScope(family),
-                    ),
-                    child: const Text('Open'),
-                  ),
+                body: ListenableBuilder(
+                  listenable: family,
+                  builder: (_, _) {
+                    final scope = caregiverMealDecisionContextScope(
+                      family,
+                      request,
+                    );
+                    return scope == null
+                        ? const SizedBox.shrink()
+                        : SingleChildScrollView(
+                            child: CaregiverMealLocalContext(
+                              scope: scope,
+                              mealId: request.mealId,
+                            ),
+                          );
+                  },
                 ),
               ),
             ),
           ),
         );
-        await tester.tap(find.text('Open'));
         await tester.pumpAndSettle();
         if (wrongChild) {
           expect(find.byType(CaregiverMealLocalContext), findsNothing);
           expect(nightscout.glucoseWindows, isEmpty);
-          expect(
-            container
-                .read(mealDecisionDemoControllerProvider)['meal']!
-                .claimedById,
-            isNull,
-          );
+          expect(nightscout.deviceWindows, isEmpty);
+          expect(nightscout.treatmentWindows, isEmpty);
         } else {
           expect(find.byType(CaregiverMealLocalContext), findsOneWidget);
           expect(find.widgetWithText(ListTile, 'Lunch'), findsOneWidget);
@@ -145,8 +122,6 @@ void main() {
         }
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox.shrink());
-        container.dispose();
-        disposed = true;
       },
     );
   }

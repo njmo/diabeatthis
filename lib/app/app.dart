@@ -9,6 +9,7 @@ import '../common/events/data/app/execute_command_event.dart';
 import '../common/events/data/app/lifecycle_state_event.dart';
 import '../common/events/data/app/sync_data_key.dart';
 import '../common/events/data/app_event_data.dart';
+import '../common/family_chat/notifications/family_chat_notifications_runtime.dart';
 import '../common/l10n/application_language.dart';
 import '../common/l10n/language.dart';
 import '../common/location/residence_country_provider.dart';
@@ -205,7 +206,9 @@ class _MyAppState extends ConsumerState<MyApp>
 
     return MaterialApp.router(
       builder: (context, child) => ApplicationBackdrop(
-        child: MealDecisionRuntime(child: child ?? const SizedBox.shrink()),
+        child: FamilyChatNotificationRuntime(
+          child: MealDecisionRuntime(child: child ?? const SizedBox.shrink()),
+        ),
       ),
       locale: selectedLanguage?.locale,
       onGenerateTitle: (context) => context.lang.appTitle,
