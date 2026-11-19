@@ -60,13 +60,19 @@ class CaregiverMealLocalContext extends ConsumerWidget {
     final rows = scope.family.rows.values.toList();
     MealPageState? state;
     try {
-      state = FamilyMealDetails(
-        rows,
-      ).build(mealId, context.lang.mealPortionLabel);
+      state = FamilyMealDetails(rows).build(
+        mealId,
+        context.lang.mealPortionLabel,
+        includePlannedPreview: scope.family.complete,
+      );
     } catch (_) {
       return Text(context.lang.beforeMealUnavailable);
     }
-    if (state == null) return Text(context.lang.beforeMealUnavailable);
+    if (state == null) {
+      return scope.family.busy
+          ? const LinearProgressIndicator()
+          : Text(context.lang.beforeMealUnavailable);
+    }
     final details = state.details;
     final totals = details.preferredNutritionTotals;
     final asOf = clock.now();
@@ -156,7 +162,9 @@ class CaregiverMealLocalContext extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        if (totals == null)
+        if (totals == null && scope.family.busy && !scope.family.complete)
+          const LinearProgressIndicator()
+        else if (totals == null)
           Text(context.lang.similarMealsMissingMacros)
         else
           CarbohydrateTotalsSummary(

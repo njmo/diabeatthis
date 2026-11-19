@@ -9,3 +9,7 @@ class NextMealEvent extends ForegroundEvent {
 
 /// Persistent storage currently has no planned meal candidate.
 class PlannedMealsClearedEvent extends ForegroundEvent {}
+
+class MealDecisionMethodChanged extends ForegroundEvent {
+  const MealDecisionMethodChanged();
+}

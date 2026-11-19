@@ -231,6 +231,46 @@ void main() {
     'epoch': 'epoch',
     'messageId': 'question',
   };
+  test('sync keeps an incoming message quiet while chat is open', () async {
+    final db = FamilyChatDatabase(NativeDatabase.memory());
+    final api = _Api();
+    final presenter = _Presenter();
+    final session = FamilyChatSession(
+      uid: 'child',
+      api: api,
+      db: db,
+      isCurrentAccount: () => true,
+      notificationPresenter: presenter,
+      clock: () => DateTime.fromMillisecondsSinceEpoch(1000),
+    );
+    addTearDown(db.close);
+    addTearDown(session.dispose);
+
+    await session.start(foreground: true, chatVisible: true);
+
+    expect(presenter.shown, isEmpty);
+    expect(session.unreadCount, 1);
+    expect(api.message['receipts']['child']['deliveredAt'], 1000);
+  });
+
+  test('reading schedules tray cleanup and recovers older read notices', () async {
+    final db = FamilyChatDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final notice = familyChatNotice(scope, 'question');
+    await db.activateChat('child', scope, 'one');
+    await db.rememberNotification(scope, notice.id, 'one', tag: notice.tag);
+    await db.queueReceipt(scope, 'question', false);
+    expect(await db.historyCancellationIntents(scope), isEmpty);
+
+    await db.queueReceipt(scope, 'question', true);
+    await db.markMessageNotificationForCancellation(scope, 'question');
+    expect(await db.historyCancellationIntents(scope), [notice]);
+
+    await db.confirmCancelled(notice);
+    await db.rememberNotification(scope, notice.id, 'one', tag: notice.tag);
+    await db.markLocallyReadNotificationsForCancellation(scope);
+    expect(await db.historyCancellationIntents(scope), [notice]);
+  });
   test(
     'foreground recovery presents a saved push before flushing its receipt',
     () async {

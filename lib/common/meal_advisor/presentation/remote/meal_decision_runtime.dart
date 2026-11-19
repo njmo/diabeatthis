@@ -1,15 +1,18 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/router/providers/app_router_provider.dart';
 import '../../../../core/data/provider/initial_configuration_provider.dart';
+import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/drift/mappers/meal_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../features/dashboard/presentation/utils/meal_status_dialog_result_handler.dart';
 import '../../../../features/dashboard/presentation/utils/show_meal_status_dialog.dart';
+import '../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../app_mode/application_device_mode.dart';
 import '../../../auth/google_authentication_providers.dart';
 import '../../meal_decision_preferences.dart';
@@ -20,6 +23,7 @@ import '../../notifications/meal_decision_push.dart';
 import '../../remote/accept_remote_meal_decision.dart';
 import '../../remote/caregiver_meal_decision_eligibility.dart';
 import '../../remote/meal_decision_remote_controller.dart';
+import '../../remote/scheduled_meal_decision_journal.dart';
 import 'caregiver_meal_decision_sheet.dart';
 import 'meal_decision_presentation_registry.dart';
 
@@ -37,6 +41,7 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
   StreamSubscription<void>? intentSubscription;
   StreamSubscription<void>? presentationSubscription;
   Timer? receiptRetry;
+  bool cleaningTimeouts = false;
   bool routing = false, replaying = false;
   bool drainAgain = false;
   final presentedRequests = <String>{};
@@ -49,12 +54,44 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
         .listen((_) => unawaited(drain()));
     intentSubscription = MealDecisionNotificationIntentStore.changes.stream
         .listen((_) => unawaited(drain()));
-    WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(drain()));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(drain());
+      unawaited(cleanTimeoutNotifications());
+    });
     receiptRetry = Timer.periodic(const Duration(seconds: 30), (_) {
+      unawaited(cleanTimeoutNotifications());
       if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
         unawaited(replayReceipts());
       }
     });
+  }
+
+  Future<void> cleanTimeoutNotifications() async {
+    if (!mounted || cleaningTimeouts || Firebase.apps.isEmpty) return;
+    final account = ref.read(googleAccountProvider).asData;
+    final prefsReady = ref.read(sharedPrefsProvider).asData != null;
+    if (account == null || !prefsReady) return;
+    final preferences = ref.read(mealDecisionPreferencesProvider);
+    cleaningTimeouts = true;
+    try {
+      await ScheduledMealDecisionJournal(
+        ref.read(databaseProvider),
+      ).cleanNotifications(
+        uid: preferences.method == MealDecisionMethod.caregiver
+            ? account.value?.uid
+            : null,
+        keepManualNotices:
+            preferences.timeoutFallback == MealDecisionTimeoutFallback.manual &&
+            preferences.allowManualDecision,
+        now: clock.now(),
+        cancel: (id) =>
+            cancelScheduledMealDecisionFallback(id, throwOnFailure: true),
+      );
+    } catch (_) {
+      // A failed Android cancellation stays in the journal for the next pass.
+    } finally {
+      cleaningTimeouts = false;
+    }
   }
 
   bool get configured =>
@@ -209,6 +246,9 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(cleanTimeoutNotifications());
+    }
     if (state == AppLifecycleState.resumed && configured) {
       unawaited(
         ref.read(mealDecisionRemoteControllerProvider.notifier).refresh(),
@@ -230,6 +270,21 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
   Widget build(BuildContext context) {
     if (Firebase.apps.isNotEmpty) {
       ref.watch(mealDecisionNotificationsProvider);
+      ref.listen(
+        googleAccountProvider,
+        (_, _) => unawaited(cleanTimeoutNotifications()),
+      );
+      ref.listen(
+        mealDecisionPreferencesProvider,
+        (_, _) => unawaited(cleanTimeoutNotifications()),
+      );
+      if (ref.watch(applicationDeviceModeProvider).asData?.value ==
+          ApplicationDeviceMode.patient) {
+        ref.listen(
+          mealsStreamProvider,
+          (_, _) => unawaited(cleanTimeoutNotifications()),
+        );
+      }
     }
     if (Firebase.apps.isNotEmpty &&
         ref.watch(initialConfigurationDoneProvider).asData?.value == true) {
@@ -242,6 +297,11 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
             !next.failed) {
           for (final request in next.requests) {
             final before = previous?.byId(request.id);
+            if (request.ownerUid == uid &&
+                (request.status == 'accepted' ||
+                    request.data['outcome'] != null)) {
+              unawaited(cancelScheduledMealDecisionFallback(request.id));
+            }
             if (request.claimedByUid == uid && before?.claimedByUid != uid) {
               if (MealDecisionPresentationRegistry.caregiverRequests.contains(
                 request.id,

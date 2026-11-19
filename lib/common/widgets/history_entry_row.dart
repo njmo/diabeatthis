@@ -8,12 +8,14 @@ class HistoryEntryRow extends StatelessWidget {
     required this.metadata,
     required this.onTap,
     this.trailing,
+    this.details,
   });
 
   final String name;
   final List<Widget> metadata;
   final VoidCallback? onTap;
   final Widget? trailing;
+  final Widget? details;
 
   @override
   Widget build(BuildContext context) => InkWell(
@@ -34,6 +36,7 @@ class HistoryEntryRow extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: metadata,
                 ),
+                if (details != null) ...[const SizedBox(height: 6), details!],
               ],
             ),
           ),

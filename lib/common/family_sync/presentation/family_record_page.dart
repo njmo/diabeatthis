@@ -105,9 +105,11 @@ class FamilyRecordPage extends ConsumerWidget {
           Widget? body;
           if (record != null) {
             if (kind == 'meals') {
-              final state = FamilyMealDetails(
-                rows,
-              ).build(id, context.lang.mealPortionLabel);
+              final state = FamilyMealDetails(rows).build(
+                id,
+                context.lang.mealPortionLabel,
+                includePlannedPreview: true,
+              );
               if (state != null) {
                 Widget mealBody({MealAnalysisData? analysis}) =>
                     MealPageBody.controlled(

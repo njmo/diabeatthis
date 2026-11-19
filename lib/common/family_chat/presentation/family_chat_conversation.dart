@@ -1407,9 +1407,6 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
   @override
   Widget build(BuildContext context) {
     final messages = _messages;
-    if (ModalRoute.of(context)?.isCurrent == true) {
-      widget._session.visibleTarget = _recipient;
-    }
     if (messages.isNotEmpty && _positionedTargets.add(_recipient)) {
       _jumpToLatest();
     }

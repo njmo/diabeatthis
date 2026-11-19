@@ -11,6 +11,7 @@ class MealDecisionAnsweredStatus extends StatelessWidget {
     this.message = '',
     this.caregiverName,
     this.isAccepted = false,
+    this.isTimedOut = false,
   });
 
   final MealDecisionAnswer? answer;
@@ -18,16 +19,21 @@ class MealDecisionAnsweredStatus extends StatelessWidget {
   final String message;
   final String? caregiverName;
   final bool isAccepted;
+  final bool isTimedOut;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final timeoutColor = theme.colorScheme.error;
     final numColor =
         isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
     final mutedColor =
         isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
-    final statusText = isAccepted
+    final statusText = isTimedOut
+        ? context.lang.mealDecisionCaregiverTimedOut
+        : isAccepted
         ? context.lang.mealDecisionRemoteAccepted
         : context.lang.mealDecisionStatusAnswered;
 
@@ -46,7 +52,7 @@ class MealDecisionAnsweredStatus extends StatelessWidget {
       };
     }
 
-    if (decisionText.isEmpty && message.isEmpty && !isAccepted) {
+    if (decisionText.isEmpty && message.isEmpty && !isAccepted && !isTimedOut) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -64,7 +70,9 @@ class MealDecisionAnsweredStatus extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: isAccepted
+        color: isTimedOut
+            ? timeoutColor.withValues(alpha: .10)
+            : isAccepted
             ? (isDark
                 ? Colors.green.shade900.withValues(alpha: 0.25)
                 : Colors.green.shade50)
@@ -73,7 +81,9 @@ class MealDecisionAnsweredStatus extends StatelessWidget {
                 : const Color(0xFF00A3FF).withValues(alpha: 0.08)),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isAccepted
+          color: isTimedOut
+              ? timeoutColor.withValues(alpha: .45)
+              : isAccepted
               ? (isDark
                   ? Colors.green.shade700.withValues(alpha: 0.5)
                   : Colors.green.shade200)
@@ -89,11 +99,15 @@ class MealDecisionAnsweredStatus extends StatelessWidget {
           Row(
             children: [
               Icon(
-                isAccepted
+                isTimedOut
+                    ? Icons.schedule
+                    : isAccepted
                     ? Icons.check_circle_rounded
                     : Icons.mark_chat_read_outlined,
                 size: 15,
-                color: isAccepted
+                color: isTimedOut
+                    ? timeoutColor
+                    : isAccepted
                     ? (isDark ? Colors.green.shade400 : Colors.green.shade700)
                     : const Color(0xFF00A3FF),
               ),
@@ -104,7 +118,9 @@ class MealDecisionAnsweredStatus extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: isAccepted
+                    color: isTimedOut
+                        ? timeoutColor
+                        : isAccepted
                         ? (isDark
                             ? Colors.green.shade400
                             : Colors.green.shade700)

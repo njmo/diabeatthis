@@ -158,7 +158,7 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
     );
     final sheetRoute = ModalRoute.of(context);
     final sheetNavigator = Navigator.of(context);
-    void closeSheet() {
+    void closeSheet({bool keepSheet = false}) {
       if (!sheetNavigator.mounted) return;
       OwnedRouteRegistry.close(family);
       final nested = delegateRoute.value;
@@ -167,7 +167,8 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
           nested.navigator == sheetNavigator) {
         sheetNavigator.removeRoute(nested);
       }
-      if (sheetRoute != null &&
+      if (!keepSheet &&
+          sheetRoute != null &&
           sheetRoute.isActive &&
           sheetRoute.navigator == sheetNavigator) {
         sheetNavigator.removeRoute(sheetRoute);
@@ -220,20 +221,9 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
                     !request.claimAvailable)));
     useEffect(() {
       if (unavailable) {
-        final route = ModalRoute.of(context);
-        final navigator = Navigator.of(context);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           unawaited(cancelMealDecisionNotification(requestId));
-          if (navigator.mounted) {
-            OwnedRouteRegistry.close(family);
-            final nested = delegateRoute.value;
-            if (nested != null && nested.isActive) {
-              navigator.removeRoute(nested);
-            }
-            if (!timedOut && route != null && route.isActive) {
-              navigator.removeRoute(route);
-            }
-          }
+          if (context.mounted) closeSheet(keepSheet: timedOut);
         });
       }
       return null;

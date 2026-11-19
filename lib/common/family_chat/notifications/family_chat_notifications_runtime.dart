@@ -145,9 +145,7 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
           currentUid: () =>
               disposed ? null : FirebaseAuth.instance.currentUser?.uid,
           presenter: presenter,
-          shouldPresent: (target) =>
-              !(runtime.conversationVisible &&
-                  runtime.session?.visibleTarget == target),
+          shouldPresent: (_) => !runtime.conversationVisible,
         ).receive(Map<String, dynamic>.from(message.data));
         if (!received) {
           Log.d('FamilyChatPush', 'Foreground push was not accepted');

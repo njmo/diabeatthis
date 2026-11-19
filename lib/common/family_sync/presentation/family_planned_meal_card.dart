@@ -72,22 +72,21 @@ class FamilyPlannedMealCard extends StatelessWidget {
                 ),
               )
             : null,
-        footer: decisionAction != null || onRetry != null
-            ? Wrap(
+        cardDetails: onRetry == null
+            ? decisionAction
+            : Wrap(
                 spacing: 8,
                 runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   if (decisionAction != null) decisionAction!,
-                  if (onRetry != null)
-                    TextButton.icon(
-                      onPressed: onRetry,
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: Text(context.lang.familyPlanRetry),
-                    ),
+                  TextButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: Text(context.lang.familyPlanRetry),
+                  ),
                 ],
-              )
-            : null,
+              ),
       );
     }
     final card = MealEntryCard(

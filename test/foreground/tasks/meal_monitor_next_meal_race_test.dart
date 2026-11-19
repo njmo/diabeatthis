@@ -16,7 +16,9 @@ import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
 import 'package:diabeatthis/foreground/task/base/collector_context.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/detect_finished_eating_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/monitor_until_meal.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/new_meal_check_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/wait_for_bolus_executor.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_context.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import 'package:drift/drift.dart' show Variable;
 import 'package:drift/native.dart';
@@ -29,6 +31,39 @@ import '../utils/fake_notifications_controller.dart';
 import '../utils/fake_runtime_harness.dart';
 
 void main() {
+  test('restart resumes the persisted bolus wait before a planned meal', () async {
+    final now = DateTime(2026, 11, 19, 19, 35);
+    final db = drift.DatabaseImpl(NativeDatabase.memory());
+    addTearDown(db.close);
+    final container = ProviderContainer(
+      overrides: [databaseProvider.overrideWithValue(db)],
+    );
+    addTearDown(container.dispose);
+    final harness = FakeRuntimeHarness(container: container);
+    final state = MealMonitorContext();
+
+    await withClock(Clock.fixed(now), () async {
+      await db.customInsert(
+        '''
+        INSERT INTO meal (id, name, planned_at, status)
+        VALUES (1, 'Lunch', ?, 'waiting-for-bolus'),
+               (2, 'Dinner', ?, 'planned')
+        ''',
+        variables: [
+          Variable(now.subtract(const Duration(minutes: 40)).millisecondsSinceEpoch),
+          Variable(now.add(const Duration(minutes: 11)).millisecondsSinceEpoch),
+        ],
+      );
+
+      final next = await NewMealCheckExecutor().execute(
+        harness.runtimeContext,
+        state,
+      );
+      expect(next, isA<WaitForBolusExecutor>());
+      expect(state.activeMeal?.id, 1);
+    });
+  });
+
   for (final disposeDuringDelay in [false, true]) {
     test(
       'does not emit a candidate ${disposeDuringDelay ? 'after disposal' : 'that changed during the delay'}',

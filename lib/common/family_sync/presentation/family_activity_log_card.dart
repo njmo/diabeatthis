@@ -68,12 +68,8 @@ class FamilyActivityLogCard extends ConsumerWidget {
               ? null
               : DateTime.fromMillisecondsSinceEpoch(payload['ended_at'] as int),
           onTap: onOpen,
+          notes: payload['notes'] as String?,
         ),
-        if (payload['notes'] != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(payload['notes'] as String),
-          ),
       ],
     );
   }

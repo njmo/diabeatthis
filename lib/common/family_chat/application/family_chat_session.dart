@@ -36,7 +36,6 @@ class FamilyChatSession extends ChangeNotifier {
   Map<String, dynamic>? config;
   String? scope;
   String? error;
-  String? visibleTarget;
   bool busy = false;
   bool _disposed = false;
   bool _invalidated = false;
@@ -911,8 +910,7 @@ class FamilyChatSession extends ChangeNotifier {
       api: api,
       presenter: notificationPresenter!,
       currentUid: () => active && enabled && scope == currentScope ? uid : null,
-      shouldPresent: (target) =>
-          _appForeground && !(_chatVisible && visibleTarget == target),
+      shouldPresent: (_) => _appForeground && !_chatVisible,
     );
     final elapsedAtSync = _elapsed.elapsedMilliseconds;
     final notificationConfig = {...currentConfig, 'serverTime': serverNow};
@@ -938,12 +936,14 @@ class FamilyChatSession extends ChangeNotifier {
   }
 
   Future<void> _cancelClearedNotices(String currentScope) async {
+    await db.markLocallyReadNotificationsForCancellation(currentScope);
     final notices = await db.historyCancellationIntents(currentScope);
     if (notices.isEmpty) return;
     await FamilyChatNotificationPlatform.cancel(
       db,
       notices,
       keepTrying: () => false,
+      operation: notificationPresenter?.cancel,
     );
   }
 
@@ -1923,6 +1923,10 @@ class FamilyChatSession extends ChangeNotifier {
           (message['receipts'] as Map?)?[uid]?['readAt'] == null) {
         final queued = await _write(currentScope, () async {
           await db.queueReceipt(currentScope, message['id'] as String, true);
+          await db.markMessageNotificationForCancellation(
+            currentScope,
+            message['id'] as String,
+          );
           return true;
         });
         if (queued != true) return false;
@@ -1938,6 +1942,7 @@ class FamilyChatSession extends ChangeNotifier {
         db,
         notices,
         keepTrying: () => active && enabled,
+        operation: notificationPresenter?.cancel,
       ),
     );
     unawaited(synchronize(enqueueAgain: true));

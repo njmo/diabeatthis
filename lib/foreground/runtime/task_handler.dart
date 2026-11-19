@@ -14,6 +14,8 @@ import '../../common/family_sync/family_workflow_guard.dart';
 import '../../common/family_sync/request_family_mirror_sync.dart';
 import '../../common/l10n/application_language.dart';
 import '../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
+import '../../common/meal_advisor/meal_decision_preferences_provider.dart';
+import '../../core/data/provider/shared_prefs_provider.dart';
 import '../../core/drift/providers/database_provider.dart';
 import '../../core/logger/logger.dart';
 import '../../features/activity/data/services/activity_schedule_service.dart';
@@ -68,6 +70,9 @@ class MyTaskHandler extends TaskHandler with Logging {
 
     LogRuntimeConfig.configure(enableBuffer: true, capacity: 20000);
     await initializeLanguageStringsFromPreferences();
+    _container!.read(mealDecisionPreferencesProvider);
+    await _container!.read(sharedPrefsProvider.future);
+    if (_isStopping) return;
 
     _taskScheduler = WorkflowScheduler();
 

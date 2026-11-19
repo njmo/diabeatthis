@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../features/meals/presentation/widgets/meal_details/meal_detail_formatters.dart';
 import '../../../features/meals/presentation/widgets/meal_progress/meal_schedule_labels.dart';
 import '../../l10n/language.dart';
+import '../../meal/meal_decision.dart';
 import '../../meal/meal_display_name.dart';
 import '../../meal/meal_progress_plan.dart';
 import '../../widgets/meal_progress/meal_progress_steps.dart';
@@ -12,6 +13,8 @@ class FamilyActiveMealCard extends StatelessWidget {
     super.key,
     required this.payload,
     required this.now,
+    this.decision,
+    this.history = const [],
     this.decisionAction,
     this.onOpen,
     this.monitoring = false,
@@ -19,6 +22,8 @@ class FamilyActiveMealCard extends StatelessWidget {
 
   final Map payload;
   final DateTime now;
+  final MealDecision? decision;
+  final Iterable<String> history;
   final Widget? decisionAction;
   final VoidCallback? onOpen;
   final bool monitoring;
@@ -138,7 +143,11 @@ class FamilyActiveMealCard extends StatelessWidget {
               const SizedBox(height: 10),
               // Paski kroków (np. Bolus -> Jedzenie)
               MealProgressSteps(
-                plan: mealProgressPlanForStatus(status),
+                plan: mealProgressPlanForStatus(
+                  status,
+                  decision: decision,
+                  history: history,
+                ),
               ),
               if (decisionAction != null) ...[
                 const SizedBox(height: 8),

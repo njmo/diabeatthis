@@ -1,14 +1,12 @@
 import 'dart:async';
 
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:http/http.dart' as http;
 
 import '../../core/drift/database_impl.dart';
 import '../../core/drift/family_sync/family_mirror_outbox.dart';
-import '../../core/firebase/firebase_app_check_provider.dart';
-import '../../firebase_options.dart';
+import '../../core/firebase/initialize_family_firebase.dart';
 import '../auth/load_firebase_callable_identity.dart';
 import '../backend/authenticated_callable_transport.dart';
 import 'publish_family_mirror_use_case.dart';
@@ -51,14 +49,7 @@ class FamilyMirrorBackgroundRuntime {
   }
 
   Future<void> initialize() async {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
-    await FirebaseAppCheck.instance.activate(
-      providerAndroid: await createAndroidAppCheckProvider(),
-    );
+    await initializeFamilyFirebase();
     if (!disposed) {
       accountSubscription ??= FirebaseAuth.instance.idTokenChanges().listen((
         _,

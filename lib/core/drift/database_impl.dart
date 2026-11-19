@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../common/drift/database_open_tracker.dart';
 import '../../common/drift/mirrored_statement_table.dart';
+import '../../common/meal_advisor/remote/scheduled_meal_decision_journal.dart';
 import 'dao/activity_dao.dart';
 import 'dao/ingredient_dao.dart';
 import 'dao/local_mirror_dao.dart';
@@ -414,6 +415,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       await customStatement(createIngredientPortionsUnsyncedTrigger);
       await installFamilyMirrorSchema(this);
       await installFamilyTreatmentJournal(this);
+      await installScheduledMealDecisionJournal(this);
     },
   );
 

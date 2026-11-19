@@ -13,6 +13,7 @@ import '../domain/models/notification_event_type.dart';
 import 'android_notification_action_mapper.dart';
 
 class AndroidNotificationDetailsMapper {
+  static const _familyChatIcon = 'ic_diabeatthis_notification';
   final NotificationDefinitionCatalog _catalog =
       NotificationDefinitionCatalogImpl();
   final NotificationChannelDefinitionCatalog _channelCatalog =
@@ -32,6 +33,7 @@ class AndroidNotificationDetailsMapper {
         return AndroidNotificationDetails(
           channelDefinition.id,
           channelDefinition.name,
+          icon: _familyChatIcon,
           tag: event.tag,
           visibility: NotificationVisibility.private,
           onlyAlertOnce: true,
@@ -43,6 +45,7 @@ class AndroidNotificationDetailsMapper {
       return AndroidNotificationDetails(
         channelDefinition.id,
         channelDefinition.name,
+        icon: _familyChatIcon,
         tag: event.tag,
         importance: channelDefinition.importance,
         priority: Priority.high,

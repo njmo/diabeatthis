@@ -1,11 +1,16 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../common/monitoring/meal_monitoring_status.dart';
 import '../../../../common/notifications/meal_notification_cancellation.dart';
+import '../../../../common/notifications/scoped_notification_cancellation.dart';
+import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/logger/logger.dart';
+import '../../../../core/notifications/domain/models/notification_event_type.dart';
+import '../../../../core/notifications/domain/models/notification_key.dart';
 import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../event/internal/meal_event.dart';
@@ -32,6 +37,7 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
   List<bool Function(ForegroundEvent)> get interruptableEventsMatcher => [
     (e) => e is NextMealEvent || e is PlannedMealsClearedEvent,
     (e) => e is MealStatusChangedEvent,
+    (e) => e is MealDecisionMethodChanged,
   ];
 
   @visibleForTesting
@@ -40,6 +46,12 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
   @override
   bool shouldInterrupt(ForegroundEvent event) {
     logI("MealMonitorTask shouldInterrupt ${event.runtimeType}");
+    if (event is MealDecisionMethodChanged) {
+      return _state is MonitorUntilMeal ||
+          _loadingPlannedMeal ||
+          (_state is MealMonitorStateIdle &&
+              _activeMealExecutorContext.activeMeal?.status == 'planned');
+    }
     if (event is PlannedMealsClearedEvent) {
       if (_loadingMealId != null) return _loadingPlannedMeal;
       return _state is MonitorUntilMeal || _state is NewMealCheckExecutor;
@@ -129,7 +141,39 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
     MealMonitorTransition? mealMonitorTransition;
 
     switch (interruptedEvent) {
+      case MealDecisionMethodChanged():
+        final mealId = _activeMealExecutorContext.activeMeal?.id;
+        if (mealId != null) {
+          try {
+            await context.container
+                .read(notificationsControllerForegroundProvider)
+                .cancelNotification(
+                  NotificationKey(
+                    type: NotificationEventType.mealSuggestion,
+                    entityId: mealId,
+                  ),
+                );
+          } catch (_) {
+            logW('Could not cancel previous meal suggestion');
+          }
+        }
+        mealMonitorTransition = MealMonitorTransition(
+          MealMonitorContext(),
+          NewMealCheckExecutor(),
+        );
+        break;
       case PlannedMealsClearedEvent():
+        final recovery = await context.container.refresh(
+          getNearestMealProvider.future,
+        );
+        if (recovery != null &&
+            recovery.plannedAt?.isAfter(clock.now()) == false) {
+          mealMonitorTransition = MealMonitorTransition(
+            MealMonitorContext(),
+            NewMealCheckExecutor(),
+          );
+          break;
+        }
         final removedMealId = _activeMealExecutorContext.activeMeal?.id;
         if (removedMealId != null) {
           try {
@@ -163,10 +207,15 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
         late final MealMonitorContext nextMealExecutorContext;
         _loadingPlannedMeal = true;
         try {
-          nextMealExecutorContext = await buildMealMonitorContext(
-            context,
-            interruptedEvent.mealId,
+          final candidate = await context.container.refresh(
+            getNearestMealProvider.future,
           );
+          nextMealExecutorContext =
+              candidate != null &&
+                  (mealStatusBlocksAnotherMealActivation(candidate.status) ||
+                      candidate.plannedAt?.isAfter(clock.now()) == false)
+              ? MealMonitorContext(activeMeal: candidate)
+              : await buildMealMonitorContext(context, interruptedEvent.mealId);
         } finally {
           _loadingPlannedMeal = false;
         }

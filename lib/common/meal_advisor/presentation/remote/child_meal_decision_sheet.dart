@@ -16,6 +16,7 @@ import '../../meal_decision_preferences.dart';
 import '../../meal_decision_preferences_provider.dart';
 import '../../remote/accept_remote_meal_decision.dart';
 import '../../remote/meal_decision_remote_controller.dart';
+import '../../remote/meal_decision_request_creation.dart';
 import '../../remote/meal_decision_resolution.dart';
 import '../meal_decision_deadline_panel.dart';
 import 'child_meal_decision_answer.dart';
@@ -149,21 +150,50 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
         final source = await FamilyMirrorOutbox(
           ref.read(databaseProvider),
         ).sourceForOwner(uid);
+        final storedMeal = await ref.read(databaseProvider).mealDao.getMealById(
+          mealId,
+        );
+        final plannedAt = storedMeal?.plannedAt;
+        if (!context.mounted) return;
+        final scheduledId = plannedAt == null
+            ? null
+            : scheduledMealDecisionRequestId(source, mealId, plannedAt);
+        final scheduled = scheduledId == null
+            ? null
+            : refreshed.byId(scheduledId);
+        if (scheduled != null &&
+            scheduled.response == null &&
+            scheduled.data['outcome'] == null) {
+          requestId.value = scheduled.id;
+          return;
+        }
+        final timeToMeal = plannedAt == null
+            ? Duration.zero
+            : DateTime.fromMillisecondsSinceEpoch(
+                plannedAt,
+              ).difference(DateTime.now());
         final random = Random.secure();
         final id =
             requestId.value ??
+            (scheduled == null &&
+                    timeToMeal > Duration.zero &&
+                    timeToMeal <= scheduledCaregiverRequestLeadTime
+                ? scheduledId
+                : null) ??
             List.generate(
               32,
               (_) => random.nextInt(16).toRadixString(16),
             ).join();
         if (context.mounted) requestId.value = id;
-        final created = await controller.execute('create', {
-          'requestId': id,
-          'mealId': '$mealId',
-          'sourceId': source,
-          'timeoutFallback': preferences.timeoutFallback.name,
-          'allowManualDecision': preferences.allowManualDecision,
-        });
+        final created = await controller.execute(
+          'create',
+          mealDecisionCreationData(
+            requestId: id,
+            mealId: mealId,
+            sourceId: source,
+            preferences: preferences,
+          ),
+        );
         if (context.mounted) {
           requestId.value = created['requestId'] as String? ?? id;
         }

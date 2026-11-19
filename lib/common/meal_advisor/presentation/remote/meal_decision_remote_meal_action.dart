@@ -45,23 +45,7 @@ class MealDecisionRemoteMealAction extends HookConsumerWidget {
 
     if (request != null) {
       if (request.timedOutAt(now)) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 18,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                context.lang.mealDecisionCaregiverTimedOut,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            ),
-          ],
-        );
+        return const MealDecisionAnsweredStatus(isTimedOut: true);
       }
 
       if (request.status == 'answered' ||

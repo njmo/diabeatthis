@@ -14,6 +14,7 @@ import '../../notifications/firebase_background_handler.dart';
 import '../meal_decision_eligibility.dart';
 import '../meal_decision_preference_keys.dart';
 import '../meal_decision_preferences.dart';
+import '../remote/scheduled_meal_decision_journal.dart';
 import 'meal_decision_notification_eligibility.dart';
 import 'meal_decision_notification_intent.dart';
 
@@ -36,21 +37,43 @@ Future<void> showMealDecisionPush(RemoteMessage message) async {
       ? const MealDecisionPreferences(method: MealDecisionMethod.ai)
       : MealDecisionPreferences.decode(saved);
   if (!mealDecisionEnabled(mode, preferences)) return;
+  await _showMealDecisionNotification(
+    id,
+    caregiver: mode == ApplicationDeviceMode.caregiver,
+  );
+}
+
+Future<void> showScheduledMealDecisionFallback(String requestId) =>
+    _showMealDecisionNotification(requestId, caregiver: false, timedOut: true);
+
+Future<void> _showMealDecisionNotification(
+  String id, {
+  required bool caregiver,
+  bool timedOut = false,
+}) async {
   final plugin = FlutterLocalNotificationsPlugin();
   await initializeLanguageStringsFromPreferences();
   await bootstrap.init(plugin);
-  final notificationId = mealDecisionNotificationId(id);
-  final caregiver = mode == ApplicationDeviceMode.caregiver;
+  final notificationId = timedOut
+      ? mealDecisionNotificationId('timeout/$id')
+      : mealDecisionNotificationId(id);
   await plugin.show(
     id: notificationId,
-    title: lang.mealDecisionNotificationTitle,
-    body: lang.mealDecisionNotificationBody,
+    title: timedOut
+        ? lang.mealDecisionTimeoutChildTitle
+        : lang.mealDecisionNotificationTitle,
+    body: timedOut
+        ? lang.mealDecisionTimeoutWaiting
+        : lang.mealDecisionNotificationBody,
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
         'meal_decision_requests',
         lang.mealDecisionNotificationTitle,
         importance: Importance.high,
         priority: Priority.high,
+        timeoutAfter: timedOut
+            ? scheduledMealDecisionRecoveryWindow.inMilliseconds
+            : null,
         actions: caregiver
             ? [
                 AndroidNotificationAction(
@@ -101,5 +124,18 @@ Future<void> cancelMealDecisionNotification(String requestId) async {
     );
   } catch (_) {
     // A notification failure must not prevent the decision UI from closing.
+  }
+}
+
+Future<void> cancelScheduledMealDecisionFallback(
+  String requestId, {
+  bool throwOnFailure = false,
+}) async {
+  try {
+    await FlutterLocalNotificationsPlugin().cancel(
+      id: mealDecisionNotificationId('timeout/$requestId'),
+    );
+  } catch (_) {
+    if (throwOnFailure) rethrow;
   }
 }

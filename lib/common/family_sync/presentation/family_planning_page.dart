@@ -19,6 +19,7 @@ import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../l10n/language.dart';
 import '../../meal_advisor/presentation/remote/meal_decision_remote_meal_action.dart';
+import '../../meal_advisor/remote/meal_decision_remote_controller.dart';
 import '../../monitoring/effective_activity_duration.dart';
 import '../../planning/firebase_planning_repository.dart';
 import '../../planning/planning_repository_provider.dart';
@@ -558,6 +559,43 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     );
   }
 
+  Widget _buildActiveMealCard(Map payload) {
+    final mealId = payload['id'] as int;
+    final decision = ref.watch(
+      mealDecisionRemoteControllerProvider.select((inbox) {
+        final uid = controller.currentUid();
+        if (uid == null || inbox.accountUid != uid) return null;
+        final request = inbox.latestForMeal(mealId);
+        if (request == null ||
+            request.ownerUid != controller.owner ||
+            request.sourceId != controller.source ||
+            request.status != 'accepted') {
+          return null;
+        }
+        return request.answer?.decision;
+      }),
+    );
+    final history = controller
+        .ofKind('mealHistory')
+        .map((row) => row['payload'] as Map)
+        .where((row) => row['meal_id'] == mealId)
+        .map((row) => row['status'])
+        .whereType<String>();
+
+    return DashboardCardPadding(
+      enabled: true,
+      child: FamilyActiveMealCard(
+        payload: payload,
+        now: DateTime.now(),
+        decision: decision,
+        history: history,
+        monitoring: controller.monitored('meals', mealId),
+        decisionAction: MealDecisionRemoteMealAction(mealId: mealId),
+        onOpen: recordOpener(context, 'meals', mealId),
+      ),
+    );
+  }
+
   Widget _buildPlannedMealCard(Map<String, dynamic> row) {
     return DashboardCardPadding(
       enabled: homeLayout,
@@ -872,25 +910,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                       (r['payload'] as Map)['status'] as String?,
                     ),
                   ))
-                    DashboardCardPadding(
-                      enabled: true,
-                      child: FamilyActiveMealCard(
-                        payload: row['payload'] as Map,
-                        now: DateTime.now(),
-                        monitoring: controller.monitored(
-                          'meals',
-                          (row['payload'] as Map)['id'] as int,
-                        ),
-                        decisionAction: MealDecisionRemoteMealAction(
-                          mealId: (row['payload'] as Map)['id'] as int,
-                        ),
-                        onOpen: recordOpener(
-                          context,
-                          'meals',
-                          (row['payload'] as Map)['id'] as int,
-                        ),
-                      ),
-                    ),
+                    _buildActiveMealCard(row['payload'] as Map),
                 ],
                 if (visibleMeals.any(
                   (row) => mealStatusReadyToSummarize(

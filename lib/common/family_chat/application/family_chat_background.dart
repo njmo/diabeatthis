@@ -577,7 +577,7 @@ class FamilyChatBackground {
                 (fresh.config['serverTime'] as int) +
                 (fresh.elapsedMilliseconds?.call() ?? 0),
           );
-          await db.markReplyNotificationForCancellation(scope, parent);
+          await db.markMessageNotificationForCancellation(scope, parent);
           if (await db.notificationCancelling(scope, cached.notice.tag)) {
             await db.deferReplyCancellation(cached.notice.tag);
           }

@@ -1,7 +1,9 @@
+import '../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../../../features/meals/data/mappers/ingredient_nutrition_mapper.dart';
 import '../../../../features/meals/data/models/meal_details_data.dart';
 import '../../../../features/meals/presentation/models/meal_page_state.dart';
+import '../../../nutrition/meal_nutrition_totals.dart';
 import '../../../presentation/details/meal_record_presentation_mapper.dart';
 
 /// Read-only projection adapter; never constructs a database or writes local rows.
@@ -16,12 +18,16 @@ class FamilyMealDetails {
       DateTime.fromMillisecondsSinceEpoch(value as int);
   double number(Map p, String key) => (p[key] as num).toDouble();
 
-  MealPageState? build(int id, String portionLabel) {
+  MealPageState? build(
+    int id,
+    String portionLabel, {
+    bool includePlannedPreview = false,
+  }) {
     final meal = ofKind('meals').where((p) => p['id'] == id).firstOrNull;
     if (meal == null) return null;
-    final snapshots = ofKind(
-      'mealSnapshots',
-    ).where((p) => p['meal_id'] == id).toList();
+    final snapshots = ofKind('mealSnapshots')
+        .where((p) => p['meal_id'] == id)
+        .toList();
     Map? rawSnapshot(String type) =>
         snapshots.where((s) => s['snapshot_type'] == type).firstOrNull;
     final planned = rawSnapshot('planned');
@@ -30,9 +36,9 @@ class FamilyMealDetails {
     for (final item in ofKind(
       'mealIngredients',
     ).where((p) => p['meal_id'] == id)) {
-      final raw = ofKind(
-        'ingredients',
-      ).where((p) => p['id'] == item['ingredient_id']).firstOrNull;
+      final raw = ofKind('ingredients')
+          .where((p) => p['id'] == item['ingredient_id'])
+          .firstOrNull;
       if (raw == null) {
         return null; // A mirror batch may not yet contain all dependencies.
       }
@@ -85,9 +91,9 @@ class FamilyMealDetails {
           ? 0.0
           : number(item, 'amount');
       final consumedAmount = (item['consumed_amount'] as num?)?.toDouble();
-      final portion = ofKind(
-        'portions',
-      ).where((p) => p['id'] == item['portion_id']).firstOrNull;
+      final portion = ofKind('portions')
+          .where((p) => p['id'] == item['portion_id'])
+          .firstOrNull;
       components.add(
         MealIngredientDetailsData(
           mealIngredientId: item['id'] as int,
@@ -149,8 +155,8 @@ class FamilyMealDetails {
         : records.mapSnapshot(
             MealSnapshotData.fromJson({...p, 'is_synced': true}),
           );
-    // Recorded whole-meal totals come from the child's saved snapshots,
-    // never from a potentially partial list of mirrored ingredient links.
+    // Recorded totals come from saved snapshots. Only callers with a complete
+    // mirror may request a live preview for a still-planned meal.
     return MealPageState(
       details: MealDetailsData(
         meal: records.mapMeal(MealData.fromJson({...meal, 'is_synced': true})),
@@ -158,8 +164,52 @@ class FamilyMealDetails {
         ingredients: components,
         plannedSnapshot: snapshot(planned),
         consumedSnapshot: snapshot(consumed),
-        plannedPreviewNutrition: null,
+        plannedPreviewNutrition:
+            includePlannedPreview &&
+                meal['status'] == 'planned' &&
+                planned == null &&
+                consumed == null &&
+                history.every((entry) => entry.status == 'planned')
+            ? _plannedPreview(components)
+            : null,
         statusHistory: history,
+      ),
+    );
+  }
+
+  MealNutritionTotals? _plannedPreview(
+    List<MealIngredientDetailsData> components,
+  ) {
+    final planned = components.where((item) => !item.isExtra);
+    if (planned.isEmpty ||
+        planned.any((item) => !item.recordedWeightAvailable)) {
+      return null;
+    }
+
+    var grams = 0.0;
+    var carbs = 0.0;
+    var netCarbs = 0.0;
+    var fiber = 0.0;
+    var protein = 0.0;
+    var fat = 0.0;
+    for (final item in planned) {
+      final nutrition = item.currentNutrition;
+      final factor = item.plannedTotalGrams / 100;
+      grams += item.plannedTotalGrams;
+      carbs += factor * nutrition.carbsPer100g;
+      netCarbs += factor * nutrition.safeNetCarbsPer100g;
+      fiber += factor * nutrition.fiberPer100g;
+      protein += factor * nutrition.proteinPer100g;
+      fat += factor * nutrition.fatPer100g;
+    }
+    return MealNutritionTotals.fromMacroSummary(
+      MealMacroSummary(
+        carbsGrams: carbs,
+        fatGrams: fat,
+        proteinGrams: protein,
+        fiberGrams: fiber,
+        totalGrams: grams,
+        netCarbsGrams: netCarbs,
       ),
     );
   }

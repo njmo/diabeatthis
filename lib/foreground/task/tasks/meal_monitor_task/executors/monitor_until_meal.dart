@@ -1,10 +1,12 @@
 import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/meal_suggestion_response_event.dart';
+import '../../../../../common/meal_advisor/remote/meal_decision_request_creation.dart';
 import '../../../../../common/monitoring/is_temporary_target_active.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../../core/domain/model/device_status.dart';
+import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
 import '../../../../../core/notifications/domain/events/meal_advice_pending_notification.dart';
@@ -31,6 +33,7 @@ import '../../../../providers/device_status_value_provider.dart';
 import '../../../../runtime/wait_handle.dart';
 import '../../../../synchronization/synchronization_cache_controller.dart';
 import '../../../base/runtime_context.dart';
+import '../helpers/scheduled_caregiver_meal_decision.dart';
 import '../meal_monitor_context.dart';
 import 'detect_finished_eating_executor.dart';
 import 'idle_executor.dart';
@@ -95,25 +98,23 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
 
   Future<DeviceStatus> getOrWaitForNextAvailableDeviceStatus(
     RuntimeContext context,
-    int maxMinutes,
+    Duration maxWait,
   ) {
     final deviceStatus = context.container.read(deviceStatusValueProvider);
     if (deviceStatus != null) {
       logI("device status available from beginning");
       return Future.value(deviceStatus);
     }
-    return waitForNextAvailableDeviceStatus(context, maxMinutes);
+    return waitForNextAvailableDeviceStatus(context, maxWait);
   }
 
   Future<DeviceStatus> waitForNextAvailableDeviceStatus(
     RuntimeContext context,
-    int maxMinutes,
+    Duration maxWait,
   ) async {
-    logI("waiting for device status for $maxMinutes minutes");
+    logI("waiting for device status for $maxWait");
     final event = await context
-        .waitForEventWithTimeout<DataAvailableEvent<DeviceStatus>>(
-          Duration(minutes: maxMinutes),
-        );
+        .waitForEventWithTimeout<DataAvailableEvent<DeviceStatus>>(maxWait);
     return event.data;
   }
 
@@ -223,12 +224,12 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
 
   Future<DateTime> normalizeMealTime(
     RuntimeContext runtimeContext,
-    Duration timeToMeal,
+    Duration maxWait,
     DateTime mealPlannedAt,
   ) async {
     final deviceStatus = await getOrWaitForNextAvailableDeviceStatus(
       runtimeContext,
-      timeToMeal.inMinutes,
+      maxWait,
     );
 
     logI(
@@ -283,23 +284,66 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       runtimeContext,
       MealMonitoringPhase.planned,
     );
-    final mealPlannedAt = mealMonitorContext.activeMeal!.plannedAt!;
+    final meal = mealMonitorContext.activeMeal!;
+    final mealPlannedAt = meal.plannedAt!;
     final timeToMeal = mealPlannedAt.difference(clock.now());
+    final requestAt = mealPlannedAt.subtract(scheduledCaregiverRequestLeadTime);
+    var caregiverPathHandled = false;
+    bool usesCaregiver() =>
+        !caregiverPathHandled &&
+        meal.purpose == MealPurpose.meal &&
+        usesCaregiverMealDecision(runtimeContext);
+    Future<bool> requestCaregiverDecision() {
+      caregiverPathHandled = true;
+      return runtimeContext.container.read(
+        scheduledCaregiverMealDecisionProvider,
+      )(runtimeContext, mealMonitorContext, meal);
+    }
+
+    Duration limitWait(Duration wait) {
+      if (!usesCaregiver()) return wait;
+      final untilRequest = requestAt.difference(clock.now());
+      if (untilRequest <= Duration.zero) return Duration.zero;
+      return untilRequest < wait ? untilRequest : wait;
+    }
+
     logI("Meal planned at ${mealPlannedAt.toIso8601String()}");
     logI("Time to meal ${timeToMeal.inMinutes}");
+
+    if (timeToMeal <= scheduledCaregiverRequestLeadTime &&
+        usesCaregiver() &&
+        await requestCaregiverDecision()) {
+      return MealMonitorStateIdle(phase: MealMonitoringPhase.waitingForUser);
+    }
 
     DeviceStatus? deviceStatus;
 
     DateTime normalizedMealTime;
-    try {
-      normalizedMealTime = await normalizeMealTime(
-        runtimeContext,
-        timeToMeal,
-        mealPlannedAt,
-      );
-    } on WaitTimeoutException catch (_) {
-      logI("Problem normalizing meal time");
-      return NewMealCheckExecutor();
+    while (true) {
+      try {
+        normalizedMealTime = await normalizeMealTime(
+          runtimeContext,
+          limitWait(
+            caregiverPathHandled
+                ? const Duration(minutes: 7)
+                : Duration(
+                    minutes: mealPlannedAt.difference(clock.now()).inMinutes,
+                  ),
+          ),
+          mealPlannedAt,
+        );
+        break;
+      } on WaitTimeoutException catch (_) {
+        if (!usesCaregiver()) {
+          logI("Problem normalizing meal time");
+          return NewMealCheckExecutor();
+        }
+        if (await requestCaregiverDecision()) {
+          return MealMonitorStateIdle(
+            phase: MealMonitoringPhase.waitingForUser,
+          );
+        }
+      }
     }
     mealMonitorContext.throwIfStopped(runtimeContext);
 
@@ -308,7 +352,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     logI("Time to meal ${timeToMealNormalized.inMinutes}");
 
     final mealAdvisorBuffer = 5;
-    if (timeToMealNormalized.inMinutes < mealAdvisorBuffer) {
+    if (!caregiverPathHandled &&
+        timeToMealNormalized.inMinutes < mealAdvisorBuffer) {
       logI("User probably added new meal manually using quick method");
       // The meal remains current while the user continues in the app.
       return MealMonitorStateIdle(phase: MealMonitoringPhase.waitingForUser);
@@ -320,7 +365,21 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       mealMonitorContext.throwIfStopped(runtimeContext);
       final now = clock.now();
       final timeToMeal = normalizedMealTime.difference(now);
-      final pathDecision = detectPathDecision(timeToMeal);
+      if ((mealPlannedAt.difference(now) <= scheduledCaregiverRequestLeadTime ||
+              detectPathDecision(timeToMeal) == PathDecision.mealAdvisor) &&
+          usesCaregiver()) {
+        if (await requestCaregiverDecision()) {
+          return MealMonitorStateIdle(
+            phase: MealMonitoringPhase.waitingForUser,
+          );
+        }
+        continue;
+      }
+      final scheduledPath = detectPathDecision(timeToMeal);
+      final pathDecision =
+          caregiverPathHandled && scheduledPath == PathDecision.abort
+          ? PathDecision.mealAdvisor
+          : scheduledPath;
       if (pathDecision != PathDecision.abort) {
         mealMonitorContext.publishStatus(
           runtimeContext,
@@ -345,7 +404,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               "Duration till meal ${timeToMeal.inMinutes} waiting for monitoring window",
             );
             await runtimeContext.waitForDuration(
-              Duration(minutes: maxWaitMinutes),
+              limitWait(Duration(minutes: maxWaitMinutes)),
             );
           case PathDecision.temporaryTargetSuggestion:
             logI(
@@ -353,7 +412,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             );
             final deviceStatus = await getOrWaitForNextAvailableDeviceStatus(
               runtimeContext,
-              maxWaitMinutes,
+              limitWait(Duration(minutes: maxWaitMinutes)),
             );
             mealMonitorContext.throwIfStopped(runtimeContext);
             logI("Blood sugar value: ${deviceStatus.bg}");
@@ -361,7 +420,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               mealTempTargetDetected = await showTempTargetUntilDetected(
                 runtimeContext,
                 mealMonitorContext.activeMeal!.id,
-                Duration(minutes: maxWaitMinutes),
+                limitWait(Duration(minutes: maxWaitMinutes)),
                 ensureActive: () =>
                     mealMonitorContext.throwIfStopped(runtimeContext),
               );
@@ -370,12 +429,12 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             if (maxWaitMinutes > 5) {
               logI("sleeping till next readaing for ${maxWaitMinutes - 5}");
               await runtimeContext.waitForDuration(
-                Duration(minutes: maxWaitMinutes - 5),
+                limitWait(Duration(minutes: maxWaitMinutes - 5)),
               );
             } else {
               logI("sleeping till next path for $maxWaitMinutes");
               await runtimeContext.waitForDuration(
-                Duration(minutes: maxWaitMinutes),
+                limitWait(Duration(minutes: maxWaitMinutes)),
               );
             }
             break;
@@ -405,7 +464,8 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                     .value ??
                 const ExtendedCarbsScheduleSettings.defaults();
 
-            var iterationsLeft = (timeToMeal.inMinutes / 5).floor() + 2;
+            var iterationsLeft =
+                (timeToMeal.inMinutes.clamp(0, 20) / 5).floor() + 2;
             do {
               logI("iterationsLeft $iterationsLeft");
               deviceStatus = runtimeContext.container.read(
@@ -484,7 +544,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
               try {
                 deviceStatus = await waitForNextAvailableDeviceStatus(
                   runtimeContext,
-                  7,
+                  const Duration(minutes: 7),
                 );
               } on WaitTimeoutException catch (_) {
                 logI("No device status available for 7 minutes");

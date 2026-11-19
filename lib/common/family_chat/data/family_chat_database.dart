@@ -461,13 +461,28 @@ class FamilyChatDatabase extends GeneratedDatabase {
     )[parent]!.blocksNewAnswer;
   }
 
-  Future<void> markReplyNotificationForCancellation(
+  Future<void> markMessageNotificationForCancellation(
     String scope,
-    String parent,
+    String id,
   ) => customStatement(
     "UPDATE chat_notifications SET status='cancel' WHERE scope=? AND tag=?",
-    [scope, '${familyChatNotificationTagPrefix(scope)}$parent'],
+    [scope, '${familyChatNotificationTagPrefix(scope)}$id'],
   );
+
+  Future<void> markLocallyReadNotificationsForCancellation(String scope) =>
+      customStatement(
+        r'''
+        UPDATE chat_notifications SET status='cancel'
+        WHERE scope=? AND status<>'cancel' AND tag IN (
+          SELECT ? || reads.id FROM chat_local_reads AS reads
+          WHERE reads.scope=? AND NOT EXISTS (
+            SELECT 1 FROM chat_outbox
+            WHERE scope=reads.scope AND json_extract(payload,'$.replyTo')=reads.id
+          )
+        )
+        ''',
+        [scope, familyChatNotificationTagPrefix(scope), scope],
+      );
 
   Future<void> deferReplyCancellation(String tag) =>
       setMetadata('replyAcknowledgment:$tag', {
@@ -714,7 +729,7 @@ class FamilyChatDatabase extends GeneratedDatabase {
         value['senderUid'] == account &&
         value['kind'] == 'answer' &&
         parent is String) {
-      await markReplyNotificationForCancellation(scope, parent);
+      await markMessageNotificationForCancellation(scope, parent);
     }
     final receipts = value['receipts'] as Map?;
     final observed = receipts?[account] as Map?;

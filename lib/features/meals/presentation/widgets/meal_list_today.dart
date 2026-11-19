@@ -153,7 +153,7 @@ class MealListToday extends ConsumerWidget {
                 meal: meal,
                 enabled: blockingMeal == null || blockingMeal.id == meal.id,
                 onOpen: () => openExistingActions(meal),
-                footer: ChildMealDecisionMealAction(mealId: meal.id),
+                cardDetails: ChildMealDecisionMealAction(mealId: meal.id),
                 onDelete: deleteAction(meal),
               ),
           ],

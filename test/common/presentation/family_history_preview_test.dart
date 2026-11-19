@@ -46,25 +46,31 @@ void main() {
     },
   );
 
-  test(
-    'family preview never invents missing dependencies or historical portion weights',
-    () {
-      final rows = familyCollectionFixtures();
-      expect(
-        FamilyMealDetails(
-          rows,
-        ).build(2, 'portion')!.details.plannedPreviewNutrition,
-        isNull,
-      );
-      (rows[2]['payload'] as Map)['grams_per_portion_used'] = null;
-      (rows[2]['payload'] as Map)['portion_id'] = 999;
-      final state = FamilyMealDetails(rows).build(2, 'portion')!;
-      expect(state.details.ingredients.single.recordedWeightAvailable, isFalse);
-      expect(state.details.plannedPreviewNutrition, isNull);
-      rows.removeAt(0);
-      expect(FamilyMealDetails(rows).build(2, 'portion'), isNull);
-    },
-  );
+  test('family preview never invents missing dependencies or historical portion weights', () {
+    final rows = familyCollectionFixtures();
+    expect(
+      FamilyMealDetails(rows)
+          .build(2, 'portion')!
+          .details
+          .plannedPreviewNutrition,
+      isNull,
+    );
+    final preview = FamilyMealDetails(rows)
+        .build(2, 'portion', includePlannedPreview: true)!
+        .details
+        .plannedPreviewNutrition!;
+    expect(preview.totalNetCarbsG, 6);
+    expect(preview.totalProteinG, 1);
+    expect(preview.totalFatG, .5);
+    (rows[2]['payload'] as Map)['grams_per_portion_used'] = null;
+    (rows[2]['payload'] as Map)['portion_id'] = 999;
+    final state = FamilyMealDetails(rows)
+        .build(2, 'portion', includePlannedPreview: true)!;
+    expect(state.details.ingredients.single.recordedWeightAvailable, isFalse);
+    expect(state.details.plannedPreviewNutrition, isNull);
+    rows.removeAt(0);
+    expect(FamilyMealDetails(rows).build(2, 'portion'), isNull);
+  });
 
   for (final status in ['planned', 'eaten']) {
     testWidgets(

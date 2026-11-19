@@ -10,6 +10,7 @@ import '../../../../common/events/data/app/sync_data_key.dart';
 import '../../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../../common/l10n/application_language.dart';
 import '../../../../common/l10n/application_language_storage_keys.dart';
+import '../../../../common/meal_advisor/meal_decision_preferences_provider.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/data_sources/config/data_source_config_provider.dart';
 import '../../../../core/data_sources/nightscout/nightscout_storage_keys.dart';
@@ -26,6 +27,7 @@ import '../../../providers/task_event_router_provider.dart';
 import '../../../synchronization/synchronization_cache_controller.dart';
 import '../../../task/base/runtime_context.dart';
 import '../../internal/activity_temp_target_settings_changed.dart';
+import '../../internal/meal_event.dart';
 import 'app_event.dart';
 
 class AppEventHandler with Logging {
@@ -58,6 +60,11 @@ class AppEventHandler with Logging {
               sharedPrefsProvider.future,
             );
             await sharedPrefs.reload();
+            if (data.containsKey(mealDecisionPreferencesKey)) {
+              runtimeContext.container.invalidate(mealDecisionPreferencesProvider);
+              runtimeContext.emitEvent(const MealDecisionMethodChanged());
+              if (data.length == 1) return;
+            }
             if (data.containsKey(nightscoutTempTargetsEnabledKey)) {
               runtimeContext.emitEvent(
                 const ActivityTempTargetSettingsChanged(),

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/providers/app_event_router_provider.dart';
 import '../../core/data/provider/shared_prefs_provider.dart';
+import '../events/data/app/execute_command_event.dart';
 import 'meal_decision_preference_keys.dart';
 import 'meal_decision_preferences.dart';
 
@@ -33,13 +35,19 @@ final saveMealDecisionPreferencesProvider = Provider(
       throw StateError('AI meal decisions are temporarily unavailable');
     }
     final prefs = await ref.read(sharedPrefsProvider.future);
+    final previous = MealDecisionPreferences.decode(
+      prefs.getString(mealDecisionPreferencesKey),
+    );
     if (!await prefs.setString(
       mealDecisionPreferencesKey,
       preferences.encode(),
     )) {
       throw StateError('Meal decision configuration was not saved');
     }
-    if (ref.mounted) ref.invalidate(mealDecisionPreferencesProvider);
+    if (ref.mounted) {
+      ref.invalidate(mealDecisionPreferencesProvider);
+      if (previous.method != preferences.method) _syncMealDecisionMethod(ref);
+    }
   },
 );
 
@@ -69,9 +77,23 @@ final configureMealDecisionPreferencesProvider = Provider(
             if (!restored) {
               throw StateError('Meal decision configuration rollback failed');
             }
-            if (ref.mounted) ref.invalidate(mealDecisionPreferencesProvider);
+            if (ref.mounted) {
+              ref.invalidate(mealDecisionPreferencesProvider);
+              if (MealDecisionPreferences.decode(previous).method !=
+                  preferences.method) {
+                _syncMealDecisionMethod(ref);
+              }
+            }
           }
           rethrow;
         }
       },
 );
+
+void _syncMealDecisionMethod(Ref ref) {
+  ref.read(appEventRouterProvider).send(
+    const ExecuteCommandEvent.syncSettings(
+      data: {mealDecisionPreferencesKey: ''},
+    ),
+  );
+}

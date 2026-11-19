@@ -7,6 +7,8 @@ import 'package:diabeatthis/common/events/data/notification/meal_suggestion_resp
 import 'package:diabeatthis/common/events/data/notification/meal_summary_reminder_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/temp_target_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/temp_target_type.dart';
+import 'package:diabeatthis/common/meal_advisor/meal_decision_preferences.dart';
+import 'package:diabeatthis/common/meal_advisor/meal_decision_preferences_provider.dart';
 import 'package:diabeatthis/common/monitoring/meal_monitoring_phase.dart';
 import 'package:diabeatthis/core/domain/model/bolus_calculator_result.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
@@ -56,6 +58,7 @@ import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/me
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/monitor_until_meal.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/new_meal_check_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/wait_for_bolus_executor.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/scheduled_caregiver_meal_decision.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_context.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_task.dart';
 import 'package:drift/native.dart';
@@ -214,6 +217,151 @@ class UpdateMealSpy {
 }
 
 void main() {
+  for (final minutesToMeal in [20, 3]) {
+    test(
+      'Meal Advisor resumes after timeout when meal is in $minutesToMeal minutes',
+      () {
+        fakeAsync((async) {
+          final start = DateTime(2026, 3, 23, 12);
+          withFakeClock(async, start, () {
+            final notifications = FakeNotificationsController();
+            var requests = 0;
+            final meal = Meal(
+              id: 1,
+              name: 'Lunch',
+              status: 'planned',
+              plannedAt: start.add(Duration(minutes: minutesToMeal)),
+            );
+            final container = ProviderContainer(
+              parent: parentContainer,
+              overrides: [
+                mealDecisionPreferencesProvider.overrideWithValue(
+                  const MealDecisionPreferences(
+                    method: MealDecisionMethod.caregiver,
+                  ),
+                ),
+                scheduledCaregiverMealDecisionProvider.overrideWithValue((
+                  context,
+                  _,
+                  _,
+                ) async {
+                  requests++;
+                  await context.waitForDuration(const Duration(minutes: 5));
+                  return false;
+                }),
+                mealMacronutrientsSummaryProvider(meal.id).overrideWithValue(
+                  AsyncData(
+                    MealMacroSummary(
+                      fatGrams: 10,
+                      proteinGrams: 10,
+                      fiberGrams: 0,
+                      carbsGrams: 10,
+                      totalGrams: 50,
+                    ),
+                  ),
+                ),
+                notificationsControllerForegroundProvider.overrideWithValue(
+                  notifications,
+                ),
+              ],
+            );
+            final harness = FakeRuntimeHarness(container: container);
+            container
+                .read(deviceStatusValueProvider.notifier)
+                .update(
+                  testDeviceStatus(
+                    bg: 190,
+                    iob: 0,
+                    cob: 0,
+                    date: start,
+                    tick: '',
+                  ),
+                );
+            unawaited(
+              MonitorUntilMeal().execute(
+                harness.runtimeContext,
+                MealMonitorContext(activeMeal: meal),
+              ),
+            );
+            _advanceTime(
+              harness,
+              async,
+              const Duration(minutes: 4, seconds: 59),
+            );
+            expect(notifications.shownEvents, isEmpty);
+
+            _advanceTime(harness, async, const Duration(seconds: 1));
+            _advanceMinutes(harness, async, 7);
+            expect(requests, 1);
+            expect(
+              notifications.shownEvents
+                  .whereType<MealSuggestionNotificationEvent>(),
+              hasLength(1),
+            );
+            container.dispose();
+          });
+        });
+      },
+    );
+  }
+
+  test('caregiver request starts twenty minutes before a meal without CGM', () {
+    fakeAsync((async) {
+      final start = DateTime(2026, 3, 23, 12);
+      withFakeClock(async, start, () {
+        final notifications = FakeNotificationsController();
+        final requests = <(int, DateTime)>[];
+        final meal = Meal(
+          id: 1,
+          name: 'Lunch',
+          status: 'planned',
+          plannedAt: start.add(const Duration(minutes: 25)),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            mealDecisionPreferencesProvider.overrideWithValue(
+              const MealDecisionPreferences(
+                method: MealDecisionMethod.caregiver,
+              ),
+            ),
+            scheduledCaregiverMealDecisionProvider.overrideWithValue((
+              _,
+              _,
+              meal,
+            ) async {
+              requests.add((meal.id, clock.now()));
+              return true;
+            }),
+            notificationsControllerForegroundProvider.overrideWithValue(
+              notifications,
+            ),
+          ],
+        );
+        final harness = FakeRuntimeHarness(container: container);
+        MealMonitorStateExecutor? result;
+        unawaited(
+          MonitorUntilMeal()
+              .execute(
+                harness.runtimeContext,
+                MealMonitorContext(activeMeal: meal),
+              )
+              .then((value) => result = value),
+        );
+        _advanceTime(harness, async, const Duration(minutes: 4, seconds: 59));
+        expect(requests, isEmpty);
+
+        _advanceTime(harness, async, const Duration(seconds: 1));
+        expect(requests, [(meal.id, start.add(const Duration(minutes: 5)))]);
+        expect(
+          (result as MealMonitorStateIdle).phase,
+          MealMonitoringPhase.waitingForUser,
+        );
+        expect(notifications.shownEvents, isEmpty);
+        container.dispose();
+      });
+    });
+  });
+
   test(
     'foreground rejects expired advice input despite fresh current status',
     () async {

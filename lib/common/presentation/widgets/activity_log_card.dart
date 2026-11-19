@@ -14,6 +14,7 @@ class ActivityLogCard extends StatelessWidget {
   final DateTime? endedAt;
   final VoidCallback? onTap;
   final int? durationMinutes;
+  final String? notes;
 
   const ActivityLogCard({
     super.key,
@@ -22,6 +23,7 @@ class ActivityLogCard extends StatelessWidget {
     required this.endedAt,
     required this.onTap,
     this.durationMinutes,
+    this.notes,
   });
 
   @override
@@ -41,6 +43,7 @@ class ActivityLogCard extends StatelessWidget {
       return HistoryEntryRow(
         name: name,
         onTap: onTap,
+        details: notes?.trim().isNotEmpty == true ? Text(notes!) : null,
         metadata: [
           ActivityLogStatusChip(state: state),
           ActivityLogMetaPill(icon: Icons.access_time, text: range),
