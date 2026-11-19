@@ -152,9 +152,11 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Lunch',
-              plannedAt: mealAt
-                  .subtract(const Duration(hours: 4))
-                  .millisecondsSinceEpoch,
+              plannedAt: Value(
+                mealAt
+                    .subtract(const Duration(hours: 4))
+                    .millisecondsSinceEpoch,
+              ),
               status: const Value('eaten'),
             ),
           );

@@ -15,7 +15,7 @@ void main() {
             .insert(
               MealCompanion.insert(
                 name: name,
-                plannedAt: planned,
+                plannedAt: Value(planned),
                 status: const Value('summarized'),
               ),
             );

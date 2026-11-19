@@ -119,7 +119,7 @@ void main() {
     await db.customInsert(
       "INSERT INTO meal (id, name, planned_at, status) VALUES "
       "(1, 'Kept', ?, 'planned'), (2, 'Moved', ?, 'planned'), "
-      "(3, 'Skipped', ?, 'skipped')",
+      "(3, 'Skipped', ?, 'skipped'), (5, 'Untimed', NULL, 'planned')",
       variables: [
         Variable(now.millisecondsSinceEpoch),
         Variable(now.add(const Duration(hours: 1)).millisecondsSinceEpoch),
@@ -127,14 +127,18 @@ void main() {
       ],
     );
     final journal = ScheduledMealDecisionJournal(db);
-    for (final id in [1, 2, 3, 4]) {
+    for (final id in [1, 2, 3, 4, 5]) {
       await journal.remember(id, now, uid: 'child', requestId: 'notice-$id');
     }
     final cancelled = <String>[];
     Future<void> cancel(String id) async => cancelled.add(id);
     await journal.cleanNotifications(uid: 'child', now: now, cancel: cancel);
-    expect(cancelled, unorderedEquals(['notice-2', 'notice-3', 'notice-4']));
+    expect(
+      cancelled,
+      unorderedEquals(['notice-2', 'notice-3', 'notice-4', 'notice-5']),
+    );
     expect(await journal.load(1, now), isNotNull);
+    expect(await journal.load(5, now), isNull);
     cancelled.clear();
 
     await journal.cleanNotifications(

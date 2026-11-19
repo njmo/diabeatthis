@@ -106,7 +106,7 @@ void main() {
               db.MealCompanion.insert(
                 id: const Value(1),
                 name: meal.name,
-                plannedAt: 1000,
+                plannedAt: Value(1000),
                 status: const Value('waiting-for-bolus'),
                 consumptionConfirmedEndedAt: const Value(2000),
               ),

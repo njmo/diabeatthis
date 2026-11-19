@@ -11,6 +11,7 @@ import 'package:diabeatthis/core/notifications/domain/events/temp_target_notific
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/foreground/event/external/notification/notification_response_event.dart';
 import 'package:diabeatthis/foreground/event/external/notification/notification_response_event_handler.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -64,7 +65,7 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Meal',
-              plannedAt: clock.now().millisecondsSinceEpoch,
+              plannedAt: Value(clock.now().millisecondsSinceEpoch),
             ),
           );
       final offer = (await service.prepare(

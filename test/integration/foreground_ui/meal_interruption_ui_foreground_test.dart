@@ -216,7 +216,7 @@ Future<int> _seedEatingMeal(
       .insert(
         MealCompanion.insert(
           name: 'Integration lunch',
-          plannedAt: startedAt.millisecondsSinceEpoch,
+          plannedAt: Value(startedAt.millisecondsSinceEpoch),
           status: const Value('eating'),
         ),
       );
@@ -254,7 +254,7 @@ Future<void> _seedCompletedMeal(
       .insert(
         MealCompanion.insert(
           name: 'Earlier finished meal',
-          plannedAt: time.millisecondsSinceEpoch,
+          plannedAt: Value(time.millisecondsSinceEpoch),
           status: const Value('eaten'),
         ),
       );

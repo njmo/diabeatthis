@@ -20,7 +20,7 @@ void main() {
       .insert(
         MealCompanion.insert(
           name: 'Test $purpose $status',
-          plannedAt: at.millisecondsSinceEpoch,
+          plannedAt: Value(at.millisecondsSinceEpoch),
           purpose: Value(purpose),
           status: Value(status),
         ),

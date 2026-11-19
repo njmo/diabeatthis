@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/planning/meal_form_actions.dart';
 import '../../../../../common/widgets/controlled_text_form_field.dart';
+import '../../../../../common/widgets/date_time_summary_card.dart';
 import '../../../../../common/widgets/meal_category_field.dart';
 import '../../../../../common/widgets/review_section_header.dart';
 import '../../../data/model/copied_meal_type.dart';
@@ -65,11 +66,19 @@ class MealReviewStep extends ConsumerWidget {
             ),
           ),
         const SizedBox(height: 12),
-        MealReviewTiming(
-          start: draft.plannedAt,
-          timing: timing,
-          onChange: onChangeTime,
-        ),
+        if (draft.plannedDay != null)
+          DateTimeSummaryCard.labeled(
+            title: context.lang.mealFlowWhen,
+            valueLabel: context.lang.mealPlanTodayWithoutHour,
+            actionLabel: context.lang.mealEditTime,
+            onChange: onChangeTime,
+          )
+        else
+          MealReviewTiming(
+            start: draft.plannedAt,
+            timing: timing,
+            onChange: onChangeTime,
+          ),
         const SizedBox(height: 16),
         const MealReviewNutrition(),
         ReviewSectionHeader(

@@ -17,7 +17,9 @@ void main() {
   test('deleting meal cascades generated meal data', () async {
     final meal = await db
         .into(db.meal)
-        .insertReturning(MealCompanion.insert(name: 'Obiad', plannedAt: 1));
+        .insertReturning(
+          MealCompanion.insert(name: 'Obiad', plannedAt: Value(1)),
+        );
     final ingredient = await db
         .into(db.ingredient)
         .insertReturning(

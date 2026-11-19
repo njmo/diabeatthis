@@ -26,9 +26,17 @@ class CaregiverMealsController implements MealsController {
                      category: MealCategory.fromStorage(
                        p['category'] as String?,
                      ),
-                     plannedAt: DateTime.fromMillisecondsSinceEpoch(
-                       p['planned_at'] as int,
-                     ),
+                     plannedAt: p['planned_at'] is int
+                         ? DateTime.fromMillisecondsSinceEpoch(
+                             p['planned_at'] as int,
+                           )
+                         : null,
+                     plannedDay: p['planned_day'] as String?,
+                     createdAt: p['created_at'] is int
+                         ? DateTime.fromMillisecondsSinceEpoch(
+                             p['created_at'] as int,
+                           )
+                         : null,
                      notes: p['notes'] as String?,
                    );
                  })
@@ -40,7 +48,7 @@ class CaregiverMealsController implements MealsController {
                        (category == null || m.category == category),
                  )
                  .toList()
-               ..sort((a, b) => b.plannedAt!.compareTo(a.plannedAt!)),
+               ..sort((a, b) => _sortTime(b).compareTo(_sortTime(a))),
          loading: loading,
          failed: failed,
        );
@@ -56,3 +64,9 @@ class CaregiverMealsController implements MealsController {
   @override
   void loadMore() {}
 }
+
+DateTime _sortTime(Meal meal) =>
+    meal.plannedAt ??
+    DateTime.tryParse(meal.plannedDay ?? '') ??
+    meal.createdAt ??
+    DateTime.fromMillisecondsSinceEpoch(0);

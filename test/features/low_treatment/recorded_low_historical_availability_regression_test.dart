@@ -66,7 +66,7 @@ void main() {
             .insert(
               MealCompanion.insert(
                 name: 'Historical low treatment',
-                plannedAt: 1000,
+                plannedAt: Value(1000),
                 purpose: const Value('lowTreatment'),
                 status: const Value('confirmed'),
                 createdAt: const Value(1000),

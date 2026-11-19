@@ -33,6 +33,7 @@ abstract class MealDraft with _$MealDraft {
     MealCategory? category,
     required List<MealIngredientsDraft> mealIngredients,
     required DateTime plannedAt,
+    String? plannedDay,
     @Default(MealPurpose.meal) MealPurpose purpose,
     required String status,
     String? notes,

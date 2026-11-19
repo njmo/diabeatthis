@@ -18,7 +18,7 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Legacy dinner',
-            plannedAt: DateTime(2026, 9, 21).millisecondsSinceEpoch,
+            plannedAt: Value(DateTime(2026, 9, 21).millisecondsSinceEpoch),
             status: const Value('eaten-bolused'),
           ),
         );

@@ -217,7 +217,7 @@ class AnalyzeMealUseCase {
       return MealLinkedMealData(
         mealId: meal.id,
         name: meal.name,
-        plannedAt: _date(meal.plannedAt),
+        plannedAt: _date(meal.plannedAt!),
         status: meal.status,
       );
     }).toList();

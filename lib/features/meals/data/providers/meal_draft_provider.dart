@@ -154,7 +154,14 @@ class MealDraftNotifier extends _$MealDraftNotifier with Logging {
       state = state.copyWith(category: category);
   void setPlannedAt(DateTime plannedAt) {
     logI("Srtting planned at to ${plannedAt.toIso8601String()}");
-    state = state.copyWith(plannedAt: plannedAt);
+    state = state.copyWith(plannedAt: plannedAt, plannedDay: null);
+  }
+
+  void planWithoutHour(DateTime day) {
+    state = state.copyWith(
+      plannedAt: day,
+      plannedDay: day.toLocal().toIso8601String().split('T').first,
+    );
   }
 
   void setBasedOnMealId(int? basedOnMealId) =>

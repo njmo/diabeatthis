@@ -85,7 +85,7 @@ Future<MealData> _insertMeal(DatabaseImpl db, String name) {
       .insertReturning(
         MealCompanion.insert(
           name: name,
-          plannedAt: DateTime(2026).millisecondsSinceEpoch,
+          plannedAt: Value(DateTime(2026).millisecondsSinceEpoch),
         ),
       );
 }

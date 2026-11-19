@@ -27,7 +27,7 @@ class LowTreatmentRelationRepository {
           id: meal.id,
           kind: TimelineRelationKind.meal,
           name: meal.name,
-          at: DateTime.fromMillisecondsSinceEpoch(meal.plannedAt),
+          at: DateTime.fromMillisecondsSinceEpoch(meal.plannedAt!),
         ),
       for (final activity in activities)
         TimelineRelation(
@@ -55,7 +55,7 @@ class LowTreatmentRelationRepository {
         id: meal.id,
         kind: TimelineRelationKind.meal,
         name: meal.name,
-        at: DateTime.fromMillisecondsSinceEpoch(meal.plannedAt),
+        at: DateTime.fromMillisecondsSinceEpoch(meal.plannedAt!),
       );
     }
     if (activityLogId != null) {

@@ -1,6 +1,7 @@
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_details/meal_category_edit_button.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,7 +19,7 @@ void main() {
         final name = automatic ? 'Posiłek: chleb żytni' : 'Moja własna nazwa';
         final id = await db
             .into(db.meal)
-            .insert(MealCompanion.insert(name: name, plannedAt: 1000));
+            .insert(MealCompanion.insert(name: name, plannedAt: Value(1000)));
         await tester.pumpWidget(
           ProviderScope(
             overrides: [databaseProvider.overrideWithValue(db)],

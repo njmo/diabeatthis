@@ -144,6 +144,7 @@ class AcceptRemoteMealDecision {
               plannedAt: Value(
                 responded + Duration(minutes: request.minutes).inMilliseconds,
               ),
+              plannedDay: const Value(null),
               isSynced: const Value(false),
             ),
           );

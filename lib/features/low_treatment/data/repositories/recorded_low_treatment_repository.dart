@@ -117,7 +117,7 @@ class RecordedLowTreatmentRepository {
     return RecordedLowTreatment(
       ingredients: List.unmodifiable(consumedIngredients),
       mealId: meal.id,
-      eatenAt: DateTime.fromMillisecondsSinceEpoch(meal.plannedAt),
+      eatenAt: DateTime.fromMillisecondsSinceEpoch(meal.plannedAt!),
       historicalNutritionCarbsGrams: historicalCarbs,
       historicalNutritionUnavailable: historicalCarbs == null,
       ingredientsAvailable: ingredientsAvailable,

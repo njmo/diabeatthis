@@ -24,7 +24,7 @@ class MealSaveReferenceLines extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          '${lang.mealPlannedTimeReference}: ${mealDateTime(details.meal.plannedAt.toLocal())}',
+          '${lang.mealPlannedTimeReference}: ${mealDateTimeOrDash(details.meal.plannedAt?.toLocal())}',
         ),
         if (referenceTime != null)
           Text(

@@ -79,7 +79,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 51;
+  int get schemaVersion => 52;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -395,11 +395,31 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
           );
         }
       }
-      if (from < 51) {
+      // The earlier local debug build used version 51 for the meal change.
+      final mealColumns = await customSelect('PRAGMA table_info(meal)').get();
+      final hasPlannedDay = mealColumns.any(
+        (row) => row.read<String>('name') == 'planned_day',
+      );
+      if (from < 51 || (from == 51 && hasPlannedDay)) {
         await m.alterTable(
           // ignore: experimental_member_use
           TableMigration(lowTreatmentContext),
         );
+      }
+      if (from < 52 && !hasPlannedDay) {
+        await customStatement('PRAGMA foreign_keys = OFF');
+        await transaction(() async {
+          for (final event in ['insert', 'update', 'delete']) {
+            await customStatement(
+              'DROP TRIGGER IF EXISTS family_sync_meal_$event',
+            );
+          }
+          // Drift preserves the meal indexes, data and status history triggers.
+          await m.alterTable(
+            // ignore: experimental_member_use
+            TableMigration(meal, newColumns: [meal.plannedDay]),
+          );
+        });
       }
     },
     beforeOpen: (details) async {

@@ -51,7 +51,7 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Meal',
-            plannedAt: now.millisecondsSinceEpoch,
+            plannedAt: Value(now.millisecondsSinceEpoch),
             status: Value(elapsed == null ? 'eating' : 'planned'),
           ),
         );

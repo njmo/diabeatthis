@@ -42,6 +42,10 @@ class FamilyPlannedMealCard extends StatelessWidget {
   final VoidCallback? onOpen;
   @override
   Widget build(BuildContext context) {
+    final timestamp = payload['planned_at'] as int?;
+    final plannedAt = timestamp == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(timestamp);
     if (compact && onOpen != null) {
       final status = payload['status'] as String;
       return MealScheduleTile(
@@ -49,9 +53,8 @@ class FamilyPlannedMealCard extends StatelessWidget {
           id: payload['id'] as int? ?? 0,
           name: payload['name'] as String,
           status: status,
-          plannedAt: DateTime.fromMillisecondsSinceEpoch(
-            payload['planned_at'] as int,
-          ),
+          plannedAt: plannedAt,
+          plannedDay: payload['planned_day'] as String?,
           carbs: (payload['carbs'] as num?)?.toInt(),
           insulin: (payload['insulin'] as num?)?.toDouble(),
         ),
@@ -93,9 +96,7 @@ class FamilyPlannedMealCard extends StatelessWidget {
       onRetry: onRetry,
       name: payload['name'] as String,
       status: payload['status'] as String,
-      plannedAt: DateTime.fromMillisecondsSinceEpoch(
-        payload['planned_at'] as int,
-      ),
+      plannedAt: plannedAt,
       statusLabel:
           requestStatusLabel ??
           (locked && !monitoring ? context.lang.familyPlanPending : null),
@@ -110,7 +111,10 @@ class FamilyPlannedMealCard extends StatelessWidget {
               ),
             )
           : null,
-      additionalMetadata: [if (decisionAction != null) decisionAction!],
+      additionalMetadata: [
+        if (plannedAt == null) Text(context.lang.mealPlanWithoutHour),
+        if (decisionAction != null) decisionAction!,
+      ],
       details: monitoring || onOpen != null
           ? null
           : [
@@ -121,9 +125,8 @@ class FamilyPlannedMealCard extends StatelessWidget {
                   label: Text(context.lang.mealReviewPageTitle),
                 ),
               Text(
-                DateTime.fromMillisecondsSinceEpoch(
-                  payload['planned_at'] as int,
-                ).toLocal().toString(),
+                plannedAt?.toLocal().toString() ??
+                    (payload['planned_day'] as String? ?? ''),
               ),
               for (final row in components)
                 Builder(

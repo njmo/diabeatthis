@@ -44,7 +44,7 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: seed.name,
-              plannedAt: seed.at.millisecondsSinceEpoch,
+              plannedAt: Value(seed.at.millisecondsSinceEpoch),
               status: Value(seed.status),
             ),
           );

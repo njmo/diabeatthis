@@ -1,5 +1,7 @@
 import '../backend/authenticated_callable_transport.dart';
 
+const familyPlanningProtocolVersion = 5;
+
 /// Explicit protocol negotiation keeps new commands out of legacy child runners.
 /// A legacy server still supports the original mirror/planning operations.
 Future<Map<String, dynamic>> callFamilyActivityProtocol({

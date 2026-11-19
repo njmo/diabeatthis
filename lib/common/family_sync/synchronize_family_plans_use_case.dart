@@ -171,7 +171,7 @@ class SynchronizeFamilyPlansUseCase {
     final response = await callFamilyActivityProtocol(
       transport: transport,
       name: 'fetchFamilyPlans',
-      activityCommandsVersion: 4,
+      activityCommandsVersion: familyPlanningProtocolVersion,
       data: {},
       uid: uid,
       permitted: allowed,
@@ -210,7 +210,7 @@ class SynchronizeFamilyPlansUseCase {
         final claim = await callFamilyActivityProtocol(
           transport: transport,
           name: 'claimFamilyPlan',
-          activityCommandsVersion: 4,
+          activityCommandsVersion: familyPlanningProtocolVersion,
           data: {'id': plan['id'], 'sourceId': source},
           uid: uid,
           permitted: allowed,

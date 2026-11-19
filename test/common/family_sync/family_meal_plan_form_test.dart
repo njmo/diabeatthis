@@ -140,12 +140,38 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text(language.mealFlowNextTime));
       await tester.pumpAndSettle();
+      expect(find.text(language.mealPlanSpecificTime), findsOneWidget);
+      await tester.tap(find.text(language.mealFlowBack));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(language.mealPlanTodayWithoutHour));
+      await tester.pumpAndSettle();
+      expect(find.text(language.mealFlowNextReview), findsNothing);
+
+      await tester.tap(find.text(language.mealFlowBack));
+      await tester.pumpAndSettle();
+      expect(find.text(language.mealFlowNextTime), findsOneWidget);
+
+      await tester.tap(find.text(language.mealPlanTodayWithoutHour));
+      await tester.pumpAndSettle();
+      final editTime = find.byTooltip(language.mealEditTime);
+      await tester.ensureVisible(editTime);
+      await tester.tap(editTime);
+      await tester.pumpAndSettle();
+      final untimedOption = tester.widget<ListTile>(
+        find.widgetWithText(ListTile, language.mealPlanTodayWithoutHour),
+      );
+      expect(untimedOption.selected, isTrue);
       await tester.tap(find.text(language.mealFlowNextReview));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text(language.mealFlowPlan));
       await tester.tap(find.text(language.mealFlowPlan));
       await tester.pumpAndSettle();
       expect(sent, isNotNull);
+      expect(sent!['plannedAt'], isNull);
+      expect(
+        sent!['plannedDay'],
+        DateTime.now().toIso8601String().split('T').first,
+      );
       expect(sent!['ingredients'], [
         {
           'ingredientId': 42,

@@ -29,7 +29,7 @@ void main() {
             .insert(
               MealCompanion.insert(
                 name: 'Dinner $i',
-                plannedAt: i,
+                plannedAt: Value(i),
                 updatedAt: Value(i),
                 status: Value(
                   summarized

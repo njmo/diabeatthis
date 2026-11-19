@@ -39,7 +39,9 @@ void main() {
   test('creates low treatment meal and context from dashboard draft', () async {
     final relatedMeal = await db
         .into(db.meal)
-        .insertReturning(MealCompanion.insert(name: 'Obiad', plannedAt: 1000));
+        .insertReturning(
+          MealCompanion.insert(name: 'Obiad', plannedAt: drift.Value(1000)),
+        );
     final deviceStatusDate = DateTime.fromMillisecondsSinceEpoch(
       DateTime.now().millisecondsSinceEpoch,
     );
@@ -158,9 +160,11 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Stary posiłek',
-            plannedAt: now
-                .subtract(const Duration(hours: 3, minutes: 1))
-                .millisecondsSinceEpoch,
+            plannedAt: drift.Value(
+              now
+                  .subtract(const Duration(hours: 3, minutes: 1))
+                  .millisecondsSinceEpoch,
+            ),
           ),
         );
     final relatedMeal = await db
@@ -168,9 +172,9 @@ void main() {
         .insertReturning(
           MealCompanion.insert(
             name: 'Obiad',
-            plannedAt: now
-                .subtract(const Duration(minutes: 45))
-                .millisecondsSinceEpoch,
+            plannedAt: drift.Value(
+              now.subtract(const Duration(minutes: 45)).millisecondsSinceEpoch,
+            ),
             status: const drift.Value('summarized'),
           ),
         );
@@ -179,9 +183,9 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Zaplanowany posiłek',
-            plannedAt: now
-                .subtract(const Duration(minutes: 5))
-                .millisecondsSinceEpoch,
+            plannedAt: drift.Value(
+              now.subtract(const Duration(minutes: 5)).millisecondsSinceEpoch,
+            ),
           ),
         );
     final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);
@@ -239,9 +243,11 @@ void main() {
           .insertReturning(
             MealCompanion.insert(
               name: 'Obiad',
-              plannedAt: now
-                  .subtract(const Duration(minutes: 45))
-                  .millisecondsSinceEpoch,
+              plannedAt: drift.Value(
+                now
+                    .subtract(const Duration(minutes: 45))
+                    .millisecondsSinceEpoch,
+              ),
               status: const drift.Value('summarized'),
             ),
           );
@@ -405,9 +411,11 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Obiad',
-              plannedAt: now
-                  .subtract(const Duration(minutes: 45))
-                  .millisecondsSinceEpoch,
+              plannedAt: drift.Value(
+                now
+                    .subtract(const Duration(minutes: 45))
+                    .millisecondsSinceEpoch,
+              ),
               status: const drift.Value('summarized'),
             ),
           );
@@ -466,9 +474,9 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Obiad',
-            plannedAt: now
-                .subtract(const Duration(minutes: 45))
-                .millisecondsSinceEpoch,
+            plannedAt: drift.Value(
+              now.subtract(const Duration(minutes: 45)).millisecondsSinceEpoch,
+            ),
           ),
         );
     final ingredient = _ingredientDraft(name: 'Glukoza', carbsPer100g: 100);

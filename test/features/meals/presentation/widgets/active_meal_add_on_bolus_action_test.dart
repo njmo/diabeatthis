@@ -32,7 +32,7 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Meal with an extra meatball',
-            plannedAt: 1,
+            plannedAt: Value(1),
             status: const Value('eating-extra'),
           ),
         );

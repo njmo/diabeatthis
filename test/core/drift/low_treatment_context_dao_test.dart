@@ -3,6 +3,7 @@ import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/features/low_treatment/data/drafts/low_treatment_context_draft.dart';
 import 'package:diabeatthis/features/low_treatment/data/mappers/low_treatment_context_draft_drift_mapper.dart';
 import 'package:diabeatthis/features/meals/data/drafts/meal_draft.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -23,7 +24,7 @@ void main() {
       final relatedMeal = await db
           .into(db.meal)
           .insertReturning(
-            MealCompanion.insert(name: 'Obiad', plannedAt: 1000),
+            MealCompanion.insert(name: 'Obiad', plannedAt: Value(1000)),
           );
       final treatmentAt = DateTime.fromMillisecondsSinceEpoch(2000);
       final lowTreatment = await db.mealDao.createLowTreatmentEntry(
@@ -119,9 +120,11 @@ void main() {
         .insertReturning(
           MealCompanion.insert(
             name: 'Kolacja',
-            plannedAt: DateTime.now()
-                .add(const Duration(minutes: 10))
-                .millisecondsSinceEpoch,
+            plannedAt: Value(
+              DateTime.now()
+                  .add(const Duration(minutes: 10))
+                  .millisecondsSinceEpoch,
+            ),
           ),
         );
 

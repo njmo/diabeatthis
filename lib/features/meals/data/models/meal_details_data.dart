@@ -302,7 +302,8 @@ class MealRecordData {
   final String name;
   final String purpose;
   final String status;
-  final DateTime plannedAt;
+  final DateTime? plannedAt;
+  final String? plannedDay;
   final DateTime? summarizedAt;
   final int? mealTemplateId;
   final int? basedOnMealId;
@@ -323,13 +324,14 @@ class MealRecordData {
     required this.mealTemplateId,
     required this.basedOnMealId,
     required this.notes,
+    this.plannedDay,
     required this.createdAt,
     required this.updatedAt,
     required this.isSynced,
     this.completionDecision,
   });
 
-  DateTime get eatenOrPlannedAt => summarizedAt ?? plannedAt;
+  DateTime get eatenOrPlannedAt => summarizedAt ?? plannedAt ?? createdAt;
 
   DateTime get analysisTime => eatenOrPlannedAt;
 
@@ -361,6 +363,7 @@ class MealRecordData {
       id: id,
       name: name,
       plannedAt: plannedAt,
+      plannedDay: plannedDay,
       eatenAt: summarizedAt,
       status: status,
       notes: notes,

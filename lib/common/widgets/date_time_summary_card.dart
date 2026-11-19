@@ -6,14 +6,24 @@ class DateTimeSummaryCard extends StatelessWidget {
   const DateTimeSummaryCard({
     super.key,
     required this.title,
-    required this.dateTime,
+    required DateTime this.dateTime,
     required this.actionLabel,
     required this.onChange,
     this.details,
-  });
+  }) : valueLabel = null;
+
+  const DateTimeSummaryCard.labeled({
+    super.key,
+    required this.title,
+    required String this.valueLabel,
+    required this.actionLabel,
+    required this.onChange,
+  }) : dateTime = null,
+       details = null;
 
   final String title;
-  final DateTime dateTime;
+  final DateTime? dateTime;
+  final String? valueLabel;
   final String actionLabel;
   final VoidCallback onChange;
   final Widget? details;
@@ -22,6 +32,10 @@ class DateTimeSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final localizations = MaterialLocalizations.of(context);
+    final date = dateTime;
+    final label = date == null
+        ? valueLabel!
+        : '${localizations.formatMediumDate(date)} · ${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(date), alwaysUse24HourFormat: true)}';
     return SectionSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -36,10 +50,7 @@ class DateTimeSummaryCard extends StatelessWidget {
                   children: [
                     Text(title, style: theme.textTheme.labelMedium),
                     const SizedBox(height: 4),
-                    Text(
-                      '${localizations.formatMediumDate(dateTime)} · ${localizations.formatTimeOfDay(TimeOfDay.fromDateTime(dateTime), alwaysUse24HourFormat: true)}',
-                      style: theme.textTheme.titleMedium,
-                    ),
+                    Text(label, style: theme.textTheme.titleMedium),
                   ],
                 ),
               ),

@@ -5,6 +5,7 @@ import 'package:diabeatthis/core/data_sources/nightscout/mappers/bolus_wizard_ma
 import 'package:diabeatthis/core/domain/model/manual_bolus.dart' as domain;
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/features/meals/data/repositories/meal_wizard_link_repository.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -25,7 +26,7 @@ void main() {
       final stored = await db.select(db.bolusWizard).getSingle();
       final meal = await db
           .into(db.meal)
-          .insert(MealCompanion.insert(name: 'Lunch', plannedAt: 1000));
+          .insert(MealCompanion.insert(name: 'Lunch', plannedAt: Value(1000)));
       final links = MealWizardLinkRepository(db);
       await links.link(mealId: meal, localWizardId: stored.localId);
       await writer.mirrorTreatments([

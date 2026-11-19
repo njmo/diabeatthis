@@ -92,7 +92,7 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Lunch',
-              plannedAt: 1,
+              plannedAt: Value(1),
               category: const Value('lunch'),
             ),
           );
@@ -101,7 +101,7 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Snack',
-              plannedAt: 2,
+              plannedAt: Value(2),
               category: const Value('snack'),
             ),
           );

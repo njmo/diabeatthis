@@ -51,7 +51,7 @@ void main() {
         .insertReturning(
           MealCompanion.insert(
             name: 'Dosłodzenie',
-            plannedAt: lowTreatmentAt.millisecondsSinceEpoch,
+            plannedAt: Value(lowTreatmentAt.millisecondsSinceEpoch),
             summarizedAt: Value(lowTreatmentAt.millisecondsSinceEpoch),
             purpose: const Value('lowTreatment'),
             status: const Value('confirmed'),

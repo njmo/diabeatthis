@@ -59,6 +59,32 @@ Future<void> seedPlanIngredient(DatabaseImpl db) => db.customStatement(
 );
 void main() {
   test(
+    'applying an untimed caregiver plan keeps its day and no alarm',
+    () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      await seedPlanIngredient(db);
+      final day = DateTime.now().toIso8601String().split('T').first;
+      final plan = await localPlan(db, 'createMeal');
+      final values = plan['values'] as Map<String, dynamic>;
+      values['plannedAt'] = null;
+      values['plannedDay'] = day;
+      await ApplyFamilyPlanUseCase(db)('child', plan);
+      final meal = await db.select(db.meal).getSingle();
+      expect(meal.plannedDay, day);
+      expect(meal.plannedAt, isNull);
+      expect(await db.mealDao.getNearestMeal(), isNull);
+      final rows = await loadFamilyPlanRows(db, {
+        ...plan,
+        'type': 'updateMeal',
+        'targetId': meal.id,
+      });
+      final mirrored = rows.singleWhere((row) => row['kind'] == 'meals');
+      expect((mirrored['payload'] as Map)['planned_day'], day);
+    },
+  );
+
+  test(
     'meal application and journal are atomic and replay does not duplicate',
     () async {
       final db = DatabaseImpl(NativeDatabase.memory());

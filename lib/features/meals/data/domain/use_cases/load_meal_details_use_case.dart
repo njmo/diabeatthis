@@ -158,7 +158,7 @@ class LoadMealDetailsUseCase {
     return MealCopyUsageData(
       id: meal.id,
       name: meal.name,
-      plannedAt: _date(meal.plannedAt),
+      plannedAt: _date(meal.plannedAt ?? meal.createdAt),
       status: meal.status,
       sourceType: sourceType,
     );

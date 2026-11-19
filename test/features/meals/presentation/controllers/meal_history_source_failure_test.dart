@@ -29,7 +29,7 @@ void main() {
           .insertReturning(
             MealCompanion.insert(
               name: 'Recorded meal',
-              plannedAt: DateTime(2026, 9, 9, 12).millisecondsSinceEpoch,
+              plannedAt: Value(DateTime(2026, 9, 9, 12).millisecondsSinceEpoch),
               status: const Value('eaten'),
             ),
           );

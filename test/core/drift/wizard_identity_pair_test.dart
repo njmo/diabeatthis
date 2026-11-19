@@ -27,7 +27,7 @@ void main() {
       final original = await db.select(db.bolusWizard).getSingle();
       final meal = await db
           .into(db.meal)
-          .insert(MealCompanion.insert(name: 'Lunch', plannedAt: 1000));
+          .insert(MealCompanion.insert(name: 'Lunch', plannedAt: Value(1000)));
       final links = MealWizardLinkRepository(db);
       await links.link(
         mealId: meal,

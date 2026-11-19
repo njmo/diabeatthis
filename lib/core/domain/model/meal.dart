@@ -37,12 +37,16 @@ abstract class Meal with _$Meal {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? plannedAt,
+    String? plannedDay,
     DateTime? eatenAt,
     @Default(MealPurpose.meal) MealPurpose purpose,
     String? status,
     String? notes,
     int? mealTemplateId,
   }) = _Meal;
+
+  DateTime? get scheduleDate =>
+      plannedAt ?? DateTime.tryParse(plannedDay ?? '');
 
   String getParts() =>
       "🍽️ ${carbs?.toStringAsFixed(2) ?? 0}g \n 💉${insulin?.toStringAsFixed(2)}U";

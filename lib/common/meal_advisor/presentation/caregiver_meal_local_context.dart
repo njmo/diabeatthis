@@ -89,9 +89,15 @@ class CaregiverMealLocalContext extends ConsumerWidget {
                 'summarized',
               }.contains(p['status']);
         }).toList()..sort(
-          (a, b) => ((b['payload'] as Map)['planned_at'] as int).compareTo(
-            (a['payload'] as Map)['planned_at'] as int,
-          ),
+          (a, b) =>
+              (((b['payload'] as Map)['planned_at'] ??
+                          (b['payload'] as Map)['created_at'])
+                      as int)
+                  .compareTo(
+                    ((a['payload'] as Map)['planned_at'] ??
+                            (a['payload'] as Map)['created_at'])
+                        as int,
+                  ),
         );
     final activityNotices = <Widget>[
       for (final activity in activities)
@@ -149,7 +155,7 @@ class CaregiverMealLocalContext extends ConsumerWidget {
               DateFormat(
                 'dd.MM HH:mm',
                 context.lang.localeName,
-              ).format(details.meal.plannedAt),
+              ).format(details.meal.plannedAt ?? details.meal.createdAt),
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => FamilyRecordPage.open(
@@ -182,7 +188,9 @@ class CaregiverMealLocalContext extends ConsumerWidget {
                   subtitle: Text(
                     DateFormat('dd.MM HH:mm', context.lang.localeName).format(
                       DateTime.fromMillisecondsSinceEpoch(
-                        (row['payload'] as Map)['planned_at'] as int,
+                        ((row['payload'] as Map)['planned_at'] ??
+                                (row['payload'] as Map)['created_at'])
+                            as int,
                       ),
                     ),
                   ),

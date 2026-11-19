@@ -49,7 +49,7 @@ test('registry is complete, immutable and denies unknown/prototype operations',(
  assert.deepEqual(Object.keys(operations).sort(),Object.keys(cases).sort());
  for(const op of Object.values(operations))assert.equal(Object.isFrozen(op),true);
  for(const type of ['constructor','toString','__proto__','unexpected'])assert.throws(()=>operationFor(type));
- for(const version of [-1,0,5,'4',null])assert.throws(()=>validateProtocol({activityCommandsVersion:version}));
+ for(const version of [-1,0,6,'4',null])assert.throws(()=>validateProtocol({activityCommandsVersion:version}));
  assert.doesNotThrow(()=>validateProtocol({}));
 });
 test('inline definition and recurrence consistently increase protocol in every reader',()=>{
@@ -66,4 +66,26 @@ test('scope graph excludes old sessions and rejects missing/deleted dependencies
   const source=rows.map(r=>r.kind===missing?{...r,deleted:true}:r);
   assert.throws(()=>scopeRows(source,plan));const store=scopeStore(source);await assert.rejects(loadRows(store.tx,store.entities,plan));
  }
+});
+
+test('a meal plan can carry a calendar day without a time', () => {
+  const plannedDay = new Date().toISOString().slice(0, 10);
+  const plan = {
+    id: 'a'.repeat(32),
+    sourceId: 'b'.repeat(32),
+    type: 'createMeal',
+    targetId: null,
+    expected: [],
+    values: {...meal, plannedAt: null, plannedDay},
+  };
+  assert.doesNotThrow(() => validatePlan(plan));
+  assert.equal(supportsPlan(plan, 4), false);
+  assert.equal(supportsPlan(plan, 5), true);
+  for (const values of [
+    {...plan.values, plannedAt: future},
+    {...plan.values, plannedDay: '2026-02-31'},
+    {...plan.values, plannedDay: null},
+  ]) {
+    assert.throws(() => validatePlan({...plan, values}));
+  }
 });

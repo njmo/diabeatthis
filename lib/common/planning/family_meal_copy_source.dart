@@ -19,7 +19,9 @@ class FamilyMealCopySource {
             id: (row['payload'] as Map)['id'] as int,
             name: (row['payload'] as Map)['name'] as String,
             date: DateTime.fromMillisecondsSinceEpoch(
-              (row['payload'] as Map)['planned_at'] as int,
+              ((row['payload'] as Map)['planned_at'] ??
+                      (row['payload'] as Map)['created_at'])
+                  as int,
             ),
             copiedFromMealId: null,
             copiedFromTemplateId: null,

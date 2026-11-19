@@ -19,13 +19,15 @@ const operations=Object.freeze({
 });
 for(const operation of Object.values(operations))Object.freeze(operation);
 const prefixes=Object.freeze({meals:'meal',activities:'activity',activityLogs:'activityLog',activityOccurrences:'occurrence',activitySchedules:'schedule'});
-const maximumProtocol=4;
+const maximumProtocol=5;
 function operationFor(type){
   if(typeof type!=='string'||!Object.hasOwn(operations,type))throw new FamilyError('invalid-argument');
   return operations[type];
 }
 function requiredProtocol(plan){
-  return Math.max(operationFor(plan.type).protocol,plan.values.activity?2:0,plan.values.schedule?3:0);
+  const operation=operationFor(plan.type);
+  const untimedMeal=operation.scope==='meal'&&Object.hasOwn(plan.values,'plannedDay');
+  return Math.max(operation.protocol,plan.values.activity?2:0,plan.values.schedule?3:0,untimedMeal?5:0);
 }
 function supportsPlan(plan,version=0){return Number.isInteger(version)&&version>=requiredProtocol(plan);}
 function validateProtocol(data){

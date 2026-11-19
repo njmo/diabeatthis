@@ -88,7 +88,9 @@ class MealPlannedTimeField extends FormField<DateTime> {
                  child: InputDecorator(
                    decoration: InputDecoration(
                      prefixIcon: const Icon(Icons.calendar_today_outlined),
-                     labelText: context.lang.plannedTimeChoose,
+                     labelText: selected == null
+                         ? null
+                         : context.lang.plannedTimeChoose,
                      border: const OutlineInputBorder(),
                      errorText: state.errorText,
                    ),

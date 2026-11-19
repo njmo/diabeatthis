@@ -494,7 +494,7 @@ Future<int> _insertPlannedMeal(
       .insert(
         MealCompanion.insert(
           name: name,
-          plannedAt: scheduledAt.millisecondsSinceEpoch,
+          plannedAt: Value(scheduledAt.millisecondsSinceEpoch),
           status: Value(status),
         ),
       );

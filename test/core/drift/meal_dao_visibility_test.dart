@@ -73,7 +73,7 @@ Future<MealData> _insertMeal(
       .insertReturning(
         MealCompanion.insert(
           name: name,
-          plannedAt: plannedAt.millisecondsSinceEpoch,
+          plannedAt: Value(plannedAt.millisecondsSinceEpoch),
           purpose: Value(purpose),
           status: Value(status),
         ),

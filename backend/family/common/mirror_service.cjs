@@ -17,8 +17,11 @@ function validateRecord(record) {
   const spec = contract[record.kind];
   if (!spec || typeof record.id !== 'string' || !/^[1-9][0-9]*(?:_[1-9][0-9]*)?$/.test(record.id) || record.id.length > 42 || !Number.isSafeInteger(record.revision) || record.revision < 1 || typeof record.deleted !== 'boolean') fail('invalid-argument');
   if (record.deleted) { if (record.payload !== null) fail('invalid-argument'); return; }
-  exact(record.payload, spec.columns);
-  if (Object.keys(record.payload).length !== spec.columns.length || spec.keys.map(k => String(record.payload[k])).join('_') !== record.id) fail('invalid-argument');
+  const columns = record.kind === 'meals' && !Object.hasOwn(record.payload ?? {}, 'planned_day')
+    ? spec.columns.filter(column => column !== 'planned_day')
+    : spec.columns;
+  exact(record.payload, columns);
+  if (Object.keys(record.payload).length !== columns.length || spec.keys.map(k => String(record.payload[k])).join('_') !== record.id) fail('invalid-argument');
   for (const value of Object.values(record.payload)) {
     if (value !== null && !(typeof value === 'string' && value.length <= 32000) && !(typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER)) fail('invalid-argument');
   }

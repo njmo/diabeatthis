@@ -159,9 +159,9 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Meal',
-              plannedAt: now
-                  .add(const Duration(minutes: 15))
-                  .millisecondsSinceEpoch,
+              plannedAt: Value(
+                now.add(const Duration(minutes: 15)).millisecondsSinceEpoch,
+              ),
             ),
           );
       final first = (await service.prepare(

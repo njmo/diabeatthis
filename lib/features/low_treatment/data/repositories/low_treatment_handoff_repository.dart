@@ -93,7 +93,7 @@ class LowTreatmentHandoffRepository implements LowTreatmentHandoffGateway {
         continue;
       }
       recordedAtByMeal[item.mealId] = DateTime.fromMillisecondsSinceEpoch(
-        meal.plannedAt,
+        meal.plannedAt!,
       );
     }
     final selected = const MatchLowTreatmentHandoffsUseCase().select(

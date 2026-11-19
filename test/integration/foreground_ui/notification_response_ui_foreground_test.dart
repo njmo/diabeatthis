@@ -441,7 +441,11 @@ Future<int> _insertMeal(DatabaseImpl db, String name, String status) async {
   final id = await db
       .into(db.meal)
       .insert(
-        MealCompanion.insert(name: name, plannedAt: at, status: Value(status)),
+        MealCompanion.insert(
+          name: name,
+          plannedAt: Value(at),
+          status: Value(status),
+        ),
       );
   await db
       .into(db.mealStatusHistory)

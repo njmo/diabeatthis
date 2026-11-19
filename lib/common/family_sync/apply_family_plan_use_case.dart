@@ -474,7 +474,12 @@ class ApplyFamilyPlanUseCase {
       return activityId;
     }
     if (type == 'createMeal' || type == 'updateMeal') {
-      if ((v['plannedAt'] as int) <= now ||
+      final plannedAt = v['plannedAt'] as int?;
+      final plannedDay = v['plannedDay'] as String?;
+      final today = DateTime.fromMillisecondsSinceEpoch(
+        now,
+      ).toIso8601String().split('T').first;
+      if ((plannedAt == null ? plannedDay != today : plannedAt <= now) ||
           (v['ingredients'] as List).isEmpty) {
         throw StateError('Meal time expired');
       }
@@ -490,7 +495,8 @@ class ApplyFamilyPlanUseCase {
             category: Value(v['category'] as String),
             name: Value(v['name'] as String),
             notes: Value(v['notes'] as String),
-            plannedAt: Value(v['plannedAt'] as int),
+            plannedAt: Value(plannedAt),
+            plannedDay: Value(plannedDay),
           ),
         );
         await (db.delete(
@@ -506,7 +512,8 @@ class ApplyFamilyPlanUseCase {
               MealCompanion.insert(
                 category: Value(v['category'] as String),
                 name: v['name'] as String,
-                plannedAt: v['plannedAt'] as int,
+                plannedAt: Value(plannedAt),
+                plannedDay: Value(plannedDay),
                 notes: Value(v['notes'] as String),
               ),
             );

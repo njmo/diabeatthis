@@ -40,6 +40,7 @@ class AddMealPage extends HookConsumerWidget {
     final actions = ref.watch(mealFormActionsProvider);
     useListenable(actions);
     final step = useState(0);
+    final summaryFromIngredients = useState(false);
     final timing = useState(const RetrospectiveMealTiming());
     final selectedDate = useState(initialEatenAt);
     final timeAnchor = useState(
@@ -81,6 +82,29 @@ class AddMealPage extends HookConsumerWidget {
       step.value = value;
     }
 
+    void planWithoutHour() {
+      selectedDate.value = null;
+      timeFieldVersion.value++;
+      mealDraft.planWithoutHour(clock.now());
+    }
+
+    void back() {
+      changeStep(
+        step.value == 2 && summaryFromIngredients.value ? 0 : step.value - 1,
+      );
+    }
+
+    void skipToReview() {
+      if (busy ||
+          draft.mealIngredients.isEmpty ||
+          !actions.canContinue(draft)) {
+        return;
+      }
+      planWithoutHour();
+      summaryFromIngredients.value = true;
+      changeStep(2);
+    }
+
     void next() {
       if (busy) return;
       if (step.value == 0) {
@@ -90,8 +114,10 @@ class AddMealPage extends HookConsumerWidget {
         return;
       }
       final form = timeFormKey.currentState;
-      if (form == null || !form.validate()) return;
-      form.save();
+      if (ref.read(mealDraftProvider).plannedDay == null) {
+        if (form == null || !form.validate()) return;
+        form.save();
+      }
       if (retrospective) {
         try {
           timing.value.validate(
@@ -105,13 +131,14 @@ class AddMealPage extends HookConsumerWidget {
           return;
         }
       }
+      summaryFromIngredients.value = false;
       changeStep(2);
     }
 
     return PopScope(
       canPop: step.value == 0 && !isSaving,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && !busy && step.value > 0) changeStep(step.value - 1);
+        if (!didPop && !busy && step.value > 0) back();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -120,7 +147,7 @@ class AddMealPage extends HookConsumerWidget {
                 ? null
                 : () {
                     if (step.value > 0) {
-                      if (!isCopying) changeStep(step.value - 1);
+                      if (!isCopying) back();
                     } else {
                       Navigator.of(context).maybePop();
                     }
@@ -184,6 +211,8 @@ class AddMealPage extends HookConsumerWidget {
                               planningHorizonDays: actions.planningHorizonDays,
                               key: ValueKey(timeFieldVersion.value),
                               retrospective: retrospective,
+                              withoutHour: draft.plannedDay != null,
+                              onWithoutHour: planWithoutHour,
                               selectedDate: selectedDate.value,
                               anchor: timeAnchor.value,
                               onAnchorChanged: (value) {
@@ -233,52 +262,73 @@ class AddMealPage extends HookConsumerWidget {
         bottomNavigationBar: SheetContentSectionReporter(
           section: SheetContentSection.footer,
           child: FormActionBar(
-            child: Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (step.value > 0) ...[
-                  TextButton(
-                    onPressed: busy ? null : () => changeStep(step.value - 1),
-                    child: Text(context.lang.mealFlowBack),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed:
-                        busy ||
-                            (step.value == 0 && draft.mealIngredients.isEmpty)
+                if (step.value == 0 && !retrospective) ...[
+                  OutlinedButton.icon(
+                    onPressed: busy || draft.mealIngredients.isEmpty
                         ? null
-                        : step.value < 2
-                        ? next
-                        : () => _saveMeal(
-                            context: context,
-                            ref: ref,
-                            formKey: reviewFormKey,
-                            timing: retrospective ? timing.value : null,
-                          ),
-                    icon: isSaving
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(
-                            step.value < 2 ? Icons.arrow_forward : Icons.check,
-                          ),
-                    label: Text(
-                      isSaving
-                          ? context.lang.addMealSaving
-                          : switch (step.value) {
-                              0 => context.lang.mealFlowNextTime,
-                              1 => context.lang.mealFlowNextReview,
-                              _ =>
-                                !retrospective
-                                    ? context.lang.mealFlowPlan
-                                    : initialEatenAt != null
-                                    ? context.lang.mealFlowSaveAndLink
-                                    : context.lang.addMealSave,
-                            },
-                    ),
+                        : skipToReview,
+                    icon: const Icon(Icons.today_outlined),
+                    label: Text(context.lang.mealPlanTodayWithoutHour),
                   ),
+                  const SizedBox(height: 8),
+                ],
+                Row(
+                  children: [
+                    if (step.value > 0) ...[
+                      TextButton(
+                        onPressed: busy ? null : back,
+                        child: Text(context.lang.mealFlowBack),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed:
+                            busy ||
+                                (step.value == 0 &&
+                                    draft.mealIngredients.isEmpty)
+                            ? null
+                            : step.value < 2
+                            ? next
+                            : () => _saveMeal(
+                                context: context,
+                                ref: ref,
+                                formKey: reviewFormKey,
+                                timing: retrospective ? timing.value : null,
+                              ),
+                        icon: isSaving
+                            ? const SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                step.value < 2
+                                    ? Icons.arrow_forward
+                                    : Icons.check,
+                              ),
+                        label: Text(
+                          isSaving
+                              ? context.lang.addMealSaving
+                              : switch (step.value) {
+                                  0 => context.lang.mealFlowNextTime,
+                                  1 => context.lang.mealFlowNextReview,
+                                  _ =>
+                                    !retrospective
+                                        ? context.lang.mealFlowPlan
+                                        : initialEatenAt != null
+                                        ? context.lang.mealFlowSaveAndLink
+                                        : context.lang.addMealSave,
+                                },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

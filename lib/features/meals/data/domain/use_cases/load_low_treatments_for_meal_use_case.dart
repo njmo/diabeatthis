@@ -36,7 +36,9 @@ class LoadLowTreatmentsForMealUseCase {
       treatments.add(await repository.load(meal, context));
     }
 
-    treatments.sort((a, b) => a.meal.plannedAt.compareTo(b.meal.plannedAt));
+    treatments.sort(
+      (a, b) => a.meal.eatenOrPlannedAt.compareTo(b.meal.eatenOrPlannedAt),
+    );
     return treatments;
   }
 }

@@ -24,7 +24,7 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Breakfast',
-              plannedAt: at.millisecondsSinceEpoch,
+              plannedAt: Value(at.millisecondsSinceEpoch),
               status: const Value('eaten'),
             ),
           );
@@ -125,7 +125,7 @@ void main() {
             .insert(
               MealCompanion.insert(
                 name: 'Breakfast',
-                plannedAt: at.millisecondsSinceEpoch,
+                plannedAt: Value(at.millisecondsSinceEpoch),
               ),
             ),
         throwsA(isA<Exception>()),

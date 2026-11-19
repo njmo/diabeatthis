@@ -202,7 +202,9 @@ void main() {
   test('meal totals calculate net carbs per ingredient label mode', () async {
     final meal = await db
         .into(db.meal)
-        .insertReturning(MealCompanion.insert(name: 'Mix', plannedAt: 1));
+        .insertReturning(
+          MealCompanion.insert(name: 'Mix', plannedAt: Value(1)),
+        );
     final euIngredient = await db
         .into(db.ingredient)
         .insertReturning(

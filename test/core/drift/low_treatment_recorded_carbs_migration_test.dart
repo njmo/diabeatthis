@@ -32,7 +32,9 @@ void main() {
       final old = Version43LowTreatmentCarbsDatabase(NativeDatabase(file));
       final id = await old
           .into(old.meal)
-          .insert(MealCompanion.insert(name: 'Existing', plannedAt: 1000));
+          .insert(
+            MealCompanion.insert(name: 'Existing', plannedAt: Value(1000)),
+          );
       await old.customStatement(
         'INSERT INTO low_treatment_context (meal_id, source) VALUES (?, ?)',
         [id, 'manual'],

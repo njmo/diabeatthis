@@ -4,6 +4,7 @@ import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/meals/data/domain/use_cases/complete_bolus_wait_use_case.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_database_provider.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,7 +25,7 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Lunch',
-            plannedAt: start.millisecondsSinceEpoch,
+            plannedAt: Value(start.millisecondsSinceEpoch),
           ),
         );
   });

@@ -61,8 +61,10 @@ class DashboardMealTargetCard extends ConsumerWidget {
         title: meal?.name ?? context.lang.dashboardMealTempTargetTitle,
         subtitle: meal == null
             ? targetValue
+            : meal.plannedAt == null
+            ? context.lang.mealPlanWithoutHour
             : TimeOfDay.fromDateTime(
-                DateTime.fromMillisecondsSinceEpoch(meal.plannedAt).toLocal(),
+                DateTime.fromMillisecondsSinceEpoch(meal.plannedAt!).toLocal(),
               ).format(context),
         details: meal == null
             ? DashboardTargetProgress(target: target, now: now)

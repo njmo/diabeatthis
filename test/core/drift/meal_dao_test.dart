@@ -16,9 +16,9 @@ void main() {
           .insert(
             drift.MealCompanion.insert(
               name: 'Wczorajszy aktywny',
-              plannedAt: now
-                  .subtract(const Duration(days: 1))
-                  .millisecondsSinceEpoch,
+              plannedAt: Value(
+                now.subtract(const Duration(days: 1)).millisecondsSinceEpoch,
+              ),
               status: const Value('waiting-for-bolus'),
             ),
           );
@@ -27,9 +27,9 @@ void main() {
           .insert(
             drift.MealCompanion.insert(
               name: 'Dzisiejszy plan',
-              plannedAt: now
-                  .add(const Duration(hours: 1))
-                  .millisecondsSinceEpoch,
+              plannedAt: Value(
+                now.add(const Duration(hours: 1)).millisecondsSinceEpoch,
+              ),
             ),
           );
       await db
@@ -37,9 +37,9 @@ void main() {
           .insert(
             drift.MealCompanion.insert(
               name: 'Wczorajszy plan',
-              plannedAt: now
-                  .subtract(const Duration(days: 1))
-                  .millisecondsSinceEpoch,
+              plannedAt: Value(
+                now.subtract(const Duration(days: 1)).millisecondsSinceEpoch,
+              ),
             ),
           );
 

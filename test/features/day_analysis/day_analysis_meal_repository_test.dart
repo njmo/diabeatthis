@@ -28,7 +28,7 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: name,
-              plannedAt: start.millisecondsSinceEpoch,
+              plannedAt: Value(start.millisecondsSinceEpoch),
               status: const Value('eaten'),
             ),
           );

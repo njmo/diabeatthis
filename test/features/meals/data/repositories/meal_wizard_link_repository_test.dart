@@ -16,7 +16,7 @@ void main() {
     links = MealWizardLinkRepository(db);
     meal = await db
         .into(db.meal)
-        .insert(MealCompanion.insert(name: 'Lunch', plannedAt: 1000));
+        .insert(MealCompanion.insert(name: 'Lunch', plannedAt: Value(1000)));
   });
   tearDown(() => db.close());
   Future<BolusWizardData> wizard(int time, {String? remote}) async {
@@ -107,7 +107,7 @@ void main() {
   test('conflicting meal assignments roll back identity enrichment', () async {
     final other = await db
         .into(db.meal)
-        .insert(MealCompanion.insert(name: 'Other', plannedAt: 2000));
+        .insert(MealCompanion.insert(name: 'Other', plannedAt: Value(2000)));
     final local = await wizard(1000);
     await links.link(mealId: meal, localWizardId: local.localId);
     await links.link(

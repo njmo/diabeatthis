@@ -52,6 +52,8 @@ class MealScheduleTile extends StatelessWidget {
     final detailsParts = <String>[
       if (meal.carbs != null && meal.carbs! > 0) '${meal.carbs}g WW',
       if (meal.insulin != null && meal.insulin! > 0) '${meal.insulin} U',
+      if (meal.plannedAt == null && meal.plannedDay != null)
+        lang.mealPlanWithoutHour,
       statusLabel ?? mealStatusLabel(status),
       if (isQuickMealName(meal.name)) lang.mealProgressQuickMeal,
       if (!enabled) lang.mealProgressBlocked,

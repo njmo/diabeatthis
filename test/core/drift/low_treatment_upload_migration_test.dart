@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:diabeatthis/core/drift/database_impl.dart';
-import 'package:drift/drift.dart' show MigrationStrategy;
+import 'package:drift/drift.dart' show MigrationStrategy, Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -30,7 +30,9 @@ void main() {
       final old = Version42LowTreatmentDatabase(NativeDatabase(file));
       await old
           .into(old.meal)
-          .insert(MealCompanion.insert(name: 'Existing meal', plannedAt: 1000));
+          .insert(
+            MealCompanion.insert(name: 'Existing meal', plannedAt: Value(1000)),
+          );
       await old.close();
       final db = DatabaseImpl(NativeDatabase(file));
       addTearDown(db.close);

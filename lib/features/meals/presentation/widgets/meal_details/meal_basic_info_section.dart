@@ -27,7 +27,9 @@ class MealBasicInfoSection extends StatelessWidget {
         ),
         MealInfoRow(
           label: context.lang.mealPlannedAtLabel,
-          value: mealDateTime(meal.plannedAt),
+          value: meal.plannedAt == null && meal.plannedDay != null
+              ? '${meal.plannedDay} · ${context.lang.mealPlanWithoutHour}'
+              : mealDateTimeOrDash(meal.plannedAt),
         ),
         MealInfoRow(
           label: context.lang.mealSummarizedAtLabel,

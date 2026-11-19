@@ -241,7 +241,7 @@ Future<int> _seedLateEatingMeal(DatabaseImpl db, DateTime now) async {
       .insert(
         MealCompanion.insert(
           name: 'Late navigation meal',
-          plannedAt: startedAt.millisecondsSinceEpoch,
+          plannedAt: Value(startedAt.millisecondsSinceEpoch),
           status: const Value('eating'),
         ),
       );

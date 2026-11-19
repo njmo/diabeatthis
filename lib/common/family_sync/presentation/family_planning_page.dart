@@ -305,6 +305,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     'category': payload['category'] ?? 'lunch',
     'notes': payload['notes'] ?? '',
     'plannedAt': payload['planned_at'],
+    'plannedDay': payload['planned_at'] == null ? payload['planned_day'] : null,
     'ingredients': [
       for (final row
           in controller
@@ -349,13 +350,16 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
           final status = p['status'] as String?;
           return mealStatusAppearsOnDashboard(status) &&
               (status != 'planned' ||
-                  sameDay(p['planned_at'] as int, DateTime.now()));
+                  (p['planned_at'] is int
+                      ? sameDay(p['planned_at'] as int, DateTime.now())
+                      : p['planned_day'] ==
+                            DateTime.now().toIso8601String().split('T').first));
         }
         return true;
       }).toList()..sort(
         (a, b) =>
-            ((a['payload'] as Map)['planned_at'] as int).compareTo(
-              (b['payload'] as Map)['planned_at'] as int,
+            ((a['payload'] as Map)['planned_at'] as int? ?? 0).compareTo(
+              (b['payload'] as Map)['planned_at'] as int? ?? 0,
             ) *
             (widget.view == FamilyPlanningView.meals ? -1 : 1),
       );

@@ -10,7 +10,7 @@ Future<void> registerFamilyMirror({
   await callFamilyActivityProtocol(
     transport: transport,
     name: 'registerFamilyMirror',
-    activityCommandsVersion: 4,
+    activityCommandsVersion: familyPlanningProtocolVersion,
     data: {'sourceId': source},
     uid: uid,
     permitted: permitted,

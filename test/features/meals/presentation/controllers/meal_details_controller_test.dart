@@ -70,7 +70,9 @@ void main() {
           .insertReturning(
             MealCompanion.insert(
               name: 'Meal',
-              plannedAt: DateTime(2026, 5, 24, 13).millisecondsSinceEpoch,
+              plannedAt: Value(
+                DateTime(2026, 5, 24, 13).millisecondsSinceEpoch,
+              ),
               status: const Value('eaten'),
             ),
           );
@@ -100,7 +102,9 @@ void main() {
           .insertReturning(
             MealCompanion.insert(
               name: 'Obiad',
-              plannedAt: DateTime(2026, 5, 24, 13).millisecondsSinceEpoch,
+              plannedAt: Value(
+                DateTime(2026, 5, 24, 13).millisecondsSinceEpoch,
+              ),
               status: const Value('eaten'),
             ),
           );
@@ -169,7 +173,7 @@ void main() {
           .insertReturning(
             MealCompanion.insert(
               name: 'Breakfast',
-              plannedAt: start.millisecondsSinceEpoch,
+              plannedAt: Value(start.millisecondsSinceEpoch),
               status: const Value('summarized'),
             ),
           );
@@ -207,7 +211,7 @@ void main() {
         .insertReturning(
           MealCompanion.insert(
             name: 'Dosłodzenie',
-            plannedAt: DateTime(2026, 5, 24, 13).millisecondsSinceEpoch,
+            plannedAt: Value(DateTime(2026, 5, 24, 13).millisecondsSinceEpoch),
             purpose: const Value('lowTreatment'),
             status: const Value('confirmed'),
           ),

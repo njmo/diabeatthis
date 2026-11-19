@@ -67,9 +67,14 @@ MealDraft familyMealDraft(
     mealIngredients: ingredients,
     status: 'planned',
     notes: initial?['notes'] as String?,
-    plannedAt: DateTime.fromMillisecondsSinceEpoch(
-      initial?['plannedAt'] as int? ??
-          DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch,
-    ),
+    plannedDay: initial?['plannedDay'] as String?,
+    plannedAt:
+        DateTime.tryParse(initial?['plannedDay'] as String? ?? '') ??
+        DateTime.fromMillisecondsSinceEpoch(
+          initial?['plannedAt'] as int? ??
+              DateTime.now()
+                  .add(const Duration(hours: 1))
+                  .millisecondsSinceEpoch,
+        ),
   );
 }

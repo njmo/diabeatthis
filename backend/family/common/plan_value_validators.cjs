@@ -17,9 +17,16 @@ function inlineSchedule(v){
 }
 function referenceKeys(v){return ['activityId',...(Object.hasOwn(v,'activity')?['activity']:[]),...(Object.hasOwn(v,'schedule')?['schedule']:[])];}
 function meal(v,checkTime){
-  exact(v,['name','category','plannedAt','notes','ingredients']);
+  const untimed=Object.hasOwn(v,'plannedDay');
+  exact(v,['name','category','plannedAt','notes','ingredients',...(untimed?['plannedDay']:[])]);
+  const day=untimed&&typeof v.plannedDay==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v.plannedDay)
+    ? Date.parse(v.plannedDay+'T00:00:00Z') : NaN;
+  const validTiming=untimed
+    ? v.plannedAt===null&&Number.isFinite(day)&&new Date(day).toISOString().slice(0,10)===v.plannedDay&&
+      (!checkTime||(day<=Date.now()+86400000&&day+2*86400000>Date.now()))
+    : future(v.plannedAt,checkTime);
   if(!['breakfast','secondBreakfast','lunch','snack','afternoonSnack','dinner'].includes(v.category))fail();
-  if(typeof v.name!=='string'||!v.name.trim()||v.name.length>120||typeof v.notes!=='string'||v.notes.length>2000||!future(v.plannedAt,checkTime)||!Array.isArray(v.ingredients)||v.ingredients.length<1||v.ingredients.length>30)fail();
+  if(typeof v.name!=='string'||!v.name.trim()||v.name.length>120||typeof v.notes!=='string'||v.notes.length>2000||!validTiming||!Array.isArray(v.ingredients)||v.ingredients.length<1||v.ingredients.length>30)fail();
   for(const item of v.ingredients){
     exact(item,['ingredientId','catalogId','catalogRevision','grams']);
     const local=positive(item.ingredientId)&&item.catalogId===null&&item.catalogRevision===null;

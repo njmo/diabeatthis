@@ -17,7 +17,7 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Old dinner',
-            plannedAt: 1000,
+            plannedAt: Value(1000),
             status: const Value('eaten-bolused'),
           ),
         );

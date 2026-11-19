@@ -43,7 +43,7 @@ void main() {
             .insert(
               MealCompanion.insert(
                 name: 'Recorded rescue',
-                plannedAt: at,
+                plannedAt: Value(at),
                 purpose: const Value('lowTreatment'),
                 status: const Value('confirmed'),
                 createdAt: Value(at),

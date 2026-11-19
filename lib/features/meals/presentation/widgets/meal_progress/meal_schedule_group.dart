@@ -16,7 +16,8 @@ List<MealScheduleGroup> mealScheduleGroups(Iterable<Meal> meals) {
         const {'summarized', 'skipped', 'interrupted'}.contains(meal.status)) {
       continue;
     }
-    final scheduled = meal.plannedAt?.toLocal();
+    final scheduled =
+        meal.plannedAt?.toLocal() ?? DateTime.tryParse(meal.plannedDay ?? '');
     final day = scheduled == null
         ? null
         : DateTime(scheduled.year, scheduled.month, scheduled.day);

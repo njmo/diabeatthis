@@ -75,7 +75,7 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Breakfast',
-            plannedAt: DateTime(2026, 10, 28).millisecondsSinceEpoch,
+            plannedAt: Value(DateTime(2026, 10, 28).millisecondsSinceEpoch),
           ),
         );
     await expectLater(

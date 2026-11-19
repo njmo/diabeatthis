@@ -5,6 +5,7 @@ import 'package:diabeatthis/features/day_analysis/data/repositories/day_summary_
 import 'package:diabeatthis/features/day_analysis/domain/models/accepted_day_summary.dart'
     as domain;
 import 'package:diabeatthis/features/day_analysis/domain/models/day_summary_snapshot.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -18,7 +19,9 @@ void main() {
       var db = DatabaseImpl(NativeDatabase(file));
       final mealId = await db
           .into(db.meal)
-          .insert(MealCompanion.insert(name: 'Existing', plannedAt: 1000));
+          .insert(
+            MealCompanion.insert(name: 'Existing', plannedAt: Value(1000)),
+          );
       await db.customStatement('DROP TABLE accepted_day_summary');
       await db.customStatement('PRAGMA user_version = 27');
       await db.close();

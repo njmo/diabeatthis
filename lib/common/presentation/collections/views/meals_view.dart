@@ -75,7 +75,7 @@ class MealListContent extends StatelessWidget {
       return Center(child: Text(context.lang.mealEmptyList));
     }
 
-    final groups = groupHistoryByDay(meals, (meal) => meal.plannedAt);
+    final groups = groupHistoryByDay(meals, (meal) => meal.scheduleDate);
     final bottomPadding = 112 + MediaQuery.paddingOf(context).bottom;
 
     return NotificationListener<ScrollNotification>(

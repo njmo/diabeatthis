@@ -4,6 +4,7 @@ import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/features/meals/common/models/meal_wizard_relation_type.dart';
 import 'package:diabeatthis/features/meals/data/domain/use_cases/link_recorded_meal_wizard_use_case.dart';
 import 'package:diabeatthis/features/meals/data/repositories/meal_wizard_link_repository.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,7 +16,7 @@ void main() {
       addTearDown(db.close);
       final meal = await db
           .into(db.meal)
-          .insert(MealCompanion.insert(name: 'Lunch', plannedAt: 1000));
+          .insert(MealCompanion.insert(name: 'Lunch', plannedAt: Value(1000)));
       final time = DateTime(2026, 9, 11, 13, 3);
       final wizard = domain.BolusWizard(
         nightscoutObjectId: null,
@@ -55,7 +56,7 @@ void main() {
       addTearDown(db.close);
       final meal = await db
           .into(db.meal)
-          .insert(MealCompanion.insert(name: 'Lunch', plannedAt: 1000));
+          .insert(MealCompanion.insert(name: 'Lunch', plannedAt: Value(1000)));
       final time = DateTime(2026, 9, 11);
       await LinkRecordedMealWizardUseCase(
         db,

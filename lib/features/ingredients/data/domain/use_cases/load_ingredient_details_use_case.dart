@@ -40,7 +40,9 @@ class LoadIngredientDetailsUseCase {
         name: meal.name,
         purpose: MealPurpose.fromStorage(meal.purpose),
         description: '',
-        plannedAt: DateTime.fromMillisecondsSinceEpoch(meal.plannedAt),
+        plannedAt: DateTime.fromMillisecondsSinceEpoch(
+          meal.plannedAt ?? meal.createdAt,
+        ),
         status: meal.status,
       );
     }).toList();

@@ -25,7 +25,7 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Lunch ${++mealSequence}',
-            plannedAt: plannedAt.millisecondsSinceEpoch,
+            plannedAt: Value(plannedAt.millisecondsSinceEpoch),
             status: Value(status),
             purpose: Value(purpose),
           ),

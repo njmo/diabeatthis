@@ -6,6 +6,7 @@ import 'package:diabeatthis/features/meals/common/models/meal_wizard_relation_ty
 import 'package:diabeatthis/features/meals/data/models/meal_review_timing.dart';
 import 'package:diabeatthis/features/meals/data/models/retrospective_meal_timing.dart';
 import 'package:diabeatthis/features/meals/data/repositories/meal_wizard_link_repository.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,10 +31,10 @@ void main() {
       final controller = container.read(provider.notifier);
       final first = await db
           .into(db.meal)
-          .insert(MealCompanion.insert(name: 'First', plannedAt: 1000));
+          .insert(MealCompanion.insert(name: 'First', plannedAt: Value(1000)));
       final second = await db
           .into(db.meal)
-          .insert(MealCompanion.insert(name: 'Second', plannedAt: 2000));
+          .insert(MealCompanion.insert(name: 'Second', plannedAt: Value(2000)));
       final wizard = domain.BolusWizard(
         nightscoutObjectId: 'ns',
         remoteSource: 'https://example.com',

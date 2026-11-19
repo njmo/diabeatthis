@@ -17,11 +17,15 @@ class MealTimingStep extends StatelessWidget {
     required this.timing,
     required this.onTimingChanged,
     this.calculatorDate,
+    this.withoutHour = false,
+    this.onWithoutHour,
     this.anchor = MealTimeAnchor.eatingStart,
     this.onAnchorChanged,
     this.onCalculatorSelected,
     this.planningHorizonDays = 5,
   });
+  final bool withoutHour;
+  final VoidCallback? onWithoutHour;
   final int planningHorizonDays;
   final MealTimeAnchor anchor;
   final ValueChanged<MealTimeAnchor>? onAnchorChanged;
@@ -52,6 +56,36 @@ class MealTimingStep extends StatelessWidget {
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 16),
+      ],
+      if (!retrospective && onWithoutHour != null) ...[
+        Semantics(
+          selected: withoutHour,
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: withoutHour
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            selected: withoutHour,
+            selectedTileColor: Theme.of(context).colorScheme.primaryContainer,
+            selectedColor: Theme.of(context).colorScheme.onPrimaryContainer,
+            leading: Icon(
+              withoutHour ? Icons.check_circle : Icons.today_outlined,
+            ),
+            title: Text(context.lang.mealPlanTodayWithoutHour),
+            onTap: onWithoutHour,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          context.lang.mealPlanSpecificTime,
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: 4),
       ],
       MealPlannedTimeField(
         planningHorizonDays: planningHorizonDays,

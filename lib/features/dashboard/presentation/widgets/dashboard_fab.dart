@@ -64,9 +64,9 @@ class DashboardFAB extends HookConsumerWidget with Logging {
             child: Divider(
               height: 1,
               thickness: 1,
-              color: Theme.of(context).colorScheme.outlineVariant.withValues(
-                    alpha: 0.25,
-                  ),
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.25),
             ),
           ),
           Row(
@@ -113,6 +113,7 @@ class DashboardFAB extends HookConsumerWidget with Logging {
                     if (mealIngredient != null) {
                       final draft = ref.read(mealDraftProvider.notifier);
                       draft.addMealIngredient(mealIngredient);
+                      draft.planWithoutHour(DateTime.now());
                       draft.setCategory(MealCategory.snack);
                       draft.setName("QM: ${mealIngredient.ingredient.name}");
                       final quickMealDraft = ref.read(mealDraftProvider);

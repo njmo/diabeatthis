@@ -20,7 +20,7 @@ void main() {
         .insertReturning(
           MealCompanion.insert(
             name: 'Meal',
-            plannedAt: recordedAt.millisecondsSinceEpoch,
+            plannedAt: Value(recordedAt.millisecondsSinceEpoch),
             createdAt: Value(recordedAt.millisecondsSinceEpoch),
             status: const Value('eaten'),
           ),

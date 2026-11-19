@@ -45,7 +45,11 @@ class FamilyPlanStatusCard extends StatelessWidget {
       return MealEntryCard(
         name: name,
         status: 'planned',
-        plannedAt: time,
+        plannedAt: values['plannedDay'] == null ? time : null,
+        additionalMetadata: [
+          if (values['plannedDay'] != null)
+            Text(context.lang.mealPlanTodayWithoutHour),
+        ],
         statusLabel: label,
         onTap: rejected ? onRetry : null,
       );

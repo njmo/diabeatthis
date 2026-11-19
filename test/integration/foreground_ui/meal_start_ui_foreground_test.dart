@@ -214,7 +214,7 @@ Future<int> _seedPlannedMeal(
       .insert(
         MealCompanion.insert(
           name: 'Manual start integration meal',
-          plannedAt: plannedAt.millisecondsSinceEpoch,
+          plannedAt: Value(plannedAt.millisecondsSinceEpoch),
           status: const Value('planned'),
         ),
       );

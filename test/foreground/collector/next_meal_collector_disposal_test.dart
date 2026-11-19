@@ -5,6 +5,7 @@ import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/foreground/collector/next_meal_collector.dart';
 import 'package:diabeatthis/foreground/runtime/wait_handle.dart';
 import 'package:diabeatthis/foreground/task/base/collector_context.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,9 +46,11 @@ void main() {
               .insert(
                 MealCompanion.insert(
                   name: 'Pending candidate',
-                  plannedAt: DateTime.now()
-                      .add(const Duration(hours: 1))
-                      .millisecondsSinceEpoch,
+                  plannedAt: Value(
+                    DateTime.now()
+                        .add(const Duration(hours: 1))
+                        .millisecondsSinceEpoch,
+                  ),
                 ),
               );
         }

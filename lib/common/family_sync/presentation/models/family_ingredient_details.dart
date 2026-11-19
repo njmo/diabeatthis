@@ -52,7 +52,7 @@ class FamilyIngredientDetails {
             purpose: MealPurpose.fromStorage(p['purpose'] as String?),
             description: '',
             plannedAt: DateTime.fromMillisecondsSinceEpoch(
-              p['planned_at'] as int,
+              (p['planned_at'] ?? p['created_at']) as int,
             ),
             status: p['status'] as String,
           ),

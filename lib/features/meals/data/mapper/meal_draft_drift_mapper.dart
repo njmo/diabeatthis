@@ -9,7 +9,10 @@ extension MealDraftToCompanion on MealDraft {
     return MealCompanion(
       name: d.Value(purpose == MealPurpose.lowTreatment ? '' : name),
       category: d.Value(category?.name),
-      plannedAt: d.Value(plannedAt.millisecondsSinceEpoch),
+      plannedAt: d.Value(
+        plannedDay == null ? plannedAt.millisecondsSinceEpoch : null,
+      ),
+      plannedDay: d.Value(plannedDay),
       purpose: d.Value(purpose.storageValue),
       status: d.Value(status),
       notes: d.Value(notes),

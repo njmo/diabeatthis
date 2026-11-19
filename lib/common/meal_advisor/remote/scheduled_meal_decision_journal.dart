@@ -78,7 +78,7 @@ class ScheduledMealDecisionJournal {
         SELECT journal.meal_id, journal.planned_at, journal.owner_uid,
           journal.request_id, journal.notified,
           (journal.owner_uid IS NOT ? OR meal.id IS NULL
-           OR meal.planned_at <> journal.planned_at OR meal.status <> 'planned'
+           OR meal.planned_at IS NOT journal.planned_at OR meal.status <> 'planned'
            OR meal.purpose <> 'meal' OR journal.planned_at < ?) AS stale
         FROM scheduled_meal_decision AS journal
         LEFT JOIN meal ON meal.id=journal.meal_id

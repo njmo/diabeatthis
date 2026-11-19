@@ -24,7 +24,7 @@ void main() {
             .insert(
               MealCompanion.insert(
                 name: 'Skipped breakfast',
-                plannedAt: start.millisecondsSinceEpoch,
+                plannedAt: Value(start.millisecondsSinceEpoch),
                 status: const Value('skipped'),
               ),
             );
@@ -124,7 +124,7 @@ void main() {
       addTearDown(db.close);
       final id = await db
           .into(db.meal)
-          .insert(MealCompanion.insert(name: 'Replay', plannedAt: 1000));
+          .insert(MealCompanion.insert(name: 'Replay', plannedAt: Value(1000)));
       await db.mealDao.updateMealStatus(
         id,
         'eaten',

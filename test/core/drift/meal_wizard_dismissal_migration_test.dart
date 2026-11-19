@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/features/meals/data/repositories/meal_wizard_link_repository.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,7 +16,7 @@ void main() {
       var db = DatabaseImpl(NativeDatabase(file));
       final meal = await db
           .into(db.meal)
-          .insert(MealCompanion.insert(name: 'Lunch', plannedAt: 1000));
+          .insert(MealCompanion.insert(name: 'Lunch', plannedAt: Value(1000)));
       await MealWizardLinkRepository(db).link(
         mealId: meal,
         remoteWizardId: 'ns',

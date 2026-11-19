@@ -8,6 +8,7 @@ import 'package:diabeatthis/features/meals/data/domain/use_cases/confirm_reviewe
 import 'package:diabeatthis/features/meals/data/models/meal_review_timing.dart';
 import 'package:diabeatthis/features/meals/data/models/retrospective_meal_timing.dart';
 import 'package:diabeatthis/features/meals/data/repositories/meal_wizard_link_repository.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -39,7 +40,7 @@ void main() {
               .insert(
                 MealCompanion.insert(
                   name: 'Meal',
-                  plannedAt: start.millisecondsSinceEpoch,
+                  plannedAt: Value(start.millisecondsSinceEpoch),
                 ),
               );
           final oldHistory = timing(
@@ -119,7 +120,7 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Rollback',
-              plannedAt: start.millisecondsSinceEpoch,
+              plannedAt: Value(start.millisecondsSinceEpoch),
             ),
           );
       await db.mealDao.updateMealStatus(

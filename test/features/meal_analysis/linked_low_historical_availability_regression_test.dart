@@ -48,7 +48,7 @@ void main() {
               .insert(
                 MealCompanion.insert(
                   name: 'Analyzed meal',
-                  plannedAt: at.millisecondsSinceEpoch,
+                  plannedAt: Value(at.millisecondsSinceEpoch),
                   status: const Value('summarized'),
                 ),
               );
@@ -97,7 +97,7 @@ void main() {
               .insert(
                 MealCompanion.insert(
                   name: 'Recorded rescue',
-                  plannedAt: lowAt,
+                  plannedAt: Value(lowAt),
                   purpose: const Value('lowTreatment'),
                   status: const Value('confirmed'),
                   createdAt: Value(lowAt),

@@ -41,7 +41,7 @@ class HistoricalNutritionScenario {
         .insert(
           MealCompanion.insert(
             name: 'Historical meal',
-            plannedAt: at,
+            plannedAt: Value(at),
             status: const Value('summarized'),
             summarizedAt: Value(at + 1200000),
             createdAt: Value(at),

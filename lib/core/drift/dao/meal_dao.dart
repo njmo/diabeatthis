@@ -68,6 +68,12 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       await (update(db.meal)..where((t) => t.id.equals(id))).write(
         MealCompanion(
           status: Value(status),
+          plannedAt:
+              current.status == 'planned' &&
+                  current.plannedAt == null &&
+                  mealStatusesBlockingAnotherMealActivation.contains(status)
+              ? Value((occurredAt ?? clock.now()).millisecondsSinceEpoch)
+              : const Value.absent(),
           addOnBolusContext:
               const {
                 'planned',
@@ -256,7 +262,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
     return into(db.meal).insertReturning(
       MealCompanion.insert(
         name: '',
-        plannedAt: eatenAt.millisecondsSinceEpoch,
+        plannedAt: Value(eatenAt.millisecondsSinceEpoch),
         summarizedAt: Value(eatenAt.millisecondsSinceEpoch),
         purpose: const Value('lowTreatment'),
         status: const Value('confirmed'),
@@ -266,7 +272,8 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
   });
 
   Stream<List<MealData>> getAllMealForToday() {
-    final now = clock.now().toUtc();
+    final now = clock.now().toLocal();
+    final dayKey = now.toIso8601String().split('T').first;
     final todayMillisecondsSinceEpoch = DateTime(
       now.year,
       now.month,
@@ -276,6 +283,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       ..where(
         (tbl) =>
             tbl.plannedAt.isBiggerThanValue(todayMillisecondsSinceEpoch) |
+            (tbl.plannedAt.isNull() & tbl.plannedDay.equals(dayKey)) |
             tbl.status.isIn(
               mealStatusesBlockingAnotherMealActivation.toList(growable: false),
             ),
@@ -489,7 +497,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       }
 
       final waitDuration = DateTime.fromMillisecondsSinceEpoch(
-        current.plannedAt,
+        current.plannedAt!,
       ).difference(clock.now().toUtc());
 
       if (waitDuration <= Duration.zero) {
@@ -511,6 +519,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       now.month,
       now.day,
     ).millisecondsSinceEpoch;
+    final dayKey = now.toIso8601String().split('T').first;
     // Dashboard must keep unfinished active meals visible even when they were
     // planned before today, otherwise they could block new meals with no way
     // to finish or cancel them from the main screen.
@@ -518,6 +527,7 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
       ..where(
         (tbl) =>
             tbl.plannedAt.isBiggerOrEqualValue(todayMillisecondsSinceEpoch) |
+            (tbl.plannedAt.isNull() & tbl.plannedDay.equals(dayKey)) |
             tbl.status.isIn(
               mealStatusesBlockingAnotherMealActivation.toList(growable: false),
             ) |

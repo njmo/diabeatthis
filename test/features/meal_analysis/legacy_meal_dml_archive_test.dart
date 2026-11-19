@@ -29,7 +29,7 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Archived',
-              plannedAt: aiMealTime.millisecondsSinceEpoch,
+              plannedAt: Value(aiMealTime.millisecondsSinceEpoch),
               status: const Value('eaten'),
             ),
           );

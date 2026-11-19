@@ -52,7 +52,7 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Two slices',
-              plannedAt: at,
+              plannedAt: Value(at),
               status: const Value('summarized'),
               summarizedAt: Value(at + 1200000),
               createdAt: Value(at),

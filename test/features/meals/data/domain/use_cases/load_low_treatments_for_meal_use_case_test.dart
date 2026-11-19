@@ -32,7 +32,7 @@ void main() {
         .insertReturning(
           MealCompanion.insert(
             name: 'Obiad',
-            plannedAt: DateTime(2026, 5, 24, 12).millisecondsSinceEpoch,
+            plannedAt: Value(DateTime(2026, 5, 24, 12).millisecondsSinceEpoch),
             status: const Value('summarized'),
           ),
         );
@@ -42,7 +42,7 @@ void main() {
         .insertReturning(
           MealCompanion.insert(
             name: 'Dosłodzenie',
-            plannedAt: lowTreatmentAt.millisecondsSinceEpoch,
+            plannedAt: Value(lowTreatmentAt.millisecondsSinceEpoch),
             summarizedAt: Value(lowTreatmentAt.millisecondsSinceEpoch),
             purpose: const Value('lowTreatment'),
             status: const Value('confirmed'),

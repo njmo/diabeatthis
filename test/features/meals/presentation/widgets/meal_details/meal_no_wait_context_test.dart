@@ -11,7 +11,7 @@ void main() {
     'immediate eating has no wait comparison, wait metadata or navigation arrows',
     (tester) async {
       final state = await ReviewTestController().build(1);
-      final at = state.details.meal.plannedAt;
+      final at = state.details.meal.plannedAt!;
       final decision = MealAdvisorDecisionData(
         result: 'eatNow',
         initialWaitTime: 0,

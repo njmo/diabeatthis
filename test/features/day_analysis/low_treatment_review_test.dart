@@ -4,6 +4,7 @@ import 'package:diabeatthis/features/low_treatment/data/repositories/low_treatme
 import 'package:diabeatthis/features/low_treatment/domain/models/low_treatment_review_decision.dart';
 import 'package:diabeatthis/features/low_treatment/domain/models/recorded_low_treatment.dart';
 import 'package:diabeatthis/features/low_treatment/domain/use_cases/build_low_treatment_review_use_case.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -109,7 +110,7 @@ void main() {
           .insert(
             drift.MealCompanion.insert(
               name: 'Meal',
-              plannedAt: time.millisecondsSinceEpoch,
+              plannedAt: Value(time.millisecondsSinceEpoch),
             ),
           );
       await expectLater(repo.save(event, mealId: meal), throwsStateError);

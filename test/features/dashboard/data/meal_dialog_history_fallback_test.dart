@@ -26,6 +26,7 @@ import 'package:diabeatthis/features/meal_advisor/domain/models/meal_advice_unav
 import 'package:diabeatthis/features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_activation_guard_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -317,7 +318,7 @@ class MealHistoryFixture {
         .insert(
           MealCompanion.insert(
             name: 'History fallback meal',
-            plannedAt: now.millisecondsSinceEpoch,
+            plannedAt: Value(now.millisecondsSinceEpoch),
           ),
         );
     container = ProviderContainer(

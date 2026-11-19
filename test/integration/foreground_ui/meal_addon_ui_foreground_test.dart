@@ -197,7 +197,7 @@ Future<int> _seedMeal(
       .insert(
         MealCompanion.insert(
           name: 'Integration lunch',
-          plannedAt: start.millisecondsSinceEpoch,
+          plannedAt: Value(start.millisecondsSinceEpoch),
           status: Value(status),
         ),
       );

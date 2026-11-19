@@ -130,9 +130,7 @@ void main() {
       await tester.pumpAndSettle();
       final bar = find.byType(FormActionBar);
       expect(bar, findsOneWidget);
-      final actions = find
-          .descendant(of: bar, matching: find.byType(Row))
-          .first;
+      final actions = find.byWidget(tester.widget<FormActionBar>(bar).child);
       expect(
         tester.getBottomRight(bar).dy - tester.getBottomRight(actions).dy,
         48,

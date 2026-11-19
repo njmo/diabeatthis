@@ -47,9 +47,9 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Low $minutes',
-              plannedAt: time
-                  .add(Duration(minutes: minutes))
-                  .millisecondsSinceEpoch,
+              plannedAt: Value(
+                time.add(Duration(minutes: minutes)).millisecondsSinceEpoch,
+              ),
               purpose: const Value('lowTreatment'),
               status: const Value('confirmed'),
             ),

@@ -126,7 +126,7 @@ class DayAnalysisMealRepository with Logging {
       eatenAt:
           timing.recordedEatingStartedAt ??
           DateTime.fromMillisecondsSinceEpoch(
-            meal.summarizedAt ?? meal.plannedAt,
+            meal.summarizedAt ?? meal.plannedAt ?? meal.createdAt,
           ),
       eatingEndedAt: timing.recordedEatingEndedAt,
       wait: timing.recordedWait,

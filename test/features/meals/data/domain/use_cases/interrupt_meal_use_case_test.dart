@@ -34,7 +34,7 @@ void main() {
       .insert(
         MealCompanion.insert(
           name: name,
-          plannedAt: now.millisecondsSinceEpoch,
+          plannedAt: Value(now.millisecondsSinceEpoch),
           status: Value(status),
         ),
       );
@@ -226,7 +226,7 @@ void main() {
             .insert(
               MealCompanion.insert(
                 name: 'Midnight',
-                plannedAt: midnight.millisecondsSinceEpoch,
+                plannedAt: Value(midnight.millisecondsSinceEpoch),
               ),
             );
         await db
@@ -234,9 +234,11 @@ void main() {
             .insert(
               MealCompanion.insert(
                 name: 'Older summary',
-                plannedAt: midnight
-                    .subtract(const Duration(days: 1))
-                    .millisecondsSinceEpoch,
+                plannedAt: Value(
+                  midnight
+                      .subtract(const Duration(days: 1))
+                      .millisecondsSinceEpoch,
+                ),
                 status: const Value('eaten'),
               ),
             );

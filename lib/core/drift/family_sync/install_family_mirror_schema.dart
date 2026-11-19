@@ -52,8 +52,16 @@ Future<void> installFamilyMirrorSchema(DatabaseImpl db) async {
     String key(String prefix) => integration.keys
         .map((key) => 'CAST($prefix"$key" AS TEXT)')
         .join(" || '_' || ");
-    String payload(String prefix) =>
-        "json_object(${integration.columns.map((column) => "'$column', $prefix\"$column\"").join(', ')})";
+    String payload(String prefix) {
+      String encode(Iterable<String> columns) =>
+          "json_object(${columns.map((column) => "'$column', $prefix\"$column\"").join(', ')})";
+      final columns = integration.columns;
+      if (table != 'meal') return encode(columns);
+      final timedColumns = columns.where((column) => column != 'planned_day');
+      return 'CASE WHEN ${prefix}planned_day IS NULL THEN ${encode(timedColumns)} '
+          'ELSE ${encode(columns)} END';
+    }
+
     for (final event in ['INSERT', 'UPDATE', 'DELETE']) {
       final deleted = event == 'DELETE';
       final prefix = deleted ? 'OLD.' : 'NEW.';

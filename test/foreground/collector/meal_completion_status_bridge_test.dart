@@ -58,7 +58,7 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Lunch',
-            plannedAt: start.millisecondsSinceEpoch,
+            plannedAt: Value(start.millisecondsSinceEpoch),
           ),
         );
     await db

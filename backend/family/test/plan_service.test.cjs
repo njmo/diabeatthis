@@ -89,3 +89,25 @@ test('published monitoring phase blocks caregiver editing even while meal status
   store.values.set('userMirrors/child/entities/workflowLocks_1',{kind:'workflowLocks',id:'1',revision:1,deleted:false,payload:{id:1,kind:'meal',entity_id:1,phase:'preparing',active:1}});
   await assert.rejects(plans.submit('parent',proposal));
 });
+
+test('untimed proposals are only delivered to a child with protocol 5', async () => {
+  const {plans, proposal, store} = await fixture();
+  const mirror = createMirrorService({store});
+  const plannedDay = new Date().toISOString().slice(0, 10);
+  const untimed = {
+    ...proposal,
+    values: {...proposal.values, plannedAt: null, plannedDay},
+  };
+
+  await mirror.register('child', {sourceId, activityCommandsVersion: 4});
+  await assert.rejects(plans.submit('parent', untimed), error => error.code === 'failed-precondition');
+  await mirror.register('child', {sourceId, activityCommandsVersion: 5});
+  assert.equal((await plans.submit('parent', untimed)).status, 'pending');
+  assert.equal((await plans.fetch('child', {activityCommandsVersion: 4})).plans.length, 0);
+  await assert.rejects(
+    plans.claim('child', {id: untimed.id, sourceId, activityCommandsVersion: 4}),
+    error => error.code === 'failed-precondition',
+  );
+  assert.equal((await plans.fetch('child', {activityCommandsVersion: 5})).plans.length, 1);
+  assert.ok((await plans.claim('child', {id: untimed.id, sourceId, activityCommandsVersion: 5})).claimToken);
+});

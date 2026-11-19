@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -131,6 +132,11 @@ class AddMealUseCase with Logging {
   }
 
   Future<void> _validateMealDraft(MealDraft draft) async {
+    if (draft.plannedDay != null &&
+        draft.plannedDay !=
+            clock.now().toLocal().toIso8601String().split('T').first) {
+      throw ArgumentError(lang.planningInvalidDraft);
+    }
     if (draft.mealIngredients.isEmpty) {
       throw ArgumentError(lang.uiAMealMustContainAtLeastOneIngredient);
     }

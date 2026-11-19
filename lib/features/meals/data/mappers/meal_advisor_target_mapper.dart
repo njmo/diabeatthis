@@ -59,7 +59,7 @@ class MealAdvisorTargetMapper {
     return MealAdvisorTarget(
       mealId: details.meal.id,
       name: details.meal.name,
-      plannedAt: details.meal.plannedAt,
+      plannedAt: details.meal.plannedAt ?? asOf,
       macros: macros,
       composition:
           grams.isEmpty ||

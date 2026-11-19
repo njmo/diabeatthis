@@ -58,7 +58,7 @@ class LowTreatmentReviewRepository {
           meal.status != 'confirmed') {
         throw StateError('Recorded low treatment required');
       }
-      final date = DateTime.fromMillisecondsSinceEpoch(meal.plannedAt);
+      final date = DateTime.fromMillisecondsSinceEpoch(meal.plannedAt!);
       final eventDate = event.createdAt.toLocal();
       if (DateTime(date.year, date.month, date.day) !=
           DateTime(eventDate.year, eventDate.month, eventDate.day)) {

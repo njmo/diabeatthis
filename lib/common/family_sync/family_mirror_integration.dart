@@ -88,6 +88,7 @@ const familyMirrorIntegrations = <FamilyMirrorIntegration>[
       'name',
       'category',
       'planned_at',
+      'planned_day',
       'summarized_at',
       'consumption_confirmed_ended_at',
       'purpose',

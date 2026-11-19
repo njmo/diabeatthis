@@ -47,8 +47,10 @@ class NextMealCollector extends ForegroundCollector {
         final now = clock.now();
         MealData? current;
         for (final meal in meals) {
+          final timestamp = meal.plannedAt;
           if (meal.status == 'planned' &&
-              meal.plannedAt > now.millisecondsSinceEpoch) {
+              timestamp != null &&
+              timestamp > now.millisecondsSinceEpoch) {
             current = meal;
             break;
           }
@@ -104,7 +106,7 @@ class NextMealCollector extends ForegroundCollector {
           _lastStatus = current.status;
 
           final plannedAt = DateTime.fromMillisecondsSinceEpoch(
-            current.plannedAt,
+            current.plannedAt!,
           );
 
           logI("Nearest meal from database $current");
@@ -118,7 +120,7 @@ class NextMealCollector extends ForegroundCollector {
         }
 
         final plannedAt = DateTime.fromMillisecondsSinceEpoch(
-          current.plannedAt,
+          current.plannedAt!,
         );
         final waitDuration = plannedAt.difference(clock.now());
 

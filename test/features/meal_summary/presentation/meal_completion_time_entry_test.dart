@@ -60,7 +60,7 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Lunch',
-            plannedAt: start.millisecondsSinceEpoch,
+            plannedAt: Value(start.millisecondsSinceEpoch),
             status: Value(missingStart ? status : 'planned'),
           ),
         );

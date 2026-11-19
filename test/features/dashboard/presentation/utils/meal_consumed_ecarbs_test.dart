@@ -128,7 +128,7 @@ void main() {
               drift.MealCompanion.insert(
                 id: const Value(1),
                 name: 'Meal',
-                plannedAt: 1000,
+                plannedAt: Value(1000),
                 status: const Value('waiting-for-bolus'),
                 consumptionConfirmedEndedAt: Value(confirmed ? 2000 : null),
               ),

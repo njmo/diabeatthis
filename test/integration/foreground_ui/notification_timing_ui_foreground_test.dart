@@ -40,7 +40,7 @@ void main() {
               .insert(
                 MealCompanion.insert(
                   name: 'Timed lunch',
-                  plannedAt: now.millisecondsSinceEpoch,
+                  plannedAt: Value(now.millisecondsSinceEpoch),
                   status: const Value('eating'),
                 ),
               );

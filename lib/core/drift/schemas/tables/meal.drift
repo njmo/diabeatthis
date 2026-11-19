@@ -5,7 +5,8 @@ CREATE TABLE meal (
   name TEXT NOT NULL,
   category TEXT,
 
-  planned_at INTEGER NOT NULL,
+  planned_at INTEGER,
+  planned_day TEXT,
   summarized_at INTEGER,
   consumption_confirmed_ended_at INTEGER,
   add_on_bolus_context TEXT,

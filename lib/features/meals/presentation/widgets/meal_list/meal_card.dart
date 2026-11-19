@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/l10n/language.dart';
 import '../../../../../common/presentation/widgets/meal_entry_card.dart';
 import '../../../../../core/domain/model/meal.dart' as domain;
 
@@ -23,6 +24,10 @@ class MealCard extends StatelessWidget {
       name: meal.name,
       status: meal.status ?? 'planned',
       plannedAt: meal.plannedAt,
+      additionalMetadata: [
+        if (meal.plannedAt == null && meal.plannedDay != null)
+          Text(context.lang.mealPlanWithoutHour),
+      ],
       onTap: onTap,
       statusLabel: statusLabel,
       onRetry: onRetry,

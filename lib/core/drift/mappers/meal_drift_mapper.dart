@@ -11,7 +11,10 @@ extension MealDataToDomain on MealData {
     category: MealCategory.fromStorage(category),
     status: status,
     purpose: MealPurpose.fromStorage(purpose),
-    plannedAt: DateTime.fromMillisecondsSinceEpoch(plannedAt),
+    plannedAt: plannedAt == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(plannedAt!),
+    plannedDay: plannedDay,
     createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
     updatedAt: DateTime.fromMillisecondsSinceEpoch(updatedAt),
     mealTemplateId: mealTemplateId,
@@ -28,7 +31,8 @@ extension DomainMealToCompanion on Meal {
       id: d.Value(id),
       name: d.Value(purpose == MealPurpose.lowTreatment ? '' : name),
       category: d.Value(category?.name),
-      plannedAt: d.Value(plannedAt!.millisecondsSinceEpoch),
+      plannedAt: d.Value(plannedAt?.millisecondsSinceEpoch),
+      plannedDay: d.Value(plannedDay),
       purpose: d.Value(purpose.storageValue),
       mealTemplateId: d.Value(mealTemplateId),
     );

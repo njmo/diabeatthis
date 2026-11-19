@@ -75,9 +75,9 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: name,
-              plannedAt: now
-                  .add(const Duration(minutes: 30))
-                  .millisecondsSinceEpoch,
+              plannedAt: Value(
+                now.add(const Duration(minutes: 30)).millisecondsSinceEpoch,
+              ),
             ),
           );
       mealId = await meal('Current meal');

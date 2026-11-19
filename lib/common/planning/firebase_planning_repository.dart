@@ -42,12 +42,17 @@ class FirebasePlanningRepository implements PlanningRepository {
       throw StateError('Caregiver can only propose meal plans');
     }
     final now = DateTime.now();
-    if (draft.category == null ||
+    if ((draft.plannedDay != null &&
+            draft.plannedDay != now.toIso8601String().split('T').first) ||
+        draft.category == null ||
         draft.name.trim().isEmpty ||
         draft.name.length > 120 ||
         (draft.notes?.length ?? 0) > 2000 ||
-        !draft.plannedAt.isAfter(now) ||
-        !draft.plannedAt.isBefore(now.add(const Duration(days: 366))) ||
+        (draft.plannedDay == null &&
+            (!draft.plannedAt.isAfter(now) ||
+                !draft.plannedAt.isBefore(
+                  now.add(const Duration(days: 366)),
+                ))) ||
         draft.mealIngredients.isEmpty ||
         draft.mealIngredients.length > 30) {
       throw ArgumentError(language.planningInvalidDraft);
@@ -86,7 +91,10 @@ class FirebasePlanningRepository implements PlanningRepository {
     await submit(operation, targetId, {
       'name': draft.name,
       'category': draft.category?.name,
-      'plannedAt': draft.plannedAt.millisecondsSinceEpoch,
+      'plannedAt': draft.plannedDay == null
+          ? draft.plannedAt.millisecondsSinceEpoch
+          : null,
+      if (draft.plannedDay != null) 'plannedDay': draft.plannedDay,
       'notes': draft.notes ?? '',
       'ingredients': ingredients,
     });

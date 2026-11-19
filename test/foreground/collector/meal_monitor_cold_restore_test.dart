@@ -43,9 +43,9 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Meal ${++sequence}',
-            plannedAt: now
-                .subtract(const Duration(hours: 1))
-                .millisecondsSinceEpoch,
+            plannedAt: Value(
+              now.subtract(const Duration(hours: 1)).millisecondsSinceEpoch,
+            ),
             purpose: Value(purpose),
           ),
         );

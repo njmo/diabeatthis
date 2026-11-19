@@ -110,9 +110,9 @@ void main() {
           .insert(
             MealCompanion.insert(
               name: 'Dinner',
-              plannedAt: now
-                  .add(const Duration(minutes: 30))
-                  .millisecondsSinceEpoch,
+              plannedAt: Value(
+                now.add(const Duration(minutes: 30)).millisecondsSinceEpoch,
+              ),
             ),
           );
       final firstOffer = (await service.activityOffer(first))!;

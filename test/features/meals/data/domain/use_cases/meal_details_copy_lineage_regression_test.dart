@@ -15,7 +15,7 @@ void main() {
       .insert(
         MealCompanion.insert(
           name: name,
-          plannedAt: time,
+          plannedAt: Value(time),
           status: const Value('summarized'),
           basedOnMealId: Value(source),
           mealTemplateId: Value(template),

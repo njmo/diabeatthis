@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:diabeatthis/core/domain/model/treat.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart' hide Treat;
 import 'package:diabeatthis/features/low_treatment/data/repositories/low_treatment_review_repository.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -16,7 +17,9 @@ void main() {
       var db = DatabaseImpl(NativeDatabase(file));
       final mealId = await db
           .into(db.meal)
-          .insert(MealCompanion.insert(name: 'Existing', plannedAt: 1000));
+          .insert(
+            MealCompanion.insert(name: 'Existing', plannedAt: Value(1000)),
+          );
       await db.customStatement('DROP TABLE low_treatment_review');
       await db.customStatement('PRAGMA user_version = 26');
       await db.close();

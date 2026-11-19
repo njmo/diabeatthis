@@ -72,7 +72,7 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Recorded',
-            plannedAt: date.millisecondsSinceEpoch,
+            plannedAt: Value(date.millisecondsSinceEpoch),
             status: const Value('eaten'),
           ),
         );

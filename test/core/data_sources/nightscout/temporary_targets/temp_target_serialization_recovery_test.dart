@@ -101,7 +101,7 @@ void main() {
         .insert(
           MealCompanion.insert(
             name: 'Meal',
-            plannedAt: now.millisecondsSinceEpoch,
+            plannedAt: Value(now.millisecondsSinceEpoch),
           ),
         );
     return (await service.prepare(
