@@ -11,10 +11,12 @@ class DashboardActivityDetails extends StatelessWidget {
     required this.activity,
     required this.now,
     this.waitingLabel,
+    this.requestLabel,
   });
   final ActivityLogSummaryData activity;
   final DateTime now;
   final String? waitingLabel;
+  final String? requestLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +57,8 @@ class DashboardActivityDetails extends StatelessWidget {
               Text(timing, style: theme.textTheme.bodyMedium),
           ],
         ),
+        if (requestLabel != null)
+          Text(requestLabel!, style: theme.textTheme.bodySmall),
         if (waitingLabel == null &&
             !timeline.planned &&
             duration != null &&

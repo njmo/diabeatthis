@@ -14,30 +14,41 @@ class DashboardActivityTargetCard extends ConsumerWidget {
     super.key,
     required this.target,
     required this.now,
+    this.allowLocalActions = true,
     required this.canAttach,
   });
   final TemporaryTarget target;
   final DateTime now;
+  final bool allowLocalActions;
   final bool canAttach;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => StatusInfoCard(
     icon: Icons.track_changes_rounded,
     title: context.lang.dashboardActivityTempTargetTitle,
-    subtitle: context.lang.dashboardTargetValue(target.targetTop),
+    subtitle: target.targetBottom == target.targetTop
+        ? context.lang.dashboardTargetValue(target.targetTop)
+        : context.lang.caregiverTargetRange(
+            target.targetBottom.toString(),
+            target.targetTop.toString(),
+          ),
     details: DashboardTargetProgress(target: target, now: now),
-    trailing: DashboardTargetActions(
-      target: target,
-      attachTooltip: context.lang.dashboardAttachActivity,
-      onAttach: !canAttach
-          ? null
-          : () async {
-              final draft = await showActivityTargetAttachmentSheet(context);
-              if (draft == null || !context.mounted) return;
-              await ref
-                  .read(dashboardStatusControllerProvider.notifier)
-                  .attachActivity(target, draft);
-            },
-    ),
+    trailing: !allowLocalActions
+        ? null
+        : DashboardTargetActions(
+            target: target,
+            attachTooltip: context.lang.dashboardAttachActivity,
+            onAttach: !canAttach
+                ? null
+                : () async {
+                    final draft = await showActivityTargetAttachmentSheet(
+                      context,
+                    );
+                    if (draft == null || !context.mounted) return;
+                    await ref
+                        .read(dashboardStatusControllerProvider.notifier)
+                        .attachActivity(target, draft);
+                  },
+          ),
   );
 }

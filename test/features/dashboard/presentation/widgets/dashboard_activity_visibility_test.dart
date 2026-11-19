@@ -111,7 +111,7 @@ void main() {
     },
   );
   testWidgets(
-    'the clock makes a planned activity visible without reopening the screen',
+    'the preparation boundary reveals a planned activity between clock samples',
     (tester) async {
       final clock = StreamController<DateTime>();
       addTearDown(clock.close);
@@ -131,7 +131,9 @@ void main() {
       clock.add(now);
       await tester.pumpAndSettle();
       expect(find.textContaining('Jujitsu'), findsNothing);
-      clock.add(now.add(const Duration(minutes: 30)));
+      await tester.pump(const Duration(minutes: 29));
+      expect(find.textContaining('Jujitsu'), findsNothing);
+      await tester.pump(const Duration(minutes: 1));
       await tester.pumpAndSettle();
       expect(find.textContaining('Jujitsu'), findsOneWidget);
     },

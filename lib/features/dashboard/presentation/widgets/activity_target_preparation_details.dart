@@ -29,6 +29,14 @@ class ActivityTargetPreparationDetails extends StatelessWidget {
               : context.lang.dashboardActivityOngoingTarget(target.targetTop),
           style: Theme.of(context).textTheme.titleSmall,
         ),
+        if (target.targetBottom != target.targetTop)
+          Text(
+            context.lang.caregiverTargetRange(
+              target.targetBottom.toString(),
+              target.targetTop.toString(),
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         const SizedBox(height: 8),
         DashboardTargetProgress(target: target, now: now),
       ],

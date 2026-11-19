@@ -17,38 +17,50 @@ class DashboardMealTargetCard extends ConsumerWidget {
     super.key,
     required this.target,
     required this.now,
+    this.allowLocalActions = true,
   });
 
   final TemporaryTarget target;
   final DateTime now;
+  final bool allowLocalActions;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final meal = ref.watch(linkedTargetMealProvider(target)).asData?.value;
-    final actions = DashboardTargetActions(
-      target: target,
-      attachTooltip: meal == null
-          ? context.lang.dashboardAttachMeal
-          : context.lang.dashboardChangeLinkedMeal,
-      onAttach: () async {
-        final id = await showMealTargetPickerSheet(
-          context,
-          target,
-          selectedMealId: meal?.id,
-        );
-        if (id != null && context.mounted) {
-          await ref
-              .read(dashboardStatusControllerProvider.notifier)
-              .attachMeal(target, id);
-        }
-      },
-    );
+    final meal = allowLocalActions
+        ? ref.watch(linkedTargetMealProvider(target)).asData?.value
+        : null;
+    final actions = !allowLocalActions
+        ? null
+        : DashboardTargetActions(
+            target: target,
+            attachTooltip: meal == null
+                ? context.lang.dashboardAttachMeal
+                : context.lang.dashboardChangeLinkedMeal,
+            onAttach: () async {
+              final id = await showMealTargetPickerSheet(
+                context,
+                target,
+                selectedMealId: meal?.id,
+              );
+              if (id != null && context.mounted) {
+                await ref
+                    .read(dashboardStatusControllerProvider.notifier)
+                    .attachMeal(target, id);
+              }
+            },
+          );
+    final targetValue = target.targetBottom == target.targetTop
+        ? context.lang.dashboardTargetValue(target.targetTop)
+        : context.lang.caregiverTargetRange(
+            target.targetBottom.toString(),
+            target.targetTop.toString(),
+          );
     return ConnectedStatusCards(
       primary: StatusInfoCard(
         icon: Icons.restaurant_rounded,
         title: meal?.name ?? context.lang.dashboardMealTempTargetTitle,
         subtitle: meal == null
-            ? context.lang.dashboardTargetValue(target.targetTop)
+            ? targetValue
             : TimeOfDay.fromDateTime(
                 DateTime.fromMillisecondsSinceEpoch(meal.plannedAt).toLocal(),
               ).format(context),
@@ -70,7 +82,7 @@ class DashboardMealTargetCard extends ConsumerWidget {
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   Text(
-                    context.lang.dashboardTargetValue(target.targetTop),
+                    targetValue,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
