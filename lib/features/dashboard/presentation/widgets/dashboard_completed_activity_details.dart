@@ -5,16 +5,21 @@ import '../../../activity/data/models/activity_log_summary_data.dart';
 import '../../../activity/presentation/widgets/activity_summary_action.dart';
 
 class DashboardCompletedActivityDetails extends StatelessWidget {
-  const DashboardCompletedActivityDetails({super.key, required this.activity});
+  const DashboardCompletedActivityDetails({
+    super.key,
+    required this.activity,
+    this.allowLocalActions = true,
+  });
   final ActivityLogSummaryData activity;
+  final bool allowLocalActions;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final numColor =
-        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final mutedColor =
-        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final numColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final mutedColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     final heading = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,6 +46,7 @@ class DashboardCompletedActivityDetails extends StatelessWidget {
         ),
       ],
     );
+    if (!allowLocalActions) return heading;
     final actions = ActivitySummaryAction(
       activityLogId: activity.id,
       summarized: false,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,11 +9,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/model/meal_status_flow.dart';
 import '../../../core/drift/providers/database_provider.dart';
+import '../../../features/activity/data/models/activity_log_summary_data.dart';
+import '../../../features/caregiver/data/caregiver_visible_state_provider.dart';
 import '../../../features/caregiver/presentation/widgets/caregiver_day_view.dart';
+import '../../../features/dashboard/data/providers/dashboard_activity_clock_provider.dart';
+import '../../../features/dashboard/domain/use_cases/build_dashboard_status_use_case.dart';
+import '../../../features/dashboard/presentation/widgets/dashboard_status_card.dart';
 import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../l10n/language.dart';
 import '../../meal_advisor/presentation/remote/meal_decision_remote_meal_action.dart';
+import '../../monitoring/effective_activity_duration.dart';
 import '../../planning/firebase_planning_repository.dart';
 import '../../planning/planning_repository_provider.dart';
 import '../../presentation/dashboard/dashboard_card_padding.dart';
@@ -351,42 +358,150 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
             ) *
             (widget.view == FamilyPlanningView.meals ? -1 : 1),
       );
-  List<Map<String, dynamic>> get visibleOccurrences =>
+  List<Map<String, dynamic>> visibleOccurrences(
+    DateTime now,
+    int? dashboardActivityId,
+  ) =>
       controller.ofKind('activityOccurrences').where((row) {
         final p = row['payload'] as Map;
         if (!['pending', 'planned'].contains(p['status'])) return false;
-        final log =
-            controller.rows['activityLogs/${p['activity_log_id']}']?['payload']
-                as Map?;
+        final logId = p['activity_log_id'];
+        final log = controller.rows['activityLogs/$logId']?['payload'] as Map?;
         if (log != null &&
-            (log['started_at'] as int) <=
-                DateTime.now().millisecondsSinceEpoch) {
+            (logId == dashboardActivityId ||
+                (log['started_at'] as int) <= now.millisecondsSinceEpoch)) {
           return false;
         }
-        if (widget.view == FamilyPlanningView.home) {
-          return sameDay(p['started_at'] as int, DateTime.now());
-        }
-        return true;
+        return widget.view != FamilyPlanningView.home ||
+            sameDay(p['started_at'] as int, now);
       }).toList()..sort(
         (a, b) => ((a['payload'] as Map)['started_at'] as int).compareTo(
           (b['payload'] as Map)['started_at'] as int,
         ),
       );
-  List<Map<String, dynamic>> get visibleLogs =>
+
+  List<Map<String, dynamic>> visibleLogs(DateTime now) =>
       controller.ofKind('activityLogs').where((row) {
         final p = row['payload'] as Map;
-        if ((p['started_at'] as int) > DateTime.now().millisecondsSinceEpoch) {
-          return false;
-        }
-        if (widget.view == FamilyPlanningView.home) {
-          return p['ended_at'] == null;
-        }
-        return true;
+        return (p['started_at'] as int) <= now.millisecondsSinceEpoch;
       }).toList()..sort(
         (a, b) => ((b['payload'] as Map)['started_at'] as int).compareTo(
           (a['payload'] as Map)['started_at'] as int,
         ),
       );
+
+  ActivityLogSummaryData? activitySummary(Map log) {
+    final activity = controller.rows['activities/${log['activity_id']}'];
+    final definition = activity?['payload'] as Map?;
+    if (activity?['deleted'] == true || definition == null) return null;
+    final occurrence = linkedOccurrence(log['id'] as int);
+    final end = log['ended_at'] as int?;
+    return ActivityLogSummaryData(
+      id: log['id'] as int,
+      activityName: definition['name'] as String,
+      activityId: log['activity_id'] as int,
+      startedAt: DateTime.fromMillisecondsSinceEpoch(log['started_at'] as int),
+      endedAt: end == null ? null : DateTime.fromMillisecondsSinceEpoch(end),
+      durationMinutes: effectiveActivityDuration(
+        activityDuration: definition['duration_minutes'] as int?,
+        hasScheduledOccurrence: occurrence != null,
+        occurrenceDuration: occurrence?['duration_minutes'] as int?,
+      ),
+    );
+  }
+
+  Map? linkedOccurrence(int activityLogId) => controller
+      .ofKind('activityOccurrences')
+      .map((row) => row['payload'] as Map)
+      .where((row) => row['activity_log_id'] == activityLogId)
+      .firstOrNull;
+
+  String? dashboardActivityRequestLabel(BuildContext context, Map? occurrence) {
+    if (occurrence == null) return null;
+    const kind = 'activityOccurrences';
+    final id = occurrence['id'] as int;
+    return familyPlanRecordLabel(context, controller.plans, kind, id) ??
+        (controller.monitored(kind, id)
+            ? context.lang.familyPlanMonitoring
+            : controller.locked(kind, id)
+            ? context.lang.familyPlanPending
+            : null);
+  }
+
+  Widget dashboardActivityTrailing(
+    BuildContext context,
+    ActivityLogSummaryData activity,
+    DateTime now,
+    Map? occurrence,
+  ) {
+    final lang = context.lang;
+    final open = recordOpener(context, 'activityLogs', activity.id);
+    final occurrenceId = occurrence?['id'] as int?;
+    if (enabled &&
+        activity.startedAt.isAfter(now) &&
+        occurrenceId != null &&
+        ['planned', 'pending'].contains(occurrence?['status'])) {
+      final unlocked = !controller.locked('activityOccurrences', occurrenceId);
+      final retry = familyPlanRetryForRecord(
+        controller.plans,
+        'activityOccurrences',
+        occurrenceId,
+        edit,
+      );
+      if (unlocked || retry != null) {
+        final scope = FamilyAccessScope(controller);
+        void editOccurrence(String operation) {
+          final current =
+              controller.rows['activityOccurrences/$occurrenceId']?['payload']
+                  as Map?;
+          if (!mounted ||
+              !scope.isCurrent ||
+              !enabled ||
+              controller.locked('activityOccurrences', occurrenceId) ||
+              !['planned', 'pending'].contains(current?['status'])) {
+            return;
+          }
+          edit(
+            operation,
+            targetId: occurrenceId,
+            initial: operation == 'moveActivity'
+                ? {'startedAt': current?['started_at']}
+                : null,
+          );
+        }
+
+        return PopupMenuButton<VoidCallback>(
+          onSelected: (action) => action(),
+          itemBuilder: (context) => [
+            PopupMenuItem(value: open, child: Text(lang.activityDetailsTitle)),
+            if (retry != null)
+              PopupMenuItem(
+                value: () {
+                  if (mounted && scope.isCurrent && enabled) retry();
+                },
+                child: Text(lang.familyPlanRetry),
+              ),
+            if (unlocked) ...[
+              PopupMenuItem(
+                value: () => editOccurrence('moveActivity'),
+                child: Text(lang.activityScheduleMove),
+              ),
+              PopupMenuItem(
+                value: () => editOccurrence('skipActivity'),
+                child: Text(lang.activityScheduleNo),
+              ),
+            ],
+          ],
+        );
+      }
+    }
+    return IconButton(
+      tooltip: lang.activityDetailsTitle,
+      icon: const Icon(Icons.open_in_new_rounded),
+      onPressed: open,
+    );
+  }
+
   bool visibleRequest(Map<String, dynamic> plan) =>
       ![
         'createActivity',
@@ -610,6 +725,55 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
               body: collection,
             );
     }
+    final home = widget.view == FamilyPlanningView.home;
+    final logs = home
+        ? controller.ofKind('activityLogs').map((row) => row['payload'] as Map)
+        : const <Map>[];
+    final pending =
+        logs
+            .where((log) => log['ended_at'] == null)
+            .map(activitySummary)
+            .nonNulls
+            .toList()
+          ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
+    final now = home
+        ? ref.watch(
+            dashboardActivityClockProvider(pending.firstOrNull?.startedAt),
+          )
+        : clock.now();
+    final completed =
+        logs
+            .where(
+              (log) =>
+                  log['ended_at'] != null &&
+                  log['summarized_at'] == null &&
+                  log['summary_dismissed_at'] == null,
+            )
+            .map(activitySummary)
+            .nonNulls
+            .toList()
+          ..sort((a, b) => b.endedAt!.compareTo(a.endedAt!));
+    final target = home
+        ? ref.watch(caregiverVisibleStateProvider).snapshot?.temporaryTarget
+        : null;
+    final status = const BuildDashboardStatusUseCase()(
+      now: now,
+      pendingActivity: pending.firstOrNull,
+      completedActivities: completed,
+      target:
+          target != null &&
+              target.targetBottom > 0 &&
+              target.targetTop >= target.targetBottom
+          ? target
+          : null,
+    );
+    final activity = status.activity;
+    final occurrence = activity == null ? null : linkedOccurrence(activity.id);
+    final occurrences = visibleOccurrences(now, activity?.id);
+    final historyLogs = home
+        ? const <Map<String, dynamic>>[]
+        : visibleLogs(now);
+
     final content = SafeArea(
       bottom: !widget.embedded,
       child: RefreshIndicator(
@@ -670,6 +834,23 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                     label: Text(context.lang.familyPlanActivity),
                   ),
                 ],
+              ),
+            if (home)
+              DashboardStatusCards(
+                status: status,
+                allowLocalActions: false,
+                activityRequestLabel:
+                    activity != null && activity.startedAt.isAfter(now)
+                    ? dashboardActivityRequestLabel(context, occurrence)
+                    : null,
+                activityTrailing: activity == null
+                    ? null
+                    : dashboardActivityTrailing(
+                        context,
+                        activity,
+                        now,
+                        occurrence,
+                      ),
               ),
             if (showMeals && visibleMeals.isNotEmpty) ...[
               if (homeLayout) ...[
@@ -737,14 +918,14 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
               ],
             ],
             if (showActivities &&
-                (visibleOccurrences.isNotEmpty || visibleLogs.isNotEmpty)) ...[
+                (occurrences.isNotEmpty || historyLogs.isNotEmpty)) ...[
               if (!homeLayout) const SizedBox(height: 16),
               if (widget.view != FamilyPlanningView.home)
                 Text(
                   context.lang.familySyncActivityOccurrences,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-              for (final row in visibleOccurrences)
+              for (final row in occurrences)
                 DashboardCardPadding(
                   enabled: homeLayout,
                   child: FamilyPlannedActivityCard(
@@ -825,7 +1006,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                         : null,
                   ),
                 ),
-              for (final row in visibleLogs)
+              for (final row in historyLogs)
                 DashboardCardPadding(
                   enabled: homeLayout,
                   child: FamilyActivityLogCard(

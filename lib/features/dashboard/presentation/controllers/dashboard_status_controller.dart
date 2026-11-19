@@ -14,6 +14,7 @@ import '../../../activity/data/drafts/activity_log_draft.dart';
 import '../../../activity/data/providers/activity_provider.dart';
 import '../../../activity/data/providers/activity_summary_provider.dart';
 import '../../common/temporary_targets/meal_target_links.dart';
+import '../../data/providers/dashboard_activity_clock_provider.dart';
 import '../../data/providers/linked_target_meal_provider.dart';
 import '../../data/providers/temporary_target_ui_provider.dart';
 import '../../data/providers/time_now_provider.dart';
@@ -28,7 +29,9 @@ final dashboardStatusViewModelProvider =
     Provider.autoDispose<DashboardStatusViewModel>((ref) {
       final activity = ref.watch(getPendingActivityProvider);
       return const BuildDashboardStatusUseCase()(
-        now: ref.watch(timeNowProvider).asData?.value ?? clock.now(),
+        now: ref.watch(
+          dashboardActivityClockProvider(activity.asData?.value?.startedAt),
+        ),
         pendingActivity: activity.asData?.value,
         target: ref.watch(temporaryTargetUiProvider),
         loading: activity.isLoading,

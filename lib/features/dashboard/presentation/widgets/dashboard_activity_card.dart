@@ -21,6 +21,7 @@ class DashboardActivityCard extends ConsumerWidget {
     this.target,
     this.allowLocalActions = true,
     this.waitingLabel,
+    this.requestLabel,
     this.trailing,
   });
   final ActivityLogSummaryData activity;
@@ -28,6 +29,7 @@ class DashboardActivityCard extends ConsumerWidget {
   final TemporaryTarget? target;
   final bool allowLocalActions;
   final String? waitingLabel;
+  final String? requestLabel;
   final Widget? trailing;
 
   @override
@@ -44,6 +46,7 @@ class DashboardActivityCard extends ConsumerWidget {
           activity: activity,
           now: now,
           waitingLabel: waitingLabel,
+          requestLabel: requestLabel,
         ),
         trailing: allowLocalActions
             ? IconButton(

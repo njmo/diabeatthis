@@ -13,10 +13,12 @@ class DashboardCompletedActivityCard extends StatelessWidget {
     super.key,
     required this.activity,
     required this.now,
+    this.allowLocalActions = true,
     this.target,
   });
   final ActivityLogSummaryData activity;
   final DateTime now;
+  final bool allowLocalActions;
   final TemporaryTarget? target;
 
   @override
@@ -25,13 +27,18 @@ class DashboardCompletedActivityCard extends StatelessWidget {
       : ConnectedStatusCards(
           primary: StatusInfoPanel(
             icon: Icons.sports_score,
-            child: DashboardCompletedActivityDetails(activity: activity),
+            child: DashboardCompletedActivityDetails(
+              activity: activity,
+              allowLocalActions: allowLocalActions,
+            ),
           ),
           secondary: target == null
               ? null
               : StatusInfoPanel(
                   icon: Icons.track_changes_rounded,
-                  trailing: DashboardTargetActions(target: target!),
+                  trailing: allowLocalActions
+                      ? DashboardTargetActions(target: target!)
+                      : null,
                   child: ActivityTargetPreparationDetails(
                     target: target!,
                     now: now,
