@@ -4,6 +4,7 @@ import 'package:diabeatthis/common/family_chat/application/family_chat_backgroun
 import 'package:diabeatthis/common/family_chat/application/family_chat_consumption_action.dart';
 import 'package:diabeatthis/common/family_chat/data/family_chat_database.dart';
 import 'package:diabeatthis/common/family_chat/data/family_chat_notification_platform.dart';
+import 'package:diabeatthis/common/family_chat/notifications/family_chat_presenter.dart';
 import 'package:diabeatthis/common/family_chat/notifications/family_chat_presenter_provider.dart';
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/l10n/application_language_storage_keys.dart';
@@ -289,9 +290,13 @@ void main() {
             'validUntil': 6000,
           },
         };
-        await presenter.show(
-          FamilyChatPushView(view.guard, config, message, 'family'),
+        final treatmentView = FamilyChatPushView(
+          view.guard,
+          config,
+          message,
+          'family',
         );
+        await presenter.show(treatmentView);
         expect(plugin.shown.last.body, contains('Frozen product'));
         expect(plugin.shown.last.body, contains(english ? '6.5' : '6,5'));
         expect(plugin.shown.last.body, contains('7'));
@@ -303,19 +308,16 @@ void main() {
           message['text'],
           'Zjedz 1 szt. Frozen product · 6,5 g WW (zapis: 7 g)',
         );
-        final choices = plugin.shown.last.android!.actions!
-            .singleWhere((action) => action.id == 'family_chat_reply')
-            .inputs
-            .single
-            .choices;
+        final actions = plugin.shown.last.android!.actions!;
         expect(
-          choices,
+          AndroidFamilyChatPresenter.messageEvent(treatmentView).replyChoices,
           english ? ["I'll eat it", "I don't have it"] : ['Zjem', 'Nie mam'],
         );
         expect(
-          plugin.shown.last.android!.actions!.map((action) => action.id),
-          contains('family_chat_consume'),
+          actions.map((action) => action.title),
+          english ? ['I ate it', 'Reply'] : ['Zjadłem', 'Odpowiedź'],
         );
+        expect(actions.last.inputs.single.choices, isEmpty);
 
         await presenter.show(
           FamilyChatPushView(view.guard, config, {

@@ -276,7 +276,7 @@ void main() {
       final reply = treatment.actions!.singleWhere(
         (action) => action.id == 'family_chat_reply',
       );
-      expect(reply.inputs.single.choices, ['Zjem', 'Nie mam']);
+      expect(reply.inputs.single.choices, isEmpty);
       expect(
         details(
           'managingCaregiver',
