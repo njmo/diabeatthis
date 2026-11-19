@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/domain/model/net_carbs_calculator.dart';
+import '../../family/family_providers.dart';
+import '../../family_sync/load_child_ingredient_mirror.dart';
+import '../../family_sync/photo/family_photo_ingredient_reader.dart';
+import '../../family_sync/presentation/show_family_ingredient_picker.dart';
+import '../../ingredient_catalog/ingredient_catalog_providers.dart';
 import '../../l10n/language.dart';
 import '../application/family_chat_runtime.dart';
 import '../application/family_chat_session.dart';
@@ -9,15 +15,8 @@ import '../application/family_treatment_adapter.dart';
 import 'family_chat_conversation.dart';
 
 class FamilyChatPage extends ConsumerStatefulWidget {
-  const FamilyChatPage({
-    super.key,
-    this.loadFoods,
-    this.pickIngredient,
-    this.initialTarget,
-  });
+  const FamilyChatPage({super.key, this.initialTarget});
   final String? initialTarget;
-  final Future<List<FamilyChatFoodChoice>> Function()? loadFoods;
-  final Future<FamilyChatFoodChoice?> Function(BuildContext)? pickIngredient;
   @override
   ConsumerState<FamilyChatPage> createState() => _FamilyChatPageState();
 }
@@ -88,8 +87,6 @@ class _FamilyChatPageState extends ConsumerState<FamilyChatPage>
           key: ValueKey(session),
           session: session,
           initialTarget: widget.initialTarget,
-          loadFoods: widget.loadFoods,
-          pickIngredient: widget.pickIngredient,
         );
       },
     );
@@ -101,15 +98,88 @@ class _ConnectedFamilyChat extends ConsumerWidget {
     super.key,
     required this.session,
     this.initialTarget,
-    this.loadFoods,
-    this.pickIngredient,
   });
   final FamilyChatSession session;
   final String? initialTarget;
-  final Future<List<FamilyChatFoodChoice>> Function()? loadFoods;
-  final Future<FamilyChatFoodChoice?> Function(BuildContext)? pickIngredient;
+  Future<FamilyChatFoodChoice?> _pickIngredient(
+    BuildContext context,
+    WidgetRef ref,
+    String target,
+  ) async {
+    final scope = session.scope;
+    final children = session.members.where(
+      (member) => member['role'] == 'child',
+    );
+    final child = target == 'family'
+        ? children.length == 1
+              ? children.single['uid'] as String?
+              : null
+        : children
+                  .where((member) => member['uid'] == target)
+                  .firstOrNull?['uid']
+              as String?;
+    bool isCurrent() =>
+        context.mounted &&
+        scope != null &&
+        session.scope == scope &&
+        session.serverVerified &&
+        session.isCurrentAccount() &&
+        session.members.any(
+          (member) => member['role'] == 'child' && member['uid'] == child,
+        );
+    if (child == null || !isCurrent()) {
+      throw StateError('A child conversation is required');
+    }
+    final transport = ref.read(authenticatedFamilyTransportProvider);
+    final catalog = ref.read(catalogRepositoryProvider);
+    final language = Localizations.localeOf(context).languageCode;
+    final rows = await loadChildIngredientMirror(
+      transport: transport,
+      caregiverUid: session.uid,
+      childUid: child,
+      isCurrent: isCurrent,
+    );
+    if (!context.mounted || !isCurrent()) return null;
+    final selected = await showFamilyIngredientPicker(
+      context,
+      rows: rows,
+      catalog: catalog,
+    );
+    if (selected == null || !isCurrent()) return null;
+
+    final id = selected.localIngredientId;
+    if (id != null) {
+      final ingredient = await FamilyPhotoIngredientReader(rows).get(id);
+      if (!isCurrent()) return null;
+      return FamilyChatFoodChoice(
+        name: ingredient.name,
+        unit: ingredient.isReference ? 'porcji' : 'g',
+        gramsPerUnit: ingredient.isReference ? null : 1,
+        carbsPerUnit:
+            calculateNetCarbs(
+              carbs: ingredient.carbsPer100g,
+              fiber: ingredient.fiberPer100g,
+              labelMode: ingredient.carbsLabelMode,
+            ) *
+            (ingredient.isReference ? 1 : .01),
+      );
+    }
+    final ingredient = await catalog.get(
+      selected.identity,
+      languageCode: language,
+    );
+    if (!isCurrent()) return null;
+    return FamilyChatFoodChoice(
+      name: ingredient.name,
+      unit: 'g',
+      gramsPerUnit: 1,
+      carbsPerUnit: ingredient.netCarbsPer100g / 100,
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (session.isCaregiver) ref.watch(authenticatedFamilyTransportProvider);
     final executor = session.isCaregiver
         ? null
         : ref.watch(familyTreatmentExecutorProvider(session));
@@ -117,8 +187,9 @@ class _ConnectedFamilyChat extends ConsumerWidget {
       isCaregiver: session.isCaregiver,
       session: session,
       initialTarget: initialTarget,
-      loadFoods: loadFoods,
-      pickIngredient: pickIngredient,
+      pickIngredient: session.isCaregiver
+          ? (context, target) => _pickIngredient(context, ref, target)
+          : null,
       confirmTreatment: executor?.confirm,
       confirmTreatmentWithAuthorization: executor == null
           ? null

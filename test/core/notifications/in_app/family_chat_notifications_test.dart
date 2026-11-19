@@ -13,6 +13,7 @@ import 'package:diabeatthis/core/notifications/handlers/notification_response_ha
 import 'package:diabeatthis/core/notifications/in_app/in_app_notification_center.dart';
 import 'package:diabeatthis/core/notifications/inbox/notification_inbox_entry.dart';
 import 'package:diabeatthis/core/notifications/inbox/notification_inbox_store.dart';
+import 'package:diabeatthis/core/notifications/mappers/android_notification_details_mapper.dart';
 import 'package:diabeatthis/core/notifications/providers/local_notifications_controller_provider.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:drift/native.dart';
@@ -93,6 +94,17 @@ void main() {
     SharedPreferencesAsyncPlatform.instance =
         InMemorySharedPreferencesAsync.empty();
     local = _LocalController();
+  });
+
+  test('Android treatment notification shows two actions without suggestion chips', () {
+    final details = AndroidNotificationDetailsMapper().map(message);
+    final actions = details.actions!;
+    expect(actions.map((action) => action.id), [
+      NotificationActionType.familyChatConsume.toDarwinString(),
+      NotificationActionType.familyChatReply.toDarwinString(),
+    ]);
+    expect(actions.last.allowGeneratedReplies, isFalse);
+    expect(actions.last.inputs.single.choices, isEmpty);
   });
 
   ProviderContainer createContainer({List<Override> overrides = const []}) =>

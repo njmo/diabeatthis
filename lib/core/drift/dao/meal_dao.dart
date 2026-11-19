@@ -4,6 +4,7 @@ import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 
 import '../../../common/meal/meal_add_on_bolus_progress.dart';
+import '../../../common/meal_advisor/remote/scheduled_meal_decision_journal.dart';
 import '../../domain/model/meal_status_flow.dart';
 import '../database_impl.dart';
 
@@ -393,6 +394,41 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
 
   Future<MealData?> getNearestMeal() =>
       (_futurePlannedMealsQuery()..limit(1)).getSingleOrNull();
+
+  Future<MealData?> getMealForMonitoring(DateTime now) async {
+    final activeStatuses = mealStatusesBlockingAnotherMealActivation;
+    final placeholders = List.filled(activeStatuses.length, '?').join(',');
+    final timestamp = now.millisecondsSinceEpoch;
+    final recoveryStart = now
+        .subtract(scheduledMealDecisionRecoveryWindow)
+        .millisecondsSinceEpoch;
+    final row = await customSelect(
+      '''
+      SELECT meal.* FROM meal
+      WHERE meal.purpose='meal' AND (
+        meal.status IN ($placeholders)
+        OR (meal.status='planned' AND (
+          meal.planned_at > ?
+          OR (meal.planned_at BETWEEN ? AND ? AND EXISTS (
+            SELECT 1 FROM scheduled_meal_decision AS journal
+            WHERE journal.meal_id=meal.id AND journal.planned_at=meal.planned_at
+              AND journal.handled=0
+          ))
+        ))
+      )
+      ORDER BY (meal.status='planned'), meal.planned_at, meal.id
+      LIMIT 1
+      ''',
+      variables: [
+        for (final status in activeStatuses) Variable(status),
+        Variable(timestamp),
+        Variable(recoveryStart),
+        Variable(timestamp),
+      ],
+      readsFrom: {meal},
+    ).getSingleOrNull();
+    return row == null ? null : meal.map(row.data);
+  }
 
   /// The collector evaluates this committed snapshot as wall-clock time moves.
   Stream<List<MealData>> watchFuturePlannedMeals() =>

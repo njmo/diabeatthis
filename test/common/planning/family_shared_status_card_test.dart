@@ -1,13 +1,13 @@
-import 'package:diabeatthis/common/family_sync/presentation/family_activity_log_card.dart';
 import 'package:diabeatthis/common/family_sync/presentation/family_active_meal_card.dart';
+import 'package:diabeatthis/common/family_sync/presentation/family_activity_log_card.dart';
 import 'package:diabeatthis/common/family_sync/presentation/family_plan_status_card.dart';
 import 'package:diabeatthis/common/family_sync/presentation/family_planned_meal_card.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/meal/meal_decision.dart';
 import 'package:diabeatthis/common/meal/meal_progress_plan.dart';
 import 'package:diabeatthis/common/meal_advisor/presentation/remote/meal_decision_answered_status.dart';
-import 'package:diabeatthis/common/widgets/meal_progress/meal_progress_steps.dart';
 import 'package:diabeatthis/common/widgets/history_entry_row.dart';
+import 'package:diabeatthis/common/widgets/meal_progress/meal_progress_steps.dart';
 import 'package:diabeatthis/common/widgets/status_info_card.dart';
 import 'package:diabeatthis/features/activity/common/controllers/activity_actions_controller.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/dashboard_activity_card.dart';

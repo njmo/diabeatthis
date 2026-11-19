@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../../../common/l10n/language.dart';
 import '../base/notification_channel_definition_catalog.dart';
 import '../base/notification_definition_catalog.dart';
 import '../definitions/notification_channel_catalog_impl.dart';
@@ -68,7 +69,12 @@ class AndroidNotificationDetailsMapper {
         ),
         actions: [
           for (final action in notificationActionsFor(event, eventDefinition))
-            _familyChatAction(action, notificationInputChoicesFor(event)),
+            _familyChatAction(
+              action,
+              event.allowConsumption
+                  ? const []
+                  : notificationInputChoicesFor(event),
+            ),
         ],
       );
     }
@@ -101,15 +107,17 @@ class AndroidNotificationDetailsMapper {
     List<String> choices,
   ) => AndroidNotificationAction(
     action.type.toDarwinString(),
-    action.label,
+    action.type == NotificationActionType.familyChatConsume
+        ? lang.familyChatTreatmentAnswerAte
+        : lang.familyChatReply,
     cancelNotification: false,
     semanticAction: action is TextNotificationActionDef
         ? SemanticAction.reply
         : SemanticAction.none,
     inputs: [
-      if (action case TextNotificationActionDef(:final inputActionDef))
+      if (action is TextNotificationActionDef)
         AndroidNotificationActionInput(
-          label: inputActionDef.title,
+          label: lang.familyChatReply,
           choices: choices,
         ),
     ],

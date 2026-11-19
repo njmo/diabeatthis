@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers/app_event_router_provider.dart';
+import '../../app/providers/foreground_task_state_provider.dart';
 import '../../core/data/provider/shared_prefs_provider.dart';
 import '../events/data/app/execute_command_event.dart';
 import 'meal_decision_preference_keys.dart';
@@ -91,6 +92,7 @@ final configureMealDecisionPreferencesProvider = Provider(
 );
 
 void _syncMealDecisionMethod(Ref ref) {
+  if (!ref.read(foregroundTaskStateProvider).alive) return;
   ref.read(appEventRouterProvider).send(
     const ExecuteCommandEvent.syncSettings(
       data: {mealDecisionPreferencesKey: ''},

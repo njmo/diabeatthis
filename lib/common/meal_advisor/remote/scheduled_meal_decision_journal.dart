@@ -65,29 +65,6 @@ class ScheduledMealDecisionJournal {
     [notified ? 1 : 0, mealId, plannedAt.millisecondsSinceEpoch],
   );
 
-  Future<int?> dueMeal(DateTime now) async {
-    final row = await db
-        .customSelect(
-          '''
-      SELECT journal.meal_id FROM scheduled_meal_decision AS journal
-      JOIN meal ON meal.id=journal.meal_id AND meal.planned_at=journal.planned_at
-      WHERE journal.handled=0 AND meal.status='planned' AND meal.purpose='meal'
-        AND journal.planned_at BETWEEN ? AND ?
-      ORDER BY journal.planned_at LIMIT 1
-      ''',
-          variables: [
-            Variable(
-              now
-                  .subtract(scheduledMealDecisionRecoveryWindow)
-                  .millisecondsSinceEpoch,
-            ),
-            Variable(now.millisecondsSinceEpoch),
-          ],
-        )
-        .getSingleOrNull();
-    return row?.read<int>('meal_id');
-  }
-
   Future<void> cleanNotifications({
     required String? uid,
     required DateTime now,

@@ -25,6 +25,7 @@ import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../meal_advisor/presentation/widgets/meal_activity_warning.dart';
 import '../../../meal_summary/domain/utils/meal_add_on_status.dart';
+import '../../../meals/data/providers/meal_activation_guard_provider.dart';
 import '../../data/meal_dialog_controller.dart';
 import '../../data/meal_dialog_state.dart';
 import '../../data/utils/meal_advisor.dart';
@@ -109,6 +110,16 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
       }
       resolvingCaregiver.value = true;
       try {
+        final blockingMeal = await ref.refresh(
+          mealBlockingActivationProvider(meal.id).future,
+        );
+        if (!context.mounted) return;
+        if (blockingMeal != null) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            SnackBar(content: Text(context.lang.mealProgressBlocked)),
+          );
+          return;
+        }
         final resolution = await ref.read(
           childMealDecisionRequestPresenterProvider,
         )(context, meal.id, meal.name);

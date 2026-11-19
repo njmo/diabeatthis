@@ -2,7 +2,6 @@ import 'package:clock/clock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../common/meal_advisor/remote/scheduled_meal_decision_journal.dart';
 import '../../../../core/domain/model/ingredient.dart' as domain;
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../../core/domain/model/portion.dart' as domain;
@@ -11,7 +10,6 @@ import '../../../../core/drift/providers/database_provider.dart';
 import '../../../dashboard/data/providers/time_now_provider.dart';
 import '../drafts/meal_draft.dart';
 import '../persistence/insert_meal_draft.dart';
-import 'meal_activation_guard_provider.dart';
 
 part 'meal_database_provider.g.dart';
 
@@ -119,13 +117,8 @@ Future<domain.Meal?> getMealById(Ref ref, int id) async {
 
 @riverpod
 Future<domain.Meal?> getNearestMeal(Ref ref) async {
-  final activeMeal = await ref.watch(currentMealBlockingActivationProvider.future);
-  if (activeMeal != null) return activeMeal;
   final db = ref.read(databaseProvider);
-  final dueMeal = await ScheduledMealDecisionJournal(db).dueMeal(clock.now());
-  final meal = dueMeal == null
-      ? await db.mealDao.getNearestMeal()
-      : await db.mealDao.getMealById(dueMeal);
+  final meal = await db.mealDao.getMealForMonitoring(clock.now());
   return meal?.toDomain();
 }
 

@@ -372,7 +372,7 @@ class FamilyChatConversation extends StatefulWidget {
   final Future<FamilyTreatmentResult?> Function(String id)? loadTreatmentResult;
   final Future<double?> Function(String id)? loadTreatmentQuantity;
   final Future<List<FamilyChatFoodChoice>> Function()? loadFoods;
-  final Future<FamilyChatFoodChoice?> Function(BuildContext)? pickIngredient;
+  final Future<FamilyChatFoodChoice?> Function(BuildContext, String)? pickIngredient;
 
   @override
   State<FamilyChatConversation> createState() => _FamilyChatConversationState();
@@ -1116,7 +1116,9 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
       context,
       builder: (_) => _LowTreatmentRequestEditor(
         foods: foods,
-        pickIngredient: widget.pickIngredient,
+        pickIngredient: widget.pickIngredient == null
+            ? null
+            : (context) => widget.pickIngredient!(context, target),
       ),
     );
     if (!mounted || request == null) return;

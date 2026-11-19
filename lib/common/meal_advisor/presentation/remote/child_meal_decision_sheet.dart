@@ -150,36 +150,20 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
         final source = await FamilyMirrorOutbox(
           ref.read(databaseProvider),
         ).sourceForOwner(uid);
-        final storedMeal = await ref.read(databaseProvider).mealDao.getMealById(
-          mealId,
-        );
-        final plannedAt = storedMeal?.plannedAt;
+        final storedMeal = await ref
+            .read(databaseProvider)
+            .mealDao
+            .getMealById(mealId);
         if (!context.mounted) return;
-        final scheduledId = plannedAt == null
-            ? null
-            : scheduledMealDecisionRequestId(source, mealId, plannedAt);
-        final scheduled = scheduledId == null
-            ? null
-            : refreshed.byId(scheduledId);
-        if (scheduled != null &&
-            scheduled.response == null &&
-            scheduled.data['outcome'] == null) {
-          requestId.value = scheduled.id;
-          return;
+        if (storedMeal?.status != 'planned') {
+          throw StateError('Meal is no longer planned');
         }
-        final timeToMeal = plannedAt == null
-            ? Duration.zero
-            : DateTime.fromMillisecondsSinceEpoch(
-                plannedAt,
-              ).difference(DateTime.now());
+        final draftId = requestId.value;
+        final draftExpired =
+            draftId != null && refreshed.byId(draftId)?.expired == true;
         final random = Random.secure();
         final id =
-            requestId.value ??
-            (scheduled == null &&
-                    timeToMeal > Duration.zero &&
-                    timeToMeal <= scheduledCaregiverRequestLeadTime
-                ? scheduledId
-                : null) ??
+            (draftExpired ? null : draftId) ??
             List.generate(
               32,
               (_) => random.nextInt(16).toRadixString(16),
@@ -313,8 +297,7 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
                         busy.value = true;
                         failed.value = false;
                         try {
-                          final advice =
-                              answer == MealDecisionAnswer.deferMeal
+                          final advice = answer == MealDecisionAnswer.deferMeal
                               ? await ref.read(
                                   acceptRemoteMealDecisionProvider,
                                 )(request!)
