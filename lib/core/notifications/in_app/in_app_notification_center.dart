@@ -75,6 +75,10 @@ final notificationInboxStoreProvider = Provider<NotificationInboxStore>(
   (_) => NotificationInboxStore(),
 );
 
+final inAppNotificationResponderProvider = Provider(
+  (_) => respondToNotification,
+);
+
 final inAppNotificationCenterProvider =
     NotifierProvider<InAppNotificationCenter, InAppNotificationState>(
       InAppNotificationCenter.new,
@@ -210,14 +214,23 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
     NotificationEvent event,
     String? actionId,
     String? input,
-  ) => respondToNotification(
-    payload: jsonEncode({...event.toPayload(), notificationIdPayloadKey: id}),
-    actionId: actionId,
-    input: input,
-    familyChatPresenter: event is FamilyChatNotificationEvent
-        ? ref.read(familyChatUiPresenterProvider)
-        : null,
-  );
+  ) async {
+    try {
+      await ref.read(inAppNotificationResponderProvider)(
+        payload: jsonEncode({
+          ...event.toPayload(),
+          notificationIdPayloadKey: id,
+        }),
+        actionId: actionId,
+        input: input,
+        familyChatPresenter: event is FamilyChatNotificationEvent
+            ? ref.read(familyChatUiPresenterProvider)
+            : null,
+      );
+    } catch (_) {
+      logW('Could not answer notification $id');
+    }
+  }
 
   /// Rebuilds the event behind an inbox entry so its actions can be answered.
   NotificationEvent? eventFor(NotificationInboxEntry entry) {
