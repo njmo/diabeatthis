@@ -84,7 +84,7 @@ void main() {
     (tester) async {
       final now = DateTime(2026, 10, 29, 13);
       await withClock(Clock.fixed(now), () async {
-        await show(
+        final container = await show(
           tester,
           now: now,
           runningTargetStart: now,
@@ -94,6 +94,9 @@ void main() {
         expect(find.text('Temp target aktywności'), findsOneWidget);
         expect(find.textContaining('Jujitsu'), findsNothing);
         expect(find.textContaining('Przygotowanie:'), findsNothing);
+        await tester.pumpWidget(const SizedBox.shrink());
+        container.dispose();
+        await tester.pump();
       });
     },
   );
@@ -107,7 +110,7 @@ void main() {
       await withClock(Clock.fixed(now), () async {
         // Deliberately keep the unrelated target active across both visibility
         // boundaries, so hiding the future card cannot mask an association bug.
-        await show(
+        final container = await show(
           tester,
           now: now,
           runningTargetStart: now,
@@ -130,6 +133,9 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(StatusInfoCard), findsOneWidget);
         expect(find.textContaining('Przygotowanie:'), findsOneWidget);
+        await tester.pumpWidget(const SizedBox.shrink());
+        container.dispose();
+        await tester.pump();
       });
     },
   );
@@ -139,7 +145,7 @@ void main() {
     (tester) async {
       final now = DateTime(2026, 10, 29, 16, 5);
       await withClock(Clock.fixed(now), () async {
-        await show(
+        final container = await show(
           tester,
           now: now,
           runningTargetStart: now,
@@ -149,6 +155,9 @@ void main() {
         expect(find.byType(StatusInfoCard), findsOneWidget);
         expect(find.text('Temp target aktywności'), findsNothing);
         expect(find.textContaining('Przygotowanie:'), findsOneWidget);
+        await tester.pumpWidget(const SizedBox.shrink());
+        container.dispose();
+        await tester.pump();
       });
     },
   );

@@ -4,12 +4,12 @@ import 'package:diabeatthis/common/auth/google_authentication_providers.dart';
 import 'package:diabeatthis/common/family/family_providers.dart';
 import 'package:diabeatthis/common/family_sync/family_planning_controller.dart';
 import 'package:diabeatthis/common/family_sync/family_planning_view.dart';
-import 'package:diabeatthis/common/family_sync/presentation/family_activity_log_card.dart';
 import 'package:diabeatthis/common/family_sync/presentation/family_planning_page.dart';
 import 'package:diabeatthis/common/family_sync/presentation/family_record_page.dart';
 import 'package:diabeatthis/common/presentation/widgets/activity_log_card.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
+import 'package:diabeatthis/features/dashboard/presentation/widgets/dashboard_activity_card.dart';
 import 'package:diabeatthis/features/meals/presentation/widgets/meal_list/meal_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -111,9 +111,12 @@ void main() {
               .widget<ActivityLogCard>(find.byType(ActivityLogCard))
               .onTap!;
         } else {
-          callback = tester
-              .widget<FamilyActivityLogCard>(find.byType(FamilyActivityLogCard))
-              .onOpen!;
+          final card = tester.widget<DashboardActivityCard>(
+            find.byType(DashboardActivityCard),
+          );
+          expect(card.allowLocalActions, isFalse);
+          expect(card.trailing, isA<IconButton>());
+          callback = (card.trailing! as IconButton).onPressed!;
         }
         if (type == 'expiredScope') fixture.family.source = 'another-source';
         callback();

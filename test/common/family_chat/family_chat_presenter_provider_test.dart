@@ -179,7 +179,7 @@ void main() {
         );
         expect(plugin.shown.last.android!.silent, true);
         expect(plugin.shown.last.android!.actions, isEmpty);
-        expect(plugin.shown.last.android!.timeoutAfter, 3000);
+        expect(plugin.shown.last.android!.timeoutAfter, 1000);
         await presenter.pending(view, needsTicket: false);
         expect(
           plugin.shown.last.title,
