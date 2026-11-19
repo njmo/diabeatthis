@@ -190,7 +190,7 @@ class FamilyChatDatabase extends GeneratedDatabase {
   }) async {
     final version =
         expectedGeneration ?? (await fence.read())['version'] as String;
-    return transaction(() async {
+    final admitted = await transaction(() async {
       await _lockActive();
       if (allowed?.call() == false) return false;
       if (await fence.blocked() &&
@@ -206,6 +206,10 @@ class FamilyChatDatabase extends GeneratedDatabase {
       }
       return true;
     });
+    if (admitted && _notificationInbox != null) {
+      NotificationInboxStore.notifyFamilyChatAccessChanged();
+    }
+    return admitted;
   }
 
   Future<List<FamilyChatNotice>> deactivateChat({
@@ -214,6 +218,9 @@ class FamilyChatDatabase extends GeneratedDatabase {
   }) async {
     final version = await fence.block(expectedStamp: expectedStamp);
     if (version == null) return <FamilyChatNotice>[];
+    if (_notificationInbox != null) {
+      NotificationInboxStore.notifyFamilyChatAccessChanged();
+    }
     onBlocked?.call(version);
     return cancellationIntents();
   }

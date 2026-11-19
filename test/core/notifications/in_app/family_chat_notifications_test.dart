@@ -261,7 +261,11 @@ void main() {
   test(
     'durable inbox revisions reject restored content after account clear',
     () async {
-      final db = FamilyChatDatabase(NativeDatabase.memory());
+      final db = FamilyChatDatabase(
+        NativeDatabase.memory(),
+        null,
+        NotificationInboxStore(),
+      );
       addTearDown(db.close);
       const scope = '["user","family","epoch"]';
       Future<NotificationInboxEntry> entry(
@@ -284,7 +288,9 @@ void main() {
         createdAt: clock.now(),
       );
 
+      final accessChanged = NotificationInboxStore.changes.first;
       expect(await db.activateChat('user', scope, 'initial'), isTrue);
+      await accessChanged;
       final old = await entry(1);
       expect(await db.authorizedInbox('user', [old]), [old]);
       expect(await db.authorizedInbox('other', [old]), isEmpty);

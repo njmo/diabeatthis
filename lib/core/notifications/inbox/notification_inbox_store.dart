@@ -39,6 +39,8 @@ class NotificationInboxStore {
   /// short-lived ones owned by push handlers, so the UI can follow along.
   static Stream<void> get changes => _changes.stream;
 
+  static void notifyFamilyChatAccessChanged() => _changes.add(null);
+
   void _changed() => _changes.add(null);
 
   final SharedPreferencesAsync? _injected;
@@ -83,7 +85,7 @@ class NotificationInboxStore {
       if (entry.read) await prefs.setBool(_readKey(entry.id), true);
       if (!entry.active) await prefs.setBool(_inactiveKey(entry.id), true);
     } catch (error) {
-      Log.w('NotificationInbox', 'Inbox put failed ($error)');
+      Log.w('NotificationInbox', 'Inbox put failed (${error.runtimeType})');
       return false;
     }
     await _guard('prune', _prune);
@@ -121,7 +123,10 @@ class NotificationInboxStore {
       }
       return null;
     } catch (error) {
-      Log.w('NotificationInbox', 'Could not read entry $id ($error)');
+      Log.w(
+        'NotificationInbox',
+        'Could not read entry $id (${error.runtimeType})',
+      );
       return null;
     }
   }
