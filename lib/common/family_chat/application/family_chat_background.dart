@@ -335,6 +335,7 @@ class FamilyChatBackground {
     String input, {
     bool treatmentUnavailable = false,
     int? answerIndex,
+    Future<void> Function()? onReplyQueued,
   }) async {
     if (!rolloutEnabled) return false;
     if (payload['type'] != 'familyChat') return false;
@@ -438,6 +439,7 @@ class FamilyChatBackground {
       return true;
     });
     if (queued != true) return false;
+    if (created && currentUid() == uid) await onReplyQueued?.call();
     _unreadChanges.add(scope);
     Future<void> cancelCompleted({bool acknowledge = false}) async {
       if (currentUid() != uid) return;

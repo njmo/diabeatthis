@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:intl/intl.dart';
 
+import '../../../features/low_treatment/application/snooze_aaps_carbs_request.dart';
 import '../../../features/low_treatment/presentation/widgets/quick_low_treatment_selection.dart';
 import '../../../features/low_treatment/presentation/widgets/quick_low_treatment_tile.dart';
 import '../../backend/authenticated_callable_transport.dart';
@@ -1017,6 +1018,12 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
             ? message.answers.indexOf(answer)
             : null,
       );
+      if (queued &&
+          message.lowTreatment != null &&
+          answer == _treatmentFeelsWellAnswer &&
+          !widget._session.isCaregiver) {
+        await snoozeAapsCarbsRequest();
+      }
       // Questions: once queued, the shared reply policy (pending/unknown
       // blocks, definite failure reopens) owns duplicate protection, so a
       // later definite failure can be answered again. Other rows (clinical

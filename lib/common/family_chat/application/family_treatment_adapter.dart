@@ -10,6 +10,7 @@ import '../../../core/drift/providers/database_provider.dart';
 import '../../../features/ingredients/data/drafts/ingredient_draft.dart';
 import '../../../features/ingredients/data/drafts/ingredient_portion_draft.dart';
 import '../../../features/low_treatment/application/save_recorded_low_treatment_use_case.dart';
+import '../../../features/low_treatment/application/snooze_aaps_carbs_request.dart';
 import '../../../features/low_treatment/data/drafts/low_treatment_context_draft.dart';
 import '../../../features/low_treatment/data/providers/aaps_carbs_request_episode_store_provider.dart';
 import '../../../features/low_treatment/data/repositories/family_treatment_journal.dart';
@@ -64,6 +65,13 @@ ConfirmFamilyTreatment createFamilyTreatmentExecutor(
     api: api,
     currentUid: currentUid,
     observedAuthorization: observedAuthorization,
+    onCommitted: (confirmedAt) async {
+      if (confirmedAt != null) {
+        await snoozeAapsCarbsRequest(
+          at: DateTime.fromMillisecondsSinceEpoch(confirmedAt),
+        );
+      }
+    },
     onPrepared: (id, guard) async {
       final notice = familyChatNotice(guard['scope'] as String, id);
       await chatDb.withChatGuard(

@@ -4,8 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/models/aaps_carbs_request_episode.dart';
 
+typedef AapsCarbsRequestSnooze = ({String episodeId, DateTime at});
+
 abstract interface class AapsCarbsRequestEpisodeStore {
   Future<AapsCarbsRequestEpisode> load();
+  Future<AapsCarbsRequestSnooze?> loadSnooze();
   Future<void> start(String episodeId);
   Future<void> markReminded(DateTime at);
   Future<void> acceptStatus(DateTime at, double? activeCarbsReq);
@@ -17,12 +20,46 @@ abstract interface class AapsCarbsRequestEpisodeStore {
 class SharedPreferencesAapsCarbsRequestEpisodeStore
     implements AapsCarbsRequestEpisodeStore {
   static const _episodeKey = 'aaps_carbs_request_episode';
+  static const _snoozeKey = 'aaps_carbs_request_snooze';
 
   final Future<SharedPreferences> Function() loadPreferences;
 
   const SharedPreferencesAapsCarbsRequestEpisodeStore({
     required this.loadPreferences,
   });
+
+  @override
+  Future<AapsCarbsRequestSnooze?> loadSnooze() async {
+    final preferences = await loadPreferences();
+    await preferences.reload();
+    final encoded = preferences.getString(_snoozeKey);
+    if (encoded == null) return null;
+    try {
+      final data = jsonDecode(encoded);
+      if (data case {'episodeId': final String id, 'at': final int at}) {
+        return (episodeId: id, at: DateTime.fromMillisecondsSinceEpoch(at));
+      }
+    } on FormatException {
+      return null;
+    }
+    return null;
+  }
+
+  Future<void> saveSnooze(AapsCarbsRequestSnooze snooze) async {
+    final previous = await loadSnooze();
+    if (previous != null && !snooze.at.isAfter(previous.at)) return;
+    final preferences = await loadPreferences();
+    final saved = await preferences.setString(
+      _snoozeKey,
+      jsonEncode({
+        'episodeId': snooze.episodeId,
+        'at': snooze.at.millisecondsSinceEpoch,
+      }),
+    );
+    if (!saved) {
+      throw StateError('Could not persist AAPS carbs request snooze.');
+    }
+  }
 
   @override
   Future<AapsCarbsRequestEpisode> load() async {

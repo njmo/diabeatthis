@@ -7,6 +7,7 @@ import '../../../common/treatments/raw_treatment_batch_buffer.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
 import '../../task/base/runtime_context.dart';
+import '../internal/aaps_carbs_request_snoozed_event.dart';
 import 'app/app_event_handler.dart';
 import 'external_event.dart';
 import 'local_treatments/local_treatments_event.dart';
@@ -61,6 +62,13 @@ class ExternalEventHandler with Logging {
               ),
             ),
       );
+      return;
+    }
+    final appEvent = event['data'];
+    if (event['external_event'] == 'app_event' &&
+        appEvent is Map &&
+        appEvent['app_event'] == AapsCarbsRequestSnoozedEvent.command) {
+      _runtimeContext.emitEvent(const AapsCarbsRequestSnoozedEvent());
       return;
     }
     final rawTreatments = nativeTreatmentPayloads(event);

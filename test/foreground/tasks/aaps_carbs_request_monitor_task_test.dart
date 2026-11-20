@@ -7,6 +7,7 @@ import 'package:diabeatthis/features/low_treatment/data/providers/aaps_carbs_req
 import 'package:diabeatthis/features/low_treatment/data/repositories/aaps_carbs_request_episode_store.dart';
 import 'package:diabeatthis/features/low_treatment/domain/models/aaps_carbs_request_episode.dart';
 import 'package:diabeatthis/foreground/event/internal/aaps_carbs_request_acknowledged_event.dart';
+import 'package:diabeatthis/foreground/event/internal/aaps_carbs_request_snoozed_event.dart';
 import 'package:diabeatthis/foreground/event/internal/data_available_event.dart';
 import 'package:diabeatthis/foreground/synchronization/synchronization_cache_controller.dart';
 import 'package:diabeatthis/foreground/task/tasks/aaps_carbs_request_monitor_task.dart';
@@ -20,6 +21,71 @@ import '../utils/fake_runtime_harness.dart';
 
 void main() {
   final start = DateTime(2026, 9, 15, 12);
+
+  test('snoozes only the matching request for five minutes', () {
+    fakeAsync((async) {
+      withClock(Clock(() => start.add(async.elapsed)), () {
+        final fixture = _fixture(start);
+        unawaited(
+          const AapsCarbsRequestMonitorTask()
+              .run(fixture.harness.runtimeContext)
+              .catchError((_) {}),
+        );
+        async.flushMicrotasks();
+        final episodeId = fixture.store.value.id!;
+        fixture.store.snooze = (
+          episodeId: 'different-episode',
+          at: clock.now(),
+        );
+        fixture.harness.dispatchEvent(const AapsCarbsRequestSnoozedEvent());
+        async.flushMicrotasks();
+        expect(fixture.notifications.cancelledIds, isEmpty);
+
+        async.elapse(const Duration(minutes: 1));
+        final snoozedAt = clock.now();
+        fixture.store.snooze = (episodeId: episodeId, at: snoozedAt);
+        fixture.harness.dispatchEvent(const AapsCarbsRequestSnoozedEvent());
+        async.flushMicrotasks();
+        expect(fixture.notifications.cancelledIds, hasLength(1));
+        expect(fixture.store.value.lastReminderAt, snoozedAt);
+        expect(fixture.store.value.acknowledged, isFalse);
+
+        async.elapse(const Duration(minutes: 4, seconds: 59));
+        final latest = clock.now();
+        fixture.cache.cacheDeviceStatus(
+          testDeviceStatus(
+            date: latest,
+            iob: 0,
+            cob: 0,
+            tick: '0',
+            bg: 100,
+            carbsReq: 8,
+          ),
+        );
+        fixture.cache.cacheGlucose(
+          Glucose(
+            externalId: null,
+            source: GlucoseSource.cloud,
+            date: latest,
+            sgv: 100,
+            direction: 'Flat',
+          ),
+        );
+        fixture.harness.dispatchEvent(
+          DataAvailableEvent(fixture.cache.deviceStatusCache),
+        );
+        fixture.harness.dispatchTick(latest);
+        async.flushMicrotasks();
+        expect(fixture.notifications.shownEvents, hasLength(1));
+
+        async.elapse(const Duration(seconds: 1));
+        fixture.harness.dispatchTick(clock.now());
+        async.flushMicrotasks();
+        expect(fixture.notifications.shownEvents, hasLength(2));
+        fixture.harness.cancel();
+      });
+    });
+  });
 
   test(
     'hides without replaying the saved request when the cache regresses',
@@ -356,6 +422,11 @@ _fixture(DateTime now) {
 }
 
 class _MemoryStore implements AapsCarbsRequestEpisodeStore {
+  AapsCarbsRequestSnooze? snooze;
+
+  @override
+  Future<AapsCarbsRequestSnooze?> loadSnooze() async => snooze;
+
   int acknowledgementFailures = 0;
   AapsCarbsRequestEpisode value = const AapsCarbsRequestEpisode.empty();
 

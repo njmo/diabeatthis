@@ -174,6 +174,9 @@ void main() {
 }
 
 class FreshnessEpisodeStore implements AapsCarbsRequestEpisodeStore {
+  @override
+  Future<AapsCarbsRequestSnooze?> loadSnooze() async => null;
+
   AapsCarbsRequestEpisode value = const AapsCarbsRequestEpisode.empty();
   @override
   Future<AapsCarbsRequestEpisode> load() async => value;

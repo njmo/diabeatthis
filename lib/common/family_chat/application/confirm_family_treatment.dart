@@ -102,6 +102,7 @@ class ConfirmFamilyTreatment {
     required this.clinicalAuthorized,
     required this.save,
     this.onPrepared,
+    this.onCommitted,
     this.observedAuthorization,
   });
   final FamilyChatDatabase chatDb;
@@ -113,6 +114,7 @@ class ConfirmFamilyTreatment {
   save;
   final Future<void> Function(String id, Map<String, dynamic> guard)?
   onPrepared;
+  final Future<void> Function(int? confirmedAt)? onCommitted;
   final FamilyTreatmentAuthorization? Function()? observedAuthorization;
 
   Future<bool> _allowed(
@@ -351,6 +353,9 @@ class ConfirmFamilyTreatment {
       deadlineMilliseconds: until - serverTime,
       appliedAt: serverTime,
     );
+    if (savedHere && currentUid() == uid) {
+      await onCommitted?.call(operation.confirmedAt);
+    }
     final acknowledged = await finish(operation);
     if (savedHere && !recovery && currentUid() == uid) {
       await onSaved?.call(mealId);

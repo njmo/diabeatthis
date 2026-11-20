@@ -145,6 +145,7 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
       _publishRequestChanged(context);
       episode = episode.start(id);
     }
+    episode = await _applySnooze(context, episode, store);
     if (episode.acknowledged || !_isDue(episode, now)) return episode;
 
     episode = await _applyEvents(
@@ -164,6 +165,7 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
     if (signal.type != AapsCarbsRequestSignalType.positive) {
       return _hideUnavailable(context, episode);
     }
+    episode = await _applySnooze(context, episode, store);
     if (episode.acknowledged || !_isDue(episode, checkedAt)) {
       return episode;
     }
@@ -263,6 +265,26 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
       episode = await _cancelPending(context, episode, store);
     }
     return episode;
+  }
+
+  Future<AapsCarbsRequestEpisode> _applySnooze(
+    RuntimeContext context,
+    AapsCarbsRequestEpisode episode,
+    AapsCarbsRequestEpisodeStore store,
+  ) async {
+    if (episode.acknowledged) return episode;
+    final snooze = await store.loadSnooze();
+    final now = clock.now();
+    if (snooze == null ||
+        snooze.episodeId != episode.id ||
+        snooze.at.isAfter(now) ||
+        !now.isBefore(snooze.at.add(reminderInterval)) ||
+        episode.lastReminderAt?.isBefore(snooze.at) == false) {
+      return episode;
+    }
+    await _cancelNotification(context);
+    await store.markReminded(snooze.at);
+    return episode.reminded(snooze.at);
   }
 
   bool _isDue(AapsCarbsRequestEpisode episode, DateTime now) {

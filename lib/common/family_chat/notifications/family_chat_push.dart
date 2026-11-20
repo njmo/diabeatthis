@@ -16,6 +16,7 @@ import '../../../core/firebase/firebase_app_check_provider.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/family_chat_notification.dart';
 import '../../../features/low_treatment/application/resolve_low_treatment_upload_status_use_case.dart';
+import '../../../features/low_treatment/application/snooze_aaps_carbs_request.dart';
 import '../../../features/low_treatment/data/providers/low_treatment_upload_provider.dart';
 import '../../../firebase_options.dart';
 import '../../auth/load_firebase_callable_identity.dart';
@@ -295,6 +296,7 @@ Future<void> handleFamilyChatNotificationResponse(
         payload,
         'Czuję się dobrze',
         treatmentUnavailable: true,
+        onReplyQueued: snoozeAapsCarbsRequest,
       );
     } else if (response.actionId == 'family_chat_reply' &&
         response.input != null) {
