@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:diabeatthis/common/backend/authenticated_callable_transport.dart';
+import 'package:diabeatthis/common/family_sync/child_ingredient_search_repository.dart';
+import 'package:diabeatthis/common/family_sync/edit_family_quick_treatment_use_case.dart';
 import 'package:diabeatthis/common/family_sync/family_plan_submission_store.dart';
 import 'package:diabeatthis/common/family_sync/family_planning_controller.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
@@ -10,6 +12,84 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test(
+    'quick treatment editor submits the selected child mirror versions',
+    () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      final source = 'a' * 32;
+      final rows = [
+        {
+          'kind': 'ingredients',
+          'id': '1',
+          'revision': 7,
+          'payload': {'id': 1},
+          'deleted': false,
+        },
+      ];
+      var planSource = 'b' * 32;
+      Map<String, dynamic>? submitted;
+      final transport = AuthenticatedCallableTransport(
+        client: MockClient((request) async {
+          final data = (jsonDecode(request.body) as Map)['data'] as Map;
+          final operation = request.url.pathSegments.last;
+          final result = switch (operation) {
+            'searchFamilyMirrorIngredients' => {
+              'ownerUid': 'child',
+              'sourceId': source,
+              'records': rows,
+            },
+            'fetchFamilyPlans' => {
+              'ownerUid': 'child',
+              'sourceId': planSource,
+              'plans': [],
+            },
+            'submitFamilyPlan' => {'id': data['id'], 'status': 'pending'},
+            _ => throw StateError('Unexpected operation: $operation'),
+          };
+          if (operation == 'submitFamilyPlan') {
+            submitted = Map<String, dynamic>.from(data);
+          }
+          return http.Response(jsonEncode({'result': result}), 200);
+        }),
+        projectId: 'test',
+        currentUid: () => 'parent',
+        identity: () async => const CallableIdentity('parent', 'token', 'app'),
+      );
+      final store = FamilyPlanSubmissionStore(db);
+      final editor = EditFamilyQuickTreatmentUseCase(
+        ChildIngredientSearchRepository(
+          transport: transport,
+          caregiverUid: 'parent',
+          childUid: 'child',
+          isCurrent: () => true,
+        ),
+        store,
+      );
+
+      await expectLater(editor.load(), throwsStateError);
+      planSource = source;
+      final snapshot = await editor.load();
+      expect(snapshot.rows, rows);
+      expect(snapshot.pending, isFalse);
+      expect(await editor.ingredientRows(1, source), rows);
+      await editor.save(
+        sourceId: snapshot.sourceId,
+        rows: snapshot.rows,
+        items: [
+          {'ingredientId': 1, 'amount': 2},
+        ],
+      );
+
+      expect(submitted?['type'], 'replaceQuickTreatmentItems');
+      expect(submitted?['sourceId'], source);
+      expect(submitted?['expected'], [
+        {'kind': 'ingredients', 'id': '1', 'revision': 7},
+      ]);
+      expect(await store.pending('parent'), isNull);
+    },
+  );
+
   test(
     'ambiguous parent send is durable and reuses exact ID after reopening',
     () async {
