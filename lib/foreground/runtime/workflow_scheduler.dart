@@ -121,6 +121,8 @@ class WorkflowScheduler with Logging {
     }
 
     final completer = Completer<T>();
+    // Shutdown can cancel a registered wait before the caller awaits it.
+    completer.future.ignore();
     late final EventWaiter<T> waiter;
 
     waiter = EventWaiter<T>(
@@ -154,6 +156,7 @@ class WorkflowScheduler with Logging {
     }
 
     final completer = Completer<void>();
+    completer.future.ignore();
     late final DeadlineWaiter waiter;
 
     waiter = DeadlineWaiter(
@@ -180,6 +183,7 @@ class WorkflowScheduler with Logging {
     }
 
     final completer = Completer<void>();
+    completer.future.ignore();
     late final SignalWaiter waiter;
 
     waiter = SignalWaiter(

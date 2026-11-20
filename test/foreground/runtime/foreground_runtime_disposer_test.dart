@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:diabeatthis/core/logger/logger.dart';
 import 'package:diabeatthis/foreground/runtime/foreground_runtime_disposer.dart';
+import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
 import 'package:diabeatthis/foreground/runtime/workflow_scheduler.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +13,29 @@ import '../utils/controlled_meal_monitor.dart';
 
 void main() {
   LogRuntimeConfig.configure(isUnitTest: true, enableBuffer: false);
+
+  test('shutdown can cancel a wait before its caller subscribes', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final scheduler = WorkflowScheduler();
+    final context = scheduler.createContext(container);
+    final waits = [
+      context.signalWait('work').future,
+      context.durationWait(const Duration(hours: 1)).future,
+      context
+          .wallClockWaitUntilHandle(
+            DateTime.now().add(const Duration(hours: 1)),
+          )
+          .future,
+    ];
+
+    await scheduler.dispose();
+    await Future<void>.delayed(Duration.zero);
+
+    for (final wait in waits) {
+      await expectLater(wait, throwsA(isA<TaskCancelledException>()));
+    }
+  });
 
   test('scheduler bounds shutdown even when task I/O ignores cancellation', () {
     fakeAsync((async) {

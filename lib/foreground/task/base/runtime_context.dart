@@ -205,6 +205,8 @@ class RuntimeContext with Logging {
     final deadlineHandle = _deadlineWaitFactory(deadline);
 
     final completer = Completer<void>();
+    // A caller can register the deadline before it starts awaiting it.
+    completer.future.ignore();
 
     var finished = false;
     Future<void>? cancelDeadlineFuture;
@@ -288,8 +290,10 @@ class RuntimeContext with Logging {
     }
 
     scheduleWake();
+    final future = deadline.future.whenComplete(cancelTimer);
+    future.ignore();
     return WaitHandle<void>(
-      future: deadline.future.whenComplete(cancelTimer),
+      future: future,
       cancel: () async {
         cancelTimer();
         await deadline.cancel();
