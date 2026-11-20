@@ -14,6 +14,7 @@ import '../../../core/drift/database_impl.dart';
 import '../../../core/drift/providers/database_provider.dart';
 import '../../../core/firebase/firebase_app_check_provider.dart';
 import '../../../core/logger/logger.dart';
+import '../../../core/notifications/domain/events/family_chat_notification.dart';
 import '../../../features/low_treatment/data/providers/low_treatment_aaps_provider.dart';
 import '../../../firebase_options.dart';
 import '../../auth/load_firebase_callable_identity.dart';
@@ -256,6 +257,12 @@ Future<void> handleFamilyChatNotificationResponse(
     } else if (response.actionId == 'family_chat_reply' &&
         response.input != null) {
       await worker.reply(payload, response.input!);
+    } else if (response.actionId case final id?
+        when id.startsWith(FamilyChatNotificationEvent.answerActionPrefix)) {
+      final index = int.tryParse(
+        id.substring(FamilyChatNotificationEvent.answerActionPrefix.length),
+      );
+      if (index != null) await worker.reply(payload, '', answerIndex: index);
     }
   });
 }

@@ -297,9 +297,11 @@ void main() {
         'kind': 'question',
         'answers': ['Zjadłem'],
       });
-      expect(ordinary.actions, hasLength(1));
-      expect(ordinary.actions!.single.id, 'family_chat_reply');
-      expect(ordinary.actions!.single.inputs.single.choices, ['Zjadłem']);
+      expect(ordinary.actions!.map((action) => action.id), [
+        'family_chat_reply',
+        'family_chat_answer_0',
+      ]);
+      expect(ordinary.actions!.first.inputs.single.choices, ['Zjadłem']);
       elapsed = 3999;
       expect(details('child', message).timeoutAfter, 1);
       elapsed = 4000;

@@ -17,6 +17,8 @@ typedef FamilyChatNotificationMessage = ({
 /// An authenticated chat notification, already assigned an Android identity
 /// by the durable family chat journal.
 class FamilyChatNotificationEvent implements NotificationEvent {
+  static const answerActionPrefix = 'family_chat_answer_';
+
   const FamilyChatNotificationEvent({
     required this.id,
     required this.tag,

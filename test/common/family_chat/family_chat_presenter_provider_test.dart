@@ -359,6 +359,11 @@ void main() {
           }, 'family'),
         );
         expect(plugin.shown.last.body, message['text']);
+        expect(plugin.shown.last.android!.actions!.map((action) => action.id), [
+          'family_chat_reply',
+          'family_chat_answer_0',
+          'family_chat_answer_1',
+        ]);
         expect(
           plugin.shown.last.android!.actions!
               .singleWhere((action) => action.id == 'family_chat_reply')
@@ -366,6 +371,23 @@ void main() {
               .single
               .choices,
           ['Zjadłem', 'Nie mam'],
+        );
+        await presenter.show(
+          FamilyChatPushView(view.guard, config, {
+            ...message,
+            'kind': 'question',
+            'answers': ['Mam', 'Skończyła się', 'Kupię'],
+          }, 'family'),
+        );
+        expect(
+          plugin.shown.last.android!.actions!
+              .skip(1)
+              .map((action) => action.title),
+          ['Mam', 'Skończyła się', 'Kupię'],
+        );
+        expect(
+          plugin.shown.last.android!.actions!.first.inputs.single.choices,
+          ['Mam', 'Skończyła się', 'Kupię'],
         );
         for (final invalid in [
           <String, dynamic>{'validUntil': 6000},

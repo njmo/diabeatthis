@@ -25,6 +25,7 @@ const _accent = Color(0xFF0EA5E9);
 /// Protocol answers of a low-treatment request. They are sent back as reply
 /// tokens and must stay stable; only their on-screen label is localized.
 const _treatmentAteAnswer = 'Zjadłem';
+const _maxQuestionAnswers = 3;
 const _treatmentNoneAnswer = 'Nie mam';
 const _treatmentFeelsWellAnswer = 'Czuję się dobrze';
 
@@ -986,6 +987,12 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
     String? composerDraft,
     String? targetUid,
   }) async {
+    if (question.answers.length > _maxQuestionAnswers) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.lang.familyChatQuestionAnswerLimit)),
+      );
+      return false;
+    }
     return _sendRemote(
       question.text,
       kind: 'question',
@@ -3616,15 +3623,17 @@ class _QuestionEditorState extends State<_QuestionEditor> {
               ),
               IconButton.filledTonal(
                 tooltip: context.lang.familyChatAddAnswerTooltip,
-                onPressed: () =>
-                    setState(() => _answers.add(TextEditingController())),
+                onPressed: _answers.length < _maxQuestionAnswers
+                    ? () =>
+                          setState(() => _answers.add(TextEditingController()))
+                    : null,
                 icon: const Icon(Icons.add),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
-            context.lang.familyChatChildWillSeeOnlyAnswers,
+            context.lang.familyChatQuestionAnswerLimit,
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -3660,6 +3669,14 @@ class _QuestionEditorState extends State<_QuestionEditor> {
                   .where((s) => s.isNotEmpty)
                   .toSet()
                   .toList();
+              if (answers.length > _maxQuestionAnswers) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(context.lang.familyChatQuestionAnswerLimit),
+                  ),
+                );
+                return;
+              }
               if (text.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(

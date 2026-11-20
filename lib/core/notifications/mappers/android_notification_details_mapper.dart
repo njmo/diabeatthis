@@ -59,6 +59,9 @@ class AndroidNotificationDetailsMapper {
               : null,
         );
       }
+      final choices = event.allowConsumption || event.lowTreatment
+          ? const <String>[]
+          : notificationInputChoicesFor(event);
       return AndroidNotificationDetails(
         channelDefinition.id,
         channelDefinition.name,
@@ -85,11 +88,12 @@ class AndroidNotificationDetailsMapper {
         ),
         actions: [
           for (final action in notificationActionsFor(event, eventDefinition))
-            _familyChatAction(
-              action,
-              event.allowConsumption
-                  ? const []
-                  : notificationInputChoicesFor(event),
+            _familyChatAction(action, choices),
+          for (final (index, choice) in choices.take(3).indexed)
+            AndroidNotificationAction(
+              '${FamilyChatNotificationEvent.answerActionPrefix}$index',
+              choice,
+              cancelNotification: false,
             ),
         ],
       );

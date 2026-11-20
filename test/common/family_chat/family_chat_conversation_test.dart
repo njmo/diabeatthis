@@ -599,7 +599,7 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
-  for (final count in [0, 1, 2]) {
+  for (final count in [0, 1, 2, 3]) {
     testWidgets('question sends exactly $count nonempty proposed replies', (
       tester,
     ) async {
@@ -621,7 +621,15 @@ void main() {
         findsNothing,
       );
       for (var i = 0; i <= count; i++) {
-        await tester.tap(find.byTooltip('Dodaj odpowiedź'));
+        final add = find.byWidgetPredicate(
+          (widget) =>
+              widget is IconButton && widget.tooltip == 'Dodaj odpowiedź',
+        );
+        if (i == 3) {
+          expect(tester.widget<IconButton>(add).onPressed, isNull);
+          break;
+        }
+        await tester.tap(add);
         await tester.pumpAndSettle();
         if (i < count) {
           await tester.enterText(

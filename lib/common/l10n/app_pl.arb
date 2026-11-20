@@ -281,7 +281,7 @@
   "familyChatQuestionContentHint": "O co chcesz zapytać?",
   "familyChatProposedAnswersHeader": "Proponowane odpowiedzi",
   "familyChatAddAnswerTooltip": "Dodaj odpowiedź",
-  "familyChatChildWillSeeOnlyAnswers": "Dziecko zobaczy tylko wpisane odpowiedzi.",
+  "familyChatQuestionAnswerLimit": "Dodaj maksymalnie 3 gotowe odpowiedzi.",
   "familyChatAnswerNumberedLabel": "Odpowiedź {number}",
   "@familyChatAnswerNumberedLabel": {
     "placeholders": {

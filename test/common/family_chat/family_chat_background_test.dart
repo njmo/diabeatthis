@@ -1314,6 +1314,7 @@ void main() {
         <String>[],
         ['Mam'],
         ['Mam', 'Nie mam'],
+        ['Mam', 'Nie mam', 'Kupię'],
       ]) {
         final view = FamilyChatPushView(
           {'uid': 'child', 'scope': scope, 'stamp': 'one'},
@@ -1324,8 +1325,16 @@ void main() {
         final details = AndroidFamilyChatPresenter.messageEvent(
           view,
         ).toAndroidNotificationDetails();
-        expect(details.actions!.single.inputs.single.choices, answers);
-        expect(details.actions!.single.allowGeneratedReplies, false);
+        final actions = details.actions!;
+        final reply = actions.singleWhere(
+          (action) => action.id == 'family_chat_reply',
+        );
+        expect(reply.inputs.single.choices, answers);
+        expect(reply.allowGeneratedReplies, false);
+        expect(
+          actions.where((action) => action.id != reply.id).map((a) => a.title),
+          answers,
+        );
         expect(details.visibility, NotificationVisibility.private);
         expect(details.onlyAlertOnce, true);
         expect(details.tag, view.notice.tag);
@@ -1350,6 +1359,29 @@ void main() {
       }
     },
   );
+  test(
+    'direct answer resolves its index against the cached question',
+    () async {
+      final db = FamilyChatDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      final api = _Api();
+      api.message['answers'] = ['Mam', 'Nie mam', 'Kupię'];
+      final presenter = _Presenter();
+      await db.activateChat('child', scope, 'one');
+      final worker = FamilyChatBackground(
+        db: db,
+        api: api,
+        currentUid: () => 'child',
+        presenter: presenter,
+      );
+      await worker.receive(data);
+      final payload = presenter.shown.single.payload;
+      expect(await worker.reply(payload, '', answerIndex: 3), isFalse);
+      expect(await worker.reply(payload, '', answerIndex: 2), isTrue);
+      expect(api.sent.values.single['text'], 'Kupię');
+    },
+  );
+
   test('pending reply keeps the original Android channel defaults', () {
     const event = FamilyChatNotificationEvent(
       id: 8042,

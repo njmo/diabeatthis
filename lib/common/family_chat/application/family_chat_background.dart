@@ -334,14 +334,10 @@ class FamilyChatBackground {
     Map<String, dynamic> payload,
     String input, {
     bool treatmentUnavailable = false,
+    int? answerIndex,
   }) async {
     if (!rolloutEnabled) return false;
-    final text = input.trim();
-    if (text.isEmpty ||
-        text.length > 64000 ||
-        payload['type'] != 'familyChat') {
-      return false;
-    }
+    if (payload['type'] != 'familyChat') return false;
     final required = {
       'uid': payload['uid'],
       'scope': payload['scope'],
@@ -350,6 +346,19 @@ class FamilyChatBackground {
     };
     final cached = await _cachedReply(payload, required);
     if (cached == null) return false;
+    if (answerIndex != null) {
+      final answers = cached.message['answers'];
+      if (cached.message['kind'] != 'question' ||
+          answers is! List ||
+          answerIndex < 0 ||
+          answerIndex >= answers.length ||
+          answers[answerIndex] is! String) {
+        return false;
+      }
+      input = answers[answerIndex] as String;
+    }
+    final text = input.trim();
+    if (text.isEmpty || text.length > 64000) return false;
     if (treatmentUnavailable &&
         (cached.message['kind'] != 'lowTreatment' ||
             cached.message['treatmentResult'] != null ||

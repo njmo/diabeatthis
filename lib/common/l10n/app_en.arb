@@ -281,7 +281,7 @@
   "familyChatQuestionContentHint": "What would you like to ask?",
   "familyChatProposedAnswersHeader": "Proposed answers",
   "familyChatAddAnswerTooltip": "Add answer",
-  "familyChatChildWillSeeOnlyAnswers": "The child will see only the entered answers.",
+  "familyChatQuestionAnswerLimit": "Use up to 3 suggested answers.",
   "familyChatAnswerNumberedLabel": "Answer {number}",
   "@familyChatAnswerNumberedLabel": {
     "placeholders": {
