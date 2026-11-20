@@ -235,7 +235,7 @@ void main() {
                   actualQuantity: alternate && offline ? 1.5 : null,
                 ),
                 lookup: (id, _) => subscription.read().lookup(id),
-                show: (notice, state) async {
+                show: (notice, state, _) async {
                   expect(await chat.hasCancellationIntent(notice), true);
                   shown = state;
                 },

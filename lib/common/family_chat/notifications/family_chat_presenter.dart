@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 import '../../../core/notifications/base/notifications_controller.dart';
 import '../../../core/notifications/domain/events/family_chat_notification.dart';
 import '../../l10n/language.dart';
@@ -122,8 +124,11 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
   static FamilyChatNotificationEvent consumptionEvent(
     FamilyChatNotice notice,
     Map<String, dynamic> payload,
-    FamilyConsumptionNotice state,
-  ) {
+    FamilyConsumptionNotice state, {
+    double? manualCarbs,
+    String? deliveryStatus,
+  }) {
+    final openAaps = manualCarbs != null;
     final completed =
         state == FamilyConsumptionNotice.recorded ||
         state == FamilyConsumptionNotice.completedElsewhere;
@@ -154,25 +159,45 @@ class AndroidFamilyChatPresenter implements FamilyChatPushPresenter {
       id: notice.id,
       tag: notice.tag,
       title: title,
-      body: body,
-      payload: payload,
+      body: [
+        if (body.isNotEmpty) body,
+        if (manualCarbs != null)
+          '${lang.familyChatTreatmentEnterInAaps} '
+              '${lang.aapsPipCarbs}: ${NumberFormat('0.###', lang.localeName).format(manualCarbs)} g',
+        if (deliveryStatus != null) deliveryStatus,
+      ].join('\n'),
+      payload: openAaps
+          ? {...payload, FamilyChatNotificationEvent.reviewAapsPayloadKey: true}
+          : payload,
       silent: true,
-      timeoutAfter: completed
+      timeoutAfter: openAaps || deliveryStatus != null
+          ? 86400000
+          : completed
           ? 5000
           : state == FamilyConsumptionNotice.pending
           ? 30000
           : 86400000,
-      transient: completed,
+      transient: completed && !openAaps && deliveryStatus == null,
     );
   }
 
   Future<void> consumptionStatus(
     FamilyChatNotice notice,
     Map<String, dynamic> payload,
-    FamilyConsumptionNotice state,
-  ) async {
+    FamilyConsumptionNotice state, {
+    double? manualCarbs,
+    String? deliveryStatus,
+  }) async {
     await _prepare();
-    await _show(consumptionEvent(notice, payload, state));
+    await _show(
+      consumptionEvent(
+        notice,
+        payload,
+        state,
+        manualCarbs: manualCarbs,
+        deliveryStatus: deliveryStatus,
+      ),
+    );
   }
 
   @override

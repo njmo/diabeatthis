@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:diabeatthis/common/family_chat/application/family_chat_background.dart';
 import 'package:diabeatthis/common/family_chat/application/family_chat_consumption_action.dart';
@@ -213,6 +214,27 @@ void main() {
         expect(plugin.shown.last.android!.actions, isEmpty);
         expect(plugin.shown.last.id, notice.id);
         expect(plugin.shown.last.tag, notice.tag);
+
+        await presenter.consumptionStatus(
+          notice,
+          view.payload,
+          FamilyConsumptionNotice.recorded,
+          manualCarbs: 12,
+        );
+        final manual = plugin.shown.last;
+        expect(manual.body, contains('12 g'));
+        expect(manual.android!.timeoutAfter, greaterThan(5000));
+        expect(manual.android!.actions, isEmpty);
+        expect(jsonDecode(manual.payload!)['reviewAaps'], isTrue);
+
+        await presenter.consumptionStatus(
+          notice,
+          view.payload,
+          FamilyConsumptionNotice.recorded,
+          deliveryStatus: 'Nightscout: queued',
+        );
+        expect(plugin.shown.last.body, contains('Nightscout: queued'));
+        expect(plugin.shown.last.android!.actions, isEmpty);
 
         for (final state in FamilyConsumptionNotice.values) {
           await presenter.consumptionStatus(notice, view.payload, state);

@@ -46,7 +46,7 @@ void main() {
       currentUid: () => 'child',
       confirm: (_, _) async => throw const CallableFailure('unavailable'),
       lookup: (_, _) async => (mealId: null, acknowledged: false),
-      show: (notice, state) async {
+      show: (notice, state, _) async {
         expect(state, FamilyConsumptionNotice.pending);
         final details = AndroidFamilyChatPresenter.consumptionEvent(
           notice,
@@ -110,7 +110,7 @@ void main() {
               return result;
             },
             lookup: (_, _) async => result,
-            show: (notice, actual) async {
+            show: (notice, actual, _) async {
               showed++;
               expect(actual, state);
               expect(await db.hasCancellationIntent(notice), true);
@@ -183,7 +183,7 @@ void main() {
             return (mealId: 42, acknowledged: true);
           },
           lookup: (_, _) async => null,
-          show: (_, _) async {
+          show: (_, _, _) async {
             shows++;
           },
           cancel: (_) async {},
@@ -215,7 +215,7 @@ void main() {
             currentUid: () => 'child',
             confirm: (_, _) async => (mealId: 42, acknowledged: true),
             lookup: (_, _) async => null,
-            show: (_, _) async {
+            show: (_, _, _) async {
               await db.fence.block();
             },
             cancel: (_) async {
@@ -272,7 +272,8 @@ void main() {
         (action) => action.id == 'family_chat_consume',
       );
       expect(consume.inputs, isEmpty);
-      expect(consume.cancelNotification, false);
+      expect(consume.cancelNotification, isTrue);
+      expect(consume.showsUserInterface, isFalse);
       final unavailable = treatment.actions!.singleWhere(
         (action) => action.id == 'family_chat_treatment_unavailable',
       );

@@ -219,7 +219,8 @@ class _InboxEntryCard extends ConsumerWidget {
     final actionable = event != null && entry.active && actions.isNotEmpty;
     final expired = !actionable && actions.isNotEmpty;
     final opensChat =
-        event is FamilyChatNotificationEvent && event.message != null;
+        event is FamilyChatNotificationEvent &&
+        (event.message != null || event.opensAapsReview);
     final reply = actionable
         ? actions
               .where(

@@ -15,14 +15,17 @@ import '../../../core/drift/providers/database_provider.dart';
 import '../../../core/firebase/firebase_app_check_provider.dart';
 import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/events/family_chat_notification.dart';
-import '../../../features/low_treatment/data/providers/low_treatment_aaps_provider.dart';
+import '../../../features/low_treatment/application/resolve_low_treatment_upload_status_use_case.dart';
+import '../../../features/low_treatment/data/providers/low_treatment_upload_provider.dart';
 import '../../../firebase_options.dart';
 import '../../auth/load_firebase_callable_identity.dart';
 import '../../backend/authenticated_callable_transport.dart';
+import '../../identifiers/create_uuid.dart';
 import '../../l10n/language.dart';
 import '../application/confirm_family_treatment.dart';
 import '../application/family_chat_background.dart';
 import '../application/family_chat_consumption_action.dart';
+import '../application/family_treatment_aaps_handoff.dart';
 import '../application/family_treatment_adapter.dart';
 import '../data/family_chat_database.dart';
 import '../data/family_chat_remote.dart';
@@ -135,7 +138,10 @@ Future<void> showFamilyChatPush(
   presenter: presenter,
 );
 
-Future<void> _queueConversationOpen(Map<String, dynamic> payload) async {
+Future<void> _queueConversationOpen(
+  Map<String, dynamic> payload, {
+  required bool reviewAaps,
+}) async {
   await _initialize();
   final uid = payload['uid'];
   final scope = payload['scope'];
@@ -150,13 +156,14 @@ Future<void> _queueConversationOpen(Map<String, dynamic> payload) async {
   }
   final db = FamilyChatDatabase();
   try {
-    // This is only a navigation request. The UI validates the current
-    // admission, membership, history and message before opening the chat.
+    // The foreground runtime revalidates admission before routing the action.
     await db.setMetadata('chatOpen', {
       'uid': uid,
       'scope': scope,
       'messageId': messageId,
       'historyGeneration': generation,
+      'intentId': createUuid(),
+      if (reviewAaps) ...{'reviewAaps': true, 'stamp': payload['stamp']},
     });
     familyChatOpenEvents.add(null);
   } catch (error) {
@@ -180,7 +187,11 @@ Future<void> handleFamilyChatNotificationResponse(
   if (response.actionId == null ||
       response.actionId!.isEmpty ||
       response.actionId == 'family_chat_open_request') {
-    await _queueConversationOpen(payload);
+    await _queueConversationOpen(
+      payload,
+      reviewAaps:
+          payload[FamilyChatNotificationEvent.reviewAapsPayloadKey] == true,
+    );
     return;
   }
   await _withWorker(presenter: presenter, (worker, db, presenter) async {
@@ -217,28 +228,59 @@ Future<void> handleFamilyChatNotificationResponse(
           api: worker.api,
           payload: payload,
           currentUid: worker.currentUid,
-          confirm: (id, guard) => executor(guard).confirm(
-            id,
-            onSaved: (mealId) async {
-              if (WidgetsBinding.instance.lifecycleState !=
-                  AppLifecycleState.resumed) {
-                return;
-              }
-              try {
-                await container!
-                    .read(lowTreatmentAapsControllerProvider)
-                    .open(mealId, lang);
-              } catch (error) {
-                Log.w(
-                  'FamilyChatPush',
-                  'Could not open AAPS (${error.runtimeType})',
-                );
-              }
-            },
-          ),
+          confirm: (id, guard) => executor(guard).confirm(id),
           lookup: (id, guard) => executor(guard).lookup(id),
-          show: (notice, state) =>
-              presenter.consumptionStatus(notice, payload, state),
+          show: (notice, state, mealId) async {
+            double? manualCarbs;
+            String? deliveryStatus;
+            try {
+              if (mealId != null && container != null) {
+                final providers = container!;
+                final upload = await providers
+                    .read(lowTreatmentUploadRepositoryProvider)
+                    .find(mealId);
+                if (upload != null) {
+                  final settings = await providers.read(
+                    nightscoutLowTreatmentSettingsLoaderProvider,
+                  )();
+                  deliveryStatus =
+                      switch (const ResolveLowTreatmentUploadStatusUseCase()(
+                        state: upload.state,
+                        sourceKey: upload.sourceKey,
+                        settings: settings,
+                      )) {
+                        LowTreatmentUploadDisplayStatus.queued =>
+                          lang.lowTreatmentUploadQueued,
+                        LowTreatmentUploadDisplayStatus.verifying =>
+                          lang.lowTreatmentUploadVerifying,
+                        LowTreatmentUploadDisplayStatus.sent =>
+                          lang.lowTreatmentUploadSent,
+                        LowTreatmentUploadDisplayStatus.cancelled =>
+                          lang.lowTreatmentUploadCancelled,
+                        LowTreatmentUploadDisplayStatus.paused =>
+                          lang.lowTreatmentUploadPaused,
+                      };
+                } else {
+                  final pending = await providers
+                      .read(familyTreatmentAapsHandoffProvider)
+                      .pendingFor(mealId);
+                  manualCarbs = pending?.expectedCarbs;
+                }
+              }
+            } catch (error) {
+              Log.w(
+                'FamilyChatPush',
+                'Could not load treatment delivery details (${error.runtimeType})',
+              );
+            }
+            await presenter.consumptionStatus(
+              notice,
+              payload,
+              state,
+              manualCarbs: manualCarbs,
+              deliveryStatus: deliveryStatus,
+            );
+          },
           cancel: presenter.cancel,
         );
       } finally {

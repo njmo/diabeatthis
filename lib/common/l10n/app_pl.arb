@@ -125,6 +125,8 @@
   "familyChatTreatmentHandledByOtherDevice": "Potwierdzenie obsługuje inne urządzenie. Nie utworzono nowego wpisu.",
   "familyChatTreatmentUnavailable": "Prośba jest niedostępna. Nie zapisano dosłodzenia.",
   "familyChatTreatmentSaveFailed": "Nie zapisano dosłodzenia. Sprawdź połączenie i spróbuj ponownie.",
+  "familyChatEnterCarbsInAaps": "Wpisz gramy w AAPS",
+  "familyChatTreatmentEnterInAaps": "Wpisz zapisane węglowodany w AAPS.",
   "familyChatTreatmentRecorded": "Zapisano dosłodzenie",
   "familyChatTreatmentRecordedPendingNetwork": "Zapisano dosłodzenie · potwierdzenie oczekuje na sieć",
   "familyChatChildConfirmedEating": "Dziecko potwierdziło zjedzenie",

@@ -26,7 +26,7 @@ List<NotificationActionDef> notificationActionsFor(
     NotificationActionDef.plain(
       type: NotificationActionType.familyChatConsume,
       label: lang.familyChatTreatmentAnswerAte,
-      openApp: true,
+      openApp: false,
     ),
     NotificationActionDef.plain(
       type: NotificationActionType.familyChatTreatmentUnavailable,

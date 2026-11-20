@@ -113,7 +113,8 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
   Timer? _autoDismiss;
   bool _editing = false;
 
-  bool get _informational => widget.banner.actions.isEmpty;
+  bool get _informational =>
+      widget.banner.actions.isEmpty && !widget.banner.opensOnTap;
 
   @override
   void initState() {
@@ -140,6 +141,7 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
     _autoDismiss?.cancel();
     if (_editing) return;
     final duration = switch (widget.banner.event) {
+      FamilyChatNotificationEvent(opensAapsReview: true) => 15000,
       FamilyChatNotificationEvent(timeoutAfter: final ms?) => ms.clamp(
         0,
         _maxPreviewMilliseconds,
@@ -300,6 +302,17 @@ class _InAppBannerCardState extends ConsumerState<_InAppBannerCard> {
                         ),
                       ],
                     ),
+                    if (event case FamilyChatNotificationEvent(
+                      opensAapsReview: true,
+                    ))
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: TextButton(
+                          onPressed: () =>
+                              unawaited(center.open(banner.id, event)),
+                          child: Text(context.lang.familyChatEnterCarbsInAaps),
+                        ),
+                      ),
                     if (reply != null)
                       Padding(
                         padding: const EdgeInsets.only(

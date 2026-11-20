@@ -35,6 +35,10 @@ class FamilyChatNotificationEvent implements NotificationEvent {
     this.transient = false,
   });
 
+  static const reviewAapsPayloadKey = 'reviewAaps';
+
+  bool get opensAapsReview => payload[reviewAapsPayloadKey] == true;
+
   final int id;
   final String tag;
   @override

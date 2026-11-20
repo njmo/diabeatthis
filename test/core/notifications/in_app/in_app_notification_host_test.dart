@@ -337,6 +337,41 @@ void main() {
     expect(find.text(event.title), findsOneWidget);
   });
 
+  testWidgets('a system AAPS reminder surfaces as a banner on refresh', (
+    tester,
+  ) async {
+    final container = await pumpApp(tester);
+    const reminder = FamilyChatNotificationEvent(
+      id: 712,
+      tag: 'recorded-treatment',
+      title: 'Zapisano dosłodzenie',
+      body: 'Wpisz zapisane węglowodany w AAPS.',
+      payload: {FamilyChatNotificationEvent.reviewAapsPayloadKey: true},
+      silent: true,
+    );
+    await tester.runAsync(() async {
+      await NotificationInboxStore().put(
+        NotificationInboxEntry.fromEvent(
+          reminder,
+          id: reminder.id,
+          createdAt: clock.now(),
+        ),
+      );
+      await container.read(inAppNotificationCenterProvider.notifier).refresh();
+    });
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 6));
+
+    final banner = container.read(inAppNotificationCenterProvider).current;
+    expect(banner?.id, reminder.id);
+    expect(banner?.opensOnTap, isTrue);
+    expect(find.text(reminder.title), findsOneWidget);
+    expect(
+      find.widgetWithText(TextButton, 'Wpisz gramy w AAPS'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('a new notification is shown above an unanswered one', (
     tester,
   ) async {

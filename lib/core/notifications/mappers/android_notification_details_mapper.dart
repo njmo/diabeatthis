@@ -129,7 +129,7 @@ class AndroidNotificationDetailsMapper {
     action.type.toDarwinString(),
     action is TextNotificationActionDef ? lang.familyChatReply : action.label,
     showsUserInterface: action.openApp,
-    cancelNotification: false,
+    cancelNotification: action.type == NotificationActionType.familyChatConsume,
     semanticAction: action is TextNotificationActionDef
         ? SemanticAction.reply
         : SemanticAction.none,

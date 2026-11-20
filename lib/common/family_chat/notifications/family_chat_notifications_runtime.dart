@@ -21,10 +21,13 @@ import '../application/family_chat_background.dart';
 import '../application/family_chat_runtime.dart';
 import '../application/family_chat_settings_controller.dart';
 import '../application/family_chat_settings_runtime.dart';
+import '../application/family_treatment_aaps_handoff.dart';
+import '../application/family_treatment_adapter.dart';
 import '../application/family_treatment_consumption_recovery.dart';
 import '../application/family_treatment_recovery.dart';
 import '../data/family_chat_remote.dart';
 import '../presentation/family_chat_page.dart';
+import '../presentation/family_treatment_aaps_review.dart';
 import 'family_chat_presenter_provider.dart';
 import 'family_chat_push.dart';
 import 'family_chat_registration.dart';
@@ -290,13 +293,15 @@ class _FamilyChatNotificationRuntimeState
       }
       final intent = await runtime.db.metadata('chatOpen');
       if (intent == null) return;
+      Future<void> clearIntent() => runtime.db.customStatement(
+        "DELETE FROM chat_metadata WHERE key='chatOpen' AND value=?",
+        [jsonEncode(intent)],
+      );
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != session!.uid ||
           intent['uid'] != uid ||
           intent['scope'] != session.scope) {
-        await runtime.db.customStatement(
-          "DELETE FROM chat_metadata WHERE key='chatOpen'",
-        );
+        await clearIntent();
         return;
       }
       final scope = session.scope!;
@@ -311,9 +316,53 @@ class _FamilyChatNotificationRuntimeState
       if (id is! String ||
           generation is! int ||
           !await runtime.db.historyAllows(scope, generation)) {
-        await runtime.db.customStatement(
-          "DELETE FROM chat_metadata WHERE key='chatOpen'",
+        await clearIntent();
+        return;
+      }
+      if (intent['reviewAaps'] == true) {
+        if (session.isCaregiver || intent['stamp'] != guard['stamp']) {
+          await clearIntent();
+          return;
+        }
+        bool isForeground() =>
+            mounted &&
+            session.enabled &&
+            runtime.session == session &&
+            FirebaseAuth.instance.currentUser?.uid == uid &&
+            WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+        if (!isForeground()) return;
+        final navigator = ref.read(appRouterProvider).navigatorKey.currentState;
+        if (navigator == null) {
+          _retry?.cancel();
+          _retry = Timer(const Duration(milliseconds: 250), _changed);
+          return;
+        }
+        final handoff = ref.read(familyTreatmentAapsHandoffProvider);
+        final subscription = ref.listenManual(
+          familyTreatmentExecutorProvider(session),
+          (_, _) {},
         );
+        try {
+          final handled = await handoff.open(
+            executor: subscription.read(),
+            messageId: id,
+            confirm: (pending) =>
+                showFamilyTreatmentAapsReview(navigator.context, pending),
+            isCurrent: () async {
+              final active = await runtime.db.activeChat();
+              final current = await runtime.db.metadata('chatOpen');
+              return active['enabled'] == true &&
+                  active['uid'] == uid &&
+                  active['scope'] == scope &&
+                  active['stamp'] == guard['stamp'] &&
+                  current?['intentId'] == intent['intentId'] &&
+                  isForeground();
+            },
+          );
+          if (handled) await clearIntent();
+        } finally {
+          subscription.close();
+        }
         return;
       }
       // A just-queued outgoing request can still be in the local outbox
@@ -367,9 +416,7 @@ class _FamilyChatNotificationRuntimeState
                   .singleOrNull;
       }
       if (target == null) {
-        await runtime.db.customStatement(
-          "DELETE FROM chat_metadata WHERE key='chatOpen'",
-        );
+        await clearIntent();
         return;
       }
       final navigator = ref.read(appRouterProvider).navigatorKey.currentState;
@@ -380,9 +427,7 @@ class _FamilyChatNotificationRuntimeState
       }
       if (jsonEncode(await runtime.db.metadata('chatOpen')) ==
           jsonEncode(intent)) {
-        await runtime.db.customStatement(
-          "DELETE FROM chat_metadata WHERE key='chatOpen'",
-        );
+        await clearIntent();
       }
       if (mounted && session.enabled && runtime.session == session) {
         unawaited(

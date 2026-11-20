@@ -125,6 +125,8 @@
   "familyChatTreatmentHandledByOtherDevice": "Confirmation is handled by another device. No new entry was created.",
   "familyChatTreatmentUnavailable": "Request is unavailable. Treatment was not saved.",
   "familyChatTreatmentSaveFailed": "Treatment was not saved. Check your connection and try again.",
+  "familyChatEnterCarbsInAaps": "Enter carbs in AAPS",
+  "familyChatTreatmentEnterInAaps": "Enter the recorded carbohydrates in AAPS.",
   "familyChatTreatmentRecorded": "Low treatment recorded",
   "familyChatTreatmentRecordedPendingNetwork": "Low treatment recorded · confirmation waiting for network",
   "familyChatChildConfirmedEating": "Child confirmed eating",

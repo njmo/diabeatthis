@@ -46,9 +46,11 @@ class InAppBanner {
   /// Suggested answers for a text action.
   List<String> get inputChoices => notificationInputChoicesFor(event);
 
-  /// Tapping a chat message opens its conversation.
+  /// Chat banners open the conversation or a pending AAPS review.
   bool get opensOnTap =>
-      event is FamilyChatNotificationEvent && actions.isNotEmpty;
+      event is FamilyChatNotificationEvent &&
+      (actions.isNotEmpty ||
+          (event as FamilyChatNotificationEvent).opensAapsReview);
 }
 
 class InAppNotificationState {
@@ -469,8 +471,7 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
     final shown = banners.map((banner) => banner.id).toSet();
     // The inbox is newest first; restored banners go behind live ones.
     for (final entry in inbox) {
-      if (!entry.inApp ||
-          entry.read ||
+      if (entry.read ||
           !entry.active ||
           shown.contains(entry.id) ||
           _handingOver.contains(entry.id) ||
@@ -479,6 +480,10 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
       }
       final event = eventFor(entry);
       if (event == null) continue;
+      if (!entry.inApp &&
+          (event is! FamilyChatNotificationEvent || !event.opensAapsReview)) {
+        continue;
+      }
       banners.add(
         InAppBanner(
           id: entry.id,
@@ -489,7 +494,7 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
       );
       // It may have been handed to the system tray while the app was in the
       // background; the banner replaces that copy.
-      unawaited(_withdrawSystemCopy(event));
+      if (entry.inApp) unawaited(_withdrawSystemCopy(event));
     }
     return banners;
   }

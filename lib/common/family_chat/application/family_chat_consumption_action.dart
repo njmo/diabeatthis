@@ -33,6 +33,7 @@ Future<bool> handleFamilyChatConsumption({
   required Future<void> Function(
     FamilyChatNotice notice,
     FamilyConsumptionNotice state,
+    int? mealId,
   )
   show,
   required Future<void> Function(FamilyChatNotice notice) cancel,
@@ -119,7 +120,7 @@ Future<bool> handleFamilyChatConsumption({
         await db.notificationCancelling(scope, notice.tag)) {
       return false;
     }
-    await show(notice, state);
+    await show(notice, state, result?.mealId);
     await db.markNotificationShown(guard, notice);
     return true;
   });
