@@ -36,6 +36,14 @@ jobs:
       - name: Build Android debug APK
         run: |
           df -h /
+          gradle_home="${GRADLE_USER_HOME:-$HOME/.gradle}"
+          mkdir -p "$gradle_home"
+          cat >> "$gradle_home/gradle.properties" <<'EOF'
+
+          org.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1024m -XX:ReservedCodeCacheSize=512m -XX:+HeapDumpOnOutOfMemoryError
+          org.gradle.workers.max=2
+          kotlin.daemon.jvmargs=-Xmx1g
+          EOF
           flutter build apk --debug --no-pub
 
       - name: Report disk usage after Android build
