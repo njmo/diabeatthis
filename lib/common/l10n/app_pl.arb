@@ -14,6 +14,7 @@
   "familyChatRetrySetting": "Zastosuj ponownie",
   "familyChatDiscardSetting": "Odrzuć poprzednią zmianę",
   "familyChatReenableHere": "Potwierdź włączenie na tym urządzeniu",
+  "familyChatLoadingMessages": "Ładowanie wiadomości…",
   "familyChatLoadingSettings": "Łączenie z ustawieniami rodziny…",
   "familyChatJoinRequired": "Połącz rodzinę, aby korzystać z rozmów.",
   "familyChatSharedRetention": "Wspólne dla rodziny. Zmienia opiekun.",

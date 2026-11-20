@@ -14,6 +14,7 @@
   "familyChatRetrySetting": "Apply again",
   "familyChatDiscardSetting": "Discard the previous change",
   "familyChatReenableHere": "Confirm enabling on this device",
+  "familyChatLoadingMessages": "Loading messages…",
   "familyChatLoadingSettings": "Connecting to family settings…",
   "familyChatJoinRequired": "Connect your family to use conversations.",
   "familyChatSharedRetention": "Shared by the family. Managed by caregivers.",

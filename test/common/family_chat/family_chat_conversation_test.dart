@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:diabeatthis/common/family_chat/application/family_chat_session.dart';
 import 'package:diabeatthis/common/family_chat/application/family_chat_settings_runtime.dart';
 import 'package:diabeatthis/common/family_chat/data/family_chat_database.dart';
@@ -12,6 +14,41 @@ import '../../helpers/localized_material_app.dart';
 import 'support/family_chat_test_api.dart';
 
 void main() {
+  for (final caregiver in [true, false]) {
+    testWidgets(
+      'empty chat shows initial history loading (caregiver=$caregiver)',
+      (tester) async {
+        late Completer<void> release;
+        late _ConversationFixture fixture;
+        late Future<void> started;
+        try {
+          await tester.runAsync(() async {
+            final entered = Completer<void>();
+            release = Completer<void>();
+            fixture = await _ConversationFixture.create(
+              caregiver: caregiver,
+              start: false,
+              seed: (api) {
+                api.heldOperation = 'fetchFamilyChatMessages';
+                api.operationEntered = entered;
+                api.operationRelease = release;
+              },
+            );
+            started = fixture.session.start();
+            await entered.future.timeout(const Duration(seconds: 5));
+          });
+          await tester.pumpWidget(localizedMaterialApp(home: fixture.view()));
+          expect(find.text('Ładowanie wiadomości…'), findsOneWidget);
+        } finally {
+          release.complete();
+          await tester.runAsync(() => started);
+        }
+        await tester.pumpAndSettle();
+        expect(find.text('Ładowanie wiadomości…'), findsNothing);
+      },
+    );
+  }
+
   testWidgets('treatment replies quote the exact request they answer', (
     tester,
   ) async {
@@ -678,6 +715,7 @@ class _ConversationFixture {
 
   static Future<_ConversationFixture> create({
     required bool caregiver,
+    bool start = true,
     void Function(FamilyChatTestApi)? seed,
   }) async {
     final db = FamilyChatDatabase(NativeDatabase.memory());
@@ -696,7 +734,7 @@ class _ConversationFixture {
       session.dispose();
       await db.close();
     });
-    await session.start();
+    if (start) await session.start();
     return _ConversationFixture(session, api);
   }
 

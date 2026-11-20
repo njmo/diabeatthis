@@ -1465,6 +1465,7 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
   @override
   Widget build(BuildContext context) {
     final messages = _messages;
+    final loadingHistory = widget._session.isLoadingHistory(_recipient);
     if (messages.isNotEmpty && _positionedTargets.add(_recipient)) {
       _jumpToLatest();
     }
@@ -1705,72 +1706,87 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                   ),
               ],
             ),
-            Expanded(
-              child: ListView.builder(
-                key: _messageViewport,
-                controller: _scroll,
-                reverse: true,
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
-                itemCount: messages.length,
-                itemBuilder: (context, itemIndex) {
-                  final index = messages.length - 1 - itemIndex;
-                  final message = messages[index];
-                  final previous = index == 0 ? null : messages[index - 1];
-                  final newDay =
-                      previous == null ||
-                      !DateUtils.isSameDay(
-                        previous.createdAt,
-                        message.createdAt,
-                      );
-                  final newGroup =
-                      newDay ||
-                      previous.mine != message.mine ||
-                      previous.sender != message.sender;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+            if (messages.isEmpty && loadingHistory)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (newDay)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8, bottom: 14),
-                          child: Row(
-                            children: [
-                              Expanded(child: Divider(color: divider.color)),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                ),
-                                child: Text(
-                                  DateUtils.isSameDay(
-                                        message.createdAt,
-                                        DateTime.now(),
-                                      )
-                                      ? context.lang.familyChatToday
-                                      : DateFormat(
-                                          'dd.MM.yyyy',
-                                        ).format(message.createdAt),
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    color: colors.onSurfaceVariant,
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 12),
+                      Text(context.lang.familyChatLoadingMessages),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  key: _messageViewport,
+                  controller: _scroll,
+                  reverse: true,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+                  itemCount: messages.length,
+                  itemBuilder: (context, itemIndex) {
+                    final index = messages.length - 1 - itemIndex;
+                    final message = messages[index];
+                    final previous = index == 0 ? null : messages[index - 1];
+                    final newDay =
+                        previous == null ||
+                        !DateUtils.isSameDay(
+                          previous.createdAt,
+                          message.createdAt,
+                        );
+                    final newGroup =
+                        newDay ||
+                        previous.mine != message.mine ||
+                        previous.sender != message.sender;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (newDay)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8, bottom: 14),
+                            child: Row(
+                              children: [
+                                Expanded(child: Divider(color: divider.color)),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                  ),
+                                  child: Text(
+                                    DateUtils.isSameDay(
+                                          message.createdAt,
+                                          DateTime.now(),
+                                        )
+                                        ? context.lang.familyChatToday
+                                        : DateFormat(
+                                            'dd.MM.yyyy',
+                                          ).format(message.createdAt),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: colors.onSurfaceVariant,
+                                        ),
                                   ),
                                 ),
-                              ),
-                              Expanded(child: Divider(color: divider.color)),
-                            ],
+                                Expanded(child: Divider(color: divider.color)),
+                              ],
+                            ),
                           ),
+                        KeyedSubtree(
+                          key: message.id == null
+                              ? null
+                              : _messageKeys.putIfAbsent(
+                                  message.id!,
+                                  GlobalKey.new,
+                                ),
+                          child: _bubble(message, startsGroup: newGroup),
                         ),
-                      KeyedSubtree(
-                        key: message.id == null
-                            ? null
-                            : _messageKeys.putIfAbsent(
-                                message.id!,
-                                GlobalKey.new,
-                              ),
-                        child: _bubble(message, startsGroup: newGroup),
-                      ),
-                    ],
-                  );
-                },
+                      ],
+                    );
+                  },
+                ),
               ),
-            ),
             Container(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               decoration: BoxDecoration(

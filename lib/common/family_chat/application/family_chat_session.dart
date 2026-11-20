@@ -78,6 +78,7 @@ class FamilyChatSession extends ChangeNotifier {
   int _serverOffset = 0;
   Timer? _timer;
   final _history = <String, List<Map<String, dynamic>>>{};
+  final _historySyncedTargets = <String>{};
   final _before = <String, int>{};
   final _olderCursor = <String, int>{};
   final _latestFirst = <String, int>{};
@@ -140,6 +141,9 @@ class FamilyChatSession extends ChangeNotifier {
       },
     );
   }
+
+  bool isLoadingHistory(String target) =>
+      busy && !_historySyncedTargets.contains(target);
 
   bool showingOlder(String target) => _before.containsKey(target);
   Future<List<Map<String, dynamic>>> _readHistory(
@@ -808,6 +812,7 @@ class FamilyChatSession extends ChangeNotifier {
     if (_historyMinimum <= previous) return;
     _generation++;
     _history.clear();
+    _historySyncedTargets.clear();
     _before.clear();
     _olderCursor.clear();
     _latestFirst.clear();
@@ -1073,6 +1078,7 @@ class FamilyChatSession extends ChangeNotifier {
       await db.clearScope(oldScope);
       _historyState = {};
       _history.clear();
+      _historySyncedTargets.clear();
       _before.clear();
       _olderCursor.clear();
       _latestFirst.clear();
@@ -1122,6 +1128,7 @@ class FamilyChatSession extends ChangeNotifier {
       await _draftOperations.catchError((Object _) {});
       await db.clearScope(nextScope, preserveHistory: true);
       _history.clear();
+      _historySyncedTargets.clear();
       _pending.clear();
       _hasQueuedSends = false;
       _receiptsPending = false;
@@ -1414,7 +1421,10 @@ class FamilyChatSession extends ChangeNotifier {
           if (page['hasMore'] != true) break;
         }
         if (!valid()) return;
-        _history[target] = await _readHistory(currentScope, target);
+        final history = await _readHistory(currentScope, target);
+        if (!valid()) return;
+        _history[target] = history;
+        if (_historySyncedTargets.add(target)) _notify();
       }
       if (!valid()) return;
       if (!await _refreshStates(currentScope, valid)) return;
@@ -1469,6 +1479,7 @@ class FamilyChatSession extends ChangeNotifier {
         config = null;
         scope = null;
         _history.clear();
+        _historySyncedTargets.clear();
         _pending.clear();
         _hasQueuedSends = false;
         _receiptsPending = false;
@@ -1485,6 +1496,7 @@ class FamilyChatSession extends ChangeNotifier {
         await _disableBackground();
         _suspended = true;
         _history.clear();
+        _historySyncedTargets.clear();
         _pending.clear();
       }
     } finally {
@@ -2322,6 +2334,7 @@ class FamilyChatSession extends ChangeNotifier {
     config = null;
     scope = null;
     _history.clear();
+    _historySyncedTargets.clear();
     _pending.clear();
     _hasQueuedSends = false;
     _receiptsPending = false;
@@ -2341,6 +2354,7 @@ class FamilyChatSession extends ChangeNotifier {
     _timer?.cancel();
     config = null;
     _history.clear();
+    _historySyncedTargets.clear();
     _pending.clear();
     _hasQueuedSends = false;
     _receiptsPending = false;
