@@ -1,0 +1,116 @@
+name: iOS TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: "App Store Connect build number"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: macos-26
+    env:
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      BUILD_NUMBER: ${{ inputs.build_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check release configuration
+        env:
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          SIGNING_CERTIFICATE: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          SIGNING_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          PROFILE: ${{ secrets.IOS_APP_STORE_PROFILE_BASE64 }}
+        run: |
+          for name in APPLE_TEAM_ID ASC_KEY ASC_KEY_ID ASC_ISSUER_ID SIGNING_CERTIFICATE SIGNING_PASSWORD PROFILE; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing release configuration: $name"
+              exit 1
+            fi
+          done
+          [[ "$BUILD_NUMBER" =~ ^[1-9][0-9]*$ ]] || {
+            echo "::error::Build number must be a positive integer"
+            exit 1
+          }
+          xcodebuild -version
+
+      - uses: ./.github/actions/setup-flutter-project
+
+      - name: Import distribution signing assets
+        env:
+          SIGNING_CERTIFICATE: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          SIGNING_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          PROFILE: ${{ secrets.IOS_APP_STORE_PROFILE_BASE64 }}
+        run: |
+          certificate="$RUNNER_TEMP/distribution.p12"
+          profile="$RUNNER_TEMP/app-store.mobileprovision"
+          keychain="$RUNNER_TEMP/ios-signing.keychain-db"
+          keychain_password="$(openssl rand -hex 32)"
+          printf '%s' "$SIGNING_CERTIFICATE" | base64 -D > "$certificate"
+          printf '%s' "$PROFILE" | base64 -D > "$profile"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$certificate" -P "$SIGNING_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain"
+          security list-keychains -d user -s "$keychain"
+          security cms -D -i "$profile" > "$RUNNER_TEMP/profile.plist"
+          profile_uuid="$(/usr/libexec/PlistBuddy -c 'Print UUID' "$RUNNER_TEMP/profile.plist")"
+          profile_app="$(/usr/libexec/PlistBuddy -c 'Print Entitlements:application-identifier' "$RUNNER_TEMP/profile.plist")"
+          [[ "$profile_app" == "$APPLE_TEAM_ID.pl.diabeatthis.app" ]]
+          mkdir -p "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+          cp "$profile" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/$profile_uuid.mobileprovision"
+          echo "PROFILE_UUID=$profile_uuid" >> "$GITHUB_ENV"
+
+      - name: Configure signing and export
+        run: |
+          ruby -rxcodeproj -e '
+            project = Xcodeproj::Project.open("ios/Runner.xcodeproj")
+            target = project.targets.find { |candidate| candidate.name == "Runner" }
+            release = target.build_configurations.find { |config| config.name == "Release" }
+            release.build_settings.merge!(
+              "CODE_SIGN_STYLE" => "Manual",
+              "CODE_SIGN_IDENTITY" => "Apple Distribution",
+              "DEVELOPMENT_TEAM" => ENV.fetch("APPLE_TEAM_ID"),
+              "PROVISIONING_PROFILE" => ENV.fetch("PROFILE_UUID")
+            )
+            project.save
+          '
+          python3 - <<'PY'
+          import os
+          import plistlib
+
+          with open(os.path.join(os.environ["RUNNER_TEMP"], "ExportOptions.plist"), "wb") as options:
+              plistlib.dump({
+                  "method": "app-store-connect",
+                  "destination": "export",
+                  "signingStyle": "manual",
+                  "signingCertificate": "Apple Distribution",
+                  "teamID": os.environ["APPLE_TEAM_ID"],
+                  "provisioningProfiles": {"pl.diabeatthis.app": os.environ["PROFILE_UUID"]},
+                  "manageAppVersionAndBuildNumber": False,
+              }, options)
+          PY
+
+      - name: Build signed IPA
+        run: flutter build ipa --release --build-number "$BUILD_NUMBER" --export-options-plist "$RUNNER_TEMP/ExportOptions.plist"
+
+      - name: Upload to App Store Connect
+        env:
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          API_PRIVATE_KEYS_DIR: ${{ runner.temp }}/asc-keys
+        run: |
+          install -d -m 700 "$API_PRIVATE_KEYS_DIR"
+          umask 077
+          printf '%s' "$ASC_KEY" | base64 -D > "$API_PRIVATE_KEYS_DIR/AuthKey_$ASC_KEY_ID.p8"
+          xcrun altool --upload-app --type ios --file build/ios/ipa/*.ipa \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"

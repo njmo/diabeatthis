@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../common/app_mode/application_device_mode.dart';
 import 'shared_prefs_provider.dart';
 
 part 'initial_configuration_provider.g.dart';
@@ -64,5 +65,6 @@ Future<void> completeInitialConfiguration(
 @Riverpod(keepAlive: true)
 Future<bool> initialConfigurationDone(Ref ref) async {
   final prefs = await ref.watch(sharedPrefsProvider.future);
+  if (isCaregiverOnlyPlatform && !hasSavedCaregiverMode(prefs)) return false;
   return hasInitialConfiguration(prefs);
 }

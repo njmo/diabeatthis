@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../../firebase_options.dart';
+import '../app_mode/application_device_mode.dart';
 import 'google_account.dart';
 import 'google_authentication_repository.dart';
 
@@ -18,7 +20,8 @@ class FirebaseGoogleAuthenticationRepository
   Future<void>? initialization;
   @override
   bool get isSupported =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+      isCaregiverOnlyPlatform ||
+      (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
 
   GoogleAccount? account(User? user) {
     if (user == null) return null;
@@ -42,9 +45,13 @@ class FirebaseGoogleAuthenticationRepository
   @override
   Future<GoogleAccount?> signIn() async {
     if (!isSupported) {
-      throw UnsupportedError('Google sign-in is configured only for Android');
+      throw UnsupportedError('Google sign-in is unavailable on this platform.');
     }
-    initialization ??= google.initialize();
+    initialization ??= google.initialize(
+      clientId: isCaregiverOnlyPlatform
+          ? DefaultFirebaseOptions.ios.iosClientId
+          : null,
+    );
     try {
       await initialization;
     } catch (_) {

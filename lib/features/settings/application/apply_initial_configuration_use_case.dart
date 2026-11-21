@@ -45,6 +45,9 @@ class ApplyInitialConfigurationUseCase {
     bool lowTreatmentsEnabled = false,
     InitialConfigurationBinding? chatSetupBinding,
   }) async {
+    if (isCaregiverOnlyPlatform) {
+      throw UnsupportedError('Patient setup is unavailable on this platform.');
+    }
     final availability = await _ref.read(
       dataSourceOptionAvailabilityProvider.future,
     );
