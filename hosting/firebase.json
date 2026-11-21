@@ -1,0 +1,8 @@
+{
+  "hosting": {
+    "site": "diabeatthis-e634c",
+    "public": "public",
+    "cleanUrls": true,
+    "ignore": ["**/.*", "**/node_modules/**"]
+  }
+}
