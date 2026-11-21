@@ -1,6 +1,9 @@
 name: iOS TestFlight
 
 on:
+  push:
+    tags:
+      - "ios-testflight-*"
   workflow_dispatch:
     inputs:
       build_number:
@@ -14,11 +17,26 @@ permissions:
 jobs:
   upload:
     runs-on: macos-26
+    defaults:
+      run:
+        shell: bash
     env:
       APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
       BUILD_NUMBER: ${{ inputs.build_number }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check Xcode and iOS SDK
+        run: |
+          xcodebuild -version
+          sdk_version="$(xcrun --sdk iphoneos --show-sdk-version)"
+          echo "iOS SDK $sdk_version"
+          if (( ${sdk_version%%.*} < 26 )); then
+            echo "::error::App Store Connect requires the iOS 26 SDK or later"
+            exit 1
+          fi
 
       - name: Check release configuration
         env:
@@ -35,13 +53,27 @@ jobs:
               exit 1
             fi
           done
+          if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_EVENT_NAME" == push ]]; then
+            BUILD_NUMBER="${GITHUB_REF_NAME#ios-testflight-}"
+          fi
           [[ "$BUILD_NUMBER" =~ ^[1-9][0-9]*$ ]] || {
             echo "::error::Build number must be a positive integer"
             exit 1
           }
-          xcodebuild -version
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
 
-      - uses: ./.github/actions/setup-flutter-project
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: "3.47.9"
+          channel: stable
+          cache: true
+
+      - name: Restore dependencies and generate Flutter code
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter gen-l10n
+          dart run build_runner build --delete-conflicting-outputs
 
       - name: Import distribution signing assets
         env:
@@ -100,7 +132,7 @@ jobs:
           PY
 
       - name: Build signed IPA
-        run: flutter build ipa --release --build-number "$BUILD_NUMBER" --export-options-plist "$RUNNER_TEMP/ExportOptions.plist"
+        run: flutter build ipa --release --no-pub --build-number "$BUILD_NUMBER" --export-options-plist "$RUNNER_TEMP/ExportOptions.plist"
 
       - name: Upload to App Store Connect
         env:
