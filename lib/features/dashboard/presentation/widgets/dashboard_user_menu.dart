@@ -1,5 +1,4 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -7,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../common/family_chat/application/family_chat_runtime.dart';
 import '../../../../common/family_chat/application/family_chat_settings_runtime.dart';
 import '../../../../common/family_chat/data/family_chat_preferences_provider.dart';
+import '../../../../common/family_chat/family_chat_platform.dart';
 import '../../../../common/family_chat/presentation/family_chat_page.dart';
 import '../../../../common/l10n/language.dart';
 
@@ -18,8 +18,7 @@ class DashboardUserMenu extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
-          const _FamilyChatButton(),
+        if (supportsFamilyChat) const _FamilyChatButton(),
         IconButton(
           tooltip: context.lang.settingsTitle,
           icon: const Icon(LucideIcons.settings, size: 21),
@@ -53,7 +52,7 @@ class _FamilyChatButton extends ConsumerWidget {
             ? ''
             : session!.name(session.unreadSender!).trim();
         return IconButton(
-          tooltip: 'Rozmowy rodzinne',
+          tooltip: context.lang.familyChatTitle,
           icon: Badge(
             isLabelVisible: hasUnread,
             label: Text(senderName.isEmpty ? '' : senderName.characters.first),

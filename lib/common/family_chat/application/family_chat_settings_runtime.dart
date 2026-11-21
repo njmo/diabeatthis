@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,6 +19,7 @@ import '../data/family_chat_preferences_provider.dart';
 import '../data/family_chat_remote.dart';
 import '../data/family_chat_settings_store.dart';
 import '../domain/family_chat_preferences.dart';
+import '../family_chat_platform.dart';
 import 'family_chat_settings_controller.dart';
 import 'family_chat_settings_local_gate.dart';
 
@@ -335,9 +335,7 @@ class FamilyChatSettingsRuntime extends ChangeNotifier {
 final familyChatSettingsRuntimeProvider = Provider<FamilyChatSettingsRuntime?>((
   ref,
 ) {
-  if (kIsWeb ||
-      defaultTargetPlatform != TargetPlatform.android ||
-      Firebase.apps.isEmpty) {
+  if (!supportsFamilyChat || Firebase.apps.isEmpty) {
     return null;
   }
   final account = ref.watch(googleAccountProvider);

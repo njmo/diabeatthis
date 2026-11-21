@@ -22,9 +22,8 @@ na iPhonie to iOS 15.
 1. W **Apple Developer → Certificates, Identifiers & Profiles → Identifiers**
    kliknij **+ → App IDs → App**. Wpisz opis `Diabeatthis`, wybierz
    **Explicit** i wpisz `pl.diabeatthis.app`. W sekcji **Capabilities**
-   zaznacz **App Attest**. Dla tej bety zostaw pozostałe ustawienia domyślne.
-   **Push Notifications** (APNs) dodamy przy wdrażaniu zdalnych powiadomień
-   na iOS. Zatwierdź **Continue → Register**.
+   zaznacz **App Attest** i **Push Notifications** (APNs). Pozostałe
+   ustawienia zostaw domyślne. Zatwierdź **Continue → Register**.
    [Otwórz Identifiers](https://developer.apple.com/account/resources/identifiers/list) · [Pomoc Apple](https://developer.apple.com/help/account/identifiers/register-an-app-id/)
 2. W **App Store Connect → Apps → + → New App** wybierz **iOS**. Wprowadź nazwę
    `Diabeatthis`, główny język, np. **Polish**, zarejestrowany **Bundle ID**
@@ -45,6 +44,14 @@ W **Firebase Console → diabeatthis-e634c → App Check → Apps** znajdź
 Kliknij **Register**, wybierz **App Attest** i podaj **Team ID** z kroku 1.
 Kod iOS deklaruje już App Attest, a backend rodziny wymaga prawidłowego tokenu.
 [Otwórz App Check w projekcie Diabeatthis](https://console.firebase.google.com/project/diabeatthis-e634c/appcheck/apps) · [Konfiguracja App Attest](https://firebase.google.com/codelabs/app-attest#3)
+
+Do powiadomień czatu utwórz klucz **Apple Push Notifications service (APNs)**
+w **Apple Developer → Keys**. Klucz musi pozwalać wysyłać do aplikacji
+`pl.diabeatthis.app` w środowisku **Production**, którego używa TestFlight.
+W **Firebase → Project settings → Cloud Messaging → Apple app configuration**
+wybierz aplikację iOS i wgraj plik APNs `.p8` z jego **Key ID** i swoim
+**Team ID**. Klucz App Store Connect z kroku 5 służy do wysyłki buildów.
+[Otwórz Apple Keys](https://developer.apple.com/account/resources/authkeys/list) · [Otwórz Cloud Messaging w Firebase](https://console.firebase.google.com/project/diabeatthis-e634c/settings/cloudmessaging) · [Konfiguracja APNs](https://firebase.google.com/docs/cloud-messaging/flutter/get-started)
 
 ## 4. Utwórz certyfikat i profil do podpisania
 
@@ -128,5 +135,6 @@ repozytorium i czatem.
    i zainstaluj Diabeatthis. [Pobierz TestFlight na iPhone’a](https://apps.apple.com/pl/app/testflight/id899247664) · [Testy wewnętrzne](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers/)
 4. Na iPhonie sprawdź start, logowanie Google, konfigurację Nightscout,
    parowanie rodziny i wejście na ekran opiekuna. Sprawdź też powiadomienia
-   lokalne. Zdalne powiadomienia czatu i decyzji posiłkowych korzystają obecnie
-   ze ścieżek Androida.
+   czatu na otwartym ekranie i po zablokowaniu iPhone’a oraz otwarcie rozmów
+   z powiadomienia. Zdalne powiadomienia decyzji posiłkowych korzystają
+   obecnie ze ścieżki Androida.

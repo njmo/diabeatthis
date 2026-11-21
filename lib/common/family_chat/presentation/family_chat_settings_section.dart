@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/language.dart';
 import '../application/family_chat_settings_runtime.dart';
 import '../domain/family_chat_preferences.dart';
+import '../family_chat_platform.dart';
 import 'family_chat_configuration.dart';
 
 class FamilyChatSettingsSection extends ConsumerStatefulWidget {
@@ -36,7 +36,7 @@ class _FamilyChatSettingsSectionState
 
   @override
   Widget build(BuildContext context) {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+    if (!supportsFamilyChat) {
       return const SizedBox.shrink();
     }
     final runtime = ref.watch(familyChatSettingsRuntimeProvider);

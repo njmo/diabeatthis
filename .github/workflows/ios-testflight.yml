@@ -97,6 +97,11 @@ jobs:
           profile_uuid="$(/usr/libexec/PlistBuddy -c 'Print UUID' "$RUNNER_TEMP/profile.plist")"
           profile_app="$(/usr/libexec/PlistBuddy -c 'Print Entitlements:application-identifier' "$RUNNER_TEMP/profile.plist")"
           [[ "$profile_app" == "$APPLE_TEAM_ID.pl.diabeatthis.app" ]]
+          aps_environment="$(/usr/libexec/PlistBuddy -c 'Print Entitlements:aps-environment' "$RUNNER_TEMP/profile.plist" 2>/dev/null || true)"
+          if [[ "$aps_environment" != production ]]; then
+            echo "::error::Enable Push Notifications for pl.diabeatthis.app, regenerate the App Store profile, and update IOS_APP_STORE_PROFILE_BASE64"
+            exit 1
+          fi
           mkdir -p "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
           cp "$profile" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/$profile_uuid.mobileprovision"
           echo "PROFILE_UUID=$profile_uuid" >> "$GITHUB_ENV"

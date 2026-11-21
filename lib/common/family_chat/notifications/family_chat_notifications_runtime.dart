@@ -5,7 +5,6 @@ import 'package:drift/isolate.dart' show DriftRemoteException;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +13,7 @@ import 'package:sqlite3/common.dart' show SqliteException;
 import '../../../app/router/providers/app_router_provider.dart';
 import '../../../core/data/provider/initial_configuration_provider.dart';
 import '../../../core/logger/logger.dart';
+import '../../app_mode/application_device_mode.dart';
 import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../notifications/firebase_background_handler.dart';
@@ -26,6 +26,7 @@ import '../application/family_treatment_adapter.dart';
 import '../application/family_treatment_consumption_recovery.dart';
 import '../application/family_treatment_recovery.dart';
 import '../data/family_chat_remote.dart';
+import '../family_chat_platform.dart';
 import '../presentation/family_chat_page.dart';
 import '../presentation/family_treatment_aaps_review.dart';
 import 'family_chat_presenter_provider.dart';
@@ -33,9 +34,7 @@ import 'family_chat_push.dart';
 import 'family_chat_registration.dart';
 
 final familyChatNotificationsProvider = Provider<void>((ref) {
-  if (kIsWeb ||
-      defaultTargetPlatform != TargetPlatform.android ||
-      Firebase.apps.isEmpty) {
+  if (!supportsFamilyChat || Firebase.apps.isEmpty) {
     return;
   }
   if (ref.watch(initialConfigurationDoneProvider).asData?.value != true) return;
@@ -74,7 +73,24 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
           guard['uid'] == uid &&
           guard['scope'] == session?.scope;
       if (wantsEnabled() && !enabled) return;
-      final token = await FirebaseMessaging.instance.getToken();
+      final messaging = FirebaseMessaging.instance;
+      if (isCaregiverOnlyPlatform) {
+        if (enabled) {
+          final current = await messaging.getNotificationSettings();
+          final permissions =
+              current.authorizationStatus == AuthorizationStatus.notDetermined
+              ? await messaging.requestPermission()
+              : current;
+          if (permissions.authorizationStatus == AuthorizationStatus.denied) {
+            return;
+          }
+        }
+        if (await messaging.getAPNSToken() == null) {
+          throw StateError('APNs token is still unavailable');
+        }
+      }
+      if (disposed || FirebaseAuth.instance.currentUser?.uid != uid) return;
+      final token = await messaging.getToken();
       if (token == null ||
           disposed ||
           FirebaseAuth.instance.currentUser?.uid != uid) {
@@ -136,7 +152,12 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
 
   runtime.addListener(changed);
   settings?.addListener(changed);
-  FirebaseMessaging.onBackgroundMessage(familyFirebaseBackgroundHandler);
+  final appleLifecycle = isCaregiverOnlyPlatform
+      ? AppLifecycleListener(onResume: changed)
+      : null;
+  if (!isCaregiverOnlyPlatform) {
+    FirebaseMessaging.onBackgroundMessage(familyFirebaseBackgroundHandler);
+  }
   final tokens = FirebaseMessaging.instance.onTokenRefresh.listen((_) {
     unawaited(register(force: true));
   });
@@ -179,6 +200,7 @@ final familyChatNotificationsProvider = Provider<void>((ref) {
   ref.onDispose(() {
     disposed = true;
     retry?.cancel();
+    appleLifecycle?.dispose();
     runtime.removeListener(changed);
     settings?.removeListener(changed);
     unawaited(tokens.cancel());
@@ -205,6 +227,30 @@ class _FamilyChatNotificationRuntimeState
   bool _routeAgain = false;
   bool _cleaning = false;
   StreamSubscription<User?>? _auth;
+  StreamSubscription<RemoteMessage>? _remoteOpens;
+  Map<String, dynamic>? _pendingRemoteOpen;
+
+  void _handleRemoteOpen(RemoteMessage message) {
+    if (!mounted || message.data['type'] != 'familyChat') return;
+    final recipient = message.data['uid'];
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (recipient is! String || (uid != null && recipient != uid)) return;
+    _pendingRemoteOpen = message.data;
+    unawaited(_drain());
+  }
+
+  Future<void> _checkInitialRemoteOpen() async {
+    try {
+      final message = await FirebaseMessaging.instance.getInitialMessage();
+      if (message != null) _handleRemoteOpen(message);
+    } catch (error) {
+      Log.w(
+        'FamilyChatPush',
+        'Remote launch check failed (${error.runtimeType})',
+      );
+    }
+  }
+
   Timer? _cleanupRetry;
   @override
   void initState() {
@@ -226,11 +272,7 @@ class _FamilyChatNotificationRuntimeState
   }
 
   Future<void> _cleanup() async {
-    if (!mounted ||
-        _cleaning ||
-        Firebase.apps.isEmpty ||
-        kIsWeb ||
-        defaultTargetPlatform != TargetPlatform.android) {
+    if (!mounted || _cleaning || Firebase.apps.isEmpty || !supportsFamilyChat) {
       return;
     }
     _cleaning = true;
@@ -289,6 +331,48 @@ class _FamilyChatNotificationRuntimeState
             response != null &&
             familyChatNotificationPayload(response.payload) != null) {
           await handleFamilyChatNotificationResponse(response);
+        }
+      }
+      final remoteOpen = _pendingRemoteOpen;
+      if (remoteOpen != null) {
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        final scope = jsonEncode([
+          uid,
+          remoteOpen['familyId'],
+          remoteOpen['epoch'],
+        ]);
+        if (remoteOpen['uid'] != uid || session!.scope != scope) {
+          _pendingRemoteOpen = null;
+        } else {
+          final active = await runtime.db.activeChat();
+          if (!mounted ||
+              runtime.session != session ||
+              !session.enabled ||
+              FirebaseAuth.instance.currentUser?.uid != uid ||
+              active['enabled'] != true ||
+              active['uid'] != uid ||
+              active['scope'] != scope) {
+            return;
+          }
+          final navigator = ref
+              .read(appRouterProvider)
+              .navigatorKey
+              .currentState;
+          if (navigator == null) {
+            _retry?.cancel();
+            _retry = Timer(const Duration(milliseconds: 250), _changed);
+            return;
+          }
+          _pendingRemoteOpen = null;
+          if (!runtime.conversationVisible) {
+            unawaited(
+              navigator.push<void>(
+                MaterialPageRoute(builder: (_) => const FamilyChatPage()),
+              ),
+            );
+          }
+          unawaited(session.synchronize(enqueueAgain: true));
+          return;
         }
       }
       final intent = await runtime.db.metadata('chatOpen');
@@ -460,24 +544,27 @@ class _FamilyChatNotificationRuntimeState
 
   @override
   Widget build(BuildContext context) {
-    if (!kIsWeb &&
-        defaultTargetPlatform == TargetPlatform.android &&
-        Firebase.apps.isNotEmpty &&
-        _auth == null) {
+    if (supportsFamilyChat && Firebase.apps.isNotEmpty && _auth == null) {
       _auth = FirebaseAuth.instance.authStateChanges().listen((_) {
         unawaited(_cleanup());
       });
+      if (isCaregiverOnlyPlatform) {
+        _remoteOpens = FirebaseMessaging.onMessageOpenedApp.listen(
+          _handleRemoteOpen,
+        );
+        unawaited(_checkInitialRemoteOpen());
+      }
       scheduleMicrotask(() {
         unawaited(_cleanup());
       });
     }
-    if (!kIsWeb &&
-        defaultTargetPlatform == TargetPlatform.android &&
-        Firebase.apps.isNotEmpty) {
+    if (supportsFamilyChat && Firebase.apps.isNotEmpty) {
       ref.watch(familyChatNotificationsProvider);
       ref.watch(familyChatSettingsRuntimeProvider);
-      ref.watch(familyTreatmentRecoveryProvider);
-      ref.watch(familyTreatmentConsumptionRecoveryProvider);
+      if (!isCaregiverOnlyPlatform) {
+        ref.watch(familyTreatmentRecoveryProvider);
+        ref.watch(familyTreatmentConsumptionRecoveryProvider);
+      }
       final runtime = ref.watch(familyChatRuntimeProvider);
       if (_runtime != runtime) {
         _runtime?.removeListener(_changed);
@@ -495,6 +582,7 @@ class _FamilyChatNotificationRuntimeState
   void dispose() {
     _cleanupRetry?.cancel();
     unawaited(_auth?.cancel());
+    unawaited(_remoteOpens?.cancel());
     _runtime?.removeListener(_changed);
     _retry?.cancel();
     unawaited(_opens?.cancel());
