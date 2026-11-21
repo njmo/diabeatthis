@@ -13,6 +13,11 @@ on:
         description: "App Store Connect build number override"
         type: string
 
+      distribute_existing_build:
+        description: "Distribute an already uploaded build (requires version and build number)"
+        type: boolean
+        default: false
+
 permissions:
   contents: read
 
@@ -32,6 +37,7 @@ jobs:
           persist-credentials: false
 
       - name: Check Xcode and iOS SDK
+        if: ${{ !inputs.distribute_existing_build }}
         run: |
           xcodebuild -version
           sdk_version="$(xcrun --sdk iphoneos --show-sdk-version)"
@@ -43,6 +49,10 @@ jobs:
 
       - name: Resolve iOS version and build number
         run: |
+          if [[ "${{ inputs.distribute_existing_build }}" == true && ( -z "$RELEASE_VERSION" || -z "$BUILD_NUMBER" ) ]]; then
+            echo "::error::Specify both the version and build number for an existing build"
+            exit 1
+          fi
           if [[ "$GITHUB_EVENT_NAME" == push ]]; then
             if [[ ! "$GITHUB_REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-ios$ ]]; then
               echo "::error::Use an iOS release tag such as v1.0.1-ios"
@@ -66,6 +76,7 @@ jobs:
           echo "TestFlight release $RELEASE_VERSION ($BUILD_NUMBER)"
 
       - name: Check release configuration
+        if: ${{ !inputs.distribute_existing_build }}
         env:
           ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
@@ -82,6 +93,7 @@ jobs:
           done
 
       - name: Set up Flutter
+        if: ${{ !inputs.distribute_existing_build }}
         uses: subosito/flutter-action@v2.23.0
         with:
           flutter-version: "3.47.9"
@@ -89,12 +101,14 @@ jobs:
           cache: true
 
       - name: Restore dependencies and generate Flutter code
+        if: ${{ !inputs.distribute_existing_build }}
         run: |
           flutter pub get --enforce-lockfile
           flutter gen-l10n
           dart run build_runner build --delete-conflicting-outputs
 
       - name: Import distribution signing assets
+        if: ${{ !inputs.distribute_existing_build }}
         env:
           SIGNING_CERTIFICATE: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
           SIGNING_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
@@ -126,6 +140,7 @@ jobs:
           echo "PROFILE_UUID=$profile_uuid" >> "$GITHUB_ENV"
 
       - name: Configure signing and export
+        if: ${{ !inputs.distribute_existing_build }}
         run: |
           ruby -rxcodeproj -e '
             project = Xcodeproj::Project.open("ios/Runner.xcodeproj")
@@ -156,12 +171,14 @@ jobs:
           PY
 
       - name: Build signed IPA
+        if: ${{ !inputs.distribute_existing_build }}
         run: |
           flutter build ipa --release --no-pub \
             --build-name "$RELEASE_VERSION" --build-number "$BUILD_NUMBER" \
             --export-options-plist "$RUNNER_TEMP/ExportOptions.plist"
 
       - name: Verify version in signed IPA
+        if: ${{ !inputs.distribute_existing_build }}
         run: |
           python3 - <<'PY'
           import os
@@ -191,6 +208,7 @@ jobs:
           PY
 
       - name: Upload to App Store Connect
+        if: ${{ !inputs.distribute_existing_build }}
         env:
           ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
@@ -206,25 +224,24 @@ jobs:
       - name: Distribute to external TestFlight testers
         timeout-minutes: 25
         env:
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          API_PRIVATE_KEYS_DIR: ${{ runner.temp }}/asc-keys
           EXTERNAL_GROUP: diabeatthis
         run: |
           key_json="$RUNNER_TEMP/testflight-api-key.json"
           umask 077
           trap 'rm -f -- "$key_json"' EXIT
           python3 - > "$key_json" <<'PY'
+          import base64
           import json
           import os
-          from pathlib import Path
 
           key_id = os.environ["ASC_KEY_ID"]
-          private_key = Path(os.environ["API_PRIVATE_KEYS_DIR"], f"AuthKey_{key_id}.p8")
           print(json.dumps({
               "key_id": key_id,
               "issuer_id": os.environ["ASC_ISSUER_ID"],
-              "key": private_key.read_text(),
+              "key": base64.b64decode(os.environ["ASC_KEY"]).decode("utf-8"),
               "in_house": False,
           }))
           PY
@@ -240,7 +257,7 @@ jobs:
           ' "$key_json")"
 
           fastlane run upload_to_testflight \
-            "api_key_path:$key_json" app_identifier:pl.diabeatthis.app \
+            "api_key_path:$key_json" app_identifier:pl.diabeatthis.app app_platform:ios \
             "app_version:$RELEASE_VERSION" "build_number:$BUILD_NUMBER" \
             distribute_only:true distribute_external:true "groups:$group_id" \
             notify_external_testers:true wait_processing_timeout_duration:1200 \
