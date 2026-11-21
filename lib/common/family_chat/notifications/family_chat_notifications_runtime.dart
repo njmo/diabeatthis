@@ -488,6 +488,20 @@ class _FamilyChatNotificationRuntimeState
         await clearIntent();
         return;
       }
+      if (remoteOpen != null && !session.targets.contains(target)) {
+        await session.synchronize(enqueueAgain: true);
+        if (!mounted ||
+            runtime.session != session ||
+            !session.enabled ||
+            session.scope != scope ||
+            FirebaseAuth.instance.currentUser?.uid != uid) {
+          return;
+        }
+        if (!session.targets.contains(target)) {
+          await clearIntent();
+          return;
+        }
+      }
       final navigator = ref.read(appRouterProvider).navigatorKey.currentState;
       if (navigator == null) {
         _retry?.cancel();
@@ -502,6 +516,7 @@ class _FamilyChatNotificationRuntimeState
       if (mounted &&
           session.enabled &&
           runtime.session == session &&
+          session.scope == scope &&
           FirebaseAuth.instance.currentUser?.uid == uid) {
         unawaited(
           navigator.push<void>(
