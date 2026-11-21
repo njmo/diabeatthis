@@ -23,7 +23,9 @@ class SetupStartStep extends StatelessWidget {
       const SizedBox(height: 12),
       SetupStepHeading(
         title: context.lang.setupWelcomeTitle,
-        description: controller.state.signedIn
+        description: isCaregiverOnlyPlatform
+            ? context.lang.setupCaregiverModeDescription
+            : controller.state.signedIn
             ? context.lang.setupWelcomeSignedInDescription
             : context.lang.setupWelcomeDescription,
       ),

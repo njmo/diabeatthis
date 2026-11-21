@@ -564,8 +564,7 @@ class SetupWizardController extends ChangeNotifier {
     if (!disposed) notifyListeners();
   }
 
-  bool canUseMode(SetupDeviceMode mode) =>
-      mode == SetupDeviceMode.patient
+  bool canUseMode(SetupDeviceMode mode) => mode == SetupDeviceMode.patient
       ? !isCaregiverOnlyPlatform
       : authentication == null || state.signedIn;
   bool canEnableFeature(SetupFeatureId id) =>

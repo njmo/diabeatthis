@@ -411,12 +411,12 @@ class SetupWizardViewState extends State<SetupWizard>
           saving: busy,
           onNext:
               (isCaregiverOnlyPlatform &&
-                  state.currentStep == SetupStep.start &&
-                  controller.authentication != null &&
-                  !state.signedIn) ||
-              (inModule &&
-                  controller.module == SetupModule.ai &&
-                  !controller.aiSubmission.isReady)
+                      state.currentStep == SetupStep.start &&
+                      controller.authentication != null &&
+                      !state.signedIn) ||
+                  (inModule &&
+                      controller.module == SetupModule.ai &&
+                      !controller.aiSubmission.isReady)
               ? null
               : () => next(context),
           onPreviousFeature: inModule && state.moduleIndex > 0 ? back : null,

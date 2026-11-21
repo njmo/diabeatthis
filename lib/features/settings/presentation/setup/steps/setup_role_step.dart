@@ -19,9 +19,10 @@ class SetupRoleStep extends StatelessWidget {
         description: context.lang.setupStartDescription,
       ),
       const SizedBox(height: 20),
-      for (final mode in isCaregiverOnlyPlatform
-          ? const [SetupDeviceMode.caregiver]
-          : SetupDeviceMode.values)
+      for (final mode
+          in isCaregiverOnlyPlatform
+              ? const [SetupDeviceMode.caregiver]
+              : SetupDeviceMode.values)
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: SetupModeChoice(
