@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:diabeatthis/common/app_mode/application_device_mode.dart';
 import 'package:diabeatthis/common/auth/google_account.dart';
 import 'package:diabeatthis/common/auth/google_authentication_providers.dart';
+import 'package:diabeatthis/common/family/family_join_request.dart';
+import 'package:diabeatthis/common/family/family_providers.dart';
+import 'package:diabeatthis/common/family/family_status.dart';
 import 'package:diabeatthis/common/family_sync/family_planning_view.dart';
 import 'package:diabeatthis/common/family_sync/presentation/family_planning_page.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
@@ -27,6 +32,8 @@ void main() {
     (tester) async {
       final db = DatabaseImpl(NativeDatabase.memory());
       addTearDown(db.close);
+      final familyUpdates = StreamController<FamilyStatus>();
+      addTearDown(familyUpdates.close);
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -42,6 +49,9 @@ void main() {
                 const GoogleAccount(uid: 'parent', displayName: 'Parent'),
               ),
             ),
+            secureFamilyStatusProvider(
+              'parent',
+            ).overrideWith((ref) => familyUpdates.stream),
             caregiverVisibleStateProvider.overrideWithValue(
               const CaregiverRefreshState(),
             ),
@@ -64,6 +74,18 @@ void main() {
       expect(find.byType(DashboardBottomBar), findsOneWidget);
       expect(find.byType(CaregiverDashboardFab), findsOneWidget);
       expect(find.byType(DashboardFAB), findsNothing);
+      expect(find.text(lang.familyApprovalTitle), findsNothing);
+      familyUpdates.add(
+        const FamilyStatus(
+          pending: FamilyJoinRequest(id: 'invite', displayName: 'Parent 2'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(lang.familyApprovalTitle), findsOneWidget);
+      expect(find.text(lang.familyManageAction), findsOneWidget);
+      familyUpdates.add(const FamilyStatus());
+      await tester.pumpAndSettle();
+      expect(find.text(lang.familyApprovalTitle), findsNothing);
       final state = tester.state(find.byType(FamilyPlanningPage));
       await tester.tap(find.byTooltip(lang.dashboardDayTab));
       await tester.pumpAndSettle();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../common/app_mode/application_device_mode.dart';
 import '../../../../common/auth/google_authentication_repository.dart';
 import '../../../../common/family/family_management_context.dart';
 import '../../../../common/family/family_pairing_repository.dart';
@@ -151,7 +152,8 @@ class SetupWizardViewState extends State<SetupWizard>
 
   Future<void> next(BuildContext context) async {
     FocusScope.of(context).unfocus();
-    if (controller.state.currentStep == SetupStep.start &&
+    if (!isCaregiverOnlyPlatform &&
+        controller.state.currentStep == SetupStep.start &&
         controller.authentication != null &&
         !controller.state.signedIn) {
       await controller.continueWithoutGoogle();
@@ -408,9 +410,13 @@ class SetupWizardViewState extends State<SetupWizard>
         bottomNavigationBar: SetupWizardActions(
           saving: busy,
           onNext:
-              inModule &&
-                  controller.module == SetupModule.ai &&
-                  !controller.aiSubmission.isReady
+              (isCaregiverOnlyPlatform &&
+                      state.currentStep == SetupStep.start &&
+                      controller.authentication != null &&
+                      !state.signedIn) ||
+                  (inModule &&
+                      controller.module == SetupModule.ai &&
+                      !controller.aiSubmission.isReady)
               ? null
               : () => next(context),
           onPreviousFeature: inModule && state.moduleIndex > 0 ? back : null,
@@ -418,7 +424,8 @@ class SetupWizardViewState extends State<SetupWizard>
               ? () => skip(context)
               : null,
           label:
-              state.currentStep == SetupStep.start &&
+              !isCaregiverOnlyPlatform &&
+                  state.currentStep == SetupStep.start &&
                   controller.authentication != null &&
                   !state.signedIn
               ? context.lang.setupContinueWithoutGoogle

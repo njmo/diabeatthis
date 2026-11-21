@@ -1,0 +1,247 @@
+name: iOS TestFlight
+
+on:
+  push:
+    tags:
+      - "v*.*.*-ios"
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "iOS version (defaults to pubspec.yaml)"
+        type: string
+      build_number:
+        description: "App Store Connect build number override"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: xcode-27
+    defaults:
+      run:
+        shell: bash
+    env:
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      RELEASE_VERSION: ${{ inputs.release_version }}
+      BUILD_NUMBER: ${{ inputs.build_number }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check Xcode and iOS SDK
+        run: |
+          xcodebuild -version
+          sdk_version="$(xcrun --sdk iphoneos --show-sdk-version)"
+          echo "iOS SDK $sdk_version"
+          if (( ${sdk_version%%.*} < 27 )); then
+            echo "::error::This TestFlight workflow requires the iOS 27 SDK or later"
+            exit 1
+          fi
+
+      - name: Resolve iOS version and build number
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            if [[ ! "$GITHUB_REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-ios$ ]]; then
+              echo "::error::Use an iOS release tag such as v1.0.1-ios"
+              exit 1
+            fi
+            RELEASE_VERSION="${BASH_REMATCH[1]}"
+          else
+            RELEASE_VERSION="${RELEASE_VERSION:-$(sed -nE 's/^version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)(\+[0-9]+)?[[:space:]]*$/\1/p' pubspec.yaml)}"
+          fi
+          BUILD_NUMBER="${BUILD_NUMBER:-$GITHUB_RUN_NUMBER}"
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "::error::Version must have the form X.Y.Z"
+            exit 1
+          }
+          [[ "$BUILD_NUMBER" =~ ^[1-9][0-9]*$ ]] || {
+            echo "::error::Build number must be a positive integer"
+            exit 1
+          }
+          echo "RELEASE_VERSION=$RELEASE_VERSION" >> "$GITHUB_ENV"
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
+          echo "TestFlight release $RELEASE_VERSION ($BUILD_NUMBER)"
+
+      - name: Check release configuration
+        env:
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          SIGNING_CERTIFICATE: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          SIGNING_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          PROFILE: ${{ secrets.IOS_APP_STORE_PROFILE_BASE64 }}
+        run: |
+          for name in APPLE_TEAM_ID ASC_KEY ASC_KEY_ID ASC_ISSUER_ID SIGNING_CERTIFICATE SIGNING_PASSWORD PROFILE; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing release configuration: $name"
+              exit 1
+            fi
+          done
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2.23.0
+        with:
+          flutter-version: "3.47.9"
+          channel: stable
+          cache: true
+
+      - name: Restore dependencies and generate Flutter code
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter gen-l10n
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Import distribution signing assets
+        env:
+          SIGNING_CERTIFICATE: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          SIGNING_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          PROFILE: ${{ secrets.IOS_APP_STORE_PROFILE_BASE64 }}
+        run: |
+          certificate="$RUNNER_TEMP/distribution.p12"
+          profile="$RUNNER_TEMP/app-store.mobileprovision"
+          keychain="$RUNNER_TEMP/ios-signing.keychain-db"
+          keychain_password="$(openssl rand -hex 32)"
+          printf '%s' "$SIGNING_CERTIFICATE" | base64 -D > "$certificate"
+          printf '%s' "$PROFILE" | base64 -D > "$profile"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$certificate" -P "$SIGNING_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+          security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain"
+          security list-keychains -d user -s "$keychain"
+          security cms -D -i "$profile" > "$RUNNER_TEMP/profile.plist"
+          profile_uuid="$(/usr/libexec/PlistBuddy -c 'Print UUID' "$RUNNER_TEMP/profile.plist")"
+          profile_app="$(/usr/libexec/PlistBuddy -c 'Print Entitlements:application-identifier' "$RUNNER_TEMP/profile.plist")"
+          [[ "$profile_app" == "$APPLE_TEAM_ID.pl.diabeatthis.app" ]]
+          aps_environment="$(/usr/libexec/PlistBuddy -c 'Print Entitlements:aps-environment' "$RUNNER_TEMP/profile.plist" 2>/dev/null || true)"
+          if [[ "$aps_environment" != production ]]; then
+            echo "::error::Enable Push Notifications for pl.diabeatthis.app, regenerate the App Store profile, and update IOS_APP_STORE_PROFILE_BASE64"
+            exit 1
+          fi
+          mkdir -p "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+          cp "$profile" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/$profile_uuid.mobileprovision"
+          echo "PROFILE_UUID=$profile_uuid" >> "$GITHUB_ENV"
+
+      - name: Configure signing and export
+        run: |
+          ruby -rxcodeproj -e '
+            project = Xcodeproj::Project.open("ios/Runner.xcodeproj")
+            target = project.targets.find { |candidate| candidate.name == "Runner" }
+            release = target.build_configurations.find { |config| config.name == "Release" }
+            release.build_settings.merge!(
+              "CODE_SIGN_STYLE" => "Manual",
+              "CODE_SIGN_IDENTITY" => "Apple Distribution",
+              "DEVELOPMENT_TEAM" => ENV.fetch("APPLE_TEAM_ID"),
+              "PROVISIONING_PROFILE" => ENV.fetch("PROFILE_UUID")
+            )
+            project.save
+          '
+          python3 - <<'PY'
+          import os
+          import plistlib
+
+          with open(os.path.join(os.environ["RUNNER_TEMP"], "ExportOptions.plist"), "wb") as options:
+              plistlib.dump({
+                  "method": "app-store-connect",
+                  "destination": "export",
+                  "signingStyle": "manual",
+                  "signingCertificate": "Apple Distribution",
+                  "teamID": os.environ["APPLE_TEAM_ID"],
+                  "provisioningProfiles": {"pl.diabeatthis.app": os.environ["PROFILE_UUID"]},
+                  "manageAppVersionAndBuildNumber": False,
+              }, options)
+          PY
+
+      - name: Build signed IPA
+        run: |
+          flutter build ipa --release --no-pub \
+            --build-name "$RELEASE_VERSION" --build-number "$BUILD_NUMBER" \
+            --export-options-plist "$RUNNER_TEMP/ExportOptions.plist"
+
+      - name: Verify version in signed IPA
+        run: |
+          python3 - <<'PY'
+          import os
+          import plistlib
+          import re
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          archives = list(Path("build/ios/ipa").glob("*.ipa"))
+          if len(archives) != 1:
+              raise SystemExit(f"Expected one signed IPA, found {len(archives)}")
+          with ZipFile(archives[0]) as archive:
+              app_plists = [
+                  name for name in archive.namelist()
+                  if re.fullmatch(r"Payload/[^/]+\.app/Info\.plist", name)
+              ]
+              if len(app_plists) != 1:
+                  raise SystemExit("Expected one application Info.plist in the IPA")
+              app = plistlib.loads(archive.read(app_plists[0]))
+          expected = (os.environ["RELEASE_VERSION"], os.environ["BUILD_NUMBER"])
+          actual = (app.get("CFBundleShortVersionString"), app.get("CFBundleVersion"))
+          if actual != expected:
+              raise SystemExit(f"Signed IPA version {actual} does not match {expected}")
+          if app.get("ITSAppUsesNonExemptEncryption") is not False:
+              raise SystemExit("Signed IPA is missing the expected export compliance declaration")
+          print(f"Verified signed IPA version {actual[0]} ({actual[1]})")
+          PY
+
+      - name: Upload to App Store Connect
+        env:
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          API_PRIVATE_KEYS_DIR: ${{ runner.temp }}/asc-keys
+        run: |
+          install -d -m 700 "$API_PRIVATE_KEYS_DIR"
+          umask 077
+          printf '%s' "$ASC_KEY" | base64 -D > "$API_PRIVATE_KEYS_DIR/AuthKey_$ASC_KEY_ID.p8"
+          xcrun altool --upload-app --type ios --file build/ios/ipa/*.ipa \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+
+      - name: Distribute to external TestFlight testers
+        timeout-minutes: 25
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          API_PRIVATE_KEYS_DIR: ${{ runner.temp }}/asc-keys
+          EXTERNAL_GROUP: diabeatthis
+        run: |
+          key_json="$RUNNER_TEMP/testflight-api-key.json"
+          umask 077
+          trap 'rm -f -- "$key_json"' EXIT
+          python3 - > "$key_json" <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          key_id = os.environ["ASC_KEY_ID"]
+          private_key = Path(os.environ["API_PRIVATE_KEYS_DIR"], f"AuthKey_{key_id}.p8")
+          print(json.dumps({
+              "key_id": key_id,
+              "issuer_id": os.environ["ASC_ISSUER_ID"],
+              "key": private_key.read_text(),
+              "in_house": False,
+          }))
+          PY
+
+          group_id="$(ruby -rspaceship -e '
+            Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from_json_file(ARGV.fetch(0))
+            app = Spaceship::ConnectAPI::App.find("pl.diabeatthis.app")
+            abort("Diabeatthis is unavailable to the App Store Connect API key") unless app
+            name = ENV.fetch("EXTERNAL_GROUP")
+            groups = app.get_beta_groups.select { |group| group.is_internal_group == false && group.name == name }
+            abort("Expected exactly one external TestFlight group named #{name}") unless groups.one?
+            puts groups.first.id
+          ' "$key_json")"
+
+          fastlane run upload_to_testflight \
+            "api_key_path:$key_json" app_identifier:pl.diabeatthis.app \
+            "app_version:$RELEASE_VERSION" "build_number:$BUILD_NUMBER" \
+            distribute_only:true distribute_external:true "groups:$group_id" \
+            notify_external_testers:true wait_processing_timeout_duration:1200 \
+            'changelog:Sprawdź tryb opiekuna, parowanie i rozmowy rodzinne.'

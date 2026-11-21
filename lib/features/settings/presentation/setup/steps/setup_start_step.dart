@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/app_mode/application_device_mode.dart';
 import '../../../../../common/l10n/language.dart';
 import '../setup_wizard_controller.dart';
 import '../widgets/setup_account_choice_panel.dart';
@@ -22,12 +23,19 @@ class SetupStartStep extends StatelessWidget {
       const SizedBox(height: 12),
       SetupStepHeading(
         title: context.lang.setupWelcomeTitle,
-        description: controller.state.signedIn
+        description: isCaregiverOnlyPlatform
+            ? context.lang.setupCaregiverModeDescription
+            : controller.state.signedIn
             ? context.lang.setupWelcomeSignedInDescription
             : context.lang.setupWelcomeDescription,
       ),
       const SizedBox(height: 28),
-      if (controller.state.signedIn)
+      if (isCaregiverOnlyPlatform)
+        SetupAccountChoicePanel(
+          controller: controller,
+          caregiverRequiresGoogle: true,
+        )
+      else if (controller.state.signedIn)
         SetupAccountChoicePanel(controller: controller)
       else
         SetupLocalProfile(

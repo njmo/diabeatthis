@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../../common/app_mode/application_device_mode.dart';
 import '../../../../common/auth/google_account.dart';
 import '../../../../common/auth/google_authentication_repository.dart';
 import '../../../../common/family/demo_family_pairing_repository.dart';
@@ -43,6 +44,7 @@ class SetupWizardController extends ChangeNotifier {
     this.loadFamilyChatPreferences,
   }) : familyRepository = familyRepository ?? DemoFamilyPairingRepository(),
        ownsFamilyRepository = familyRepository == null {
+    if (isCaregiverOnlyPlatform) state.mode = SetupDeviceMode.caregiver;
     aiSubmission.addListener(changed);
     state.requireGoogleForFamily = authentication != null;
     if (authentication != null) {
@@ -147,6 +149,7 @@ class SetupWizardController extends ChangeNotifier {
     state.googleAccount = account;
     state.signedIn = account != null;
     if (account == null &&
+        !isCaregiverOnlyPlatform &&
         authentication != null &&
         state.mode == SetupDeviceMode.caregiver) {
       state.mode = SetupDeviceMode.patient;
@@ -195,7 +198,7 @@ class SetupWizardController extends ChangeNotifier {
   }
 
   Future<void> continueWithoutGoogle() async {
-    if (familyCareLocked) return;
+    if (isCaregiverOnlyPlatform || familyCareLocked) return;
     if (disposed ||
         state.signingIn ||
         (state.mode != SetupDeviceMode.patient &&
@@ -561,10 +564,9 @@ class SetupWizardController extends ChangeNotifier {
     if (!disposed) notifyListeners();
   }
 
-  bool canUseMode(SetupDeviceMode mode) =>
-      mode == SetupDeviceMode.patient ||
-      authentication == null ||
-      state.signedIn;
+  bool canUseMode(SetupDeviceMode mode) => mode == SetupDeviceMode.patient
+      ? !isCaregiverOnlyPlatform
+      : authentication == null || state.signedIn;
   bool canEnableFeature(SetupFeatureId id) =>
       authentication == null ||
       state.signedIn ||

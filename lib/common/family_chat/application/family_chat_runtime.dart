@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,6 +16,7 @@ import '../data/family_chat_database_provider.dart';
 import '../data/family_chat_notification_platform.dart';
 import '../data/family_chat_preferences_provider.dart';
 import '../data/family_chat_remote.dart';
+import '../family_chat_platform.dart';
 import '../notifications/family_chat_presenter_provider.dart';
 import 'family_chat_background.dart';
 import 'family_chat_session.dart';
@@ -225,8 +225,7 @@ class FamilyChatRuntime extends ChangeNotifier with WidgetsBindingObserver {
 final familyChatRuntimeProvider = Provider<FamilyChatRuntime>((ref) {
   final runtime = FamilyChatRuntime(
     ref.watch(familyChatDatabaseProvider),
-    notificationPresenter:
-        !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+    notificationPresenter: supportsFamilyChat
         ? ref.watch(familyChatUiPresenterProvider)
         : null,
   );

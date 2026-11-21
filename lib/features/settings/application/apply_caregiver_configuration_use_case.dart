@@ -58,10 +58,12 @@ class ApplyCaregiverConfigurationUseCase {
     if (currentAccount?.uid != account.uid) {
       throw StateError('Google account changed during setup.');
     }
-    await ref.read(stopPatientRuntimeProvider)();
+    if (!isCaregiverOnlyPlatform) {
+      await ref.read(stopPatientRuntimeProvider)();
+      await ref.read(dataReceiverActivationControllerProvider).disableAll();
+    }
     final prefs = await ref.read(sharedPrefsProvider.future);
     const cloud = DataSourceConfig.defaults();
-    await ref.read(dataReceiverActivationControllerProvider).disableAll();
     await DataSourceConfigStorer(prefs).save(cloud);
     for (final result in await Future.wait([
       prefs.setString(nightscoutUrlKey, address),

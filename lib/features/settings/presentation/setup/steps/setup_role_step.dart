@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../common/app_mode/application_device_mode.dart';
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
 import '../setup_wizard_controller.dart';
@@ -18,7 +19,10 @@ class SetupRoleStep extends StatelessWidget {
         description: context.lang.setupStartDescription,
       ),
       const SizedBox(height: 20),
-      for (final mode in SetupDeviceMode.values)
+      for (final mode
+          in isCaregiverOnlyPlatform
+              ? const [SetupDeviceMode.caregiver]
+              : SetupDeviceMode.values)
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: SetupModeChoice(

@@ -94,7 +94,15 @@ function createChatNotifications({store, chat, messaging, now = Date.now}) {
     if (!delivery) return;
     try {
       // No message text or suggested answers are ever sent through FCM.
-      const result = await messaging.sendEachForMulticast({tokens: delivery.tokens.map(device => device.token), data: delivery.data, android: {priority: 'high', ttl: delivery.ttl}});
+      const result = await messaging.sendEachForMulticast({
+        tokens: delivery.tokens.map(device => device.token),
+        data: delivery.data,
+        android: {priority: 'high', ttl: delivery.ttl},
+        apns: {
+          headers: {'apns-push-type': 'alert', 'apns-expiration': String(Math.floor((now() + delivery.ttl) / 1000))},
+          payload: {aps: {alert: {title: 'Diabeatthis', locKey: 'FAMILY_CHAT_NEW_MESSAGE'}, sound: 'default'}},
+        },
+      });
       let retry = result.responses.length !== delivery.tokens.length;
       const completed = [];
       const invalid = [];

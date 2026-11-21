@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/notifications/base/notifications_controller.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 
+import '../family_chat_platform.dart';
 import 'family_chat_database.dart';
 
 class FamilyChatNotificationPlatform {
@@ -14,7 +14,7 @@ class FamilyChatNotificationPlatform {
     Future<void> Function(FamilyChatNotice)? operation,
     NotificationsController? controller,
   }) async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    if (!supportsFamilyChat) return;
     ProviderContainer? container;
     try {
       for (final notice in notices) {

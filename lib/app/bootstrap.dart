@@ -68,7 +68,9 @@ Future<void> bootstrap(BootstrapBuilder builder) async {
 }
 
 Future<void> _initializeFirebase() async {
-  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+  if (kIsWeb ||
+      (defaultTargetPlatform != TargetPlatform.android &&
+          !isCaregiverOnlyPlatform)) {
     return;
   }
 
@@ -82,6 +84,14 @@ Future<void> _initializeFirebase() async {
 }
 
 Future<void> _activateFirebaseAppCheck() async {
+  if (isCaregiverOnlyPlatform) {
+    await FirebaseAppCheck.instance.activate(
+      providerApple: kReleaseMode
+          ? const AppleAppAttestProvider()
+          : const AppleDebugProvider(),
+    );
+    return;
+  }
   await FirebaseAppCheck.instance.activate(
     providerAndroid: await createAndroidAppCheckProvider(),
   );

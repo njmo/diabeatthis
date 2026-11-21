@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/app_mode/application_device_mode.dart';
 import 'package:diabeatthis/common/auth/google_account.dart';
 import 'package:diabeatthis/common/auth/widgets/google_account_summary.dart';
 import 'package:diabeatthis/common/setup/domain/setup_account_choice.dart';
@@ -6,14 +7,62 @@ import 'package:diabeatthis/common/setup/domain/setup_step.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_option_availability.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard.dart';
 import 'package:diabeatthis/features/settings/presentation/setup/setup_wizard_controller.dart';
+import 'package:diabeatthis/features/settings/presentation/setup/widgets/setup_mode_choice.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../helpers/localized_material_app.dart';
 import '../../../helpers/regression/setup_live_services.dart';
 import 'setup_account_choice_test.dart' show accountChoiceDraft;
 
 void main() {
+  test('iOS ignores saved patient mode', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    SharedPreferences.setMockInitialValues({
+      applicationDeviceModeKey: ApplicationDeviceMode.patient.name,
+    });
+
+    expect(await loadApplicationDeviceMode(), ApplicationDeviceMode.caregiver);
+    expect(
+      deviceModeFromPreferences(await SharedPreferences.getInstance()),
+      ApplicationDeviceMode.caregiver,
+    );
+  });
+
+  testWidgets('iOS setup exposes only the caregiver role', (tester) async {
+    final auth = SetupGoogleAuthenticationTestRepository()
+      ..result = const GoogleAccount(uid: 'a', displayName: 'Alex Morgan');
+    addTearDown(auth.dispose);
+    final draft = accountChoiceDraft();
+    await tester.pumpWidget(
+      localizedMaterialApp(
+        home: SetupWizard(
+          initialState: draft,
+          availability: const DataSourceOptionAvailability.none(),
+          authentication: auth,
+        ),
+      ),
+    );
+    expect(draft.mode, SetupDeviceMode.caregiver);
+    expect(find.byType(TextFormField), findsNothing);
+    expect(find.text('Kontynuuj bez logowania'), findsNothing);
+
+    await tester.tap(find.text('Zaloguj przez Google'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dalej'));
+    await tester.pumpAndSettle();
+
+    expect(draft.currentStep, SetupStep.role);
+    expect(find.text('Jestem opiekunem'), findsOneWidget);
+    expect(find.byType(SetupModeChoice), findsOneWidget);
+    final wizard = tester.state<SetupWizardViewState>(find.byType(SetupWizard));
+    wizard.controller.setMode(SetupDeviceMode.patient);
+    expect(draft.mode, SetupDeviceMode.caregiver);
+  }, variant: const TargetPlatformVariant({TargetPlatform.iOS}));
+
   for (final mode in SetupDeviceMode.values) {
     testWidgets('Start identity is separate from the $mode role', (
       tester,
