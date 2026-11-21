@@ -32,6 +32,8 @@ jobs:
         run: |
           test -s hosting/public/index.html
           test -s hosting/public/privacy/index.html
+          test -s hosting/public/en/index.html
+          test -s hosting/public/en/privacy/index.html
           test -s hosting/public/styles.css
           test -s hosting/public/icon.png
           npx --yes firebase-tools@15.36.0 --version
