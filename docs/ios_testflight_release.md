@@ -4,8 +4,9 @@ Pierwszy build iOS udostępnia wyłącznie tryb opiekuna. Firebase ma już aplik
 iOS w projekcie `diabeatthis-e634c`, z identyfikatorem pakietu
 `pl.diabeatthis.app`. Użyj tego samego identyfikatora w obu panelach Apple.
 Wszystkie kroki poniżej możesz wykonać z Linuksa. GitHub Actions buduje
-i podpisuje aplikację na runnerze `macos-26` z Flutterem 3.47.9.
-Workflow sprawdza, czy SDK iOS ma wersję co najmniej 26.
+i podpisuje aplikację na runnerze `xcode-27` z Flutterem 3.47.9.
+Workflow wymaga SDK iOS 27 lub nowszego. Minimalna wersja systemu
+na iPhonie to iOS 15.
 
 ## 1. Potwierdź członkostwo i skopiuj Team ID
 

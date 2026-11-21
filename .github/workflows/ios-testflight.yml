@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   upload:
-    runs-on: macos-26
+    runs-on: xcode-27
     defaults:
       run:
         shell: bash
@@ -33,8 +33,8 @@ jobs:
           xcodebuild -version
           sdk_version="$(xcrun --sdk iphoneos --show-sdk-version)"
           echo "iOS SDK $sdk_version"
-          if (( ${sdk_version%%.*} < 26 )); then
-            echo "::error::App Store Connect requires the iOS 26 SDK or later"
+          if (( ${sdk_version%%.*} < 27 )); then
+            echo "::error::This TestFlight workflow requires the iOS 27 SDK or later"
             exit 1
           fi
 
