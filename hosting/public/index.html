@@ -3,22 +3,62 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Diabeatthis pomaga planować posiłki i aktywność oraz śledzić dane z Nightscout w trybie opiekuna.">
+  <meta name="description" content="Diabeatthis pomaga rodzinom planować posiłki i aktywność oraz przeglądać dane z Nightscout.">
   <title>Diabeatthis</title>
+  <link rel="canonical" href="https://diabeatthis.app/">
+  <link rel="alternate" hreflang="pl" href="https://diabeatthis.app/">
+  <link rel="alternate" hreflang="en" href="https://diabeatthis.app/en/">
+  <link rel="alternate" hreflang="x-default" href="https://diabeatthis.app/">
   <link rel="icon" href="/icon.png?v=2">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=2">
 </head>
-<body>
-  <main>
-    <img class="logo" src="/icon.png" width="76" height="76" alt="">
-    <h1>Diabeatthis</h1>
-    <p class="intro">Posiłki, glikemia i aktywność w jednym miejscu.</p>
-    <p>Diabeatthis pomaga rodzinom planować posiłki i aktywność, przeglądać odczyty glukozy z Nightscout oraz koordynować opiekę w ciągu dnia.</p>
-    <p>Na Androidzie dostępne są tryby dziecka i opiekuna. Beta na iPhone’a jest przeznaczona dla opiekunów. Logowanie Google identyfikuje konto używane do bezpiecznego parowania rodziny i korzystania ze wspólnych funkcji.</p>
-    <nav aria-label="Informacje o aplikacji">
-      <a href="/privacy/">Polityka prywatności</a>
-      <a href="https://github.com/njmo/diabeatthis">Kod projektu</a>
-    </nav>
+<body class="home-page">
+  <header class="site-header">
+    <div class="shell site-nav">
+      <a class="brand" href="/">
+        <img src="/icon.png?v=2" width="34" height="34" alt="">
+        <span>Diabeatthis</span>
+      </a>
+      <nav class="nav-actions" aria-label="Nawigacja główna">
+        <a class="privacy-link" href="/privacy/">Polityka prywatności</a>
+        <div class="languages" aria-label="Język">
+          <a lang="pl" hreflang="pl" href="/" aria-current="page">PL</a>
+          <a lang="en" hreflang="en" href="/en/">EN</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+  <main id="main" class="shell hero">
+    <section class="hero-copy">
+      <p class="eyebrow">Dla rodzin z cukrzycą typu 1</p>
+      <h1>Posiłki, ruch<br>i glikemia.</h1>
+      <p class="lead">Planuj posiłki i aktywność, przeglądaj odczyty glukozy z Nightscout i koordynuj opiekę w rodzinie.</p>
+      <p class="account-note">Konto Google służy do parowania rodziny i uruchamia funkcje współdzielone.</p>
+      <a class="cta" href="https://github.com/njmo/diabeatthis/releases">Wydania aplikacji</a>
+      <p class="platforms">Android · iOS TestFlight dla opiekunów</p>
+    </section>
+    <figure class="preview" aria-label="Podgląd trybu opiekuna z fikcyjnymi danymi">
+      <div class="preview-surface" aria-hidden="true">
+        <div class="preview-heading">
+          <div>
+            <p class="preview-mode">Tryb opiekuna</p>
+            <p class="preview-title">Dzisiaj</p>
+          </div>
+          <img src="/icon.png?v=2" width="42" height="42" alt="">
+        </div>
+        <div class="preview-card glucose">
+          <p>Odczyt glukozy</p>
+          <div class="reading">124 <span>mg/dL</span></div>
+          <div class="graph"><span class="graph-fill"></span><span class="graph-line"></span></div>
+          <div class="graph-times"><span>08:00</span><span>09:00</span><span>10:00</span></div>
+        </div>
+        <div class="preview-card meal">
+          <span class="meal-time">08:30</span>
+          <div><p>Plan posiłku</p><strong>Śniadanie</strong></div>
+        </div>
+      </div>
+      <figcaption>Dane przykładowe</figcaption>
+    </figure>
   </main>
 </body>
 </html>

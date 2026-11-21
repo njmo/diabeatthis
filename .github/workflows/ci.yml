@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - develop
+    paths-ignore:
+      - "hosting/**"
+      - ".github/workflows/firebase-hosting.yml"
   pull_request:
     branches:
       - develop
+    paths-ignore:
+      - "hosting/**"
+      - ".github/workflows/firebase-hosting.yml"
 
 jobs:
   checks:
