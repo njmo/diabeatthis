@@ -118,21 +118,33 @@ repozytorium i czatem.
 
 ## 7. Wyślij build i zainstaluj go na iPhonie
 
-1. Wypchnięcie taga `ios-testflight-1` z commita zawierającego workflow
-   uruchamia build numer `1`. Przy następnych wysyłkach używaj kolejnych
-   numerów. Po scaleniu workflow do `develop` możesz też użyć **Actions →
-   iOS TestFlight → Run workflow** i podać `build_number`. Wersja aplikacji
-   pochodzi z `pubspec.yaml`.
+1. Utwórz tag na commicie przeznaczonym do testów i wypchnij go do GitHuba.
+
+   ```bash
+   git tag v1.0.1-ios
+   git push origin v1.0.1-ios
+   ```
+
+   Tag `v1.0.1-ios` uruchamia wysyłkę TestFlight z wersją `1.0.1`.
+   GitHub Actions nadaje numer buildu automatycznie. Do kolejnego wydania
+   użyj nowego taga, np. `v1.0.2-ios`. Tagi z końcówką `-ios` są
+   wykluczone z workflow Androida. Po scaleniu workflow do `develop` wciąż
+   możesz użyć **Actions → iOS TestFlight → Run workflow** i opcjonalnie
+   podać wersję oraz numer buildu. Ręczne uruchomienie domyślnie używa wersji
+   z `pubspec.yaml`.
    [Otwórz Actions](https://github.com/njmo/diabeatthis/actions)
 2. Sprawdź, czy krok **Upload to App Store Connect** zakończył się sukcesem.
    W **App Store Connect → Apps → Diabeatthis → TestFlight** poczekaj na
    przetworzenie buildu. Jeśli Apple wyświetli **Missing Compliance**,
    uzupełnij pytania o szyfrowanie zgodnie z tym, czego używa aplikacja.
    [Otwórz Apps i wybierz Diabeatthis](https://appstoreconnect.apple.com/apps) · [Przetwarzanie buildów](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds/)
-3. W **TestFlight → Internal Testing** utwórz grupę, np. `Diabeatthis Internal`.
-   Użyj **Add Builds** i **Invite Testers**, żeby dodać build i własne konto
-   App Store Connect. Na iPhonie zainstaluj **TestFlight**, przyjmij zaproszenie
-   i zainstaluj Diabeatthis. [Pobierz TestFlight na iPhone’a](https://apps.apple.com/pl/app/testflight/id899247664) · [Testy wewnętrzne](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers/)
+3. W **TestFlight → Internal Testing** utwórz grupę, np. `Diabeatthis Internal`,
+   i zaznacz **Enable automatic distribution**. Przez **Invite Testers**
+   dodaj konta testerów. Kolejne gotowe buildy będą trafiały do tej grupy
+   po przetworzeniu. Na iPhonie zainstaluj **TestFlight**, przyjmij zaproszenie
+   i zainstaluj Diabeatthis. Dla grup zewnętrznych obowiązuje beta review
+   Apple, kiedy dany build go wymaga.
+   [Otwórz TestFlight Diabeatthis](https://appstoreconnect.apple.com/teams/197032ea-c7c4-48e2-8ad1-d40efadd82a2/apps/6837619950/testflight) · [Testy wewnętrzne](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers/) · [Testy zewnętrzne](https://developer.apple.com/help/app-store-connect/test-a-beta-version/invite-external-testers/)
 4. Na iPhonie sprawdź start, logowanie Google, konfigurację Nightscout,
    parowanie rodziny i wejście na ekran opiekuna. Sprawdź też powiadomienia
    czatu na otwartym ekranie i po zablokowaniu iPhone’a oraz otwarcie rozmów

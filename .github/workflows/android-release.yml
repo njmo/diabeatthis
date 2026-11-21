@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*.*.*"
+      - "!v*.*.*-ios"
   workflow_dispatch:
     inputs:
       release_version:

@@ -3,12 +3,14 @@ name: iOS TestFlight
 on:
   push:
     tags:
-      - "ios-testflight-*"
+      - "v*.*.*-ios"
   workflow_dispatch:
     inputs:
+      release_version:
+        description: "iOS version (defaults to pubspec.yaml)"
+        type: string
       build_number:
-        description: "App Store Connect build number"
-        required: true
+        description: "App Store Connect build number override"
         type: string
 
 permissions:
@@ -22,6 +24,7 @@ jobs:
         shell: bash
     env:
       APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      RELEASE_VERSION: ${{ inputs.release_version }}
       BUILD_NUMBER: ${{ inputs.build_number }}
     steps:
       - uses: actions/checkout@v7.0.1
@@ -38,6 +41,30 @@ jobs:
             exit 1
           fi
 
+      - name: Resolve iOS version and build number
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            if [[ ! "$GITHUB_REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-ios$ ]]; then
+              echo "::error::Use an iOS release tag such as v1.0.1-ios"
+              exit 1
+            fi
+            RELEASE_VERSION="${BASH_REMATCH[1]}"
+          else
+            RELEASE_VERSION="${RELEASE_VERSION:-$(sed -nE 's/^version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)(\+[0-9]+)?[[:space:]]*$/\1/p' pubspec.yaml)}"
+          fi
+          BUILD_NUMBER="${BUILD_NUMBER:-$GITHUB_RUN_NUMBER}"
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+            echo "::error::Version must have the form X.Y.Z"
+            exit 1
+          }
+          [[ "$BUILD_NUMBER" =~ ^[1-9][0-9]*$ ]] || {
+            echo "::error::Build number must be a positive integer"
+            exit 1
+          }
+          echo "RELEASE_VERSION=$RELEASE_VERSION" >> "$GITHUB_ENV"
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
+          echo "TestFlight release $RELEASE_VERSION ($BUILD_NUMBER)"
+
       - name: Check release configuration
         env:
           ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
@@ -53,14 +80,6 @@ jobs:
               exit 1
             fi
           done
-          if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_EVENT_NAME" == push ]]; then
-            BUILD_NUMBER="${GITHUB_REF_NAME#ios-testflight-}"
-          fi
-          [[ "$BUILD_NUMBER" =~ ^[1-9][0-9]*$ ]] || {
-            echo "::error::Build number must be a positive integer"
-            exit 1
-          }
-          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2.23.0
@@ -137,7 +156,37 @@ jobs:
           PY
 
       - name: Build signed IPA
-        run: flutter build ipa --release --no-pub --build-number "$BUILD_NUMBER" --export-options-plist "$RUNNER_TEMP/ExportOptions.plist"
+        run: |
+          flutter build ipa --release --no-pub \
+            --build-name "$RELEASE_VERSION" --build-number "$BUILD_NUMBER" \
+            --export-options-plist "$RUNNER_TEMP/ExportOptions.plist"
+
+      - name: Verify version in signed IPA
+        run: |
+          python3 - <<'PY'
+          import os
+          import plistlib
+          import re
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          archives = list(Path("build/ios/ipa").glob("*.ipa"))
+          if len(archives) != 1:
+              raise SystemExit(f"Expected one signed IPA, found {len(archives)}")
+          with ZipFile(archives[0]) as archive:
+              app_plists = [
+                  name for name in archive.namelist()
+                  if re.fullmatch(r"Payload/[^/]+\.app/Info\.plist", name)
+              ]
+              if len(app_plists) != 1:
+                  raise SystemExit("Expected one application Info.plist in the IPA")
+              app = plistlib.loads(archive.read(app_plists[0]))
+          expected = (os.environ["RELEASE_VERSION"], os.environ["BUILD_NUMBER"])
+          actual = (app.get("CFBundleShortVersionString"), app.get("CFBundleVersion"))
+          if actual != expected:
+              raise SystemExit(f"Signed IPA version {actual} does not match {expected}")
+          print(f"Verified signed IPA version {actual[0]} ({actual[1]})")
+          PY
 
       - name: Upload to App Store Connect
         env:
