@@ -185,6 +185,8 @@ jobs:
           actual = (app.get("CFBundleShortVersionString"), app.get("CFBundleVersion"))
           if actual != expected:
               raise SystemExit(f"Signed IPA version {actual} does not match {expected}")
+          if app.get("ITSAppUsesNonExemptEncryption") is not False:
+              raise SystemExit("Signed IPA is missing the expected export compliance declaration")
           print(f"Verified signed IPA version {actual[0]} ({actual[1]})")
           PY
 
@@ -200,3 +202,46 @@ jobs:
           printf '%s' "$ASC_KEY" | base64 -D > "$API_PRIVATE_KEYS_DIR/AuthKey_$ASC_KEY_ID.p8"
           xcrun altool --upload-app --type ios --file build/ios/ipa/*.ipa \
             --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+
+      - name: Distribute to external TestFlight testers
+        timeout-minutes: 25
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          API_PRIVATE_KEYS_DIR: ${{ runner.temp }}/asc-keys
+          EXTERNAL_GROUP: diabeatthis
+        run: |
+          key_json="$RUNNER_TEMP/testflight-api-key.json"
+          umask 077
+          trap 'rm -f -- "$key_json"' EXIT
+          python3 - > "$key_json" <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          key_id = os.environ["ASC_KEY_ID"]
+          private_key = Path(os.environ["API_PRIVATE_KEYS_DIR"], f"AuthKey_{key_id}.p8")
+          print(json.dumps({
+              "key_id": key_id,
+              "issuer_id": os.environ["ASC_ISSUER_ID"],
+              "key": private_key.read_text(),
+              "in_house": False,
+          }))
+          PY
+
+          group_id="$(ruby -rspaceship -e '
+            Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from_json_file(ARGV.fetch(0))
+            app = Spaceship::ConnectAPI::App.find("pl.diabeatthis.app")
+            abort("Diabeatthis is unavailable to the App Store Connect API key") unless app
+            name = ENV.fetch("EXTERNAL_GROUP")
+            groups = app.get_beta_groups.select { |group| group.is_internal_group == false && group.name == name }
+            abort("Expected exactly one external TestFlight group named #{name}") unless groups.one?
+            puts groups.first.id
+          ' "$key_json")"
+
+          fastlane run upload_to_testflight \
+            "api_key_path:$key_json" app_identifier:pl.diabeatthis.app \
+            "app_version:$RELEASE_VERSION" "build_number:$BUILD_NUMBER" \
+            distribute_only:true distribute_external:true "groups:$group_id" \
+            notify_external_testers:true wait_processing_timeout_duration:1200 \
+            'changelog:Sprawdź tryb opiekuna, parowanie i rozmowy rodzinne.'

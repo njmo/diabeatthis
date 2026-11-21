@@ -91,7 +91,8 @@ wybierz aplikację iOS i wgraj plik APNs `.p8` z jego **Key ID** i swoim
 W **App Store Connect → Users and Access → Integrations → App Store Connect
 API** kliknij **Request Access**, jeśli sekcja wymaga aktywacji. O dostęp
 występuje właściciel konta. W **Team Keys** utwórz klucz, np.
-`Diabeatthis GitHub Actions`, z rolą **Developer**. Zapisz **Key ID**,
+`Diabeatthis GitHub Actions`, z rolą **App Manager** do wysyłki oraz
+dystrybucji zewnętrznej. Zapisz **Key ID**,
 **Issuer ID** i pobierz `AuthKey_<KEY_ID>.p8`. Apple udostępnia pobranie pliku
 tylko raz. [Otwórz App Store Connect API](https://appstoreconnect.apple.com/access/integrations/api) · [Pomoc Apple](https://developer.apple.com/help/app-store-connect/get-started/app-store-connect-api/)
 
@@ -142,11 +143,25 @@ repozytorium i czatem.
    i zaznacz **Enable automatic distribution**. Przez **Invite Testers**
    dodaj konta testerów. Kolejne gotowe buildy będą trafiały do tej grupy
    po przetworzeniu. Na iPhonie zainstaluj **TestFlight**, przyjmij zaproszenie
-   i zainstaluj Diabeatthis. Dla grup zewnętrznych obowiązuje beta review
-   Apple, kiedy dany build go wymaga.
+   i zainstaluj Diabeatthis. Dla grupy zewnętrznej **diabeatthis** workflow
+   automatycznie przypisuje konkretną wersję i numer buildu, zgłasza ją do
+   beta review, gdy jest wymagane, i włącza **Automatically notify testers**.
+   W App Store Connect muszą być uzupełnione informacje aplikacji wymagane
+   przez beta review. Apple dopuszcza jeden build danej wersji w review naraz.
    [Otwórz TestFlight Diabeatthis](https://appstoreconnect.apple.com/teams/197032ea-c7c4-48e2-8ad1-d40efadd82a2/apps/6837619950/testflight) · [Testy wewnętrzne](https://developer.apple.com/help/app-store-connect/test-a-beta-version/add-internal-testers/) · [Testy zewnętrzne](https://developer.apple.com/help/app-store-connect/test-a-beta-version/invite-external-testers/)
 4. Na iPhonie sprawdź start, logowanie Google, konfigurację Nightscout,
    parowanie rodziny i wejście na ekran opiekuna. Sprawdź też powiadomienia
    czatu na otwartym ekranie i po zablokowaniu iPhone’a oraz otwarcie rozmów
    z powiadomienia. Zdalne powiadomienia decyzji posiłkowych korzystają
    obecnie ze ścieżki Androida.
+
+### Szyfrowanie i Francja
+
+Nowe buildy zawierają w `Info.plist` deklarację
+`ITSAppUsesNonExemptEncryption = false` na podstawie obecnego użycia
+standardowego szyfrowania i decyzji o braku dystrybucji App Store we Francji.
+Przy zmianie mechanizmów szyfrowania lub dodaniu Francji sprawdź tę deklarację
+przed kolejną publikacją. Dostępność ustawiasz osobno w **Distribution →
+Pricing and Availability → App Availability**. Wybierz **Specific Countries
+or Regions** i pomiń **France**.
+[Szyfrowanie](https://developer.apple.com/help/app-store-connect/reference/app-information/export-compliance-documentation-for-encryption/) · [Dostępność w krajach](https://developer.apple.com/help/app-store-connect/manage-your-apps-availability/manage-availability-for-your-app-on-the-app-store/)
