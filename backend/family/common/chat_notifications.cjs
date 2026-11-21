@@ -100,7 +100,7 @@ function createChatNotifications({store, chat, messaging, now = Date.now}) {
         android: {priority: 'high', ttl: delivery.ttl},
         apns: {
           headers: {'apns-push-type': 'alert', 'apns-expiration': String(Math.floor((now() + delivery.ttl) / 1000))},
-          payload: {aps: {alert: {title: 'Diabeatthis', 'loc-key': 'FAMILY_CHAT_NEW_MESSAGE'}, sound: 'default'}},
+          payload: {aps: {alert: {title: 'Diabeatthis', locKey: 'FAMILY_CHAT_NEW_MESSAGE'}, sound: 'default'}},
         },
       });
       let retry = result.responses.length !== delivery.tokens.length;
