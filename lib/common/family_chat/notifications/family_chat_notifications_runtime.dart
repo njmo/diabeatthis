@@ -333,54 +333,36 @@ class _FamilyChatNotificationRuntimeState
           await handleFamilyChatNotificationResponse(response);
         }
       }
-      final remoteOpen = _pendingRemoteOpen;
-      if (remoteOpen != null) {
-        final uid = FirebaseAuth.instance.currentUser?.uid;
-        final scope = jsonEncode([
-          uid,
-          remoteOpen['familyId'],
-          remoteOpen['epoch'],
-        ]);
-        if (remoteOpen['uid'] != uid || session!.scope != scope) {
-          _pendingRemoteOpen = null;
-        } else {
-          final active = await runtime.db.activeChat();
-          if (!mounted ||
-              runtime.session != session ||
-              !session.enabled ||
-              FirebaseAuth.instance.currentUser?.uid != uid ||
-              active['enabled'] != true ||
-              active['uid'] != uid ||
-              active['scope'] != scope) {
-            return;
+      var remoteOpen = _pendingRemoteOpen;
+      final recipient = FirebaseAuth.instance.currentUser?.uid;
+      if (remoteOpen != null &&
+          (remoteOpen['uid'] != recipient ||
+              session!.scope !=
+                  jsonEncode([
+                    recipient,
+                    remoteOpen['familyId'],
+                    remoteOpen['epoch'],
+                  ]))) {
+        _pendingRemoteOpen = null;
+        remoteOpen = null;
+      }
+      final intent = remoteOpen == null
+          ? await runtime.db.metadata('chatOpen')
+          : {...remoteOpen, 'scope': session!.scope};
+      if (intent == null) return;
+      Future<void> clearIntent() async {
+        if (remoteOpen != null) {
+          if (identical(_pendingRemoteOpen, remoteOpen)) {
+            _pendingRemoteOpen = null;
           }
-          final navigator = ref
-              .read(appRouterProvider)
-              .navigatorKey
-              .currentState;
-          if (navigator == null) {
-            _retry?.cancel();
-            _retry = Timer(const Duration(milliseconds: 250), _changed);
-            return;
-          }
-          _pendingRemoteOpen = null;
-          if (!runtime.conversationVisible) {
-            unawaited(
-              navigator.push<void>(
-                MaterialPageRoute(builder: (_) => const FamilyChatPage()),
-              ),
-            );
-          }
-          unawaited(session.synchronize(enqueueAgain: true));
           return;
         }
+        await runtime.db.customStatement(
+          "DELETE FROM chat_metadata WHERE key='chatOpen' AND value=?",
+          [jsonEncode(intent)],
+        );
       }
-      final intent = await runtime.db.metadata('chatOpen');
-      if (intent == null) return;
-      Future<void> clearIntent() => runtime.db.customStatement(
-        "DELETE FROM chat_metadata WHERE key='chatOpen' AND value=?",
-        [jsonEncode(intent)],
-      );
+
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != session!.uid ||
           intent['uid'] != uid ||
@@ -399,7 +381,8 @@ class _FamilyChatNotificationRuntimeState
       final generation = intent['historyGeneration'] ?? 0;
       if (id is! String ||
           generation is! int ||
-          !await runtime.db.historyAllows(scope, generation)) {
+          (remoteOpen == null &&
+              !await runtime.db.historyAllows(scope, generation))) {
         await clearIntent();
         return;
       }
@@ -451,7 +434,7 @@ class _FamilyChatNotificationRuntimeState
       }
       // A just-queued outgoing request can still be in the local outbox
       // when its confirmation banner is tapped.
-      var target = session.isCaregiver
+      var target = remoteOpen == null && session.isCaregiver
           ? session.targets
                 .where(
                   (target) => session
@@ -483,13 +466,15 @@ class _FamilyChatNotificationRuntimeState
         }
         if (!mounted || runtime.session != session || !session.enabled) return;
         final participants = message?['participants'] as Map?;
+        final messageGeneration = message?['historyGeneration'] ?? 0;
         final validMessage =
             message?['id'] == id &&
-            (message?['historyGeneration'] ?? 0) == generation &&
+            messageGeneration is int &&
+            (remoteOpen != null || messageGeneration == generation) &&
             participants?[uid] == session.config?['epoch'] &&
             (message?['expiresAt'] == null ||
                 (message!['expiresAt'] as int) > session.serverNow) &&
-            await runtime.db.historyAllows(scope, generation);
+            await runtime.db.historyAllows(scope, messageGeneration);
         target = !validMessage
             ? null
             : message!['conversationId'] == 'family'
@@ -509,11 +494,15 @@ class _FamilyChatNotificationRuntimeState
         _retry = Timer(const Duration(milliseconds: 250), _changed);
         return;
       }
-      if (jsonEncode(await runtime.db.metadata('chatOpen')) ==
-          jsonEncode(intent)) {
+      if (remoteOpen != null ||
+          jsonEncode(await runtime.db.metadata('chatOpen')) ==
+              jsonEncode(intent)) {
         await clearIntent();
       }
-      if (mounted && session.enabled && runtime.session == session) {
+      if (mounted &&
+          session.enabled &&
+          runtime.session == session &&
+          FirebaseAuth.instance.currentUser?.uid == uid) {
         unawaited(
           navigator.push<void>(
             MaterialPageRoute(

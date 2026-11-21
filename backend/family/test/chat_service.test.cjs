@@ -403,7 +403,7 @@ test('chat push dispatch sends opaque IDs once and does not manufacture a delive
   assert.deepEqual(Object.keys(delivered[0].data).sort(), ['epoch', 'familyId', 'messageId', 'type', 'uid']);
   assert.equal(delivered[0].apns.headers['apns-push-type'], 'alert');
   assert.equal(delivered[0].apns.headers['apns-expiration'], String((1000000 + delivered[0].android.ttl) / 1000));
-  assert.deepEqual(delivered[0].apns.payload.aps.alert, {title: 'Diabeatthis', body: 'New family message'});
+  assert.deepEqual(delivered[0].apns.payload.aps.alert, {title: 'Diabeatthis', 'loc-key': 'FAMILY_CHAT_NEW_MESSAGE'});
   assert.equal(JSON.stringify(delivered[0]).includes('Hello'), false);
   assert.equal((await service.states('mom', {ids: [message.id]})).messages[0].receipts.child.deliveredAt, null);
 });

@@ -4,7 +4,8 @@ on:
   push:
     tags:
       - "v*.*.*"
-      - "!v*.*.*-ios"
+      - "!v*.*.*-*"
+      - "v*.*.*-android"
   workflow_dispatch:
     inputs:
       release_version:
@@ -39,11 +40,18 @@ jobs:
       contents: write
 
     env:
-      GOOGLE_PLAY_TRACK: ${{ github.event.inputs.track || 'internal' }}
+      GOOGLE_PLAY_TRACK: ${{ inputs.track || (endsWith(github.ref_name, '-android') && 'alpha') || 'internal' }}
       GOOGLE_PLAY_RELEASE_STATUS: ${{ github.event.inputs.release_status || 'completed' }}
       GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
 
     steps:
+      - name: Verify Google Play credentials
+        run: |
+          if [[ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]]; then
+            echo "::error::Set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON before running an Android release"
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -80,12 +88,24 @@ jobs:
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/android/app/release.jks"
 
       - name: Read release version
+        env:
+          MANUAL_RELEASE_VERSION: ${{ inputs.release_version }}
         run: |
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            echo "RELEASE_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+            if [ "$GOOGLE_PLAY_TRACK" = "production" ]; then
+              echo "::error::Tagged builds require a Google Play testing track"
+              exit 1
+            fi
+            version="${GITHUB_REF_NAME#v}"
+            version="${version%-android}"
           else
-            echo "RELEASE_VERSION=${{ github.event.inputs.release_version }}" >> "$GITHUB_ENV"
+            version="$MANUAL_RELEASE_VERSION"
           fi
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Expected an Android version in X.Y.Z format"
+            exit 1
+          fi
+          echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
           echo "RELEASE_BUILD_NUMBER=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
 
       - name: Build signed app bundle
@@ -117,7 +137,6 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload to Google Play
-        if: env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != ''
         uses: r0adkll/upload-google-play@v1.1.5
         with:
           serviceAccountJsonPlainText: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
