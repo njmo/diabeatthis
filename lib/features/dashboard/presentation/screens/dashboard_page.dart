@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:clock/clock.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -9,6 +10,7 @@ import '../../../../common/app_mode/application_device_mode_loading.dart';
 import '../../../../common/presentation/dashboard/dashboard_shell.dart';
 import '../../../../common/presentation/dashboard/dashboard_spacing.dart';
 import '../../../../core/data/provider/parent_controller_provider.dart';
+import '../../../../debug/debug_treatment_fab.dart';
 import '../../../caregiver/presentation/widgets/caregiver_dashboard.dart';
 import '../../../day_analysis/presentation/widgets/day_summary_status.dart';
 import '../../../day_analysis/presentation/widgets/today_page.dart';
@@ -18,8 +20,6 @@ import '../widgets/dashboard_fab.dart';
 import '../widgets/dashboard_status_card.dart';
 import '../widgets/nightscout_dashboard.dart';
 import '../widgets/parent_dashboard_fab.dart';
-
-final dashboardSecondaryActionProvider = Provider<Widget?>((ref) => null);
 
 @RoutePage()
 class DashboardPage extends HookConsumerWidget {
@@ -45,7 +45,7 @@ class DashboardPage extends HookConsumerWidget {
 
     return DashboardShell(
       destination: destination.value,
-      secondaryAction: ref.watch(dashboardSecondaryActionProvider),
+      secondaryAction: kDebugMode ? const DebugTreatmentFab() : null,
       dayStatus: DaySummaryStatus(
         date: dayDate.value ?? DateUtils.dateOnly(clock.now().toLocal()),
       ),

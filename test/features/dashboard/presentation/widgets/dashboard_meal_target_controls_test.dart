@@ -35,7 +35,7 @@ void main() {
         );
         final meal = MealData(id: 1, name: 'Śniadanie', plannedAt: now.millisecondsSinceEpoch,
           purpose: 'meal', status: 'planned', createdAt: now.millisecondsSinceEpoch,
-          updatedAt: now.millisecondsSinceEpoch, isSynced: false);
+          updatedAt: now.millisecondsSinceEpoch, isSynced: false, treatmentSurplus: false);
         await withClock(Clock.fixed(now), () async {
           await tester.pumpWidget(ProviderScope(
             overrides: [

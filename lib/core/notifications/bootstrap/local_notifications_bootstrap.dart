@@ -21,7 +21,9 @@ void ensureTimeZonesInitialized() {
 Future<void> init(FlutterLocalNotificationsPlugin plugin) async {
   ensureTimeZonesInitialized();
 
-  const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const androidInit = AndroidInitializationSettings(
+    'ic_diabeatthis_notification',
+  );
 
   final iosInit = DarwinInitializationSettings(
     requestAlertPermission: false,

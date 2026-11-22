@@ -43,7 +43,7 @@ exports.revokeFamilyChatNotifications = onCall({region: 'europe-west1', enforceA
     throw new HttpsError('unavailable', 'Device registration is temporarily unavailable');
   }
 });
-const service = {mealDecision: decisions.execute, registerMealDecisionNotifications: notifications.register, claimPlan:plans.claim,submitPlan:plans.submit,fetchPlans:plans.fetch,acknowledgePlan:plans.acknowledge,...createFamilyService({store: getFirestore(), auth}), registerMirror: mirror.register, publishMirror: mirror.publish, fetchMirror: mirror.fetch, searchMirrorIngredients: mirror.searchIngredients};
+const service = {mealDecision: decisions.execute, registerMealDecisionNotifications: notifications.register, claimPlan:plans.claim,submitPlan:plans.submit,fetchPlans:plans.fetch,acknowledgePlan:plans.acknowledge,...createFamilyService({store: getFirestore(), auth}), registerMirror: mirror.register, publishMirror: mirror.publish, fetchMirror: mirror.fetch, fetchMirrorView: mirror.fetchView, searchMirrorIngredients: mirror.searchIngredients};
 for (const [name, operation] of Object.entries({
   registerFamilyChatNotifications: 'chatNotifications',
   claimFamilyChatTreatment: 'chatTreatmentClaim', completeFamilyChatTreatment: 'chatTreatmentComplete',
@@ -51,12 +51,14 @@ for (const [name, operation] of Object.entries({
   getFamilyChatConfig: 'chatConfig', configureFamilyChat: 'chatConfigure', clearFamilyChatHistory: 'chatClearHistory', reserveFamilyChatOperations: 'chatReserve', sendFamilyChatMessage: 'chatSend', fetchFamilyChatMessages: 'chatFetch', fetchFamilyChatConversations: 'chatConversations', acknowledgeFamilyChatMessage: 'chatAcknowledge', fetchFamilyChatMessageStates: 'chatStates', acknowledgeFamilyChatMessages: 'chatAcknowledgeBatch',
   mealDecision: 'mealDecision', registerMealDecisionNotifications: 'registerMealDecisionNotifications',
   claimFamilyPlan:'claimPlan', submitFamilyPlan:'submitPlan', fetchFamilyPlans:'fetchPlans', acknowledgeFamilyPlan:'acknowledgePlan',
-  registerFamilyMirror: 'registerMirror', publishFamilyMirror: 'publishMirror', fetchFamilyMirror: 'fetchMirror',
+  registerFamilyMirror: 'registerMirror', publishFamilyMirror: 'publishMirror', fetchFamilyMirror: 'fetchMirror', fetchFamilyMirrorView: 'fetchMirrorView',
   searchFamilyMirrorIngredients: 'searchMirrorIngredients',
   createFamilyInvite: 'createInvite', requestFamilyJoin: 'requestJoin', requestFamilyJoinByCode: 'requestJoinByCode', decideFamilyJoin: 'decide',
   getFamilyStatus: 'status', disconnectFamilyMember: 'disconnect', finalizeFamilySetup: 'finalize',
 })) {
-  exports[name] = onCall({secrets: [pairingHmacKey], region: 'europe-west1', enforceAppCheck: true, maxInstances: 4, concurrency: 20, timeoutSeconds: 20}, async request => {
+  exports[name] = onCall({secrets: [pairingHmacKey], region: 'europe-west1', enforceAppCheck: true, maxInstances: 4, concurrency: 20, timeoutSeconds: 20,
+    ...(name === 'fetchFamilyMirrorView' ? {invoker: 'public'} : {}),
+  }, async request => {
     try {
       const uid = requireGoogle(request);
       // Check revocation and disabled accounts, not only the callable's cached token validation.

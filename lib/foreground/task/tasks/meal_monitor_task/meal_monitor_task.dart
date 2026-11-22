@@ -145,14 +145,17 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
         final mealId = _activeMealExecutorContext.activeMeal?.id;
         if (mealId != null) {
           try {
-            await context.container
-                .read(notificationsControllerForegroundProvider)
-                .cancelNotification(
-                  NotificationKey(
-                    type: NotificationEventType.mealSuggestion,
-                    entityId: mealId,
-                  ),
-                );
+            final notifications = context.container.read(
+              notificationsControllerForegroundProvider,
+            );
+            for (final type in [
+              NotificationEventType.mealSuggestion,
+              NotificationEventType.plannedMealAdvice,
+            ]) {
+              await notifications.cancelNotification(
+                NotificationKey(type: type, entityId: mealId),
+              );
+            }
           } catch (_) {
             logW('Could not cancel previous meal suggestion');
           }
@@ -167,7 +170,8 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
           getNearestMealProvider.future,
         );
         if (recovery != null &&
-            recovery.plannedAt?.isAfter(clock.now()) == false) {
+            (mealStatusBlocksAnotherMealActivation(recovery.status) ||
+                recovery.plannedAt?.isAfter(clock.now()) == false)) {
           mealMonitorTransition = MealMonitorTransition(
             MealMonitorContext(),
             NewMealCheckExecutor(),

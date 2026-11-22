@@ -7,15 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../../../core/drift/providers/database_provider.dart';
-import '../../../family/family_providers.dart';
-import '../../../family_sync/family_plan_submission_store.dart';
-import '../../../family_sync/family_planning_controller.dart';
+import '../../../family_sync/family_planning_session_provider.dart';
 import '../../../l10n/language.dart';
 import '../../../routing/owned_route_registry.dart';
 import '../../../widgets/meal_start/meal_start_sheet.dart';
 import '../../meal_decision_answer.dart';
 import '../../meal_decision_preferences_provider.dart';
+import '../../meal_decision_timing.dart';
 import '../../notifications/meal_decision_push.dart';
 import '../../remote/caregiver_meal_decision_eligibility.dart';
 import '../../remote/meal_decision_presence_controller.dart';
@@ -71,7 +69,7 @@ Future<void> showCaregiverMealDecisionRequest(
       return;
     }
     var nextAction = action;
-    if (request.claimedByUid != uid) {
+    if (request.claimAvailable || request.claimedByUid != uid) {
       if (action == 'claim' || action == 'delegate') {
         await ProviderScope.containerOf(context, listen: false)
             .read(mealDecisionRemoteControllerProvider.notifier)
@@ -148,19 +146,20 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
     final answer = useState(MealDecisionAnswer.insulinAndEat);
     final minutes = useTextEditingController();
     final message = useTextEditingController();
-    final family = useMemoized(
-      () => FamilyPlanningController(
-        ref.read(authenticatedFamilyTransportProvider),
-        () => FirebaseAuth.instance.currentUser?.uid,
-        FamilyPlanSubmissionStore(ref.read(databaseProvider)),
-      ),
-      [uid],
+    final family = ref.watch(
+      familyPlanningSessionProvider((
+        uid: request == null ? null : uid,
+        home: false,
+        mealId: request?.mealId,
+        context: true,
+      )),
     );
+    final routeOwner = useMemoized(Object.new);
     final sheetRoute = ModalRoute.of(context);
     final sheetNavigator = Navigator.of(context);
     void closeSheet({bool keepSheet = false}) {
       if (!sheetNavigator.mounted) return;
-      OwnedRouteRegistry.close(family);
+      OwnedRouteRegistry.close(routeOwner);
       final nested = delegateRoute.value;
       if (nested != null &&
           nested.isActive &&
@@ -178,8 +177,36 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
     useListenable(family);
     final mirrorUnavailable = useState(false);
     useEffect(() {
-      unawaited(family.refresh());
-      return family.dispose;
+      if (!inbox.failed && !family.failed && !mirrorUnavailable.value) {
+        return null;
+      }
+      final timer = Timer(const Duration(seconds: 5), () async {
+        await remote.refresh();
+        if (!context.mounted || family.disposed) return;
+        await family.refreshAndWait(mirrorOnly: true);
+        if (context.mounted && family.complete && !family.failed) {
+          mirrorUnavailable.value = false;
+        }
+      });
+      return timer.cancel;
+    }, [inbox.failed, family, family.failed, mirrorUnavailable.value]);
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted || family.disposed) return;
+        mealDecisionTiming('phone.sheet.firstFrame');
+        unawaited(
+          timeMealDecision(
+            'phone.family',
+            () => family.refreshAndWait(
+              mirrorOnly: true,
+              timing: (phase, elapsed) {
+                mealDecisionTiming('phone.family.$phase', elapsedMs: elapsed);
+              },
+            ),
+          ),
+        );
+      });
+      return null;
     }, [family]);
     useEffect(() {
       if (uid == null || Firebase.apps.isEmpty) {
@@ -192,7 +219,7 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
             (event) {
               if (!event.metadata.isFromCache &&
                   FirebaseAuth.instance.currentUser?.uid == uid) {
-                unawaited(family.refresh());
+                unawaited(family.refreshMirrorForSignal(event.data()));
               }
             },
             onError: (Object _) {
@@ -359,6 +386,14 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
     final contextScope = request == null || mirrorUnavailable.value
         ? null
         : caregiverMealDecisionContextScope(family, request);
+    useEffect(() {
+      if (contextScope != null && stage.value == 'context') {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          mealDecisionTiming('phone.context.firstFrame');
+        });
+      }
+      return null;
+    }, [contextScope != null, stage.value]);
     if (timedOut && request != null) {
       return CaregiverMealDecisionTimeout(
         request: request,
@@ -372,8 +407,7 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
         title: request?.mealName ?? context.lang.mealDecisionNotificationTitle,
         subtitle:
             '${stage.value == 'context' ? '1' : '2'}/2 · ${stage.value == 'context' ? context.lang.mealDecisionRemoteContext : context.lang.mealDecisionRemoteDecision}',
-        showClose: !locked,
-        onClose: locked ? null : closeSheet,
+        onClose: closeSheet,
         onBack: locked && stage.value == 'decision'
             ? () => stage.value = 'context'
             : null,
@@ -412,9 +446,12 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
               contextScope != null
                   ? CaregiverMealLocalContext(
                       scope: contextScope,
+                      routeOwner: routeOwner,
                       mealId: request.mealId,
                     )
-                  : family.failed || mirrorUnavailable.value
+                  : family.failed ||
+                        mirrorUnavailable.value ||
+                        (family.complete && !family.busy)
                   ? Text(context.lang.familyDataRefreshFailed)
                   : const LinearProgressIndicator()
             else ...[
@@ -479,22 +516,15 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
                     else
                       FilledButton(
                         onPressed: () async {
-                          final wait = answer.value.requiresMinutes
-                              ? int.tryParse(minutes.text)
-                              : null;
-                          if (answer.value.requiresMinutes &&
-                              (wait == null || wait < 1 || wait > 180)) {
+                          final decision = answer.value.remoteResponse(
+                            int.tryParse(minutes.text),
+                            message.text,
+                          );
+                          if (decision == null) {
                             failed.value = true;
                             return;
                           }
-                          if (await run('respond', {
-                                'decision': {
-                                  'type': answer.value.name,
-                                  'minutes': wait,
-                                  'message': message.text.trim(),
-                                  'targetSuggestion': null,
-                                },
-                              }) &&
+                          if (await run('respond', {'decision': decision}) &&
                               context.mounted) {
                             closeSheet();
                           }
@@ -521,14 +551,6 @@ class CaregiverMealDecisionSheet extends HookConsumerWidget {
                         ),
                       ),
                   ],
-                  if (inbox.failed || family.failed)
-                    TextButton(
-                      onPressed: () async {
-                        await remote.refresh();
-                        await family.refresh();
-                      },
-                      child: Text(context.lang.commonRetry),
-                    ),
                 ],
               ),
       ),

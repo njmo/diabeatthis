@@ -8,11 +8,13 @@ class MealDecisionResolution {
     this.fallback,
     this.request,
     this.deferred = false,
+    this.rejected = false,
     this.acceptanceToken,
   });
   final MealAdvice? advice;
   final MealDecisionTimeoutFallback? fallback;
   final MealDecisionRemoteRequest? request;
   final bool deferred;
+  final bool rejected;
   final String? acceptanceToken;
 }

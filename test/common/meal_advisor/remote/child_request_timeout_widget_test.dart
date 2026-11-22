@@ -24,7 +24,7 @@ void main() {
     final manual = scenario.$1;
     final captured = scenario.$2;
     testWidgets(
-      'waiting locks dismissal and timeout respects manual permission=$manual captured=$captured',
+      'waiting offers close and timeout respects manual permission=$manual captured=$captured',
       (tester) async {
         final request = MealDecisionRemoteRequest({
           'id': 'a' * 32,
@@ -82,10 +82,7 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 400));
         expect(find.text('Awaiting a caregiver'), findsOneWidget);
-        expect(
-          find.byIcon(Icons.close),
-          findsNothing,
-        ); // The waiting step has no close button.
+        expect(find.byTooltip('Close'), findsOneWidget);
         final sheet = tester.widget<PopScope>(find.byType(PopScope).last);
         expect(sheet.canPop, isFalse);
         // The test advances real deadline by overriding its server timestamp explicitly.

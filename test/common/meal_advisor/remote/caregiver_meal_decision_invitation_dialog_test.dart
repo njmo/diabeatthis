@@ -21,6 +21,7 @@ void main() {
               failed: false,
               onAccept: () => accepted++,
               onCancel: () => cancelled++,
+              onClose: () {},
             ),
           ),
         ),
@@ -31,12 +32,12 @@ void main() {
       );
       expect(
         tester.getTopLeft(find.text('Accept')).dx,
-        lessThan(tester.getTopLeft(find.text('Cancel')).dx),
+        lessThan(tester.getTopLeft(find.text('Decline')).dx),
       );
       await tester.tap(find.text('Accept'));
       expect(accepted, 1);
       expect(cancelled, 0);
-      await tester.tap(find.text('Cancel'));
+      await tester.tap(find.text('Decline'));
       expect(cancelled, 1);
     },
   );
@@ -45,6 +46,7 @@ void main() {
     tester,
   ) async {
     var calls = 0;
+    var closed = 0;
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('en'),
@@ -57,12 +59,16 @@ void main() {
             failed: true,
             onAccept: () => calls++,
             onCancel: () => calls++,
+            onClose: () => closed++,
           ),
         ),
       ),
     );
     await tester.tap(find.text('Accept'));
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.text('Decline'));
+    expect(calls, 0);
+    await tester.tap(find.byTooltip('Close'));
+    expect(closed, 1);
     expect(calls, 0);
     expect(
       find.text(
@@ -94,12 +100,13 @@ void main() {
             failed: true,
             onAccept: () {},
             onCancel: () {},
+            onClose: () {},
           ),
         ),
       ),
     );
     expect(tester.takeException(), isNull);
     expect(find.text('Akceptuj'), findsOneWidget);
-    expect(find.text('Anuluj'), findsOneWidget);
+    expect(find.text('Odmów'), findsOneWidget);
   });
 }

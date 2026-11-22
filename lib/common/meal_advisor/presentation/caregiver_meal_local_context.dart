@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/domain/model/device_status.dart';
-import '../../../core/domain/model/glucose.dart';
-import '../../../core/domain/model/temporary_target.dart';
-import '../../../core/domain/model/treatment_base.dart';
 import '../../../features/caregiver/data/caregiver_visible_state_provider.dart';
 import '../../../features/meals/presentation/models/meal_page_state.dart';
 import '../../family_sync/family_access_scope.dart';
@@ -18,6 +14,7 @@ import '../../presentation/details/nightscout_record_history.dart';
 import '../../widgets/carbohydrate_totals_summary.dart';
 import '../context/caregiver_meal_context_history.dart';
 import '../context/meal_decision_activity_context.dart';
+import '../meal_decision_timing.dart';
 import '../remote/meal_decision_remote_request.dart';
 import 'caregiver_meal_context_history_view.dart';
 import 'meal_decision_activity_card.dart';
@@ -30,9 +27,13 @@ FamilyAccessScope? caregiverMealDecisionContextScope(
   MealDecisionRemoteRequest request,
 ) {
   final scope = FamilyAccessScope(family);
+  final expectedRevision = request.data['mealRevision'];
   if (!scope.isCurrent ||
       scope.owner != request.ownerUid ||
       scope.source != request.sourceId ||
+      (expectedRevision is int &&
+          family.rows['meals/${request.mealId}']?['revision'] !=
+              expectedRevision) ||
       !family.complete && !family.busy) {
     return null;
   }
@@ -46,9 +47,11 @@ class CaregiverMealLocalContext extends ConsumerWidget {
     super.key,
     required this.scope,
     required this.mealId,
+    this.routeOwner,
   });
   final FamilyAccessScope scope;
   final int mealId;
+  final Object? routeOwner;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -117,6 +120,7 @@ class CaregiverMealLocalContext extends ConsumerWidget {
             activity.kind,
             activity.id,
             scope: scope,
+            routeOwner: routeOwner,
           ),
           openActivity: activity.planned
               ? null
@@ -137,6 +141,7 @@ class CaregiverMealLocalContext extends ConsumerWidget {
                       'activities',
                       activityId,
                       scope: scope,
+                      routeOwner: routeOwner,
                     );
                   }
                 },
@@ -164,6 +169,7 @@ class CaregiverMealLocalContext extends ConsumerWidget {
               'meals',
               mealId,
               scope: scope,
+              routeOwner: routeOwner,
             ),
           ),
         ),
@@ -201,6 +207,7 @@ class CaregiverMealLocalContext extends ConsumerWidget {
                     'meals',
                     (row['payload'] as Map)['id'] as int,
                     scope: scope,
+                    routeOwner: routeOwner,
                   ),
                 ),
             ],
@@ -236,34 +243,12 @@ class CaregiverMealLocalContext extends ConsumerWidget {
       recordKey: (scope.uid, scope.owner, scope.source, mealId),
       load: (ref, history) async {
         scope.requireCurrent(complete: false);
-        final now = clock.now();
-        final glucose = history.glucose.fetchGlucoseBetween(
-          now.subtract(const Duration(minutes: 30)),
-          now,
-        );
-        final devices = history.deviceStatuses.fetchDeviceStatusBetween(
-          now.subtract(const Duration(minutes: 30)),
-          now,
-        );
-        final treatments = history.treatments.fetchTreatmentsBetween(
-          now.subtract(const Duration(hours: 24)),
-          now.add(const Duration(hours: 4)),
-        );
-        final all = await Future.wait<Object>([glucose, devices, treatments]);
-        final historyTreatments = List<Treatment>.of(all[2] as List<Treatment>);
-        final cachedTarget = visible.snapshot?.temporaryTarget;
-        if (cachedTarget != null &&
-            !historyTreatments.whereType<TemporaryTarget>().any(
-              (target) => target.createdAt == cachedTarget.createdAt,
-            )) {
-          historyTreatments.add(cachedTarget);
-        }
-        final result = CaregiverMealContextHistory(
-          asOf: now,
-          syncedAt: clock.now(),
-          glucose: all[0] as List<Glucose>,
-          devices: all[1] as List<DeviceStatus>,
-          treatments: historyTreatments,
+        final result = await timeMealDecision(
+          'phone.nightscout',
+          () => CaregiverMealContextHistory.load(
+            history,
+            cachedTarget: visible.snapshot?.temporaryTarget,
+          ),
         );
         scope.requireCurrent(complete: false);
         return result;

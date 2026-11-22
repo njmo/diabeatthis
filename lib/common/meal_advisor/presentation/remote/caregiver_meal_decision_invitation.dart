@@ -7,6 +7,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../family/family_providers.dart';
 import '../../../l10n/language.dart';
+import '../../meal_decision_timing.dart';
 import '../../notifications/meal_decision_push.dart';
 import '../../remote/meal_decision_remote_controller.dart';
 import 'caregiver_meal_decision_invitation_dialog.dart';
@@ -43,8 +44,20 @@ class CaregiverMealDecisionInvitation extends HookConsumerWidget {
       return timer.cancel;
     }, const []);
 
+    void dismiss([String? action]) {
+      if (!context.mounted || closing.value) return;
+      closing.value = true;
+      final route = ModalRoute.of(context);
+      final navigator = Navigator.of(context);
+      if (route != null && route.isActive && navigator.mounted) {
+        navigator.removeRoute(route, action);
+      }
+      unawaited(cancelMealDecisionNotification(requestId));
+    }
+
     Future<void> act(String action) async {
       if (busy.value || closing.value) return;
+      mealDecisionTiming('phone.invitation.$action.tap');
       busy.value = true;
       failed.value = false;
       try {
@@ -52,16 +65,18 @@ class CaregiverMealDecisionInvitation extends HookConsumerWidget {
           action == 'delegate' ? 'claim' : action,
           {'requestId': requestId},
         );
-        if (!context.mounted || closing.value) return;
-        closing.value = true;
-        final route = ModalRoute.of(context);
-        final navigator = Navigator.of(context);
-        await cancelMealDecisionNotification(requestId);
-        if (route != null && route.isActive && navigator.mounted) {
-          navigator.removeRoute(route, action);
-        }
+        mealDecisionTiming('phone.invitation.$action.confirmed');
+        dismiss(action);
       } catch (_) {
-        if (context.mounted) failed.value = true;
+        if (!context.mounted) return;
+        if (action == 'decline') {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            SnackBar(content: Text(context.lang.mealDecisionRemoteFailed)),
+          );
+          dismiss();
+        } else {
+          failed.value = true;
+        }
       } finally {
         if (context.mounted) busy.value = false;
       }
@@ -69,6 +84,10 @@ class CaregiverMealDecisionInvitation extends HookConsumerWidget {
 
     useEffect(() {
       Future<void> handle(String action) async {
+        if (action == 'watchHandled') {
+          dismiss();
+          return;
+        }
         if (action == 'claim' || action == 'decline' || action == 'delegate') {
           await act(action);
         }
@@ -99,20 +118,20 @@ class CaregiverMealDecisionInvitation extends HookConsumerWidget {
         request?.timedOutAt(tick.value) == true &&
         uid != null &&
         inbox.accountUid == uid;
+    final takenOnAnotherDevice =
+        !busy.value &&
+        uid != null &&
+        inbox.accountUid == uid &&
+        request?.claimedByUid == uid &&
+        request?.claimAvailable == false;
     useEffect(() {
-      if (unavailable && !timedOut && !closing.value) {
-        closing.value = true;
-        final route = ModalRoute.of(context);
-        final navigator = Navigator.of(context);
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          await cancelMealDecisionNotification(requestId);
-          if (route != null && route.isActive && navigator.mounted) {
-            navigator.removeRoute(route);
-          }
-        });
+      if ((unavailable || takenOnAnotherDevice) &&
+          !timedOut &&
+          !closing.value) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => dismiss());
       }
       return null;
-    }, [unavailable, timedOut]);
+    }, [unavailable, timedOut, takenOnAnotherDevice]);
 
     if (timedOut && request != null) {
       final route = ModalRoute.of(context);
@@ -138,6 +157,7 @@ class CaregiverMealDecisionInvitation extends HookConsumerWidget {
       failed: failed.value,
       onAccept: () => act('claim'),
       onCancel: () => act('decline'),
+      onClose: () => dismiss(),
     );
   }
 }

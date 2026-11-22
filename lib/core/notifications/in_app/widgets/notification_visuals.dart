@@ -176,6 +176,7 @@ class _NotificationInputDialog extends StatefulWidget {
 
 class _NotificationInputDialogState extends State<_NotificationInputDialog> {
   final _controller = TextEditingController();
+  int _minutes = 30;
 
   @override
   void dispose() {
@@ -191,6 +192,40 @@ class _NotificationInputDialogState extends State<_NotificationInputDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final step = widget.input.minuteStep;
+    if (step != null) {
+      return AlertDialog(
+        title: Text(widget.input.title),
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton(
+              onPressed: _minutes <= step
+                  ? null
+                  : () => setState(() => _minutes -= step),
+              child: Text('−$step'),
+            ),
+            Text('$_minutes'),
+            TextButton(
+              onPressed: _minutes >= 1440
+                  ? null
+                  : () => setState(() => _minutes += step),
+              child: Text('+$step'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.lang.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop('$_minutes'),
+            child: Text(context.lang.mealDecisionDefer),
+          ),
+        ],
+      );
+    }
     return AlertDialog(
       title: Text(widget.input.title),
       content: Column(

@@ -20,10 +20,12 @@ Map<String, Object?> mealDecisionCreationData({
   required int mealId,
   required String sourceId,
   required MealDecisionPreferences preferences,
+  Map<String, Object?>? advisorSuggestion,
 }) => {
   'requestId': requestId,
   'mealId': '$mealId',
   'sourceId': sourceId,
   'timeoutFallback': preferences.timeoutFallback.name,
   'allowManualDecision': preferences.allowManualDecision,
+  if (advisorSuggestion != null) 'advisorSuggestion': advisorSuggestion,
 };

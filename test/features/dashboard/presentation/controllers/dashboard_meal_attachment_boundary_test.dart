@@ -101,6 +101,7 @@ void main() {
                   createdAt: now.millisecondsSinceEpoch,
                   updatedAt: now.millisecondsSinceEpoch,
                   isSynced: false,
+                  treatmentSurplus: false,
                 ),
         );
         if (expectation != null) {

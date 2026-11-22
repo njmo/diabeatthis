@@ -9,6 +9,7 @@ import '../../../common/meal_advisor/meal_decision_preferences_provider.dart';
 import '../../../common/meal_advisor/remote/accept_remote_meal_decision.dart';
 import '../../../common/meal_advisor/remote/meal_decision_remote_request.dart';
 import '../../../common/meal_advisor/remote/record_meal_decision_fallback.dart';
+import '../../../common/meal_advisor/remote/start_accepted_caregiver_meal.dart';
 import '../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../core/domain/model/device_status.dart';
 import '../../../core/domain/model/meal_macro_summary.dart';
@@ -33,6 +34,7 @@ import '../../meal_advisor/domain/utils/wbt_extended_carbs_calculator.dart';
 import '../../meal_analysis/data/providers/build_before_meal_context_use_case_provider.dart';
 import '../../meals/data/providers/meal_activation_guard_provider.dart';
 import '../../meals/data/providers/meal_ingredients_list_provider.dart';
+
 import 'meal_dialog_state.dart';
 import 'providers/blood_sugar_readings_list_provider.dart';
 import 'use_cases/accept_meal_decision_use_case.dart';
@@ -389,6 +391,23 @@ class MealDialogController extends _$MealDialogController with Logging {
       }
     }
     if (advice.source == 'caregiver') {
+      final uid = ref.read(googleAccountProvider).asData?.value?.uid;
+      if (uid != null &&
+          await readAcceptedCaregiverMeal(
+                ref.read(databaseProvider),
+                uid,
+                mealId,
+              ) !=
+              null) {
+        return ref.read(startAcceptedCaregiverMealProvider)(
+          uid,
+          mealId,
+          isCancelled: () =>
+              !ref.mounted ||
+              request != _adviceRequest ||
+              !identical(state.advice, advice),
+        );
+      }
       final remoteRequest = _caregiverRequest;
       if (remoteRequest == null || remoteRequest.mealId != mealId) {
         throw StateError('Missing caregiver request');

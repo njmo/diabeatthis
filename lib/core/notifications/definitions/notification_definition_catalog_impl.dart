@@ -12,6 +12,7 @@ import 'event/finished_eating_notification_definition.dart';
 import 'event/meal_advice_pending_notification_definition.dart';
 import 'event/meal_suggestion_notification_definition.dart';
 import 'event/meal_summary_reminder_notification_definition.dart';
+import 'event/planned_meal_confirmation_definition.dart';
 import 'event/temp_target_notification_definition.dart';
 
 class NotificationDefinitionCatalogImpl
@@ -27,6 +28,8 @@ class NotificationDefinitionCatalogImpl
       channelType: NotificationChannelType.target,
     ),
     mealSuggestionNotificationDefinition,
+    plannedMealConfirmationDefinition,
+    plannedMealAdviceDefinition,
     mealAdvicePendingNotificationDefinition,
     finishedEatingNotificationDefinition,
     activityFinishedNotificationDefinition,

@@ -22,50 +22,12 @@ class MealDecisionCarbohydrateNotices extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String time(DateTime at) =>
-        DateFormat.Hm(context.lang.localeName).format(at.toLocal());
-    final messages = <String>[];
-    if (until.isAfter(now)) {
-      for (final treatment in treatments) {
-        if (!treatment.isValid) continue;
-        if (treatment case Treat(:final carbs, :final createdAt)) {
-          if (carbs > 0 &&
-              createdAt.isAfter(now) &&
-              !createdAt.isAfter(until)) {
-            messages.add(
-              context.lang.mealDecisionContextPlannedCarbs(
-                carbs,
-                time(createdAt),
-              ),
-            );
-          }
-        } else if (treatment case ExtendedCarb(
-          :final carbs,
-          :final duration,
-          :final createdAt,
-        )) {
-          final end = createdAt.add(Duration(milliseconds: duration));
-          if (carbs > 0 &&
-              duration > 0 &&
-              end.isAfter(now) &&
-              !createdAt.isAfter(until)) {
-            messages.add(
-              createdAt.isAfter(now)
-                  ? context.lang.mealDecisionContextPlannedExtendedCarbs(
-                      carbs,
-                      time(createdAt),
-                      time(end),
-                    )
-                  : context.lang.mealDecisionContextExtendedCarbs(
-                      carbs,
-                      time(createdAt),
-                      time(end),
-                    ),
-            );
-          }
-        }
-      }
-    }
+    final messages = mealDecisionCarbohydrateMessages(
+      treatments,
+      now,
+      until,
+      context.lang,
+    );
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -80,4 +42,52 @@ class MealDecisionCarbohydrateNotices extends StatelessWidget {
       ],
     );
   }
+}
+
+List<String> mealDecisionCarbohydrateMessages(
+  List<Treatment> treatments,
+  DateTime now,
+  DateTime until,
+  AppLocalizations lang,
+) {
+  String time(DateTime at) =>
+      DateFormat.Hm(lang.localeName).format(at.toLocal());
+  final messages = <String>[];
+  if (until.isAfter(now)) {
+    for (final treatment in treatments) {
+      if (!treatment.isValid) continue;
+      if (treatment case Treat(:final carbs, :final createdAt)) {
+        if (carbs > 0 && createdAt.isAfter(now) && !createdAt.isAfter(until)) {
+          messages.add(
+            lang.mealDecisionContextPlannedCarbs(carbs, time(createdAt)),
+          );
+        }
+      } else if (treatment case ExtendedCarb(
+        :final carbs,
+        :final duration,
+        :final createdAt,
+      )) {
+        final end = createdAt.add(Duration(milliseconds: duration));
+        if (carbs > 0 &&
+            duration > 0 &&
+            end.isAfter(now) &&
+            !createdAt.isAfter(until)) {
+          messages.add(
+            createdAt.isAfter(now)
+                ? lang.mealDecisionContextPlannedExtendedCarbs(
+                    carbs,
+                    time(createdAt),
+                    time(end),
+                  )
+                : lang.mealDecisionContextExtendedCarbs(
+                    carbs,
+                    time(createdAt),
+                    time(end),
+                  ),
+          );
+        }
+      }
+    }
+  }
+  return messages;
 }

@@ -11,7 +11,11 @@ class AcceptMealDecisionUseCase {
   final Ref ref;
   const AcceptMealDecisionUseCase(this.ref);
 
-  Future<void> call(int mealId, MealAdvice advice) async {
+  Future<void> call(
+    int mealId,
+    MealAdvice advice, {
+    bool alreadySaved = false,
+  }) async {
     final decision = advice.decision;
     if (decision == null) {
       throw StateError('Cannot accept an empty meal decision');
@@ -23,9 +27,11 @@ class AcceptMealDecisionUseCase {
         mealId,
         allowedStatuses: const {'planned'},
       );
-      await MealAdvisorResultUseCase(
-        DriftMealAdvisorResultStore(dao: db.mealAdvisorResultDao),
-      ).saveMealAdvice(mealId, advice);
+      if (!alreadySaved) {
+        await MealAdvisorResultUseCase(
+          DriftMealAdvisorResultStore(dao: db.mealAdvisorResultDao),
+        ).saveMealAdvice(mealId, advice);
+      }
       await ref
           .read(mealSnapshotControllerProvider)
           .createPlannedSnapshot(mealId);

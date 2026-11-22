@@ -11,4 +11,6 @@ enum NotificationEventType {
   aapsCarbsRequest,
   tempTargetDelivery,
   familyChat,
+  plannedMealConfirmation,
+  plannedMealAdvice,
 }

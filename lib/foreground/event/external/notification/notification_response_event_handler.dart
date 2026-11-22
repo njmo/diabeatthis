@@ -5,6 +5,7 @@ import 'package:clock/clock.dart';
 import '../../../../common/events/data/notification/aaps_carbs_request_response_event.dart';
 import '../../../../common/events/data/notification/activity_finished_response_event.dart';
 import '../../../../common/events/data/notification/activity_schedule_response_event.dart';
+import '../../../../common/events/data/notification/eat_now_response_event.dart';
 import '../../../../common/events/data/notification/finished_eating_response_event.dart';
 import '../../../../common/events/data/notification/meal_suggestion_response_event.dart';
 import '../../../../common/events/data/notification/meal_summary_reminder_response_event.dart';
@@ -14,19 +15,25 @@ import '../../../../common/events/data/task/task_open_meal_completion_payload.da
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_completion_timing.dart';
 import '../../../../common/meal/pending_meal_completion_requests.dart';
+import '../../../../common/notifications/scoped_notification_cancellation.dart';
 import '../../../../core/data_sources/nightscout/temporary_targets/temp_target_service.dart';
 import '../../../../core/domain/model/meal_status_flow.dart';
+import '../../../../core/drift/mappers/meal_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../../core/notifications/domain/events/temp_target_delivery_notification.dart';
+import '../../../../core/notifications/domain/models/notification_event_type.dart';
+import '../../../../core/notifications/domain/models/notification_key.dart';
 import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../features/activity/data/services/activity_schedule_service.dart';
 import '../../../../features/dashboard/data/providers/meal_snapshot_controller_provider.dart';
 import '../../../../features/meals/data/providers/meal_database_provider.dart';
+import '../../../../features/meals/data/domain/use_cases/complete_bolus_wait_use_case.dart';
 import '../../../providers/task_event_router_provider.dart';
 import '../../../task/base/runtime_context.dart';
 import '../../internal/aaps_carbs_request_acknowledged_event.dart';
 import 'notification_response_event.dart';
+import '../../../task/tasks/meal_monitor_task/helpers/meal_completion_requirements.dart';
 
 class NotificationResponseEventHandler with Logging {
   NotificationResponseEventHandler();
@@ -35,7 +42,10 @@ class NotificationResponseEventHandler with Logging {
     event.when(
       activityScheduleResponse: (data) =>
           unawaited(_handleActivitySchedule(data, context)),
-      eatNowResponse: (data) => context.emitEvent(data),
+      eatNowResponse: (data) => data.maybeWhen(
+        eating: (_) => unawaited(_startEating(data, context)),
+        orElse: () => context.emitEvent(data),
+      ),
       tempTargetResponse: (TempTargetResponseEvent data) =>
           unawaited(_handleTempTarget(data, context)),
       mealSuggestionResponse: (MealSuggestionResponseEvent data) {
@@ -65,6 +75,36 @@ class NotificationResponseEventHandler with Logging {
                 .send(const TaskOpenLowTreatmentPayload()),
           ),
     );
+  }
+
+  Future<void> _startEating(
+    EatNowResponseEvent event,
+    RuntimeContext context,
+  ) async {
+    try {
+      final db = context.container.read(databaseProvider);
+      final meal = await db.mealDao.getMealById(event.mealId);
+      if (meal == null || meal.status != 'bolused-waiting') return;
+      if (await mealHasPendingExtendedCarbs(context, event.mealId)) return;
+      context.throwIfCancelled();
+      await context.container
+          .read(completeBolusWaitUseCaseProvider)
+          .call(meal.toDomain());
+      await context.container
+          .read(notificationsControllerForegroundProvider)
+          .cancelNotification(
+            NotificationKey(
+              type: NotificationEventType.eatNow,
+              entityId: event.mealId,
+            ),
+          );
+    } catch (error, stackTrace) {
+      logE(
+        'Could not record the actual meal wait',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   Future<void> handleFinishedEatingResponse(

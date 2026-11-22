@@ -7,6 +7,9 @@ import 'package:diabeatthis/common/events/data/notification/meal_suggestion_resp
 import 'package:diabeatthis/common/events/data/notification/meal_summary_reminder_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/temp_target_response_event.dart';
 import 'package:diabeatthis/common/events/data/notification/temp_target_type.dart';
+import 'package:diabeatthis/common/meal/calculator/meal_calculator_request_controller.dart';
+import 'package:diabeatthis/common/meal/calculator/meal_calculator_request_controller_provider.dart';
+import 'package:diabeatthis/common/meal/calculator/meal_calculator_request_store.dart';
 import 'package:diabeatthis/common/meal_advisor/meal_decision_preferences.dart';
 import 'package:diabeatthis/common/meal_advisor/meal_decision_preferences_provider.dart';
 import 'package:diabeatthis/common/monitoring/meal_monitoring_phase.dart';
@@ -21,6 +24,7 @@ import 'package:diabeatthis/core/drift/database_impl.dart' as drift;
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/core/logger/logger.dart';
 import 'package:diabeatthis/core/notifications/definitions/event/meal_summary_reminder_notification_definition.dart';
+import 'package:diabeatthis/core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/eat_now_event_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/finished_eating_event_notification.dart';
 import 'package:diabeatthis/core/notifications/domain/events/meal_advice_pending_notification.dart';
@@ -52,6 +56,7 @@ import 'package:diabeatthis/foreground/providers/device_status_value_provider.da
 import 'package:diabeatthis/foreground/providers/latest_bolus_wizard_provider.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/bolus_then_wait_executor.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/meal_completion_requirements.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/detect_finished_eating_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/finalize_meal_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/idle_executor.dart';
@@ -59,6 +64,7 @@ import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/me
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/monitor_until_meal.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/new_meal_check_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/wait_for_bolus_executor.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/planned_meal_confirmation.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/scheduled_caregiver_meal_decision.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_context.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_task.dart';
@@ -160,6 +166,7 @@ final fakeNotifications = FakeNotificationsController();
 
 final parentContainer = ProviderContainer(
   overrides: [
+    confirmPlannedMealProvider.overrideWithValue((_, _, _) async => true),
     mealWizardRecorderProvider.overrideWithValue((_, _, _) async {}),
     checkMealAdvisorDeviceStatusUseCaseProvider.overrideWithValue(
       const AvailableMealAdvisorDeviceStatus(),
@@ -218,6 +225,64 @@ class UpdateMealSpy {
 }
 
 void main() {
+  test(
+    'waits for ten ordinary carbs and accepts a delivered surplus across records',
+    () async {
+      final calculator = MealCalculatorRequestController(
+        store: MemoryMealCalculatorRequestStore(),
+        publishWindow: (_, _) async {},
+        readContext: (_) async => null,
+        projectExtendedConfirmation: (_, _, _, _) async {},
+        onError: (error, stack) => Error.throwWithStackTrace(error, stack),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          mealCalculatorRequestControllerProvider.overrideWithValue(calculator),
+        ],
+      );
+      container.read(mealCalculatorRequestControllerProvider);
+      final harness = FakeRuntimeHarness(container: container);
+      addTearDown(() {
+        harness.cancel();
+        calculator.dispose();
+        container.dispose();
+      });
+      await calculator.register(
+        const AapsBolusSuggestionNotificationEvent(mealId: 1, carbs: 10),
+      );
+      final first = testBolusWizard(
+        createdAt: DateTime(2026, 3, 23, 12),
+        carbs: 5,
+      );
+      dispatchDeliveredMealBolus(harness, first);
+      var completed = false;
+      final result =
+          waitForMealCarbDeliveries(
+            harness.runtimeContext,
+            MealMonitorContext(activeMeal: const Meal(id: 1, name: 'Meal')),
+            first,
+          ).then((records) {
+            completed = true;
+            return records;
+          });
+      await pumpEventQueue();
+      expect(completed, isFalse);
+      dispatchDeliveredMealBolus(
+        harness,
+        testBolusWizard(
+          createdAt: first.createdAt.add(const Duration(seconds: 15)),
+          carbs: 7,
+        ),
+      );
+      expect(
+        (await result.timeout(
+          const Duration(seconds: 3),
+        )).map((record) => record.carbs),
+        [5, 7],
+      );
+    },
+  );
+
   for (final minutesToMeal in [20, 3]) {
     test(
       'Meal Advisor resumes after timeout when meal is in $minutesToMeal minutes',
@@ -320,6 +385,15 @@ void main() {
         );
         final container = ProviderContainer(
           overrides: [
+            confirmPlannedMealProvider.overrideWithValue((
+              context,
+              _,
+              meal,
+            ) async {
+              final due = meal.plannedAt!.subtract(const Duration(minutes: 20));
+              if (clock.now().isBefore(due)) await context.waitUntil(due);
+              return true;
+            }),
             mealDecisionPreferencesProvider.overrideWithValue(
               const MealDecisionPreferences(
                 method: MealDecisionMethod.caregiver,
@@ -378,6 +452,9 @@ void main() {
         );
         final container = ProviderContainer(
           overrides: [
+            confirmPlannedMealProvider.overrideWithValue(
+              (_, _, _) async => true,
+            ),
             notificationsControllerForegroundProvider.overrideWithValue(
               notifications,
             ),
@@ -422,6 +499,7 @@ void main() {
       final notifications = FakeNotificationsController();
       final container = ProviderContainer(
         overrides: [
+          confirmPlannedMealProvider.overrideWithValue((_, _, _) async => true),
           notificationsControllerForegroundProvider.overrideWithValue(
             notifications,
           ),
@@ -537,7 +615,10 @@ void main() {
       await _seedPlannedMeal(db);
 
       final container = ProviderContainer(
-        overrides: [databaseProvider.overrideWithValue(db)],
+        overrides: [
+          confirmPlannedMealProvider.overrideWithValue((_, _, _) async => true),
+          databaseProvider.overrideWithValue(db),
+        ],
       );
       addTearDown(container.dispose);
 
@@ -566,7 +647,10 @@ void main() {
       await _seedPlannedMeal(db);
 
       final container = ProviderContainer(
-        overrides: [databaseProvider.overrideWithValue(db)],
+        overrides: [
+          confirmPlannedMealProvider.overrideWithValue((_, _, _) async => true),
+          databaseProvider.overrideWithValue(db),
+        ],
       );
       addTearDown(container.dispose);
 
@@ -594,7 +678,10 @@ void main() {
       await db.mealDao.updateMealStatus(1, 'summarized');
 
       final container = ProviderContainer(
-        overrides: [databaseProvider.overrideWithValue(db)],
+        overrides: [
+          confirmPlannedMealProvider.overrideWithValue((_, _, _) async => true),
+          databaseProvider.overrideWithValue(db),
+        ],
       );
       addTearDown(container.dispose);
 
@@ -766,6 +853,9 @@ void main() {
               final notifications = FakeNotificationsController();
               final container = ProviderContainer(
                 overrides: [
+                  confirmPlannedMealProvider.overrideWithValue(
+                    (_, _, _) async => true,
+                  ),
                   notificationsControllerForegroundProvider.overrideWithValue(
                     notifications,
                   ),
@@ -842,6 +932,9 @@ void main() {
           final calls = <(Meal, String)>{};
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),
@@ -922,6 +1015,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),
@@ -989,6 +1085,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 FakeNotificationsController(),
               ),
@@ -1049,6 +1148,9 @@ void main() {
             );
             final container = ProviderContainer(
               overrides: [
+                confirmPlannedMealProvider.overrideWithValue(
+                  (_, _, _) async => true,
+                ),
                 notificationsControllerForegroundProvider.overrideWithValue(
                   notifications,
                 ),
@@ -1106,6 +1208,95 @@ void main() {
         });
       },
     );
+    for (final receiptBeforeDeadline in [true, false]) {
+      test(
+        'prebolus countdown and eCarbs finish independently (receipt arrives first: $receiptBeforeDeadline)',
+        () {
+          fakeAsync((async) {
+            final start = DateTime(2026, 3, 23, 12);
+            withFakeClock(async, start, () {
+              final notifications = FakeNotificationsController();
+              final calculator = MealCalculatorRequestController(
+                store: MemoryMealCalculatorRequestStore(),
+                publishWindow: (_, _) async {},
+                readContext: (_) async => null,
+                projectExtendedConfirmation: (_, _, _, _) async {},
+                onError: (error, stack) =>
+                    Error.throwWithStackTrace(error, stack),
+              );
+              final container = ProviderContainer(
+                overrides: [
+                  mealCalculatorRequestControllerProvider.overrideWithValue(
+                    calculator,
+                  ),
+                  notificationsControllerForegroundProvider.overrideWithValue(
+                    notifications,
+                  ),
+                  updateMealProvider.overrideWith((ref, args) async {}),
+                ],
+              );
+              container.read(mealCalculatorRequestControllerProvider);
+              unawaited(
+                calculator.register(
+                  const AapsBolusSuggestionNotificationEvent(
+                    mealId: 1,
+                    carbs: 22,
+                    extendedCarbs: 21,
+                    extendedCarbsDelayMinutes: 45,
+                    extendedCarbsDurationMinutes: 120,
+                  ),
+                ),
+              );
+              final harness = FakeRuntimeHarness(container: container);
+              unawaited(
+                BolusThenWaitExecutor(recommendedMinutes: 5, isManual: true)
+                    .execute(
+                      harness.runtimeContext,
+                      MealMonitorContext(
+                        activeMeal: const Meal(id: 1, name: 'Breakfast'),
+                      ),
+                    )
+                    .catchError((Object error) {
+                      if (error is TaskCancelledException)
+                        return NewMealCheckExecutor();
+                      throw error;
+                    }),
+              );
+              _settle(async);
+
+              _advanceMinutes(harness, async, receiptBeforeDeadline ? 2 : 5);
+              expect(notifications.shownEvents, isEmpty);
+              unawaited(
+                calculator.observe({
+                  'submissions': [],
+                  'extendedCarb': {
+                    'id': 'ecarbs',
+                    'carbs': 21,
+                    'valid': true,
+                    'at': start
+                        .add(const Duration(minutes: 45))
+                        .millisecondsSinceEpoch,
+                    'duration': const Duration(hours: 2).inMilliseconds,
+                  },
+                }),
+              );
+              _settle(async);
+              expect(notifications.shownEvents, isEmpty);
+              _advanceMinutes(harness, async, receiptBeforeDeadline ? 3 : 1);
+              expect(
+                notifications.shownEvents.single,
+                isA<EatNowNotificationEvent>(),
+              );
+              harness.cancel();
+              _settle(async);
+              calculator.dispose();
+              container.dispose();
+            });
+          });
+        },
+      );
+    }
+
     test('status driven bolus wait notifies after recommended wait', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);
@@ -1118,6 +1309,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),
@@ -1169,6 +1363,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),
@@ -1232,6 +1429,9 @@ void main() {
             );
             final container = ProviderContainer(
               overrides: [
+                confirmPlannedMealProvider.overrideWithValue(
+                  (_, _, _) async => true,
+                ),
                 notificationsControllerForegroundProvider.overrideWithValue(
                   notifications,
                 ),
@@ -1283,6 +1483,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),
@@ -1364,6 +1567,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),
@@ -1424,6 +1630,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),
@@ -1494,6 +1703,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),
@@ -1584,6 +1796,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),
@@ -1689,6 +1904,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),
@@ -3315,6 +3533,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),
@@ -3382,6 +3603,9 @@ void main() {
           );
           final container = ProviderContainer(
             overrides: [
+              confirmPlannedMealProvider.overrideWithValue(
+                (_, _, _) async => true,
+              ),
               notificationsControllerForegroundProvider.overrideWithValue(
                 notifications,
               ),

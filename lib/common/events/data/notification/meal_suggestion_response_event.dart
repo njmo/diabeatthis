@@ -8,24 +8,29 @@ part 'meal_suggestion_response_event.g.dart';
 
 @Freezed(unionKey: 'action', unionValueCase: FreezedUnionCase.snake)
 sealed class MealSuggestionResponseEvent
-    with _$MealSuggestionResponseEvent, NotificationEventData implements ForegroundEvent {
+    with _$MealSuggestionResponseEvent, NotificationEventData
+    implements ForegroundEvent {
   const MealSuggestionResponseEvent._();
 
   const factory MealSuggestionResponseEvent.agree({
     required int mealId,
+    int? plannedAtMs,
   }) = _MealSuggestionResponseAgreeEvent;
 
   const factory MealSuggestionResponseEvent.skip({
     required int mealId,
+    int? plannedAtMs,
   }) = _MealSuggestionResponseSkipEvent;
 
   const factory MealSuggestionResponseEvent.snooze({
     required int mealId,
+    int? plannedAtMs,
     required String input,
   }) = _MealSuggestionResponseSnoozeEvent;
 
   const factory MealSuggestionResponseEvent.empty({
     required int mealId,
+    int? plannedAtMs,
   }) = _MealSuggestionResponseEmptyEvent;
 
   factory MealSuggestionResponseEvent.fromJson(Map<String, dynamic> json) =>

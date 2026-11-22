@@ -13,6 +13,7 @@ import '../../backend/authenticated_callable_transport.dart';
 import '../../family/family_providers.dart';
 import '../meal_decision_eligibility.dart';
 import '../meal_decision_preferences_provider.dart';
+import '../meal_decision_timing.dart';
 import 'meal_decision_remote_request.dart';
 
 class MealDecisionRemoteInbox {
@@ -20,10 +21,12 @@ class MealDecisionRemoteInbox {
     this.requests = const [],
     this.loading = false,
     this.failed = false,
+    this.retryableReadFailure = false,
     this.accountUid,
   });
   final List<MealDecisionRemoteRequest> requests;
   final bool loading, failed;
+  final bool retryableReadFailure;
   final String? accountUid;
   MealDecisionRemoteRequest? byId(String id) =>
       requests.where((r) => r.id == id).firstOrNull;
@@ -156,11 +159,15 @@ class MealDecisionRemoteController extends Notifier<MealDecisionRemoteInbox> {
   }) async {
     final uid = ref.read(googleAccountProvider).asData?.value?.uid;
     if (uid == null) throw StateError('Google authentication is required');
-    final result = await ref.read(authenticatedFamilyTransportProvider).call(
-      'mealDecision',
-      {'action': action, ...values},
-      expectedUid: uid,
-    );
+    Future<Map<String, dynamic>> call() => ref
+        .read(authenticatedFamilyTransportProvider)
+        .call('mealDecision', {'action': action, ...values}, expectedUid: uid);
+    final result = switch (action) {
+      'claim' ||
+      'fetch' ||
+      'respond' => await timeMealDecision('firebase.$action', call),
+      _ => await call(),
+    };
     if (refresh &&
         ref.mounted &&
         ref.read(googleAccountProvider).asData?.value?.uid == uid) {
@@ -201,6 +208,15 @@ class MealDecisionRemoteController extends Notifier<MealDecisionRemoteInbox> {
                     ? const []
                     : state.requests,
                 failed: true,
+                retryableReadFailure:
+                    error is CallableFailure &&
+                    error.code == 'unavailable' &&
+                    (error.rejectionCode == null ||
+                        const {
+                          'unavailable',
+                          'internal',
+                          'deadline-exceeded',
+                        }.contains(error.rejectionCode)),
               );
             }
           }

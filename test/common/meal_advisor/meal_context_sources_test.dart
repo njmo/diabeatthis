@@ -1,10 +1,31 @@
+import 'dart:async';
+
+import 'package:diabeatthis/common/history/nightscout_history_repositories.dart';
 import 'package:diabeatthis/common/meal_advisor/context/caregiver_meal_context_history.dart';
 import 'package:diabeatthis/common/meal_advisor/context/meal_decision_activity_context.dart';
+import 'package:diabeatthis/core/data_sources/nightscout/repository/nightscout_repository.dart';
+import 'package:diabeatthis/core/domain/model/device_status.dart';
+import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
+import 'package:diabeatthis/core/domain/model/treatment_base.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../helpers/device_status_factory.dart';
 
 void main() {
   final now = DateTime(2026, 11, 8, 12);
+  test('slow treatments do not discard IOB and COB records', () async {
+    final repository = _SlowTreatmentsRepository();
+    final history = await CaregiverMealContextHistory.load(
+      NightscoutHistoryRepositories(repository),
+      seriesTimeout: const Duration(milliseconds: 25),
+    );
+    expect(history.statuses.single.iob, 1.3);
+    expect(history.statuses.single.cob, 12);
+    expect(history.treatments, isEmpty);
+    expect(history.syncedAt, isNotNull);
+  });
+
   test('target cancellation clips the previous grey duration window', () {
     TemporaryTarget target(DateTime at, int duration) => TemporaryTarget(
       nightscoutId: '$at',
@@ -73,4 +94,32 @@ void main() {
       expect(context.map((entry) => entry.id), [2, 1]);
     },
   );
+}
+
+class _SlowTreatmentsRepository extends Fake implements NightscoutRepository {
+  @override
+  Future<List<Treatment>> fetchTreatmentsBetween(
+    DateTime start,
+    DateTime end,
+  ) => Completer<List<Treatment>>().future;
+
+  @override
+  Future<List<Glucose>> fetchGlucoseBetween(
+    DateTime start,
+    DateTime end,
+  ) async => const [];
+
+  @override
+  Future<List<DeviceStatus>> fetchDeviceStatusBetween(
+    DateTime start,
+    DateTime end,
+  ) async => [
+    testDeviceStatus(
+      date: end.subtract(const Duration(minutes: 1)),
+      iob: 1.3,
+      cob: 12,
+      tick: '',
+      bg: 120,
+    ),
+  ];
 }

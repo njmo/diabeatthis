@@ -7,6 +7,7 @@ import '../../../common/events/data/task/task_state_synchronization_payload.dart
 import '../../../common/meal/open_meal_completion.dart';
 import '../../../common/meal/pending_meal_completion_recovery.dart';
 import '../../../common/meal/pending_meal_completion_requests.dart';
+import '../../../common/monitoring/meal_wait_status.dart';
 import '../../../common/navigation/deferred_ui_action.dart';
 import '../../../core/domain/model/meal_status_flow.dart';
 import '../../../core/drift/providers/database_provider.dart';
@@ -113,6 +114,7 @@ class TaskEventHandler with Logging {
         payload.when(
           carbsRequestChanged: () =>
               _ref.invalidate(lowTreatmentSuggestionVisibilityProvider),
+          mealWaitChanged: () => _ref.invalidate(mealWaitStatusProvider),
           alive: (data) {
             _ref.read(foregroundTaskStateProvider.notifier).setAlive(data);
           },
@@ -128,6 +130,7 @@ class TaskEventHandler with Logging {
   }
 
   void retryPendingUiActions() {
+    _ref.invalidate(mealWaitStatusProvider);
     _ref.invalidate(lowTreatmentSuggestionVisibilityProvider);
     _lowTreatmentLauncher.retryPending();
     _mealCompletionLauncher.retryPending();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_add_on_bolus_context.dart';
 import '../../../../common/meal/meal_extended_carbs.dart';
 import '../../../../common/meal/open_meal_add_on_editor.dart';
@@ -13,10 +14,10 @@ import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
+import '../../../../core/notifications/handlers/notification_response_handler.dart';
 import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../meal_advisor/data/providers/get_meal_activity_advice_use_case_provider.dart';
 import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
-import '../../../meals/data/domain/use_cases/complete_bolus_wait_use_case.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
 import '../../data/providers/meal_advisor_result_provider.dart';
 import '../widgets/meal_status_dialog_result.dart';
@@ -43,7 +44,11 @@ Future<void> handleMealStatusDialogResult({
       if (!alreadySaved &&
           meal.status == 'bolused-waiting' &&
           status == 'waited-eating') {
-        await ref.read(completeBolusWaitUseCaseProvider).call(meal);
+        if (!await requestMealStartEating(meal.id) && context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(lang.uiMonitoringUnavailable)));
+        }
         return;
       }
 
@@ -159,7 +164,18 @@ Future<AapsBolusSuggestionNotificationEvent?> _aapsSuggestionNotificationEvent(
     }
   }
   final extendedCarbs = advice?.extendedCarbs;
-  final extendedCarbsGrams = consumedExtendedCarbs ?? extendedCarbs?.grams ?? 0;
+  final plannedMacros =
+      consumedExtendedCarbs == null &&
+          status == 'waiting-for-bolus' &&
+          advice?.source == 'caregiver' &&
+          extendedCarbs?.shouldSuggest != true
+      ? await ref.read(databaseProvider).ingredientDao.totalsForMeal(meal.id)
+      : null;
+  final extendedCarbsGrams =
+      consumedExtendedCarbs ??
+      (plannedMacros == null
+          ? extendedCarbs?.grams ?? 0
+          : mealExtendedCarbsFromMacros(plannedMacros));
   final schedule =
       extendedCarbs?.scheduleSettings ??
       const ExtendedCarbsScheduleSettings.defaults();

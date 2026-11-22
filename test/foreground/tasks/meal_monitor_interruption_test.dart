@@ -17,6 +17,7 @@ import 'package:diabeatthis/features/dashboard/data/providers/meal_advisor_resul
 import 'package:diabeatthis/features/dashboard/data/utils/meal_advisor.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_database_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_ingredients_list_provider.dart';
+import 'package:diabeatthis/foreground/event/internal/meal_event.dart';
 import 'package:diabeatthis/foreground/event/internal/meal_status_changed_event.dart';
 import 'package:diabeatthis/foreground/event/internal/monitoring_status_changed.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
@@ -35,6 +36,49 @@ import '../utils/fake_runtime_harness.dart';
 import '../utils/pending_notifications_controller.dart';
 
 void main() {
+  test('clearing the plan resumes a meal that now awaits prebolus', () {
+    fakeAsync((async) {
+      final now = DateTime(2026, 11, 1, 12);
+      withClock(Clock.fixed(now), () {
+        final waiting = Meal(
+          id: 1,
+          name: 'Lunch',
+          status: 'waiting-for-bolus',
+          plannedAt: now.add(const Duration(minutes: 10)),
+          carbs: 22,
+        );
+        final notifications = PendingNotificationsController();
+        final container = ProviderContainer(
+          overrides: [
+            getNearestMealProvider.overrideWith((ref) async => waiting),
+            notificationsControllerForegroundProvider.overrideWithValue(
+              notifications,
+            ),
+            getMealAdviceProvider(waiting).overrideWith((ref) async => null),
+          ],
+        );
+        final harness = FakeRuntimeHarness(container: container);
+        final task = MealMonitorTask();
+        unawaited(
+          task
+              .runLoop(
+                harness.runtimeContext,
+                interruptedEvent: PlannedMealsClearedEvent(),
+              )
+              .catchError((Object error) {
+                if (error is! TaskCancelledException) throw error;
+              }),
+        );
+        async.flushMicrotasks();
+
+        expect(task.state, isA<WaitForBolusExecutor>());
+        harness.cancel();
+        async.flushMicrotasks();
+        container.dispose();
+      });
+    });
+  });
+
   for (final terminal in ['interrupted', 'summarized']) {
     test('parses the $terminal terminal event', () {
       final event = MealStatusChangedEvent.fromJson({

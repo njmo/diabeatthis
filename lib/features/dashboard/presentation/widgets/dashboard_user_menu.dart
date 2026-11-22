@@ -47,7 +47,7 @@ class _FamilyChatButton extends ConsumerWidget {
             state?['confirmed']?['account']?['enabled'] as bool? ??
             preferences.enabled;
         if (!accountEnabled) return const SizedBox.shrink();
-        final hasUnread = (session?.unreadCount ?? 0) > 0;
+        final hasUnread = session?.hasUnread ?? false;
         final senderName = !hasUnread || session?.unreadSender == null
             ? ''
             : session!.name(session.unreadSender!).trim();

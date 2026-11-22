@@ -39,14 +39,18 @@ class MealDecisionCompactStatus extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Expanded(
-          child: Tooltip(
-            message: '$name · $label',
-            child: Text(
-              '$name · $label',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ],

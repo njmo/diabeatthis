@@ -196,3 +196,19 @@ test('expired slot may be replaced with a new request',async()=>{
   const f=fixture(); await f.create(); f.advance(300001); const otherId='d'.repeat(32);
   assert.equal((await f.call('child','create',{requestId:otherId,mealId:'1',sourceId,timeoutFallback:'app'})).requestId,otherId);
 });
+
+test('a request freezes the child advisor suggestion without treating it as a caregiver response', async () => {
+  const f = fixture();
+  await f.enable('one');
+  const fields = {requestId, mealId:'1', sourceId, timeoutFallback:'manual'};
+  const advisorSuggestion = {type:'insulinThenWait', minutes:15};
+  await rejected(f.call('child','create',{...fields,advisorSuggestion:{...advisorSuggestion, dose:1}}), 'invalid-argument');
+  await rejected(f.call('child','create',{...fields,advisorSuggestion:{type:'insulinThenWait',minutes:0}}), 'invalid-argument');
+  const created = await f.call('child','create',{...fields,advisorSuggestion});
+  assert.equal(created.response, null);
+  await f.call('child','create',{...fields,advisorSuggestion:{type:'eatThenInsulin'}});
+  const {requests} = await f.call('one','fetch');
+  assert.deepEqual(requests[0].advisorSuggestion, advisorSuggestion);
+  assert.equal(requests[0].status, 'waiting');
+  assert.equal(requests[0].response, null);
+});

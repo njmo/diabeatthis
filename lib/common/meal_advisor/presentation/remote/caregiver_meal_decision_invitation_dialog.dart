@@ -12,6 +12,7 @@ class CaregiverMealDecisionInvitationDialog extends StatelessWidget {
     required this.failed,
     required this.onAccept,
     required this.onCancel,
+    required this.onClose,
   });
 
   final String name;
@@ -19,6 +20,7 @@ class CaregiverMealDecisionInvitationDialog extends StatelessWidget {
   final bool failed;
   final VoidCallback onAccept;
   final VoidCallback onCancel;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) => PopScope(
@@ -26,14 +28,14 @@ class CaregiverMealDecisionInvitationDialog extends StatelessWidget {
     child: MealStartSheet(
       title: context.lang.mealDecisionInvitation(name),
       subtitle: '',
-      showClose: false,
+      onClose: onClose,
       maxHeightFactor: .75,
       body: IconChoicePair(
         firstIcon: Icons.check_rounded,
         firstLabel: context.lang.mealDecisionInvitationAccept,
         onFirst: busy ? null : onAccept,
         secondIcon: Icons.close_rounded,
-        secondLabel: context.lang.commonCancel,
+        secondLabel: context.lang.mealDecisionNotificationDecline,
         onSecond: busy ? null : onCancel,
       ),
       actions: Column(

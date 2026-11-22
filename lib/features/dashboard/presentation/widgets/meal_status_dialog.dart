@@ -4,13 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/auth/google_authentication_providers.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/manual_meal_decision.dart';
+import '../../../../common/meal_advisor/manual_meal_choice.dart';
 import '../../../../common/meal_advisor/meal_decision_preferences.dart';
 import '../../../../common/meal_advisor/meal_decision_preferences_provider.dart';
 import '../../../../common/meal_advisor/presentation/remote/child_meal_decision_sheet.dart';
+import '../../../../common/meal_advisor/remote/accept_remote_meal_decision.dart';
 import '../../../../common/meal_advisor/remote/meal_decision_remote_controller.dart';
 import '../../../../common/meal_advisor/remote/meal_decision_remote_request.dart';
+import '../../../../common/meal_advisor/remote/start_accepted_caregiver_meal.dart';
 import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../common/theme/app_design_tokens.dart';
 import '../../../../common/widgets/ai_text_dialog.dart';
@@ -22,6 +26,7 @@ import '../../../../common/widgets/meal_start/meal_start_sheet.dart';
 import '../../../../common/widgets/meal_start/meal_start_summary.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../../core/domain/model/meal.dart';
+import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../meal_advisor/presentation/widgets/meal_activity_warning.dart';
 import '../../../meal_summary/domain/utils/meal_add_on_status.dart';
@@ -63,6 +68,7 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
         s.advice.source != 'caregiver' &&
         fallbackRequest.value?.data['allowManualDecision'] != false;
     final resolvingCaregiver = useState(false);
+    final scheduledBolus = useState<DateTime?>(null);
     final reviewedCaregiverRequest = useState<MealDecisionRemoteRequest?>(null);
     final fallbackMethod = useState<MealDecisionTimeoutFallback?>(null);
     Future<void> chooseManual() async {
@@ -93,8 +99,17 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
     }
 
     Future<void> chooseEat() async {
-      await ref.read(sharedPrefsProvider.future);
+      final prefs = await ref.read(sharedPrefsProvider.future);
+      await prefs.reload();
       if (!context.mounted) return;
+      if (usesManualMealChoice(
+        prefs,
+        meal.id,
+        meal.plannedAt?.millisecondsSinceEpoch,
+      )) {
+        await chooseManual();
+        return;
+      }
       final configuredPreferences = ref.read(mealDecisionPreferencesProvider);
       if (resolvingCaregiver.value) return;
       if (configuredPreferences.method != MealDecisionMethod.caregiver ||
@@ -120,10 +135,30 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
           );
           return;
         }
+        final uid = ref.read(googleAccountProvider).asData?.value?.uid;
+        final database = uid == null ? null : ref.read(databaseProvider);
+        if (uid != null) {
+          final accepted = await readAcceptedCaregiverMeal(
+            database!,
+            uid,
+            meal.id,
+          );
+          if (!context.mounted) return;
+          if (accepted != null) {
+            await c.chooseCaregiverAdvice(accepted.advice);
+            if (context.mounted) scheduledBolus.value = accepted.bolusDueAt;
+            return;
+          }
+        }
         final resolution = await ref.read(
           childMealDecisionRequestPresenterProvider,
         )(context, meal.id, meal.name);
         if (!context.mounted || resolution == null) return;
+        if (resolution.rejected) {
+          fallbackMethod.value = MealDecisionTimeoutFallback.manual;
+          await chooseManual();
+          return;
+        }
         if (resolution.deferred) {
           Navigator.of(context).pop();
           return;
@@ -136,20 +171,57 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
           fallbackRequest.value,
           acceptanceToken: resolution.acceptanceToken,
         );
-        reviewedCaregiverRequest.value = resolution.advice == null
-            ? null
-            : resolution.request;
+        reviewedCaregiverRequest.value =
+            resolution.advice != null && uid == null
+            ? resolution.request
+            : null;
         c.setCaregiverRequest(
           resolution.advice == null ? null : resolution.request,
         );
         if (resolution.advice != null) {
           await c.chooseCaregiverAdvice(resolution.advice!);
+          if (!context.mounted || resolution.request == null || uid == null) {
+            return;
+          }
+          final currentAdvice = ref
+              .read(mealDialogControllerProvider(meal.id, getStep()))
+              .advice;
+          await ref.read(acceptRemoteMealDecisionProvider)(
+            resolution.request!,
+            reviewedAdvice: currentAdvice,
+            isCancelled: () => !context.mounted,
+          );
+          final accepted = await readAcceptedCaregiverMeal(
+            database!,
+            uid,
+            meal.id,
+          );
+          if (accepted == null) {
+            final currentMeal = await database.mealDao.getMealById(meal.id);
+            if (!context.mounted) return;
+            if (currentMeal?.status != 'planned') {
+              Navigator.of(context).pop();
+              return;
+            }
+            throw StateError('Accepted meal is no longer current');
+          }
+          if (!context.mounted) return;
+          reviewedCaregiverRequest.value = null;
+          c.setCaregiverRequest(null);
+          scheduledBolus.value = accepted.bolusDueAt;
         } else if (resolution.fallback == MealDecisionTimeoutFallback.manual &&
             ref.read(mealDecisionPreferencesProvider).allowManualDecision &&
             resolution.request?.data['allowManualDecision'] != false) {
           await chooseManual();
         } else {
           await c.chooseEat();
+        }
+      } catch (_) {
+        if (context.mounted) {
+          c.back();
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            SnackBar(content: Text(context.lang.mealDecisionRemoteFailed)),
+          );
         }
       } finally {
         if (context.mounted) resolvingCaregiver.value = false;
@@ -379,6 +451,9 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
               child: Text(
                 s.skipMeal
                     ? context.lang.mealStatusConfirm
+                    : s.advice.source == 'caregiver' &&
+                          s.advice.decision == MealDecision.bolusAndEatNow
+                    ? context.lang.mealStatusStartEating
                     : _buttonText(s.advice.decision),
               ),
             ),
@@ -493,6 +568,7 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
         saving.value = true;
         if (!s.skipMeal) await c.cancelPendingAdviceReminder();
         if (!context.mounted) return;
+        scheduledBolus.value = null;
         c.back();
         saving.value = false;
       }
@@ -515,8 +591,26 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
               : context.lang.mealStartAdvisorProposal,
           onBack: confirming && !saving.value ? backToChoice : null,
           onClose: saving.value ? null : close,
-          body: AbsorbPointer(absorbing: saving.value, child: content()),
-          actions: confirming
+          body: AbsorbPointer(
+            absorbing: saving.value || resolvingCaregiver.value,
+            child: scheduledBolus.value != null
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      content(),
+                      Text(
+                        '${context.lang.mealStatusDeliverBolusAndWait} · ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(scheduledBolus.value!), alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context))}',
+                      ),
+                    ],
+                  )
+                : content(),
+          ),
+          actions: scheduledBolus.value != null
+              ? TextButton(
+                  onPressed: close,
+                  child: Text(context.lang.notificationActionOk),
+                )
+              : confirming && !resolvingCaregiver.value
               ? MealStartActions(
                   confirmAction: actions().last,
                   cancelAction: actions().first,

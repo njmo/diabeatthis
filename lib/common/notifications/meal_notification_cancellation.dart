@@ -23,6 +23,8 @@ extension MealNotificationCancellation on NotificationsController {
       NotificationEventType.finishedEating,
       if (includeBolusReminder) NotificationEventType.mealSuggestion,
       NotificationEventType.mealAdvicePending,
+      NotificationEventType.plannedMealConfirmation,
+      NotificationEventType.plannedMealAdvice,
       NotificationEventType.mealSummaryReminder,
       if (includeBolusInstructions) NotificationEventType.aapsBolusSuggestion,
     ]) {

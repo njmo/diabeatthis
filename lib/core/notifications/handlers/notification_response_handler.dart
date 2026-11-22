@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../../../common/events/data/notification/eat_now_response_event.dart';
 import '../../../common/family_chat/notifications/family_chat_presenter.dart';
 import '../../../common/family_chat/notifications/family_chat_push.dart';
 import '../../../common/meal/pending_meal_completion_requests.dart';
@@ -147,6 +148,21 @@ Future<void> dispatchNotificationResponse({
 
 void notifyFinishedEatingConfirmationDismissed(int mealId) {
   _sendFinishedEatingResponse(mealId, 'confirmation_dismissed');
+}
+
+Future<bool> requestMealStartEating(int mealId) async {
+  if (!await FlutterForegroundTask.isRunningService) return false;
+  final event = EatNowResponseEvent.eating(mealId: mealId);
+  FlutterForegroundTask.sendDataToTask(
+    jsonEncode({
+      'external_event': 'notification_event',
+      'data': {
+        'notification_response_event': event.eventName,
+        'data': event.toJson(),
+      },
+    }),
+  );
+  return true;
 }
 
 /// Replays a durable fresh confirmation after the service has finished starting.

@@ -17,11 +17,13 @@ class ChildMealDecisionFallbackNotice extends HookWidget {
     required this.request,
     required this.fallback,
     required this.onContinue,
+    required this.onClose,
   });
   final String mealName;
   final MealDecisionRemoteRequest request;
   final MealDecisionTimeoutFallback fallback;
   final VoidCallback onContinue;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +48,10 @@ class ChildMealDecisionFallbackNotice extends HookWidget {
       child: MealStartSheet(
         title: context.lang.mealDecisionAllDeclinedTitle,
         subtitle: '',
-        showClose: false,
+        onClose: () {
+          completed.value = true;
+          onClose();
+        },
         maxHeightFactor: .75,
         body: Column(
           mainAxisSize: MainAxisSize.min,

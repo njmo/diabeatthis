@@ -33,6 +33,7 @@ import '../../../../providers/device_status_value_provider.dart';
 import '../../../../runtime/wait_handle.dart';
 import '../../../../synchronization/synchronization_cache_controller.dart';
 import '../../../base/runtime_context.dart';
+import '../helpers/planned_meal_confirmation.dart';
 import '../helpers/scheduled_caregiver_meal_decision.dart';
 import '../meal_monitor_context.dart';
 import 'detect_finished_eating_executor.dart';
@@ -288,6 +289,18 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     final mealPlannedAt = meal.plannedAt!;
     final timeToMeal = mealPlannedAt.difference(clock.now());
     final requestAt = mealPlannedAt.subtract(scheduledCaregiverRequestLeadTime);
+    var confirmationPending =
+        meal.status == 'planned' && meal.purpose == MealPurpose.meal;
+    Future<bool> confirm() async {
+      if (!confirmationPending) return true;
+      confirmationPending = false;
+      return runtimeContext.container.read(confirmPlannedMealProvider)(
+        runtimeContext,
+        mealMonitorContext,
+        meal,
+      );
+    }
+
     var caregiverPathHandled = false;
     bool usesCaregiver() =>
         !caregiverPathHandled &&
@@ -301,7 +314,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     }
 
     Duration limitWait(Duration wait) {
-      if (!usesCaregiver()) return wait;
+      if (!confirmationPending && !usesCaregiver()) return wait;
       final untilRequest = requestAt.difference(clock.now());
       if (untilRequest <= Duration.zero) return Duration.zero;
       return untilRequest < wait ? untilRequest : wait;
@@ -310,10 +323,11 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
     logI("Meal planned at ${mealPlannedAt.toIso8601String()}");
     logI("Time to meal ${timeToMeal.inMinutes}");
 
-    if (timeToMeal <= scheduledCaregiverRequestLeadTime &&
-        usesCaregiver() &&
-        await requestCaregiverDecision()) {
-      return MealMonitorStateIdle(phase: MealMonitoringPhase.waitingForUser);
+    if (timeToMeal <= scheduledCaregiverRequestLeadTime) {
+      if (!await confirm() ||
+          (usesCaregiver() && await requestCaregiverDecision())) {
+        return MealMonitorStateIdle(phase: MealMonitoringPhase.waitingForUser);
+      }
     }
 
     DeviceStatus? deviceStatus;
@@ -334,6 +348,11 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
         );
         break;
       } on WaitTimeoutException catch (_) {
+        if (confirmationPending && !await confirm()) {
+          return MealMonitorStateIdle(
+            phase: MealMonitoringPhase.waitingForUser,
+          );
+        }
         if (!usesCaregiver()) {
           logI("Problem normalizing meal time");
           return NewMealCheckExecutor();
@@ -365,6 +384,12 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       mealMonitorContext.throwIfStopped(runtimeContext);
       final now = clock.now();
       final timeToMeal = normalizedMealTime.difference(now);
+      if (confirmationPending &&
+          (!now.isBefore(requestAt) ||
+              detectPathDecision(timeToMeal) == PathDecision.mealAdvisor) &&
+          !await confirm()) {
+        return MealMonitorStateIdle(phase: MealMonitoringPhase.waitingForUser);
+      }
       if ((mealPlannedAt.difference(now) <= scheduledCaregiverRequestLeadTime ||
               detectPathDecision(timeToMeal) == PathDecision.mealAdvisor) &&
           usesCaregiver()) {
@@ -586,6 +611,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 minutes: mealAdvice.wait?.recommendedMinutes ?? 0,
                 activityDoseSuggestion: mealAdvice.activityDoseSuggestion,
                 decision: mealAdvice.decision!,
+                isPlannedAdvice: meal.status == 'planned',
                 carbs: mealStatus.netCarbsGrams.ceilMacro(),
                 extendedCarbs:
                     mealAdvice.decision == MealDecision.eatNowBolusLater
@@ -605,13 +631,14 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
             final response = await runtimeContext
                 .waitForEvent<MealSuggestionResponseEvent>(
                   predicate: (event) =>
-                      event.mealId == mealMonitorContext.activeMeal!.id,
+                      event.mealId == mealMonitorContext.activeMeal!.id &&
+                      event.plannedAtMs == null,
                 );
             // if no response but device status came, recalculate
             var retry = false;
             logI("Received response from user");
             await response.when(
-              agree: (e) async {
+              agree: (_, _) async {
                 if (!await checkAdviceEligibility(
                   runtimeContext,
                   mealMonitorContext.activeMeal!.id,
@@ -641,7 +668,18 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 );
                 mealMonitorContext.throwIfStopped(runtimeContext);
               },
-              skip: (_) async {
+              skip: (_, _) async {
+                if (meal.status == 'planned') {
+                  await disablePlannedMealMonitoring(
+                    runtimeContext,
+                    meal,
+                    manual: true,
+                  );
+                  nextExecutor = MealMonitorStateIdle(
+                    phase: MealMonitoringPhase.waitingForUser,
+                  );
+                  return;
+                }
                 logI("User dismissed meal, clicked on notification");
                 await runtimeContext.container.read(
                   updateMealProvider(
@@ -652,7 +690,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 mealMonitorContext.throwIfStopped(runtimeContext);
                 nextExecutor = MealMonitorStateIdle();
               },
-              snooze: (_, input) {
+              snooze: (_, _, input) {
                 logI("Snooze input: $input");
                 final minutes = int.parse(input);
                 normalizedMealTime = alignToNextCgmReading(
@@ -661,7 +699,7 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 );
                 retry = true;
               },
-              empty: (_) {
+              empty: (_, _) {
                 logI(
                   "No action from user, clicked on notification he will continue in-app",
                 );

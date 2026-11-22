@@ -48,15 +48,28 @@ function createMealDecisionService({store, now = Date.now}) {
     });
   }
   async function execute(uid, input) {
-    exact(input, ['action', 'enabled', 'requestId', 'mealId', 'sourceId', 'caregiverUid', 'decision', 'outcome', 'stage', 'present', 'timeoutFallback', 'acceptanceToken', 'allowManualDecision']);
+    exact(input, ['action', 'enabled', 'requestId', 'mealId', 'sourceId', 'caregiverUid', 'decision', 'outcome', 'stage', 'present', 'timeoutFallback', 'acceptanceToken', 'allowManualDecision', 'advisorSuggestion']);
     const {action} = input;
-    const schemas = {configure:['action','enabled'], create:Object.hasOwn(input,'allowManualDecision') ? ['action','requestId','mealId','sourceId','timeoutFallback','allowManualDecision'] : ['action','requestId','mealId','sourceId','timeoutFallback'], fetch:['action'], claim:['action','requestId'], heartbeat:['action','requestId','stage','present'], decline:['action','requestId'], delegate:['action','requestId','caregiverUid'], respond:['action','requestId','decision'], prepareAcceptance:['action','requestId','sourceId'], abortAcceptance:['action','requestId','sourceId','acceptanceToken'], acknowledge:['action','requestId','sourceId','acceptanceToken','outcome'], expire:Object.hasOwn(input,'acceptanceToken') ? ['action','requestId','sourceId','outcome','acceptanceToken'] : ['action','requestId','sourceId','outcome']};
+    const schemas = {configure:['action','enabled'], create:[
+      'action','requestId','mealId','sourceId','timeoutFallback',
+      ...['allowManualDecision','advisorSuggestion'].filter(key => Object.hasOwn(input, key)),
+    ], fetch:['action'], claim:['action','requestId'], heartbeat:['action','requestId','stage','present'], decline:['action','requestId'], delegate:['action','requestId','caregiverUid'], respond:['action','requestId','decision'], prepareAcceptance:['action','requestId','sourceId'], abortAcceptance:['action','requestId','sourceId','acceptanceToken'], acknowledge:['action','requestId','sourceId','acceptanceToken','outcome'], expire:Object.hasOwn(input,'acceptanceToken') ? ['action','requestId','sourceId','outcome','acceptanceToken'] : ['action','requestId','sourceId','outcome']};
     if (!Object.hasOwn(schemas, action)) fail('invalid-argument');
     exact(input, schemas[action]);
     if (Object.keys(input).length !== schemas[action].length) fail('invalid-argument');
     if (action === 'configure' && typeof input.enabled !== 'boolean') fail('invalid-argument');
     if (action !== 'configure' && action !== 'fetch' && !token(input.requestId)) fail('invalid-argument');
     if (action === 'create' && (!mealId(input.mealId) || !token(input.sourceId) || !['app','manual'].includes(input.timeoutFallback) || (Object.hasOwn(input,'allowManualDecision') && typeof input.allowManualDecision !== 'boolean') || (input.timeoutFallback === 'manual' && input.allowManualDecision === false))) fail('invalid-argument');
+    if (action === 'create' && Object.hasOwn(input, 'advisorSuggestion')) {
+      const suggestion = input.advisorSuggestion;
+      const waiting = suggestion?.type === 'insulinThenWait';
+      const fields = waiting ? ['type', 'minutes'] : ['type'];
+      exact(suggestion, fields);
+      if (Object.keys(suggestion).length !== fields.length ||
+          !['insulinThenWait', 'insulinAndEat', 'eatThenInsulin'].includes(suggestion.type) ||
+          (waiting && (!Number.isInteger(suggestion.minutes) ||
+            suggestion.minutes < 1 || suggestion.minutes > 180))) fail('invalid-argument');
+    }
     if (['prepareAcceptance','abortAcceptance','acknowledge','expire'].includes(action) && !token(input.sourceId)) fail('invalid-argument');
     if (action === 'delegate' && (typeof input.caregiverUid !== 'string' || !input.caregiverUid || input.caregiverUid.includes('/') || input.caregiverUid.length > 128)) fail('invalid-argument');
     if (action === 'heartbeat' && (!['context','decision'].includes(input.stage) || typeof input.present !== 'boolean')) fail('invalid-argument');
@@ -111,6 +124,7 @@ function createMealDecisionService({store, now = Date.now}) {
         const meal = (await tx.get(mirror(child).collection('entities').doc(`meals_${input.mealId}`))).data();
         if (!meal || meal.deleted || meal.kind !== 'meals' || meal.payload?.status !== 'planned' || meal.payload?.purpose !== 'meal') fail('failed-precondition');
         const row = {requestId:input.requestId, familyId:account.familyId, childUid:child, sourceId:input.sourceId, mealId:input.mealId, mealRevision:meal.revision, mealName:String(meal.payload.name ?? '').slice(0,120), timeoutFallback:input.timeoutFallback, allowManualDecision:input.allowManualDecision ?? true, createdAt:time, deadline:time+300000, status:'open', ownerUid:null, claimUntil:null, presentUntil:null, stage:null, declinedUids:[], response:null, outcome:null};
+        if (Object.hasOwn(input, 'advisorSuggestion')) row.advisorSuggestion = input.advisorSuggestion;
         tx.set(ref(child,input.requestId),row);
         tx.set(slotRef,{requestId:input.requestId});
         signal(tx,family.memberUids,input.requestId,time);

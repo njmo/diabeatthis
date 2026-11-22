@@ -13,4 +13,19 @@ enum MealDecisionAnswer {
     deferMeal => null,
   };
   bool get requiresMinutes => this == insulinThenWait || this == deferMeal;
+
+  Map<String, Object?>? remoteResponse(int? minutes, String message) {
+    final note = message.trim();
+    if (note.length > 240 ||
+        (requiresMinutes &&
+            (minutes == null || minutes < 1 || minutes > 180))) {
+      return null;
+    }
+    return {
+      'type': name,
+      'minutes': requiresMinutes ? minutes : null,
+      'message': note,
+      'targetSuggestion': null,
+    };
+  }
 }

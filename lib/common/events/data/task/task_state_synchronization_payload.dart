@@ -16,6 +16,9 @@ abstract class TaskStateSynchronizationPayload
   const factory TaskStateSynchronizationPayload.carbsRequestChanged() =
       TaskCarbsRequestChanged;
 
+  const factory TaskStateSynchronizationPayload.mealWaitChanged() =
+      TaskMealWaitChanged;
+
   factory TaskStateSynchronizationPayload.fromJson(Map<String, dynamic> json) =>
       _$TaskStateSynchronizationPayloadFromJson(json);
 

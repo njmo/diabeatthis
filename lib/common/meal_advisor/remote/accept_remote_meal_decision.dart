@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/data/provider/shared_prefs_provider.dart';
 import '../../../core/drift/database_impl.dart';
 import '../../../core/drift/providers/database_provider.dart';
 import '../../../features/dashboard/data/repositories/meal_advisor_result_store.dart';
@@ -14,19 +15,89 @@ import '../../app_mode/application_device_mode.dart';
 import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../meal/meal_activation_guard.dart';
+import '../manual_meal_choice.dart';
 import '../meal_decision_answer.dart';
 import 'meal_decision_remote_controller.dart';
 import 'meal_decision_remote_request.dart';
+import 'scheduled_meal_decision_journal.dart';
 
 final acceptRemoteMealDecisionProvider = Provider(
   (ref) => AcceptRemoteMealDecision(ref),
 );
 
 class AcceptRemoteMealDecision {
-  const AcceptRemoteMealDecision(this.ref);
+  AcceptRemoteMealDecision(this.ref);
   final Ref ref;
+  final _deciding = <String>{};
+
+  Future<T> _decide<T>(String id, Future<T> Function() action) async {
+    if (!_deciding.add(id)) {
+      throw StateError('A decision is already being handled');
+    }
+    try {
+      return await action();
+    } finally {
+      _deciding.remove(id);
+    }
+  }
+
+  Future<void> reject(MealDecisionRemoteRequest request) =>
+      _decide(request.id, () => _reject(request));
+
+  Future<void> _reject(MealDecisionRemoteRequest request) async {
+    final uid = ref.read(googleAccountProvider).asData?.value?.uid;
+    if (uid != request.ownerUid ||
+        ref.read(authenticatedFamilyTransportProvider).currentUid() != uid ||
+        await ref.read(applicationDeviceModeProvider.future) !=
+            ApplicationDeviceMode.patient) {
+      throw StateError('Not the child owner');
+    }
+    final remote = ref.read(mealDecisionRemoteControllerProvider.notifier);
+    final db = ref.read(databaseProvider);
+    final meal = await db.mealDao.getMealById(request.mealId);
+    if (meal?.status != 'planned' ||
+        request.data['allowManualDecision'] == false) {
+      throw StateError('Manual decision is unavailable');
+    }
+    final receipt = await db
+        .customSelect(
+          'SELECT 1 FROM family_meal_decision_receipts WHERE request_id=? AND owner_uid=?',
+          variables: [Variable(request.id), Variable(request.ownerUid)],
+        )
+        .getSingleOrNull();
+    if (receipt != null) throw StateError('The decision was already accepted');
+    final prefs = await ref.read(sharedPrefsProvider.future);
+    final identifiers = {'requestId': request.id, 'sourceId': request.sourceId};
+    final reservation = await remote.execute(
+      'prepareAcceptance',
+      identifiers,
+      refresh: false,
+    );
+    await remote.execute('abortAcceptance', {
+      ...identifiers,
+      'acceptanceToken': reservation['acceptanceToken'] as String,
+    });
+    if (!await saveManualMealChoice(prefs, request.mealId, meal!.plannedAt)) {
+      throw StateError('Could not save the manual meal choice');
+    }
+  }
 
   Future<MealAdvice?> call(
+    MealDecisionRemoteRequest request, {
+    MealAdvice? reviewedAdvice,
+    bool startMeal = false,
+    bool Function()? isCancelled,
+  }) => _decide(
+    request.id,
+    () => _accept(
+      request,
+      reviewedAdvice: reviewedAdvice,
+      startMeal: startMeal,
+      isCancelled: isCancelled,
+    ),
+  );
+
+  Future<MealAdvice?> _accept(
     MealDecisionRemoteRequest request, {
     MealAdvice? reviewedAdvice,
     bool startMeal = false,
@@ -127,8 +198,24 @@ class AcceptRemoteMealDecision {
         if (version?.read<int>('revision') != request.data['mealRevision']) {
           throw StateError('The meal changed since the request');
         }
+        final meal = await db.mealDao.getMealById(request.mealId);
+        final plannedAt = meal?.plannedAt;
+        final scheduled = plannedAt == null
+            ? null
+            : await ScheduledMealDecisionJournal(db).load(
+                request.mealId,
+                DateTime.fromMillisecondsSinceEpoch(plannedAt),
+              );
+        final scheduledRequest =
+            scheduled?.uid == uid && scheduled?.requestId == request.id;
         if (advice != null) {
-          if (startMeal) {
+          // A fresh response to a moved plan supersedes its previous result.
+          await (db.delete(
+            db.mealAdvisorResult,
+          )..where((row) => row.mealId.equals(request.mealId))).go();
+          if (startMeal &&
+              !(scheduledRequest &&
+                  answer == MealDecisionAnswer.insulinThenWait)) {
             await AcceptMealDecisionUseCase(ref).call(request.mealId, advice);
           } else {
             await MealAdvisorResultUseCase(
@@ -151,22 +238,27 @@ class AcceptRemoteMealDecision {
         } else {
           throw StateError('No valid caregiver answer');
         }
-        await db.customStatement(
+        await db.customInsert(
           'INSERT INTO family_meal_decision_receipts(request_id,owner_uid,source_id,meal_id,acceptance_token,outcome_json,created_at) VALUES(?,?,?,?,?,?,?)',
-          [
-            request.id,
-            uid,
-            request.sourceId,
-            request.mealId,
-            token,
-            jsonEncode({
-              'source': 'caregiver',
-              'decision': answer!.name,
-              'minutes': answer.requiresMinutes ? request.minutes : null,
-              'caregiverUid': request.respondingCaregiverUid,
-            }),
-            DateTime.now().millisecondsSinceEpoch,
+          variables: [
+            Variable(request.id),
+            Variable(uid),
+            Variable(request.sourceId),
+            Variable(request.mealId),
+            Variable(token),
+            Variable(
+              jsonEncode({
+                'source': 'caregiver',
+                'decision': answer!.name,
+                'minutes': answer.requiresMinutes ? request.minutes : null,
+                'caregiverUid': request.respondingCaregiverUid,
+                'plannedAt': plannedAt,
+                if (scheduledRequest) 'scheduled': true,
+              }),
+            ),
+            Variable(DateTime.now().millisecondsSinceEpoch),
           ],
+          updates: {db.familyMealDecisionReceipts},
         );
       });
     } catch (_) {
@@ -217,6 +309,8 @@ Future<void> reconcileMealDecisionReceipts(Ref ref) async {
       final token = row.read<String>('acceptance_token');
       final outcome =
           jsonDecode(row.read<String>('outcome_json')) as Map<String, dynamic>;
+      outcome.remove('plannedAt');
+      outcome.remove('scheduled');
       await ref.read(mealDecisionRemoteControllerProvider.notifier).execute(
         outcome['source'] == 'caregiver' ? 'acknowledge' : 'expire',
         {

@@ -7,7 +7,9 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/drift/family_sync/family_mirror_outbox.dart';
+import '../../../../core/drift/mappers/meal_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
+import '../../../../features/dashboard/data/providers/device_status_ui_provider.dart';
 import '../../../auth/google_authentication_providers.dart';
 import '../../../l10n/language.dart';
 import '../../../widgets/meal_start/meal_start_sheet.dart';
@@ -15,6 +17,7 @@ import '../../meal_decision_answer.dart';
 import '../../meal_decision_preferences.dart';
 import '../../meal_decision_preferences_provider.dart';
 import '../../remote/accept_remote_meal_decision.dart';
+import '../../remote/capture_meal_advisor_suggestion.dart';
 import '../../remote/meal_decision_remote_controller.dart';
 import '../../remote/meal_decision_request_creation.dart';
 import '../../remote/meal_decision_resolution.dart';
@@ -95,7 +98,17 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
     final allDeclined =
         expired && request?.data['terminalReason'] == 'allCaregiversDeclined';
     final popped = useRef(false);
+    final closed = useRef(false);
+    void close() {
+      if (closed.value) return;
+      closed.value = true;
+      final route = ModalRoute.of(context);
+      if (route != null && route.isActive)
+        Navigator.of(context).removeRoute(route);
+    }
+
     void resolve(MealDecisionResolution resolution) {
+      if (closed.value) return;
       if (onResolved != null) {
         onResolved!(resolution);
       } else {
@@ -104,6 +117,7 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
     }
 
     Future<void> send() async {
+      if (!context.mounted || closed.value) return;
       busy.value = true;
       failed.value = false;
       try {
@@ -111,6 +125,7 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
           mealDecisionRemoteControllerProvider.notifier,
         );
         await controller.refresh();
+        if (!context.mounted || closed.value) return;
         final refreshed = ref.read(mealDecisionRemoteControllerProvider);
         final existing = initialRequestId == null
             ? refreshed.forMeal(mealId)
@@ -154,8 +169,8 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
             .read(databaseProvider)
             .mealDao
             .getMealById(mealId);
-        if (!context.mounted) return;
-        if (storedMeal?.status != 'planned') {
+        if (!context.mounted || closed.value) return;
+        if (storedMeal == null || storedMeal.status != 'planned') {
           throw StateError('Meal is no longer planned');
         }
         final draftId = requestId.value;
@@ -169,6 +184,11 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
               (_) => random.nextInt(16).toRadixString(16),
             ).join();
         if (context.mounted) requestId.value = id;
+        final suggestion = await ref.read(captureMealAdvisorSuggestionProvider)(
+          storedMeal.toDomain(),
+          ref.read(deviceStatusUiProvider),
+        );
+        if (!context.mounted || closed.value) return;
         final created = await controller.execute(
           'create',
           mealDecisionCreationData(
@@ -176,6 +196,7 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
             mealId: mealId,
             sourceId: source,
             preferences: preferences,
+            advisorSuggestion: suggestion,
           ),
         );
         if (context.mounted) {
@@ -216,6 +237,32 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
       }
       return null;
     }, [expired, allDeclined, busy.value]);
+    final knownId = requestId.value ?? request?.id;
+    final answer = request?.answer;
+    Future<void> retryRead() async {
+      await ref.read(mealDecisionRemoteControllerProvider.notifier).refresh();
+      if (context.mounted && knownId != null) {
+        final refreshed = ref.read(mealDecisionRemoteControllerProvider);
+        if (!refreshed.failed && refreshed.byId(knownId) != null) {
+          failed.value = false;
+        }
+      }
+    }
+
+    useEffect(() {
+      if (!inbox.retryableReadFailure ||
+          knownId == null ||
+          expired ||
+          answer != null ||
+          busy.value) {
+        return null;
+      }
+      final timer = Timer(const Duration(seconds: 2), () {
+        if (context.mounted) unawaited(retryRead());
+      });
+      return timer.cancel;
+    }, [inbox, knownId, expired, answer, busy.value]);
+
     if (allDeclined && request != null) {
       final fallback =
           preferences.allowManualDecision &&
@@ -227,6 +274,7 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
         mealName: mealName,
         request: request,
         fallback: fallback,
+        onClose: close,
         onContinue: () {
           if (popped.value) return;
           popped.value = true;
@@ -234,7 +282,6 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
         },
       );
     }
-    final answer = request?.answer;
     return PopScope(
       canPop: false,
       child: MealStartSheet(
@@ -249,7 +296,7 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
             ? context.lang.mealDecisionWaitingDescription
             : '',
         maxHeightFactor: .75,
-        showClose: false,
+        onClose: close,
         body: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -286,8 +333,38 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
           children: [
             if (failed.value && answer == null)
               TextButton(
-                onPressed: busy.value ? null : send,
+                onPressed: busy.value
+                    ? null
+                    : knownId == null
+                    ? send
+                    : retryRead,
                 child: Text(context.lang.commonRetry),
+              ),
+            if (answer != null &&
+                preferences.allowManualDecision &&
+                request?.data['allowManualDecision'] != false)
+              TextButton(
+                onPressed: busy.value
+                    ? null
+                    : () async {
+                        busy.value = true;
+                        failed.value = false;
+                        try {
+                          await ref
+                              .read(acceptRemoteMealDecisionProvider)
+                              .reject(request!);
+                          if (context.mounted) {
+                            resolve(
+                              const MealDecisionResolution(rejected: true),
+                            );
+                          }
+                        } catch (_) {
+                          if (context.mounted) failed.value = true;
+                        } finally {
+                          if (context.mounted) busy.value = false;
+                        }
+                      },
+                child: Text(context.lang.notificationActionReject),
               ),
             if (answer != null)
               FilledButton(

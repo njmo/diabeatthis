@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/domain/model/glucose.dart';
 import '../../l10n/language.dart';
 import '../../widgets/inline_status_notice.dart';
 import '../../widgets/timeline_analysis_charts.dart';
@@ -23,26 +22,10 @@ class CaregiverMealContextHistoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final start = history.asOf.subtract(const Duration(minutes: 30));
-    final end = history.asOf.add(const Duration(minutes: 5));
-    final readings =
-        history.glucose
-            .where(
-              (g) =>
-                  g.type == GlucoseType.cgm &&
-                  g.sgv > 0 &&
-                  !g.date.isAfter(history.asOf) &&
-                  !g.date.isBefore(start),
-            )
-            .toList()
-          ..sort((a, b) => a.date.compareTo(b.date));
-    final statuses =
-        history.devices
-            .where(
-              (s) => !s.date.isAfter(history.asOf) && !s.date.isBefore(start),
-            )
-            .toList()
-          ..sort((a, b) => a.date.compareTo(b.date));
+    final start = history.start;
+    final end = history.end;
+    final readings = history.readings;
+    final statuses = history.statuses;
     final glucose = readings.lastOrNull;
     final device = statuses.lastOrNull;
     final previous = readings.length > 1 ? readings[readings.length - 2] : null;

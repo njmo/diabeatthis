@@ -5,8 +5,11 @@ import 'package:diabeatthis/common/auth/google_account.dart';
 import 'package:diabeatthis/common/auth/google_authentication_providers.dart';
 import 'package:diabeatthis/common/backend/authenticated_callable_transport.dart';
 import 'package:diabeatthis/common/family/family_providers.dart';
+import 'package:diabeatthis/common/meal_advisor/manual_meal_choice.dart';
 import 'package:diabeatthis/common/meal_advisor/remote/accept_remote_meal_decision.dart';
 import 'package:diabeatthis/common/meal_advisor/remote/meal_decision_remote_request.dart';
+import 'package:diabeatthis/common/meal_advisor/remote/scheduled_meal_decision_journal.dart';
+import 'package:diabeatthis/common/meal_advisor/remote/start_accepted_caregiver_meal.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/repositories/meal_advisor_result_store.dart';
@@ -16,34 +19,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const source = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const requestId = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
 const acceptanceToken = 'cccccccccccccccccccccccccccccccc';
 
-MealDecisionRemoteRequest request({String owner = 'child', int revision = 1}) =>
-    MealDecisionRemoteRequest({
-      'id': requestId,
-      'mealId': '1',
-      'ownerUid': owner,
-      'sourceId': source,
-      'mealRevision': revision,
-      'status': 'answered',
-      'deadline': DateTime.now()
-          .add(const Duration(minutes: 4))
-          .millisecondsSinceEpoch,
-      'createdAt': DateTime.now().millisecondsSinceEpoch,
-      'claimedByUid': null,
-      'response': {
-        'type': 'insulinThenWait',
-        'minutes': 15,
-        'message': 'Wait',
-        'targetSuggestion': null,
-        'caregiverUid': 'caregiver',
-        'caregiverName': 'Alex',
-        'respondedAt': DateTime.now().millisecondsSinceEpoch,
-      },
-    });
+MealDecisionRemoteRequest request({
+  String owner = 'child',
+  int revision = 1,
+  String answer = 'insulinThenWait',
+}) => MealDecisionRemoteRequest({
+  'id': requestId,
+  'mealId': '1',
+  'ownerUid': owner,
+  'sourceId': source,
+  'mealRevision': revision,
+  'status': 'answered',
+  'deadline': DateTime.now()
+      .add(const Duration(minutes: 4))
+      .millisecondsSinceEpoch,
+  'createdAt': DateTime.now().millisecondsSinceEpoch,
+  'claimedByUid': null,
+  'response': {
+    'type': answer,
+    'minutes': answer == 'insulinThenWait' ? 15 : null,
+    'message': 'Wait',
+    'targetSuggestion': null,
+    'caregiverUid': 'caregiver',
+    'caregiverName': 'Alex',
+    'respondedAt': DateTime.now().millisecondsSinceEpoch,
+  },
+});
 
 class ReceiptFixture {
   ReceiptFixture(this.db, this.container, this.calls);
@@ -173,6 +180,7 @@ void main() {
         'decision': 'insulinThenWait',
         'minutes': 15,
         'caregiverUid': 'caregiver',
+        'plannedAt': 1000,
       });
       f.ackFails = false;
       await f.container.read(reconcileMealDecisionReceiptsProvider)();
@@ -212,6 +220,141 @@ void main() {
       );
     },
   );
+
+  test(
+    'scheduled prebolus acceptance keeps the meal planned and binds the receipt',
+    () async {
+      final f = await fixture();
+      addTearDown(() async {
+        f.container.dispose();
+        await f.db.close();
+      });
+      final plannedAt = DateTime.now().add(const Duration(minutes: 20));
+      await f.db.customStatement('UPDATE meal SET planned_at=? WHERE id=1', [
+        plannedAt.millisecondsSinceEpoch,
+      ]);
+      await f.db.customStatement(
+        "UPDATE family_sync_outbox SET revision=1 WHERE kind='meals' AND entity_id='1'",
+      );
+      await ScheduledMealDecisionJournal(
+        f.db,
+      ).remember(1, plannedAt, uid: 'child', requestId: requestId);
+
+      await f.container.read(acceptRemoteMealDecisionProvider)(
+        request(),
+        startMeal: true,
+      );
+
+      expect((await f.db.mealDao.getMealById(1))?.status, 'planned');
+      final receipt = await f.db
+          .customSelect(
+            'SELECT outcome_json FROM family_meal_decision_receipts',
+          )
+          .getSingle();
+      expect(
+        jsonDecode(receipt.read<String>('outcome_json')),
+        containsPair('plannedAt', plannedAt.millisecondsSinceEpoch),
+      );
+      expect(
+        jsonDecode(receipt.read<String>('outcome_json')),
+        containsPair('scheduled', true),
+      );
+    },
+  );
+
+  for (final (answer, status) in [
+    ('eatThenInsulin', 'eating-then-bolus'),
+    ('insulinAndEat', 'waiting-for-bolus'),
+  ]) {
+    test('accepting $answer saves a separate, one-time start', () async {
+      final f = await fixture();
+      addTearDown(() async {
+        f.container.dispose();
+        await f.db.close();
+      });
+      await f.container.read(acceptRemoteMealDecisionProvider)(
+        request(answer: answer),
+      );
+      expect((await f.db.mealDao.getMealById(1))?.status, 'planned');
+      expect(await readAcceptedCaregiverMeal(f.db, 'someone-else', 1), isNull);
+      expect(await readAcceptedCaregiverMeal(f.db, 'child', 1), isNotNull);
+      final start = f.container.read(startAcceptedCaregiverMealProvider);
+      expect(
+        await Future.wait([start('child', 1), start('child', 1)]),
+        unorderedEquals([true, false]),
+      );
+      expect((await f.db.mealDao.getMealById(1))?.status, status);
+      expect(
+        f.calls.where((call) => call['action'] == 'prepareAcceptance'),
+        hasLength(1),
+      );
+    });
+  }
+
+  test('a moved meal does not reuse a previously accepted start', () async {
+    final f = await fixture();
+    addTearDown(() async {
+      f.container.dispose();
+      await f.db.close();
+    });
+    await f.container.read(acceptRemoteMealDecisionProvider)(
+      request(answer: 'eatThenInsulin'),
+    );
+    await f.db.customStatement('UPDATE meal SET planned_at=2000 WHERE id=1');
+    expect(await readAcceptedCaregiverMeal(f.db, 'child', 1), isNull);
+    expect(
+      await f.container.read(startAcceptedCaregiverMealProvider)('child', 1),
+      isFalse,
+    );
+    expect((await f.db.mealDao.getMealById(1))?.status, 'planned');
+  });
+
+  test(
+    'rejection preserves planned meal and records a manual choice',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final f = await fixture();
+      addTearDown(() async {
+        f.container.dispose();
+        await f.db.close();
+      });
+      await f.container
+          .read(acceptRemoteMealDecisionProvider)
+          .reject(request());
+      expect((await f.db.mealDao.getMealById(1))?.status, 'planned');
+      expect(await f.results.loadMealAdvice(1), isNull);
+      expect(
+        await f.db
+            .customSelect('SELECT * FROM family_meal_decision_receipts')
+            .get(),
+        isEmpty,
+      );
+      expect(
+        f.calls.map((call) => call['action']),
+        contains('abortAcceptance'),
+      );
+      final prefs = await SharedPreferences.getInstance();
+      expect(usesManualMealChoice(prefs, 1, 1000), isTrue);
+      expect(usesManualMealChoice(prefs, 1, 2000), isFalse);
+    },
+  );
+
+  test('an in-flight or recorded acceptance cannot be rejected', () async {
+    final f = await fixture();
+    addTearDown(() async {
+      f.container.dispose();
+      await f.db.close();
+    });
+    final decisions = f.container.read(acceptRemoteMealDecisionProvider);
+    final acceptance = decisions(request());
+    await expectLater(decisions.reject(request()), throwsStateError);
+    await acceptance;
+    await expectLater(decisions.reject(request()), throwsStateError);
+    expect(
+      f.calls.map((call) => call['action']),
+      isNot(contains('abortAcceptance')),
+    );
+  });
 
   test('receipt failure rolls back starting the meal', () async {
     final f = await fixture();

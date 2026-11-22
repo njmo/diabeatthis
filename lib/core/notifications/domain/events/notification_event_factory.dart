@@ -10,6 +10,7 @@ import 'finished_eating_event_notification.dart';
 import 'meal_advice_pending_notification.dart';
 import 'meal_suggestion_notification.dart';
 import 'meal_summary_reminder_notification.dart';
+import 'planned_meal_confirmation_notification.dart';
 import 'temp_target_delivery_notification.dart';
 import 'temp_target_notification.dart';
 
@@ -21,6 +22,8 @@ class NotificationEventFactory {
     Map<String, dynamic> data,
   ) {
     switch (type) {
+      case NotificationEventType.plannedMealConfirmation:
+        return PlannedMealConfirmationNotification.fromPayload(data);
       case NotificationEventType.familyChat:
         return FamilyChatNotificationEvent.fromJson(data);
       case NotificationEventType.activitySchedule:
@@ -33,6 +36,7 @@ class NotificationEventFactory {
         );
       case NotificationEventType.tempTarget:
         return TempTargetNotificationEvent.fromPayload(data);
+      case NotificationEventType.plannedMealAdvice:
       case NotificationEventType.mealSuggestion:
         return MealSuggestionNotificationEvent.fromPayload(data);
       case NotificationEventType.mealAdvicePending:

@@ -7,6 +7,7 @@ const mealDecisionNotificationType = 'meal_decision';
 const mealDecisionNotificationActions = {
   'open',
   'claim',
+  'claimOnPhone',
   'delegate',
   'decline',
 };

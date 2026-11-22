@@ -20,6 +20,7 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
     this.extendedCarbsDelayMinutes = 45,
     this.extendedCarbsDurationMinutes = 120,
     this.isAddOn = false,
+    this.isPlannedAdvice = false,
   });
 
   final int mealId;
@@ -33,9 +34,12 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
   final int extendedCarbsDelayMinutes;
   final int extendedCarbsDurationMinutes;
   final bool isAddOn;
+  final bool isPlannedAdvice;
 
   @override
-  NotificationEventType get type => NotificationEventType.mealSuggestion;
+  NotificationEventType get type => isPlannedAdvice
+      ? NotificationEventType.plannedMealAdvice
+      : NotificationEventType.mealSuggestion;
 
   @override
   String get notificationResponseEvent => 'meal_suggestion_response';
@@ -119,6 +123,7 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
     'extendedCarbsDurationMinutes': extendedCarbsDurationMinutes,
     'decision': decision.index,
     'isAddOn': isAddOn,
+    if (isPlannedAdvice) 'isPlannedAdvice': true,
   };
 
   factory MealSuggestionNotificationEvent.fromPayload(
@@ -143,6 +148,7 @@ class MealSuggestionNotificationEvent implements NotificationEvent {
           json['extendedCarbsDurationMinutes'] as int? ?? 120,
       decision: MealDecision.values[json['decision'] as int],
       isAddOn: json['isAddOn'] as bool? ?? false,
+      isPlannedAdvice: json['isPlannedAdvice'] == true,
     );
   }
 }
