@@ -21,6 +21,10 @@ on:
         description: "Build and verify the signed IPA without uploading it"
         type: boolean
         default: false
+      internal_only:
+        description: "Upload to TestFlight without distributing to external testers"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -293,7 +297,7 @@ jobs:
             --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
 
       - name: Distribute to external TestFlight testers
-        if: ${{ !inputs.build_only }}
+        if: ${{ !inputs.build_only && !inputs.internal_only }}
         timeout-minutes: 25
         env:
           ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
