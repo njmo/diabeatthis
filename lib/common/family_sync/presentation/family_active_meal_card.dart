@@ -50,8 +50,20 @@ class FamilyActiveMealCard extends StatelessWidget {
         : null;
     final schedule = mealScheduleLabel(context, plannedAt, now);
     final addOn = readMirroredAddOnProgress(payload['add_on_progress']);
+    final progress = status == 'eating-extra' && addOn == null
+        ? const MealProgressPlan(
+            stages: [MealProgressStage.extra],
+            currentIndex: 0,
+          )
+        : mealProgressPlanForStatus(
+            status,
+            decision: decision,
+            history: history,
+            mirroredAddOn: addOn,
+          );
     final statusText = mealStatusLabel(
-      status == 'eating-extra' && addOn?.waitingForExtraBolus == true
+      status == 'eating-extra' &&
+              progress.currentStage == MealProgressStage.bolus
           ? 'waiting-for-bolus'
           : status,
     );
@@ -156,19 +168,7 @@ class FamilyActiveMealCard extends StatelessWidget {
                 const SizedBox(height: 8),
               ],
               // Paski kroków (np. Bolus -> Jedzenie)
-              MealProgressSteps(
-                plan: status == 'eating-extra' && addOn == null
-                    ? const MealProgressPlan(
-                        stages: [MealProgressStage.extra],
-                        currentIndex: 0,
-                      )
-                    : mealProgressPlanForStatus(
-                        status,
-                        decision: decision,
-                        history: history,
-                        mirroredAddOn: addOn,
-                      ),
-              ),
+              MealProgressSteps(plan: progress),
               if (decisionAction != null) ...[
                 const SizedBox(height: 8),
                 decisionAction!,

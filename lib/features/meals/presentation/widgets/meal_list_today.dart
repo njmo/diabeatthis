@@ -4,12 +4,15 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_display_name.dart';
+import '../../../../common/meal/meal_progress_plan.dart';
 import '../../../../common/meal/meal_treatment_surplus.dart';
 import '../../../../common/meal/open_meal_add_on.dart';
 import '../../../../common/meal/open_meal_completion.dart';
 import '../../../../common/meal_advisor/presentation/remote/child_meal_decision_meal_action.dart';
+import '../../../../common/monitoring/meal_wait_status.dart';
 import '../../../../common/widgets/meal_progress/active_meal_progress_card.dart';
 import '../../../../common/widgets/meal_progress/meal_progress_section_heading.dart';
+import '../../../../common/widgets/meal_progress/meal_progress_steps.dart';
 import '../../../../common/widgets/meal_progress/show_meal_interruption_dialog.dart';
 import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
@@ -62,9 +65,25 @@ class MealListToday extends ConsumerWidget {
             .asData
             ?.value,
     };
+    final progressPlans = {
+      for (final meal in activeMeals)
+        meal.id: watchActiveMealPlan(
+          ref,
+          meal,
+          fallbackAddOn: addOnProgress[meal.id],
+        ),
+    };
     bool waitingForExtraBolus(domain.Meal meal) =>
         meal.status == 'eating-extra' &&
-        addOnProgress[meal.id]?.waitingForExtraBolus == true;
+        progressPlans[meal.id]?.currentStage == MealProgressStage.bolus;
+    final waitState =
+        activeMeals.any((meal) => meal.status == 'bolused-waiting')
+        ? ref.watch(mealWaitStatusProvider).value
+        : null;
+    bool waitsForExtendedCarbs(domain.Meal meal) =>
+        meal.status == 'bolused-waiting' &&
+        waitState?.mealId == meal.id &&
+        waitState?.waitingForExtendedCarbs == true;
     final summaryMeals = visibleMeals.where(
       (meal) => mealStatusReadyToSummarize(meal.status),
     );
@@ -104,7 +123,7 @@ class MealListToday extends ConsumerWidget {
                     : meal.status ?? 'planned',
               ),
               schedule: mealScheduleLabel(context, meal.plannedAt, now),
-              steps: ActiveMealSteps(meal: meal),
+              steps: MealProgressSteps(plan: progressPlans[meal.id]!),
               treatmentSurplus: treatmentSurpluses?.contains(meal.id) == true,
               progressAction: meal.status == 'eating-extra'
                   ? ActiveMealAddOnBolusAction(mealId: meal.id)
@@ -114,7 +133,8 @@ class MealListToday extends ConsumerWidget {
                   : meal.status == 'waiting-for-bolus'
                   ? lang.mealProgressOpenCalculator
                   : lang.mealStatusAte,
-              onAction: waitingForExtraBolus(meal)
+              onAction:
+                  waitingForExtraBolus(meal) || waitsForExtendedCarbs(meal)
                   ? null
                   : () async {
                       if (mealStatusesStartingEating.contains(meal.status) ||

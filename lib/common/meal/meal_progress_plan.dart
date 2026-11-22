@@ -15,6 +15,12 @@ class MealProgressPlan {
   final int currentIndex;
   final Set<int> pendingIndices;
 
+  MealProgressStage get currentStage => stages[currentIndex];
+
+  bool get canFinishEating =>
+      currentStage == MealProgressStage.eating ||
+      currentStage == MealProgressStage.extra;
+
   bool isComplete(int index) =>
       index < currentIndex && !pendingIndices.contains(index);
 }

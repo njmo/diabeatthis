@@ -25,11 +25,10 @@ Map<String, Object?> watchMealProgress(
     addOn: addOn,
     mirroredAddOn: mirroredAddOn,
   );
-  final stage = progress.stages[progress.currentIndex];
+  final stage = progress.currentStage;
   return {
     'stage': stage.name,
-    if (stage == MealProgressStage.eating || stage == MealProgressStage.extra)
-      'canFinishEating': true,
+    if (progress.canFinishEating) 'canFinishEating': true,
     'index': progress.currentIndex,
     'count': progress.stages.length,
     'completed': [
