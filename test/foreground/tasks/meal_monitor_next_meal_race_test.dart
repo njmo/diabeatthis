@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:clock/clock.dart';
+import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/mappers/bolus_wizard_drift_mapper.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart' as drift;
@@ -31,38 +33,45 @@ import '../utils/fake_notifications_controller.dart';
 import '../utils/fake_runtime_harness.dart';
 
 void main() {
-  test('restart resumes the persisted bolus wait before a planned meal', () async {
-    final now = DateTime(2026, 11, 19, 19, 35);
-    final db = drift.DatabaseImpl(NativeDatabase.memory());
-    addTearDown(db.close);
-    final container = ProviderContainer(
-      overrides: [databaseProvider.overrideWithValue(db)],
-    );
-    addTearDown(container.dispose);
-    final harness = FakeRuntimeHarness(container: container);
-    final state = MealMonitorContext();
+  test(
+    'restart resumes the persisted bolus wait before a planned meal',
+    () async {
+      final now = DateTime(2026, 11, 19, 19, 35);
+      final db = drift.DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(container.dispose);
+      final harness = FakeRuntimeHarness(container: container);
+      final state = MealMonitorContext();
 
-    await withClock(Clock.fixed(now), () async {
-      await db.customInsert(
-        '''
+      await withClock(Clock.fixed(now), () async {
+        await db.customInsert(
+          '''
         INSERT INTO meal (id, name, planned_at, status)
         VALUES (1, 'Lunch', ?, 'waiting-for-bolus'),
                (2, 'Dinner', ?, 'planned')
         ''',
-        variables: [
-          Variable(now.subtract(const Duration(minutes: 40)).millisecondsSinceEpoch),
-          Variable(now.add(const Duration(minutes: 11)).millisecondsSinceEpoch),
-        ],
-      );
+          variables: [
+            Variable(
+              now.subtract(const Duration(minutes: 40)).millisecondsSinceEpoch,
+            ),
+            Variable(
+              now.add(const Duration(minutes: 11)).millisecondsSinceEpoch,
+            ),
+          ],
+        );
 
-      final next = await NewMealCheckExecutor().execute(
-        harness.runtimeContext,
-        state,
-      );
-      expect(next, isA<WaitForBolusExecutor>());
-      expect(state.activeMeal?.id, 1);
-    });
-  });
+        final next = await NewMealCheckExecutor().execute(
+          harness.runtimeContext,
+          state,
+        );
+        expect(next, isA<WaitForBolusExecutor>());
+        expect(state.activeMeal?.id, 1);
+      });
+    },
+  );
 
   for (final disposeDuringDelay in [false, true]) {
     test(
@@ -255,18 +264,33 @@ void main() {
             expect(notifications.shownEvents, hasLength(1));
             expect(updates, isEmpty);
 
-            dispatchDeliveredMealBolus(
-              harness,
-              BolusWizard(
-                nightscoutObjectId: null,
-                createdAt: now,
-                date: now,
-                glucose: 120,
-                units: 'mg/dl',
-                notes: null,
-                calculatorResult: null,
+            final wizard = BolusWizard(
+              nightscoutObjectId: null,
+              createdAt: now,
+              date: now,
+              glucose: 120,
+              units: 'mg/dl',
+              notes: null,
+              calculatorResult: null,
+            );
+            unawaited(
+              db.customInsert(
+                "INSERT INTO meal (id, name, status) VALUES (84, 'Lunchbox', 'waiting-for-bolus')",
               ),
-              task: task,
+            );
+            unawaited(
+              db.localMirrorDao.upsertBolusWizard(
+                wizard.toCompanion(TreatmentsSource.aaps),
+              ),
+            );
+            unawaited(seedDeliveredMealBolus(db, now));
+            async.flushMicrotasks();
+            dispatchDeliveredMealBolus(harness, wizard, task: task);
+            async.flushMicrotasks();
+            unawaited(
+              db.mealDao.getMealById(84).then((meal) {
+                updates.add((84, meal!.status));
+              }),
             );
             async.flushMicrotasks();
             expect(updates, [(84, 'bolused-eating')]);

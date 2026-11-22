@@ -22,26 +22,50 @@ void main() {
     tester,
   ) async {
     late ForegroundUiHarness harness;
+    late int mealId;
     await tester.runAsync(() async {
       harness = await ForegroundUiHarness.create(
         meals: false,
         activities: false,
       );
+      mealId = await harness.uiDb
+          .into(harness.uiDb.meal)
+          .insert(
+            MealCompanion.insert(
+              name: 'Lunch',
+              status: const Value('bolused-waiting'),
+            ),
+          );
     });
     try {
       final inbox = harness.runtimeContext
           .openEventInbox<EatNowResponseEvent>();
-      final notification = EatNowNotificationEvent(mealId: 41, minutes: 15);
+      final notification = EatNowNotificationEvent(mealId: mealId, minutes: 15);
       final handler = ExternalEventHandler(harness.runtimeContext);
 
       for (final (action, expected) in [
-        ('eating', EatNowResponseEvent.eating(mealId: 41)),
-        ('dismiss', EatNowResponseEvent.dismiss(mealId: 41)),
-        ('empty', EatNowResponseEvent.empty(mealId: 41)),
+        ('dismiss', EatNowResponseEvent.dismiss(mealId: mealId)),
+        ('empty', EatNowResponseEvent.empty(mealId: mealId)),
       ]) {
-        handler.handle(notificationResponseWire(notification, action));
-        expect(await inbox.nextBatch(), [expected]);
+        await tester.runAsync(() async {
+          handler.handle(notificationResponseWire(notification, action));
+          final events = await inbox.nextBatch().timeout(
+            const Duration(seconds: 5),
+          );
+          expect(events, [expected]);
+        });
       }
+      await tester.runAsync(() async {
+        final db = harness.foregroundDb;
+        final meals = db.select(db.meal)
+          ..where((meal) => meal.id.equals(mealId));
+        final started = meals.watchSingle().firstWhere(
+          (meal) => meal.status == 'waited-eating',
+        );
+        handler.handle(notificationResponseWire(notification, 'eating'));
+        expect(await started.timeout(const Duration(seconds: 5)), isNotNull);
+      });
+      expect(inbox.drain(), isEmpty);
       inbox.close();
     } finally {
       await tester.runAsync(harness.close);
