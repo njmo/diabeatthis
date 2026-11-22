@@ -43,13 +43,6 @@ void main() {
     );
     send(
       const DebugTreatmentEvent(
-        kind: DebugTreatmentKind.manualBolus,
-        insulin: 2.5,
-      ),
-      secondsLater: 2,
-    );
-    send(
-      const DebugTreatmentEvent(
         kind: DebugTreatmentKind.correctionBolus,
         insulin: 0.5,
       ),
@@ -60,6 +53,7 @@ void main() {
         kind: DebugTreatmentKind.extendedCarbs,
         carbs: 15,
         minutes: 90,
+        startAfterMinutes: 45,
       ),
       secondsLater: 4,
     );
@@ -77,13 +71,14 @@ void main() {
     expect(wizard.createdAt, timestamp.add(const Duration(seconds: 1)));
     expect(wizard.carbs, 36);
     expect(wizard.insulin, 2.5);
+    final delivery = events
+        .whereType<TreatmentAvailableEvent<ManualBolus>>()
+        .single
+        .data;
+    expect(delivery.insulin, 2.5);
     expect(
-      events
-          .whereType<TreatmentAvailableEvent<ManualBolus>>()
-          .single
-          .data
-          .insulin,
-      2.5,
+      delivery.createdAt,
+      wizard.createdAt.add(const Duration(milliseconds: 1)),
     );
     expect(
       events
@@ -98,6 +93,10 @@ void main() {
         .single
         .data;
     expect(extended.carbs, 15);
+    expect(
+      extended.createdAt,
+      timestamp.add(const Duration(minutes: 45, seconds: 4)),
+    );
     expect(extended.duration, const Duration(minutes: 90).inMilliseconds);
     expect(
       container.read(calculatorSubmissionsProvider).single.deliveredInsulin,

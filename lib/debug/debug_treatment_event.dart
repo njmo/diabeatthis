@@ -23,24 +23,31 @@ class DebugTreatmentEvent with AppEventData {
     this.insulin,
     this.carbs,
     this.minutes,
+    this.startAfterMinutes = 0,
   });
 
   static const type = 'debug_treatment';
+  static const simulatedInsulin = 1.0;
 
   final DebugTreatmentKind kind;
   final double? insulin;
   final int? carbs;
   final int? minutes;
+  final int startAfterMinutes;
 
   static DebugTreatmentEvent? tryParse(
     DebugTreatmentKind kind, {
     String? insulin,
     String? carbs,
     String? minutes,
+    String? startAfterMinutes,
   }) {
-    final dose = double.tryParse(insulin?.trim().replaceAll(',', '.') ?? '');
+    final dose = insulin == null
+        ? simulatedInsulin
+        : double.tryParse(insulin.trim().replaceAll(',', '.'));
     final grams = int.tryParse(carbs?.trim() ?? '');
     final duration = int.tryParse(minutes?.trim() ?? '');
+    final delay = int.tryParse(startAfterMinutes?.trim() ?? '0');
     if (kind.hasInsulin &&
         (dose == null ||
             !dose.isFinite ||
@@ -60,6 +67,9 @@ class DebugTreatmentEvent with AppEventData {
     if (kind == DebugTreatmentKind.extendedCarbs &&
         (duration == null ||
             duration <= 0 ||
+            delay == null ||
+            delay < 0 ||
+            delay > 1440 ||
             Duration(minutes: duration).inMinutes != duration)) {
       return null;
     }
@@ -68,6 +78,7 @@ class DebugTreatmentEvent with AppEventData {
       insulin: kind.hasInsulin ? dose : null,
       carbs: kind.hasCarbs ? grams : null,
       minutes: kind == DebugTreatmentKind.extendedCarbs ? duration : null,
+      startAfterMinutes: kind == DebugTreatmentKind.extendedCarbs ? delay! : 0,
     );
   }
 
@@ -80,5 +91,6 @@ class DebugTreatmentEvent with AppEventData {
     if (insulin != null) 'insulin': insulin,
     if (carbs != null) 'carbs': carbs,
     if (minutes != null) 'minutes': minutes,
+    if (startAfterMinutes != 0) 'startAfterMinutes': startAfterMinutes,
   };
 }

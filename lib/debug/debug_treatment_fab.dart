@@ -57,26 +57,26 @@ class _DebugTreatmentDialog extends StatefulWidget {
 }
 
 class _DebugTreatmentDialogState extends State<_DebugTreatmentDialog> {
-  final _insulin = TextEditingController();
   final _carbs = TextEditingController();
-  final _minutes = TextEditingController();
+  final _minutes = TextEditingController(text: '120');
+  final _startAfterMinutes = TextEditingController(text: '45');
   DebugTreatmentKind _kind = DebugTreatmentKind.manualBolus;
   bool _showError = false;
 
   @override
   void dispose() {
-    _insulin.dispose();
     _carbs.dispose();
     _minutes.dispose();
+    _startAfterMinutes.dispose();
     super.dispose();
   }
 
   void _submit() {
     final event = DebugTreatmentEvent.tryParse(
       _kind,
-      insulin: _insulin.text,
       carbs: _carbs.text,
       minutes: _minutes.text,
+      startAfterMinutes: _startAfterMinutes.text,
     );
     if (event == null) {
       setState(() => _showError = true);
@@ -105,18 +105,6 @@ class _DebugTreatmentDialogState extends State<_DebugTreatmentDialog> {
               _showError = false;
             }),
           ),
-          if (_kind.hasInsulin)
-            TextField(
-              controller: _insulin,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: InputDecoration(
-                labelText: _kind == DebugTreatmentKind.calculator
-                    ? 'Calculated insulin (U)'
-                    : 'Insulin (U)',
-              ),
-            ),
           if (_kind.hasCarbs)
             TextField(
               controller: _carbs,
@@ -129,6 +117,14 @@ class _DebugTreatmentDialogState extends State<_DebugTreatmentDialog> {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 labelText: 'Duration (minutes)',
+              ),
+            ),
+          if (_kind == DebugTreatmentKind.extendedCarbs)
+            TextField(
+              controller: _startAfterMinutes,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Start after (minutes)',
               ),
             ),
           if (_showError)

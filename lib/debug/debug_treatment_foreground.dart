@@ -1,6 +1,5 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../core/data_sources/nightscout/dto/bolus_wizard_dto.dart';
 import '../core/data_sources/nightscout/mappers/bolus_wizard_mapper.dart';
@@ -10,19 +9,8 @@ import '../core/domain/model/manual_bolus.dart';
 import '../core/domain/model/treat.dart';
 import '../core/domain/model/treatment_base.dart';
 import '../foreground/event/internal/treatment_event_dispatcher.dart';
-import '../foreground/runtime/task_handler.dart';
 import '../foreground/task/base/runtime_context.dart';
 import 'debug_treatment_event.dart';
-
-@pragma('vm:entry-point')
-void startDebugTreatmentForeground() {
-  if (!kDebugMode) {
-    throw StateError('The treatment simulator requires a Flutter debug build.');
-  }
-  FlutterForegroundTask.setTaskHandler(
-    MyTaskHandler(handleAdditionalEvent: handleDebugTreatmentEvent),
-  );
-}
 
 bool handleDebugTreatmentEvent(
   Map<String, dynamic> event,
@@ -44,14 +32,27 @@ bool handleDebugTreatmentEvent(
     insulin: data['insulin']?.toString(),
     carbs: data['carbs']?.toString(),
     minutes: data['minutes']?.toString(),
+    startAfterMinutes: data['startAfterMinutes']?.toString(),
   );
   if (request == null) return true;
 
-  TreatmentEventDispatcher().dispatch(
+  final now = clock.now();
+  final dispatcher = TreatmentEventDispatcher();
+  void dispatch(Treatment treatment) => dispatcher.dispatch(
     container: context.container,
     emitEvent: context.emitEvent,
-    treatment: _createTreatment(request, clock.now()),
+    treatment: treatment,
   );
+  dispatch(_createTreatment(request, now));
+  if (kind == DebugTreatmentKind.calculator && request.insulin! > 0) {
+    dispatch(
+      ManualBolus(
+        externalId: 'debug-delivery-${now.millisecondsSinceEpoch}',
+        createdAt: now.add(const Duration(milliseconds: 1)),
+        insulin: request.insulin!,
+      ),
+    );
+  }
   return true;
 }
 
@@ -87,7 +88,7 @@ Treatment _createTreatment(DebugTreatmentEvent request, DateTime now) {
     ),
     DebugTreatmentKind.extendedCarbs => ExtendedCarb(
       externalId: id,
-      createdAt: now,
+      createdAt: now.add(Duration(minutes: request.startAfterMinutes)),
       carbs: request.carbs!,
       duration: Duration(minutes: request.minutes!).inMilliseconds,
     ),
