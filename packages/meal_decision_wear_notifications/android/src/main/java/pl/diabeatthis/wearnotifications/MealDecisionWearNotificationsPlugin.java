@@ -47,7 +47,7 @@ public final class MealDecisionWearNotificationsPlugin implements FlutterPlugin 
                 result.success(false);
                 return;
             }
-            if (!answer && (invitationBridge == null || isPhoneInUse(context))) {
+            if (invitationBridge == null || (!answer && isPhoneInUse(context))) {
                 result.success(false);
                 return;
             }
@@ -57,7 +57,7 @@ public final class MealDecisionWearNotificationsPlugin implements FlutterPlugin 
                 .onSuccessTask(capability -> {
                     var client = Wearable.getMessageClient(context);
                     List<Task<byte[]>> sends = new ArrayList<>();
-                    if (!answer && (invitationBridge == null || isPhoneInUse(context))) return Tasks.whenAllComplete(sends);
+                    if (invitationBridge == null || (!answer && isPhoneInUse(context))) return Tasks.whenAllComplete(sends);
                     for (Node watch : capability.getNodes()) {
                         sends.add(client.sendRequest(watch.getId(), answer ? "/diabeatthis/meal-decision/answer" : INVITATION, request));
                     }
