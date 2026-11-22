@@ -69,7 +69,11 @@ class _MyAppState extends ConsumerState<MyApp>
     WidgetsBinding.instance.addObserver(this);
 
     Future.microtask(() async {
-      await ref.read(notificationsControllerUiProvider).init();
+      try {
+        await ref.read(notificationsControllerUiProvider).init();
+      } catch (error) {
+        logW('Could not initialize UI notifications (${error.runtimeType})');
+      }
       if (!mounted) return;
       _modeSubscription = ref.listenManual(applicationDeviceModeProvider, (
         _,
