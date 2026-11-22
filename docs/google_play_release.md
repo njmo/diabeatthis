@@ -25,6 +25,13 @@ git push github v1.0.2
 
 The workflow also supports manual runs from GitHub Actions with a selected Google Play track.
 
+Tagged GitHub releases attach `app-release.apk` for phones and
+`wear-release.apk` for Wear OS, alongside both bundles. For a manual
+Wear Installer 2 installation, select **Custom APK** and choose
+`wear-release.apk`. The phone and watch need matching signing certificates.
+If the phone app came from Google Play, download the corresponding
+Play-signed Wear OS APK from Play Console instead.
+
 ## Release notes
 
 Add a uniquely named JSON file under `release-notes/` for each user-visible
