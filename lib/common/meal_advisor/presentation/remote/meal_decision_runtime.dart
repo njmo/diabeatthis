@@ -32,6 +32,7 @@ import '../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../../features/meals/presentation/widgets/meal_details/meal_detail_formatters.dart';
 import '../../../app_mode/application_device_mode.dart';
 import '../../../auth/google_authentication_providers.dart';
+import '../../../family/family_providers.dart';
 import '../../../family_sync/family_access_scope.dart';
 import '../../../family_sync/family_planning_session_provider.dart';
 import '../../../family_sync/presentation/models/family_meal_details.dart';
@@ -54,6 +55,7 @@ import '../../context/caregiver_meal_context_history.dart';
 import '../../context/meal_decision_activity_context.dart';
 import '../../manual_meal_choice.dart';
 import '../../meal_decision_answer.dart';
+import '../../meal_decision_eligibility.dart';
 import '../../meal_decision_preferences.dart';
 import '../../meal_decision_preferences_provider.dart';
 import '../../meal_decision_timing.dart';
@@ -264,7 +266,19 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
       if (action == 'list') {
         final remote = ref.read(mealDecisionRemoteControllerProvider.notifier);
         if (!remote.backgroundEnabled) {
-          return {'version': 1, 'status': 'caregiverRequestsDisabled'};
+          final family = ref.read(secureFamilyStatusProvider(session.uid));
+          final status = switch (family) {
+            AsyncData(:final value)
+                when !mealDecisionFamilyPaired(
+                  ApplicationDeviceMode.caregiver,
+                  value,
+                ) =>
+              'familyPairingRequired',
+            AsyncData() when ref.read(sharedPrefsProvider).asData != null =>
+              'caregiverRequestsDisabled',
+            _ => 'phoneNotReady',
+          };
+          return {'version': 1, 'status': status};
         }
         await remote.refresh();
         if (watchSession() != session) {

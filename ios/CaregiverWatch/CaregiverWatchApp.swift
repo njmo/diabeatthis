@@ -45,6 +45,7 @@ enum WatchError: Error {
   case phoneUnreachable
   case phoneNotReady
   case caregiverRequired
+  case familyPairingRequired
   case caregiverRequestsDisabled
   case inboxUnavailable
 
@@ -56,8 +57,10 @@ enum WatchError: Error {
       return "Open Diabeatthis on your iPhone and try again."
     case .caregiverRequired:
       return "Switch Diabeatthis on your iPhone to caregiver mode."
+    case .familyPairingRequired:
+      return "Pair your child's account in Diabeatthis on your iPhone first."
     case .caregiverRequestsDisabled:
-      return "Check family pairing and enable meal requests on your iPhone."
+      return "Enable meal requests in Diabeatthis on your iPhone."
     case .inboxUnavailable:
       return "Could not load meal requests. Try again."
     default:
@@ -96,6 +99,7 @@ final class PhoneConnection: NSObject, ObservableObject, WCSessionDelegate {
         case "expired": continuation.resume(throwing: WatchError.expired)
         case "phoneNotReady": continuation.resume(throwing: WatchError.phoneNotReady)
         case "caregiverRequired": continuation.resume(throwing: WatchError.caregiverRequired)
+        case "familyPairingRequired": continuation.resume(throwing: WatchError.familyPairingRequired)
         case "caregiverRequestsDisabled": continuation.resume(throwing: WatchError.caregiverRequestsDisabled)
         case "inboxUnavailable": continuation.resume(throwing: WatchError.inboxUnavailable)
         default: continuation.resume(throwing: WatchError.unavailable)
