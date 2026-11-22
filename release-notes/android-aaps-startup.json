@@ -1,5 +1,5 @@
 {
   "platforms": ["android"],
-  "pl-PL": "Naprawiono uruchamianie odbioru glikemii i wpisów AAPS po instalacji wersji Android.",
-  "en-US": "Fixed startup of AAPS glucose and treatment updates after installing the Android release."
+  "pl-PL": "Naprawiono uruchamianie odbioru glikemii i wpisów AAPS po instalacji wersji Android. Zegarek Wear OS może ponownie wykryć aplikację na sparowanym telefonie.",
+  "en-US": "Fixed startup of AAPS glucose and treatment updates after installing the Android release. Wear OS can discover the app on the paired phone again."
 }
