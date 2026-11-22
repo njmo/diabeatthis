@@ -369,8 +369,8 @@ public final class MealWatchTileService extends TileService {
                 .addContent(centeredColumn()
                     .addContent(startMealId > 0
                         ? mealActionButton(labels.getString(R.string.start_eating),
-                            openMeal("start-" + startMealId,
-                                MealDecisionWatchActivity.EXTRA_START_ACCEPTED_MEAL_ID, startMealId))
+                            openMeal("planned-" + startMealId,
+                                MealDecisionWatchActivity.EXTRA_PLANNED_MEAL_ID, startMealId))
                         : mealEatenButton(labels, summaryMealId))
                     .addContent(gap(ActiveMealPresentation.ARC_HEIGHT
                         + ActiveMealPresentation.ARC_BOTTOM_PADDING))

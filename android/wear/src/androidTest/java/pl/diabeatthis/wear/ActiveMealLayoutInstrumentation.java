@@ -59,6 +59,7 @@ public final class ActiveMealLayoutInstrumentation extends Instrumentation {
             runOnMainSync(() -> {
                 try {
                     verifyAcceptedPlan(running);
+                    verifyStartIntentOpensConfirmation(running);
                     verifyWaitingTile(running);
                     verifyAdvisorPage(running);
                 } catch (Throwable error) {
@@ -66,7 +67,7 @@ public final class ActiveMealLayoutInstrumentation extends Instrumentation {
                 }
             });
             if (failure.get() != null) throw new AssertionError("Accepted plan", failure.get());
-            result.putString("stream", "\n6 active meal layouts, 3 accepted plans, 5 decision tile states and the advisor page passed\n");
+            result.putString("stream", "\nActive meal layouts, tile states, start confirmation and advisor page passed\n");
             finish(Activity.RESULT_OK, result);
         } catch (Throwable error) {
             result.putString("stream", "\n" + android.util.Log.getStackTraceString(error) + "\n");
@@ -232,6 +233,40 @@ public final class ActiveMealLayoutInstrumentation extends Instrumentation {
             if (appStart != !scheduled || tileStart != !scheduled) {
                 throw new AssertionError("Wrong accepted-plan start action for " + decision);
             }
+        }
+    }
+
+    private void verifyStartIntentOpensConfirmation(MealDecisionWatchActivity activity)
+            throws Exception {
+        var receive = MealDecisionWatchActivity.class.getDeclaredMethod(
+            "receiveRequests", int.class, String.class, byte[].class);
+        receive.setAccessible(true);
+        boolean wasStarted = field("started").getBoolean(activity);
+        field("started").setBoolean(activity, false);
+        try {
+            for (boolean waiting : List.of(true, false)) {
+                activity.onNewIntent(new Intent()
+                    .putExtra(MealDecisionWatchActivity.EXTRA_START_ACCEPTED_MEAL_ID, "1"));
+                var meal = new JSONObject().put("mealId", 1).put("mealName", "Jabłko");
+                if (waiting) {
+                    meal.put("activeStatus", "bolused-waiting")
+                        .put("progress", new JSONObject().put("stage", "waiting")
+                            .put("waitUntilMs", System.currentTimeMillis() + 60000));
+                } else {
+                    meal.put("acceptedDecision", "eatNowBolusLater")
+                        .put("canStartAccepted", true);
+                }
+                var overview = new JSONObject().put("version", 1).put("status", "ok")
+                    .put("mode", "child").put("languageTag", "pl")
+                    .put("requests", new JSONArray()).put("plans", new JSONArray().put(meal));
+                receive.invoke(activity, field("requestGeneration").getInt(activity), null,
+                    overview.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                if (button((View) field("root").get(activity), "Zaczynam jeść") == null) {
+                    throw new AssertionError("The start intent must render a confirmation button");
+                }
+            }
+        } finally {
+            field("started").setBoolean(activity, wasStarted);
         }
     }
 

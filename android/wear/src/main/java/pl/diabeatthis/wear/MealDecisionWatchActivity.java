@@ -103,7 +103,6 @@ public class MealDecisionWatchActivity extends Activity
     private long requestedSummaryMealId;
     static final String EXTRA_START_ACCEPTED_MEAL_ID = "watchStartAcceptedMealId";
     private long requestedPlannedMealId;
-    private long requestedStartAcceptedMealId;
     private boolean openedFromPlannedTile;
     private long focusedMealId;
     private final Set<String> openedChildDecisions = new HashSet<>();
@@ -141,7 +140,9 @@ public class MealDecisionWatchActivity extends Activity
         tileRequestId = takeTileRequest(getIntent());
         requestedSummaryMealId = takeMealId(getIntent(), EXTRA_SUMMARY_MEAL_ID);
         requestedPlannedMealId = takeMealId(getIntent(), EXTRA_PLANNED_MEAL_ID);
-        requestedStartAcceptedMealId = takeMealId(getIntent(), EXTRA_START_ACCEPTED_MEAL_ID);
+        if (requestedPlannedMealId == 0) {
+            requestedPlannedMealId = takeMealId(getIntent(), EXTRA_START_ACCEPTED_MEAL_ID);
+        }
         openedFromPlannedTile = requestedPlannedMealId > 0;
         root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -186,10 +187,12 @@ public class MealDecisionWatchActivity extends Activity
         tileRequestId = takeTileRequest(intent);
         requestedSummaryMealId = takeMealId(intent, EXTRA_SUMMARY_MEAL_ID);
         requestedPlannedMealId = takeMealId(intent, EXTRA_PLANNED_MEAL_ID);
-        requestedStartAcceptedMealId = takeMealId(intent, EXTRA_START_ACCEPTED_MEAL_ID);
+        if (requestedPlannedMealId == 0) {
+            requestedPlannedMealId = takeMealId(intent, EXTRA_START_ACCEPTED_MEAL_ID);
+        }
         openedFromPlannedTile = requestedPlannedMealId > 0;
         if (started && (notificationRequestId != null || tileRequestId != null ||
-                requestedSummaryMealId > 0 || requestedPlannedMealId > 0 || requestedStartAcceptedMealId > 0)) refresh();
+                requestedSummaryMealId > 0 || requestedPlannedMealId > 0)) refresh();
     }
 
     private String takeTileRequest(Intent intent) {
@@ -434,29 +437,8 @@ public class MealDecisionWatchActivity extends Activity
                     }
                 }
                 if (active != null) {
-                    long startId = requestedStartAcceptedMealId;
-                    requestedStartAcceptedMealId = 0;
-                    JSONObject progress = active.optJSONObject("progress");
-                    if (startId > 0 && active.optLong("mealId") == startId && progress != null
-                            && "waiting".equals(progress.optString("stage"))) {
-                        sendChildMealAction(phone, startId, "startEatingAfterWait");
-                        return;
-                    }
                     renderActiveMeal(phone, active, true, generation);
                     return;
-                }
-                long startId = requestedStartAcceptedMealId;
-                requestedStartAcceptedMealId = 0;
-                if (startId > 0 && plans != null) {
-                    for (int i = 0; i < plans.length(); i++) {
-                        JSONObject meal = plans.optJSONObject(i);
-                        if (meal != null && meal.optLong("mealId") == startId &&
-                                !meal.optString("acceptedDecision").isEmpty() &&
-                                meal.optLong("bolusDueAtMs") == 0) {
-                            sendChildMealAction(phone, startId, "startAcceptedMeal");
-                            return;
-                        }
-                    }
                 }
                 if (tileRequestId != null && json.optBoolean("inboxAvailable", true)) {
                     String target = tileRequestId;
