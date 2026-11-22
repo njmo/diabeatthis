@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/meal/meal_treatment_surplus.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/core/data/provider/parent_controller_provider.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
@@ -54,6 +55,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            mealTreatmentSurplusesProvider.overrideWith(
+              (ref) => Stream.value({}),
+            ),
             timeNowProvider.overrideWithValue(AsyncData(now)),
             anyMealBlockingActivationProvider.overrideWith(
               (ref) => Stream.value(active),
@@ -118,6 +122,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            mealTreatmentSurplusesProvider.overrideWith(
+              (ref) => Stream.value({}),
+            ),
             parentModeProvider.overrideWithValue(true),
             timeNowProvider.overrideWithValue(AsyncData(DateTime(2026, 11, 1))),
             anyMealBlockingActivationProvider.overrideWith(

@@ -1,4 +1,5 @@
 import 'package:clock/clock.dart';
+import 'package:diabeatthis/common/meal/calculator/meal_calculator_state_use_case.dart';
 import 'package:diabeatthis/common/meal/meal_add_on_bolus_progress.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
@@ -108,6 +109,13 @@ void main() {
   test(
     'accepted add-on remains linked after recorder failure and monitor restart with mirroring disabled',
     () async {
+      final pending = (await readMealAddOnBolusContext(db, 1))!;
+      await MealCalculatorStateUseCase(db).projectExtendedConfirmation(
+        1,
+        pending.requestedAt,
+        pending.requestedExtendedCarbs,
+        true,
+      );
       final addon = testBolusWizard(
         createdAt: requestedAt.add(const Duration(minutes: 1)),
         carbs: 2,

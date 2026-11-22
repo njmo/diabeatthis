@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
+import 'package:diabeatthis/common/meal/calculator/meal_calculator_state_use_case.dart';
 import 'package:diabeatthis/common/meal/meal_add_on_bolus_context.dart';
 import 'package:diabeatthis/common/meal/meal_add_on_bolus_progress.dart';
 import 'package:diabeatthis/common/widgets/amount_entry_dialog.dart';
@@ -105,7 +106,7 @@ void main() {
         );
         final finish = find.widgetWithText(FilledButton, 'Zjadłem');
         expect(find.widgetWithText(OutlinedButton, 'Dokładka'), findsNothing);
-        expect(finish, findsOneWidget);
+        expect(finish, findsNothing);
         expect(calculator, findsOneWidget);
 
         var progress = (await readMealAddOnBolusContext(db, 1))!;
@@ -141,6 +142,12 @@ void main() {
         expect(find.widgetWithText(OutlinedButton, 'Dokładka'), findsNothing);
         expect((await db.mealDao.getMealById(1))!.status, 'eating-extra');
 
+        expect(finish, findsNothing);
+        await MealCalculatorStateUseCase(
+          db,
+        ).projectExtendedConfirmation(1, requestedAt, originalECarbs, true);
+        await tester.pumpAndSettle();
+        expect(finish, findsOneWidget);
         await tester.tap(finish);
         await tester.pumpAndSettle();
         expect(find.byType(MealCompletionChoiceSheet), findsOneWidget);

@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/meal/meal_treatment_surplus.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_activation_guard_provider.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_database_provider.dart';
@@ -15,6 +16,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          mealTreatmentSurplusesProvider.overrideWith(
+            (ref) => Stream.value({}),
+          ),
           anyMealBlockingActivationProvider.overrideWith(
             (ref) => Stream.value(null),
           ),
@@ -57,6 +61,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          mealTreatmentSurplusesProvider.overrideWith(
+            (ref) => Stream.value({}),
+          ),
           anyMealBlockingActivationProvider.overrideWith(
             (ref) => Stream.value(
               Meal(
@@ -97,6 +104,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            mealTreatmentSurplusesProvider.overrideWith(
+              (ref) => Stream.value({}),
+            ),
             anyMealBlockingActivationProvider.overrideWith(
               (ref) => Stream.value(null),
             ),
