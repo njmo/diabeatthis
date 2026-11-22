@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../firebase_options.dart';
@@ -9,6 +10,11 @@ import '../meal_advisor/notifications/meal_decision_push.dart';
 @pragma('vm:entry-point')
 Future<void> familyFirebaseBackgroundHandler(RemoteMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (kDebugMode &&
+      message.data.length == 1 &&
+      message.data['requestId'] is String) {
+    debugPrint('MealDecisionPush Flutter background handler started');
+  }
   await routeFamilyFirebaseMessage(message);
 }
 
@@ -29,5 +35,9 @@ Future<void> routeFamilyFirebaseMessage(
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
-  await (meal ?? showMealDecisionPush)(message);
+  if (meal != null) {
+    await meal(message);
+  } else if (defaultTargetPlatform == TargetPlatform.android) {
+    await showMealDecisionPush(message);
+  }
 }

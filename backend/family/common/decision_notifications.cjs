@@ -60,7 +60,12 @@ function createDecisionNotifications({store, messaging, now = Date.now}) {
     });
     if (!result) return;
     try {
-      const sent = result.tokens.length && result.ttl > 0 ? await messaging.sendEachForMulticast({tokens: result.tokens.map(device => device.token), data: {requestId}, android: {priority: 'high', ttl: result.ttl}}) : null;
+      const sent = result.tokens.length && result.ttl > 0 ? await messaging.sendEachForMulticast({tokens: result.tokens.map(device => device.token), data: {requestId}, android: {priority: 'high', ttl: result.ttl},
+        apns: {
+          headers: {'apns-push-type': 'alert', 'apns-expiration': String(Math.floor((now() + result.ttl) / 1000))},
+          payload: {aps: {alert: {title: 'Diabeatthis', locKey: 'MEAL_DECISION_REQUEST'}, sound: 'default'}},
+        },
+      }) : null;
       /* Process individual errors; successful recipients are deduplicated by notification ID. */
      
       let transient = false;

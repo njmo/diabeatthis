@@ -29,6 +29,7 @@ import '../data/family_chat_remote.dart';
 import '../family_chat_platform.dart';
 import '../presentation/family_chat_page.dart';
 import '../presentation/family_treatment_aaps_review.dart';
+import '../../meal_advisor/notifications/meal_decision_notification_intent.dart';
 import 'family_chat_presenter_provider.dart';
 import 'family_chat_push.dart';
 import 'family_chat_registration.dart';
@@ -231,7 +232,20 @@ class _FamilyChatNotificationRuntimeState
   Map<String, dynamic>? _pendingRemoteOpen;
 
   void _handleRemoteOpen(RemoteMessage message) {
-    if (!mounted || message.data['type'] != 'familyChat') return;
+    if (!mounted) return;
+    if (message.data['type'] != 'familyChat') {
+      final id = message.data['requestId'];
+      if (message.data.length == 1 &&
+          id is String &&
+          RegExp(r'^[A-Za-z0-9_-]{1,128}$').hasMatch(id)) {
+        unawaited(
+          MealDecisionNotificationIntentStore().add(
+            MealDecisionNotificationIntent(id, 'open'),
+          ),
+        );
+      }
+      return;
+    }
     final recipient = message.data['uid'];
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (recipient is! String || (uid != null && recipient != uid)) return;

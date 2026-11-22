@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,7 +26,10 @@ import 'notification_token_serial_queue.dart';
 
 final mealDecisionNotificationsProvider = Provider<void>((ref) {
   if (kIsWeb ||
-      defaultTargetPlatform != TargetPlatform.android ||
+      !{
+        TargetPlatform.android,
+        TargetPlatform.iOS,
+      }.contains(defaultTargetPlatform) ||
       Firebase.apps.isEmpty) {
     return;
   }
@@ -59,10 +63,23 @@ final mealDecisionNotificationsProvider = Provider<void>((ref) {
   final runtime = MealDecisionNotificationsRuntime(
     enabled,
     revoke: revoke,
+    shouldShowForegroundPush: (requestId) {
+      if (mode != ApplicationDeviceMode.caregiver) return true;
+      if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        return false;
+      }
+      final inbox = ref.read(mealDecisionRemoteControllerProvider);
+      if (inbox.accountUid != uid || inbox.loading || inbox.failed) return true;
+      final request = inbox.byId(requestId);
+      return request == null ||
+          (request.pending &&
+              request.status == 'waiting' &&
+              request.claimAvailable);
+    },
     afterForegroundPush: (requestId) async {
-      if (!ref.mounted || mode != ApplicationDeviceMode.caregiver) return;
-      await ref.read(mealDecisionRemoteControllerProvider.notifier).refresh();
       if (!ref.mounted) return;
+      await ref.read(mealDecisionRemoteControllerProvider.notifier).refresh();
+      if (!ref.mounted || mode != ApplicationDeviceMode.caregiver) return;
       final inbox = ref.read(mealDecisionRemoteControllerProvider);
       if (inbox.failed || inbox.loading || inbox.accountUid != uid) return;
       final request = inbox.byId(requestId);
@@ -84,9 +101,11 @@ class MealDecisionNotificationsRuntime {
   MealDecisionNotificationsRuntime(
     this.enabled, {
     this.revoke = true,
+    this.shouldShowForegroundPush,
     this.afterForegroundPush,
   });
   final Future<void> Function(String requestId)? afterForegroundPush;
+  final bool Function(String requestId)? shouldShowForegroundPush;
   final bool enabled;
   final bool revoke;
   static final NotificationTokenSerialQueue tokenQueue =
@@ -108,8 +127,11 @@ class MealDecisionNotificationsRuntime {
     FirebaseMessaging.onBackgroundMessage(familyFirebaseBackgroundHandler);
     messageSubscription = FirebaseMessaging.onMessage.listen((message) {
       unawaited(() async {
-        await showMealDecisionPush(message);
         final id = message.data['requestId'];
+        if (defaultTargetPlatform == TargetPlatform.android &&
+            (id is! String || shouldShowForegroundPush?.call(id) != false)) {
+          await showMealDecisionPush(message);
+        }
         if (id is String) await afterForegroundPush?.call(id);
       }());
     });
@@ -153,6 +175,7 @@ class MealDecisionNotificationsRuntime {
 
   Future<void> register(String uid, int expectedGeneration) async {
     if (disposed || generation != expectedGeneration) return;
+    if (!enabled && !revoke) return;
     try {
       final messaging = FirebaseMessaging.instance;
       final storage = SharedPreferencesAsync();
@@ -162,8 +185,19 @@ class MealDecisionNotificationsRuntime {
           FirebaseAuth.instance.currentUser?.uid != uid) {
         return;
       }
-      if (!enabled && !revoke) return;
       final key = 'meal_decision_registered_token:$uid';
+      if (enabled && defaultTargetPlatform == TargetPlatform.iOS) {
+        final settings = await messaging.getNotificationSettings();
+        final permission =
+            settings.authorizationStatus == AuthorizationStatus.notDetermined
+            ? await messaging.requestPermission()
+            : settings;
+        if (permission.authorizationStatus == AuthorizationStatus.denied)
+          return;
+        if (await messaging.getAPNSToken() == null) {
+          throw StateError('APNs token is still unavailable');
+        }
+      }
       final token = enabled
           ? await messaging.getToken()
           : await storage.getString(key);
