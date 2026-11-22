@@ -208,9 +208,16 @@ jobs:
       - name: Build signed IPA
         if: ${{ !inputs.distribute_existing_build }}
         run: |
-          flutter build ipa --release --no-pub \
+          build_log="$RUNNER_TEMP/flutter-ipa-build.log"
+          if flutter --verbose build ipa --release --no-pub \
             --build-name "$RELEASE_VERSION" --build-number "$BUILD_NUMBER" \
-            --export-options-plist "$RUNNER_TEMP/ExportOptions.plist"
+            --export-options-plist "$RUNNER_TEMP/ExportOptions.plist" >"$build_log" 2>&1; then
+            tail -25 "$build_log"
+          else
+            grep -nE -C 3 '(^|[[:space:]])error:|fatal error:' "$build_log" | tail -120 || true
+            tail -50 "$build_log"
+            exit 1
+          fi
 
       - name: Verify version in signed IPA
         if: ${{ !inputs.distribute_existing_build }}
