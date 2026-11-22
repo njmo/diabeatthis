@@ -30,7 +30,7 @@ final familyPlanningSessionProvider = Provider.autoDispose
           final current = FirebaseAuth.instance.currentUser?.uid;
           return current == uid ? current : null;
         },
-        FamilyPlanSubmissionStore(ref.watch(databaseProvider)),
+        FamilyPlanSubmissionStore.lazy(() => ref.read(databaseProvider)),
         view: home
             ? () {
                 final now = DateTime.now();
