@@ -217,17 +217,17 @@ struct RequestDetail: View {
           }
           if let error { Text(error).font(.footnote).foregroundStyle(.orange) }
           if busy { ProgressView() }
-          if let selected {
-            Text(selected.name).font(.headline)
-            if selected.minutes != nil {
+          if let option = selected {
+            Text(option.name).font(.headline)
+            if option.minutes != nil {
               Stepper(value: $minutes, in: 1...180) {
                 Text("\(minutes) min")
               }
             }
             Button("Send") {
               Task {
-                var fields: [String: Any] = ["type": selected.id, "message": ""]
-                if selected.minutes != nil { fields["minutes"] = minutes }
+                var fields: [String: Any] = ["type": option.id, "message": ""]
+                if option.minutes != nil { fields["minutes"] = minutes }
                 await perform("respond", fields: fields)
               }
             }.tint(.green)
