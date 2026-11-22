@@ -6,6 +6,7 @@ import 'package:diabeatthis/common/family_sync/child_ingredient_search_repositor
 import 'package:diabeatthis/common/family_sync/edit_family_quick_treatment_use_case.dart';
 import 'package:diabeatthis/common/family_sync/family_plan_submission_store.dart';
 import 'package:diabeatthis/common/family_sync/family_planning_controller.dart';
+import 'package:diabeatthis/common/family_sync/submit_family_plan_use_case.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +14,43 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test(
+    'a pending submission clears after its planning session is disposed',
+    () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      var disposed = false;
+      final store = FamilyPlanSubmissionStore.lazy(() {
+        if (disposed) throw StateError('Planning session disposed');
+        return db;
+      });
+      final reserved = await store.reserve('parent', {'id': 'plan'});
+      final requestStarted = Completer<void>();
+      final response = Completer<http.Response>();
+      final transport = AuthenticatedCallableTransport(
+        client: MockClient((_) {
+          requestStarted.complete();
+          return response.future;
+        }),
+        projectId: 'test',
+        currentUid: () => 'parent',
+        identity: () async => const CallableIdentity('parent', 'token', 'app'),
+      );
+      final submission = SubmitFamilyPlanUseCase(
+        transport,
+        store,
+        (_) => !disposed,
+      ).sendReserved('parent', reserved);
+      await requestStarted.future;
+      disposed = true;
+      response.complete(
+        http.Response('{"result":{"id":"plan","status":"pending"}}', 200),
+      );
+      await submission;
+      expect(await store.pending('parent'), isNull);
+    },
+  );
+
   test(
     'scoped controllers keep home plans and meal details separate',
     () async {

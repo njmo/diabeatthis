@@ -6,16 +6,11 @@ import '../../core/drift/database_impl.dart';
 
 /// Only confirmed send intents, not a caregiver copy of patient domain tables.
 class FamilyPlanSubmissionStore {
-  const FamilyPlanSubmissionStore(DatabaseImpl db)
-    : _db = db,
-      _open = null;
-  const FamilyPlanSubmissionStore.lazy(DatabaseImpl Function() open)
-    : _db = null,
-      _open = open;
+  FamilyPlanSubmissionStore(DatabaseImpl db) : _open = (() => db);
+  FamilyPlanSubmissionStore.lazy(this._open);
 
-  final DatabaseImpl? _db;
-  final DatabaseImpl Function()? _open;
-  DatabaseImpl get db => _db ?? _open!();
+  final DatabaseImpl Function() _open;
+  late final DatabaseImpl db = _open();
   Future<Map<String, dynamic>?> pending(String uid) async {
     final row = await db
         .customSelect(
