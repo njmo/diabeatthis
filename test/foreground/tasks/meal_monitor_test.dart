@@ -56,7 +56,6 @@ import 'package:diabeatthis/foreground/providers/device_status_value_provider.da
 import 'package:diabeatthis/foreground/providers/latest_bolus_wizard_provider.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/bolus_then_wait_executor.dart';
-import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/meal_completion_requirements.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/detect_finished_eating_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/finalize_meal_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/idle_executor.dart';
@@ -64,6 +63,7 @@ import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/me
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/monitor_until_meal.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/new_meal_check_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/wait_for_bolus_executor.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/meal_completion_requirements.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/planned_meal_confirmation.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/scheduled_caregiver_meal_decision.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_context.dart';
@@ -1257,8 +1257,9 @@ void main() {
                       ),
                     )
                     .catchError((Object error) {
-                      if (error is TaskCancelledException)
+                      if (error is TaskCancelledException) {
                         return NewMealCheckExecutor();
+                      }
                       throw error;
                     }),
               );

@@ -103,8 +103,9 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
       if (closed.value) return;
       closed.value = true;
       final route = ModalRoute.of(context);
-      if (route != null && route.isActive)
+      if (route != null && route.isActive) {
         Navigator.of(context).removeRoute(route);
+      }
     }
 
     void resolve(MealDecisionResolution resolution) {

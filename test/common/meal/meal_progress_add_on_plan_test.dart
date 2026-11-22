@@ -35,7 +35,7 @@ void main() {
       originalStatus: 'waited-eating',
       bolusConfirmed: true,
       awaitingBolus: false,
-    ).copyWith(requestedExtendedCarbs: 10, additionalServing: true);
+    ).copyWith(requestedExtendedCarbs: 10);
     final pending = mealProgressPlanForStatus('eating-extra', addOn: context);
     expect(pending.stages[pending.currentIndex], MealProgressStage.bolus);
     final confirmed = mealProgressPlanForStatus(

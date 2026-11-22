@@ -32,8 +32,9 @@ final captureMealAdvisorSuggestionProvider = Provider((ref) {
     final activity = await ref.read(getMealActivityAdviceUseCaseProvider)(
       mealAt: meal.plannedAt,
     );
-    if (!ref.mounted || check(device) != MealAdviceEligibility.available)
+    if (!ref.mounted || check(device) != MealAdviceEligibility.available) {
       return null;
+    }
     final advice = ref.read(getMealAdviceUseCaseProvider)(
       macros: nutrition,
       deviceStatus: device,

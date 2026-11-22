@@ -66,8 +66,9 @@ class MealAddOnBolusWaiter {
       }
       if (!context.awaitingBolus) {
         if (context.requestedExtendedCarbs <= 0 ||
-            context.extendedCarbsConfirmed)
+            context.extendedCarbsConfirmed) {
           return true;
+        }
         final pending = context;
         await refreshInstruction(runtime, mealContext, pending);
         await waitForMealCompletionRequirements(
@@ -209,13 +210,14 @@ class MealAddOnBolusWaiter {
       final notifications = runtime.container.read(
         notificationsControllerForegroundProvider,
       );
-      if (notify)
+      if (notify) {
         await notifications.cancelNotification(
           NotificationKey(
             type: NotificationEventType.aapsBolusSuggestion,
             entityId: mealId,
           ),
         );
+      }
       mealContext.throwIfStopped(runtime);
       if (request.requestedCarbs == 0 && pendingExtendedCarbs == 0) {
         return;

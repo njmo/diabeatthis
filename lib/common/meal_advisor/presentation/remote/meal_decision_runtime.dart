@@ -10,13 +10,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/router/providers/app_router_provider.dart';
 import '../../../../core/data/provider/initial_configuration_provider.dart';
 import '../../../../core/data/provider/shared_prefs_provider.dart';
+import '../../../../core/data_sources/local_mirror/mappers/bolus_wizard_drift_mapper.dart';
 import '../../../../core/data_sources/nightscout/providers/nightscout_repository_provider.dart';
 import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/drift/family_sync/family_mirror_outbox.dart';
 import '../../../../core/drift/mappers/meal_drift_mapper.dart';
-import '../../../../core/data_sources/local_mirror/mappers/bolus_wizard_drift_mapper.dart';
-import '../../../../core/notifications/handlers/notification_response_handler.dart';
 import '../../../../core/drift/providers/database_provider.dart';
+import '../../../../core/notifications/handlers/notification_response_handler.dart';
 import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../features/caregiver/data/caregiver_visible_state_provider.dart';
 import '../../../../features/dashboard/data/providers/device_status_ui_provider.dart';
@@ -45,9 +45,9 @@ import '../../../meal/meal_add_on_bolus_context.dart';
 import '../../../meal/meal_display_name.dart';
 import '../../../meal/meal_extended_carbs.dart';
 import '../../../meal/meal_treatment_surplus.dart';
-import '../../../monitoring/meal_wait_status.dart';
 import '../../../meal/open_meal_completion.dart';
 import '../../../meal/stored_meal_decision.dart';
+import '../../../monitoring/meal_wait_status.dart';
 import '../../../notifications/meal_notification_cancellation.dart';
 import '../../../nutrition/stable_macro_ceil.dart';
 import '../../context/caregiver_meal_context_history.dart';
@@ -894,8 +894,9 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
         ref.read(deviceStatusUiProvider),
       );
       if (_watchSession() != session ||
-          await outbox.mealNeedsPublishing(mealId))
+          await outbox.mealNeedsPublishing(mealId)) {
         return null;
+      }
       final result = await remote.execute(
         'create',
         mealDecisionCreationData(
@@ -1426,15 +1427,17 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
   ) async {
     if (ref.read(mealDecisionPreferencesProvider).method !=
             MealDecisionMethod.caregiver ||
-        MealDecisionPresentationRegistry.childMeals.isNotEmpty)
+        MealDecisionPresentationRegistry.childMeals.isNotEmpty) {
       return;
+    }
     final db = ref.read(databaseProvider);
     for (final request in inbox.requests.reversed) {
       if (request.ownerUid != uid ||
           request.status != 'answered' ||
           request.expired ||
-          _presentedScheduledAnswers.contains((uid, request.id)))
+          _presentedScheduledAnswers.contains((uid, request.id))) {
         continue;
+      }
       final stored = await db.mealDao.getMealById(request.mealId);
       if (stored?.status != 'planned' || stored?.plannedAt == null) continue;
       final journal = await ScheduledMealDecisionJournal(db).load(
@@ -1444,8 +1447,9 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
       if (!mounted ||
           !context.mounted ||
           WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed ||
-          ref.read(googleAccountProvider).asData?.value?.uid != uid)
+          ref.read(googleAccountProvider).asData?.value?.uid != uid) {
         return;
+      }
       if (journal?.uid != uid ||
           journal?.requestId != request.id ||
           ref
@@ -1453,8 +1457,9 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
                   .byId(request.id)
                   ?.status !=
               'answered' ||
-          MealDecisionPresentationRegistry.childMeals.isNotEmpty)
+          MealDecisionPresentationRegistry.childMeals.isNotEmpty) {
         continue;
+      }
       _presentedScheduledAnswers.add((uid, request.id));
       final meal = stored.toDomain();
       final result = await showMealStatusDialog(
@@ -1526,8 +1531,9 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
           (_, _) => unawaited(_notifyWatchInboxChanged()),
         );
         ref.listen(mealTreatmentSurplusesProvider, (previous, next) {
-          if (!setEquals(previous?.value, next.value))
+          if (!setEquals(previous?.value, next.value)) {
             unawaited(_notifyWatchInboxChanged());
+          }
         });
         ref.listen(
           mealsStreamProvider,

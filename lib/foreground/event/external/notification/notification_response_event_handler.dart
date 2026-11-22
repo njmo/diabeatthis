@@ -27,13 +27,13 @@ import '../../../../core/notifications/domain/models/notification_key.dart';
 import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../features/activity/data/services/activity_schedule_service.dart';
 import '../../../../features/dashboard/data/providers/meal_snapshot_controller_provider.dart';
-import '../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../../features/meals/data/domain/use_cases/complete_bolus_wait_use_case.dart';
+import '../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../providers/task_event_router_provider.dart';
 import '../../../task/base/runtime_context.dart';
+import '../../../task/tasks/meal_monitor_task/helpers/meal_completion_requirements.dart';
 import '../../internal/aaps_carbs_request_acknowledged_event.dart';
 import 'notification_response_event.dart';
-import '../../../task/tasks/meal_monitor_task/helpers/meal_completion_requirements.dart';
 
 class NotificationResponseEventHandler with Logging {
   NotificationResponseEventHandler();

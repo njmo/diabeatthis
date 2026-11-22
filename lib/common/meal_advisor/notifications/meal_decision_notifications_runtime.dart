@@ -192,8 +192,9 @@ class MealDecisionNotificationsRuntime {
             settings.authorizationStatus == AuthorizationStatus.notDetermined
             ? await messaging.requestPermission()
             : settings;
-        if (permission.authorizationStatus == AuthorizationStatus.denied)
+        if (permission.authorizationStatus == AuthorizationStatus.denied) {
           return;
+        }
         if (await messaging.getAPNSToken() == null) {
           throw StateError('APNs token is still unavailable');
         }
