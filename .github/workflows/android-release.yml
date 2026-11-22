@@ -147,6 +147,17 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: flutter build apk --release --build-name "$RELEASE_VERSION" --build-number "$RELEASE_BUILD_NUMBER"
 
+      - name: Verify notification icon in signed APK
+        if: ${{ !inputs.wear_only }}
+        run: |
+          aapt2="$(find "$ANDROID_HOME/build-tools" -type f -name aapt2 | sort -V | tail -1)"
+          test -x "$aapt2"
+          "$aapt2" dump resources build/app/outputs/flutter-apk/app-release.apk > "$RUNNER_TEMP/android-apk-resources.txt"
+          if ! grep -Fq 'drawable/ic_diabeatthis_notification' "$RUNNER_TEMP/android-apk-resources.txt"; then
+            echo "::error::The release APK is missing the notification icon required during startup"
+            exit 1
+          fi
+
       - name: Upload app bundle artifact
         if: ${{ !inputs.wear_only }}
         uses: actions/upload-artifact@v4
