@@ -1281,6 +1281,7 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
           continue;
         }
         final uid = ref.read(googleAccountProvider).asData?.value?.uid;
+        if (uid == null) return;
         final controller = ref.read(
           mealDecisionRemoteControllerProvider.notifier,
         );
@@ -1290,7 +1291,7 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
           return;
         }
         final inbox = ref.read(mealDecisionRemoteControllerProvider);
-        if (inbox.failed) return;
+        if (!inbox.canResolveNotificationFor(uid)) return;
         final request = inbox.byId(intent.requestId);
         if (request == null) {
           await store.remove(intent);

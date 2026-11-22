@@ -23,11 +23,18 @@ class MealDecisionRemoteInbox {
     this.failed = false,
     this.retryableReadFailure = false,
     this.accountUid,
+    this.authoritative = false,
   });
   final List<MealDecisionRemoteRequest> requests;
   final bool loading, failed;
   final bool retryableReadFailure;
   final String? accountUid;
+
+  /// True only after a successful server fetch for [accountUid].
+  final bool authoritative;
+
+  bool canResolveNotificationFor(String? uid) =>
+      uid != null && accountUid == uid && authoritative && !loading && !failed;
   MealDecisionRemoteRequest? byId(String id) =>
       requests.where((r) => r.id == id).firstOrNull;
   MealDecisionRemoteRequest? forMeal(int mealId) =>
@@ -191,10 +198,15 @@ class MealDecisionRemoteController extends Notifier<MealDecisionRemoteInbox> {
           try {
             final response = await execute('fetch', {}, refresh: false);
             if (!ref.mounted || version != generation) continue;
+            final rows = response['requests'];
+            if (rows is! List) {
+              throw const FormatException('Missing meal decision inbox');
+            }
             state = MealDecisionRemoteInbox(
               accountUid: uid,
+              authoritative: true,
               requests: [
-                for (final r in response['requests'] as List? ?? [])
+                for (final r in rows)
                   MealDecisionRemoteRequest(
                     Map<String, dynamic>.from(r as Map),
                   ),
