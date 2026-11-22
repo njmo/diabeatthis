@@ -39,10 +39,16 @@ class StartupPermissionBridge extends ControlledAppForegroundBridge {
 }
 
 class StartupNotifications implements NotificationsController {
+  StartupNotifications({required this.failInitialization});
+
+  final bool failInitialization;
   int initializations = 0;
   @override
   Future<void> init() async {
     initializations++;
+    if (failInitialization) {
+      throw PlatformException(code: 'invalid_icon');
+    }
   }
 
   @override
@@ -66,75 +72,86 @@ class StartupPermissionRouter extends AppRouter {
 }
 
 void main() {
-  testWidgets(
-    'actual MyApp startup never requests permissions and locale changes refresh automatic country',
-    (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final bridge = StartupPermissionBridge();
-      final notifications = StartupNotifications();
-      final database = DatabaseImpl(NativeDatabase.memory());
-      addTearDown(database.close);
-      var locales = [const Locale('en', 'GB')];
-      final requests = <String>[];
-      const permissionChannel = MethodChannel(
-        'flutter.baseflow.com/permissions/methods',
-      );
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        permissionChannel,
-        (call) async {
-          requests.add(call.method);
-          return <int, int>{};
-        },
-      );
-      addTearDown(
-        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+  for (final failInitialization in [false, true]) {
+    testWidgets(
+      'MyApp starts the foreground bridge and refreshes the locale with '
+      'notification initialization failure=$failInitialization',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final bridge = StartupPermissionBridge();
+        final notifications = StartupNotifications(
+          failInitialization: failInitialization,
+        );
+        final database = DatabaseImpl(NativeDatabase.memory());
+        addTearDown(database.close);
+        var locales = [const Locale('en', 'GB')];
+        final requests = <String>[];
+        const permissionChannel = MethodChannel(
+          'flutter.baseflow.com/permissions/methods',
+        );
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
           permissionChannel,
-          null,
-        ),
-      );
-      final container = ProviderContainer(
-        overrides: [
-          sharedPrefsProvider.overrideWith((ref) async => prefs),
-          appForegroundBridgeProvider.overrideWithValue(bridge),
-          notificationsControllerUiProvider.overrideWithValue(notifications),
-          monitorServiceEnabledProvider.overrideWith((ref) => false),
-          databaseProvider.overrideWithValue(database),
-          appRouterProvider.overrideWith(
-            (ref) => StartupPermissionRouter(InitialConfigurationGuard(ref)),
+          (call) async {
+            requests.add(call.method);
+            return <int, int>{};
+          },
+        );
+        addTearDown(
+          () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+            permissionChannel,
+            null,
           ),
-          applicationLightThemeProvider.overrideWithValue(ThemeData()),
-          applicationDarkThemeProvider.overrideWithValue(ThemeData.dark()),
-          deviceCountryLocalesProvider.overrideWith((ref) => locales),
-        ],
-      );
-      await tester.pumpWidget(
-        UncontrolledProviderScope(container: container, child: const MyApp()),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Startup'), findsOneWidget);
-      expect(requests, isEmpty);
-      expect(notifications.initializations, 1);
-      expect(bridge.calls, contains('init'));
-      expect(await container.read(residenceCountryProvider.future), 'GB');
-      final observer =
-          tester.state(find.byType(MyApp)) as WidgetsBindingObserver;
-      locales = [const Locale('pl', 'PL')];
-      observer.didChangeLocales(locales);
-      await tester.pumpAndSettle();
-      expect(await container.read(residenceCountryProvider.future), 'PL');
-      await prefs.setString(residenceCountryKey, 'Portugal');
-      container.invalidate(residenceCountryOverrideProvider);
-      expect(await container.read(residenceCountryProvider.future), 'Portugal');
-      locales = [const Locale('en', 'US')];
-      observer.didChangeLocales(locales);
-      await tester.pumpAndSettle();
-      expect(await container.read(residenceCountryProvider.future), 'Portugal');
-      expect(requests, isEmpty);
-      await tester.pumpWidget(const SizedBox());
-      container.dispose();
-      await tester.pump();
-      expect(tester.takeException(), isNull);
-    },
-  );
+        );
+        final container = ProviderContainer(
+          overrides: [
+            sharedPrefsProvider.overrideWith((ref) async => prefs),
+            appForegroundBridgeProvider.overrideWithValue(bridge),
+            notificationsControllerUiProvider.overrideWithValue(notifications),
+            monitorServiceEnabledProvider.overrideWith((ref) => false),
+            databaseProvider.overrideWithValue(database),
+            appRouterProvider.overrideWith(
+              (ref) => StartupPermissionRouter(InitialConfigurationGuard(ref)),
+            ),
+            applicationLightThemeProvider.overrideWithValue(ThemeData()),
+            applicationDarkThemeProvider.overrideWithValue(ThemeData.dark()),
+            deviceCountryLocalesProvider.overrideWith((ref) => locales),
+          ],
+        );
+        await tester.pumpWidget(
+          UncontrolledProviderScope(container: container, child: const MyApp()),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Startup'), findsOneWidget);
+        expect(requests, isEmpty);
+        expect(notifications.initializations, 1);
+        expect(bridge.calls, contains('init'));
+        expect(await container.read(residenceCountryProvider.future), 'GB');
+        final observer =
+            tester.state(find.byType(MyApp)) as WidgetsBindingObserver;
+        locales = [const Locale('pl', 'PL')];
+        observer.didChangeLocales(locales);
+        await tester.pumpAndSettle();
+        expect(await container.read(residenceCountryProvider.future), 'PL');
+        await prefs.setString(residenceCountryKey, 'Portugal');
+        container.invalidate(residenceCountryOverrideProvider);
+        expect(
+          await container.read(residenceCountryProvider.future),
+          'Portugal',
+        );
+        locales = [const Locale('en', 'US')];
+        observer.didChangeLocales(locales);
+        await tester.pumpAndSettle();
+        expect(
+          await container.read(residenceCountryProvider.future),
+          'Portugal',
+        );
+        expect(requests, isEmpty);
+        await tester.pumpWidget(const SizedBox());
+        container.dispose();
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }
