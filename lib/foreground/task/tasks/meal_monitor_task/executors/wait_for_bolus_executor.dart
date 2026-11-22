@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 
+import '../../../../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
 import '../../../../../common/meal/meal_bolus_coverage.dart';
 import '../../../../../common/meal/meal_bolus_timing.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
@@ -8,6 +9,7 @@ import '../../../../../core/data_sources/local_mirror/mappers/bolus_wizard_drift
 import '../../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/logger/logger.dart';
+import '../../../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
 import '../../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../../features/dashboard/data/providers/meal_advisor_result_provider.dart';
 import '../../../../../features/dashboard/data/utils/meal_advisor.dart';
@@ -177,6 +179,40 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
       logI("Recent calculator response already available");
       calculatorResponse = TreatmentAvailableEvent<BolusWizard>(latestBolus);
     }
+    final hasCalculatorTracker =
+        runtimeContext.container.exists(databaseProvider) ||
+        runtimeContext.container.exists(
+          mealCalculatorRequestControllerProvider,
+        );
+    BolusReminderSuggestion? suggestion;
+    if (hasCalculatorTracker) {
+      suggestion = await _bolusReminderHelper.resolveMealBolusSuggestion(
+        runtimeContext,
+        confirmedCarbs == null ? meal : meal.copyWith(carbs: confirmedCarbs),
+        consumed: decision == MealDecision.eatNowBolusLater,
+        advice: advice,
+      );
+      mealMonitorContext.throwIfStopped(runtimeContext);
+      await runtimeContext.container
+          .read(mealCalculatorRequestControllerProvider)
+          .register(
+            AapsBolusSuggestionNotificationEvent(
+              mealId: meal.id,
+              carbs: suggestion.carbs,
+              extendedCarbs: suggestion.extendedCarbs,
+              extendedCarbsDeliveryMode: suggestion.extendedCarbsDeliveryMode,
+              extendedCarbsDelayMinutes: suggestion.extendedCarbsDelayMinutes,
+              extendedCarbsDurationMinutes:
+                  suggestion.extendedCarbsDurationMinutes,
+            ),
+            openedAt:
+                calculatorResponse?.data.createdAt ??
+                meal.updatedAt ??
+                waitingSince,
+            refreshRequirements: true,
+          );
+      mealMonitorContext.throwIfStopped(runtimeContext);
+    }
     if (calculatorResponse == null && !remindImmediately) {
       logI("Waiting for calculator use before moving to next step");
       calculatorResponse = await runtimeContext
@@ -187,7 +223,7 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
 
     if (calculatorResponse == null) {
       logI("Calculator response missing, showing bolus reminder");
-      final suggestion = await _bolusReminderHelper.resolveMealBolusSuggestion(
+      suggestion ??= await _bolusReminderHelper.resolveMealBolusSuggestion(
         runtimeContext,
         confirmedCarbs == null ? meal : meal.copyWith(carbs: confirmedCarbs),
         consumed: decision == MealDecision.eatNowBolusLater,
@@ -226,41 +262,60 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
 
     mealMonitorContext.throwIfStopped(runtimeContext);
     final pendingCalculator = calculatorResponse;
-    final confirmed = pendingCalculator == null
-        ? const <BolusWizard>[]
-        : await waitForMealCarbDeliveries(
-            runtimeContext,
-            mealMonitorContext,
-            pendingCalculator.data,
-          );
-    mealMonitorContext.throwIfStopped(runtimeContext);
-    if (decision != MealDecision.bolusWaitThenEat) {
-      await waitForMealCompletionRequirements(
-        runtimeContext,
-        mealMonitorContext,
-        hasPendingRequirements: () =>
-            mealHasPendingExtendedCarbs(runtimeContext, meal.id),
-      );
-    }
     final nextStatus = decision == MealDecision.eatNowBolusLater
         ? 'eaten-bolused'
         : decision.status;
-    for (final (index, wizard) in confirmed.indexed) {
-      await const RecordMealWizardLink()(
-        runtimeContext,
-        wizard,
-        meal.id,
-        type: index == 0
-            ? MealWizardRelationType.initial
-            : MealWizardRelationType.continuation,
-      );
+    var confirmed = const <BolusWizard>[];
+    while (true) {
+      if (pendingCalculator != null) {
+        confirmed = await waitForMealCarbDeliveries(
+          runtimeContext,
+          mealMonitorContext,
+          pendingCalculator.data,
+          previouslyAccepted: confirmed,
+        );
+      }
       mealMonitorContext.throwIfStopped(runtimeContext);
+      if (decision != MealDecision.bolusWaitThenEat) {
+        await waitForMealCompletionRequirements(
+          runtimeContext,
+          mealMonitorContext,
+          hasPendingRequirements: () =>
+              mealHasPendingExtendedCarbs(runtimeContext, meal.id),
+        );
+      }
+      final committed = await commitMealBolusDeliveries(
+        runtimeContext,
+        mealMonitorContext,
+        confirmed,
+        nextStatus,
+      );
+      if (committed == false) {
+        await runtimeContext.waitForDuration(mealRequirementRefreshInterval);
+        continue;
+      }
+      if (committed == null) {
+        for (final (index, wizard) in confirmed.indexed) {
+          await const RecordMealWizardLink()(
+            runtimeContext,
+            wizard,
+            meal.id,
+            type: index == 0
+                ? MealWizardRelationType.initial
+                : MealWizardRelationType.continuation,
+          );
+          mealMonitorContext.throwIfStopped(runtimeContext);
+        }
+        await runtimeContext.container.read(
+          updateMealProvider(meal, nextStatus).future,
+        );
+      }
+      break;
+    }
+    for (final wizard in confirmed) {
       consumeBolusWizard(runtimeContext.container, wizard);
     }
 
-    await runtimeContext.container.read(
-      updateMealProvider(meal, nextStatus).future,
-    );
     mealMonitorContext.throwIfStopped(runtimeContext);
 
     if (decision == MealDecision.eatNowBolusLater) {

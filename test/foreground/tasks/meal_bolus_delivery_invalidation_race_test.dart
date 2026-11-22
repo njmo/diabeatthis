@@ -4,23 +4,94 @@ import 'package:diabeatthis/common/treatments/calculator_submission.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/core/domain/model/manual_bolus.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
-import 'package:diabeatthis/core/drift/database_impl.dart' show DatabaseImpl;
+import 'package:diabeatthis/core/drift/database_impl.dart'
+    show DatabaseImpl, MealCompanion;
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/providers/meal_bolus_delivery_history_provider.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/meal_completion_requirements.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/wait_for_meal_bolus_delivery.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_context.dart';
-import 'package:drift/drift.dart' show ApplyInterceptor;
+import 'package:drift/drift.dart' show ApplyInterceptor, Value;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/delivered_meal_bolus.dart';
 import '../../helpers/paused_bolus_evidence_query.dart';
 import '../utils/fake_runtime_harness.dart';
 import 'meal_monitor_test.dart' show testBolusWizard;
 
 void main() {
+  test(
+    'a stored calculator must still be valid when the meal advances',
+    () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      final id = await db
+          .into(db.meal)
+          .insert(
+            MealCompanion.insert(
+              name: 'Meal',
+              status: const Value('waiting-for-bolus'),
+            ),
+          );
+      final container = ProviderContainer(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          mealBolusDeliveryHistoryProvider.overrideWithValue((_) async => []),
+        ],
+      );
+      container.read(databaseProvider);
+      final harness = FakeRuntimeHarness(container: container);
+      addTearDown(() async {
+        await harness.dispose();
+        await db.close();
+      });
+      final meal = MealMonitorContext(
+        activeMeal: Meal(id: id, name: 'Meal'),
+      );
+      final at = DateTime.utc(2026, 1, 1, 12);
+      final first = testBolusWizard(createdAt: at, carbs: 20);
+      dispatchDeliveredMealBolus(harness, first);
+      final accepted = await const WaitForMealBolusDelivery()(
+        harness.runtimeContext,
+        meal,
+        first,
+      );
+      harness.dispatchEvent(
+        TreatmentAvailableEvent<BolusWizard>(first.copyWith(isValid: false)),
+      );
+      expect(
+        await commitMealBolusDeliveries(harness.runtimeContext, meal, [
+          accepted.wizard,
+        ], 'eaten-bolused'),
+        isFalse,
+      );
+      expect((await db.mealDao.getMealById(id))?.status, 'waiting-for-bolus');
+      expect(await db.mealWizardLinkDao.forMeal(id), isEmpty);
+
+      final second = testBolusWizard(
+        createdAt: at.add(const Duration(minutes: 4)),
+        carbs: 20,
+      );
+      dispatchDeliveredMealBolus(harness, second);
+      final replacement = await const WaitForMealBolusDelivery()(
+        harness.runtimeContext,
+        meal,
+        second,
+      );
+      expect(
+        await commitMealBolusDeliveries(harness.runtimeContext, meal, [
+          replacement.wizard,
+        ], 'eaten-bolused'),
+        isTrue,
+      );
+      expect((await db.mealDao.getMealById(id))?.status, 'eaten-bolused');
+      expect(await db.mealWizardLinkDao.forMeal(id), hasLength(1));
+    },
+  );
+
   for (final stage in ['read', 'write', 'commit']) {
     for (final target in ['wizard', 'delivery']) {
       test(

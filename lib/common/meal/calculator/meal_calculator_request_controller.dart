@@ -86,6 +86,7 @@ class MealCalculatorRequestController {
     AapsBolusSuggestionNotificationEvent event, {
     String? sessionId,
     DateTime? openedAt,
+    bool refreshRequirements = false,
   }) => _enqueue(() async {
     final context = event.mealId == null
         ? null
@@ -107,7 +108,8 @@ class MealCalculatorRequestController {
             event.extendedCarbsDurationMinutes;
     if (sessionId == null &&
         existing?.sessionId != null &&
-        sameLogicalRequest) {
+        sameLogicalRequest &&
+        !refreshRequirements) {
       await _evaluate(existing);
       await _save();
       return;
@@ -118,7 +120,7 @@ class MealCalculatorRequestController {
     }
     final request = MealCalculatorRequest(
       event: event,
-      sessionId: sessionId,
+      sessionId: sessionId ?? (sameLogicalRequest ? previousSession : null),
       openedAt: sameMealRequest
           ? existing.openedAt
           : context?.requestedAt ?? openedAt ?? _now(),
@@ -171,8 +173,7 @@ class MealCalculatorRequestController {
     await _enqueue(() async {
       final request = _requests['meal:$mealId'];
       if (request == null) return;
-      pending = request.hasPendingScheduledExtendedCarbs;
-      if (!pending) return;
+      if (request.event.extendedCarbs <= 0) return;
       await _evaluate(request);
       pending =
           _requests.containsKey('meal:$mealId') &&

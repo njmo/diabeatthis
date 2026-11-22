@@ -225,6 +225,99 @@ class UpdateMealSpy {
 }
 
 void main() {
+  test('calculator before Zjadłem still waits for consumed eCarbs', () {
+    fakeAsync((async) {
+      final start = DateTime(2026, 3, 23, 12);
+      withFakeClock(async, start, () {
+        final notifications = FakeNotificationsController();
+        final calculator = MealCalculatorRequestController(
+          store: MemoryMealCalculatorRequestStore(),
+          publishWindow: (_, _) async {},
+          readContext: (_) async => null,
+          projectExtendedConfirmation: (_, _, _, _) async {},
+          onError: (error, stack) => Error.throwWithStackTrace(error, stack),
+        );
+        final meal = Meal(id: 1, name: 'Meal', updatedAt: start);
+        final statuses = <String>[];
+        final container = ProviderContainer(
+          overrides: [
+            mealWizardRecorderProvider.overrideWithValue((_, _, _) async {}),
+            mealCalculatorRequestControllerProvider.overrideWithValue(
+              calculator,
+            ),
+            mealMacronutrientsConsumedSummaryProvider(1).overrideWith(
+              (_) async => MealMacroSummary(
+                carbsGrams: 20,
+                fatGrams: 10,
+                proteinGrams: 5,
+                fiberGrams: 0,
+                totalGrams: 50,
+              ),
+            ),
+            notificationsControllerForegroundProvider.overrideWithValue(
+              notifications,
+            ),
+            updateMealProvider.overrideWith((_, args) async {
+              statuses.add(args.$2);
+            }),
+          ],
+        );
+        container.read(mealCalculatorRequestControllerProvider);
+        final harness = FakeRuntimeHarness(container: container);
+        final wizardAt = start.subtract(const Duration(minutes: 1));
+        final wizard = testBolusWizard(createdAt: wizardAt, carbs: 20);
+        dispatchDeliveredMealBolus(harness, wizard);
+        container.read(latestBolusWizardProvider.notifier).update(wizard);
+        const schedule = ExtendedCarbsScheduleSettings(
+          deliveryMode: ExtendedCarbsDeliveryMode.extendedCarbs,
+          delayMinutes: 45,
+          durationMinutes: 120,
+        );
+        unawaited(
+          WaitForBolusExecutor(
+            initialAdvice: MealAdvice.full(
+              MealDecision.eatNowBolusLater,
+              null,
+              start,
+              extendedCarbs: const WbtExtendedCarbsSuggestion(
+                kcal: 110,
+                wbt: 1.1,
+                grams: 11,
+                scheduleSettings: schedule,
+              ),
+            ),
+          ).execute(
+            harness.runtimeContext,
+            MealMonitorContext(activeMeal: meal),
+          ),
+        );
+        _settle(async);
+        expect(statuses, isEmpty);
+        expect(notifications.shownEvents, isEmpty);
+        unawaited(
+          calculator.observe({
+            'extendedCarb': {
+              'id': 'scheduled',
+              'carbs': 11,
+              'valid': true,
+              'at': wizardAt
+                  .add(const Duration(minutes: 45))
+                  .millisecondsSinceEpoch,
+              'duration': const Duration(hours: 2).inMilliseconds,
+            },
+          }),
+        );
+        _settle(async);
+        _advanceMinutes(harness, async, 1);
+        expect(statuses, ['eaten-bolused']);
+        harness.cancel();
+        _settle(async);
+        calculator.dispose();
+        container.dispose();
+      });
+    });
+  });
+
   test(
     'waits for ten ordinary carbs and accepts a delivered surplus across records',
     () async {
