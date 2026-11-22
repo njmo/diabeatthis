@@ -25,6 +25,24 @@ git push github v1.0.2
 
 The workflow also supports manual runs from GitHub Actions with a selected Google Play track.
 
+## Wear OS release notes
+
+Add a uniquely named JSON file under `release-notes/` for each user-visible
+Wear OS change. Set `platforms` to include `"wear"` and provide short
+descriptions in `pl-PL` and `en-US`. See
+[`wear-meal-decisions.json`](../release-notes/wear-meal-decisions.json) for an example.
+
+The Wear OS upload to `diabeatthis-wearos` includes notes added since the
+previous lower `published-wear-vX.Y.Z` tag. Create that marker on the exact
+build commit once the release is available to testers. Keep past note files
+in Git. When there is no marker, the renderer includes all applicable notes.
+
+Preview a committed version locally:
+
+```bash
+python3 .github/scripts/mobile_release_notes.py wear 1.0.11 /tmp/diabeatthis-wear-notes
+```
+
 ## Required GitHub secrets
 
 - `ANDROID_KEYSTORE_BASE64`: base64-encoded release upload keystore.
