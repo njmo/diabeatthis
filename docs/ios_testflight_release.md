@@ -165,6 +165,15 @@ przed kolejną publikacją. Dostępność ustawiasz osobno w **Distribution →
 Pricing and Availability → App Availability**. Wybierz **Specific Countries
 or Regions** i pomiń **France**.
 [Szyfrowanie](https://developer.apple.com/help/app-store-connect/reference/app-information/export-compliance-documentation-for-encryption/) · [Dostępność w krajach](https://developer.apple.com/help/app-store-connect/manage-your-apps-availability/manage-availability-for-your-app-on-the-app-store/)
+## Apple Watch opiekuna
+
+1. W Apple Developer przejdź do **Certificates, Identifiers & Profiles → Identifiers** i zarejestruj jawny App ID `pl.diabeatthis.app.watchkitapp` w tym samym zespole co aplikacja iPhone.
+2. W **Profiles → Distribution → App Store Connect** utwórz dla niego profil z tym samym certyfikatem **Apple Distribution**, którym podpisywany jest iPhone. Pobierz plik `.mobileprovision`.
+3. W GitHubie przejdź do **Settings → Secrets and variables → Actions → New repository secret**. Utwórz `WATCHOS_APP_STORE_PROFILE_BASE64` i wklej wynik `base64 -w0 /ścieżka/do/profilu.mobileprovision`.
+4. Workflow **iOS TestFlight** podpisuje oba targety i sprawdza identyfikatory i wersje w jednym IPA. Do samej weryfikacji podpisu i kompilacji uruchom go ręcznie z opcją **Build and verify the signed IPA without uploading it**. Zwykły przebieg wysyła build do istniejącej aplikacji TestFlight. Zegarek wymaga watchOS 10 lub nowszego i sparowanego iPhone’a z aplikacją opiekuna.
+
+W pierwszej próbie na fizycznych urządzeniach sprawdź pojawienie się prośby na liście, przekazanie powiadomienia przy zablokowanym iPhonie, otwarcie prośby, odmowę oraz przejęcie i wysłanie decyzji. Powtórz z aplikacją iPhone w tle oraz po utracie połączenia i upewnij się, że zegarek pokazuje wysłanie dopiero po odpowiedzi serwera.
+
 ## Notki wydania TestFlight
 
 TestFlight używa polskich opisów z plików w `release-notes/`, które mają

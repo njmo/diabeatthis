@@ -17,6 +17,10 @@ on:
         description: "Distribute an already uploaded build (requires version and build number)"
         type: boolean
         default: false
+      build_only:
+        description: "Build and verify the signed IPA without uploading it"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -50,6 +54,10 @@ jobs:
 
       - name: Resolve iOS version and build number
         run: |
+          if [[ "${{ inputs.distribute_existing_build }}" == true && "${{ inputs.build_only }}" == true ]]; then
+            echo "::error::Select either Build only or Distribute existing build"
+            exit 1
+          fi
           if [[ "${{ inputs.distribute_existing_build }}" == true && ( -z "$RELEASE_VERSION" || -z "$BUILD_NUMBER" ) ]]; then
             echo "::error::Specify both the version and build number for an existing build"
             exit 1
@@ -85,8 +93,9 @@ jobs:
           SIGNING_CERTIFICATE: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
           SIGNING_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
           PROFILE: ${{ secrets.IOS_APP_STORE_PROFILE_BASE64 }}
+          WATCH_PROFILE: ${{ secrets.WATCHOS_APP_STORE_PROFILE_BASE64 }}
         run: |
-          for name in APPLE_TEAM_ID ASC_KEY ASC_KEY_ID ASC_ISSUER_ID SIGNING_CERTIFICATE SIGNING_PASSWORD PROFILE; do
+          for name in APPLE_TEAM_ID ASC_KEY ASC_KEY_ID ASC_ISSUER_ID SIGNING_CERTIFICATE SIGNING_PASSWORD PROFILE WATCH_PROFILE; do
             if [[ -z "${!name}" ]]; then
               echo "::error::Missing release configuration: $name"
               exit 1
@@ -114,13 +123,16 @@ jobs:
           SIGNING_CERTIFICATE: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
           SIGNING_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
           PROFILE: ${{ secrets.IOS_APP_STORE_PROFILE_BASE64 }}
+          WATCH_PROFILE: ${{ secrets.WATCHOS_APP_STORE_PROFILE_BASE64 }}
         run: |
           certificate="$RUNNER_TEMP/distribution.p12"
           profile="$RUNNER_TEMP/app-store.mobileprovision"
+          watch_profile="$RUNNER_TEMP/watch-app-store.mobileprovision"
           keychain="$RUNNER_TEMP/ios-signing.keychain-db"
           keychain_password="$(openssl rand -hex 32)"
           printf '%s' "$SIGNING_CERTIFICATE" | base64 -D > "$certificate"
           printf '%s' "$PROFILE" | base64 -D > "$profile"
+          printf '%s' "$WATCH_PROFILE" | base64 -D > "$watch_profile"
           security create-keychain -p "$keychain_password" "$keychain"
           security set-keychain-settings -lut 21600 "$keychain"
           security unlock-keychain -p "$keychain_password" "$keychain"
@@ -139,6 +151,15 @@ jobs:
           mkdir -p "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
           cp "$profile" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/$profile_uuid.mobileprovision"
           echo "PROFILE_UUID=$profile_uuid" >> "$GITHUB_ENV"
+          security cms -D -i "$watch_profile" > "$RUNNER_TEMP/watch-profile.plist"
+          watch_uuid="$(/usr/libexec/PlistBuddy -c 'Print UUID' "$RUNNER_TEMP/watch-profile.plist")"
+          watch_app="$(/usr/libexec/PlistBuddy -c 'Print Entitlements:application-identifier' "$RUNNER_TEMP/watch-profile.plist")"
+          if [[ "$watch_app" != "$APPLE_TEAM_ID.pl.diabeatthis.app.watchkitapp" ]]; then
+            echo "::error::WATCHOS_APP_STORE_PROFILE_BASE64 must sign pl.diabeatthis.app.watchkitapp for APPLE_TEAM_ID"
+            exit 1
+          fi
+          cp "$watch_profile" "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/$watch_uuid.mobileprovision"
+          echo "WATCH_PROFILE_UUID=$watch_uuid" >> "$GITHUB_ENV"
 
       - name: Configure signing and export
         if: ${{ !inputs.distribute_existing_build }}
@@ -153,6 +174,16 @@ jobs:
               "DEVELOPMENT_TEAM" => ENV.fetch("APPLE_TEAM_ID"),
               "PROVISIONING_PROFILE" => ENV.fetch("PROFILE_UUID")
             )
+            watch = project.targets.find { |candidate| candidate.name == "CaregiverWatch" }
+            watch_release = watch.build_configurations.find { |config| config.name == "Release" }
+            watch_release.build_settings.merge!(
+              "CODE_SIGN_STYLE" => "Manual",
+              "CODE_SIGN_IDENTITY" => "Apple Distribution",
+              "DEVELOPMENT_TEAM" => ENV.fetch("APPLE_TEAM_ID"),
+              "PROVISIONING_PROFILE" => ENV.fetch("WATCH_PROFILE_UUID"),
+              "MARKETING_VERSION" => ENV.fetch("RELEASE_VERSION"),
+              "CURRENT_PROJECT_VERSION" => ENV.fetch("BUILD_NUMBER")
+            )
             project.save
           '
           python3 - <<'PY'
@@ -166,7 +197,10 @@ jobs:
                   "signingStyle": "manual",
                   "signingCertificate": "Apple Distribution",
                   "teamID": os.environ["APPLE_TEAM_ID"],
-                  "provisioningProfiles": {"pl.diabeatthis.app": os.environ["PROFILE_UUID"]},
+                  "provisioningProfiles": {
+                      "pl.diabeatthis.app": os.environ["PROFILE_UUID"],
+                      "pl.diabeatthis.app.watchkitapp": os.environ["WATCH_PROFILE_UUID"],
+                  },
                   "manageAppVersionAndBuildNumber": False,
               }, options)
           PY
@@ -199,17 +233,31 @@ jobs:
               if len(app_plists) != 1:
                   raise SystemExit("Expected one application Info.plist in the IPA")
               app = plistlib.loads(archive.read(app_plists[0]))
+              watch_plists = [
+                  name for name in archive.namelist()
+                  if re.fullmatch(r"Payload/[^/]+\.app/Watch/[^/]+\.app/Info\.plist", name)
+              ]
+              if len(watch_plists) != 1:
+                  raise SystemExit("Expected one embedded watchOS application in the IPA")
+              watch = plistlib.loads(archive.read(watch_plists[0]))
           expected = (os.environ["RELEASE_VERSION"], os.environ["BUILD_NUMBER"])
           actual = (app.get("CFBundleShortVersionString"), app.get("CFBundleVersion"))
           if actual != expected:
               raise SystemExit(f"Signed IPA version {actual} does not match {expected}")
+          watch_version = (watch.get("CFBundleShortVersionString"), watch.get("CFBundleVersion"))
+          if watch_version != expected:
+              raise SystemExit(f"watchOS version {watch_version} does not match {expected}")
+          if watch.get("CFBundleIdentifier") != "pl.diabeatthis.app.watchkitapp":
+              raise SystemExit("Unexpected watchOS bundle identifier")
+          if watch.get("WKCompanionAppBundleIdentifier") != app.get("CFBundleIdentifier"):
+              raise SystemExit("watchOS companion identifier does not match the iOS app")
           if app.get("ITSAppUsesNonExemptEncryption") is not False:
               raise SystemExit("Signed IPA is missing the expected export compliance declaration")
           print(f"Verified signed IPA version {actual[0]} ({actual[1]})")
           PY
 
       - name: Upload to App Store Connect
-        if: ${{ !inputs.distribute_existing_build }}
+        if: ${{ !inputs.distribute_existing_build && !inputs.build_only }}
         env:
           ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
           ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
@@ -223,6 +271,7 @@ jobs:
             --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
 
       - name: Distribute to external TestFlight testers
+        if: ${{ !inputs.build_only }}
         timeout-minutes: 25
         env:
           ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}

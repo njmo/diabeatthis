@@ -220,16 +220,55 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
     );
   }
 
-  Future<Object?> _handleWatchCall(MethodCall call) {
+  Future<Object?> _handleWatchCall(MethodCall call) async {
     if (call.method == 'phoneMealSummaryOpened') {
       unawaited(_resumeWatchMealSummary());
-      return Future.value();
+      return null;
     }
-    if (call.method != MealDecisionWatchProtocol.methodName) {
+    final appleWatch = call.method == 'exchangeAppleWatchCaregiver';
+    if (!appleWatch && call.method != MealDecisionWatchProtocol.methodName) {
       throw MissingPluginException();
     }
+    MealDecisionWatchSession? watchSession() {
+      final session = _watchSession();
+      return appleWatch && session?.mode != MealDecisionWatchMode.caregiver
+          ? null
+          : session;
+    }
+
+    if (appleWatch) {
+      final args = call.arguments;
+      final action = args is Map ? args['action'] : null;
+      final session = watchSession();
+      if (args is! Map ||
+          args['version'] != MealDecisionWatchProtocol.version ||
+          !const {
+            'list',
+            'open',
+            'claim',
+            'decline',
+            'presence',
+            'respond',
+          }.contains(action) ||
+          session == null) {
+        return {'version': 1, 'status': 'unavailable'};
+      }
+      if (action == 'list') {
+        final remote = ref.read(mealDecisionRemoteControllerProvider.notifier);
+        if (!remote.backgroundEnabled) {
+          return {'version': 1, 'status': 'unavailable'};
+        }
+        await remote.refresh();
+        if (watchSession() != session ||
+            !ref
+                .read(mealDecisionRemoteControllerProvider)
+                .canResolveNotificationFor(session.uid)) {
+          return {'version': 1, 'status': 'unavailable'};
+        }
+      }
+    }
     return MealDecisionWatchProtocol(
-      session: _watchSession,
+      session: watchSession,
       loadPreview: _loadWatchPreview,
       claim: _claimFromWatch,
       claimOnPhone: _claimOnPhoneFromWatch,
