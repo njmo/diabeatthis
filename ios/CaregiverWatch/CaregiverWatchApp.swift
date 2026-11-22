@@ -230,6 +230,8 @@ struct RequestDetail: View {
   @State private var claimed = false
   @State private var claimUntil: Date?
   @State private var preview: [String: Any] = [:]
+  @State private var contextPage = 0
+  @State private var choosingDecision = false
   @State private var selected: DecisionOption?
   @State private var minutes = 15
   @State private var busy = false
@@ -245,63 +247,20 @@ struct RequestDetail: View {
   }
 
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 10) {
-        if sent {
-          Text("Decision sent").font(.headline)
-          Button("Close") { dismiss() }
+    GeometryReader { geometry in
+      let scale = min(geometry.size.width, geometry.size.height)
+      Group {
+        if hasLiveClaim && !sent && !needsVerification && !choosingDecision {
+          MealContext(preview: preview, request: request, now: now, page: $contextPage) {
+            Task { await changeStage(toDecision: true) }
+          }
+          .disabled(busy || renewing || scenePhase != .active)
         } else {
-          Text(request.name).font(.headline)
-          let deadline = min(claimUntil ?? request.deadline, request.deadline)
-          if deadline > now {
-            Text(timerInterval: now...deadline, countsDown: true)
-              .font(.caption.monospacedDigit())
-          }
-          if let failureMessage {
-            Text(failureMessage).font(.footnote).foregroundStyle(.orange)
-          }
-          if busy { ProgressView() }
-          if now >= request.deadline {
-            Text("This request has expired.").font(.footnote)
-            Button("Close") { dismiss() }
-          } else if needsVerification && hasLiveClaim {
-            Button("Reload meal details") { Task { await perform("open") } }
-          } else if hasLiveClaim, let option = selected {
-            Text(option.name).font(.headline)
-            if option.minutes != nil {
-              Stepper(value: $minutes, in: 1...180) {
-                Text("\(minutes) min")
-              }
-            }
-            Button("Send") {
-              Task {
-                var fields: [String: Any] = ["type": option.id, "message": ""]
-                if option.minutes != nil { fields["minutes"] = minutes }
-                await perform("respond", fields: fields)
-              }
-            }.tint(.green)
-            Button("Change") { selected = nil }
-          } else if hasLiveClaim {
-            MealContext(preview: preview, now: now)
-            if options.isEmpty {
-              Button("Reload meal details") { Task { await perform("open") } }
-            } else {
-              Text("Choose a decision").font(.headline)
-              ForEach(options) { option in
-                Button(option.name) {
-                  minutes = option.minutes ?? 15
-                  selected = option
-                }
-              }
-            }
-          } else {
-            Button("Take request") { Task { await perform("claim") } }.tint(.green)
-            Button("Decline") { Task { await perform("decline") } }
-          }
+          decisionContent(scale: scale)
         }
       }
-      .disabled(busy || renewing || scenePhase != .active)
-      .padding(.horizontal, 4)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background(mealRequestBackground(scale: scale))
     }
     .navigationTitle("Meal request")
     .task {
@@ -330,6 +289,76 @@ struct RequestDetail: View {
     }
   }
 
+  private func decisionContent(scale: CGFloat) -> some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: scale * 0.05) {
+        if sent {
+          Text("Decision sent").font(.headline)
+          Button("Close") { dismiss() }
+        } else {
+          Text(request.name).font(.system(size: scale * 0.12, weight: .bold))
+          let deadline = min(claimUntil ?? request.deadline, request.deadline)
+          if deadline > now {
+            Text(timerInterval: now...deadline, countsDown: true)
+              .font(.system(size: scale * 0.095, design: .monospaced))
+          }
+          if let failureMessage {
+            Text(failureMessage).foregroundStyle(.orange)
+          }
+          if busy { ProgressView() }
+          if now >= request.deadline {
+            Text("This request has expired.")
+            Button("Close") { dismiss() }
+          } else if needsVerification && hasLiveClaim {
+            Button("Reload meal details") { Task { await perform("open") } }
+          } else if hasLiveClaim, let option = selected {
+            Text(option.name).font(.system(size: scale * 0.115, weight: .bold))
+            if option.minutes != nil {
+              Stepper(value: $minutes, in: 1...180) {
+                Text("\(minutes) min")
+              }
+            }
+            Button("Send") {
+              Task {
+                var fields: [String: Any] = ["type": option.id, "message": ""]
+                if option.minutes != nil { fields["minutes"] = minutes }
+                await perform("respond", fields: fields)
+              }
+            }.tint(mealRequestAccent)
+            Button("Change") { selected = nil }
+          } else if hasLiveClaim {
+            Button("Meal context") { Task { await changeStage(toDecision: false) } }
+            if options.isEmpty {
+              Button("Reload meal details") { Task { await perform("open") } }
+            } else {
+              Text("Choose a decision").font(.system(size: scale * 0.11, weight: .bold))
+              ForEach(options) { option in
+                Button(option.name) {
+                  minutes = option.minutes ?? 15
+                  selected = option
+                }
+              }
+            }
+          } else {
+            Button("Take request") { Task { await perform("claim") } }.tint(mealRequestAccent)
+            Button("Decline") { Task { await perform("decline") } }
+          }
+        }
+      }
+      .disabled(busy || renewing || scenePhase != .active)
+      .padding(.horizontal, scale * 0.035)
+      .font(.system(size: scale * 0.085))
+    }
+  }
+
+  @MainActor
+  private func changeStage(toDecision: Bool) async {
+    guard hasLiveClaim, !needsVerification, !busy, !renewing,
+          scenePhase == .active else { return }
+    choosingDecision = toDecision
+    await renewClaim()
+  }
+
   private var options: [DecisionOption] {
     (preview["options"] as? [[String: Any]] ?? []).compactMap(DecisionOption.init)
   }
@@ -350,6 +379,8 @@ struct RequestDetail: View {
 
   @MainActor
   private func invalidatePreview() {
+    choosingDecision = false
+    contextPage = 0
     selected = nil
     preview = [:]
     needsVerification = true
@@ -359,7 +390,7 @@ struct RequestDetail: View {
   private func renewClaim() async {
     renewing = true
     defer { renewing = false }
-    let stage = selected == nil ? "context" : "decision"
+    let stage = choosingDecision ? "decision" : "context"
     do {
       let reply = try await connection.exchange("presence", request: request.id,
                                                 fields: ["stage": stage])
@@ -422,66 +453,174 @@ struct RequestDetail: View {
   }
 }
 
+private let mealRequestAccent = Color(red: 0.78, green: 0.92, blue: 0.59)
+private let mealRequestSurface = Color(red: 0.14, green: 0.21, blue: 0.17)
+
+private func mealRequestBackground(scale: CGFloat) -> RadialGradient {
+  RadialGradient(colors: [mealRequestSurface, Color(red: 0.06, green: 0.10, blue: 0.08)],
+                 center: .top, startRadius: 0, endRadius: scale)
+}
+
 struct MealContext: View {
   let preview: [String: Any]
+  let request: MealRequest
   let now: Date
+  @Binding var page: Int
+  let chooseDecision: () -> Void
+
+  private let accent = mealRequestAccent
+  private let surface = mealRequestSurface
+  private let muted = Color(red: 0.71, green: 0.78, blue: 0.73)
+  private let lastPage = 5
 
   var body: some View {
-    if let planned = MealRequest.date(preview["plannedAtMs"]) {
-      Text("Planned meal").font(.caption.bold())
-      Text(planned, format: .dateTime.day().month().hour().minute()).font(.caption)
-    }
-    ForEach(Array((preview["ingredients"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { row in
-      if let name = row.element["name"] as? String {
-        Text(name).font(.caption)
+    GeometryReader { geometry in
+      let scale = min(geometry.size.width, geometry.size.height)
+      VStack(spacing: scale * 0.025) {
+        VStack(spacing: scale * 0.03) {
+          pageContent(scale: scale)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .multilineTextAlignment(.center)
+        .minimumScaleFactor(0.72)
+
+        HStack {
+          Button {
+            if page > 0 { page -= 1 }
+          } label: {
+            Image(systemName: "chevron.left")
+          }
+          .accessibilityLabel("Previous page")
+          .disabled(page == 0)
+          Spacer(minLength: scale * 0.04)
+          Button(action: advance) {
+            HStack(spacing: scale * 0.025) {
+              Text(page == lastPage
+                ? LocalizedStringKey("Choose a decision")
+                : LocalizedStringKey("Next page"))
+              Image(systemName: "chevron.right")
+            }
+          }
+        }
+        .buttonStyle(.plain)
+        .font(.system(size: scale * 0.077, weight: .semibold))
+        .foregroundStyle(accent)
+        .padding(.vertical, scale * 0.02)
+
+        HStack(spacing: scale * 0.025) {
+          ForEach(0...lastPage, id: \.self) { index in
+            Capsule().fill(index == page ? accent : muted.opacity(0.32))
+          }
+        }
+        .frame(width: geometry.size.width * 0.58, height: scale * 0.02)
+        .accessibilityHidden(true)
       }
+      .padding(.horizontal, geometry.size.width * 0.08)
+      .padding(.vertical, geometry.size.height * 0.045)
+      .frame(width: geometry.size.width, height: geometry.size.height)
+      .contentShape(Rectangle())
+      .gesture(DragGesture(minimumDistance: scale * 0.15).onEnded { gesture in
+        guard abs(gesture.translation.width) > abs(gesture.translation.height) else { return }
+        if gesture.translation.width < 0 {
+          advance()
+        } else if page > 0 {
+          page -= 1
+        }
+      })
     }
-    glucoseReading
-    if preview["historyAvailable"] as? Bool != true {
-      Text("Glucose and treatment history unavailable.")
-        .font(.caption).foregroundStyle(.orange)
-    } else if let synced = MealRequest.date(preview["historySyncedAtMs"]) {
-      HStack {
-        Text("History synced")
-        Text(synced, style: .time)
-      }.font(.caption2)
-    }
-    if let carbs = preview["mealCarbs"] as? Int,
-       let extended = preview["mealExtendedCarbs"] as? Int {
-      Text("Carbs \(carbs) g · eCarbs \(extended) g").font(.caption)
-    }
-    series("Glucose", key: "glucoseHistory", color: .orange)
-    activeValue("IOB", key: "iob", unit: "U")
-    series("IOB", key: "iobHistory", color: .cyan)
-    activeValue("COB", key: "cob", unit: "g")
-    series("COB", key: "cobHistory", color: .green)
-    if let notices = preview["notices"] as? [String], !notices.isEmpty {
-      Text("Meal context").font(.caption.bold())
-      ForEach(Array(notices.enumerated()), id: \.offset) { notice in
-        Text(notice.element).font(.caption)
-      }
-    }
-    advisorSuggestion
+  }
+
+  private func advance() {
+    if page == lastPage { chooseDecision() }
+    else { page += 1 }
   }
 
   @ViewBuilder
-  private var glucoseReading: some View {
-    if let glucose = preview["glucoseMgDl"] as? Int,
+  private func pageContent(scale: CGFloat) -> some View {
+    switch page {
+    case 0:
+      let parts = request.name.split(separator: ":", maxSplits: 1)
+      let title = parts.count == 2 && parts[0] != "QM" ? String(parts[0]) : request.name
+      Text(title).font(.system(size: scale * 0.15, weight: .bold)).lineLimit(2)
+      if request.deadline > now {
+        Text(timerInterval: now...request.deadline, countsDown: true)
+          .font(.system(size: scale * 0.13, weight: .semibold, design: .monospaced))
+          .foregroundStyle(accent)
+      }
+      glucose(scale: scale, large: true)
+    case 1:
+      heading("Planned meal", scale: scale)
+      if let planned = MealRequest.date(preview["plannedAtMs"]) {
+        Text(planned, style: .time).foregroundStyle(muted)
+          .font(.system(size: scale * 0.10, weight: .semibold))
+      }
+      HStack(spacing: scale * 0.05) {
+        macro("Carbs", key: "mealCarbs", scale: scale)
+        macro("eCarbs", key: "mealExtendedCarbs", scale: scale)
+      }
+      if let carbs = preview["mealCarbs"] as? Int,
+         let extended = preview["mealExtendedCarbs"] as? Int,
+         carbs >= 0, extended >= 0, Double(carbs) + Double(extended) > 0 {
+        let share = CGFloat(Double(carbs) / (Double(carbs) + Double(extended)))
+        GeometryReader { bar in
+          HStack(spacing: 0) {
+            Color.cyan.frame(width: bar.size.width * share)
+            Color.orange
+          }
+          .clipShape(Capsule())
+        }
+        .frame(height: scale * 0.03)
+        .accessibilityHidden(true)
+      }
+    case 2:
+      heading("Glucose", scale: scale)
+      glucose(scale: scale, large: false)
+      series("glucoseHistory", color: .orange, scale: scale)
+    case 3:
+      heading("IOB", scale: scale)
+      activeValue("iob", unit: "U", scale: scale)
+      series("iobHistory", color: .cyan, scale: scale)
+    case 4:
+      heading("COB", scale: scale)
+      activeValue("cob", unit: "g", scale: scale)
+      series("cobHistory", color: accent, scale: scale)
+    default:
+      heading("Meal advisor suggestion", scale: scale)
+      advisorSuggestion(scale: scale)
+    }
+  }
+
+  private func heading(_ title: LocalizedStringKey, scale: CGFloat) -> some View {
+    Text(title).font(.system(size: scale * 0.125, weight: .bold)).lineLimit(2)
+  }
+
+  @ViewBuilder
+  private func glucose(scale: CGFloat, large: Bool) -> some View {
+    if let value = preview["glucoseMgDl"] as? Int,
        let time = MealRequest.date(preview["glucoseAtMs"]) {
-      HStack {
-        Text("\(glucose) mg/dL").font(.title3.bold())
+      HStack(spacing: scale * 0.035) {
+        Text("\(value)").font(.system(size: scale * (large ? 0.24 : 0.14), weight: .bold))
+        Text("mg/dL").font(.system(size: scale * 0.075)).foregroundStyle(muted)
         if let direction = preview["glucoseDirection"] as? String,
            let arrow = Self.trendArrows[direction] {
-          Text(arrow).font(.headline).foregroundStyle(.green)
+          Text(arrow).font(.system(size: scale * 0.14, weight: .semibold)).foregroundStyle(accent)
         }
       }
-      Text(time, style: .time).font(.caption)
+      HStack(spacing: scale * 0.03) {
+        Text(time, style: .time).foregroundStyle(muted)
+        if let delta = glucoseChange(value: value, time: time) {
+          Text(delta, format: .number.sign(strategy: .always()))
+            .foregroundStyle(accent)
+        }
+      }
+      .font(.system(size: scale * 0.074))
       if now.timeIntervalSince(time) > 300 {
         Text("Glucose reading is over 5 min old.")
-          .font(.caption).foregroundStyle(.orange)
+          .font(.system(size: scale * 0.074, weight: .semibold)).foregroundStyle(.orange).lineLimit(2)
       }
     } else {
-      Text("Glucose reading unavailable.").font(.caption).foregroundStyle(.orange)
+      Text("Glucose reading unavailable.")
+        .font(.system(size: scale * 0.08)).foregroundStyle(.orange).lineLimit(2)
     }
   }
 
@@ -490,39 +629,69 @@ struct MealContext: View {
     "FortyFiveDown": "↘", "SingleDown": "↓", "DoubleDown": "↓↓",
   ]
 
+  private func glucoseChange(value: Int, time: Date) -> Int? {
+    let timestamp = time.timeIntervalSince1970 * 1000
+    let previous = (preview["glucoseHistory"] as? [[Double]] ?? [])
+      .filter { $0.count == 2 && $0[0] < timestamp.rounded()
+        && timestamp - $0[0] <= 600_000 && $0[1].isFinite }
+      .max { $0[0] < $1[0] }
+    return previous.flatMap { Int(exactly: (Double(value) - $0[1]).rounded(.towardZero)) }
+  }
+
+  private func macro(_ title: LocalizedStringKey, key: String, scale: CGFloat) -> some View {
+    VStack(spacing: scale * 0.025) {
+      Text(title).font(.system(size: scale * 0.075)).foregroundStyle(muted)
+      if let grams = preview[key] as? Int {
+        Text("\(grams) g").font(.system(size: scale * 0.12, weight: .bold))
+      } else {
+        Text("—").font(.system(size: scale * 0.12))
+      }
+    }
+    .frame(maxWidth: .infinity)
+    .padding(.vertical, scale * 0.06)
+    .background(surface, in: RoundedRectangle(cornerRadius: scale * 0.07))
+  }
+
   @ViewBuilder
-  private var advisorSuggestion: some View {
+  private func advisorSuggestion(scale: CGFloat) -> some View {
     if let suggestion = preview["advisorSuggestion"] as? [String: Any],
        let type = suggestion["type"] as? String,
        let option = (preview["options"] as? [[String: Any]] ?? [])
          .compactMap(DecisionOption.init).first(where: { $0.id == type }) {
-      Text("Meal advisor suggestion").font(.caption.bold())
-      Text(option.name)
-      if let minutes = suggestion["minutes"] as? Int {
-        Text("\(minutes) min")
+      Text("From the child's phone")
+        .font(.system(size: scale * 0.077)).foregroundStyle(muted)
+      VStack(spacing: scale * 0.025) {
+        Text(option.name).font(.system(size: scale * 0.09, weight: .semibold)).lineLimit(3)
+        if let minutes = suggestion["minutes"] as? Int {
+          Text("\(minutes) min")
+            .font(.system(size: scale * 0.16, weight: .bold)).foregroundStyle(accent)
+          Text("Then eat").font(.system(size: scale * 0.072)).foregroundStyle(muted)
+        }
       }
+      .frame(maxWidth: .infinity)
+      .padding(scale * 0.045)
+      .background(surface, in: RoundedRectangle(cornerRadius: scale * 0.075))
+    } else {
+      Text("Meal advisor suggestion unavailable.")
+        .font(.system(size: scale * 0.08)).foregroundStyle(muted).lineLimit(2)
     }
   }
 
   @ViewBuilder
-  private func activeValue(_ title: LocalizedStringKey, key: String, unit: String) -> some View {
+  private func activeValue(_ key: String, unit: String, scale: CGFloat) -> some View {
     if let value = preview[key] as? Double {
-      HStack {
-        Text(title).bold()
+      HStack(spacing: scale * 0.025) {
         Text(value, format: .number.precision(.fractionLength(0...2)))
-        Text(unit)
-      }.font(.caption)
-      if let time = MealRequest.date(preview["deviceAtMs"]) {
-        Text(time, style: .time).font(.caption2)
+          .font(.system(size: scale * 0.16, weight: .bold))
+        Text(unit).font(.system(size: scale * 0.075)).foregroundStyle(muted)
       }
     }
   }
 
   @ViewBuilder
-  private func series(_ title: LocalizedStringKey, key: String, color: Color) -> some View {
+  private func series(_ key: String, color: Color, scale: CGFloat) -> some View {
     let points = (preview[key] as? [[Double]] ?? []).filter { $0.count == 2 }
     if points.count > 1 {
-      Text(title).font(.caption.bold())
       Chart(points.indices, id: \.self) { index in
         let point = points[index]
         LineMark(x: .value("Time", Date(timeIntervalSince1970: point[0] / 1000)),
@@ -531,7 +700,21 @@ struct MealContext: View {
           .interpolationMethod(key == "glucoseHistory" ? .linear : .stepEnd)
       }
       .chartXAxis(.hidden)
-      .frame(height: 56)
+      .chartYAxis {
+        AxisMarks(values: .automatic(desiredCount: 3)) { axis in
+          AxisGridLine()
+          AxisValueLabel {
+            if let value = axis.as(Double.self) {
+              Text(value, format: .number.precision(.fractionLength(0...1)))
+                .font(.system(size: scale * 0.055))
+            }
+          }
+        }
+      }
+      .frame(height: scale * 0.30)
+    } else {
+      Text("Glucose and treatment history unavailable.")
+        .font(.system(size: scale * 0.075)).foregroundStyle(muted).lineLimit(2)
     }
   }
 }

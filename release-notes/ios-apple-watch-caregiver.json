@@ -1,5 +1,5 @@
 {
   "platforms": ["ios"],
-  "pl-PL": "Opiekun może przeglądać prośby o decyzję i odpowiadać na nie na Apple Watch sparowanym z iPhonem.",
-  "en-US": "Caregivers can review and answer meal decision requests on an Apple Watch paired with their iPhone."
+  "pl-PL": "Opiekun może przeglądać kontekst posiłku na Apple Watch krok po kroku, w tym wykresy i propozycję doradcy, a następnie wybrać decyzję. Dziecko widzi, kiedy opiekun przegląda kontekst i kiedy wybiera decyzję.",
+  "en-US": "Caregivers can review meal context on Apple Watch step by step, including charts and the meal advisor suggestion, before choosing a decision. The child can see when the caregiver is reviewing context or choosing a decision."
 }
