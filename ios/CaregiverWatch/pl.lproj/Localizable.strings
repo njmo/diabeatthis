@@ -1,4 +1,8 @@
 "Open Diabeatthis on your iPhone and try again." = "Otwórz Diabeatthis na iPhonie i spróbuj ponownie.";
+"Cannot connect to the paired iPhone." = "Brak połączenia ze sparowanym iPhonem.";
+"Switch Diabeatthis on your iPhone to caregiver mode." = "Przełącz Diabeatthis na iPhonie w tryb opiekuna.";
+"Check family pairing and enable meal requests on your iPhone." = "Sprawdź połączenie z dzieckiem i włącz odbieranie próśb na iPhonie.";
+"Could not load meal requests. Try again." = "Nie udało się pobrać próśb. Spróbuj ponownie.";
 "Try again" = "Spróbuj ponownie";
 "No pending requests" = "Brak próśb o decyzję";
 "Meal requests" = "Prośby o decyzję";
@@ -12,7 +16,15 @@
 "Take request" = "Przejmij";
 "Decline" = "Odrzuć";
 "This request has expired." = "Czas na decyzję minął.";
+"Your claim expired. Take the request again." = "Czas przejęcia minął. Przejmij prośbę ponownie.";
+"Could not confirm your claim. Reload the request to continue." = "Brak potwierdzenia przejęcia. Wczytaj prośbę ponownie.";
 "Sending was not confirmed. Check the request on your iPhone." = "Brak potwierdzenia wysłania. Sprawdź prośbę na iPhonie.";
 "Glucose" = "Glikemia";
+"Planned meal" = "Planowany posiłek";
+"Glucose reading unavailable." = "Brak odczytu glikemii.";
+"Glucose reading is over 5 min old." = "Odczyt glikemii sprzed ponad 5 min.";
+"Glucose and treatment history unavailable." = "Historia glikemii i wpisów niedostępna.";
+"History synced" = "Synchronizacja historii";
+"Meal context" = "Kontekst posiłku";
 "Meal advisor suggestion" = "Propozycja doradcy posiłku";
 "Carbs %lld g · eCarbs %lld g" = "Węgle %lld g · eCarbs %lld g";

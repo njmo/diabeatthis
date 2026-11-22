@@ -42,6 +42,28 @@ final class WatchNotificationDelegate: NSObject, WKApplicationDelegate, UNUserNo
 enum WatchError: Error {
   case unavailable
   case expired
+  case phoneUnreachable
+  case phoneNotReady
+  case caregiverRequired
+  case caregiverRequestsDisabled
+  case inboxUnavailable
+
+  var listMessage: LocalizedStringKey {
+    switch self {
+    case .phoneUnreachable:
+      return "Cannot connect to the paired iPhone."
+    case .phoneNotReady:
+      return "Open Diabeatthis on your iPhone and try again."
+    case .caregiverRequired:
+      return "Switch Diabeatthis on your iPhone to caregiver mode."
+    case .caregiverRequestsDisabled:
+      return "Check family pairing and enable meal requests on your iPhone."
+    case .inboxUnavailable:
+      return "Could not load meal requests. Try again."
+    default:
+      return "Could not load meal requests. Try again."
+    }
+  }
 }
 
 final class PhoneConnection: NSObject, ObservableObject, WCSessionDelegate {
@@ -59,7 +81,7 @@ final class PhoneConnection: NSObject, ObservableObject, WCSessionDelegate {
                 fields: [String: Any] = [:]) async throws -> [String: Any] {
     let session = WCSession.default
     guard session.activationState == .activated, session.isReachable else {
-      throw WatchError.unavailable
+      throw WatchError.phoneUnreachable
     }
     var message = fields
     message["version"] = 1
@@ -72,10 +94,14 @@ final class PhoneConnection: NSObject, ObservableObject, WCSessionDelegate {
         switch payload["status"] as? String {
         case "ok": continuation.resume(returning: payload)
         case "expired": continuation.resume(throwing: WatchError.expired)
+        case "phoneNotReady": continuation.resume(throwing: WatchError.phoneNotReady)
+        case "caregiverRequired": continuation.resume(throwing: WatchError.caregiverRequired)
+        case "caregiverRequestsDisabled": continuation.resume(throwing: WatchError.caregiverRequestsDisabled)
+        case "inboxUnavailable": continuation.resume(throwing: WatchError.inboxUnavailable)
         default: continuation.resume(throwing: WatchError.unavailable)
         }
       }, errorHandler: { _ in
-        continuation.resume(throwing: WatchError.unavailable)
+        continuation.resume(throwing: WatchError.phoneUnreachable)
       })
     }
   }
@@ -108,14 +134,16 @@ struct RequestList: View {
   @Environment(\.scenePhase) private var scenePhase
   @State private var requests: [MealRequest] = []
   @State private var loaded = false
-  @State private var failed = false
+  @State private var failure: WatchError?
+  @State private var loading = false
   @State private var focusedRequest: MealRequest?
 
   var body: some View {
     List {
-      if failed {
-        Text("Open Diabeatthis on your iPhone and try again.")
+      if let failure {
+        Text(failure.listMessage)
         Button("Try again") { Task { await refresh() } }
+          .disabled(loading)
       } else if !loaded {
         ProgressView()
       } else if requests.isEmpty {
@@ -145,13 +173,16 @@ struct RequestList: View {
       guard scenePhase == .active else { return }
       while !Task.isCancelled {
         await refresh()
-        try? await Task.sleep(for: .seconds(15))
+        try? await Task.sleep(for: .seconds(loaded ? 15 : 3))
       }
     }
   }
 
   @MainActor
   private func refresh() async {
+    guard !loading else { return }
+    loading = true
+    defer { loading = false }
     do {
       let reply = try await connection.exchange("list")
       guard !Task.isCancelled else { return }
@@ -159,10 +190,10 @@ struct RequestList: View {
       requests = (reply["requests"] as? [[String: Any]] ?? [])
         .compactMap(MealRequest.init).filter { $0.deadline > Date() }
       loaded = true
-      failed = false
+      failure = nil
       openSelectedRequest()
     } catch {
-      if !Task.isCancelled { failed = true }
+      if !Task.isCancelled { failure = error as? WatchError ?? .unavailable }
     }
   }
 
@@ -200,6 +231,14 @@ struct RequestDetail: View {
   @State private var busy = false
   @State private var sent = false
   @State private var failureMessage: LocalizedStringKey?
+  @State private var now = Date()
+  @State private var needsVerification = false
+  @State private var renewing = false
+
+  private var hasLiveClaim: Bool {
+    guard claimed, let claimUntil else { return false }
+    return now < min(claimUntil, request.deadline)
+  }
 
   var body: some View {
     ScrollView {
@@ -210,7 +249,6 @@ struct RequestDetail: View {
         } else {
           Text(request.name).font(.headline)
           let deadline = min(claimUntil ?? request.deadline, request.deadline)
-          let now = Date()
           if deadline > now {
             Text(timerInterval: now...deadline, countsDown: true)
               .font(.caption.monospacedDigit())
@@ -219,7 +257,12 @@ struct RequestDetail: View {
             Text(failureMessage).font(.footnote).foregroundStyle(.orange)
           }
           if busy { ProgressView() }
-          if let option = selected {
+          if now >= request.deadline {
+            Text("This request has expired.").font(.footnote)
+            Button("Close") { dismiss() }
+          } else if needsVerification && hasLiveClaim {
+            Button("Reload meal details") { Task { await perform("open") } }
+          } else if hasLiveClaim, let option = selected {
             Text(option.name).font(.headline)
             if option.minutes != nil {
               Stepper(value: $minutes, in: 1...180) {
@@ -234,8 +277,8 @@ struct RequestDetail: View {
               }
             }.tint(.green)
             Button("Change") { selected = nil }
-          } else if claimed {
-            MealContext(preview: preview)
+          } else if hasLiveClaim {
+            MealContext(preview: preview, now: now)
             if options.isEmpty {
               Button("Reload meal details") { Task { await perform("open") } }
             } else {
@@ -253,25 +296,32 @@ struct RequestDetail: View {
           }
         }
       }
-      .disabled(busy)
+      .disabled(busy || renewing || scenePhase != .active)
       .padding(.horizontal, 4)
     }
     .navigationTitle("Meal request")
     .task {
-      if let until = request.claimUntil, until > Date() { await perform("open") }
-    }
-    .task(id: claimed && !sent && scenePhase == .active) {
-      guard claimed, !sent, scenePhase == .active else { return }
       while !Task.isCancelled {
-        if !busy {
-          let stage = selected == nil ? "context" : "decision"
-          if let reply = try? await connection.exchange("presence", request: request.id,
-                                                       fields: ["stage": stage]),
-             !Task.isCancelled {
-            claimUntil = MealRequest.date(reply["claimUntilMs"])
-          }
+        updateClock()
+        try? await Task.sleep(for: .seconds(1))
+      }
+    }
+    .onChange(of: scenePhase) { _, phase in
+      if phase != .active && claimed && !sent { invalidatePreview() }
+    }
+    .task(id: scenePhase) {
+      guard scenePhase == .active else { return }
+      updateClock()
+      if !sent, let until = claimUntil ?? request.claimUntil, until > now {
+        await perform("open")
+      }
+      var renewAt = Date()
+      while !Task.isCancelled {
+        if hasLiveClaim, !sent, !busy, !needsVerification, Date() >= renewAt {
+          await renewClaim()
+          renewAt = Date().addingTimeInterval(8)
         }
-        try? await Task.sleep(for: .seconds(8))
+        try? await Task.sleep(for: .seconds(1))
       }
     }
   }
@@ -281,8 +331,53 @@ struct RequestDetail: View {
   }
 
   @MainActor
+  private func updateClock() {
+    now = Date()
+    if claimed && !hasLiveClaim && !busy && !renewing && !sent {
+      invalidatePreview()
+      claimed = false
+      claimUntil = nil
+      needsVerification = false
+      if now < request.deadline {
+        failureMessage = "Your claim expired. Take the request again."
+      }
+    }
+  }
+
+  @MainActor
+  private func invalidatePreview() {
+    selected = nil
+    preview = [:]
+    needsVerification = true
+  }
+
+  @MainActor
+  private func renewClaim() async {
+    renewing = true
+    defer { renewing = false }
+    let stage = selected == nil ? "context" : "decision"
+    do {
+      let reply = try await connection.exchange("presence", request: request.id,
+                                                fields: ["stage": stage])
+      guard !Task.isCancelled, scenePhase == .active else { return }
+      guard let until = MealRequest.date(reply["claimUntilMs"]), until > Date() else {
+        throw WatchError.expired
+      }
+      claimUntil = until
+    } catch {
+      guard !Task.isCancelled, scenePhase == .active else { return }
+      invalidatePreview()
+      failureMessage = "Could not confirm your claim. Reload the request to continue."
+    }
+  }
+
+  @MainActor
   private func perform(_ action: String, fields: [String: Any] = [:]) async {
-    guard !busy else { return }
+    updateClock()
+    guard !busy, !renewing, !sent, scenePhase == .active, now < request.deadline else { return }
+    if action == "respond" {
+      guard hasLiveClaim, !needsVerification, selected != nil else { return }
+    }
     busy = true
     failureMessage = nil
     defer { busy = false }
@@ -292,14 +387,30 @@ struct RequestDetail: View {
       case "respond": sent = true
       case "decline": dismiss()
       default:
-        claimed = true
-        preview = reply["preview"] as? [String: Any] ?? [:]
         let requests = reply["requests"] as? [[String: Any]]
-        claimUntil = requests?.first.flatMap { MealRequest.date($0["claimUntilMs"]) }
+        guard let until = requests?.first.flatMap({ MealRequest.date($0["claimUntilMs"]) }),
+              until > Date(), request.deadline > Date() else {
+          throw WatchError.expired
+        }
+        claimed = true
+        claimUntil = until
+        guard scenePhase == .active, !Task.isCancelled else {
+          invalidatePreview()
+          return
+        }
+        preview = reply["preview"] as? [String: Any] ?? [:]
+        needsVerification = false
       }
     } catch WatchError.expired {
-      failureMessage = "This request has expired."
+      invalidatePreview()
+      claimed = false
+      claimUntil = nil
+      needsVerification = false
+      failureMessage = Date() < request.deadline
+        ? "Your claim expired. Take the request again."
+        : "This request has expired."
     } catch {
+      if claimed { invalidatePreview() }
       failureMessage = action == "respond"
         ? "Sending was not confirmed. Check the request on your iPhone."
         : "Open Diabeatthis on your iPhone and try again."
@@ -309,20 +420,74 @@ struct RequestDetail: View {
 
 struct MealContext: View {
   let preview: [String: Any]
+  let now: Date
 
   var body: some View {
-    if let glucose = preview["glucoseMgDl"] as? Int,
-       let time = MealRequest.date(preview["glucoseAtMs"]) {
-      Text("\(glucose) mg/dL").font(.title3.bold())
-      Text(time, style: .time).font(.caption)
+    if let planned = MealRequest.date(preview["plannedAtMs"]) {
+      Text("Planned meal").font(.caption.bold())
+      Text(planned, format: .dateTime.day().month().hour().minute()).font(.caption)
+    }
+    ForEach(Array((preview["ingredients"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { row in
+      if let name = row.element["name"] as? String {
+        Text(name).font(.caption)
+      }
+    }
+    glucoseReading
+    if preview["historyAvailable"] as? Bool != true {
+      Text("Glucose and treatment history unavailable.")
+        .font(.caption).foregroundStyle(.orange)
+    } else if let synced = MealRequest.date(preview["historySyncedAtMs"]) {
+      HStack {
+        Text("History synced")
+        Text(synced, style: .time)
+      }.font(.caption2)
     }
     if let carbs = preview["mealCarbs"] as? Int,
        let extended = preview["mealExtendedCarbs"] as? Int {
       Text("Carbs \(carbs) g · eCarbs \(extended) g").font(.caption)
     }
     series("Glucose", key: "glucoseHistory", color: .orange)
+    activeValue("IOB", key: "iob", unit: "U")
     series("IOB", key: "iobHistory", color: .cyan)
+    activeValue("COB", key: "cob", unit: "g")
     series("COB", key: "cobHistory", color: .green)
+    if let notices = preview["notices"] as? [String], !notices.isEmpty {
+      Text("Meal context").font(.caption.bold())
+      ForEach(Array(notices.enumerated()), id: \.offset) { notice in
+        Text(notice.element).font(.caption)
+      }
+    }
+    advisorSuggestion
+  }
+
+  @ViewBuilder
+  private var glucoseReading: some View {
+    if let glucose = preview["glucoseMgDl"] as? Int,
+       let time = MealRequest.date(preview["glucoseAtMs"]) {
+      HStack {
+        Text("\(glucose) mg/dL").font(.title3.bold())
+        if let direction = preview["glucoseDirection"] as? String,
+           let arrow = Self.trendArrows[direction] {
+          Text(arrow).font(.headline).foregroundStyle(.green)
+        }
+      }
+      Text(time, style: .time).font(.caption)
+      if now.timeIntervalSince(time) > 300 {
+        Text("Glucose reading is over 5 min old.")
+          .font(.caption).foregroundStyle(.orange)
+      }
+    } else {
+      Text("Glucose reading unavailable.").font(.caption).foregroundStyle(.orange)
+    }
+  }
+
+  private static let trendArrows = [
+    "DoubleUp": "↑↑", "SingleUp": "↑", "FortyFiveUp": "↗", "Flat": "→",
+    "FortyFiveDown": "↘", "SingleDown": "↓", "DoubleDown": "↓↓",
+  ]
+
+  @ViewBuilder
+  private var advisorSuggestion: some View {
     if let suggestion = preview["advisorSuggestion"] as? [String: Any],
        let type = suggestion["type"] as? String,
        let option = (preview["options"] as? [[String: Any]] ?? [])
@@ -331,6 +496,20 @@ struct MealContext: View {
       Text(option.name)
       if let minutes = suggestion["minutes"] as? Int {
         Text("\(minutes) min")
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func activeValue(_ title: LocalizedStringKey, key: String, unit: String) -> some View {
+    if let value = preview[key] as? Double {
+      HStack {
+        Text(title).bold()
+        Text(value, format: .number.precision(.fractionLength(0...2)))
+        Text(unit)
+      }.font(.caption)
+      if let time = MealRequest.date(preview["deviceAtMs"]) {
+        Text(time, style: .time).font(.caption2)
       }
     }
   }

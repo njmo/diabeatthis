@@ -56,7 +56,7 @@ private final class CaregiverWatchBridge: NSObject, WCSessionDelegate {
                replyHandler: @escaping ([String: Any]) -> Void) {
     DispatchQueue.main.async { [weak self] in
       guard let channel = self?.channel else {
-        replyHandler(["status": "unavailable"])
+        replyHandler(["status": "phoneNotReady"])
         return
       }
       channel.invokeMethod("exchangeAppleWatchCaregiver", arguments: message) { response in
@@ -64,7 +64,7 @@ private final class CaregiverWatchBridge: NSObject, WCSessionDelegate {
         // nulls in the existing Dart protocol without altering its wire format.
         guard let response = response as? [String: Any],
               let data = try? JSONSerialization.data(withJSONObject: response) else {
-          replyHandler(["status": "unavailable"])
+          replyHandler(["status": "phoneNotReady"])
           return
         }
         replyHandler(["payload": data])

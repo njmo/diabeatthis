@@ -249,21 +249,31 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
             'decline',
             'presence',
             'respond',
-          }.contains(action) ||
-          session == null) {
+          }.contains(action)) {
         return {'version': 1, 'status': 'unavailable'};
+      }
+      if (session == null) {
+        final mode = ref.read(applicationDeviceModeProvider).asData?.value;
+        return {
+          'version': 1,
+          'status': configured && mode == ApplicationDeviceMode.patient
+              ? 'caregiverRequired'
+              : 'phoneNotReady',
+        };
       }
       if (action == 'list') {
         final remote = ref.read(mealDecisionRemoteControllerProvider.notifier);
         if (!remote.backgroundEnabled) {
-          return {'version': 1, 'status': 'unavailable'};
+          return {'version': 1, 'status': 'caregiverRequestsDisabled'};
         }
         await remote.refresh();
-        if (watchSession() != session ||
-            !ref
-                .read(mealDecisionRemoteControllerProvider)
-                .canResolveNotificationFor(session.uid)) {
+        if (watchSession() != session) {
           return {'version': 1, 'status': 'unavailable'};
+        }
+        if (!ref
+            .read(mealDecisionRemoteControllerProvider)
+            .canResolveNotificationFor(session.uid)) {
+          return {'version': 1, 'status': 'inboxUnavailable'};
         }
       }
     }
