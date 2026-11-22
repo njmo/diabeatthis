@@ -18,11 +18,31 @@ function validateRecord(record) {
   const spec = contract[record.kind];
   if (!spec || typeof record.id !== 'string' || !/^[1-9][0-9]*(?:_[1-9][0-9]*)?$/.test(record.id) || record.id.length > 42 || !Number.isSafeInteger(record.revision) || record.revision < 1 || typeof record.deleted !== 'boolean') fail('invalid-argument');
   if (record.deleted) { if (record.payload !== null) fail('invalid-argument'); return; }
-  const columns = record.kind === 'meals' && !Object.hasOwn(record.payload ?? {}, 'planned_day')
-    ? spec.columns.filter(column => column !== 'planned_day')
-    : spec.columns;
+  const meal = record.kind === 'meals';
+  const hasAddOnProgress = meal && Object.hasOwn(record.payload ?? {}, 'add_on_progress');
+  const hasTreatmentSurplus = meal && Object.hasOwn(record.payload ?? {}, 'treatment_surplus');
+  const columns = [
+    ...spec.columns.filter(column => !meal || column !== 'planned_day' || Object.hasOwn(record.payload ?? {}, column)),
+    ...(hasAddOnProgress ? ['add_on_progress'] : []),
+    ...(hasTreatmentSurplus ? ['treatment_surplus'] : []),
+  ];
   exact(record.payload, columns);
   if (Object.keys(record.payload).length !== columns.length || spec.keys.map(k => String(record.payload[k])).join('_') !== record.id) fail('invalid-argument');
+  if (hasTreatmentSurplus && record.payload.treatment_surplus !== 1) fail('invalid-argument');
+  if (hasAddOnProgress) {
+    const value = record.payload.add_on_progress;
+    if (typeof value !== 'string' || value.length > 256 ||
+        !['eating-extra', 'waiting-for-bolus'].includes(record.payload.status)) fail('invalid-argument');
+    let progress;
+    try { progress = JSON.parse(value); } catch (_) { fail('invalid-argument'); }
+    const fields = ['originalStatus', 'awaitingBolus', 'additionalServing', 'bolusBeforeExtra'];
+    exact(progress, fields);
+    if (Object.keys(progress).length !== fields.length ||
+        typeof progress.originalStatus !== 'string' || !/^[a-z-]{1,32}$/.test(progress.originalStatus) ||
+        ![0, 1].includes(progress.awaitingBolus) ||
+        ![null, 0, 1].includes(progress.additionalServing) ||
+        ![0, 1].includes(progress.bolusBeforeExtra)) fail('invalid-argument');
+  }
   for (const value of Object.values(record.payload)) {
     if (value !== null && !(typeof value === 'string' && value.length <= 32000) && !(typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER)) fail('invalid-argument');
   }
@@ -97,6 +117,144 @@ function createMirrorService({store}) {
       const rows = await tx.get(root(family.childUid).collection('entities').where('sequence', '>', data.after).orderBy('sequence').limit(50));
       const records = rows.docs.map(doc => { const {digest, ingredientSearchPrefixes, ...record} = doc.data(); return record; });
       return {ownerUid: family.childUid, sourceId: state.sourceId, records, cursor: records.at(-1)?.sequence ?? data.after, hasMore: records.length === 50};
+    });
+  }
+  async function fetchView(uid, data) {
+    const home = data?.view === 'home';
+    exact(data, home ? ['view', 'date', 'startMs', 'endMs'] : ['view', 'mealId', 'context']);
+    const hour = 3600000;
+    if (home) {
+      if (typeof data.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(data.date) ||
+          !Number.isSafeInteger(data.startMs) || !Number.isSafeInteger(data.endMs) ||
+          data.endMs <= data.startMs || data.endMs - data.startMs > 26 * hour ||
+          Math.abs(Date.now() - data.startMs) > 48 * hour) fail('invalid-argument');
+    } else if (data.view !== 'meal' || !Number.isSafeInteger(data.mealId) ||
+               data.mealId < 1 || typeof data.context !== 'boolean') {
+      fail('invalid-argument');
+    }
+    await rate(uid, 'view', 120);
+    return store.runTransaction(async tx => {
+      const {family} = await familyContext(store, tx, uid);
+      const ownerUid = family.childUid;
+      const mirror = root(ownerUid);
+      const state = (await tx.get(mirror)).data();
+      if (!state) return {ownerUid, sourceId: null, sequence: 0, records: []};
+      const entities = mirror.collection('entities');
+      const records = new Map();
+      const read = async (kind, id) => {
+        const record = (await tx.get(entities.doc(`${kind}_${id}`))).data();
+        if (record && !record.deleted) {
+          const {digest, ingredientSearchPrefixes, ...visible} = record;
+          records.set(`${kind}/${id}`, visible);
+          return visible;
+        }
+        return null;
+      };
+      const query = async (kind, field, op, value, end) => {
+        const base = entities.where('kind', '==', kind).where(field, op, value);
+        const snapshot = await tx.get((end === undefined ? base : base.where(field, '<', end)).limit(201));
+        if (snapshot.docs.length > 200) fail('resource-exhausted');
+        return snapshot.docs.flatMap(doc => {
+          const {digest, ingredientSearchPrefixes, ...record} = doc.data();
+          return record.deleted ? [] : [record];
+        });
+      };
+      const add = rows => {
+        for (const row of rows) records.set(`${row.kind}/${row.id}`, row);
+      };
+      const distinct = ids => [...new Set(ids.filter(Number.isSafeInteger))];
+      async function activities(start, end, includeCompletedSummary) {
+        const [occurrences, ongoing, recent] = await Promise.all([
+          query('activityOccurrences', 'payload.started_at', '>=', start, end),
+          query('activityLogs', 'payload.ended_at', '==', null),
+          query('activityLogs', 'payload.ended_at', '>=', start, end),
+        ]);
+        const upcoming = occurrences.filter(row => ['pending', 'planned'].includes(row.payload.status));
+        const logs = includeCompletedSummary
+          ? recent.filter(row => row.payload.summarized_at == null && row.payload.summary_dismissed_at == null)
+          : recent;
+        add([...upcoming, ...ongoing, ...logs]);
+        await Promise.all([
+          ...distinct([...upcoming, ...ongoing, ...logs].map(row => row.payload.activity_id))
+            .map(id => read('activities', id)),
+          ...distinct(upcoming.map(row => row.payload.activity_log_id)).map(id => read('activityLogs', id)),
+          ...distinct(upcoming.map(row => row.payload.id)).map(id => read('activityOccurrenceReschedules', id)),
+          ...(includeCompletedSummary
+            ? distinct([...ongoing, ...logs].map(row => row.payload.id)).map(async id =>
+                add(await query('activityOccurrences', 'payload.activity_log_id', '==', id)))
+            : []),
+        ]);
+      }
+      if (home) {
+        const [timed, dateOnly, active] = await Promise.all([
+          query('meals', 'payload.planned_at', '>=', data.startMs, data.endMs),
+          query('meals', 'payload.planned_day', '==', data.date),
+          query('meals', 'payload.status', 'in', [
+            'eating', 'eating-extra', 'eating-then-bolus', 'waiting-for-bolus',
+            'bolused-waiting', 'waited-eating', 'bolused-eating', 'eaten',
+            'eaten-extra', 'eaten-bolused',
+          ]),
+          activities(data.startMs, data.endMs, true),
+        ]);
+        const plans = [...timed, ...dateOnly].filter(row => row.payload.status === 'planned');
+        add([...plans, ...active].map(row => {
+          const {id, name, planned_at, planned_day, status, purpose, add_on_progress, treatment_surplus} = row.payload;
+          return {...row, payload: {id, name, planned_at, planned_day, status, purpose, ...(typeof add_on_progress === 'string' ? {add_on_progress} : {}), ...(treatment_surplus === 1 ? {treatment_surplus} : {})}};
+        }));
+        add(await query('workflowLocks', 'payload.active', '==', 1));
+      } else {
+        const meal = await read('meals', data.mealId);
+        if (!meal) fail('not-found');
+        const [items, snapshots, history] = await Promise.all([
+          query('mealIngredients', 'payload.meal_id', '==', data.mealId),
+          query('mealSnapshots', 'payload.meal_id', '==', data.mealId),
+          query('mealHistory', 'payload.meal_id', '==', data.mealId),
+        ]);
+        add([...items, ...snapshots, ...history]);
+        if (data.context) {
+          const peers = await tx.get(entities.where('kind', '==', 'meals')
+            .where('deleted', '==', false)
+            .where('payload.name', '==', meal.payload.name)
+            .where('payload.status', 'in', ['eaten', 'eaten-extra', 'eaten-bolused', 'summarized'])
+            .orderBy('payload.created_at', 'desc')
+            .limit(6));
+          add(peers.docs.map(doc => {
+            const {digest, ingredientSearchPrefixes, ...record} = doc.data();
+            return record;
+          }).filter(row => row.id !== meal.id).slice(0, 5));
+        }
+        await Promise.all([
+          ...distinct(items.map(row => row.payload.ingredient_id)).map(async id => {
+            if (!await read('ingredients', id)) fail('failed-precondition');
+            const planned = snapshots.find(row => row.payload.snapshot_type === 'planned')?.payload;
+            const consumed = snapshots.find(row => row.payload.snapshot_type === 'consumed')?.payload;
+            const references = distinct([
+              planned?.calculated_at ?? planned?.created_at ?? meal.payload.created_at,
+              ...items.filter(row => row.payload.ingredient_id === id).map(row =>
+                consumed?.calculated_at ?? consumed?.created_at ?? row.payload.created_at),
+            ]);
+            if (references.length === 0) {
+              add(await query('ingredientHistory', 'payload.ingredient_id', '==', id));
+              return;
+            }
+            await Promise.all(references.map(async reference => {
+              // Each history row stores nutrition immediately before its edit.
+              const firstLaterEdit = await tx.get(entities.where('kind', '==', 'ingredientHistory')
+                .where('deleted', '==', false).where('payload.ingredient_id', '==', id)
+                .where('payload.created_at', '>', reference).orderBy('payload.created_at').limit(1));
+              for (const doc of firstLaterEdit.docs) {
+                const {digest, ingredientSearchPrefixes, ...record} = doc.data();
+                add([record]);
+              }
+            }));
+          }),
+          ...distinct(items.map(row => row.payload.portion_id)).map(id => read('portions', id)),
+          ...(data.context ? [activities(Date.now() - 3 * hour, Date.now() + 2 * hour + 1, false)] : []),
+        ]);
+      }
+      const result = {ownerUid, sourceId: state.sourceId, sequence: state.sequence, records: [...records.values()]};
+      if (Buffer.byteLength(JSON.stringify(result)) > 2 * 1024 * 1024) fail('resource-exhausted');
+      return result;
     });
   }
   async function searchIngredients(uid, data) {
@@ -244,6 +402,6 @@ function createMirrorService({store}) {
       return {ownerUid, gramsPerPiece: weights.size === 1 ? [...weights][0] : null};
     });
   }
-  return {register, publish, fetch, searchIngredients};
+  return {register, publish, fetch, fetchView, searchIngredients};
 }
 module.exports = {createMirrorService, familyContext, validateRecord};

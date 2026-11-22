@@ -25,9 +25,9 @@ class FamilyMealDetails {
   }) {
     final meal = ofKind('meals').where((p) => p['id'] == id).firstOrNull;
     if (meal == null) return null;
-    final snapshots = ofKind('mealSnapshots')
-        .where((p) => p['meal_id'] == id)
-        .toList();
+    final snapshots = ofKind(
+      'mealSnapshots',
+    ).where((p) => p['meal_id'] == id).toList();
     Map? rawSnapshot(String type) =>
         snapshots.where((s) => s['snapshot_type'] == type).firstOrNull;
     final planned = rawSnapshot('planned');
@@ -36,9 +36,9 @@ class FamilyMealDetails {
     for (final item in ofKind(
       'mealIngredients',
     ).where((p) => p['meal_id'] == id)) {
-      final raw = ofKind('ingredients')
-          .where((p) => p['id'] == item['ingredient_id'])
-          .firstOrNull;
+      final raw = ofKind(
+        'ingredients',
+      ).where((p) => p['id'] == item['ingredient_id']).firstOrNull;
       if (raw == null) {
         return null; // A mirror batch may not yet contain all dependencies.
       }
@@ -91,9 +91,9 @@ class FamilyMealDetails {
           ? 0.0
           : number(item, 'amount');
       final consumedAmount = (item['consumed_amount'] as num?)?.toDouble();
-      final portion = ofKind('portions')
-          .where((p) => p['id'] == item['portion_id'])
-          .firstOrNull;
+      final portion = ofKind(
+        'portions',
+      ).where((p) => p['id'] == item['portion_id']).firstOrNull;
       components.add(
         MealIngredientDetailsData(
           mealIngredientId: item['id'] as int,
@@ -159,7 +159,13 @@ class FamilyMealDetails {
     // mirror may request a live preview for a still-planned meal.
     return MealPageState(
       details: MealDetailsData(
-        meal: records.mapMeal(MealData.fromJson({...meal, 'is_synced': true})),
+        meal: records.mapMeal(
+          MealData.fromJson({
+            ...meal,
+            'is_synced': true,
+            'treatment_surplus': meal['treatment_surplus'] == 1,
+          }),
+        ),
         advisorDecision: null,
         ingredients: components,
         plannedSnapshot: snapshot(planned),

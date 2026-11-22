@@ -24,7 +24,7 @@ class HeldRefreshFamilyController extends FamilyPlanningController {
   final held = Completer<void>();
   bool refreshed = false;
   @override
-  Future<void> refresh() {
+  Future<void> refresh({void Function(String, int)? timing}) {
     refreshed = true;
     return held.future;
   }

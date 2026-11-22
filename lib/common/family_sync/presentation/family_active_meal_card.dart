@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import '../../../features/meals/presentation/widgets/meal_details/meal_detail_formatters.dart';
 import '../../../features/meals/presentation/widgets/meal_progress/meal_schedule_labels.dart';
 import '../../l10n/language.dart';
+import '../../meal/meal_add_on_progress.dart';
 import '../../meal/meal_decision.dart';
 import '../../meal/meal_display_name.dart';
 import '../../meal/meal_progress_plan.dart';
 import '../../widgets/meal_progress/meal_progress_steps.dart';
+import '../../widgets/meal_progress/meal_treatment_surplus_warning.dart';
 
 class FamilyActiveMealCard extends StatelessWidget {
   const FamilyActiveMealCard({
@@ -32,12 +34,13 @@ class FamilyActiveMealCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final borderColor =
-        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final numColor =
-        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final mutedColor =
-        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final borderColor = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
+    final numColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final mutedColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     final name = payload['name'] as String? ?? '';
     final status = payload['status'] as String? ?? 'waiting-for-bolus';
@@ -46,7 +49,12 @@ class FamilyActiveMealCard extends StatelessWidget {
         ? DateTime.fromMillisecondsSinceEpoch(plannedAtMs)
         : null;
     final schedule = mealScheduleLabel(context, plannedAt, now);
-    final statusText = mealStatusLabel(status);
+    final addOn = readMirroredAddOnProgress(payload['add_on_progress']);
+    final statusText = mealStatusLabel(
+      status == 'eating-extra' && addOn?.waitingForExtraBolus == true
+          ? 'waiting-for-bolus'
+          : status,
+    );
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -80,7 +88,9 @@ class FamilyActiveMealCard extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 7, vertical: 2.5),
+                      horizontal: 7,
+                      vertical: 2.5,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF00A3FF).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
@@ -141,13 +151,23 @@ class FamilyActiveMealCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 10),
+              if (payload['treatment_surplus'] == 1) ...[
+                const MealTreatmentSurplusWarning(),
+                const SizedBox(height: 8),
+              ],
               // Paski kroków (np. Bolus -> Jedzenie)
               MealProgressSteps(
-                plan: mealProgressPlanForStatus(
-                  status,
-                  decision: decision,
-                  history: history,
-                ),
+                plan: status == 'eating-extra' && addOn == null
+                    ? const MealProgressPlan(
+                        stages: [MealProgressStage.extra],
+                        currentIndex: 0,
+                      )
+                    : mealProgressPlanForStatus(
+                        status,
+                        decision: decision,
+                        history: history,
+                        mirroredAddOn: addOn,
+                      ),
               ),
               if (decisionAction != null) ...[
                 const SizedBox(height: 8),

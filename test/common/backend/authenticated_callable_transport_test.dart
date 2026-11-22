@@ -6,6 +6,40 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test(
+    'retries meal creation against the older schema with the same ID',
+    () async {
+      final sent = <Map<String, dynamic>>[];
+      final transport = AuthenticatedCallableTransport(
+        client: MockClient((request) async {
+          sent.add(
+            Map<String, dynamic>.from(jsonDecode(request.body)['data'] as Map),
+          );
+          return sent.last.containsKey('advisorSuggestion')
+              ? http.Response('{"error":{"status":"INVALID_ARGUMENT"}}', 400)
+              : http.Response('{"result":{"requestId":"meal-request"}}', 200);
+        }),
+        projectId: 'test',
+        identity: () async =>
+            const CallableIdentity('child', 'token', 'attestation'),
+        currentUid: () => 'child',
+      );
+      final data = <String, Object?>{
+        'action': 'create',
+        'requestId': 'meal-request',
+      };
+      final first = {
+        ...data,
+        'advisorSuggestion': {'type': 'insulinAndEat'},
+      };
+
+      expect(await transport.call('mealDecision', first), {
+        'requestId': 'meal-request',
+      });
+      expect(sent, [first, data]);
+    },
+  );
+
   for (final example in [
     (
       function: 'sendFamilyChatMessage',

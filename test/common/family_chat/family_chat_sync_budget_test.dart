@@ -261,6 +261,40 @@ T _drain<T>(FakeAsync time, Future<T> future) {
 }
 
 void main() {
+  test('home refresh reads inbox metadata and chat entry reads messages', () {
+    fakeAsync((time) {
+      final server = _Server(() => time.elapsed)..addIncoming('mom1', 1);
+      final db = FamilyChatDatabase(NativeDatabase.memory());
+      final session = FamilyChatSession(
+        uid: _uid,
+        api: _Device(server, 'a'),
+        db: db,
+        isCurrentAccount: () => true,
+        loadHistoryWhenHidden: false,
+        clock: () => DateTime.fromMillisecondsSinceEpoch(server.now),
+      );
+      _drain(time, session.start(foreground: true));
+      expect(server.names(), contains('fetchFamilyChatConversations'));
+      expect(server.names(), isNot(contains('fetchFamilyChatMessages')));
+      expect(session.messages('mom1'), isEmpty);
+
+      session.setForeground(true, chatVisible: true);
+      time.flushMicrotasks();
+      expect(server.names(), contains('fetchFamilyChatMessages'));
+      expect(session.messages('mom1').single['id'], 'in-mom1-1');
+
+      session.setForeground(true, chatVisible: false);
+      final mark = server.calls.length;
+      _drain(time, session.synchronize());
+      expect(
+        server.names(since: mark),
+        isNot(contains('fetchFamilyChatMessages')),
+      );
+      session.dispose();
+      _drain(time, db.close());
+    });
+  });
+
   group('ACK transient failures', () {
     test(
       'ACK 429 does not block fetch or send; receipt stays durable and is retried',

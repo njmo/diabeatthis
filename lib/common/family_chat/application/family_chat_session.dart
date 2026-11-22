@@ -25,6 +25,7 @@ class FamilyChatSession extends ChangeNotifier {
     this.expectedScope,
     this.notificationPresenter,
     this.isChatVisible,
+    this.loadHistoryWhenHidden = true,
     DateTime Function()? clock,
   }) : clock = clock ?? DateTime.now;
   final String uid;
@@ -34,6 +35,7 @@ class FamilyChatSession extends ChangeNotifier {
   final String? expectedScope;
   final FamilyChatPushPresenter? notificationPresenter;
   final bool Function()? isChatVisible;
+  final bool loadHistoryWhenHidden;
   final DateTime Function() clock;
   Map<String, dynamic>? config;
   String? scope;
@@ -86,6 +88,10 @@ class FamilyChatSession extends ChangeNotifier {
   Map<String, dynamic> _unread = {'count': 0};
   StreamSubscription<String>? _notificationUnreadChanges;
   int get unreadCount => enabled ? _unread['count'] as int : 0;
+  bool get hasUnread =>
+      enabled &&
+      !historyClearPending &&
+      (unreadCount > 0 || threads.any((thread) => thread['hasUnread'] == true));
   String? get unreadSender => enabled ? _unread['senderUid'] as String? : null;
 
   /// Null means the server has no authoritative summary for this conversation.
@@ -703,6 +709,7 @@ class FamilyChatSession extends ChangeNotifier {
 
   void setForeground(bool foreground, {bool chatVisible = true}) {
     final resumed = foreground && !_appForeground;
+    final chatOpened = chatVisible && (!_chatVisible || resumed);
     _appForeground = foreground;
     _chatVisible = chatVisible;
     _timer?.cancel();
@@ -715,7 +722,7 @@ class FamilyChatSession extends ChangeNotifier {
     if (resumed) unawaited(_refreshUnread());
     if (chatVisible) {
       _cancelQueuedRetry(reset: true);
-      unawaited(synchronize());
+      unawaited(synchronize(enqueueAgain: chatOpened));
       _timer = Timer.periodic(
         const Duration(seconds: 8),
         (_) => unawaited(synchronize()),
@@ -1362,7 +1369,11 @@ class FamilyChatSession extends ChangeNotifier {
       }
       if (!valid()) return;
       threads = list;
-      for (final target in targets) {
+      final historyTargets = _chatVisible || loadHistoryWhenHidden
+          ? targets
+          : const <String>[];
+      for (final target in historyTargets) {
+        if (!_chatVisible && !loadHistoryWhenHidden) break;
         var cursor =
             (await db.metadata('cursor:$currentScope:$target'))?['value']
                 as int? ??

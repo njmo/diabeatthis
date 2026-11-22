@@ -23,6 +23,7 @@ import '../../presentation/details/nightscout_record_history.dart';
 import '../../routing/owned_route_registry.dart';
 import '../family_access_scope.dart';
 import '../family_planning_controller.dart';
+import '../family_planning_session_provider.dart';
 import 'family_activity_catalog_scope.dart';
 import 'family_activity_schedules.dart';
 import 'family_scope_guard.dart';
@@ -58,9 +59,15 @@ class FamilyRecordPage extends ConsumerWidget {
     int id, {
     VoidCallback? editMeal,
     FamilyAccessScope? scope,
+    Object? routeOwner,
   }) {
     final pinned = scope ?? FamilyAccessScope(family);
     if (!pinned.isCurrent || !family.complete) return Future<void>.value();
+    if (family.view != null &&
+        (family.view!()['view'] == 'home' ||
+            (kind == 'meals' && family.view!()['mealId'] != id))) {
+      return _openScoped(context, pinned, kind, id, editMeal, routeOwner);
+    }
     final page = FamilyRecordPage(
       family: family,
       kind: kind,
@@ -68,10 +75,55 @@ class FamilyRecordPage extends ConsumerWidget {
       editMeal: editMeal,
     );
     final route = MaterialPageRoute<void>(builder: (_) => page);
-    OwnedRouteRegistry.register(family, route);
+    final owner = routeOwner ?? family;
+    OwnedRouteRegistry.register(owner, route);
     return Navigator.of(context)
         .push<void>(route)
-        .whenComplete(() => OwnedRouteRegistry.unregister(family, route));
+        .whenComplete(() => OwnedRouteRegistry.unregister(owner, route));
+  }
+
+  static Future<void> _openScoped(
+    BuildContext context,
+    FamilyAccessScope original,
+    String kind,
+    int id,
+    VoidCallback? editMeal,
+    Object? routeOwner,
+  ) async {
+    final container = ProviderScope.containerOf(context, listen: false);
+    final provider = familyPlanningSessionProvider((
+      uid: original.uid,
+      home: false,
+      mealId: kind == 'meals' ? id : null,
+      context: false,
+    ));
+    final listener = container.listen(provider, (_, _) {});
+    try {
+      final family = listener.read();
+      await family.refreshAndWait();
+      if (!context.mounted || !original.isCurrent) return;
+      final scope = FamilyAccessScope(family);
+      if (!family.complete ||
+          !scope.isCurrent ||
+          scope.owner != original.owner ||
+          scope.source != original.source) {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(content: Text(context.lang.familyDataRefreshFailed)),
+        );
+        return;
+      }
+      await open(
+        context,
+        family,
+        kind,
+        id,
+        editMeal: editMeal,
+        scope: scope,
+        routeOwner: routeOwner,
+      );
+    } finally {
+      listener.close();
+    }
   }
 
   @override

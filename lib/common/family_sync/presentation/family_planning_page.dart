@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/model/meal_status_flow.dart';
-import '../../../core/drift/providers/database_provider.dart';
 import '../../../features/activity/data/models/activity_log_summary_data.dart';
 import '../../../features/caregiver/data/caregiver_visible_state_provider.dart';
 import '../../../features/caregiver/presentation/widgets/caregiver_day_view.dart';
@@ -18,7 +17,6 @@ import '../../../features/dashboard/presentation/widgets/dashboard_status_card.d
 import '../../../features/meals/presentation/widgets/meal_progress/meal_schedule_labels.dart';
 import '../../../features/meals/presentation/widgets/meal_progress/meal_schedule_tile.dart';
 import '../../auth/google_authentication_providers.dart';
-import '../../family/family_providers.dart';
 import '../../l10n/language.dart';
 import '../../meal_advisor/presentation/remote/meal_decision_remote_meal_action.dart';
 import '../../meal_advisor/remote/meal_decision_remote_controller.dart';
@@ -30,8 +28,8 @@ import '../../presentation/dashboard/dashboard_spacing.dart';
 import '../../routing/form_bottom_sheet_route.dart';
 import '../../widgets/meal_progress/meal_progress_section_heading.dart';
 import '../family_access_scope.dart';
-import '../family_plan_submission_store.dart';
 import '../family_planning_controller.dart';
+import '../family_planning_session_provider.dart';
 import '../family_planning_view.dart';
 import 'family_active_meal_card.dart';
 import 'family_activity_log_card.dart';
@@ -63,11 +61,8 @@ class FamilyPlanningPage extends ConsumerStatefulWidget {
 
 class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     with WidgetsBindingObserver {
-  late final controller = FamilyPlanningController(
-    ref.read(authenticatedFamilyTransportProvider),
-    () => Firebase.apps.isEmpty ? null : FirebaseAuth.instance.currentUser?.uid,
-    FamilyPlanSubmissionStore(ref.read(databaseProvider)),
-  );
+  FamilyPlanningController? _controller;
+  FamilyPlanningController get controller => _controller!;
   final subscriptions = <StreamSubscription>[];
   Timer? retry;
   bool active = true;
@@ -80,9 +75,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
   @override
   void initState() {
     super.initState();
-    controller.addListener(changed);
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => start());
   }
 
   void changed() {
@@ -116,8 +109,10 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
         ? null
         : FirebaseAuth.instance.currentUser?.uid;
     listeningUid = uid;
-    unawaited(controller.refresh());
-    if (uid == null) return;
+    if (uid == null || controller.currentUid() != uid) return;
+    final observed = controller;
+    if (observed.failed) unawaited(observed.refresh());
+
     for (final collection in ['familyMirrorSignals', 'familyPlanSignals']) {
       streamHealth[collection] = false;
       subscriptions.add(
@@ -135,15 +130,21 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                 if (!event.metadata.isFromCache &&
                     mounted &&
                     active &&
-                    listeningUid == uid) {
-                  unawaited(controller.refresh());
+                    listeningUid == uid &&
+                    identical(observed, _controller)) {
+                  if (collection == 'familyMirrorSignals') {
+                    unawaited(observed.refreshMirrorForSignal(event.data()));
+                  } else {
+                    unawaited(observed.refresh());
+                  }
                 }
               },
               onError: (Object error) {
-                if (mounted) {
-                  controller.clear();
-                  controller.failed = true;
-                  changed();
+                if (mounted &&
+                    active &&
+                    identical(observed, _controller) &&
+                    observed.currentUid() == uid) {
+                  observed.markUnavailable();
                 }
               },
             ),
@@ -158,7 +159,6 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
       start();
     } else {
       stop();
-      controller.invalidate();
     }
   }
 
@@ -166,13 +166,17 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
   void dispose() {
     stop();
     WidgetsBinding.instance.removeObserver(this);
-    controller.removeListener(changed);
-    controller.dispose();
+    _controller?.removeListener(changed);
     super.dispose();
   }
 
-  Future<void> planFromPhoto() async {
-    if (!enabled) {
+  Future<void> planFromPhoto({FamilyPlanningController? planning}) async {
+    if (planning == null && this.controller.view != null) {
+      await withFullPlanning((full) => planFromPhoto(planning: full));
+      return;
+    }
+    final controller = planning ?? this.controller;
+    if (!controller.complete || !FamilyAccessScope(controller).isCurrent) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.lang.familyPlanWaitingForChild)),
       );
@@ -208,7 +212,24 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     String type, {
     int? targetId,
     Map<String, dynamic>? initial,
+    FamilyPlanningController? planning,
   }) async {
+    if (planning == null && this.controller.view != null) {
+      await withFullPlanning((full) {
+        if (type == 'updateMeal' && targetId != null) {
+          final payload = full.rows['meals/$targetId']?['payload'] as Map?;
+          if (payload?['status'] != 'planned' ||
+              full.locked('meals', targetId) ||
+              hasUnresolvedMealWeights(full, targetId)) {
+            return Future<void>.value();
+          }
+          initial = mealValues(payload!, planning: full);
+        }
+        return edit(type, targetId: targetId, initial: initial, planning: full);
+      });
+      return;
+    }
+    final controller = planning ?? this.controller;
     final uid = controller.uid, source = controller.source;
     if (uid == null ||
         source == null ||
@@ -302,7 +323,10 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     );
   }
 
-  Map<String, dynamic> mealValues(Map payload) => {
+  Map<String, dynamic> mealValues(
+    Map payload, {
+    FamilyPlanningController? planning,
+  }) => {
     'name': payload['name'],
     'category': payload['category'] ?? 'lunch',
     'notes': payload['notes'] ?? '',
@@ -310,7 +334,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     'plannedDay': payload['planned_at'] == null ? payload['planned_day'] : null,
     'ingredients': [
       for (final row
-          in controller
+          in (planning ?? controller)
               .ofKind('mealIngredients')
               .where((r) => (r['payload'] as Map)['meal_id'] == payload['id']))
         {
@@ -324,6 +348,40 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
         },
     ],
   };
+
+  Future<void> withFullPlanning(
+    Future<void> Function(FamilyPlanningController) action,
+  ) async {
+    final original = FamilyAccessScope(controller);
+    if (!original.isCurrent) return;
+    final listener = ref.listenManual(
+      familyPlanningSessionProvider((
+        uid: original.uid,
+        home: false,
+        mealId: null,
+        context: false,
+      )),
+      (_, _) {},
+    );
+    try {
+      final full = listener.read();
+      await full.refreshAndWait();
+      if (!mounted || !original.isCurrent) return;
+      if (full.complete &&
+          FamilyAccessScope(full).isCurrent &&
+          full.source == original.source &&
+          full.owner == original.owner) {
+        await action(full);
+      } else {
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(content: Text(context.lang.familyDataRefreshFailed)),
+        );
+      }
+    } finally {
+      listener.close();
+    }
+  }
+
   bool sameDay(int timestamp, DateTime day) =>
       DateUtils.isSameDay(DateTime.fromMillisecondsSinceEpoch(timestamp), day);
   DateTime get day => selectedDate ?? DateUtils.dateOnly(DateTime.now());
@@ -352,10 +410,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
           final status = p['status'] as String?;
           return mealStatusAppearsOnDashboard(status) &&
               (status != 'planned' ||
-                  (p['planned_at'] is int
-                      ? sameDay(p['planned_at'] as int, DateTime.now())
-                      : p['planned_day'] ==
-                            DateTime.now().toIso8601String().split('T').first));
+                  familyPlannedMealIsOnDay(p, DateTime.now()));
         }
         return true;
       }).toList()..sort(
@@ -528,6 +583,13 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
       !controller.failed &&
       controller.source != null &&
       controller.uid == FirebaseAuth.instance.currentUser?.uid;
+
+  bool hasUnresolvedMealWeights(FamilyPlanningController family, int id) =>
+      family.ofKind('mealIngredients').any((row) {
+        final item = row['payload'] as Map;
+        return item['meal_id'] == id && item['grams_per_portion_used'] == null;
+      });
+
   VoidCallback? mealEditor(int id) {
     final scope = FamilyAccessScope(controller);
     bool canEdit() {
@@ -538,11 +600,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
           !controller.locked('meals', id) &&
           payload?['status'] == 'planned' &&
           payload?['purpose'] == 'meal' &&
-          !controller.ofKind('mealIngredients').any((row) {
-            final item = row['payload'] as Map;
-            return item['meal_id'] == id &&
-                item['grams_per_portion_used'] == null;
-          });
+          !hasUnresolvedMealWeights(controller, id);
     }
 
     if (!canEdit()) return null;
@@ -670,16 +728,24 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(authenticatedFamilyTransportProvider);
-    ref.listen(googleAccountProvider, (_, next) {
-      if (!next.isLoading && next.asData?.value?.uid != listeningUid) {
-        controller.clear();
-        stop();
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) start();
-        });
-      }
-    });
+    final uid = ref.watch(googleAccountProvider).asData?.value?.uid;
+    final next = ref.watch(
+      familyPlanningSessionProvider((
+        uid: uid,
+        home:
+            widget.view == FamilyPlanningView.home ||
+            widget.view == FamilyPlanningView.day,
+        mealId: null,
+        context: false,
+      )),
+    );
+    if (!identical(_controller, next)) {
+      _controller?.removeListener(changed);
+      _controller = next..addListener(changed);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && identical(_controller, next)) start();
+      });
+    }
     if (widget.view == FamilyPlanningView.day) {
       final content = SafeArea(
         bottom: !widget.embedded,

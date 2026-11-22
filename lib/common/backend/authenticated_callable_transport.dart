@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class CallableIdentity {
@@ -57,6 +58,7 @@ class AuthenticatedCallableTransport {
     'registerFamilyMirror',
     'publishFamilyMirror',
     'fetchFamilyMirror',
+    'fetchFamilyMirrorView',
     'searchFamilyMirrorIngredients',
     'createFamilyInvite',
     'requestFamilyJoin',
@@ -77,8 +79,23 @@ class AuthenticatedCallableTransport {
     }
     final initiatingUid = expectedUid ?? currentUid();
     if (initiatingUid == null) throw const CallableFailure('unauthenticated');
+    final trace =
+        kDebugMode &&
+        const {
+          'mealDecision',
+          'fetchFamilyMirror',
+          'fetchFamilyMirrorView',
+          'fetchFamilyPlans',
+        }.contains(function);
+    final timing = trace ? (Stopwatch()..start()) : null;
+    final operation = function == 'mealDecision' ? data['action'] : function;
     try {
       final account = await identity().timeout(const Duration(seconds: 15));
+      if (timing != null) {
+        debugPrint(
+          'MealDecisionTiming callable.$operation.identity ms=${timing.elapsedMilliseconds}',
+        );
+      }
       if (account.uid != initiatingUid ||
           account.uid != currentUid() ||
           account.idToken.isEmpty ||
@@ -92,6 +109,7 @@ class AuthenticatedCallableTransport {
       if (currentUid() != initiatingUid) {
         throw const CallableFailure('unauthenticated');
       }
+      timing?.reset();
       final response = await client
           .post(
             Uri.https(
@@ -106,8 +124,20 @@ class AuthenticatedCallableTransport {
             body: jsonEncode({'data': data}),
           )
           .timeout(const Duration(seconds: 20));
+      if (timing != null) {
+        debugPrint(
+          'MealDecisionTiming callable.$operation.http ms=${timing.elapsedMilliseconds} status=${response.statusCode}',
+        );
+      }
       if (account.uid != currentUid()) {
         throw const CallableFailure('unauthenticated');
+      }
+      if (function == 'fetchFamilyMirrorView' &&
+          response.statusCode == 404 &&
+          !(response.headers['content-type'] ?? '').contains(
+            'application/json',
+          )) {
+        throw const CallableFailure('endpoint-not-deployed');
       }
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode != 200 || body['error'] != null) {
@@ -126,6 +156,20 @@ class AuthenticatedCallableTransport {
                 error is Map
             ? rejections[error['status']]
             : null;
+        if (function == 'mealDecision' &&
+            operation == 'create' &&
+            response.statusCode == 400 &&
+            rejection == 'invalid-argument' &&
+            data.containsKey('advisorSuggestion')) {
+          final legacyData = Map<String, Object?>.of(data)
+            ..remove('advisorSuggestion');
+          return await call(
+            function,
+            legacyData,
+            expectedUid: initiatingUid,
+            allowRequest: allowRequest,
+          );
+        }
         final details = error is Map ? error['details'] : null;
         final reason = details is Map ? details['reason'] : null;
         final consumptionReason =

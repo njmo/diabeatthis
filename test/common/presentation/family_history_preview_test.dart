@@ -18,6 +18,22 @@ import '../../helpers/localized_material_app.dart';
 import 'family_collection_fixtures.dart';
 
 void main() {
+  test('family meal preview accepts an absent or integer warning flag', () {
+    final rows = familyCollectionFixtures();
+    final meal =
+        rows.firstWhere((row) => row['kind'] == 'meals')['payload'] as Map;
+    for (final surplus in [null, 1]) {
+      if (surplus == null) {
+        meal.remove('treatment_surplus');
+      } else {
+        meal['treatment_surplus'] = surplus;
+      }
+      final preview = FamilyMealDetails(
+        rows,
+      ).build(2, 'portion', includePlannedPreview: true);
+      expect(preview?.details.plannedPreviewNutrition?.totalNetCarbsG, 6);
+    }
+  });
   test(
     'family meal resolves saved nutrition before edit and preserves valid legacy snapshots',
     () {
@@ -46,31 +62,34 @@ void main() {
     },
   );
 
-  test('family preview never invents missing dependencies or historical portion weights', () {
-    final rows = familyCollectionFixtures();
-    expect(
-      FamilyMealDetails(rows)
-          .build(2, 'portion')!
+  test(
+    'family preview never invents missing dependencies or historical portion weights',
+    () {
+      final rows = familyCollectionFixtures();
+      expect(
+        FamilyMealDetails(
+          rows,
+        ).build(2, 'portion')!.details.plannedPreviewNutrition,
+        isNull,
+      );
+      final preview = FamilyMealDetails(rows)
+          .build(2, 'portion', includePlannedPreview: true)!
           .details
-          .plannedPreviewNutrition,
-      isNull,
-    );
-    final preview = FamilyMealDetails(rows)
-        .build(2, 'portion', includePlannedPreview: true)!
-        .details
-        .plannedPreviewNutrition!;
-    expect(preview.totalNetCarbsG, 6);
-    expect(preview.totalProteinG, 1);
-    expect(preview.totalFatG, .5);
-    (rows[2]['payload'] as Map)['grams_per_portion_used'] = null;
-    (rows[2]['payload'] as Map)['portion_id'] = 999;
-    final state = FamilyMealDetails(rows)
-        .build(2, 'portion', includePlannedPreview: true)!;
-    expect(state.details.ingredients.single.recordedWeightAvailable, isFalse);
-    expect(state.details.plannedPreviewNutrition, isNull);
-    rows.removeAt(0);
-    expect(FamilyMealDetails(rows).build(2, 'portion'), isNull);
-  });
+          .plannedPreviewNutrition!;
+      expect(preview.totalNetCarbsG, 6);
+      expect(preview.totalProteinG, 1);
+      expect(preview.totalFatG, .5);
+      (rows[2]['payload'] as Map)['grams_per_portion_used'] = null;
+      (rows[2]['payload'] as Map)['portion_id'] = 999;
+      final state = FamilyMealDetails(
+        rows,
+      ).build(2, 'portion', includePlannedPreview: true)!;
+      expect(state.details.ingredients.single.recordedWeightAvailable, isFalse);
+      expect(state.details.plannedPreviewNutrition, isNull);
+      rows.removeAt(0);
+      expect(FamilyMealDetails(rows).build(2, 'portion'), isNull);
+    },
+  );
 
   for (final status in ['planned', 'eaten']) {
     testWidgets(

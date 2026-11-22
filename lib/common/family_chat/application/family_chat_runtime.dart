@@ -126,6 +126,7 @@ class FamilyChatRuntime extends ChangeNotifier with WidgetsBindingObserver {
         expectedScope: scope,
         notificationPresenter: notificationPresenter,
         isChatVisible: () => conversationVisible,
+        loadHistoryWhenHidden: false,
         isCurrentAccount: () =>
             !_disposed &&
             _identityKnown &&

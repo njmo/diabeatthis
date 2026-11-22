@@ -47,6 +47,140 @@ void main() {
     expect(find.byType(FilledButton), findsNothing);
   });
 
+  for (final (original, stages, bolusIndex) in [
+    (
+      'eating-then-bolus',
+      [
+        MealProgressStage.eating,
+        MealProgressStage.bolus,
+        MealProgressStage.extra,
+      ],
+      1,
+    ),
+    (
+      'bolused-eating',
+      [
+        MealProgressStage.bolus,
+        MealProgressStage.eating,
+        MealProgressStage.bolus,
+        MealProgressStage.extra,
+      ],
+      2,
+    ),
+    (
+      'waited-eating',
+      [
+        MealProgressStage.bolus,
+        MealProgressStage.waiting,
+        MealProgressStage.eating,
+        MealProgressStage.bolus,
+        MealProgressStage.extra,
+      ],
+      3,
+    ),
+  ]) {
+    for (final awaiting in [true, false]) {
+      testWidgets('caregiver mirrors extra for $original, awaiting=$awaiting', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: FamilyActiveMealCard(
+                payload: {
+                  'name': 'Lunch',
+                  'status': 'eating-extra',
+                  'add_on_progress':
+                      '{"originalStatus":"$original","awaitingBolus":${awaiting ? 1 : 0},"additionalServing":1,"bolusBeforeExtra":1}',
+                },
+                now: DateTime(2026, 11, 19, 12),
+                history: [original, 'eating-extra'],
+              ),
+            ),
+          ),
+        );
+        final plan = tester
+            .widget<MealProgressSteps>(find.byType(MealProgressSteps))
+            .plan;
+        expect(plan.stages, stages);
+        expect(plan.currentIndex, awaiting ? bolusIndex : stages.length - 1);
+        expect(plan.isComplete(bolusIndex), !awaiting);
+      });
+    }
+  }
+
+  for (final (original, stageCount) in [
+    ('bolused-eating', 3),
+    ('waited-eating', 4),
+  ]) {
+    testWidgets('caregiver shows extra without a second bolus for $original', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: FamilyActiveMealCard(
+              payload: {
+                'name': 'Lunch',
+                'status': 'eating-extra',
+                'add_on_progress':
+                    '{"originalStatus":"$original","awaitingBolus":0,"additionalServing":1,"bolusBeforeExtra":0}',
+              },
+              now: DateTime(2026, 11, 19, 12),
+            ),
+          ),
+        ),
+      );
+      final plan = tester
+          .widget<MealProgressSteps>(find.byType(MealProgressSteps))
+          .plan;
+      expect(plan.stages, hasLength(stageCount));
+      expect(
+        plan.stages.where((stage) => stage == MealProgressStage.bolus),
+        hasLength(1),
+      );
+      expect(plan.currentIndex, stageCount - 1);
+    });
+  }
+
+  for (final payload in [null, 'broken JSON']) {
+    testWidgets(
+      'unknown extra progress does not mark bolus completed ($payload)',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: FamilyActiveMealCard(
+                payload: {
+                  'name': 'Lunch',
+                  'status': 'eating-extra',
+                  'add_on_progress': payload,
+                },
+                now: DateTime(2026, 11, 19, 12),
+                decision: MealDecision.eatNowBolusLater,
+              ),
+            ),
+          ),
+        );
+        final plan = tester
+            .widget<MealProgressSteps>(find.byType(MealProgressSteps))
+            .plan;
+        expect(plan.stages, [MealProgressStage.extra]);
+        expect(plan.currentIndex, 0);
+        expect(plan.isComplete(0), isFalse);
+      },
+    );
+  }
+
   testWidgets('caregiver status and retry are inside the compact meal tile', (
     tester,
   ) async {

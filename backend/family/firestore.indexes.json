@@ -28,6 +28,54 @@
       ]
     },
     {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "payload.planned_at", "order": "ASCENDING"}]
+    },
+    {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "payload.planned_day", "order": "ASCENDING"}]
+    },
+    {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "payload.status", "order": "ASCENDING"}]
+    },
+    {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "payload.started_at", "order": "ASCENDING"}]
+    },
+    {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "payload.ended_at", "order": "ASCENDING"}]
+    },
+    {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "payload.active", "order": "ASCENDING"}]
+    },
+    {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "payload.meal_id", "order": "ASCENDING"}]
+    },
+    {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "payload.ingredient_id", "order": "ASCENDING"}]
+    },
+    {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "deleted", "order": "ASCENDING"}, {"fieldPath": "payload.ingredient_id", "order": "ASCENDING"}, {"fieldPath": "payload.created_at", "order": "ASCENDING"}]
+    },
+    {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "payload.name", "order": "ASCENDING"}]
+    },
+    {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "deleted", "order": "ASCENDING"}, {"fieldPath": "payload.name", "order": "ASCENDING"}, {"fieldPath": "payload.status", "order": "ASCENDING"}, {"fieldPath": "payload.created_at", "order": "DESCENDING"}]
+    },
+    {
+      "collectionGroup": "entities", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "kind", "order": "ASCENDING"}, {"fieldPath": "payload.activity_log_id", "order": "ASCENDING"}]
+    },
+    {
       "collectionGroup": "entities",
       "queryScope": "COLLECTION",
       "fields": [

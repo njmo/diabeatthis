@@ -22,6 +22,7 @@ class MemoryStore {
             const actual = field(value, filter.field);
             if (filter.operator === '==') return actual === filter.value;
             if (filter.operator === '>') return actual > filter.value;
+            if (filter.operator === '>=') return actual >= filter.value;
             if (filter.operator === '<') return actual < filter.value;
             if (filter.operator === '<=') return actual <= filter.value;
             if (filter.operator === 'in') return filter.value.includes(actual);

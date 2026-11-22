@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:diabeatthis/common/backend/authenticated_callable_transport.dart';
@@ -12,6 +13,196 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test(
+    'scoped controllers keep home plans and meal details separate',
+    () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      const source = 'source';
+      final operations = <String>[];
+      final transport = AuthenticatedCallableTransport(
+        client: MockClient((request) async {
+          final operation = request.url.pathSegments.last;
+          final data = (jsonDecode(request.body) as Map)['data'] as Map;
+          operations.add('$operation/${data['view'] ?? ''}');
+          final meal = data['view'] == 'meal';
+          return http.Response(
+            jsonEncode({
+              'result': {
+                'ownerUid': 'child',
+                'sourceId': source,
+                if (operation == 'fetchFamilyPlans')
+                  'plans': []
+                else ...{
+                  'sequence': meal ? 20 : 10,
+                  'records': [
+                    {'kind': 'meals', 'id': '1'},
+                    if (meal) {'kind': 'mealIngredients', 'id': '2'},
+                  ],
+                },
+              },
+            }),
+            200,
+          );
+        }),
+        projectId: 'test',
+        currentUid: () => 'parent',
+        identity: () async => const CallableIdentity('parent', 'token', 'app'),
+      );
+      final store = FamilyPlanSubmissionStore(db);
+      final home = FamilyPlanningController(
+        transport,
+        () => 'parent',
+        store,
+        view: () => {'view': 'home'},
+      );
+      final details = FamilyPlanningController(
+        transport,
+        () => 'parent',
+        store,
+        view: () => {'view': 'meal', 'mealId': 1},
+      );
+      addTearDown(home.dispose);
+      addTearDown(details.dispose);
+      await home.refreshAndWait();
+      expect(operations, ['fetchFamilyMirrorView/home', 'fetchFamilyPlans/']);
+      await details.refreshAndWait(mirrorOnly: true);
+      expect(operations.last, 'fetchFamilyMirrorView/meal');
+      expect(home.rows.keys, ['meals/1']);
+      expect(home.cursor, 10);
+      expect(details.rows.keys, ['meals/1', 'mealIngredients/2']);
+      expect(details.cursor, 20);
+      expect(home.complete && details.complete, isTrue);
+    },
+  );
+
+  test('missing scoped endpoint falls back to an incremental mirror', () async {
+    final db = DatabaseImpl(NativeDatabase.memory());
+    addTearDown(db.close);
+    final operations = <String>[];
+    final transport = AuthenticatedCallableTransport(
+      client: MockClient((request) async {
+        final operation = request.url.pathSegments.last;
+        final data = (jsonDecode(request.body) as Map)['data'] as Map;
+        operations.add('$operation/${data['after'] ?? ''}');
+        if (operation == 'fetchFamilyMirrorView') {
+          return http.Response(
+            '<html>Not Found</html>',
+            404,
+            headers: {'content-type': 'text/html'},
+          );
+        }
+        return http.Response(
+          jsonEncode({
+            'result': {
+              'ownerUid': 'child',
+              'sourceId': 'source',
+              if (operation == 'fetchFamilyPlans')
+                'plans': []
+              else ...{
+                'cursor': 20,
+                'hasMore': false,
+                'records': [
+                  {'kind': 'meals', 'id': '1'},
+                ],
+              },
+            },
+          }),
+          200,
+        );
+      }),
+      projectId: 'test',
+      currentUid: () => 'parent',
+      identity: () async => const CallableIdentity('parent', 'token', 'app'),
+    );
+    final controller = FamilyPlanningController(
+      transport,
+      () => 'parent',
+      FamilyPlanSubmissionStore(db),
+      view: () => {'view': 'home'},
+    );
+    addTearDown(controller.dispose);
+    await controller.refreshAndWait();
+    await controller.refreshAndWait(mirrorOnly: true);
+    expect(controller.failed, isFalse);
+    expect(controller.rows.keys, ['meals/1']);
+    expect(operations, [
+      'fetchFamilyMirrorView/',
+      'fetchFamilyMirror/0',
+      'fetchFamilyPlans/',
+      'fetchFamilyMirror/20',
+    ]);
+  });
+
+  test('meal previews join startup and fetch only mirror deltas', () async {
+    final db = DatabaseImpl(NativeDatabase.memory());
+    addTearDown(db.close);
+    final startup = Completer<void>();
+    var source = 'a' * 32;
+    final afterValues = <int>[];
+    var planReads = 0;
+    final transport = AuthenticatedCallableTransport(
+      client: MockClient((request) async {
+        final data = (jsonDecode(request.body) as Map)['data'] as Map;
+        final isMirror = request.url.path.endsWith('fetchFamilyMirror');
+        final after = isMirror ? data['after'] as int : null;
+        if (after != null) {
+          afterValues.add(after);
+          if (afterValues.length == 1) await startup.future;
+        } else {
+          planReads++;
+        }
+        return http.Response(
+          jsonEncode({
+            'result': {
+              'ownerUid': 'child',
+              'sourceId': source,
+              if (after != null) ...{
+                'records': [
+                  {'kind': 'meals', 'id': source == 'a' * 32 ? '1' : '2'},
+                ],
+                'cursor': after + 1,
+                'hasMore': false,
+              } else
+                'plans': [],
+            },
+          }),
+          200,
+        );
+      }),
+      projectId: 'test',
+      currentUid: () => 'parent',
+      identity: () async => const CallableIdentity('parent', 'token', 'app'),
+    );
+    final controller = FamilyPlanningController(
+      transport,
+      () => 'parent',
+      FamilyPlanSubmissionStore(db),
+    );
+    addTearDown(controller.dispose);
+
+    final full = controller.refreshAndWait();
+    final watch = controller.refreshAndWait(mirrorOnly: true);
+    expect(watch, same(full));
+    startup.complete();
+    await watch;
+    expect(controller.complete, isTrue);
+    expect(afterValues, [0]);
+    expect(planReads, 1);
+
+    await controller.refreshAndWait(mirrorOnly: true);
+    expect(afterValues, [0, 1]);
+    expect(planReads, 1);
+    expect(controller.rows.keys, ['meals/1']);
+
+    source = 'b' * 32;
+    await controller.refreshAndWait(mirrorOnly: true);
+    expect(afterValues, [0, 1, 2, 0]);
+    expect(planReads, 2);
+    expect(controller.rows.keys, ['meals/2']);
+    expect(controller.complete, isTrue);
+  });
+
   test(
     'quick treatment editor submits the selected child mirror versions',
     () async {
