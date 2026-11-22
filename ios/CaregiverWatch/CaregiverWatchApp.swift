@@ -199,7 +199,7 @@ struct RequestDetail: View {
   @State private var minutes = 15
   @State private var busy = false
   @State private var sent = false
-  @State private var error: LocalizedStringKey?
+  @State private var failureMessage: LocalizedStringKey?
 
   var body: some View {
     ScrollView {
@@ -215,7 +215,9 @@ struct RequestDetail: View {
             Text(timerInterval: now...deadline, countsDown: true)
               .font(.caption.monospacedDigit())
           }
-          if let error { Text(error).font(.footnote).foregroundStyle(.orange) }
+          if let failureMessage {
+            Text(failureMessage).font(.footnote).foregroundStyle(.orange)
+          }
           if busy { ProgressView() }
           if let option = selected {
             Text(option.name).font(.headline)
@@ -282,7 +284,7 @@ struct RequestDetail: View {
   private func perform(_ action: String, fields: [String: Any] = [:]) async {
     guard !busy else { return }
     busy = true
-    error = nil
+    failureMessage = nil
     defer { busy = false }
     do {
       let reply = try await connection.exchange(action, request: request.id, fields: fields)
@@ -296,9 +298,9 @@ struct RequestDetail: View {
         claimUntil = requests?.first.flatMap { MealRequest.date($0["claimUntilMs"]) }
       }
     } catch WatchError.expired {
-      error = "This request has expired."
+      failureMessage = "This request has expired."
     } catch {
-      error = action == "respond"
+      failureMessage = action == "respond"
         ? "Sending was not confirmed. Check the request on your iPhone."
         : "Open Diabeatthis on your iPhone and try again."
     }
