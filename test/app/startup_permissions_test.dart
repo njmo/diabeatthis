@@ -39,7 +39,7 @@ class StartupPermissionBridge extends ControlledAppForegroundBridge {
 }
 
 class StartupNotifications implements NotificationsController {
-  StartupNotifications({required this.failInitialization});
+  StartupNotifications({this.failInitialization = false});
 
   final bool failInitialization;
   int initializations = 0;
