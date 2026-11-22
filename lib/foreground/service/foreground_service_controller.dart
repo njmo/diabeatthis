@@ -10,8 +10,19 @@ import '../bootstrap/foreground_plugin_init.dart';
 import '../bootstrap/foreground_start_callback.dart';
 
 class ForegroundServiceController with Logging {
+  ForegroundServiceController({this.taskCallback});
+
+  final void Function()? taskCallback;
+
   Future<void> init() async {
     await initForegroundPlugin();
+    final callback = taskCallback;
+    if (callback != null && await isRunning()) {
+      final result = await FlutterForegroundTask.updateService(
+        callback: callback,
+      );
+      if (result is ServiceRequestFailure) throw result.error;
+    }
   }
 
   Future<bool> isRunning() async {
@@ -33,7 +44,7 @@ class ForegroundServiceController with Logging {
       serviceId: 256,
       notificationTitle: lang.uiStartingMonitoring,
       notificationText: lang.uiStartingMonitoring,
-      callback: startCallback,
+      callback: taskCallback ?? startCallback,
     );
     if (result is ServiceRequestFailure) throw result.error;
     logI("Start monitor task result: $result");

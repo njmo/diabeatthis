@@ -18,6 +18,7 @@ class DashboardShell extends StatelessWidget {
     required this.actions,
     required this.body,
     this.dayStatus,
+    this.secondaryAction,
   });
   final int destination;
   final int category;
@@ -26,6 +27,7 @@ class DashboardShell extends StatelessWidget {
   final Widget actions;
   final Widget body;
   final Widget? dayStatus;
+  final Widget? secondaryAction;
   @override
   Widget build(BuildContext context) => Scaffold(
     extendBody: true,
@@ -96,6 +98,17 @@ class DashboardShell extends StatelessWidget {
       onSelected: onDestination,
     ),
     floatingActionButton: actions,
-    body: body,
+    body: secondaryAction == null
+        ? body
+        : Stack(
+            children: [
+              Positioned.fill(child: body),
+              PositionedDirectional(
+                end: 16,
+                bottom: 96 + MediaQuery.paddingOf(context).bottom,
+                child: secondaryAction!,
+              ),
+            ],
+          ),
   );
 }

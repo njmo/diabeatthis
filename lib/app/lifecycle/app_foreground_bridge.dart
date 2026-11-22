@@ -3,7 +3,8 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import '../../foreground/service/foreground_service_controller.dart';
 
 class AppForegroundBridge {
-  AppForegroundBridge() : controller = ForegroundServiceController();
+  AppForegroundBridge({ForegroundServiceController? controller})
+    : controller = controller ?? ForegroundServiceController();
 
   final ForegroundServiceController controller;
   Future<void>? _initialization;

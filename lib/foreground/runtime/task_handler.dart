@@ -43,6 +43,10 @@ import 'foreground_runtime_disposer.dart';
 import 'workflow_scheduler.dart';
 
 class MyTaskHandler extends TaskHandler with Logging {
+  MyTaskHandler({this.handleAdditionalEvent});
+
+  final AdditionalForegroundEventHandler? handleAdditionalEvent;
+
   bool isUiRunning = false;
   bool _isStopping = false;
 
@@ -79,7 +83,10 @@ class MyTaskHandler extends TaskHandler with Logging {
     _taskScheduler = WorkflowScheduler();
 
     final runtimeContext = _taskScheduler!.createContext(_container!);
-    _externalEventHandler = ExternalEventHandler(runtimeContext);
+    _externalEventHandler = ExternalEventHandler(
+      runtimeContext,
+      handleAdditionalEvent: handleAdditionalEvent,
+    );
     unawaited(
       _container!.read(mealCalculatorRequestControllerProvider).refresh(),
     );

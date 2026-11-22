@@ -63,6 +63,17 @@ kotlin {
     }
 }
 
+val flutterTarget = providers.gradleProperty("target").orNull
+if (flutterTarget?.replace('\\', '/')?.substringAfterLast('/') == "main_debug.dart") {
+    tasks.configureEach {
+        if (name.startsWith("compileFlutterBuild") && !name.endsWith("Debug")) {
+            doFirst {
+                throw GradleException("main_debug.dart requires a Flutter debug build.")
+            }
+        }
+    }
+}
+
 flutter {
     source = "../.."
 }

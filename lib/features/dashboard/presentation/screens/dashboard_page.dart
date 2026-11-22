@@ -19,6 +19,8 @@ import '../widgets/dashboard_status_card.dart';
 import '../widgets/nightscout_dashboard.dart';
 import '../widgets/parent_dashboard_fab.dart';
 
+final dashboardSecondaryActionProvider = Provider<Widget?>((ref) => null);
+
 @RoutePage()
 class DashboardPage extends HookConsumerWidget {
   const DashboardPage({super.key});
@@ -43,6 +45,7 @@ class DashboardPage extends HookConsumerWidget {
 
     return DashboardShell(
       destination: destination.value,
+      secondaryAction: ref.watch(dashboardSecondaryActionProvider),
       dayStatus: DaySummaryStatus(
         date: dayDate.value ?? DateUtils.dateOnly(clock.now().toLocal()),
       ),

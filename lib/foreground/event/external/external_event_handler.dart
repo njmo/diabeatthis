@@ -14,7 +14,11 @@ import 'local_treatments/local_treatments_event.dart';
 import 'native_receiver/native_receiver_event_handler.dart';
 import 'notification/notification_response_event_handler.dart';
 
+typedef AdditionalForegroundEventHandler =
+    bool Function(Map<String, dynamic> event, RuntimeContext context);
+
 class ExternalEventHandler with Logging {
+  final AdditionalForegroundEventHandler? handleAdditionalEvent;
   final RuntimeContext _runtimeContext;
   late final RawTreatmentBatchBuffer _treatmentBuffer = RawTreatmentBatchBuffer(
     onBatch: (records) => _nativeReceiverEventHandler.handleTreatments(
@@ -35,7 +39,7 @@ class ExternalEventHandler with Logging {
   final NativeReceiverEventHandler _nativeReceiverEventHandler;
   final NotificationResponseEventHandler _notificationResponseEventHandler;
 
-  ExternalEventHandler(this._runtimeContext)
+  ExternalEventHandler(this._runtimeContext, {this.handleAdditionalEvent})
     : _appEventHandler = AppEventHandler(),
       _nativeReceiverEventHandler = NativeReceiverEventHandler(),
       _notificationResponseEventHandler = NotificationResponseEventHandler();
@@ -43,6 +47,7 @@ class ExternalEventHandler with Logging {
   Future<void> flushPendingTreatments() => _treatmentBuffer.flush();
 
   void handle(Map<String, dynamic> event) {
+    if (handleAdditionalEvent?.call(event, _runtimeContext) ?? false) return;
     if (event['external_event'] == 'app_event' &&
         (event['data'] as Map?)?['app_event'] ==
             CalculatorRequestCommand.type) {

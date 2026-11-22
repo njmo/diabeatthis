@@ -17,7 +17,10 @@ import '../firebase_options.dart';
 import 'app_container.dart';
 
 typedef BootstrapBuilder = FutureOr<Widget> Function();
-Future<void> bootstrap(BootstrapBuilder builder) async {
+Future<void> bootstrap(
+  BootstrapBuilder builder, {
+  ProviderContainer? container,
+}) async {
   // Optional: make zone errors fatal. Must be the first statement.
   BindingBase.debugZoneErrorsAreFatal = true;
 
@@ -57,7 +60,10 @@ Future<void> bootstrap(BootstrapBuilder builder) async {
 
       final app = await builder();
       runApp(
-        UncontrolledProviderScope(container: appContainer, child: app),
+        UncontrolledProviderScope(
+          container: container ?? appContainer,
+          child: app,
+        ),
       ); // Same zone ✅
     },
     (Object error, StackTrace stack) {
