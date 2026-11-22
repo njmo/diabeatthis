@@ -84,6 +84,13 @@ jobs:
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
           echo "TestFlight release $RELEASE_VERSION ($BUILD_NUMBER)"
 
+      - name: Compile the Apple Watch sources
+        if: ${{ !inputs.distribute_existing_build }}
+        run: |
+          xcrun --sdk watchos swiftc -parse-as-library -swift-version 5 \
+            -target arm64-apple-watchos10.0 -sdk "$(xcrun --sdk watchos --show-sdk-path)" \
+            -O -c ios/CaregiverWatch/CaregiverWatchApp.swift -o "$RUNNER_TEMP/CaregiverWatch.o"
+
       - name: Check release configuration
         if: ${{ !inputs.distribute_existing_build }}
         env:
@@ -216,6 +223,14 @@ jobs:
           else
             grep -nE -C 3 '(^|[[:space:]])error:|fatal error:' "$build_log" | tail -120 || true
             tail -50 "$build_log"
+            if [[ "${{ inputs.build_only }}" == true ]]; then
+              xcode_log="$RUNNER_TEMP/xcode-native-archive.log"
+              xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release \
+                -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/diagnostic.xcarchive" \
+                archive >"$xcode_log" 2>&1 || true
+              grep -nE -C 3 'error:|unable to|signal|SwiftCompile failed' "$xcode_log" | tail -140 || true
+              tail -35 "$xcode_log"
+            fi
             exit 1
           fi
 
