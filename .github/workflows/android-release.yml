@@ -32,7 +32,7 @@ on:
           - draft
           - completed
       wear_only:
-        description: "Build only the Wear OS bundle"
+        description: "Build only the Wear OS bundle and APK"
         type: boolean
         default: false
       release_wear:
@@ -154,8 +154,8 @@ jobs:
           name: diabeatthis-aab
           path: build/app/outputs/bundle/release/app-release.aab
 
-      - name: Build signed Wear OS app bundle
-        if: ${{ env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' || inputs.wear_only }}
+      - name: Build signed Wear OS bundle and APK
+        if: ${{ github.ref_type == 'tag' || env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' || inputs.wear_only }}
         env:
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -168,16 +168,26 @@ jobs:
           cd android
           # Keep Wear version codes distinct from the mobile workflow run numbers.
           wear_version_code=$((1000000 + RELEASE_BUILD_NUMBER))
-          ./gradlew :wear:bundleRelease \
+          ./gradlew :wear:bundleRelease :wear:assembleRelease \
             "-PwearVersionCode=$wear_version_code" \
             "-PwearVersionName=$RELEASE_VERSION"
+          test -s ../build/wear/outputs/bundle/release/wear-release.aab
+          test -s ../build/wear/outputs/apk/release/wear-release.apk
 
       - name: Upload Wear OS app bundle artifact
-        if: ${{ env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' || inputs.wear_only }}
+        if: ${{ github.ref_type == 'tag' || env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' || inputs.wear_only }}
         uses: actions/upload-artifact@v4
         with:
           name: diabeatthis-wear-aab
           path: build/wear/outputs/bundle/release/wear-release.aab
+          if-no-files-found: error
+
+      - name: Upload Wear OS APK artifact
+        if: ${{ github.ref_type == 'tag' || env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' || inputs.wear_only }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: diabeatthis-wear-apk
+          path: build/wear/outputs/apk/release/wear-release.apk
           if-no-files-found: error
 
       - name: Upload APK artifact
@@ -223,9 +233,13 @@ jobs:
         with:
           generate_release_notes: true
           body: |
-            Android app bundle and APK signed by the GitHub release keystore.
+            Android and Wear OS app bundles and APKs signed by the GitHub release keystore.
+
+            The two APKs can be installed together. For a phone build installed from Google Play, download a Wear OS APK with the matching Play App Signing certificate.
 
             Google Play track: ${{ env.GOOGLE_PLAY_TRACK }}.
           files: |
             build/app/outputs/bundle/release/app-release.aab
             build/app/outputs/flutter-apk/app-release.apk
+            build/wear/outputs/bundle/release/wear-release.aab
+            build/wear/outputs/apk/release/wear-release.apk
