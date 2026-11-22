@@ -165,3 +165,10 @@ przed kolejną publikacją. Dostępność ustawiasz osobno w **Distribution →
 Pricing and Availability → App Availability**. Wybierz **Specific Countries
 or Regions** i pomiń **France**.
 [Szyfrowanie](https://developer.apple.com/help/app-store-connect/reference/app-information/export-compliance-documentation-for-encryption/) · [Dostępność w krajach](https://developer.apple.com/help/app-store-connect/manage-your-apps-availability/manage-availability-for-your-app-on-the-app-store/)
+## Notki wydania TestFlight
+
+TestFlight używa polskich opisów z plików w `release-notes/`, które mają
+`"ios"` na liście platform. Generator uwzględnia wpisy dodane od poprzedniego
+tagu `published-ios-vX.Y.Z`. Oznacz tym tagiem commit buildu, gdy stanie się
+dostępny testerom. Przy ręcznym udostępnianiu istniejącego buildu wybierz
+oryginalny ref Git, żeby notki odpowiadały jego zawartości.

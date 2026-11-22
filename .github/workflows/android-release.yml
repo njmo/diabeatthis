@@ -187,6 +187,10 @@ jobs:
           name: diabeatthis-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
+      - name: Generate Android release notes
+        if: ${{ !inputs.wear_only }}
+        run: python3 .github/scripts/mobile_release_notes.py android "$RELEASE_VERSION" "$RUNNER_TEMP/android-release-notes"
+
       - name: Upload to Google Play
         if: ${{ !inputs.wear_only }}
         uses: r0adkll/upload-google-play@v1.1.5
@@ -196,6 +200,7 @@ jobs:
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           tracks: ${{ env.GOOGLE_PLAY_TRACK }}
           status: ${{ env.GOOGLE_PLAY_RELEASE_STATUS }}
+          whatsNewDirectory: ${{ runner.temp }}/android-release-notes
 
       - name: Generate Wear OS release notes
         if: ${{ env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' }}

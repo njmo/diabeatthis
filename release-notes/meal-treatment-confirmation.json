@@ -1,0 +1,5 @@
+{
+  "platforms": ["android", "ios", "wear"],
+  "pl-PL": "Dokładniej pokazujemy etap posiłku. Przy wymaganych węglach i eCarbs monitor czeka na oba wpisy przed zakończeniem posiłku.",
+  "en-US": "Meal progress is shown more accurately. When both carbs and eCarbs are required, the monitor waits for both before completing the meal."
+}

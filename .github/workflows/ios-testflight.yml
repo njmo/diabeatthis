@@ -35,6 +35,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Check Xcode and iOS SDK
         if: ${{ !inputs.distribute_existing_build }}
@@ -256,9 +257,13 @@ jobs:
             puts groups.first.id
           ' "$key_json")"
 
+          notes_dir="$RUNNER_TEMP/ios-release-notes"
+          python3 .github/scripts/mobile_release_notes.py ios "$RELEASE_VERSION" "$notes_dir"
+          changelog="$(cat "$notes_dir/whatsnew-pl-PL")"
+
           fastlane run upload_to_testflight \
             "api_key_path:$key_json" app_identifier:pl.diabeatthis.app app_platform:ios \
             "app_version:$RELEASE_VERSION" "build_number:$BUILD_NUMBER" \
             distribute_only:true distribute_external:true "groups:$group_id" \
             notify_external_testers:true wait_processing_timeout_duration:1200 \
-            'changelog:Sprawdź tryb opiekuna, parowanie i rozmowy rodzinne.'
+            "changelog:$changelog"

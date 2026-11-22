@@ -1,0 +1,5 @@
+{
+  "platforms": ["ios"],
+  "pl-PL": "Powiadomienie o prośbie otwiera ją także po uruchomieniu zamkniętej aplikacji opiekuna, gdy prośba zostanie pobrana.",
+  "en-US": "Tapping a meal request notification now opens the request once it loads, even if the caregiver app was closed."
+}
