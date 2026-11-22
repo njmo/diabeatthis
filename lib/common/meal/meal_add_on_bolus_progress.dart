@@ -13,6 +13,7 @@ import 'meal_bolus_coverage.dart';
 import 'meal_calculator_submission.dart';
 import 'meal_completion_timing.dart';
 import 'meal_extended_carbs.dart';
+import 'meal_treatment_surplus.dart';
 
 Future<MealAddOnBolusContext?> readMealAddOnBolusContext(
   DatabaseImpl db,
@@ -88,6 +89,9 @@ Future<MealAddOnBolusContext?> acceptMealAddOnBolus(
   if (!(await readMealCalculatorSubmission(db, canonical)).isComplete) {
     return null;
   }
+  if (canonical.carbs > current.requestedCarbs + 0.001) {
+    await recordMealTreatmentSurplus(db, mealId);
+  }
   final coverage = await readMealBolusCoverage(db, mealId, context: current);
   final coveredCarbs = coverage.carbs + canonical.carbs;
   final totals = await db.ingredientDao.totalsForMealConsumed(mealId);
@@ -149,6 +153,7 @@ Future<MealAddOnBolusContext?> reconcileMealAddOnBolusProgress(
           )
           .ceilMacro();
       context = MealAddOnBolusContext(
+        additionalServing: false,
         originalStatus: meal.status,
         eatingStartedAt: start,
         requestedAt: start,

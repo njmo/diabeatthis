@@ -11,6 +11,7 @@ import '../../../core/notifications/domain/models/notification_event_type.dart';
 import '../../../core/notifications/domain/models/notification_key.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../notifications/scoped_notification_cancellation.dart';
+import '../meal_treatment_surplus.dart';
 import 'meal_calculator_request_controller.dart';
 import 'meal_calculator_request_store.dart';
 import 'meal_calculator_state_use_case.dart';
@@ -60,6 +61,11 @@ final mealCalculatorRequestControllerProvider =
                   entityId: id,
                 ),
               );
+        },
+        onTreatmentSurplus: (id) async {
+          if (!ref.mounted || !ref.exists(databaseProvider)) return;
+          final db = ref.read(databaseProvider);
+          if (db.hasOpened) await recordMealTreatmentSurplus(db, id);
         },
         isMealRelevant: (id) async =>
             await stateUseCase()?.isMealRelevant(id) ?? true,

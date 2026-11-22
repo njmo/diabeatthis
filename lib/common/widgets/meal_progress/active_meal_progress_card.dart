@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/language.dart';
+import 'meal_treatment_surplus_warning.dart';
 
 class ActiveMealProgressCard extends StatelessWidget {
   const ActiveMealProgressCard({
@@ -19,6 +20,7 @@ class ActiveMealProgressCard extends StatelessWidget {
     this.onAddFood,
     this.addFoodLabel,
     this.progressAction,
+    this.treatmentSurplus = false,
   });
 
   final String name;
@@ -26,7 +28,7 @@ class ActiveMealProgressCard extends StatelessWidget {
   final String schedule;
   final Widget steps;
   final String actionLabel;
-  final VoidCallback onAction;
+  final VoidCallback? onAction;
   final VoidCallback onInterrupt;
   final bool quickMeal;
   final Widget? footer;
@@ -35,17 +37,19 @@ class ActiveMealProgressCard extends StatelessWidget {
   final VoidCallback? onAddFood;
   final String? addFoodLabel;
   final Widget? progressAction;
+  final bool treatmentSurplus;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final borderColor =
-        isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final numColor =
-        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final mutedColor =
-        isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final borderColor = isDark
+        ? const Color(0xFF334155)
+        : const Color(0xFFE2E8F0);
+    final numColor = isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final mutedColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -75,13 +79,16 @@ class ActiveMealProgressCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2.5,
+                  ),
                   decoration: BoxDecoration(
-                    color: (quickMeal
-                            ? const Color(0xFFFF9500)
-                            : const Color(0xFF00A3FF))
-                        .withValues(alpha: 0.15),
+                    color:
+                        (quickMeal
+                                ? const Color(0xFFFF9500)
+                                : const Color(0xFF00A3FF))
+                            .withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -115,8 +122,10 @@ class ActiveMealProgressCard extends StatelessWidget {
                     icon: const Icon(Icons.delete_outline, size: 18),
                     color: mutedColor,
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 28, minHeight: 28),
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
+                    ),
                   ),
                 IconButton(
                   tooltip: lang.mealProgressInterrupt,
@@ -124,8 +133,10 @@ class ActiveMealProgressCard extends StatelessWidget {
                   icon: const Icon(Icons.close, size: 18),
                   color: mutedColor,
                   padding: EdgeInsets.zero,
-                  constraints:
-                      const BoxConstraints(minWidth: 28, minHeight: 28),
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
                 ),
               ],
             ),
@@ -155,79 +166,87 @@ class ActiveMealProgressCard extends StatelessWidget {
             const SizedBox(height: 10),
             // Paski kroków (steps)
             steps,
+            if (treatmentSurplus) ...[
+              const SizedBox(height: 8),
+              const MealTreatmentSurplusWarning(),
+            ],
             if (progressAction != null) ...[
               const SizedBox(height: 8),
               progressAction!,
             ],
-            const SizedBox(height: 12),
-            // Przyciski akcji (kompaktowe, wysokość 38px)
-            Row(
-              children: [
-                Expanded(
-                  flex: 7,
-                  child: SizedBox(
-                    height: 38,
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF00A3FF),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: onAction,
-                      child: Text(
-                        actionLabel,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                if (onAddFood != null) ...[
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 4,
-                    child: SizedBox(
-                      height: 38,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: isDark
-                              ? const Color(0xFFF8FAFC)
-                              : const Color(0xFF0F172A),
-                          side: BorderSide(color: borderColor),
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+            if (onAction != null || onAddFood != null) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (onAction != null)
+                    Expanded(
+                      flex: 7,
+                      child: SizedBox(
+                        height: 38,
+                        child: FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF00A3FF),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
-                        onPressed: onAddFood,
-                        child: Text(
-                          addFoodLabel ?? lang.mealProgressAddFood,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                          onPressed: onAction,
+                          child: Text(
+                            actionLabel,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                  if (onAddFood != null) ...[
+                    if (onAction != null) const SizedBox(width: 8),
+                    Expanded(
+                      flex: 4,
+                      child: SizedBox(
+                        height: 38,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: isDark
+                                ? const Color(0xFFF8FAFC)
+                                : const Color(0xFF0F172A),
+                            side: BorderSide(color: borderColor),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: onAddFood,
+                          child: Text(
+                            addFoodLabel ?? lang.mealProgressAddFood,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
-            ),
+              ),
+            ],
             if (onEarlierFinished != null) ...[
               const SizedBox(height: 4),
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
                   style: TextButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -243,10 +262,7 @@ class ActiveMealProgressCard extends StatelessWidget {
                 ),
               ),
             ],
-            if (footer != null) ...[
-              const SizedBox(height: 8),
-              footer!,
-            ],
+            if (footer != null) ...[const SizedBox(height: 8), footer!],
           ],
         ),
       ),

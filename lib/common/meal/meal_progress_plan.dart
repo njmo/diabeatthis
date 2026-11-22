@@ -1,4 +1,5 @@
 import 'meal_add_on_bolus_context.dart';
+import 'meal_add_on_progress.dart';
 import 'meal_decision.dart';
 
 enum MealProgressStage { bolus, waiting, eating, extra }
@@ -23,8 +24,19 @@ MealProgressPlan mealProgressPlanForStatus(
   MealDecision? decision,
   Iterable<String> history = const [],
   MealAddOnBolusContext? addOn,
+  MealAddOnProgress? mirroredAddOn,
 }) {
-  if (addOn != null &&
+  final progress = addOn == null
+      ? mirroredAddOn
+      : addOnProgressForContext(addOn);
+  // The original food-first meal also persists bolus context after eating.
+  // Its history distinguishes that handoff from an actual additional serving.
+  final originalFoodFirstBolus =
+      status == 'waiting-for-bolus' &&
+      progress?.originalStatus == 'eating-then-bolus' &&
+      !(progress?.additionalServing ?? history.contains('eating-extra'));
+  if (progress != null &&
+      !originalFoodFirstBolus &&
       (status == 'eating-extra' || status == 'waiting-for-bolus')) {
     if (status == 'waiting-for-bolus') {
       return const MealProgressPlan(
@@ -37,26 +49,27 @@ MealProgressPlan mealProgressPlanForStatus(
       );
     }
     final original = mealProgressPlanForStatus(
-      addOn.originalStatus,
+      progress.originalStatus,
       decision: decision,
       history: history,
     );
     final stages = [
       ...original.stages.where((stage) => stage != MealProgressStage.extra),
+      if (progress.originalStatus != 'eating-then-bolus' &&
+          (progress.waitingForExtraBolus || progress.bolusBeforeExtra))
+        MealProgressStage.bolus,
       MealProgressStage.extra,
     ];
     return MealProgressPlan(
       stages: stages,
-      currentIndex: stages.length - 1,
-      pendingIndices: {
-        if (!addOn.bolusConfirmed)
-          for (var index = 0; index < stages.length; index++)
-            if (stages[index] == MealProgressStage.bolus) index,
-      },
+      currentIndex: progress.waitingForExtraBolus
+          ? stages.lastIndexOf(MealProgressStage.bolus)
+          : stages.length - 1,
     );
   }
   final ateBeforeBolus =
       status == 'eating-then-bolus' ||
+      originalFoodFirstBolus ||
       history.contains('eating-then-bolus') ||
       decision == MealDecision.eatNowBolusLater;
   final waited =
@@ -67,12 +80,22 @@ MealProgressPlan mealProgressPlanForStatus(
       decision == MealDecision.bolusWaitThenEat;
 
   if (ateBeforeBolus) {
-    if (status == 'eating-extra' && history.contains('eaten-bolused')) {
+    if (status == 'eating-extra') {
       return const MealProgressPlan(
         stages: [
           MealProgressStage.eating,
           MealProgressStage.bolus,
           MealProgressStage.extra,
+        ],
+        currentIndex: 2,
+      );
+    }
+    if (status == 'waiting-for-bolus' && history.contains('eating-extra')) {
+      return MealProgressPlan(
+        stages: const [
+          MealProgressStage.eating,
+          MealProgressStage.extra,
+          MealProgressStage.bolus,
         ],
         currentIndex: 2,
       );

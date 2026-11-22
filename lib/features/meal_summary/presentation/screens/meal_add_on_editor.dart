@@ -129,7 +129,9 @@ class MealAddOnEditorState extends ConsumerState<MealAddOnEditor> {
     });
     late final MealAddOnResult result;
     try {
-      result = await ref.read(recordMealAddOnUseCaseProvider).call(draft);
+      result = await ref
+          .read(recordMealAddOnUseCaseProvider)
+          .call(draft, onlyFirstServing: true);
     } catch (failure) {
       if (mounted) {
         setState(() {

@@ -1,6 +1,7 @@
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart';
 
+import '../../../../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
 import '../../../../../common/meal/meal_add_on_bolus_context.dart';
 import '../../../../../common/meal/meal_add_on_bolus_progress.dart';
 import '../../../../../common/meal/meal_bolus_coverage.dart';
@@ -23,6 +24,7 @@ import '../../../../providers/latest_bolus_wizard_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
 import 'bolus_reminder_helper.dart';
+import 'meal_completion_requirements.dart';
 import 'wait_for_meal_bolus_delivery.dart';
 
 /// Returns null for legacy meals, which retain their original monitor path.
@@ -62,7 +64,27 @@ class MealAddOnBolusWaiter {
               ))) {
         consumeBolusWizard(runtime.container, cached);
       }
-      if (!context.awaitingBolus) return true;
+      if (!context.awaitingBolus) {
+        if (context.requestedExtendedCarbs <= 0 ||
+            context.extendedCarbsConfirmed)
+          return true;
+        final pending = context;
+        await refreshInstruction(runtime, mealContext, pending);
+        await waitForMealCompletionRequirements(
+          runtime,
+          mealContext,
+          hasPendingRequirements: () async {
+            await mealHasPendingExtendedCarbs(runtime, mealId);
+            final current = await readMealAddOnBolusContext(db, mealId);
+            return current != null &&
+                current.requestedAt == pending.requestedAt &&
+                !current.awaitingBolus &&
+                current.requestedExtendedCarbs > 0 &&
+                !current.extendedCarbsConfirmed;
+          },
+        );
+        continue;
+      }
       final request = context;
       final pendingExtendedCarbs = request.extendedCarbsConfirmed
           ? 0
@@ -115,6 +137,14 @@ class MealAddOnBolusWaiter {
       }
       if (allowGracePeriod) {
         allowGracePeriod = false;
+        if (pendingExtendedCarbs > 0) {
+          await refreshInstruction(
+            runtime,
+            mealContext,
+            request,
+            notify: false,
+          );
+        }
         final remaining = request.requestedAt
             .add(const Duration(minutes: 10))
             .difference(clock.now());
@@ -161,8 +191,9 @@ class MealAddOnBolusWaiter {
   Future<void> refreshInstruction(
     RuntimeContext runtime,
     MealMonitorContext mealContext,
-    MealAddOnBolusContext request,
-  ) async {
+    MealAddOnBolusContext request, {
+    bool notify = true,
+  }) async {
     final mealId = mealContext.activeMeal!.id;
     final pendingExtendedCarbs = request.extendedCarbsConfirmed
         ? 0
@@ -178,12 +209,13 @@ class MealAddOnBolusWaiter {
       final notifications = runtime.container.read(
         notificationsControllerForegroundProvider,
       );
-      await notifications.cancelNotification(
-        NotificationKey(
-          type: NotificationEventType.aapsBolusSuggestion,
-          entityId: mealId,
-        ),
-      );
+      if (notify)
+        await notifications.cancelNotification(
+          NotificationKey(
+            type: NotificationEventType.aapsBolusSuggestion,
+            entityId: mealId,
+          ),
+        );
       mealContext.throwIfStopped(runtime);
       if (request.requestedCarbs == 0 && pendingExtendedCarbs == 0) {
         return;
@@ -199,7 +231,7 @@ class MealAddOnBolusWaiter {
         ).getPostMealExtendedCarbsScheduleSettings();
       }
       mealContext.throwIfStopped(runtime);
-      final activityDoseSuggestion = request.requestedCarbs > 0
+      final activityDoseSuggestion = notify && request.requestedCarbs > 0
           ? await runtime.container.read(getMealActivityAdviceUseCaseProvider)(
               mealId: mealId,
             )
@@ -211,18 +243,23 @@ class MealAddOnBolusWaiter {
       );
       if (current?.encode() != request.encode()) return;
       mealContext.throwIfStopped(runtime);
-      await notifications.show(
-        AapsBolusSuggestionNotificationEvent(
-          mealId: mealId,
-          activityDoseSuggestion: activityDoseSuggestion,
-          carbs: request.requestedCarbs,
-          extendedCarbs: pendingExtendedCarbs,
-          extendedCarbsAreAdditional: true,
-          extendedCarbsDeliveryMode: schedule.deliveryMode,
-          extendedCarbsDelayMinutes: schedule.delayMinutes,
-          extendedCarbsDurationMinutes: schedule.durationMinutes,
-        ),
+      final instruction = AapsBolusSuggestionNotificationEvent(
+        mealId: mealId,
+        activityDoseSuggestion: activityDoseSuggestion,
+        carbs: request.requestedCarbs,
+        extendedCarbs: pendingExtendedCarbs,
+        extendedCarbsAreAdditional: true,
+        extendedCarbsDeliveryMode: schedule.deliveryMode,
+        extendedCarbsDelayMinutes: schedule.delayMinutes,
+        extendedCarbsDurationMinutes: schedule.durationMinutes,
       );
+      if (notify) {
+        await notifications.show(instruction);
+      } else {
+        await runtime.container
+            .read(mealCalculatorRequestControllerProvider)
+            .register(instruction);
+      }
     } catch (error, stackTrace) {
       mealContext.throwIfStopped(runtime);
       Log.e(

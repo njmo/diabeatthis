@@ -195,7 +195,10 @@ class RecordingAddOnUseCase extends RecordMealAddOnUseCase {
   final int pendingCarbs;
 
   @override
-  Future<MealAddOnResult> call(MealSummaryDraft draft) async {
+  Future<MealAddOnResult> call(
+    MealSummaryDraft draft, {
+    bool onlyFirstServing = false,
+  }) async {
     saves.add(draft);
     return MealAddOnResult(
       meal: const Meal(id: 1, name: 'Lunch', status: 'eating-extra'),

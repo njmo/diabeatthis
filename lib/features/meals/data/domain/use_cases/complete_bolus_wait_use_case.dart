@@ -48,7 +48,7 @@ class CompleteBolusWaitUseCase {
 
   Future<int?> _finalWaitMinutes(domain.Meal meal) async {
     final startedAt =
-        await ref.read(
+        await ref.refresh(
           mealStatusStartedAtProvider(
             MealStatusStartedAtRequest(
               mealId: meal.id,

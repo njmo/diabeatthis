@@ -79,7 +79,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 52;
+  int get schemaVersion => 53;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -406,6 +406,9 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
           TableMigration(lowTreatmentContext),
         );
       }
+      final hasTreatmentSurplus = mealColumns.any(
+        (row) => row.read<String>('name') == 'treatment_surplus',
+      );
       if (from < 52 && !hasPlannedDay) {
         await customStatement('PRAGMA foreign_keys = OFF');
         await transaction(() async {
@@ -417,9 +420,17 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
           // Drift preserves the meal indexes, data and status history triggers.
           await m.alterTable(
             // ignore: experimental_member_use
-            TableMigration(meal, newColumns: [meal.plannedDay]),
+            TableMigration(
+              meal,
+              newColumns: [
+                meal.plannedDay,
+                if (!hasTreatmentSurplus) meal.treatmentSurplus,
+              ],
+            ),
           );
         });
+      } else if (from < 53 && !hasTreatmentSurplus) {
+        await m.addColumn(meal, meal.treatmentSurplus);
       }
     },
     beforeOpen: (details) async {

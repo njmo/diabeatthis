@@ -1,11 +1,17 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../common/monitoring/meal_wait_status.dart';
 import '../../../../../common/widgets/meal_progress/meal_wait_progress.dart';
 import '../../../../../core/domain/model/meal.dart';
-import '../../../../dashboard/data/providers/meal_advisor_result_provider.dart';
-import '../../../../dashboard/data/providers/time_now_provider.dart';
-import '../../../data/providers/meal_status_history_provider.dart';
+
+final activeMealWaitClockProvider = StreamProvider.autoDispose<DateTime>((
+  ref,
+) async* {
+  yield clock.now();
+  yield* Stream.periodic(const Duration(seconds: 1), (_) => clock.now());
+});
 
 class ActiveMealWaitFooter extends ConsumerWidget {
   const ActiveMealWaitFooter({super.key, required this.meal});
@@ -14,27 +20,16 @@ class ActiveMealWaitFooter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final now = ref.watch(timeNowProvider).asData?.value;
-    final advice = ref.watch(getMealAdviceProvider(meal)).asData?.value;
-    final startedAt = ref
-        .watch(
-          mealStatusStartedAtProvider(
-            MealStatusStartedAtRequest(
-              mealId: meal.id,
-              status: 'bolused-waiting',
-            ),
-          ),
-        )
-        .asData
-        ?.value;
-    final minutes = advice?.wait?.recommendedMinutes;
-    if (now == null || startedAt == null || minutes == null) {
+    final wait = ref.watch(mealWaitStatusProvider).value;
+    if (wait == null || wait.mealId != meal.id) {
       return const SizedBox.shrink();
     }
-    final total = Duration(minutes: minutes);
+    final now =
+        ref.watch(activeMealWaitClockProvider).asData?.value ?? clock.now();
     return MealWaitProgress(
-      remaining: total - now.difference(startedAt),
-      total: total,
+      remaining: wait.deadline.difference(now),
+      total: wait.deadline.difference(wait.startedAt),
+      waitingForExtendedCarbs: wait.waitingForExtendedCarbs,
     );
   }
 }

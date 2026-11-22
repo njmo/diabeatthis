@@ -420,7 +420,16 @@ class MealDao extends DatabaseAccessor<DatabaseImpl> with _$MealDaoMixin {
           OR (meal.planned_at BETWEEN ? AND ? AND EXISTS (
             SELECT 1 FROM scheduled_meal_decision AS journal
             WHERE journal.meal_id=meal.id AND journal.planned_at=meal.planned_at
-              AND journal.handled=0
+              AND (journal.handled=0 OR EXISTS (
+                SELECT 1 FROM family_meal_decision_receipts AS receipt
+                WHERE receipt.request_id=journal.request_id
+                  AND receipt.owner_uid=journal.owner_uid
+                  AND receipt.meal_id=meal.id
+                  AND json_valid(receipt.outcome_json)
+                  AND json_extract(receipt.outcome_json, '\$.scheduled')=1
+                  AND json_extract(receipt.outcome_json, '\$.plannedAt')=meal.planned_at
+                  AND json_extract(receipt.outcome_json, '\$.decision')='insulinThenWait'
+              ))
           ))
         ))
       )

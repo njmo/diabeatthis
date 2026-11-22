@@ -57,6 +57,27 @@ void main() {
     );
   }
 
+  test('a second serving is rejected through the single-refill flow', () async {
+    Future<MealAddOnResult> record(double meat) async {
+      final draft = await addOnDraft(db, meat: meat);
+      return withClock(
+        Clock.fixed(now),
+        () => container
+            .read(recordMealAddOnUseCaseProvider)
+            .call(draft, onlyFirstServing: true),
+      );
+    }
+
+    await record(200);
+    final before = await db.mealDao.getMealById(1);
+    await expectLater(
+      record(300),
+      throwsA(isA<MealSummaryCannotFinishException>()),
+    );
+    final after = await db.mealDao.getMealById(1);
+    expect(after?.addOnBolusContext, before?.addOnBolusContext);
+  });
+
   Future<MealCompletionResult> finish({double? meat, DateTime? at}) async {
     final draft = await addOnDraft(db, meat: meat);
     final end = at ?? now.add(const Duration(minutes: 5));
@@ -262,6 +283,33 @@ void main() {
       );
     },
   );
+
+  for (final (initialCarbs, remainingCarbs) in [(43, 1), (45, 0)]) {
+    test(
+      'first add-on requests $remainingCarbs g after an initial calculator entry of $initialCarbs g',
+      () async {
+        final wizardAt = start.add(const Duration(minutes: 5));
+        await db.customStatement(
+          "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('initial','aaps',?,?)",
+          [wizardAt.millisecondsSinceEpoch, initialCarbs],
+        );
+        await seedDeliveredMealBolus(db, wizardAt);
+        await db.mealWizardLinkDao.link(
+          mealId: 1,
+          localWizardId: 'initial',
+          relationType: 'initial',
+        );
+
+        // The original meal has 42 g and the add-on brings it to 44 g.
+        final result = await add();
+        final context = (await readMealAddOnBolusContext(db, 1))!;
+        expect(context.coveredCarbs, initialCarbs);
+        expect(context.requestedCarbs, remainingCarbs);
+        expect(context.awaitingBolus, remainingCarbs > 0);
+        expect(result.aapsCarbs.carbs, remainingCarbs);
+      },
+    );
+  }
 
   test(
     'dismissed or other-meal calculator entries never cover the current meal',

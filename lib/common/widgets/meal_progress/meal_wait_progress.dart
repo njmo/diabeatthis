@@ -7,10 +7,12 @@ class MealWaitProgress extends StatelessWidget {
     super.key,
     required this.remaining,
     required this.total,
+    this.waitingForExtendedCarbs = false,
   });
 
   final Duration remaining;
   final Duration total;
+  final bool waitingForExtendedCarbs;
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +23,8 @@ class MealWaitProgress extends StatelessWidget {
         ? 0.0
         : (seconds / total.inSeconds).clamp(0.0, 1.0);
     final minutes = (seconds / 60).ceil();
+    final countdown =
+        '${(seconds ~/ 60).toString().padLeft(2, '0')}:${(seconds % 60).toString().padLeft(2, '0')}';
     final elapsed = remaining <= Duration.zero;
 
     return Container(
@@ -40,10 +44,7 @@ class MealWaitProgress extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                lang.durationMinutesShort(minutes),
-                style: theme.textTheme.titleMedium,
-              ),
+              Text(countdown, style: theme.textTheme.titleMedium),
             ],
           ),
           const SizedBox(height: 9),
@@ -54,6 +55,10 @@ class MealWaitProgress extends StatelessWidget {
             semanticsLabel:
                 '${elapsed ? lang.mealProgressWaitElapsed : lang.mealProgressWaitRemaining}, ${lang.durationMinutesShort(minutes)}',
           ),
+          if (waitingForExtendedCarbs) ...[
+            const SizedBox(height: 8),
+            Text(lang.mealWaitPendingExtendedCarbs),
+          ],
         ],
       ),
     );

@@ -22,7 +22,7 @@ void main() {
     );
 
     expect(find.text('Czas oczekiwania minął'), findsOneWidget);
-    expect(find.text('0 min'), findsOneWidget);
+    expect(find.text('00:00'), findsOneWidget);
     expect(
       tester
           .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))

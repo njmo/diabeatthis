@@ -34,6 +34,38 @@ void main() {
     ),
   );
 
+  test(
+    'caregiver prebolus uses planned eCarbs when advice only sets timing',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          mealMacronutrientsSummaryProvider(1).overrideWith(
+            (ref) async => MealMacroSummary(
+              carbsGrams: 21,
+              fatGrams: 16.7,
+              proteinGrams: 12.9,
+              fiberGrams: 0,
+              totalGrams: 116,
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final result = await BolusReminderHelper().resolveMealBolusSuggestion(
+        FakeRuntimeHarness(container: container).runtimeContext,
+        meal.copyWith(carbs: 22),
+        advice: MealAdvice.full(
+          MealDecision.bolusWaitThenEat,
+          null,
+          DateTime(2026, 11, 1),
+          source: 'caregiver',
+        ),
+      );
+      expect(result.carbs, 22);
+      expect(result.extendedCarbs, 21);
+    },
+  );
+
   for (final scenario in [
     (fat: 5.0, protein: 2.5, carbs: 10.0, expected: 0),
     (fat: 10.0, protein: 5.0, carbs: 20.0, expected: 11),

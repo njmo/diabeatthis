@@ -40,6 +40,40 @@ class FamilyMirrorOutbox {
     return row.read<String>('source_id');
   });
 
+  Future<bool> mealNeedsPublishing(int mealId) async {
+    final rows = await db
+        .customSelect(
+          r'''
+      SELECT 1 FROM family_sync_outbox
+      WHERE revision > acknowledged_revision
+        AND (
+          (kind = 'meals' AND entity_id = ?)
+          OR (kind IN ('mealIngredients', 'mealSnapshots')
+            AND json_extract(payload, '$.meal_id') = ?)
+          OR (kind = 'ingredients' AND entity_id IN (
+            SELECT CAST(ingredient_id AS TEXT) FROM meal_ingredients WHERE meal_id = ?
+          ))
+          OR (kind = 'ingredientHistory' AND json_extract(payload, '$.ingredient_id') IN (
+            SELECT ingredient_id FROM meal_ingredients WHERE meal_id = ?
+          ))
+          OR (kind = 'portions' AND entity_id IN (
+            SELECT CAST(portion_id AS TEXT) FROM meal_ingredients WHERE meal_id = ?
+          ))
+        )
+      LIMIT 1
+      ''',
+          variables: [
+            Variable(mealId.toString()),
+            Variable(mealId),
+            Variable(mealId),
+            Variable(mealId),
+            Variable(mealId),
+          ],
+        )
+        .get();
+    return rows.isNotEmpty;
+  }
+
   /// A batch and its journal gate must share the same SQLite snapshot.
   Future<List<FamilyMirrorRecord>> publishable({
     int limit = 25,

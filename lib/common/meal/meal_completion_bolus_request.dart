@@ -45,6 +45,11 @@ Future<bool> persistMealCompletionBolusRequest(
   final requestedAt = previousRequest?.requestedAt ?? clock.now();
   final pending = MealAddOnBolusContext(
     originalStatus: previousContext?.originalStatus ?? currentStatus,
+    additionalServing: currentStatus == 'eating-extra'
+        ? true
+        : previousContext?.additionalServing ??
+              (currentStatus == 'eating-then-bolus' ? false : null),
+    bolusBeforeExtra: previousContext?.bolusBeforeExtra,
     eatingStartedAt: previousContext?.eatingStartedAt ?? timing.startedAt,
     requestedAt: requestedAt,
     bolusWindowStartedAt: previousRequest?.bolusWindowStartedAt ?? requestedAt,

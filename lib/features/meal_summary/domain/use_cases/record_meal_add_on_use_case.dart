@@ -40,7 +40,10 @@ class RecordMealAddOnUseCase {
 
   final Ref ref;
 
-  Future<MealAddOnResult> call(MealSummaryDraft draft) async {
+  Future<MealAddOnResult> call(
+    MealSummaryDraft draft, {
+    bool onlyFirstServing = false,
+  }) async {
     final status = draft.mealStatus;
     if (status == null ||
         !(mealStatusesStartingEating.contains(status) ||
@@ -65,6 +68,21 @@ class RecordMealAddOnUseCase {
         allowedStatuses: {status},
       );
       final meal = (await db.mealDao.getMealById(draft.mealId))!;
+      if (onlyFirstServing) {
+        final previous = MealAddOnBolusContext.decode(meal.addOnBolusContext);
+        final recordedRefill =
+            await (db.select(db.mealStatusHistory)
+                  ..where(
+                    (row) =>
+                        row.mealId.equals(meal.id) &
+                        row.status.equals('eating-extra'),
+                  )
+                  ..limit(1))
+                .getSingleOrNull();
+        if (previous?.additionalServing == true || recordedRefill != null) {
+          throw MealSummaryCannotFinishException(lang.mealCompletionStale);
+        }
+      }
       final currentItems = await db.mealIngredientsDao
           .getMealIngredientsForMeal(draft.mealId);
       if (currentItems.length != draft.itemsById.length ||
@@ -115,6 +133,8 @@ class RecordMealAddOnUseCase {
           : math.max(0, totalExtendedCarbs - previousExtendedCarbs);
       final now = clock.now();
       final context = MealAddOnBolusContext(
+        additionalServing: true,
+        bolusBeforeExtra: requestedCarbs > 0,
         originalStatus: previous?.originalStatus ?? meal.status,
         eatingStartedAt:
             previous?.eatingStartedAt ??

@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_display_name.dart';
+import '../../../../common/meal/meal_treatment_surplus.dart';
 import '../../../../common/meal/open_meal_add_on.dart';
 import '../../../../common/meal/open_meal_completion.dart';
 import '../../../../common/meal_advisor/presentation/remote/child_meal_decision_meal_action.dart';
@@ -17,6 +18,7 @@ import '../../../dashboard/data/providers/time_now_provider.dart';
 import '../../../dashboard/presentation/utils/meal_status_dialog_result_handler.dart';
 import '../../../dashboard/presentation/utils/show_meal_status_dialog.dart';
 import '../../data/providers/meal_activation_guard_provider.dart';
+import '../../data/providers/meal_add_on_bolus_context_provider.dart';
 import '../../data/providers/meal_database_provider.dart';
 import 'meal_details/meal_detail_formatters.dart';
 import 'meal_progress/active_meal_add_on_bolus_action.dart';
@@ -47,9 +49,22 @@ class MealListToday extends ConsumerWidget {
         blockingMeal,
       ...meals,
     ].where((meal) => mealStatusAppearsOnDashboard(meal.status)).toList();
-    final activeMeals = visibleMeals.where(
-      (meal) => mealStatusBlocksAnotherMealActivation(meal.status),
-    );
+    final activeMeals = visibleMeals
+        .where((meal) => mealStatusBlocksAnotherMealActivation(meal.status))
+        .toList();
+    final treatmentSurpluses = activeMeals.isEmpty
+        ? null
+        : ref.watch(mealTreatmentSurplusesProvider).value;
+    final addOnProgress = {
+      for (final meal in activeMeals)
+        meal.id: ref
+            .watch(mealAddOnBolusContextProvider(meal.id))
+            .asData
+            ?.value,
+    };
+    bool waitingForExtraBolus(domain.Meal meal) =>
+        meal.status == 'eating-extra' &&
+        addOnProgress[meal.id]?.waitingForExtraBolus == true;
     final summaryMeals = visibleMeals.where(
       (meal) => mealStatusReadyToSummarize(meal.status),
     );
@@ -83,9 +98,14 @@ class MealListToday extends ConsumerWidget {
               key: ValueKey('active-meal-${meal.id}'),
               name: mealDisplayName(meal.name),
               quickMeal: isQuickMealName(meal.name),
-              status: mealStatusLabel(meal.status ?? 'planned'),
+              status: mealStatusLabel(
+                waitingForExtraBolus(meal)
+                    ? 'waiting-for-bolus'
+                    : meal.status ?? 'planned',
+              ),
               schedule: mealScheduleLabel(context, meal.plannedAt, now),
               steps: ActiveMealSteps(meal: meal),
+              treatmentSurplus: treatmentSurpluses?.contains(meal.id) == true,
               progressAction: meal.status == 'eating-extra'
                   ? ActiveMealAddOnBolusAction(mealId: meal.id)
                   : null,
@@ -94,31 +114,35 @@ class MealListToday extends ConsumerWidget {
                   : meal.status == 'waiting-for-bolus'
                   ? lang.mealProgressOpenCalculator
                   : lang.mealStatusAte,
-              onAction: () async {
-                if (mealStatusesStartingEating.contains(meal.status) ||
-                    meal.status == 'eating-extra') {
-                  openMealCompletion(context, mealId: meal.id);
-                } else if (meal.status == 'waiting-for-bolus') {
-                  try {
-                    await openAapsAfterBolusStatusUpdateIfNeeded(
-                      context: context,
-                      ref: ref,
-                      meal: meal,
-                      status: 'waiting-for-bolus',
-                    );
-                  } catch (_) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(lang.aapsOpenFailed)),
-                      );
-                    }
-                  }
-                } else {
-                  openExistingActions(meal);
-                }
-              },
+              onAction: waitingForExtraBolus(meal)
+                  ? null
+                  : () async {
+                      if (mealStatusesStartingEating.contains(meal.status) ||
+                          meal.status == 'eating-extra') {
+                        openMealCompletion(context, mealId: meal.id);
+                      } else if (meal.status == 'waiting-for-bolus') {
+                        try {
+                          await openAapsAfterBolusStatusUpdateIfNeeded(
+                            context: context,
+                            ref: ref,
+                            meal: meal,
+                            status: 'waiting-for-bolus',
+                          );
+                        } catch (_) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(lang.aapsOpenFailed)),
+                            );
+                          }
+                        }
+                      } else {
+                        openExistingActions(meal);
+                      }
+                    },
               addFoodLabel: lang.mealAddOnAction,
-              onAddFood: mealStatusesStartingEating.contains(meal.status)
+              onAddFood:
+                  mealStatusesStartingEating.contains(meal.status) &&
+                      addOnProgress[meal.id]?.additionalServing != true
                   ? () => openMealAddOn(context: context, ref: ref, meal: meal)
                   : null,
               onInterrupt: () => showMealInterruptionDialog(

@@ -1,6 +1,28 @@
 import '../../../common/family_sync/family_mirror_integration.dart';
 import '../database_impl.dart';
 
+// Export only the inputs to the shared progress state machine.
+String _mealAddOnProgress(String prefix) {
+  final context = '${prefix}add_on_bolus_context';
+  return """
+    CASE WHEN ${prefix}status IN ('eating-extra', 'waiting-for-bolus')
+      AND json_valid($context) THEN
+      CASE WHEN json_extract($context, '\$.version') = 1
+        AND json_type($context, '\$.originalStatus') = 'text'
+        AND json_type($context, '\$.awaitingBolus') IN ('true', 'false')
+      THEN json_object(
+        'originalStatus', json_extract($context, '\$.originalStatus'),
+        'awaitingBolus', json_extract($context, '\$.awaitingBolus') = 1
+          OR (coalesce(json_extract($context, '\$.requestedExtendedCarbs'), 0) > 0
+            AND coalesce(json_extract($context, '\$.extendedCarbsConfirmed'), 0) = 0),
+        'additionalServing', json_extract($context, '\$.additionalServing'),
+        'bolusBeforeExtra', coalesce(json_extract($context, '\$.bolusBeforeExtra'),
+          coalesce(json_array_length($context, '\$.acceptedWizardKeys'), 0) > 0)
+      ) END
+    END
+    """;
+}
+
 /// Capture is transactional with domain writes, including writes by foreground.
 /// Bookkeeping is independent of the legacy is_synced flags.
 Future<void> installFamilyMirrorSchema(DatabaseImpl db) async {
@@ -49,6 +71,16 @@ Future<void> installFamilyMirrorSchema(DatabaseImpl db) async {
   );
   for (final integration in familyMirrorIntegrations) {
     final table = integration.table;
+    final mealTrigger = table == 'meal'
+        ? await db
+              .customSelect(
+                "SELECT sql FROM sqlite_master WHERE type='trigger' AND name='family_sync_meal_update'",
+              )
+              .getSingleOrNull()
+        : null;
+    final upgradeMealExport =
+        mealTrigger != null &&
+        !mealTrigger.read<String>('sql').contains("'treatment_surplus'");
     String key(String prefix) => integration.keys
         .map((key) => 'CAST($prefix"$key" AS TEXT)')
         .join(" || '_' || ");
@@ -58,16 +90,33 @@ Future<void> installFamilyMirrorSchema(DatabaseImpl db) async {
       final columns = integration.columns;
       if (table != 'meal') return encode(columns);
       final timedColumns = columns.where((column) => column != 'planned_day');
-      return 'CASE WHEN ${prefix}planned_day IS NULL THEN ${encode(timedColumns)} '
+      final base =
+          'CASE WHEN ${prefix}planned_day IS NULL THEN ${encode(timedColumns)} '
           'ELSE ${encode(columns)} END';
+      // json_patch omits the optional field when there is no relevant context.
+      return "json_patch($base, json_object('add_on_progress', ${_mealAddOnProgress(prefix)} || '', "
+          "'treatment_surplus', nullif(${prefix}treatment_surplus, 0)))";
     }
 
     for (final event in ['INSERT', 'UPDATE', 'DELETE']) {
       final deleted = event == 'DELETE';
       final prefix = deleted ? 'OLD.' : 'NEW.';
+      final differences = [
+        for (final column in integration.columns)
+          'OLD."$column" IS NOT NEW."$column"',
+        if (table == 'meal')
+          '(${_mealAddOnProgress('OLD.')}) IS NOT (${_mealAddOnProgress('NEW.')})',
+        if (table == 'meal')
+          'OLD.treatment_surplus IS NOT NEW.treatment_surplus',
+      ];
       final condition = event == 'UPDATE'
-          ? 'WHEN ${integration.columns.map((column) => 'OLD."$column" IS NOT NEW."$column"').join(' OR ')}'
+          ? 'WHEN ${differences.join(' OR ')}'
           : '';
+      if (upgradeMealExport) {
+        await db.customStatement(
+          'DROP TRIGGER IF EXISTS family_sync_meal_${event.toLowerCase()}',
+        );
+      }
       await db.customStatement(
         '''CREATE TRIGGER IF NOT EXISTS family_sync_${table}_${event.toLowerCase()}
         AFTER $event ON "$table" $condition BEGIN
@@ -76,6 +125,16 @@ Future<void> installFamilyMirrorSchema(DatabaseImpl db) async {
         ON CONFLICT(kind,entity_id) DO UPDATE SET revision=revision+1,deleted=excluded.deleted,payload=excluded.payload;
         END''',
       );
+    }
+    if (upgradeMealExport) {
+      await db.customStatement("""
+        INSERT INTO family_sync_outbox(kind,entity_id,revision,deleted,payload)
+        SELECT 'meals', ${key('')},1,0,${payload('')} FROM meal
+        WHERE (${_mealAddOnProgress('')}) IS NOT NULL OR treatment_surplus = 1
+        ON CONFLICT(kind,entity_id) DO UPDATE SET
+          revision=revision+1,deleted=0,payload=excluded.payload
+        WHERE family_sync_outbox.payload IS NOT excluded.payload
+        """);
     }
     // Existing databases need a complete first export, regardless of old flags.
     await db.customStatement(

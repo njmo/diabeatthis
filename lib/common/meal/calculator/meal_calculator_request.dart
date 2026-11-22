@@ -1,4 +1,5 @@
 import '../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
+import '../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../handoff/handoff_progress.dart';
 import 'meal_calculator_evidence.dart';
 import 'meal_handoff_instruction.dart';
@@ -22,6 +23,16 @@ class MealCalculatorRequest {
   bool instructionNotificationCleared = false;
   bool acceptedByMeal = false;
   List<int> acceptedWizardTimes = [];
+
+  bool get hasPendingScheduledExtendedCarbs =>
+      event.extendedCarbs > 0 &&
+      event.extendedCarbsDeliveryMode != ExtendedCarbsDeliveryMode.extraBolus &&
+      event.extendedCarbsDelayMinutes != null &&
+      event.extendedCarbsDurationMinutes != null &&
+      !tracker.extendedCarbsConfirmed;
+
+  bool matchesMealStage(int mealId, DateTime? addOnRequestedAt) =>
+      event.mealId == mealId && contextRequestedAt == addOnRequestedAt;
 
   HandoffProgress get progress => HandoffProgress({
     MealHandoffInstruction.bolusAction: tracker.bolusConfirmed,

@@ -12,9 +12,15 @@ class IngredientDao extends DatabaseAccessor<DatabaseImpl>
   IngredientDao(super.db);
 
   Future<List<IngredientData>> getIngredientsInMeal(int mealId) {
-    final query = select(db.ingredient).join([
-      innerJoin(db.mealIngredients, db.mealIngredients.mealId.equals(mealId)),
-    ])..where(db.mealIngredients.mealId.equals(mealId));
+    final query =
+        select(db.ingredient).join([
+            innerJoin(
+              db.mealIngredients,
+              db.mealIngredients.ingredientId.equalsExp(db.ingredient.id),
+            ),
+          ])
+          ..where(db.mealIngredients.mealId.equals(mealId))
+          ..orderBy([OrderingTerm.asc(db.mealIngredients.id)]);
 
     return query.map((row) => row.readTable(db.ingredient)).get();
   }

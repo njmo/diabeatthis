@@ -1,4 +1,6 @@
 import 'package:clock/clock.dart';
+import 'package:diabeatthis/common/meal/calculator/meal_calculator_evidence.dart';
+import 'package:diabeatthis/common/meal/calculator/meal_calculator_request.dart';
 import 'package:diabeatthis/common/meal/calculator/meal_calculator_request_controller.dart';
 import 'package:diabeatthis/common/meal/calculator/meal_calculator_request_store.dart';
 import 'package:diabeatthis/common/meal/meal_add_on_bolus_context.dart';
@@ -15,6 +17,66 @@ void main() {
     extendedCarbsDelayMinutes: 45,
     extendedCarbsDurationMinutes: 120,
   );
+
+  test(
+    'calculator confirmations are scoped to the meal and add-on timestamp',
+    () {
+      final base = MealCalculatorRequest(event: event, openedAt: opened);
+      final addOn = MealCalculatorRequest(
+        event: event,
+        openedAt: opened,
+        contextRequestedAt: opened,
+      );
+      expect(base.matchesMealStage(7, null), isTrue);
+      expect(base.matchesMealStage(7, opened), isFalse);
+      expect(addOn.matchesMealStage(7, opened), isTrue);
+      expect(
+        addOn.matchesMealStage(7, opened.add(const Duration(seconds: 1))),
+        isFalse,
+      );
+      expect(addOn.matchesMealStage(8, opened), isFalse);
+    },
+  );
+
+  test('calculator entry, delivery and scheduled eCarbs are distinct', () {
+    final tracker = MealCalculatorEvidence(event: event, openedAt: opened);
+    final submission = {
+      'at': wizardAt.millisecondsSinceEpoch,
+      'carbs': 30,
+      'valid': true,
+      'complete': false,
+    };
+    const duration = Duration(hours: 2);
+    Map<String, Object> receipt(String id, DateTime at) => {
+      'id': id,
+      'at': at.millisecondsSinceEpoch,
+      'carbs': 15,
+      'duration': duration.inMilliseconds,
+      'valid': true,
+    };
+
+    expect(
+      tracker.update({
+        'submissions': [submission],
+        'extendedCarb': receipt('immediate', wizardAt),
+      }),
+      isFalse,
+    );
+    expect(tracker.carbsEntered, isTrue);
+    expect(tracker.bolusConfirmed, isFalse);
+    expect(tracker.extendedCarbsConfirmed, isFalse);
+
+    final scheduled = wizardAt.add(const Duration(minutes: 45));
+    expect(
+      tracker.update({
+        'submissions': [submission],
+        'extendedCarb': receipt('scheduled', scheduled),
+      }),
+      isFalse,
+    );
+    expect(tracker.extendedCarbsConfirmed, isTrue);
+    expect(tracker.bolusConfirmed, isFalse);
+  });
 
   Map<String, dynamic> evidence({bool extended = false, bool valid = true}) => {
     'submissions': [
@@ -109,7 +171,10 @@ void main() {
         Clock.fixed(opened),
         () => controller.register(event, sessionId: 'pip-1'),
       );
-      await controller.observe(evidence(extended: true));
+      await controller.observe({
+        ...evidence(extended: true),
+        'submissions': [],
+      });
       expect(windows.last, [false, true, true]);
       expect(context.showCalculatorAction, isTrue);
       context = context.copyWith(
@@ -187,5 +252,30 @@ void main() {
     expect(windows, [
       [false, false, false],
     ]);
+  });
+
+  test('an add-on receipt cannot count as surplus for the main meal', () async {
+    MealAddOnBolusContext? context;
+    var surplus = 0;
+    var now = wizardAt;
+    final controller = MealCalculatorRequestController(
+      now: () => now,
+      store: MemoryMealCalculatorRequestStore(),
+      publishWindow: (_, _) async {},
+      readContext: (_) async => context,
+      projectExtendedConfirmation: (_, _, _, _) async {},
+      onTreatmentSurplus: (_) async {
+        surplus++;
+      },
+      onError: (error, _) => fail('$error'),
+    );
+    await controller.register(event, openedAt: opened);
+    await controller.observe(evidence(extended: true));
+    now = now.add(const Duration(seconds: 20));
+    context = pending().copyWith(requestedAt: now);
+    final addOnEvidence = evidence(extended: true);
+    addOnEvidence['extendedCarb']['id'] = 'extended-add-on';
+    await controller.observe(addOnEvidence);
+    expect(surplus, 0);
   });
 }

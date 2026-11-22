@@ -253,6 +253,23 @@ void main() {
           ),
         );
 
+    await db
+        .into(db.ingredient)
+        .insert(
+          IngredientCompanion.insert(
+            name: 'Produkt poza posiłkiem',
+            carbsPer100g: 0,
+            fatPer100g: 0,
+            fiberPer100g: 0,
+            proteinPer100g: 0,
+            nutritionConfidence: 1,
+          ),
+        );
+    final ingredients = await db.ingredientDao.getIngredientsInMeal(meal.id);
+    expect(ingredients.map((ingredient) => ingredient.id), [
+      euIngredient.id,
+      nonEuIngredient.id,
+    ]);
     final summary = await db.ingredientDao.totalsForMeal(meal.id);
 
     expect(summary?.carbsGrams, 20);

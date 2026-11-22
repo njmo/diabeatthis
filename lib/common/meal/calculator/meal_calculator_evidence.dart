@@ -3,14 +3,23 @@ import '../../../features/meal_advisor/domain/utils/extended_carbs_schedule_sett
 
 /// Conservative matching: ambiguous or unsupported evidence keeps the card open.
 class MealCalculatorEvidence {
-  MealCalculatorEvidence({required this.event, required this.openedAt});
+  MealCalculatorEvidence({
+    required this.event,
+    required this.openedAt,
+    this.allowPartialOrSurplus = true,
+  });
 
   final AapsBolusSuggestionNotificationEvent event;
   final DateTime openedAt;
+  final bool allowPartialOrSurplus;
   final Map<String, Map<String, dynamic>> _extended = {};
   List<Map<String, dynamic>> _submissions = const [];
+  List<int> _mealWizardTimes = const [];
 
   bool update(Map<String, dynamic> payload) {
+    _mealWizardTimes =
+        (payload['mealWizardTimes'] as List?)?.whereType<int>().toList() ??
+        const [];
     _submissions = (payload['submissions'] as List)
         .map((item) => Map<String, dynamic>.from(item as Map))
         .where(
@@ -20,7 +29,9 @@ class MealCalculatorEvidence {
                   openedAt
                       .add(const Duration(minutes: 20))
                       .millisecondsSinceEpoch &&
-              ((row['carbs'] as num) - event.carbs).abs() < 0.001,
+              row['carbs'] is num &&
+              (row['carbs'] as num).isFinite &&
+              (row['carbs'] as num) > 0,
         )
         .toList();
     final incoming = <Map>[
@@ -52,7 +63,9 @@ class MealCalculatorEvidence {
       _extended[key] = row;
     }
     bolusConfirmed = event.carbs == 0;
+    carbsEntered = false;
     extendedCarbsConfirmed = event.extendedCarbs <= 0;
+    extendedCarbsSurplus = false;
     if (event.carbs < 0) {
       // Negative corrections are carb entries, never bolus calculator results.
       bolusConfirmed =
@@ -84,15 +97,29 @@ class MealCalculatorEvidence {
           (row) =>
               row['at'] >= started &&
               row['at'] <= deadline &&
-              row['valid'] == true &&
-              ((row['carbs'] as num) - event.carbs).abs() < 0.001,
+              row['valid'] == true,
         )
         .toList();
+    final enteredCarbs = matching.fold<num>(
+      0,
+      (sum, row) => sum + (row['carbs'] as num),
+    );
+    final deliveredCarbs = matching
+        .where((row) => row['complete'] == true)
+        .fold<num>(0, (sum, row) => sum + (row['carbs'] as num));
+    bool meets(num actual, num expected) => allowPartialOrSurplus
+        ? actual >= expected - 0.001
+        : (actual - expected).abs() <= 0.001;
+    final unambiguousCalculator = allowPartialOrSurplus || matching.length == 1;
+    carbsEntered =
+        event.carbs > 0 &&
+        unambiguousCalculator &&
+        meets(enteredCarbs, event.carbs);
     bolusConfirmed =
         event.carbs == 0 ||
         (payload.containsKey('mealBolusConfirmed')
             ? payload['mealBolusConfirmed'] == true
-            : matching.length == 1 && matching.single['complete'] == true);
+            : unambiguousCalculator && meets(deliveredCarbs, event.carbs));
     if (event.extendedCarbs > 0 &&
         event.extendedCarbsDeliveryMode !=
             ExtendedCarbsDeliveryMode.extraBolus) {
@@ -101,31 +128,48 @@ class MealCalculatorEvidence {
       if (delay != null && duration != null) {
         final anchor =
             payload['mealWizardAt'] as int? ??
-            (matching.length == 1 ? matching.single['at'] as int : started);
-        final expectedStart = anchor + Duration(minutes: delay).inMilliseconds;
-        extendedCarbsConfirmed =
-            _extended.values
-                .where(
-                  (row) =>
-                      row['valid'] == true &&
-                      row['carbs'] == event.extendedCarbs &&
-                      row['duration'] ==
-                          Duration(minutes: duration).inMilliseconds &&
-                      ((row['at'] as int) - expectedStart).abs() <=
-                          const Duration(minutes: 2).inMilliseconds,
-                )
-                .length ==
-            1;
+            (matching.isNotEmpty ? matching.first['at'] as int : started);
+        final expectedStarts =
+            (_mealWizardTimes.isEmpty ? [anchor] : _mealWizardTimes)
+                .map((at) => at + Duration(minutes: delay).inMilliseconds)
+                .toList();
+        final scheduledRows = _extended.values
+            .where(
+              (row) =>
+                  row['valid'] == true &&
+                  row['carbs'] is num &&
+                  (row['carbs'] as num).isFinite &&
+                  (row['carbs'] as num) > 0 &&
+                  row['duration'] ==
+                      Duration(minutes: duration).inMilliseconds &&
+                  expectedStarts.any(
+                    (expected) =>
+                        ((row['at'] as int) - expected).abs() <=
+                        const Duration(minutes: 2).inMilliseconds,
+                  ),
+            )
+            .toList();
+        final uniqueStarts = scheduledRows.map((row) => row['at']).toSet();
+        if (uniqueStarts.length != scheduledRows.length) return false;
+        final scheduledCarbs = scheduledRows.fold<num>(
+          0,
+          (sum, row) => sum + (row['carbs'] as num),
+        );
+        extendedCarbsConfirmed = meets(scheduledCarbs, event.extendedCarbs);
+        extendedCarbsSurplus = scheduledCarbs > event.extendedCarbs + 0.001;
       }
     }
     return bolusConfirmed && extendedCarbsConfirmed;
   }
 
   bool bolusConfirmed = false;
+  bool carbsEntered = false;
   bool extendedCarbsConfirmed = false;
+  bool extendedCarbsSurplus = false;
 
   Map<String, dynamic> get evidence => {
     'submissions': _submissions,
     'extendedCarbs': _extended.values.toList(),
+    if (_mealWizardTimes.isNotEmpty) 'mealWizardTimes': _mealWizardTimes,
   };
 }

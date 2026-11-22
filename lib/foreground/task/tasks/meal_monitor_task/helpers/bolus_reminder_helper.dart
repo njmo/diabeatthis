@@ -75,6 +75,14 @@ class BolusReminderHelper with Logging {
       }
     }
     final extendedCarbs = advice?.extendedCarbs;
+    final plannedMacros =
+        !consumed &&
+            advice?.source == 'caregiver' &&
+            extendedCarbs?.shouldSuggest != true
+        ? await runtimeContext.container.read(
+            mealMacronutrientsSummaryProvider(meal.id).future,
+          )
+        : null;
     final scheduleSettings =
         extendedCarbs?.scheduleSettings ??
         const ExtendedCarbsScheduleSettings.defaults();
@@ -83,6 +91,8 @@ class BolusReminderHelper with Logging {
       carbs: carbs,
       extendedCarbs: consumed
           ? mealExtendedCarbsFromMacros(consumedMacros)
+          : plannedMacros != null
+          ? mealExtendedCarbsFromMacros(plannedMacros)
           : extendedCarbs?.grams ?? 0,
       extendedCarbsDeliveryMode: scheduleSettings.deliveryMode,
       extendedCarbsDelayMinutes: scheduleSettings.delayMinutes,
@@ -208,20 +218,20 @@ class BolusReminderHelper with Logging {
       var shouldContinue = true;
 
       response.when(
-        agree: (int mealId) {
+        agree: (int mealId, _) {
           logI("User agreed to bolus");
         },
-        skip: (int mealId) {
+        skip: (int mealId, _) {
           logI("User skipped meal suggestion");
           shouldContinue = false;
         },
-        snooze: (int mealId, String input) {
+        snooze: (int mealId, _, String input) {
           logI("User snoozed meal suggestion");
           delay = Duration(
             minutes: int.tryParse(input) ?? reminderInterval.inMinutes,
           );
         },
-        empty: (int mealId) {
+        empty: (int mealId, _) {
           logI("User clicked on notification probably by mistake");
         },
       );
@@ -260,7 +270,8 @@ class BolusReminderHelper with Logging {
   ) async {
     final responseHandle = runtimeContext
         .eventWait<MealSuggestionResponseEvent>(
-          predicate: (event) => event.mealId == mealId,
+          predicate: (event) =>
+              event.mealId == mealId && event.plannedAtMs == null,
         );
     final bolusHandle = runtimeContext
         .eventWait<TreatmentAvailableEvent<BolusWizard>>(

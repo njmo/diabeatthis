@@ -1,4 +1,5 @@
 import 'package:clock/clock.dart';
+import 'package:diabeatthis/common/meal/calculator/meal_calculator_request_controller_provider.dart';
 import 'package:diabeatthis/common/meal/meal_add_on_bolus_progress.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/mappers/meal_drift_mapper.dart';
@@ -19,6 +20,7 @@ import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/wa
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/meal_add_on_bolus_waiter.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_context.dart';
 import 'package:drift/native.dart';
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -230,7 +232,7 @@ void main() {
   );
 
   test(
-    'finishing a pending add-on preserves the original flow and auto summarizes after only its remaining carbs',
+    'post-meal completion waits for the sum of separate bolus and eCarbs records',
     () async {
       await db.mealDao.updateMealStatus(1, 'planned');
       await db.mealDao.updateMealStatus(1, 'waited-eating', occurredAt: start);
@@ -247,24 +249,90 @@ void main() {
               endedAt: end,
             ),
       );
-      await db.customStatement(
-        "INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES ('pending-response','aaps',?,2)",
-        [end.add(const Duration(seconds: 10)).millisecondsSinceEpoch],
+      final pending = (await readMealAddOnBolusContext(db, 1))!;
+      expect(pending.requestedCarbs, 2);
+      await (db.update(db.meal)..where((row) => row.id.equals(1))).write(
+        MealCompanion(
+          addOnBolusContext: drift.Value(
+            pending
+                .copyWith(
+                  requestedExtendedCarbs: 10,
+                  extendedCarbsConfirmed: false,
+                )
+                .encode(),
+          ),
+        ),
       );
-      await seedDeliveredMealBolus(db, end.add(const Duration(seconds: 10)));
+      for (final second in [10, 25]) {
+        final at = end.add(Duration(seconds: second));
+        await db.customStatement(
+          'INSERT INTO bolus_wizard (local_id,source,created_at,carbs) VALUES (?,\'aaps\',?,1)',
+          ['pending-response-$second', at.millisecondsSinceEpoch],
+        );
+        await seedDeliveredMealBolus(db, at);
+      }
       final context = await monitorContext();
-      final next = await withClock(
-        Clock.fixed(end.add(const Duration(seconds: 20))),
-        () => WaitForBolusExecutor().execute(harness.runtimeContext, context),
-      );
+      var now = end.add(const Duration(seconds: 30));
+      final next = await withClock(Clock(() => now), () async {
+        final calculator = container.read(
+          mealCalculatorRequestControllerProvider,
+        );
+        await calculator.register(
+          const AapsBolusSuggestionNotificationEvent(
+            mealId: 1,
+            carbs: 0,
+            extendedCarbs: 10,
+            extendedCarbsDelayMinutes: 45,
+            extendedCarbsDurationMinutes: 120,
+          ),
+        );
+        final running = WaitForBolusExecutor().execute(
+          harness.runtimeContext,
+          context,
+        );
+        await pumpEventQueue(times: 150);
+        final coverage = (await readMealAddOnBolusContext(db, 1))!;
+        expect(coverage.awaitingBolus, isFalse);
+        expect(coverage.extendedCarbsConfirmed, isFalse);
+        expect((await db.mealDao.getMealById(1))!.status, 'waiting-for-bolus');
+
+        final scheduled = end.add(const Duration(minutes: 45, seconds: 25));
+        for (final index in [0, 0, 1]) {
+          await calculator.observe({
+            'submissions': [],
+            'extendedCarb': {
+              'id': 'extended-part-$index',
+              'carbs': 6,
+              'valid': true,
+              'at': scheduled
+                  .add(Duration(seconds: index))
+                  .millisecondsSinceEpoch,
+              'duration': const Duration(hours: 2).inMilliseconds,
+            },
+          });
+          now = now.add(const Duration(seconds: 6));
+          harness.dispatchTick(now);
+          await pumpEventQueue(times: 100);
+          if (index == 0) {
+            expect(
+              (await db.mealDao.getMealById(1))!.status,
+              'waiting-for-bolus',
+            );
+          }
+        }
+        return running.timeout(const Duration(seconds: 3));
+      });
       expect(next, isA<FinalizeMealExecutor>());
       expect((await db.mealDao.getMealById(1))!.status, 'eaten-bolused');
+      expect((await db.mealDao.getMealById(1))!.treatmentSurplus, isTrue);
       await next.execute(harness.runtimeContext, context);
       expect((await db.mealDao.getMealById(1))!.status, 'summarized');
       expect(notifications.scheduledEvents, isEmpty);
       expect(
-        (await db.mealWizardLinkDao.forMeal(1)).single.relationType,
-        'continuation',
+        (await db.mealWizardLinkDao.forMeal(
+          1,
+        )).map((link) => link.relationType),
+        ['continuation', 'continuation'],
       );
     },
   );

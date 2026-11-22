@@ -112,6 +112,7 @@ void main() {
                 createdAt: 1000,
                 updatedAt: 1000,
                 isSynced: false,
+                treatmentSurplus: false,
               ),
             ],
           ),

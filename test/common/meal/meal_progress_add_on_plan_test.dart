@@ -30,6 +30,21 @@ MealAddOnBolusContext progressAddOn({
 );
 
 void main() {
+  test('a supplied bolus still waits for required eCarbs on an add-on', () {
+    final context = progressAddOn(
+      originalStatus: 'waited-eating',
+      bolusConfirmed: true,
+      awaitingBolus: false,
+    ).copyWith(requestedExtendedCarbs: 10, additionalServing: true);
+    final pending = mealProgressPlanForStatus('eating-extra', addOn: context);
+    expect(pending.stages[pending.currentIndex], MealProgressStage.bolus);
+    final confirmed = mealProgressPlanForStatus(
+      'eating-extra',
+      addOn: context.copyWith(extendedCarbsConfirmed: true),
+    );
+    expect(confirmed.stages[confirmed.currentIndex], MealProgressStage.extra);
+  });
+
   test(
     'an eating-first add-on is current without falsely confirming its bolus',
     () {
@@ -43,20 +58,20 @@ void main() {
         MealProgressStage.bolus,
         MealProgressStage.extra,
       ]);
-      expect(plan.currentIndex, 2);
+      expect(plan.currentIndex, 1);
       expect(plan.isComplete(0), isTrue);
       expect(plan.isComplete(1), isFalse);
     },
   );
 
-  test('a pending add-on retains an already confirmed original bolus', () {
+  test('partial coverage does not start eating the extra', () {
     final plan = mealProgressPlanForStatus(
       'eating-extra',
       addOn: progressAddOn(bolusConfirmed: true),
     );
 
-    expect(plan.currentIndex, 2);
-    expect(plan.isComplete(1), isTrue);
+    expect(plan.currentIndex, 1);
+    expect(plan.isComplete(1), isFalse);
     expect(plan.pendingIndices, isEmpty);
   });
 
@@ -73,6 +88,7 @@ void main() {
       MealProgressStage.bolus,
       MealProgressStage.waiting,
       MealProgressStage.eating,
+      MealProgressStage.bolus,
       MealProgressStage.extra,
     ]);
     expect(plan.currentIndex, 3);
@@ -89,9 +105,20 @@ void main() {
     expect(plan.currentIndex, 1);
   });
 
+  test('the original food-first bolus does not add an extra step', () {
+    final plan = mealProgressPlanForStatus(
+      'waiting-for-bolus',
+      addOn: progressAddOn(),
+    );
+
+    expect(plan.stages, [MealProgressStage.eating, MealProgressStage.bolus]);
+    expect(plan.currentIndex, 1);
+  });
+
   test('finished actual food puts the remaining bolus after its add-on', () {
     final plan = mealProgressPlanForStatus(
       'waiting-for-bolus',
+      history: ['eating-then-bolus', 'eating-extra', 'waiting-for-bolus'],
       addOn: progressAddOn(bolusConfirmed: true),
     );
 
@@ -133,7 +160,7 @@ void main() {
           .toList();
       expect(steps, hasLength(3));
       expect(steps[1].complete, isFalse);
-      expect(steps[2].current, isTrue);
+      expect(steps[1].current, isTrue);
 
       changes.add(progressAddOn(bolusConfirmed: true, awaitingBolus: false));
       await tester.pumpAndSettle();

@@ -1,7 +1,10 @@
 import 'package:clock/clock.dart';
 
 import '../../../../../common/events/data/notification/eat_now_response_event.dart';
+import '../../../../../common/events/data/task/task_state_synchronization_payload.dart';
+import '../../../../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
 import '../../../../../common/monitoring/meal_monitoring_phase.dart';
+import '../../../../../common/monitoring/meal_wait_status.dart';
 import '../../../../../common/notifications/meal_notification_cancellation.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/logger/logger.dart';
@@ -14,8 +17,10 @@ import '../../../../../features/meals/data/providers/meal_status_history_provide
 import '../../../../event/internal/meal_status_changed_event.dart';
 import '../../../../event/model/foreground_event.dart';
 import '../../../../providers/device_status_value_provider.dart';
+import '../../../../providers/task_event_router_provider.dart';
 import '../../../base/runtime_context.dart';
 import '../meal_monitor_context.dart';
+import '../helpers/meal_completion_requirements.dart';
 import 'detect_finished_eating_executor.dart';
 import 'meal_monitor_state_executor.dart';
 import 'new_meal_check_executor.dart';
@@ -25,6 +30,7 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
 
   int? recommendedMinutes;
   bool isManual;
+  MealWaitStatus? _publishedWait;
 
   BolusThenWaitExecutor({this.recommendedMinutes, this.isManual = false});
 
@@ -57,6 +63,33 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
 
   @override
   Future<MealMonitorStateExecutor> execute(
+    RuntimeContext runtimeContext,
+    MealMonitorContext mealMonitorContext,
+  ) async {
+    try {
+      return await _execute(runtimeContext, mealMonitorContext);
+    } finally {
+      await _publishWait(runtimeContext, null);
+    }
+  }
+
+  Future<void> _publishWait(
+    RuntimeContext runtime,
+    MealWaitStatus? value,
+  ) async {
+    if (value == _publishedWait) return;
+    try {
+      await writeMealWaitStatus(value);
+      _publishedWait = value;
+      runtime.container
+          .read(taskEventRouterProvider)
+          .send(const TaskStateSynchronizationPayload.mealWaitChanged());
+    } catch (error) {
+      logW('Could not publish the meal wait state: $error');
+    }
+  }
+
+  Future<MealMonitorStateExecutor> _execute(
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
@@ -109,37 +142,51 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
     var waitStartedAt = clock.now();
     if (triggeredByUser) {
       waitStartedAt = mealMonitorContext.activeMeal!.updatedAt ?? waitStartedAt;
-      if (runtimeContext.container.exists(databaseProvider) &&
-          runtimeContext.container.read(databaseProvider).hasOpened) {
-        final recordedStart = await runtimeContext.container.refresh(
-          mealStatusStartedAtProvider(
-            MealStatusStartedAtRequest(
-              mealId: mealMonitorContext.activeMeal!.id,
-              status: 'bolused-waiting',
-            ),
-          ).future,
-        );
-        if (recordedStart != null) waitStartedAt = recordedStart;
-      }
-      mealMonitorContext.throwIfStopped(runtimeContext);
     }
-    logI("Waiting for $recommendedMinutes minutes before showing eat now");
-    while (_elapsedWaitMinutes(waitStartedAt) < recommendedMinutes!) {
-      if (isManual) {
-        final remaining =
-            recommendedMinutes! - _elapsedWaitMinutes(waitStartedAt);
-        await runtimeContext.waitForDuration(Duration(minutes: remaining));
-        continue;
-      }
-      final deviceStatus = runtimeContext.container.read(
-        deviceStatusValueProvider,
+    if (runtimeContext.container.exists(databaseProvider) &&
+        runtimeContext.container.read(databaseProvider).hasOpened) {
+      final recordedStart = await runtimeContext.container.refresh(
+        mealStatusStartedAtProvider(
+          MealStatusStartedAtRequest(
+            mealId: mealMonitorContext.activeMeal!.id,
+            status: 'bolused-waiting',
+          ),
+        ).future,
       );
-      if (deviceStatus == null) {
-        logI(
-          "Problem gathering blood sugar value, waiting 5 minutes for next reading",
-        );
-        await runtimeContext.waitForDuration(Duration(minutes: 5));
-      } else {
+      if (recordedStart != null) waitStartedAt = recordedStart;
+    }
+    mealMonitorContext.throwIfStopped(runtimeContext);
+    logI("Waiting for $recommendedMinutes minutes before showing eat now");
+    final waitDeadline = waitStartedAt.add(
+      Duration(minutes: recommendedMinutes!),
+    );
+    final container = runtimeContext.container;
+    final mealId = mealMonitorContext.activeMeal!.id;
+    final calculator =
+        container.exists(databaseProvider) ||
+            container.exists(mealCalculatorRequestControllerProvider)
+        ? container.read(mealCalculatorRequestControllerProvider)
+        : null;
+    Future<bool> publishProgress({DateTime? deadline}) async {
+      final pending =
+          deadline == null &&
+          (await calculator?.hasPendingScheduledExtendedCarbs(mealId) ?? false);
+      mealMonitorContext.throwIfStopped(runtimeContext);
+      await _publishWait(runtimeContext, (
+        mealId: mealId,
+        startedAt: waitStartedAt,
+        deadline: deadline ?? waitDeadline,
+        waitingForExtendedCarbs: pending,
+      ));
+      return pending;
+    }
+
+    while (clock.now().isBefore(waitDeadline)) {
+      await publishProgress();
+      final deviceStatus = isManual
+          ? null
+          : runtimeContext.container.read(deviceStatusValueProvider);
+      if (deviceStatus != null) {
         final tick = int.tryParse(deviceStatus.tick) ?? 0;
         logI(
           "Blood sugar value: ${deviceStatus.bg} read at ${deviceStatus.date.toIso8601String()} tick $tick",
@@ -169,15 +216,27 @@ class BolusThenWaitExecutor extends MealMonitorStateExecutor with Logging {
         logI("Waiting before next reading");
       }
 
-      final elapsedMinutes = _elapsedWaitMinutes(waitStartedAt);
-      final remainingMinutes = recommendedMinutes! - elapsedMinutes;
-      if (remainingMinutes <= 0) {
+      final remaining = waitDeadline.difference(clock.now());
+      if (remaining <= Duration.zero) {
         break;
       }
-      final sleepMinutes = remainingMinutes < 5 ? remainingMinutes : 5;
-      logI("Waiting for $sleepMinutes minutes before next reading");
-      await runtimeContext.waitForDuration(Duration(minutes: sleepMinutes));
+      final readingInterval = calculator == null
+          ? const Duration(minutes: 5)
+          : mealRequirementRefreshInterval;
+      await runtimeContext.waitForDuration(
+        remaining < readingInterval ? remaining : readingInterval,
+      );
       logI("wait end ");
+    }
+
+    if (!waitEnded) {
+      await waitForMealCompletionRequirements(
+        runtimeContext,
+        mealMonitorContext,
+        hasPendingRequirements: publishProgress,
+      );
+    } else {
+      await publishProgress(deadline: clock.now());
     }
 
     logI("triggered by user: $triggeredByUser, wait ended: $waitEnded");

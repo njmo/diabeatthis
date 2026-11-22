@@ -18,6 +18,7 @@ class MealCalculatorRequestController {
     this.isMealRelevant,
     this.closeWindow,
     this.onComplete,
+    this.onTreatmentSurplus,
     this.readAcceptedWizards,
     this.readExtendedReceipts,
     DateTime Function()? now,
@@ -33,6 +34,7 @@ class MealCalculatorRequestController {
   final Future<bool> Function(int)? isMealRelevant;
   final Future<void> Function(String)? closeWindow;
   final Future<void> Function(int)? onComplete;
+  final Future<void> Function(int)? onTreatmentSurplus;
   final Future<List<int>?> Function(int, DateTime, int)? readAcceptedWizards;
   final Future<List<Map<String, dynamic>>> Function(DateTime, DateTime)?
   readExtendedReceipts;
@@ -123,7 +125,9 @@ class MealCalculatorRequestController {
       contextRequestedAt:
           context?.requestedAt ??
           (sameMealRequest ? existing.contextRequestedAt : null),
-      evidence: sameMealRequest ? existing.tracker.evidence : null,
+      evidence: sameMealRequest || (context != null && sameLogicalRequest)
+          ? existing.tracker.evidence
+          : null,
     );
     _requests[key] = request;
     while (_requests.length > 20) {
@@ -162,6 +166,34 @@ class MealCalculatorRequestController {
     if (hadRequests) await _save();
   });
 
+  Future<bool> hasPendingScheduledExtendedCarbs(int mealId) async {
+    var pending = false;
+    await _enqueue(() async {
+      final request = _requests['meal:$mealId'];
+      if (request == null) return;
+      pending = request.hasPendingScheduledExtendedCarbs;
+      if (!pending) return;
+      await _evaluate(request);
+      pending =
+          _requests.containsKey('meal:$mealId') &&
+          request.hasPendingScheduledExtendedCarbs;
+      await _save();
+    });
+    return pending;
+  }
+
+  Future<int?> requiredMealCarbs(int mealId) async {
+    int? carbs;
+    await _enqueue(() async {
+      final request = _requests['meal:$mealId'];
+      if (request?.matchesMealStage(mealId, null) == true &&
+          request!.event.carbs > 0) {
+        carbs = request.event.carbs;
+      }
+    });
+    return carbs;
+  }
+
   Future<void> _evaluate(MealCalculatorRequest request) async {
     if (_disposed) return;
     final id = request.event.mealId;
@@ -175,9 +207,7 @@ class MealCalculatorRequestController {
     final context = id == null ? null : await readContext(id);
     if (_disposed) return;
     // A stale confirmation must not mutate a newer request for the same meal.
-    if (request.contextRequestedAt != null &&
-        context != null &&
-        context.requestedAt != request.contextRequestedAt) {
+    if (context != null && context.requestedAt != request.contextRequestedAt) {
       return;
     }
     final evidence = <String, dynamic>{
@@ -228,6 +258,7 @@ class MealCalculatorRequestController {
     }
     if (request.acceptedWizardTimes.isNotEmpty) {
       evidence['mealWizardAt'] = request.acceptedWizardTimes.last;
+      evidence['mealWizardTimes'] = request.acceptedWizardTimes;
     }
     if (request.event.carbs < 0 && readExtendedReceipts != null) {
       final receipts = await readExtendedReceipts!(
@@ -259,6 +290,13 @@ class MealCalculatorRequestController {
       ];
     }
     final complete = request.tracker.update(evidence);
+    if (id != null && request.tracker.extendedCarbsSurplus) {
+      try {
+        await onTreatmentSurplus?.call(id);
+      } catch (error, stack) {
+        onError(error, stack);
+      }
+    }
     if (!complete) request.instructionNotificationCleared = false;
     if (id != null &&
         context != null &&

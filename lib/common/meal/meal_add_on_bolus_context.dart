@@ -17,6 +17,8 @@ class MealAddOnBolusContext {
     required this.bolusConfirmed,
     this.acceptedWizardKeys = const [],
     this.extendedCarbsConfirmed = false,
+    this.additionalServing,
+    this.bolusBeforeExtra,
   }) : bolusWindowStartedAt = bolusWindowStartedAt ?? requestedAt;
 
   final String originalStatus;
@@ -33,6 +35,11 @@ class MealAddOnBolusContext {
   final bool awaitingBolus;
   final bool bolusConfirmed;
   final bool extendedCarbsConfirmed;
+  final bool? additionalServing;
+  final bool? bolusBeforeExtra;
+
+  bool get waitingForExtraBolus =>
+      showCalculatorAction && (additionalServing ?? true);
   final List<String> acceptedWizardKeys;
 
   /// Bolus acceptance and extended-carbs confirmation are independent.
@@ -77,6 +84,8 @@ class MealAddOnBolusContext {
       requestedCarbs: requestedCarbs,
       requestedExtendedCarbs: requestedExtendedCarbs,
       awaitingBolus: json['awaitingBolus'] as bool,
+      additionalServing: json['additionalServing'] as bool?,
+      bolusBeforeExtra: json['bolusBeforeExtra'] as bool?,
       bolusConfirmed: json['bolusConfirmed'] as bool,
       extendedCarbsConfirmed: json['extendedCarbsConfirmed'] as bool? ?? false,
       acceptedWizardKeys: (json['acceptedWizardKeys'] as List).cast<String>(),
@@ -95,6 +104,8 @@ class MealAddOnBolusContext {
     'requestedCarbs': requestedCarbs,
     'requestedExtendedCarbs': requestedExtendedCarbs,
     'awaitingBolus': awaitingBolus,
+    if (additionalServing != null) 'additionalServing': additionalServing,
+    if (bolusBeforeExtra != null) 'bolusBeforeExtra': bolusBeforeExtra,
     'bolusConfirmed': bolusConfirmed,
     'extendedCarbsConfirmed': extendedCarbsConfirmed,
     'acceptedWizardKeys': acceptedWizardKeys,
@@ -112,6 +123,8 @@ class MealAddOnBolusContext {
     List<String>? acceptedWizardKeys,
   }) => MealAddOnBolusContext(
     originalStatus: originalStatus,
+    additionalServing: additionalServing,
+    bolusBeforeExtra: bolusBeforeExtra,
     eatingStartedAt: eatingStartedAt,
     requestedAt: requestedAt ?? this.requestedAt,
     bolusWindowStartedAt: bolusWindowStartedAt,
