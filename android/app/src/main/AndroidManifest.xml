@@ -68,6 +68,14 @@
         </receiver>
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
         <receiver
+            android:name="com.example.diabeatthis.common.wear.MealDecisionPushWakeReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter android:priority="1">
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </receiver>
+        <receiver
             android:name=".XdripBgEstimateReceiver"
             android:enabled="false"
             android:exported="true">

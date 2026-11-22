@@ -64,6 +64,8 @@ dependencies:
     path: packages/calculator_handoff
   foreground_power_lock:
     path: packages/foreground_power_lock
+  meal_decision_wear_notifications:
+    path: packages/meal_decision_wear_notifications
   share_plus: ^13.3.0
   clock: ^1.1.2
   circular_buffer: ^0.12.0

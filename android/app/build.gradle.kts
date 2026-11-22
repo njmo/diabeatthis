@@ -8,6 +8,7 @@ plugins {
 }
 
 dependencies {
+    implementation("com.google.android.gms:play-services-wearable:20.0.1")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("androidx.window:window:1.0.0")
     implementation("androidx.window:window-java:1.0.0")
@@ -63,16 +64,6 @@ kotlin {
     }
 }
 
-val flutterTarget = providers.gradleProperty("target").orNull
-if (flutterTarget?.replace('\\', '/')?.substringAfterLast('/') == "main_debug.dart") {
-    tasks.configureEach {
-        if (name.startsWith("compileFlutterBuild") && !name.endsWith("Debug")) {
-            doFirst {
-                throw GradleException("main_debug.dart requires a Flutter debug build.")
-            }
-        }
-    }
-}
 
 flutter {
     source = "../.."

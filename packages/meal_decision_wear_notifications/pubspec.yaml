@@ -1,0 +1,19 @@
+name: meal_decision_wear_notifications
+description: Forwards meal decision invitations to Wear OS from Android Flutter engines.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.12.0
+  flutter: '>=3.47.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: pl.diabeatthis.wearnotifications
+        pluginClass: MealDecisionWearNotificationsPlugin

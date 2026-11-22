@@ -31,6 +31,14 @@ on:
         options:
           - draft
           - completed
+      wear_only:
+        description: "Build only the Wear OS bundle"
+        type: boolean
+        default: false
+      release_wear:
+        description: "Also release Wear OS to the Diabeatthis closed test"
+        type: boolean
+        default: false
 
 jobs:
   build-android:
@@ -41,11 +49,19 @@ jobs:
 
     env:
       GOOGLE_PLAY_TRACK: ${{ inputs.track || (endsWith(github.ref_name, '-android') && 'alpha') || 'internal' }}
+      RELEASE_WEAR_TO_CLOSED_TEST: ${{ (github.ref_type == 'tag' && endsWith(github.ref_name, '-android')) || (inputs.release_wear && (inputs.wear_only || inputs.track == 'alpha')) }}
       GOOGLE_PLAY_RELEASE_STATUS: ${{ github.event.inputs.release_status || 'completed' }}
       GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
 
     steps:
+      - name: Verify requested Wear OS track
+        if: ${{ inputs.release_wear && !inputs.wear_only && inputs.track != 'alpha' }}
+        run: |
+          echo "::error::diabeatthis-wearos is a closed test paired with the phone alpha track."
+          exit 1
+
       - name: Verify Google Play credentials
+        if: ${{ !inputs.wear_only || env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' }}
         run: |
           if [[ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]]; then
             echo "::error::Set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON before running an Android release"
@@ -72,12 +88,15 @@ jobs:
         run: flutter pub get --enforce-lockfile
 
       - name: Generate code
+        if: ${{ !inputs.wear_only }}
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Analyze
+        if: ${{ !inputs.wear_only }}
         run: flutter analyze lib test
 
       - name: Test
+        if: ${{ !inputs.wear_only }}
         run: flutter test
 
       - name: Restore release keystore
@@ -109,6 +128,7 @@ jobs:
           echo "RELEASE_BUILD_NUMBER=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
 
       - name: Build signed app bundle
+        if: ${{ !inputs.wear_only }}
         env:
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -117,6 +137,7 @@ jobs:
         run: flutter build appbundle --release --build-name "$RELEASE_VERSION" --build-number "$RELEASE_BUILD_NUMBER"
 
       - name: Build signed APK
+        if: ${{ !inputs.wear_only }}
         env:
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -125,24 +146,63 @@ jobs:
         run: flutter build apk --release --build-name "$RELEASE_VERSION" --build-number "$RELEASE_BUILD_NUMBER"
 
       - name: Upload app bundle artifact
+        if: ${{ !inputs.wear_only }}
         uses: actions/upload-artifact@v4
         with:
           name: diabeatthis-aab
           path: build/app/outputs/bundle/release/app-release.aab
 
+      - name: Build signed Wear OS app bundle
+        if: ${{ env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' || inputs.wear_only }}
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          : "${ANDROID_KEYSTORE_PATH:?}" "${ANDROID_KEYSTORE_PASSWORD:?}" "${ANDROID_KEY_ALIAS:?}" "${ANDROID_KEY_PASSWORD:?}"
+          test -s "$ANDROID_KEYSTORE_PATH"
+          flutter build apk --release --config-only --no-pub
+          cd android
+          # Keep Wear version codes distinct from the mobile workflow run numbers.
+          wear_version_code=$((1000000 + RELEASE_BUILD_NUMBER))
+          ./gradlew :wear:bundleRelease \
+            "-PwearVersionCode=$wear_version_code" \
+            "-PwearVersionName=$RELEASE_VERSION"
+
+      - name: Upload Wear OS app bundle artifact
+        if: ${{ env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' || inputs.wear_only }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: diabeatthis-wear-aab
+          path: build/wear/outputs/bundle/release/wear-release.aab
+          if-no-files-found: error
+
       - name: Upload APK artifact
+        if: ${{ !inputs.wear_only }}
         uses: actions/upload-artifact@v4
         with:
           name: diabeatthis-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload to Google Play
+        if: ${{ !inputs.wear_only }}
         uses: r0adkll/upload-google-play@v1.1.5
         with:
           serviceAccountJsonPlainText: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: pl.diabeatthis.app
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           tracks: ${{ env.GOOGLE_PLAY_TRACK }}
+          status: ${{ env.GOOGLE_PLAY_RELEASE_STATUS }}
+
+      - name: Upload Wear OS to Google Play closed testing
+        if: ${{ env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' }}
+        uses: r0adkll/upload-google-play@v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: pl.diabeatthis.app
+          releaseFiles: build/wear/outputs/bundle/release/wear-release.aab
+          tracks: "wear:diabeatthis-wearos"
           status: ${{ env.GOOGLE_PLAY_RELEASE_STATUS }}
 
       - name: Create GitHub Release

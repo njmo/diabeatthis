@@ -1,18 +1,29 @@
 package com.example.diabeatthis
 
 import android.app.NotificationManager
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.RingtoneManager
 import com.example.diabeatthis.common.pip.SuggestionPipChannel
 import com.example.diabeatthis.common.pip.SuggestionOverlayChannel
+import com.example.diabeatthis.common.wear.MealDecisionWearBridge
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+    private var mealDecisionWearBridge: MealDecisionWearBridge? = null
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        mealDecisionWearBridge?.onPhoneIntent(intent)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        mealDecisionWearBridge = MealDecisionWearBridge(this, flutterEngine.dartExecutor.binaryMessenger)
         SuggestionPipChannel(this, flutterEngine.dartExecutor.binaryMessenger)
         SuggestionOverlayChannel(this, flutterEngine.dartExecutor.binaryMessenger)
 
@@ -93,6 +104,12 @@ class MainActivity : FlutterActivity() {
                 .build()
             play()
         }
+    }
+
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        mealDecisionWearBridge?.close()
+        mealDecisionWearBridge = null
+        super.cleanUpFlutterEngine(flutterEngine)
     }
 
     private companion object {

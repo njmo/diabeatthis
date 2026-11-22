@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diabeatthis · Makieta zegarka opiekuna</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --page: #101720;
+    --watch: #111c26;
+    --surface: #1a2936;
+    --surface-raised: #233442;
+    --line: #344755;
+    --ink: #f1f6f7;
+    --muted: #b1c3cd;
+    --aqua: #9cf0d9;
+    --violet: #c4baff;
+    --gold: #f2d584;
+    font-family: system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-width: 220px;
+    background: radial-gradient(ellipse at top, #223645 0, var(--page) 660px);
+    color: var(--ink);
+  }
+  button, input, textarea { font: inherit; }
+  button { cursor: pointer; }
+  button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--aqua);
+    outline-offset: 3px;
+  }
+  [hidden] { display: none !important; }
+  .prototype {
+    width: min(100% - 16px, 384px);
+    margin: 22px auto 40px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 4px 12px;
+    font-size: .75rem;
+    color: var(--muted);
+  }
+  header strong { color: var(--ink); font-weight: 650; letter-spacing: .03em; }
+  .watch {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--watch);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    box-shadow: 0 20px 60px #070b1099;
+  }
+  .watch-screen {
+    height: 100%;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  .stage { padding: 15% 14% 19%; }
+  .eyebrow, .meta { color: var(--muted); font-size: .73rem; }
+  .stage-title {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  h1, h2, h3, p { margin: 0; }
+  h1 { font-size: 1.35rem; line-height: 1.13; letter-spacing: -.025em; }
+  h2 { font-size: 1.08rem; letter-spacing: -.015em; }
+  h3 { font-size: .83rem; font-weight: 620; }
+  .time {
+    color: var(--aqua);
+    white-space: nowrap;
+    border-radius: 99px;
+    background: #1a3a38;
+    padding: 5px 8px;
+    font: 650 .75rem ui-monospace, monospace;
+  }
+  .stack { display: grid; gap: 9px; }
+  .card {
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    background: var(--surface);
+    padding: 11px 12px;
+  }
+  .card + .card { margin-top: 0; }
+  .caption { margin: 0 0 4px; color: var(--muted); font-size: .7rem; }
+  .glucose-card { position: relative; }
+  .glucose-head, .row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .glucose {
+    font-size: 1.96rem;
+    font-weight: 680;
+    line-height: 1;
+    letter-spacing: -.035em;
+  }
+  .unit { font-size: .72rem; color: var(--muted); font-weight: 500; letter-spacing: 0; }
+  .trend { font-size: .74rem; color: var(--aqua); white-space: nowrap; }
+  canvas { display: block; width: 100%; height: 62px; margin: 7px 0 1px; }
+  .chart-time { display: flex; justify-content: space-between; }
+  .macros, .pair { margin: 0; display: grid; gap: 8px; }
+  .macros { grid-template-columns: repeat(3, minmax(0,1fr)); margin-top: 9px; }
+  .pair { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  dt { font-size: .7rem; color: var(--muted); }
+  dd { margin: 2px 0 0; font-size: .95rem; font-weight: 630; font-variant-numeric: tabular-nums; }
+  .pair > div { padding: 8px 11px; }
+  .ingredient-list, .past-meals { margin: 0; padding: 0; list-style: none; }
+  .ingredient-list li, .past-meals li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: .79rem;
+  }
+  .ingredient-list li + li, .past-meals li + li { border-top: 1px solid var(--line); }
+  .ingredient-list li span:last-child, .past-meals li span:last-child {
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  details {
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    background: var(--surface);
+  }
+  details[open] { padding-bottom: 7px; }
+  details + details { margin-top: 0; }
+  summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 8px 11px;
+    cursor: pointer;
+    list-style: none;
+    font-size: .81rem;
+    font-weight: 580;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '›'; font-size: 1rem; color: var(--aqua); }
+  details[open] > summary::after { transform: rotate(90deg); }
+  .details-body { padding: 0 11px 2px; }
+  .notice {
+    display: flex;
+    align-items: start;
+    gap: 8px;
+    margin: 0;
+    padding: 6px 0;
+    font-size: .75rem;
+    line-height: 1.4;
+  }
+  .notice + .notice { border-top: 1px solid var(--line); }
+  .notice b { color: var(--ink); font-weight: 600; }
+  .notice-dot { flex: 0 0 6px; height: 6px; border-radius: 50%; margin-top: 6px; background: var(--gold); }
+  .notice-dot.target { background: var(--violet); }
+  .notice-dot.activity { background: var(--aqua); }
+  .actions { display: grid; gap: 7px; margin-top: 11px; }
+  .action {
+    min-height: 44px;
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 12px;
+    background: var(--surface-raised);
+    color: var(--ink);
+    font-size: .81rem;
+    font-weight: 640;
+  }
+  .primary { background: var(--aqua); color: #12261f; border-color: transparent; }
+  .primary:disabled { opacity: .5; cursor: default; }
+  .quiet { background: transparent; border-color: transparent; color: var(--muted); }
+  .actions.two { grid-template-columns: 1fr 1fr; }
+  .choices { display: grid; gap: 6px; border: 0; margin: 10px 0; padding: 0; }
+  .choice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 7px 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    font-size: .79rem;
+  }
+  .choice:has(input:checked) { border-color: var(--aqua); background: #1c3938; }
+  input { accent-color: var(--aqua); }
+  .choice input { margin: 0; }
+  .field { display: grid; gap: 4px; margin-top: 9px; font-size: .76rem; color: var(--muted); }
+  .field input, .field textarea {
+    min-height: 42px;
+    padding: 6px 9px;
+    border-radius: 9px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .status { line-height: 1.44; }
+  @media (max-width: 300px) {
+    .prototype { width: calc(100% - 12px); margin-top: 10px; }
+    .actions.two { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main class="prototype">
+  <header><strong>Diabeatthis · Wear OS</strong><span>Dane fikcyjne</span></header>
+  <article class="watch" aria-label="Zegarek opiekuna">
+    <div class="watch-screen" tabindex="0" role="region" aria-label="Przewijany ekran zegarka">
+    <section class="stage" id="preview">
+      <div class="stage-title">
+        <div>
+          <p class="eyebrow">Prośba od Oli · 18:20</p>
+          <h1>Owsianka z jabłkiem</h1>
+        </div>
+        <span class="time" aria-label="Pozostały czas prośby: cztery minuty i dwanaście sekund">4:12</span>
+      </div>
+      <div class="stack">
+        <section class="card glucose-card" aria-label="Ostatni pomiar glukozy">
+          <div class="glucose-head">
+            <p class="caption">Glukoza · 18:18</p>
+            <span class="trend">↗ +6 od poprzedniego</span>
+          </div>
+          <p class="glucose">126 <span class="unit">mg/dL</span></p>
+          <canvas data-series="glucose" aria-label="Fikcyjna historia glukozy z ostatnich 30 minut. Ostatni pomiar: 126 mg/dL." role="img"></canvas>
+          <div class="chart-time meta"><span>17:50</span><span>18:20</span></div>
+        </section>
+        <section class="card" aria-label="Makroskładniki posiłku">
+          <div class="row"><h3>Makroskładniki</h3><span class="meta">Plan 18:25</span></div>
+          <dl class="macros">
+            <div><dt>Węgle netto</dt><dd>43,1 g</dd></div>
+            <div><dt>Białko</dt><dd>13,0 g</dd></div>
+            <div><dt>Tłuszcz</dt><dd>7,3 g</dd></div>
+          </dl>
+        </section>
+        <details open>
+          <summary>Składniki <span class="meta">3</span></summary>
+          <div class="details-body">
+            <ul class="ingredient-list">
+              <li><span>Płatki owsiane</span><span>40 g</span></li>
+              <li><span>Jogurt naturalny</span><span>120 g</span></li>
+              <li><span>Jabłko</span><span>90 g</span></li>
+            </ul>
+          </div>
+        </details>
+        <dl class="pair" aria-label="IOB i COB z 18:18">
+          <div class="card"><dt>IOB · 18:18</dt><dd>0,65 U</dd></div>
+          <div class="card"><dt>COB · 18:18</dt><dd>5,0 g</dd></div>
+        </dl>
+        <details open>
+          <summary>Kontekst przed posiłkiem</summary>
+          <div class="details-body">
+            <p class="notice"><span class="notice-dot target" aria-hidden="true"></span><span><b>Cel tymczasowy</b><br>110–120 mg/dL · 18:00–18:45</span></p>
+            <p class="notice"><span class="notice-dot" aria-hidden="true"></span><span><b>Rozłożone węglowodany</b><br>8 g · 18:10–18:40</span></p>
+            <p class="notice"><span class="notice-dot activity" aria-hidden="true"></span><span><b>Spacer zakończony</b><br>17:30–17:50</span></p>
+          </div>
+        </details>
+        <details>
+          <summary>Historia IOB i COB</summary>
+          <div class="details-body">
+            <p class="caption">IOB · U</p>
+            <canvas data-series="iob" role="img" aria-label="Fikcyjna historia IOB"></canvas>
+            <p class="caption">COB · g</p>
+            <canvas data-series="cob" role="img" aria-label="Fikcyjna historia COB"></canvas>
+            <div class="chart-time meta"><span>17:50</span><span>18:20</span></div>
+          </div>
+        </details>
+        <details>
+          <summary>Wcześniejsze posiłki o tej nazwie</summary>
+          <div class="details-body">
+            <ul class="past-meals">
+              <li><span>Owsianka z jabłkiem</span><span>18.11 · 07:40</span></li>
+              <li><span>Owsianka z jabłkiem</span><span>15.11 · 08:05</span></li>
+            </ul>
+          </div>
+        </details>
+        <p class="meta">Dane zsynchronizowane o 18:20</p>
+      </div>
+      <div class="actions two">
+        <button class="action primary" data-go="decision">Na zegarku</button>
+        <button class="action" data-go="handoff">Na telefonie</button>
+      </div>
+    </section>
+
+    <section class="stage" id="decision" hidden>
+      <div class="stage-title"><div><p class="eyebrow">Owsianka z jabłkiem</p><h2>Wybierz decyzję</h2></div></div>
+      <form id="decision-form">
+        <fieldset class="choices" aria-label="Opcje decyzji">
+          <label class="choice"><input type="radio" name="decision" value="wait" required> Insulina, poczekaj, potem jedz</label>
+          <label class="choice"><input type="radio" name="decision" value="now"> Insulina i jedz od razu</label>
+          <label class="choice"><input type="radio" name="decision" value="later"> Zjedz teraz, insulina później</label>
+          <label class="choice"><input type="radio" name="decision" value="defer"> Odrocz posiłek</label>
+        </fieldset>
+        <label class="field" id="minutes-field" hidden>Czas w minutach
+          <input id="minutes" type="number" min="1" max="180" inputmode="numeric">
+        </label>
+        <label class="field">Wiadomość opcjonalna
+          <textarea id="message" rows="2" maxlength="240"></textarea>
+        </label>
+        <div class="actions two">
+          <button type="button" class="action" data-go="preview">Wstecz</button>
+          <button type="submit" class="action primary">Dalej</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="stage" id="confirmation" hidden>
+      <div class="stage-title"><div><p class="eyebrow">Owsianka z jabłkiem</p><h2>Potwierdź decyzję</h2></div></div>
+      <div class="card stack">
+        <h3 id="summary-choice"></h3>
+        <p class="meta" id="summary-note" hidden></p>
+      </div>
+      <div class="actions two">
+        <button class="action" data-go="decision">Wstecz</button>
+        <button class="action primary" data-go="sent">Wyślij</button>
+      </div>
+    </section>
+
+    <section class="stage status" id="handoff" hidden>
+      <h2>Kontynuuj na telefonie</h2>
+      <p class="meta">W makiecie ta akcja pokazuje przekazanie prośby do telefonu.</p>
+      <div class="actions"><button class="action" data-go="preview">Wróć do podglądu</button></div>
+    </section>
+
+    <section class="stage status" id="sent" hidden>
+      <h2>Decyzja wysłana</h2>
+      <p class="meta">Symulacja. Dane nie zostały wysłane.</p>
+      <div class="actions"><button class="action" data-go="preview">Wróć do podglądu</button></div>
+    </section>
+    </div>
+  </article>
+</main>
+<script>
+  const stages = [...document.querySelectorAll('.stage')];
+  const form = document.getElementById('decision-form');
+  const minutes = document.getElementById('minutes');
+  const minuteField = document.getElementById('minutes-field');
+  const message = document.getElementById('message');
+
+  function show(id) {
+    stages.forEach(stage => { stage.hidden = stage.id !== id; });
+    const screen = document.querySelector('.watch-screen');
+    screen.scrollTop = 0;
+    screen.focus({preventScroll: true});
+    drawVisibleCharts();
+  }
+
+  document.querySelectorAll('[data-go]').forEach(button => {
+    button.addEventListener('click', () => show(button.dataset.go));
+  });
+
+  form.addEventListener('change', event => {
+    if (event.target.name !== 'decision') return;
+    const selection = event.target.value;
+    const requiresMinutes = selection === 'wait' || selection === 'defer';
+    minuteField.hidden = !requiresMinutes;
+    minutes.required = requiresMinutes;
+    if (requiresMinutes) minutes.value = selection === 'wait' ? '10' : '15';
+    else minutes.value = '';
+  });
+
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const option = form.querySelector('input[name="decision"]:checked');
+    if (!option || !form.reportValidity()) return;
+    document.getElementById('summary-choice').textContent =
+      option.closest('label').textContent.trim() + (minutes.required ? ' · ' + minutes.value + ' min' : '');
+    const note = document.getElementById('summary-note');
+    note.textContent = message.value.trim();
+    note.hidden = !note.textContent;
+    show('confirmation');
+  });
+
+  const history = {
+    glucose: { values: [101, 104, 106, 103, 107, 111, 113, 117, 120, 126], color: '#9cf0d9', min: 85, max: 145 },
+    iob: { values: [0.92, 0.88, 0.85, 0.81, 0.77, 0.73, 0.69, 0.65], color: '#c4baff', min: 0, max: 1.1 },
+    cob: { values: [12, 11, 11, 10, 8, 7, 6, 5], color: '#f2d584', min: 0, max: 15 },
+  };
+  function drawVisibleCharts() {
+    document.querySelectorAll('canvas[data-series]').forEach(canvas => {
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      if (!width || !height) return;
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(ratio, ratio);
+      const series = history[canvas.dataset.series];
+      const inset = 5;
+      const x = index => inset + (width - 2 * inset) * index / (series.values.length - 1);
+      const y = value => height - inset - (height - 2 * inset) * (value - series.min) / (series.max - series.min);
+      ctx.strokeStyle = '#344755';
+      ctx.lineWidth = 1;
+      for (const level of [.2, .5, .8]) {
+        ctx.beginPath();
+        ctx.moveTo(inset, height * level);
+        ctx.lineTo(width - inset, height * level);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = series.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      series.values.forEach((value, index) => {
+        if (index === 0) ctx.moveTo(x(index), y(value));
+        else ctx.lineTo(x(index), y(value));
+      });
+      ctx.stroke();
+      ctx.fillStyle = series.color;
+      ctx.beginPath();
+      ctx.arc(x(series.values.length - 1), y(series.values.at(-1)), 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+  document.querySelectorAll('details').forEach(detail => detail.addEventListener('toggle', drawVisibleCharts));
+  window.addEventListener('resize', drawVisibleCharts);
+  drawVisibleCharts();
+</script>
+</body>
+</html>
