@@ -141,16 +141,30 @@ class FamilyChatBackground {
       return null;
     }
     final watch = Stopwatch()..start();
-    final config = await api.call('getFamilyChatConfig', {});
+    final result = await api.call('fetchFamilyChatMessageStates', {
+      'ids': [data['messageId']],
+    });
+    if (currentUid() != uid) return null;
+    final embeddedConfig = result['notificationConfig'];
+    if (result.containsKey('notificationConfig') && embeddedConfig is! Map) {
+      return null;
+    }
+    // Older deployments return only the message states.
+    final config = embeddedConfig is Map
+        ? Map<String, dynamic>.from(embeddedConfig)
+        : await api.call('getFamilyChatConfig', {});
     if (currentUid() != uid ||
         config['uid'] != uid ||
         config['familyId'] != data['familyId'] ||
         config['epoch'] != data['epoch'] ||
         config['account']?['enabled'] != true ||
-        config['policy']?['enabled'] != true) {
+        config['policy']?['enabled'] != true ||
+        config['members'] is! List ||
+        config['serverTime'] is! int) {
       return null;
     }
-    final observed = config['historyGeneration'] ?? 0;
+    final observed =
+        config['historyGeneration'] ?? (embeddedConfig == null ? 0 : null);
     if (observed is! int || observed < 0) return null;
     final admitted = await db.withChatGuard(guard, () async {
       if (currentUid() != uid) return false;
@@ -166,15 +180,13 @@ class FamilyChatBackground {
         // Keep the durable cancellation intent for the next synchronization.
       }
     }
-    final result = await api.call('fetchFamilyChatMessageStates', {
-      'ids': [data['messageId']],
-    });
     if (currentUid() != uid) return null;
     final rows = result['messages'] as List;
     if (rows.length != 1) return null;
     final message = Map<String, dynamic>.from(rows.single as Map);
     final generation = message['historyGeneration'] ?? 0;
     if (generation is! int ||
+        generation != observed ||
         !await db.historyAllows(scope, generation) ||
         requiredGuard != null &&
             requiredGuard['historyGeneration'] != generation) {
@@ -186,7 +198,11 @@ class FamilyChatBackground {
         message['receipts']?[uid] == null) {
       return null;
     }
-    final time = result['serverTime'] as int? ?? config['serverTime'] as int;
+    final resultTime = result['serverTime'];
+    final configTime = config['serverTime'] as int;
+    final time = resultTime is int && resultTime > configTime
+        ? resultTime
+        : configTime;
     if (message['expiresAt'] != null && (message['expiresAt'] as int) <= time) {
       return null;
     }

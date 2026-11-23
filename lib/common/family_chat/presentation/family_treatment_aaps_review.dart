@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../features/low_treatment/domain/models/low_treatment_handoff_pending.dart';
 import '../../l10n/language.dart';
 import '../../theme/app_design_tokens.dart';
+import '../../widgets/responsive_bottom_sheet.dart';
 
 Future<bool> showFamilyTreatmentAapsReview(
   BuildContext context,
@@ -20,7 +21,7 @@ Future<bool> showFamilyTreatmentAapsReview(
     strings.localeName,
   ).format(pending.expectedCarbs);
 
-  return await showModalBottomSheet<bool>(
+  return await showResponsiveBottomSheet<bool>(
         context: context,
         showDragHandle: true,
         useSafeArea: true,

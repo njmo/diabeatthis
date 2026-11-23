@@ -51,7 +51,9 @@ class FamilyChatSession extends ChangeNotifier {
   String? _cachedComposerScope;
   bool _appForeground = false;
   bool _chatVisible = false;
+  String? _focusedConversation;
   bool _hasQueuedSends = false;
+  bool _outboundPending = false;
   int _queuedRetryAttempts = 0;
   Timer? _queuedRetry;
   static const _queuedRetryDelays = [
@@ -734,6 +736,18 @@ class FamilyChatSession extends ChangeNotifier {
     }
   }
 
+  void focusConversation(String target) {
+    if (_focusedConversation == target) return;
+    _focusedConversation = target;
+    if (_chatVisible && !_historySyncedTargets.contains(target)) {
+      scheduleMicrotask(() {
+        if (active && _chatVisible && _focusedConversation == target) {
+          unawaited(synchronize(enqueueAgain: true));
+        }
+      });
+    }
+  }
+
   /// The single bounded retry lifecycle covers sendable outbox work and
   /// durable ACKs left by a transient failure. Terminal or expired outbox rows
   /// and outcome markers never count, so they cannot keep it spinning.
@@ -1300,14 +1314,102 @@ class FamilyChatSession extends ChangeNotifier {
           scope == currentScope &&
           _generation == currentGeneration &&
           enabled;
+      var reserved = false;
+      Future<void> flushOutbound() async {
+        if (!_outboundPending || !valid()) return;
+        _outboundPending = false;
+        if (await _promoteComposerQueue(currentScope, valid)) reserved = true;
+        await _flush(currentScope, valid);
+      }
+
+      Future<bool> refreshHistory(String target) async {
+        var cursor =
+            (await db.metadata('cursor:$currentScope:$target'))?['value']
+                as int? ??
+            0;
+        for (var pageNumber = 0; pageNumber < 2 && valid(); pageNumber++) {
+          await flushOutbound();
+          if (!valid()) return false;
+          final page = await _callApi('fetchFamilyChatMessages', {
+            'targetUid': target,
+            if (cursor == 0) 'latest': true else 'after': cursor,
+          });
+          if (!valid()) return false;
+          if (cursor == 0 && page['oldestCursor'] is int) {
+            _olderCursor[target] = page['oldestCursor'] as int;
+          }
+          final rows = (page['messages'] as List).map(
+            (v) => Map<String, dynamic>.from(v as Map),
+          );
+          final incoming = <Map<String, dynamic>>[];
+          if (!await _store(currentScope, () async {
+            for (final message in rows) {
+              if (!await db.historyAllows(
+                currentScope,
+                message['historyGeneration'] as int? ?? 0,
+              )) {
+                continue;
+              }
+              final saved = await db.saveMessage(
+                currentScope,
+                target,
+                message,
+                serverNow: serverNow,
+              );
+              await db.complete(currentScope, message['id'] as String);
+              if (saved &&
+                  message['senderUid'] != uid &&
+                  (message['receipts'] as Map?)?[uid]?['deliveredAt'] == null) {
+                if (_appForeground && notificationPresenter != null) {
+                  incoming.add(message);
+                }
+                await db.queueReceipt(
+                  currentScope,
+                  message['id'] as String,
+                  false,
+                );
+              }
+            }
+            cursor = page['cursor'] as int;
+            await db.setMetadata('cursor:$currentScope:$target', {
+              'value': cursor,
+            });
+          })) {
+            return false;
+          }
+          if (incoming.isNotEmpty && valid()) {
+            await _presentSyncedMessages(currentScope, target, incoming);
+          }
+          if (page['hasMore'] != true) break;
+        }
+        if (!valid()) return false;
+        final history = await _readHistory(currentScope, target);
+        if (!valid()) return false;
+        _history[target] = history;
+        final firstSync = _historySyncedTargets.add(target);
+        if (firstSync || target == _focusedConversation) _notify();
+        return true;
+      }
+
+      // New messages can be sent after the admission and history checks,
+      // even when the current pass was originally a history refresh.
+      await flushOutbound();
       await _presentQueuedIncoming(currentScope);
       if (!valid()) return;
       await _flushReceipts(currentScope, valid);
+      final focus = _focusedConversation;
+      final focusedTarget =
+          _chatVisible && focus != null && targets.contains(focus)
+          ? focus
+          : null;
+      if (focusedTarget != null && !await refreshHistory(focusedTarget)) return;
       final list = <Map<String, dynamic>>[];
       final cached = await db.metadata('threads:$currentScope');
       var summaryAt = cached?['summaryAt'] as int?;
       var after = '';
       while (valid()) {
+        await flushOutbound();
+        if (!valid()) return;
         final page = await _callApi('fetchFamilyChatConversations', {
           'after': after,
         });
@@ -1374,75 +1476,18 @@ class FamilyChatSession extends ChangeNotifier {
           : const <String>[];
       for (final target in historyTargets) {
         if (!_chatVisible && !loadHistoryWhenHidden) break;
-        var cursor =
-            (await db.metadata('cursor:$currentScope:$target'))?['value']
-                as int? ??
-            0;
-        for (var pageNumber = 0; pageNumber < 2 && valid(); pageNumber++) {
-          final page = await _callApi('fetchFamilyChatMessages', {
-            'targetUid': target,
-            if (cursor == 0) 'latest': true else 'after': cursor,
-          });
-          if (!valid()) return;
-          if (cursor == 0 && page['oldestCursor'] is int) {
-            _olderCursor[target] = page['oldestCursor'] as int;
-          }
-          final rows = (page['messages'] as List).map(
-            (v) => Map<String, dynamic>.from(v as Map),
-          );
-          final incoming = <Map<String, dynamic>>[];
-          if (!await _store(currentScope, () async {
-            for (final message in rows) {
-              if (!await db.historyAllows(
-                currentScope,
-                message['historyGeneration'] as int? ?? 0,
-              )) {
-                continue;
-              }
-              final saved = await db.saveMessage(
-                currentScope,
-                target,
-                message,
-                serverNow: serverNow,
-              );
-              await db.complete(currentScope, message['id'] as String);
-              if (saved &&
-                  message['senderUid'] != uid &&
-                  (message['receipts'] as Map?)?[uid]?['deliveredAt'] == null) {
-                if (_appForeground && notificationPresenter != null) {
-                  incoming.add(message);
-                }
-                await db.queueReceipt(
-                  currentScope,
-                  message['id'] as String,
-                  false,
-                );
-              }
-            }
-            cursor = page['cursor'] as int;
-            await db.setMetadata('cursor:$currentScope:$target', {
-              'value': cursor,
-            });
-          })) {
-            return;
-          }
-          if (incoming.isNotEmpty && valid()) {
-            await _presentSyncedMessages(currentScope, target, incoming);
-          }
-          if (page['hasMore'] != true) break;
-        }
-        if (!valid()) return;
-        final history = await _readHistory(currentScope, target);
-        if (!valid()) return;
-        _history[target] = history;
-        if (_historySyncedTargets.add(target)) _notify();
+        if (target == focusedTarget) continue;
+        if (!await refreshHistory(target)) return;
       }
       if (!valid()) return;
+      await flushOutbound();
       if (!await _refreshStates(currentScope, valid)) return;
       if (!valid()) return;
       await _cancelClearedNotices(currentScope);
       if (!valid()) return;
-      final reserved = await _promoteComposerQueue(currentScope, valid);
+      if (!reserved) {
+        reserved = await _promoteComposerQueue(currentScope, valid);
+      }
       await _flush(currentScope, valid);
       if (valid()) {
         _unread = await db.unread(currentScope, uid);
@@ -1595,8 +1640,13 @@ class FamilyChatSession extends ChangeNotifier {
           return;
         }
         final target = operation.read<String>('target');
-        if (valid()) await _cancelClearedNotices(currentScope);
-        _history[target] = await _readHistory(currentScope, target);
+        final history = await _readHistory(currentScope, target);
+        if (!valid()) return;
+        _history[target] = history;
+        await _reloadPending(currentScope);
+        if (!valid()) return;
+        _notify();
+        await _cancelClearedNotices(currentScope);
       } on CallableFailure catch (failure) {
         if (!valid()) return;
         if (failure.rejectionCode == 'failed-precondition' &&
@@ -1931,7 +1981,8 @@ class FamilyChatSession extends ChangeNotifier {
     _cancelQueuedRetry(reset: true);
     await _reloadPending(currentScope);
     _notify();
-    if (!signed) return;
+    if (!signed && (!_appForeground || !_chatVisible)) return;
+    if (_appForeground) _outboundPending = true;
     unawaited(
       synchronize(enqueueAgain: true).catchError((Object _) {
         if (active) {

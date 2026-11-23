@@ -28,6 +28,7 @@ class _Api implements FamilyChatApi {
   bool enabled = true, failSend = false;
   bool failReadAck = false;
   bool offline = false;
+  Map<String, dynamic>? notificationConfig;
   Future<void> Function()? onConfig;
   Future<void> Function()? onSend;
   int ticket = 0, sendCount = 0;
@@ -103,6 +104,8 @@ class _Api implements FamilyChatApi {
                 jsonDecode(jsonEncode(row)),
           ],
           'serverTime': 1000,
+          if (notificationConfig != null)
+            'notificationConfig': notificationConfig,
         };
       case 'fetchFamilyChatConversations':
         return {'conversations': [], 'cursor': '', 'hasMore': false};
@@ -236,6 +239,33 @@ void main() {
     'epoch': 'epoch',
     'messageId': 'question',
   };
+  test(
+    'push uses the message and config from one authorized response',
+    () async {
+      final db = FamilyChatDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await db.activateChat('child', scope, 'stamp');
+      final api = _Api(), presenter = _Presenter();
+      api.notificationConfig = {
+        ...await api.call('getFamilyChatConfig', {}),
+        'historyGeneration': 0,
+      };
+      api.requests.clear();
+      final worker = FamilyChatBackground(
+        db: db,
+        api: api,
+        currentUid: () => 'child',
+        presenter: presenter,
+      );
+
+      expect(await worker.receive(data), true);
+      expect(api.requests.map((request) => request.$1), [
+        'fetchFamilyChatMessageStates',
+        'acknowledgeFamilyChatMessages',
+      ]);
+      expect(presenter.shown, hasLength(1));
+    },
+  );
   test('sync keeps an incoming message quiet while chat is open', () async {
     final db = FamilyChatDatabase(NativeDatabase.memory());
     final api = _Api();
@@ -282,11 +312,12 @@ void main() {
     final event = AndroidFamilyChatPresenter.messageEvent(
       presenter.shown.single,
     );
+    final createdAt = DateTime.now();
     final entry = NotificationInboxEntry.fromEvent(
       event,
       id: event.id,
-      createdAt: DateTime(2026, 11, 20),
-      retryAt: DateTime(2026, 11, 20, 0, 5),
+      createdAt: createdAt,
+      retryAt: createdAt.add(const Duration(minutes: 5)),
       retriesRemaining: 2,
     );
     expect(await inbox.put(entry), isTrue);
@@ -633,9 +664,7 @@ void main() {
       }
       if (delayed == 'states') {
         api.statesGate = Completer<void>();
-        api.onConfig = () async {
-          Timer(const Duration(milliseconds: 80), api.statesGate!.complete);
-        };
+        Timer(const Duration(milliseconds: 80), api.statesGate!.complete);
       }
       final worker = FamilyChatBackground(
         db: db,

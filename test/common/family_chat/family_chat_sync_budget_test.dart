@@ -46,12 +46,15 @@ class _Server {
   final calls = <({String device, String name, Duration at})>[];
   final refused = <String>[];
   final stateRequests = <({String device, List<String> ids})>[];
+  final historyTargets = <String>[];
   final messages = <String, List<Map<String, dynamic>>>{
     for (final target in _targets) target: [],
   };
   final acked = <String>{};
   Object? ackFailure;
   Object? sendFailure;
+  Completer<void>? conversationsGate;
+  bool issueTickets = true;
   int _sequence = 0;
   int _ticket = 0;
 
@@ -122,10 +125,12 @@ class _Server {
       case 'getFamilyChatConfig':
         return config;
       case 'fetchFamilyChatConversations':
+        await conversationsGate?.future;
         return {'conversations': [], 'cursor': '', 'hasMore': false};
       case 'fetchFamilyChatShortcuts':
         return {'items': null, 'revision': 0, 'order': [], 'orderRevision': 0};
       case 'fetchFamilyChatMessages':
+        historyTargets.add(data['targetUid'] as String);
         final all = messages[data['targetUid']] ?? const [];
         final after = data['after'] as int? ?? 0;
         var rows = data['latest'] == true
@@ -167,7 +172,7 @@ class _Server {
       case 'reserveFamilyChatOperations':
         return {
           'tickets': [
-            for (var i = 0; i < (data['count'] as int); i++)
+            for (var i = 0; issueTickets && i < (data['count'] as int); i++)
               {
                 'id': 'ticket-${++_ticket}',
                 'token': 'token-$_ticket',
@@ -261,6 +266,177 @@ T _drain<T>(FakeAsync time, Future<T> future) {
 }
 
 void main() {
+  test(
+    'sent message drops the pending indicator before inbox refresh ends',
+    () {
+      fakeAsync((time) {
+        final server = _Server(() => time.elapsed);
+        final db = FamilyChatDatabase(NativeDatabase.memory());
+        final session = _session(server, 'a', db);
+        _drain(time, session.start(foreground: true));
+        session.setForeground(true, chatVisible: true);
+        time.flushMicrotasks();
+
+        final gate = Completer<void>();
+        server.conversationsGate = gate;
+        var notified = false;
+        session.addListener(() {
+          final rows = session.messages('mom1');
+          notified |= rows.length == 1 && rows.single['sequence'] != 0;
+        });
+        _drain(time, session.send('mom1', 'hej'));
+        expect(session.busy, isTrue);
+        expect(notified, isTrue);
+
+        gate.complete();
+        time.flushMicrotasks();
+        session.dispose();
+        _drain(time, db.close());
+      });
+    },
+  );
+
+  test(
+    'open conversation publishes new messages before inbox refresh finishes',
+    () {
+      fakeAsync((time) {
+        final server = _Server(() => time.elapsed)..addIncoming('mom1', 1);
+        final db = FamilyChatDatabase(NativeDatabase.memory());
+        final session = _session(server, 'a', db);
+        _drain(time, session.start(foreground: true));
+        session.focusConversation('mom1');
+        session.setForeground(true, chatVisible: true);
+        time.flushMicrotasks();
+
+        final gate = Completer<void>();
+        server.conversationsGate = gate;
+        server.addIncoming('mom1', 1);
+        var notified = false;
+        session.addListener(() {
+          notified |= session
+              .messages('mom1')
+              .any((row) => row['id'] == 'in-mom1-2');
+        });
+        unawaited(session.synchronize());
+        time.flushMicrotasks();
+        expect(session.busy, isTrue);
+        expect(notified, isTrue);
+
+        gate.complete();
+        time.flushMicrotasks();
+        session.dispose();
+        _drain(time, db.close());
+      });
+    },
+  );
+
+  test('opening a later conversation fetches its history first', () {
+    fakeAsync((time) {
+      final server = _Server(() => time.elapsed)..addIncoming('mom5', 1);
+      final db = FamilyChatDatabase(NativeDatabase.memory());
+      final session = FamilyChatSession(
+        uid: _uid,
+        api: _Device(server, 'a'),
+        db: db,
+        isCurrentAccount: () => true,
+        loadHistoryWhenHidden: false,
+        clock: () => DateTime.fromMillisecondsSinceEpoch(server.now),
+      );
+      _drain(time, session.start(foreground: true));
+      final gate = Completer<void>();
+      server.conversationsGate = gate;
+      session.focusConversation('mom5');
+      session.setForeground(true, chatVisible: true);
+      time.flushMicrotasks();
+
+      expect(server.historyTargets, ['mom5']);
+      expect(session.messages('mom5').single['id'], 'in-mom5-1');
+      server.conversationsGate = null;
+      gate.complete();
+      time.flushMicrotasks();
+      expect(
+        server.historyTargets.where((target) => target == 'mom5'),
+        hasLength(1),
+      );
+      expect(server.historyTargets, contains('mom1'));
+
+      session.dispose();
+      _drain(time, db.close());
+    });
+  });
+
+  test(
+    'an open chat reserves a ticket and sends without waiting for polling',
+    () {
+      fakeAsync((time) {
+        final server = _Server(() => time.elapsed)..issueTickets = false;
+        final db = FamilyChatDatabase(NativeDatabase.memory());
+        final session = _session(server, 'a', db);
+        _drain(time, session.start(foreground: true));
+        session.setForeground(true, chatVisible: true);
+        time.flushMicrotasks();
+
+        server.issueTickets = true;
+        final mark = server.calls.length;
+        _drain(time, session.send('mom1', 'message without a reserved ticket'));
+        time.flushMicrotasks();
+        final calls = server.names(since: mark).toList();
+        expect(
+          calls.indexOf('reserveFamilyChatOperations'),
+          greaterThanOrEqualTo(0),
+        );
+        expect(
+          calls.indexOf('sendFamilyChatMessage'),
+          greaterThan(calls.indexOf('reserveFamilyChatOperations')),
+        );
+        expect(time.elapsed, Duration.zero);
+
+        session.dispose();
+        _drain(time, db.close());
+      });
+    },
+  );
+
+  test('a message queued during inbox refresh sends before history reads', () {
+    fakeAsync((time) {
+      final server = _Server(() => time.elapsed);
+      final db = FamilyChatDatabase(NativeDatabase.memory());
+      final session = _session(server, 'a', db);
+      _drain(time, session.start(foreground: true));
+
+      final gate = Completer<void>();
+      server.conversationsGate = gate;
+      final mark = server.calls.length;
+      session.setForeground(true, chatVisible: true);
+      time.flushMicrotasks();
+      expect(
+        server.names(since: mark),
+        contains('fetchFamilyChatConversations'),
+      );
+      _drain(time, session.send('mom1', 'message during refresh'));
+      expect(
+        server.names(since: mark),
+        isNot(contains('sendFamilyChatMessage')),
+      );
+
+      server.conversationsGate = null;
+      gate.complete();
+      time.flushMicrotasks();
+      final calls = server.names(since: mark).toList();
+      final send = calls.indexOf('sendFamilyChatMessage');
+      final history = calls.indexOf('fetchFamilyChatMessages');
+      expect(send, greaterThanOrEqualTo(0));
+      expect(history, greaterThan(send));
+      expect(
+        calls.where((name) => name == 'sendFamilyChatMessage'),
+        hasLength(1),
+      );
+
+      session.dispose();
+      _drain(time, db.close());
+    });
+  });
+
   test('home refresh reads inbox metadata and chat entry reads messages', () {
     fakeAsync((time) {
       final server = _Server(() => time.elapsed)..addIncoming('mom1', 1);

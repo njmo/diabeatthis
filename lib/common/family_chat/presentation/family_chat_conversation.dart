@@ -11,6 +11,7 @@ import '../../../features/low_treatment/presentation/widgets/quick_low_treatment
 import '../../../features/low_treatment/presentation/widgets/quick_low_treatment_tile.dart';
 import '../../backend/authenticated_callable_transport.dart';
 import '../../l10n/language.dart';
+import '../../widgets/responsive_bottom_sheet.dart';
 import '../application/confirm_family_treatment.dart';
 import '../application/family_chat_session.dart';
 import '../application/resolve_family_chat_replies.dart';
@@ -122,7 +123,7 @@ Future<T?> _showChatForm<T>(
       ),
     ),
   );
-  return showModalBottomSheet<T>(
+  return showResponsiveBottomSheet<T>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -132,7 +133,8 @@ Future<T?> _showChatForm<T>(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
     clipBehavior: Clip.antiAlias,
-    builder: (context) => Theme(data: theme, child: builder(context)),
+    contentTheme: theme,
+    builder: builder,
   );
 }
 
@@ -754,6 +756,7 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
     _recipient = _recipients.contains(widget.initialTarget)
         ? widget.initialTarget!
         : _recipients.first;
+    widget._session.focusConversation(_recipient);
     _input.text = widget._session.draft(_recipient);
     _input.addListener(_updateComposer);
     _scroll.addListener(_scheduleRead);
@@ -1593,6 +1596,7 @@ class _FamilyChatConversationState extends State<FamilyChatConversation> {
                                   _persistDraft(_recipient, _input.text),
                                 );
                                 _recipient = recipient;
+                                widget._session.focusConversation(recipient);
                                 _jumpToLatest();
                                 _draftTimer?.cancel();
                                 _input.text = widget._session.draft(recipient);
