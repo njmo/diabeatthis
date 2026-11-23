@@ -102,6 +102,8 @@
     <string name="child_parent_deciding">Making a decision</string>
     <string name="child_decision_timer">Time left for a decision</string>
     <string name="child_decision_title">Caregiver’s decision</string>
+    <string name="child_advisor_title">Meal Advisor</string>
+    <string name="child_advisor_unavailable">Meal Advisor is unavailable. Continue on your phone.</string>
     <string name="active_meal_heading">Meal in progress</string>
     <string name="active_meal_bolus">Waiting for the bolus</string>
     <string name="active_meal_waiting">Waiting before eating</string>

@@ -24,6 +24,8 @@ class MealDecisionWatchProtocol {
     this.loadChildMealDetails,
     this.loadCaregiverMeals,
     this.requestChildDecision,
+    this.prepareChildAdvisor,
+    this.acceptChildAdvisor,
     this.completeChildMeal,
     this.startChildMealAddOn,
     this.openPhoneMealSummary,
@@ -73,6 +75,14 @@ class MealDecisionWatchProtocol {
     String,
   )?
   requestChildDecision;
+  final Future<Map<String, Object?>?> Function(
+    MealDecisionWatchSession,
+    int,
+    String,
+  )?
+  prepareChildAdvisor;
+  final Future<bool> Function(MealDecisionWatchSession, int, String)?
+  acceptChildAdvisor;
   final Future<String> Function(MealDecisionWatchSession, int)?
   completeChildMeal;
   final Future<String> Function(MealDecisionWatchSession, int, double)?
@@ -127,6 +137,8 @@ class MealDecisionWatchProtocol {
               'respond',
               'presence',
               'requestDecision',
+              'prepareAdvisor',
+              'acceptAdvisor',
               'acceptDecision',
               'rejectDecision',
             }.contains(action) ||
@@ -176,6 +188,22 @@ class MealDecisionWatchProtocol {
       final status = await command?.call(current, mealId);
       return session() == current
           ? _reply(status ?? 'unavailable', mode: mode)
+          : _reply('unavailable');
+    }
+    if (action == 'prepareAdvisor' || action == 'acceptAdvisor') {
+      final mealId = message['mealId'];
+      if (mealId is! int || mealId <= 0) return _reply('invalidRequest');
+      if (mode != MealDecisionWatchMode.child) return _reply('unavailable');
+      final id = requestId as String;
+      if (action == 'acceptAdvisor') {
+        final accepted = await acceptChildAdvisor?.call(current, mealId, id);
+        return session() == current && accepted == true
+            ? _reply('ok', mode: mode)
+            : _reply('unavailable');
+      }
+      final preview = await prepareChildAdvisor?.call(current, mealId, id);
+      return session() == current && preview != null
+          ? _reply('ok', mode: mode, preview: preview)
           : _reply('unavailable');
     }
     if (action == 'requestDecision') {

@@ -101,6 +101,8 @@
     <string name="child_parent_deciding">Podejmuje decyzję</string>
     <string name="child_decision_timer">Do końca czasu na decyzję</string>
     <string name="child_decision_title">Decyzja opiekuna</string>
+    <string name="child_advisor_title">Doradca posiłkowy</string>
+    <string name="child_advisor_unavailable">Doradca posiłkowy jest niedostępny. Kontynuuj na telefonie.</string>
     <string name="active_meal_heading">Posiłek w trakcie</string>
     <string name="active_meal_bolus">Oczekiwanie na bolus</string>
     <string name="active_meal_waiting">Przerwa przed jedzeniem</string>

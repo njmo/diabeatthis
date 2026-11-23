@@ -75,12 +75,7 @@ final caregiverWatchProgressHistoryProvider = FutureProvider.autoDispose
       key,
     ) async {
       final family = ref.watch(
-        familyPlanningSessionProvider((
-          uid: key.uid,
-          home: false,
-          mealId: key.mealId,
-          context: false,
-        )),
+        familyMealProgressSessionProvider((uid: key.uid, mealId: key.mealId)),
       );
       await family.refreshAndWait(mirrorOnly: true);
       if (family.disposed ||

@@ -866,6 +866,8 @@ public class MealDecisionWatchActivity extends Activity
                     sendChildMealAction(phone, focusedMealId, "startAcceptedMeal");
                 } else if (meal.optBoolean("canRequest")) {
                     requestChildDecision(phone, meal);
+                } else if (meal.optBoolean("canUseAdvisor")) {
+                    exchangeChildAdvisor(phone, meal, UUID.randomUUID().toString().replace("-", ""), false);
                 } else {
                     sendChildMealAction(phone, focusedMealId, "startMealOnPhone");
                 }
@@ -1062,7 +1064,24 @@ public class MealDecisionWatchActivity extends Activity
 
     private boolean renderChildDecision(String phone, JSONObject meal, JSONObject request,
                                      JSONObject decision) {
-        childBandLabel(content, string(R.string.child_decision_title), ACCENT, 12);
+        String caregiver = decision.optString("caregiverName", "");
+        if (!renderChildDecisionDetails(meal, decision, R.string.child_decision_title, caregiver)) {
+            return false;
+        }
+        insetCompactButton(string(R.string.child_accept_decision), true,
+            view -> sendChildMealAction(phone, meal.optLong("mealId"), "acceptDecision",
+                request.optString("requestId")));
+        if (decision.optBoolean("allowManualDecision", true)) {
+            insetCompactButton(string(R.string.reject_request), false,
+                view -> sendChildMealAction(phone, meal.optLong("mealId"), "rejectDecision",
+                    request.optString("requestId")));
+        }
+        return true;
+    }
+
+    private boolean renderChildDecisionDetails(JSONObject meal, JSONObject decision, int title,
+                                                String sourceName) {
+        childBandLabel(content, string(title), ACCENT, 12);
         var mealName = childBandLabel(content, meal.optString("mealName"), MUTED, 11);
         mealName.setMaxLines(2);
         mealName.setEllipsize(TextUtils.TruncateAt.END);
@@ -1078,19 +1097,77 @@ public class MealDecisionWatchActivity extends Activity
             return false;
         }
         childScreenHeading(instructions);
-        String caregiver = decision.optString("caregiverName", "");
-        if (!caregiver.isEmpty()) childBandLabel(content, caregiver, MUTED, 11);
+        if (!sourceName.isEmpty()) childBandLabel(content, sourceName, MUTED, 11);
         String note = decision.optString("note", "");
         if (!note.isEmpty()) text(note);
-        insetCompactButton(string(R.string.child_accept_decision), true,
-            view -> sendChildMealAction(phone, meal.optLong("mealId"), "acceptDecision",
-                request.optString("requestId")));
-        if (decision.optBoolean("allowManualDecision", true)) {
-            insetCompactButton(string(R.string.reject_request), false,
-                view -> sendChildMealAction(phone, meal.optLong("mealId"), "rejectDecision",
-                    request.optString("requestId")));
-        }
         return true;
+    }
+
+    private void exchangeChildAdvisor(String phone, JSONObject meal, String requestId,
+                                      boolean accepting) {
+        if (requestingChildDecision) return;
+        requestingChildDecision = true;
+        int generation = ++requestGeneration;
+        handler.removeCallbacksAndMessages(null);
+        inboxHandler.removeCallbacks(refreshInbox);
+        clearScreen();
+        text(string(accepting ? R.string.accepting : R.string.connecting));
+        Runnable unavailable = () -> {
+            if (generation != requestGeneration) return;
+            ++requestGeneration;
+            requestingChildDecision = false;
+            handler.removeCallbacksAndMessages(null);
+            clearScreen();
+            swipeRight = () -> renderPlannedMeal(phone, meal);
+            content.setPadding(contentSide, dp(18), contentSide, dp(24));
+            text(string(accepting ? R.string.request_unconfirmed : R.string.child_advisor_unavailable));
+            insetCompactButton(string(R.string.meal_summary_on_phone), true,
+                view -> sendChildMealAction(phone, meal.optLong("mealId"), "startMealOnPhone"));
+            insetCompactButton(string(R.string.back), false, view -> swipeRight.run());
+        };
+        final byte[] payload;
+        try {
+            payload = new JSONObject().put("version", 1)
+                .put("action", accepting ? "acceptAdvisor" : "prepareAdvisor")
+                .put("mealId", meal.optLong("mealId")).put("requestId", requestId)
+                .toString().getBytes(StandardCharsets.UTF_8);
+        } catch (JSONException error) {
+            unavailable.run();
+            return;
+        }
+        handler.postDelayed(unavailable, 8000);
+        Wearable.getMessageClient(this).sendRequest(phone, PATH, payload)
+            .addOnSuccessListener(this, bytes -> {
+                if (generation != requestGeneration) return;
+                try {
+                    JSONObject reply = new JSONObject(new String(bytes, StandardCharsets.UTF_8));
+                    if (reply.optInt("version") != 1 || !"ok".equals(reply.optString("status"))
+                            || !"child".equals(reply.optString("mode"))) {
+                        unavailable.run();
+                        return;
+                    }
+                    handler.removeCallbacksAndMessages(null);
+                    requestingChildDecision = false;
+                    if (accepting) {
+                        refresh();
+                        return;
+                    }
+                    JSONObject decision = reply.getJSONObject("preview");
+                    clearScreen();
+                    swipeRight = () -> renderPlannedMeal(phone, meal);
+                    content.setPadding(contentSide, dp(18), contentSide, dp(24));
+                    if (!renderChildDecisionDetails(meal, decision, R.string.child_advisor_title, "")) {
+                        unavailable.run();
+                        return;
+                    }
+                    insetCompactButton(string(R.string.child_accept_decision), true,
+                        view -> exchangeChildAdvisor(phone, meal, requestId, true));
+                    insetCompactButton(string(R.string.back), false, view -> swipeRight.run());
+                } catch (JSONException error) {
+                    unavailable.run();
+                }
+            })
+            .addOnFailureListener(this, error -> unavailable.run());
     }
 
     private JSONObject pendingForMeal(JSONArray requests, long mealId) {

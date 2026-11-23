@@ -300,6 +300,60 @@ void main() {
     expect(sent, 1);
   });
 
+  test(
+    'previews and explicitly accepts local advice without the inbox',
+    () async {
+      var session = (uid: 'child', mode: MealDecisionWatchMode.child);
+      const preview = {'type': 'insulinThenWait', 'minutes': 15};
+      final calls = <(String, int, String)>[];
+      final protocol = MealDecisionWatchProtocol(
+        session: () => session,
+        refreshInbox: () async => throw StateError('Unexpected inbox read'),
+        prepareChildAdvisor: (current, mealId, requestId) async {
+          expect(current, session);
+          calls.add(('prepare', mealId, requestId));
+          return preview;
+        },
+        acceptChildAdvisor: (current, mealId, requestId) async {
+          expect(current, session);
+          calls.add(('accept', mealId, requestId));
+          return mealId == 42 && requestId == id;
+        },
+      );
+      final prepare = {
+        'version': 1,
+        'action': 'prepareAdvisor',
+        'mealId': 42,
+        'requestId': id,
+      };
+      final accept = {...prepare, 'action': 'acceptAdvisor'};
+      expect((await protocol.exchange(prepare))['preview'], preview);
+      expect(calls, [('prepare', 42, id)]);
+      expect(
+        (await protocol.exchange({...accept, 'requestId': 'bad'}))['status'],
+        'invalidRequest',
+      );
+      expect(
+        (await protocol.exchange({...accept, 'mealId': 0}))['status'],
+        'invalidRequest',
+      );
+      expect(
+        (await protocol.exchange({...accept, 'mealId': 43}))['status'],
+        'unavailable',
+      );
+      expect((await protocol.exchange(accept))['status'], 'ok');
+
+      session = (uid: 'caregiver', mode: MealDecisionWatchMode.caregiver);
+      expect((await protocol.exchange(prepare))['status'], 'unavailable');
+      expect((await protocol.exchange(accept))['status'], 'unavailable');
+      expect(calls, [
+        ('prepare', 42, id),
+        ('accept', 43, id),
+        ('accept', 42, id),
+      ]);
+    },
+  );
+
   test('child meal commands act only on the selected meal', () async {
     var mode = MealDecisionWatchMode.child;
     final calls = <String>[];
