@@ -111,6 +111,55 @@ void main() {
   );
 
   test(
+    'PiP keeps eCarbs checked while an earlier wizard waits for delivery',
+    () async {
+      final windows = <List<bool>>[];
+      final earlierWizard = opened.subtract(const Duration(seconds: 2));
+      final controller = MealCalculatorRequestController(
+        now: () => opened,
+        store: MemoryMealCalculatorRequestStore(),
+        publishWindow: (_, rows) async => windows.add(rows),
+        readContext: (_) async => null,
+        projectExtendedConfirmation: (_, _, _, _) async {},
+        onError: (error, _) => fail('$error'),
+      );
+      addTearDown(controller.dispose);
+      await controller.register(event);
+      await controller.observe({
+        'submissions': [],
+        'extendedCarb': {
+          'id': 'early-extended',
+          'at': earlierWizard
+              .add(const Duration(minutes: 45))
+              .millisecondsSinceEpoch,
+          'carbs': event.extendedCarbs,
+          'duration': const Duration(hours: 2).inMilliseconds,
+          'valid': true,
+        },
+      });
+      Map<String, Object> wizard({required bool delivered}) => {
+        'at': earlierWizard.millisecondsSinceEpoch,
+        'carbs': event.carbs,
+        'valid': true,
+        'complete': delivered,
+      };
+      // The wizard arrives before PiP opens, but delivery arrives afterwards.
+      await controller.observe({'submissions': [wizard(delivered: false)]});
+      await controller.register(event, sessionId: 'pip-early');
+      expect(windows.last, [false, true, true]);
+
+      await controller.register(
+        event,
+        openedAt: earlierWizard,
+        refreshRequirements: true,
+      );
+      expect(windows.last, [false, true, true]);
+      await controller.observe({'submissions': [wizard(delivered: true)]});
+      expect(windows.last, [true, true, true]);
+    },
+  );
+
+  test(
     'the card and PiP observe the same accepted bolus and extended confirmation',
     () async {
       var context = pending();

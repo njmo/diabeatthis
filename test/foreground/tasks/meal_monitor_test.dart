@@ -50,6 +50,7 @@ import 'package:diabeatthis/foreground/event/external/notification/notification_
 import 'package:diabeatthis/foreground/event/external/notification/notification_response_event_handler.dart';
 import 'package:diabeatthis/foreground/event/internal/data_available_event.dart';
 import 'package:diabeatthis/foreground/event/internal/meal_status_changed_event.dart';
+import 'package:diabeatthis/foreground/event/internal/meal_bolus_continued_manually.dart';
 import 'package:diabeatthis/foreground/event/internal/monitoring_status_changed.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/providers/device_status_value_provider.dart';
@@ -1877,6 +1878,54 @@ void main() {
         });
       });
     });
+    test(
+      'manual continuation resumes only the active meal from its saved status',
+      () {
+        fakeAsync((async) {
+          var meal = Meal(
+            id: 1,
+            name: 'Lunch',
+            carbs: 10,
+            status: 'waiting-for-bolus',
+          );
+          final container = ProviderContainer(
+            overrides: [
+              notificationsControllerForegroundProvider.overrideWithValue(
+                FakeNotificationsController(),
+              ),
+              getMealAdviceProvider(meal).overrideWithValue(AsyncData(null)),
+              getNearestMealProvider.overrideWithValue(AsyncData(null)),
+              getMealByIdProvider(1).overrideWith((_) async => meal),
+            ],
+          );
+          final harness = FakeRuntimeHarness(container: container);
+          final task = MealMonitorTask();
+          task.run(harness.runtimeContext);
+          _settle(async);
+          harness.dispatchEventToTask(
+            task,
+            MealWaitingForBolusEvent(mealId: 1),
+          );
+          _settle(async);
+          expect(task.state, isA<WaitForBolusExecutor>());
+
+          meal = meal.copyWith(status: 'bolused-eating');
+          harness.dispatchEventToTask(
+            task,
+            const MealBolusContinuedManually(2),
+          );
+          _settle(async);
+          expect(task.state, isA<WaitForBolusExecutor>());
+          harness.dispatchEventToTask(
+            task,
+            const MealBolusContinuedManually(1),
+          );
+          _settle(async);
+          expect(task.state, isA<DetectFinishedEatingExecutor>());
+        });
+      },
+    );
+
     test('bolused status does not replace calculator bolus detection', () {
       fakeAsync((async) {
         final start = DateTime(2026, 3, 23, 12, 0);

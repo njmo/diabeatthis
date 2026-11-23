@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../app/providers/app_event_router_provider.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/meal_display_name.dart';
 import '../../../../common/meal/meal_progress_plan.dart';
@@ -10,6 +11,7 @@ import '../../../../common/meal/open_meal_add_on.dart';
 import '../../../../common/meal/open_meal_completion.dart';
 import '../../../../common/meal_advisor/presentation/remote/child_meal_decision_meal_action.dart';
 import '../../../../common/monitoring/meal_wait_status.dart';
+import '../../../../common/notifications/scoped_notification_cancellation.dart';
 import '../../../../common/widgets/meal_progress/active_meal_progress_card.dart';
 import '../../../../common/widgets/meal_progress/meal_progress_section_heading.dart';
 import '../../../../common/widgets/meal_progress/meal_progress_steps.dart';
@@ -17,9 +19,15 @@ import '../../../../common/widgets/meal_progress/show_meal_interruption_dialog.d
 import '../../../../core/data/provider/parent_controller_provider.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../../core/domain/model/meal_status_flow.dart';
+import '../../../../core/drift/providers/database_provider.dart';
+import '../../../../core/notifications/domain/models/notification_event_type.dart';
+import '../../../../core/notifications/domain/models/notification_key.dart';
+import '../../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../../../foreground/event/internal/meal_bolus_continued_manually.dart';
 import '../../../dashboard/data/providers/time_now_provider.dart';
 import '../../../dashboard/presentation/utils/meal_status_dialog_result_handler.dart';
 import '../../../dashboard/presentation/utils/show_meal_status_dialog.dart';
+import '../../data/domain/use_cases/continue_meal_without_bolus_link.dart';
 import '../../data/providers/meal_activation_guard_provider.dart';
 import '../../data/providers/meal_add_on_bolus_context_provider.dart';
 import '../../data/providers/meal_database_provider.dart';
@@ -105,6 +113,59 @@ class MealListToday extends ConsumerWidget {
         ? () => deleteDashboardMeal(context: context, ref: ref, meal: meal)
         : null;
 
+    Future<void> confirmManualContinuation(int mealId) async {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          constraints: const BoxConstraints(maxWidth: 360),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          titleTextStyle: Theme.of(dialog).textTheme.titleMedium,
+          title: Text(lang.mealProgressContinueWithoutBolusLinkTitle),
+          contentPadding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          contentTextStyle: Theme.of(dialog).textTheme.bodyMedium,
+          content: Text(lang.mealProgressContinueWithoutBolusLinkBody),
+          actionsPadding: const EdgeInsets.fromLTRB(12, 0, 16, 12),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialog, false),
+              child: Text(lang.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialog, true),
+              child: Text(lang.mealProgressContinueWithoutBolusLinkConfirm),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) return;
+      try {
+        final notifications = ref.read(notificationsControllerUiProvider);
+        final router = ref.read(appEventRouterProvider);
+        if (await continueMealWithoutBolusLink(
+          ref.read(databaseProvider),
+          mealId,
+        )) {
+          router.send(MealBolusContinuedManually(mealId));
+          await notifications.cancelNotification(
+            NotificationKey(
+              type: NotificationEventType.mealSuggestion,
+              entityId: mealId,
+            ),
+          );
+        }
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(lang.familyPlanFailed)));
+        }
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 20),
       child: Column(
@@ -133,6 +194,12 @@ class MealListToday extends ConsumerWidget {
                   : meal.status == 'waiting-for-bolus'
                   ? lang.mealProgressOpenCalculator
                   : lang.mealStatusAte,
+              onActionLongPress:
+                  meal.status == 'waiting-for-bolus' &&
+                      !waitingForExtraBolus(meal) &&
+                      !waitsForExtendedCarbs(meal)
+                  ? () => confirmManualContinuation(meal.id)
+                  : null,
               onAction:
                   waitingForExtraBolus(meal) || waitsForExtendedCarbs(meal)
                   ? null

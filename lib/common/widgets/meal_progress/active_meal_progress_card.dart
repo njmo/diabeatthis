@@ -12,6 +12,7 @@ class ActiveMealProgressCard extends StatelessWidget {
     required this.steps,
     required this.actionLabel,
     required this.onAction,
+    this.onActionLongPress,
     required this.onInterrupt,
     this.quickMeal = false,
     this.footer,
@@ -29,6 +30,7 @@ class ActiveMealProgressCard extends StatelessWidget {
   final Widget steps;
   final String actionLabel;
   final VoidCallback? onAction;
+  final VoidCallback? onActionLongPress;
   final VoidCallback onInterrupt;
   final bool quickMeal;
   final Widget? footer;
@@ -193,6 +195,7 @@ class ActiveMealProgressCard extends StatelessWidget {
                             ),
                           ),
                           onPressed: onAction,
+                          onLongPress: onActionLongPress,
                           child: Text(
                             actionLabel,
                             textAlign: TextAlign.center,

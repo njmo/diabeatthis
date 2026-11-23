@@ -7,6 +7,7 @@ import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart'
     show DatabaseImpl, MealCompanion;
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
+import 'package:diabeatthis/features/meals/data/domain/use_cases/continue_meal_without_bolus_link.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/providers/meal_bolus_delivery_history_provider.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
@@ -24,6 +25,52 @@ import '../utils/fake_runtime_harness.dart';
 import 'meal_monitor_test.dart' show testBolusWizard;
 
 void main() {
+  test(
+    'late automatic confirmation cannot attach entries after manual continuation',
+    () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      final id = await db
+          .into(db.meal)
+          .insert(
+            MealCompanion.insert(
+              name: 'Meal',
+              status: const Value('waiting-for-bolus'),
+            ),
+          );
+      final container = ProviderContainer(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          mealBolusDeliveryHistoryProvider.overrideWithValue((_) async => []),
+        ],
+      );
+      container.read(databaseProvider);
+      final harness = FakeRuntimeHarness(container: container);
+      addTearDown(() async {
+        await harness.dispose();
+        await db.close();
+      });
+      final context = MealMonitorContext(
+        activeMeal: Meal(id: id, name: 'Meal'),
+      );
+      final wizard = testBolusWizard(createdAt: DateTime.now(), carbs: 20);
+      dispatchDeliveredMealBolus(harness, wizard);
+      final accepted = await const WaitForMealBolusDelivery()(
+        harness.runtimeContext,
+        context,
+        wizard,
+      );
+
+      expect(await continueMealWithoutBolusLink(db, id), isTrue);
+      expect(
+        await commitMealBolusDeliveries(harness.runtimeContext, context, [
+          accepted.wizard,
+        ], 'eaten-bolused'),
+        isFalse,
+      );
+      expect(await db.mealWizardLinkDao.forMeal(id), isEmpty);
+    },
+  );
+
   test(
     'a stored calculator must still be valid when the meal advances',
     () async {

@@ -73,11 +73,25 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
     RuntimeContext runtimeContext,
     MealMonitorContext mealMonitorContext,
   ) async {
+    final meal = mealMonitorContext.activeMeal!;
+    if (runtimeContext.container.exists(databaseProvider)) {
+      final db = runtimeContext.container.read(databaseProvider);
+      if (db.hasOpened) {
+        final current = await db.mealDao.getMealById(meal.id);
+        mealMonitorContext.throwIfStopped(runtimeContext);
+        if (const {
+          'eaten-bolused',
+          'bolused-eating',
+          'bolused-waiting',
+        }.contains(current?.status)) {
+          return NewMealCheckExecutor();
+        }
+      }
+    }
     mealMonitorContext.publishStatus(
       runtimeContext,
       MealMonitoringPhase.waitingForBolus,
     );
-    final meal = mealMonitorContext.activeMeal!;
     final status = meal.status;
     if (status == 'skipped' ||
         status == 'summarized' ||
@@ -291,6 +305,15 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
         nextStatus,
       );
       if (committed == false) {
+        if (runtimeContext.container.exists(databaseProvider)) {
+          final current = await runtimeContext.container
+              .read(databaseProvider)
+              .mealDao
+              .getMealById(meal.id);
+          if (current?.status != 'waiting-for-bolus') {
+            return NewMealCheckExecutor();
+          }
+        }
         await runtimeContext.waitForDuration(mealRequirementRefreshInterval);
         continue;
       }

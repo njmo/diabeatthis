@@ -146,6 +146,8 @@ Future<bool?> commitMealBolusDeliveries(
   final required = await _calculator(runtime)?.requiredMealCarbs(active.id);
   try {
     return await db.transaction(() async {
+      final savedMeal = await db.mealDao.getMealById(active.id);
+      if (savedMeal?.status != 'waiting-for-bolus') return false;
       final current = await _currentUnassignedDeliveries(runtime, accepted);
       final total = _totalCarbs(current);
       if (current.length != accepted.length ||

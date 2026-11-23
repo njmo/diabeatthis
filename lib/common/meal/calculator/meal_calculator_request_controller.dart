@@ -118,10 +118,18 @@ class MealCalculatorRequestController {
     if (previousSession != null && !sameLogicalRequest) {
       await closeWindow?.call(previousSession);
     }
+    // The monitor can find an earlier main-meal entry after PiP has opened.
+    // Add-ons keep their own boundary so they cannot reuse the main meal entry.
+    final keepExistingStart =
+        sameMealRequest &&
+        !(refreshRequirements &&
+            context == null &&
+            openedAt != null &&
+            openedAt.isBefore(existing.openedAt));
     final request = MealCalculatorRequest(
       event: event,
       sessionId: sessionId ?? (sameLogicalRequest ? previousSession : null),
-      openedAt: sameMealRequest
+      openedAt: keepExistingStart
           ? existing.openedAt
           : context?.requestedAt ?? openedAt ?? _now(),
       contextRequestedAt:

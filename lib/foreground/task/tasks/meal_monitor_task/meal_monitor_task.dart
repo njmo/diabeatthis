@@ -13,6 +13,7 @@ import '../../../../core/notifications/domain/models/notification_event_type.dar
 import '../../../../core/notifications/domain/models/notification_key.dart';
 import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../features/meals/data/providers/meal_database_provider.dart';
+import '../../../event/internal/meal_bolus_continued_manually.dart';
 import '../../../event/internal/meal_event.dart';
 import '../../../event/internal/meal_status_changed_event.dart';
 import '../../../event/internal/monitoring_status_changed.dart';
@@ -23,6 +24,7 @@ import 'executors/idle_executor.dart';
 import 'executors/meal_monitor_state_executor.dart';
 import 'executors/monitor_until_meal.dart';
 import 'executors/new_meal_check_executor.dart';
+import 'executors/wait_for_bolus_executor.dart';
 import 'helpers/meal_status_to_executor_mapper.dart';
 import 'meal_monitor_context.dart';
 import 'meal_monitor_transition.dart';
@@ -38,6 +40,7 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
     (e) => e is NextMealEvent || e is PlannedMealsClearedEvent,
     (e) => e is MealStatusChangedEvent,
     (e) => e is MealDecisionMethodChanged,
+    (e) => e is MealBolusContinuedManually,
   ];
 
   @visibleForTesting
@@ -46,6 +49,10 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
   @override
   bool shouldInterrupt(ForegroundEvent event) {
     logI("MealMonitorTask shouldInterrupt ${event.runtimeType}");
+    if (event is MealBolusContinuedManually) {
+      return _state is WaitForBolusExecutor &&
+          _activeMealExecutorContext.activeMeal?.id == event.mealId;
+    }
     if (event is MealDecisionMethodChanged) {
       return _state is MonitorUntilMeal ||
           _loadingPlannedMeal ||
@@ -141,6 +148,24 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
     MealMonitorTransition? mealMonitorTransition;
 
     switch (interruptedEvent) {
+      case MealBolusContinuedManually(:final mealId):
+        final latest = await buildMealMonitorContext(context, mealId);
+        final meal = latest.activeMeal;
+        if (meal != null &&
+            const {
+              'eaten-bolused',
+              'bolused-eating',
+              'bolused-waiting',
+            }.contains(meal.status)) {
+          final executor = mealStatusChangedEventToExecutor(
+            MealStatusChangedEvent.fromMealStatus(meal),
+            true,
+          );
+          if (executor != null) {
+            mealMonitorTransition = MealMonitorTransition(latest, executor);
+          }
+        }
+        break;
       case MealDecisionMethodChanged():
         final mealId = _activeMealExecutorContext.activeMeal?.id;
         if (mealId != null) {

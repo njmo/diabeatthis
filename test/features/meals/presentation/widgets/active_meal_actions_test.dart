@@ -42,6 +42,7 @@ void main() {
     tester,
   ) async {
     var opens = 0;
+    var confirmations = 0;
     await tester.pumpWidget(
       localizedMaterialApp(
         home: Scaffold(
@@ -52,6 +53,7 @@ void main() {
             steps: const SizedBox.shrink(),
             actionLabel: 'Otwórz kalkulator',
             onAction: () => opens++,
+            onActionLongPress: () => confirmations++,
             onInterrupt: () {},
           ),
         ),
@@ -62,5 +64,9 @@ void main() {
     expect(find.byType(FilledButton), findsOneWidget);
     await tester.tap(find.text('Otwórz kalkulator'));
     expect(opens, 1);
+    expect(confirmations, 0);
+    await tester.longPress(find.text('Otwórz kalkulator'));
+    expect(opens, 1);
+    expect(confirmations, 1);
   });
 }
