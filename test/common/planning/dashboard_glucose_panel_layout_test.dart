@@ -40,7 +40,7 @@ void main() {
                       busy: false,
                       failed: false,
                       ready: true,
-                    readyLabel: 'Synced with cloud storage',
+                      readyLabel: 'Synced with cloud storage',
                     ),
                     readings: DashboardGlucoseReading(
                       value: 123,
@@ -78,11 +78,15 @@ void main() {
         expect(metrics.left, greaterThan(sync.right));
         expect(metrics.top, greaterThan(glucose.bottom));
         expect(metrics.bottom, lessThan(chart.top));
-        final syncLabel = find.text('Synced with cloud storage');
-        expect(tester.widget<Text>(syncLabel).maxLines, 2);
-        if (width == 320) {
-          expect(tester.getSize(syncLabel).height, greaterThan(15));
-        }
+        expect(tester.widget<Text>(find.text('Synced')).maxLines, 1);
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                widget.properties.label == 'Synced with cloud storage',
+          ),
+          findsOneWidget,
+        );
         expect(find.text('IOB 0 U'), findsOneWidget);
         expect(find.text('COB —'), findsOneWidget);
         expect(find.text('COB 10 g'), findsNothing);

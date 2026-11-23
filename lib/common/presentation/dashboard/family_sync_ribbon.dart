@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/language.dart';
 
-/// The compact ribbon can wrap on narrow dashboard headers.
+/// A compact ribbon keeps the dashboard header height stable.
 class FamilySyncRibbon extends StatefulWidget {
   const FamilySyncRibbon({
     super.key,
@@ -75,6 +75,13 @@ class _FamilySyncRibbonState extends State<FamilySyncRibbon>
         : widget.ready
         ? widget.readyLabel ?? context.lang.familySyncUpdated
         : context.lang.familyPlanWaitingForChild;
+    final shortText = widget.failed
+        ? context.lang.mealDecisionContextNoSync
+        : widget.busy
+        ? context.lang.dashboardSyncBusy
+        : widget.ready
+        ? context.lang.dashboardSyncReady
+        : context.lang.dashboardSyncWaiting;
 
     final fgColor = widget.failed
         ? colors.error
@@ -99,9 +106,21 @@ class _FamilySyncRibbonState extends State<FamilySyncRibbon>
         ? colors.primary.withValues(alpha: 0.3)
         : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0));
 
+    final label = Text(
+      widget.compact ? shortText : text,
+      style: TextStyle(
+        fontSize: 10.5,
+        fontWeight: FontWeight.w600,
+        color: fgColor,
+        letterSpacing: -0.1,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
     final ribbon = Semantics(
       liveRegion: true,
       label: text,
+      excludeSemantics: true,
       child: Align(
         alignment: widget.compact
             ? Alignment.centerLeft
@@ -139,28 +158,19 @@ class _FamilySyncRibbonState extends State<FamilySyncRibbon>
                 ),
               const SizedBox(width: 5),
               Flexible(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: fgColor,
-                    letterSpacing: -0.1,
-                  ),
-                  maxLines: widget.compact ? 2 : 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                child: widget.compact
+                    ? FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: label,
+                      )
+                    : label,
               ),
             ],
           ),
         ),
       ),
     );
-    return widget.compact
-        ? ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 24),
-            child: ribbon,
-          )
-        : SizedBox(height: 24, child: ribbon);
+    return SizedBox(height: 24, child: ribbon);
   }
 }
