@@ -414,54 +414,57 @@ class DashboardGlucoseReading extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Nagłówek wewnątrz karty
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child:
-                        NightscoutPanelScope.of(context)?.syncRibbon ??
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 7,
-                              height: 7,
-                              decoration: BoxDecoration(
-                                color: statusColor,
-                                shape: BoxShape.circle,
+              LayoutBuilder(
+                builder: (context, constraints) => Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child:
+                          NightscoutPanelScope.of(context)?.syncRibbon ??
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 7,
+                                height: 7,
+                                decoration: BoxDecoration(
+                                  color: statusColor,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              context.lang.daySummarySourceGlucose,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: numColor,
+                              const SizedBox(width: 6),
+                              Text(
+                                context.lang.daySummarySourceGlucose,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: numColor,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                    ),
+                    if (showLoopMetrics) ...[
+                      const SizedBox(width: 8),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: constraints.maxWidth * 0.42,
                         ),
-                  ),
-                  if (showLoopMetrics) ...[
-                    const SizedBox(width: 8),
-                    Flexible(
-                      flex: 2,
-                      child: _LoopMetrics(
-                        iob: iob,
-                        cob: cob,
-                        stale: dashboardGlucoseIsStale(status?.date, now),
-                        textColor: numColor,
-                        mutedColor: mutedColor,
+                        child: _LoopMetrics(
+                          iob: iob,
+                          cob: cob,
+                          stale: dashboardGlucoseIsStale(status?.date, now),
+                          textColor: numColor,
+                          mutedColor: mutedColor,
+                        ),
                       ),
-                    ),
-                  ] else if (showStaleLabel)
-                    Text(
-                      context.lang.beforeMealStale,
-                      style: TextStyle(fontSize: 11, color: mutedColor),
-                    ),
-                ],
+                    ] else if (showStaleLabel)
+                      Text(
+                        context.lang.beforeMealStale,
+                        style: TextStyle(fontSize: 11, color: mutedColor),
+                      ),
+                  ],
+                ),
               ),
               if (showLoopMetrics && showStaleLabel)
                 Text(
@@ -560,7 +563,7 @@ class _LoopMetrics extends StatelessWidget {
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
         textAlign: TextAlign.end,
-        maxLines: 1,
+        maxLines: 2,
         overflow: TextOverflow.ellipsis,
       );
     }

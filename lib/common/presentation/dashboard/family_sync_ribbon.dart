@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/language.dart';
 
-/// A fixed-height compact chip: refreshes never move the readings beneath it.
+/// The compact ribbon can wrap on narrow dashboard headers.
 class FamilySyncRibbon extends StatefulWidget {
   const FamilySyncRibbon({
     super.key,
@@ -99,65 +99,68 @@ class _FamilySyncRibbonState extends State<FamilySyncRibbon>
         ? colors.primary.withValues(alpha: 0.3)
         : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0));
 
-    return SizedBox(
-      height: 24,
-      child: Semantics(
-        liveRegion: true,
-        label: text,
-        child: Align(
-          alignment: widget.compact
-              ? Alignment.centerLeft
-              : Alignment.centerRight,
-          child: Container(
-            padding: widget.compact
-                ? EdgeInsets.zero
-                : const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: widget.compact ? Colors.transparent : bgColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: widget.compact ? Colors.transparent : borderColor,
-              ),
+    final ribbon = Semantics(
+      liveRegion: true,
+      label: text,
+      child: Align(
+        alignment: widget.compact
+            ? Alignment.centerLeft
+            : Alignment.centerRight,
+        child: Container(
+          padding: widget.compact
+              ? EdgeInsets.zero
+              : const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: widget.compact ? Colors.transparent : bgColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: widget.compact ? Colors.transparent : borderColor,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (widget.busy)
-                  RotationTransition(
-                    turns: _rotationController,
-                    child: Icon(Icons.sync_rounded, size: 13, color: fgColor),
-                  )
-                else
-                  Icon(
-                    widget.failed
-                        ? widget.failureIcon
-                        : widget.ready
-                        ? Icons.cloud_done_outlined
-                        : Icons.cloud_outlined,
-                    size: 13,
-                    color: widget.ready && !widget.failed
-                        ? syncedIconColor
-                        : fgColor,
-                  ),
-                const SizedBox(width: 5),
-                Flexible(
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      color: fgColor,
-                      letterSpacing: -0.1,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.busy)
+                RotationTransition(
+                  turns: _rotationController,
+                  child: Icon(Icons.sync_rounded, size: 13, color: fgColor),
+                )
+              else
+                Icon(
+                  widget.failed
+                      ? widget.failureIcon
+                      : widget.ready
+                      ? Icons.cloud_done_outlined
+                      : Icons.cloud_outlined,
+                  size: 13,
+                  color: widget.ready && !widget.failed
+                      ? syncedIconColor
+                      : fgColor,
                 ),
-              ],
-            ),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: fgColor,
+                    letterSpacing: -0.1,
+                  ),
+                  maxLines: widget.compact ? 2 : 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
+    return widget.compact
+        ? ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 24),
+            child: ribbon,
+          )
+        : SizedBox(height: 24, child: ribbon);
   }
 }
