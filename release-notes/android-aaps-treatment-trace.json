@@ -1,0 +1,5 @@
+{
+  "platforms": ["android"],
+  "pl-PL": "Monitor posiłku rozpoznaje wpis kalkulatora AAPS bez czekania na osobny wpis insuliny. Dodano diagnostykę lokalnych komunikatów AAPS.",
+  "en-US": "Meal monitoring recognizes an AAPS calculator entry without waiting for a separate insulin record. Added diagnostics for local AAPS broadcasts."
+}

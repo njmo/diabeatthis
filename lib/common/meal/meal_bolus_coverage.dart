@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:drift/drift.dart';
 
+import '../../core/data_sources/config/data_source_config.dart';
 import '../../core/data_sources/local_mirror/mappers/bolus_wizard_drift_mapper.dart';
 import '../../core/domain/model/bolus_wizard.dart' as domain;
 import '../../core/drift/database_impl.dart';
@@ -14,11 +15,13 @@ class MealBolusCoverage {
     required this.carbs,
     required this.hasRecordedBolus,
     required this.statusBaselineCarbs,
+    this.hasAcceptedCalculator = false,
   });
 
   final double carbs;
   final bool hasRecordedBolus;
   final double statusBaselineCarbs;
+  final bool hasAcceptedCalculator;
 }
 
 /// Reads accepted calculator submissions with independent completion evidence,
@@ -43,6 +46,7 @@ Future<MealBolusCoverage> readMealBolusCoverage(
       links.isNotEmpty || (context?.acceptedWizardKeys.isNotEmpty ?? false);
   var hasInitial = false;
   var hasWizard = false;
+  var hasAcceptedCalculator = false;
   var linkedCarbs = 0.0;
   for (final link in links) {
     if (link.relationType == 'correction') continue;
@@ -56,14 +60,22 @@ Future<MealBolusCoverage> readMealBolusCoverage(
             }))
             .getSingleOrNull();
     if (wizard == null) continue;
-    if (!(await readMealCalculatorSubmission(
+    final submission = await readMealCalculatorSubmission(
       db,
       wizard.toDomain(),
-    )).isComplete) {
-      continue;
-    }
-    hasInitial |= link.relationType == 'initial';
-    hasWizard = true;
+    );
+    final initial = link.relationType == 'initial';
+    final acceptedAapsEntry =
+        wizard.source == TreatmentsSource.aaps.storageValue &&
+        submission.isValid &&
+        !submission.hasUnresolvedDelivery &&
+        !submission.wizard.hasUnresolvedDelivery &&
+        submission.recommendedInsulin.isFinite &&
+        submission.recommendedInsulin > 0;
+    if (!submission.isComplete && !acceptedAapsEntry) continue;
+    hasInitial |= initial;
+    hasWizard |= submission.isComplete;
+    hasAcceptedCalculator |= acceptedAapsEntry;
     final amount = wizard.carbs;
     if (amount != null && amount.isFinite && amount > 0) linkedCarbs += amount;
   }
@@ -96,6 +108,7 @@ Future<MealBolusCoverage> readMealBolusCoverage(
             ? statusBaselineCarbs > 0
             : hasStatusEvidence || (context?.bolusConfirmed ?? false)),
     statusBaselineCarbs: statusBaselineCarbs,
+    hasAcceptedCalculator: hasAcceptedCalculator,
   );
 }
 

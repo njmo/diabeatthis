@@ -156,6 +156,11 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
       return NewMealCheckExecutor();
     }
 
+    bool acceptsRecentWizard(BolusWizard wizard) => isMealBolusRecent(
+      bolusAt: wizard.createdAt,
+      referenceTime: meal.updatedAt ?? waitingSince,
+    );
+
     TreatmentAvailableEvent<BolusWizard>? calculatorResponse;
     var latestBolus = runtimeContext.container.read(latestBolusWizardProvider);
     if (latestBolus == null &&
@@ -185,11 +190,7 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
         latestBolus = null;
       }
     }
-    if (latestBolus != null &&
-        isMealBolusRecent(
-          bolusAt: latestBolus.createdAt,
-          referenceTime: meal.updatedAt ?? waitingSince,
-        )) {
+    if (latestBolus != null && acceptsRecentWizard(latestBolus)) {
       logI("Recent calculator response already available");
       calculatorResponse = TreatmentAvailableEvent<BolusWizard>(latestBolus);
     }
@@ -228,14 +229,20 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
       mealMonitorContext.throwIfStopped(runtimeContext);
     }
     if (calculatorResponse == null && !remindImmediately) {
+      Log.diagnostic('AapsTreatmentTrace', 'monitorWaitingForCalculator');
       logI("Waiting for calculator use before moving to next step");
       calculatorResponse = await runtimeContext
           .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<BolusWizard>>(
             Duration(minutes: 20),
+            predicate: (event) => acceptsRecentWizard(event.data),
           );
     }
 
     if (calculatorResponse == null) {
+      Log.diagnostic(
+        'AapsTreatmentTrace',
+        'monitorCalculatorMissing reminder=true',
+      );
       logI("Calculator response missing, showing bolus reminder");
       suggestion ??= await _bolusReminderHelper.resolveMealBolusSuggestion(
         runtimeContext,
@@ -248,6 +255,7 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
         runtimeContext,
         notificationProvider,
         meal.id,
+        acceptsBolus: acceptsRecentWizard,
         onBolusRecorded: (wizard) {
           calculatorResponse = TreatmentAvailableEvent<BolusWizard>(wizard);
         },
@@ -276,6 +284,13 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
 
     mealMonitorContext.throwIfStopped(runtimeContext);
     final pendingCalculator = calculatorResponse;
+    if (pendingCalculator != null) {
+      Log.diagnostic(
+        'AapsTreatmentTrace',
+        'monitorCalculator at='
+            '${pendingCalculator.data.createdAt.millisecondsSinceEpoch}',
+      );
+    }
     final nextStatus = decision == MealDecision.eatNowBolusLater
         ? 'eaten-bolused'
         : decision.status;
@@ -305,6 +320,7 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
         nextStatus,
       );
       if (committed == false) {
+        Log.diagnostic('AapsTreatmentTrace', 'monitorCommitDeferred');
         if (runtimeContext.container.exists(databaseProvider)) {
           final current = await runtimeContext.container
               .read(databaseProvider)
@@ -333,6 +349,10 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
           updateMealProvider(meal, nextStatus).future,
         );
       }
+      Log.diagnostic(
+        'AapsTreatmentTrace',
+        'monitorAdvanced status=$nextStatus calculators=${confirmed.length}',
+      );
       break;
     }
     for (final wizard in confirmed) {

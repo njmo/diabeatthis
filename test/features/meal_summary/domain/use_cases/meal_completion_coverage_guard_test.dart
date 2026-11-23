@@ -64,6 +64,35 @@ void main() {
         ),
   );
 
+  test('linked AAPS calculator covers carbs before a dose is recorded', () async {
+    final timestamp = addOnAt.millisecondsSinceEpoch;
+    await db.customStatement(
+      "INSERT INTO bolus_wizard (local_id,source,created_at,carbs,insulin) VALUES ('wizard-only','aaps',?,10,1), ('wizard-continuation','aaps',?,20,1)",
+      [timestamp, timestamp + const Duration(minutes: 2).inMilliseconds],
+    );
+    await db.mealWizardLinkDao.link(
+      mealId: 1,
+      localWizardId: 'wizard-only',
+      relationType: 'initial',
+    );
+
+    await db.mealWizardLinkDao.link(
+      mealId: 1,
+      localWizardId: 'wizard-continuation',
+      relationType: 'continuation',
+    );
+
+    final pending = await readMealBolusCoverage(db, 1);
+    expect(pending.carbs, 30);
+    expect(pending.hasRecordedBolus, isFalse);
+    expect(pending.hasAcceptedCalculator, isTrue);
+
+    await seedDeliveredMealBolus(db, addOnAt);
+    final recorded = await readMealBolusCoverage(db, 1);
+    expect(recorded.carbs, 30);
+    expect(recorded.hasRecordedBolus, isTrue);
+  });
+
   test(
     'calculator arriving after review rejects same-status completion without changing amounts',
     () async {

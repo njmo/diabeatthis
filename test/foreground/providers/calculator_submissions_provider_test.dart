@@ -3,6 +3,7 @@ import 'package:diabeatthis/core/data_sources/nightscout/dto/bolus_wizard_dto.da
 import 'package:diabeatthis/core/data_sources/nightscout/mappers/bolus_wizard_mapper.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/core/domain/model/manual_bolus.dart';
+import 'package:diabeatthis/core/domain/model/treat.dart';
 import 'package:diabeatthis/core/domain/model/treatment_base.dart';
 import 'package:diabeatthis/foreground/event/internal/calculator_submission_changed_event.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
@@ -243,35 +244,65 @@ void main() {
     }
   });
 
-  test('dispatcher emits normalized changes alongside legacy availability', () {
-    final events = <ForegroundEvent>[];
-    final dispatcher = TreatmentEventDispatcher();
-    for (final item in <Treatment>[
-      wizard,
-      delivery,
-      delivery.copyWith(isValid: false),
-    ]) {
-      dispatcher.dispatch(
-        container: container,
-        emitEvent: events.add,
-        treatment: item,
+  test(
+    'dispatcher emits one calculator entry and revisions without a separate bolus',
+    () {
+      final events = <ForegroundEvent>[];
+      final dispatcher = TreatmentEventDispatcher();
+      for (final item in <Treatment>[
+        wizard,
+        delivery,
+        delivery.copyWith(isValid: false),
+      ]) {
+        dispatcher.dispatch(
+          container: container,
+          emitEvent: events.add,
+          treatment: item,
+        );
+      }
+      expect(
+        events.whereType<TreatmentAvailableEvent<BolusWizard>>(),
+        hasLength(1),
       );
-    }
-    expect(
-      events.whereType<TreatmentAvailableEvent<BolusWizard>>(),
-      hasLength(1),
+      expect(events.whereType<TreatmentAvailableEvent<ManualBolus>>(), isEmpty);
+      final changes = events
+          .whereType<CalculatorSubmissionChangedEvent>()
+          .toList();
+      expect(changes.map((event) => event.submission.status), [
+        CalculatorSubmissionStatus.awaitingDeliveryConfirmation,
+        CalculatorSubmissionStatus.deliveryConfirmed,
+        CalculatorSubmissionStatus.awaitingDeliveryConfirmation,
+      ]);
+    },
+  );
+  test('two Nightscout batches produce one calculator and enrich it', () {
+    final dispatcher = TreatmentEventDispatcher();
+    final events = <ForegroundEvent>[];
+    final carbs = Treat(
+      externalId: 'ns-carbs',
+      createdAt: wizard.createdAt.subtract(const Duration(seconds: 2)),
+      carbs: 48,
     );
-    expect(
-      events.whereType<TreatmentAvailableEvent<ManualBolus>>(),
-      hasLength(1),
+    void fetch(List<Treatment> batch) => dispatcher.dispatchBatch(
+      container: container,
+      emitEvent: events.add,
+      treatments: batch,
     );
-    final changes = events
-        .whereType<CalculatorSubmissionChangedEvent>()
-        .toList();
-    expect(changes.map((event) => event.submission.status), [
-      CalculatorSubmissionStatus.awaitingDeliveryConfirmation,
-      CalculatorSubmissionStatus.deliveryConfirmed,
-      CalculatorSubmissionStatus.awaitingDeliveryConfirmation,
-    ]);
+    fetch([carbs, wizard]);
+    final entry = events.whereType<TreatmentAvailableEvent<BolusWizard>>();
+    expect(entry.single.data.carbohydrateRecord, carbs);
+    final first = container.read(calculatorSubmissionsProvider).single;
+    expect(first.isValid, isTrue);
+    expect(first.deliveredInsulin, isNull);
+
+    final enrichedDelivery = delivery.copyWith(externalId: 'ns-bolus');
+    fetch([delivery, wizard, carbs, enrichedDelivery]);
+    expect(entry, hasLength(1));
+    expect(events.whereType<TreatmentAvailableEvent<Treat>>(), isEmpty);
+    expect(events.whereType<TreatmentAvailableEvent<ManualBolus>>(), isEmpty);
+    final updates = events.whereType<CalculatorSubmissionChangedEvent>();
+    expect(updates, hasLength(2));
+    expect(updates.last.submission.key, first.key);
+    expect(updates.last.submission.delivery, enrichedDelivery);
   });
 }

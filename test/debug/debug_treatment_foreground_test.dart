@@ -7,6 +7,7 @@ import 'package:diabeatthis/core/domain/model/treat.dart';
 import 'package:diabeatthis/debug/debug_treatment_event.dart';
 import 'package:diabeatthis/debug/debug_treatment_foreground.dart';
 import 'package:diabeatthis/foreground/event/external/external_event_handler.dart';
+import 'package:diabeatthis/foreground/event/internal/calculator_submission_changed_event.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/providers/calculator_submissions_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,10 +72,12 @@ void main() {
     expect(wizard.createdAt, timestamp.add(const Duration(seconds: 1)));
     expect(wizard.carbs, 36);
     expect(wizard.insulin, 2.5);
+    expect(events.whereType<TreatmentAvailableEvent<ManualBolus>>(), isEmpty);
     final delivery = events
-        .whereType<TreatmentAvailableEvent<ManualBolus>>()
-        .single
-        .data;
+        .whereType<CalculatorSubmissionChangedEvent>()
+        .last
+        .submission
+        .delivery!;
     expect(delivery.insulin, 2.5);
     expect(
       delivery.createdAt,

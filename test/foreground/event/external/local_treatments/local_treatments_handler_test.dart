@@ -1,6 +1,5 @@
 import 'package:diabeatthis/common/events/data/task/task_data_synchronization_payload.dart';
 import 'package:diabeatthis/common/events/task_event_payload.dart';
-import 'package:diabeatthis/common/treatments/calculator_submission.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/models/wizard_carbohydrate_component.dart';
@@ -174,6 +173,88 @@ void main() {
       },
     );
 
+    for (final order in ['same batch', 'wizard first', 'insulin first']) {
+      test(
+        'retains matched insulin and revisions in the mirror ($order)',
+        () async {
+          final db = DatabaseImpl(NativeDatabase.memory());
+          final container = ProviderContainer(
+            overrides: [
+              databaseProvider.overrideWithValue(db),
+              dataSourceConfigProvider.overrideWithValue(
+                const AsyncData(
+                  DataSourceConfig(
+                    bgSource: BgSource.aaps,
+                    treatmentsSource: TreatmentsSource.aaps,
+                    pumpStatusSource: PumpStatusSource.aaps,
+                    historySource: HistorySource.local,
+                    mirrorToLocal: true,
+                  ),
+                ),
+              ),
+            ],
+          );
+          final harness = FakeRuntimeHarness(container: container);
+          addTearDown(() async {
+            await harness.dispose();
+            await db.close();
+          });
+          final handler = LocalTreatmentsHandler();
+          Future<void> receive(List<Map<String, dynamic>> records) =>
+              handler.handle(
+                LocalTreatmentsEvent.fromJson({'data': records}),
+                harness.runtimeContext,
+              );
+          final insulinAt = _bolusWizardCreatedAt.add(
+            const Duration(seconds: 6),
+          );
+          final insulin = {
+            ..._manualBolusPayload(isValid: true, insulin: 2.95),
+            'created_at': insulinAt.toIso8601String(),
+          };
+          final wizard = _bolusWizardPayload();
+          if (order == 'same batch') {
+            await receive([insulin, _treatPayload(), wizard]);
+          } else if (order == 'wizard first') {
+            await receive([wizard]);
+            await receive([insulin, _treatPayload()]);
+          } else {
+            await receive([insulin]);
+            await receive([wizard, _treatPayload()]);
+          }
+          expect((await db.select(db.manualBolus).get()).single.insulin, 2.95);
+          expect(await db.select(db.treat).get(), isEmpty);
+          expect(await db.select(db.bolusWizard).get(), hasLength(1));
+          expect(
+            harness.emittedEvents
+                .whereType<TreatmentAvailableEvent<domain.BolusWizard>>(),
+            hasLength(1),
+          );
+
+          await receive([
+            {...insulin, 'insulin': 1.5},
+          ]);
+          expect((await db.select(db.manualBolus).get()).single.insulin, 1.5);
+
+          await receive([
+            {
+              ...insulin,
+              '_id': 'standalone',
+              'created_at': insulinAt
+                  .add(const Duration(minutes: 3))
+                  .toIso8601String(),
+            },
+          ]);
+          expect(
+            (await db.select(db.manualBolus).get()).map(
+              (row) => row.externalId,
+            ),
+            containsAll(['manual-1', 'standalone']),
+          );
+        },
+      );
+    }
+
     test(
       'attaches calculator carbohydrates while preserving actual delivery from separate broadcasts',
       () async {
@@ -241,38 +322,31 @@ void main() {
           ).externalId,
           'treat-1',
         );
-        expect(harness.emittedEvents, [
-          isA<CalculatorSubmissionChangedEvent>().having(
-            (event) => event.submission.status,
-            'status',
-            CalculatorSubmissionStatus.awaitingDeliveryConfirmation,
-          ),
-          isA<TreatmentAvailableEvent<domain.BolusWizard>>(),
-          isA<CalculatorSubmissionChangedEvent>().having(
-            (event) => event.submission.status,
-            'status',
-            CalculatorSubmissionStatus.deliveryConfirmed,
-          ),
-          isA<TreatmentAvailableEvent<domain.ManualBolus>>(),
-          isA<CalculatorSubmissionChangedEvent>()
-              .having(
-                (event) => event.submission.status,
-                'status',
-                CalculatorSubmissionStatus.deliveryConfirmed,
-              )
-              .having(
-                (event) =>
-                    event.submission.wizard.carbohydrateRecord?.externalId,
-                'carbohydrate component',
-                'treat-1',
-              ),
-          isA<TreatmentAvailableEvent<domain.Treat>>(),
-          isA<TreatmentAvailableEvent<domain.BolusWizard>>().having(
-            (event) => event.data.carbohydrateRecord?.externalId,
-            'carbohydrate component',
-            'treat-1',
-          ),
-        ]);
+        expect(
+          harness.emittedEvents
+              .whereType<TreatmentAvailableEvent<domain.BolusWizard>>(),
+          hasLength(1),
+        );
+        expect(
+          harness.emittedEvents
+              .whereType<TreatmentAvailableEvent<domain.Treat>>(),
+          isEmpty,
+        );
+        // This fixture's insulin timestamp is three milliseconds before the
+        // wizard. Preserve it as an independent bolus rather than assigning it.
+        expect(
+          harness.emittedEvents
+              .whereType<TreatmentAvailableEvent<domain.ManualBolus>>(),
+          hasLength(1),
+        );
+        final updates = harness.emittedEvents
+            .whereType<CalculatorSubmissionChangedEvent>();
+        expect(updates, hasLength(2));
+        expect(
+          updates.last.submission.wizard.carbohydrateRecord?.externalId,
+          'treat-1',
+        );
+        expect(updates.last.submission.delivery, isNull);
 
         await harness.dispose();
         await db.close();

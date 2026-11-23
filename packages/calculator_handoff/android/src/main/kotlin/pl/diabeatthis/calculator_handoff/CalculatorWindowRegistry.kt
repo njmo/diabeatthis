@@ -1,10 +1,19 @@
 package pl.diabeatthis.calculator_handoff
 
 import java.lang.ref.WeakReference
+import android.content.Context
 import android.util.Log
 
 /** Shared by the UI engine and the foreground engine in the same process. */
 object CalculatorWindowRegistry {
+    internal var diagnosticContext: Context? = null
+
+    private fun trace(message: String, warning: Boolean = false) {
+        if (warning) Log.w("CalculatorHandoff", message)
+        else Log.i("CalculatorHandoff", message)
+        diagnosticContext?.let { AapsDiagnosticJournal.append(it, "pip", message) }
+    }
+
     private var owner = WeakReference<CalculatorWindow>(null)
     private var sessionId: String? = null
     private var ready = false
@@ -19,6 +28,7 @@ object CalculatorWindowRegistry {
     fun markReady(id: String?) {
         if (id != sessionId) return
         ready = true
+        trace("Checklist ready session=$id")
         apply()
     }
 
@@ -32,7 +42,7 @@ object CalculatorWindowRegistry {
 
     fun update(id: String, completed: List<Boolean>) {
         if (pending[id] == completed) return
-        Log.i("CalculatorHandoff", "Checklist update session=$id completed=$completed")
+        trace("Checklist update session=$id completed=$completed")
         pending[id] = completed
         while (pending.size > 20) pending.remove(pending.keys.first())
         if (id == sessionId) apply()
@@ -41,7 +51,7 @@ object CalculatorWindowRegistry {
     fun dismiss(id: String?) {
         if (id != null) pending.remove(id)
         if (id != null && id == sessionId) {
-            Log.i("CalculatorHandoff", "Dismiss cancelled or superseded instruction session=$id")
+            trace("Dismiss cancelled or superseded instruction session=$id")
             owner.get()?.closeCalculatorWindow()
         }
     }
@@ -51,15 +61,16 @@ object CalculatorWindowRegistry {
         val window = owner.get() ?: return
         val completed = pending[sessionId] ?: return
         if (completed.size != window.checklistSize) {
-            Log.w("CalculatorHandoff", "Ignore checklist with changed requirements session=$sessionId")
+            trace("Ignore checklist with changed requirements session=$sessionId", warning = true)
             return
         }
         window.updateChecklist(completed)
+        trace("Checklist applied session=$sessionId completed=$completed")
         if (completed.isNotEmpty() && completed.all { it }) {
             // Briefly show the last checkmark before dismissing the completed list.
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 if (owner.get() === window && pending[sessionId]?.all { it } == true) {
-                    Log.i("CalculatorHandoff", "Dismiss completed checklist session=$sessionId")
+                    trace("Dismiss completed checklist session=$sessionId")
                     window.closeCalculatorWindow()
                 }
             }, 800)

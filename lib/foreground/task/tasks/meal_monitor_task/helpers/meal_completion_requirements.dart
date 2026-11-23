@@ -83,6 +83,7 @@ Future<List<BolusWizard>> waitForMealCarbDeliveries(
       runtime,
       meal,
       anchor,
+      requireRecordedBolus: false,
       acceptsWizard: required == null
           ? null
           : (wizard) =>
@@ -124,7 +125,13 @@ Future<List<BolusWizard>> _currentUnassignedDeliveries(
       records.single.toDomain(),
       liveTreatments: live.records,
     );
-    if (submission.isValid && submission.isComplete) {
+    if (submission.isValid &&
+        (submission.isComplete ||
+            (submission.wizard.remoteSource == null &&
+                !submission.hasUnresolvedDelivery &&
+                !submission.wizard.hasUnresolvedDelivery &&
+                submission.recommendedInsulin.isFinite &&
+                submission.recommendedInsulin > 0))) {
       current.add(submission.wizard.copyWith(localId: records.single.localId));
     }
   }

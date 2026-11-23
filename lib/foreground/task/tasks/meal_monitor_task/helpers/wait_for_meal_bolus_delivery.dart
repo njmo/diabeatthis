@@ -3,7 +3,6 @@ import 'package:clock/clock.dart';
 import '../../../../../common/meal/meal_bolus_coverage.dart';
 import '../../../../../common/meal/meal_bolus_submission_candidates.dart';
 import '../../../../../common/meal/meal_calculator_submission.dart';
-import '../../../../../common/monitoring/meal_monitoring_phase.dart';
 import '../../../../../common/treatments/calculator_submission.dart';
 import '../../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../../core/data_sources/local_mirror/mappers/bolus_wizard_drift_mapper.dart';
@@ -13,6 +12,7 @@ import '../../../../../core/domain/model/manual_bolus.dart';
 import '../../../../../core/domain/model/treat.dart';
 import '../../../../../core/domain/model/treatment_base.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
+import '../../../../../core/logger/logger.dart';
 import '../../../../event/internal/calculator_submission_changed_event.dart';
 import '../../../../providers/calculator_submissions_provider.dart';
 import '../../../../providers/meal_bolus_delivery_history_provider.dart';
@@ -29,11 +29,8 @@ class WaitForMealBolusDelivery {
     MealMonitorContext context,
     BolusWizard wizard, {
     bool Function(BolusWizard)? acceptsWizard,
+    bool requireRecordedBolus = true,
   }) async {
-    context.publishStatus(
-      runtime,
-      MealMonitoringPhase.waitingForDeliveryConfirmation,
-    );
     final submissions = runtime.container.read(
       calculatorSubmissionsProvider.notifier,
     );
@@ -59,6 +56,7 @@ class WaitForMealBolusDelivery {
           requestedWizard,
           submissions,
           acceptsWizard,
+          requireRecordedBolus,
         );
         context.throwIfStopped(runtime);
         if (submission == null) {
@@ -128,10 +126,12 @@ class WaitForMealBolusDelivery {
                 }
                 requireCurrent();
                 _recordHistory(runtime, submissions, [canonical]);
-                if (!CalculatorSubmission(
-                  wizard: canonical,
-                  delivery: confirmedDelivery,
-                ).isComplete) {
+                if (!canonical.isValid ||
+                    ((requireRecordedBolus || canonical.insulin <= 0) &&
+                        !CalculatorSubmission(
+                          wizard: canonical,
+                          delivery: confirmedDelivery,
+                        ).isComplete)) {
                   throw const MealBolusDeliveryChanged();
                 }
                 requireCurrent();
@@ -173,6 +173,7 @@ class WaitForMealBolusDelivery {
     BolusWizard requested,
     CalculatorSubmissions submissions,
     bool Function(BolusWizard)? acceptsWizard,
+    bool requireRecordedBolus,
   ) async {
     final db = runtime.container.exists(databaseProvider)
         ? runtime.container.read(databaseProvider)
@@ -208,12 +209,28 @@ class WaitForMealBolusDelivery {
         );
         context.throwIfStopped(runtime);
       }
-      if (submission.isComplete &&
+      final originalGatePasses =
+          submission.isComplete &&
           (submission.delivery != null ||
               !submissions.wasCarbohydrateComponentRemoved(wizard) ||
-              wizard.carbohydrateRecord != null)) {
-        return submission;
-      }
+              wizard.carbohydrateRecord != null);
+      final wizardGatePasses =
+          !requireRecordedBolus &&
+          wizard.remoteSource == null &&
+          submission.isValid &&
+          !submission.hasUnresolvedDelivery &&
+          !submission.wizard.hasUnresolvedDelivery &&
+          submission.recommendedInsulin.isFinite &&
+          submission.recommendedInsulin > 0;
+      final willAdvance = originalGatePasses || wizardGatePasses;
+      Log.diagnostic(
+        'AapsTreatmentTrace',
+        'monitorGate wizardAt=${wizard.createdAt.millisecondsSinceEpoch} '
+            'original=${originalGatePasses ? 'advance' : 'wait'} '
+            'actual=${willAdvance ? 'advance' : 'wait'} '
+            'deliveryAt=${submission.delivery?.createdAt.millisecondsSinceEpoch}',
+      );
+      if (willAdvance) return submission;
     }
     return null;
   }

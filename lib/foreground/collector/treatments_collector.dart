@@ -48,13 +48,15 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
       }
 
       if (_disposed) return;
-      for (final treatment in treatments.reversed) {
-        try {
-          _handleTreatment(context, treatment);
-        } catch (e, st) {
-          if (_disposed) return;
-          logW("Error handling treatment $treatment: $e\n$st");
-        }
+      try {
+        _treatmentEventDispatcher.dispatchBatch(
+          container: context.container,
+          emitEvent: context.emitEvent,
+          treatments: treatments.reversed,
+        );
+      } catch (e, st) {
+        if (_disposed) return;
+        logW("Error handling treatments: $e\n$st");
       }
 
       await _waitForNextPoll(context);
@@ -72,14 +74,6 @@ class TreatmentsCollector extends ForegroundCollector with Logging {
     final nextPollAt = clock.now().add(_pollInterval);
     await ForegroundAlarmBridge.scheduleCollectTick(nextPollAt);
     await context.waitForDuration(_pollInterval);
-  }
-
-  void _handleTreatment(CollectorContext context, Treatment data) {
-    _treatmentEventDispatcher.dispatch(
-      container: context.container,
-      emitEvent: context.emitEvent,
-      treatment: data,
-    );
   }
 
   @override
