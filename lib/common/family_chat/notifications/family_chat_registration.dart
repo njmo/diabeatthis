@@ -112,9 +112,7 @@ class FamilyChatRegistrationJournal {
 Future<Map<String, dynamic>> revokeFamilyChatDevice(
   Map<String, dynamic> data,
 ) async {
-  await FirebaseAppCheck.instance.activate(
-    providerAndroid: await createAndroidAppCheckProvider(),
-  );
+  await activateFamilyAppCheck();
   final appCheck = await FirebaseAppCheck.instance.getToken();
   if (appCheck == null || appCheck.isEmpty) {
     throw StateError('Device attestation unavailable');

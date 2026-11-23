@@ -4,6 +4,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  test('uses App Attest in Apple release and the debug provider otherwise', () {
+    expect(
+      createAppleAppCheckProvider(isReleaseMode: true),
+      isA<AppleAppAttestProvider>(),
+    );
+    expect(
+      createAppleAppCheckProvider(isReleaseMode: false),
+      isA<AppleDebugProvider>(),
+    );
+  });
+
   group('createAndroidAppCheckProvider', () {
     test('uses Play Integrity in release mode', () async {
       final provider = await createAndroidAppCheckProvider(isReleaseMode: true);

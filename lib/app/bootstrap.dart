@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -86,19 +85,5 @@ Future<void> _initializeFirebase() async {
     );
   }
 
-  await _activateFirebaseAppCheck();
-}
-
-Future<void> _activateFirebaseAppCheck() async {
-  if (isCaregiverOnlyPlatform) {
-    await FirebaseAppCheck.instance.activate(
-      providerApple: kReleaseMode
-          ? const AppleAppAttestProvider()
-          : const AppleDebugProvider(),
-    );
-    return;
-  }
-  await FirebaseAppCheck.instance.activate(
-    providerAndroid: await createAndroidAppCheckProvider(),
-  );
+  await activateFamilyAppCheck();
 }

@@ -1,4 +1,3 @@
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../../firebase_options.dart';
@@ -10,7 +9,5 @@ Future<void> initializeFamilyFirebase() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
-  await FirebaseAppCheck.instance.activate(
-    providerAndroid: await createAndroidAppCheckProvider(),
-  );
+  await activateFamilyAppCheck();
 }

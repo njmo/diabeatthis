@@ -6,6 +6,33 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const firebaseAppCheckDebugTokenKey = 'firebase_app_check_debug_token';
 
+Future<void>? _activation;
+
+/// Configure the same attestation provider for every family Firebase caller.
+Future<void> activateFamilyAppCheck() => _activation ??= _activate();
+
+Future<void> _activate() async {
+  try {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await FirebaseAppCheck.instance.activate(
+        providerApple: createAppleAppCheckProvider(),
+      );
+    } else {
+      await FirebaseAppCheck.instance.activate(
+        providerAndroid: await createAndroidAppCheckProvider(),
+      );
+    }
+  } catch (_) {
+    _activation = null;
+    rethrow;
+  }
+}
+
+AppleAppCheckProvider createAppleAppCheckProvider({
+  bool isReleaseMode = kReleaseMode,
+}) =>
+    isReleaseMode ? const AppleAppAttestProvider() : const AppleDebugProvider();
+
 Future<AndroidAppCheckProvider> createAndroidAppCheckProvider({
   bool isReleaseMode = kReleaseMode,
 }) async {
