@@ -46,7 +46,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byType(ManualMealDecisionDialog), findsNothing);
-      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+      expect(find.text('Wybierz decyzję ręcznie'), findsOneWidget);
       fixture.gate.complete();
       await tester.pumpAndSettle();
       expect(fixture.state.beforeMealContext, isNull);
@@ -75,7 +75,7 @@ void main() {
       await tester.pumpAndSettle();
       final original = fixture.state.advice;
       expect(original.decision, isNotNull);
-      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.tap(find.text('Zmień decyzję'));
       await tester.pumpAndSettle();
       await tester.tap(
         find.descendant(

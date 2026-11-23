@@ -19,6 +19,8 @@ import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../core/notifications/handlers/notification_response_handler.dart';
 import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../features/caregiver/data/caregiver_visible_state_provider.dart';
+import '../../../../features/dashboard/data/meal_dialog_controller.dart';
+import '../../../../features/dashboard/data/meal_dialog_state.dart';
 import '../../../../features/dashboard/data/providers/device_status_ui_provider.dart';
 import '../../../../features/dashboard/presentation/utils/meal_status_dialog_result_handler.dart';
 import '../../../../features/dashboard/presentation/utils/show_meal_status_dialog.dart';
@@ -43,6 +45,7 @@ import '../../../meal/calculator/meal_calculator_request.dart';
 import '../../../meal/calculator/meal_calculator_request_store.dart';
 import '../../../meal/manual_meal_decision.dart';
 import '../../../meal/meal_add_on_bolus_context.dart';
+import '../../../meal/meal_decision.dart';
 import '../../../meal/meal_display_name.dart';
 import '../../../meal/meal_extended_carbs.dart';
 import '../../../meal/meal_treatment_surplus.dart';
@@ -106,6 +109,16 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
   ({String uid, DateTime at})? _lastWatchOverviewRefresh;
   bool _openingWatchMealSummary = false;
   final _watchMealCompletions = <int>{};
+  bool _watchAdvisorBusy = false;
+  Timer? _watchAdvisorExpiry;
+  ProviderSubscription<MealDialogState>? _watchAdvisorSubscription;
+  ({
+    MealDecisionWatchSession session,
+    int mealId,
+    String requestId,
+    Future<bool> Function() accept,
+  })?
+  _watchAdvisorOffer;
   String? presentedAccount;
 
   List<Object>? _watchInboxState(MealDecisionRemoteInbox? inbox) => inbox
@@ -304,6 +317,8 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
       loadChildMealDetails: _loadChildWatchMealDetails,
       loadCaregiverMeals: _loadCaregiverWatchMeals,
       requestChildDecision: _requestChildWatchDecision,
+      prepareChildAdvisor: _prepareChildWatchAdvisor,
+      acceptChildAdvisor: _acceptChildWatchAdvisor,
       completeChildMeal: _completeChildWatchMeal,
       startChildMealAddOn: _startChildWatchMealAddOn,
       openPhoneMealSummary: _openChildWatchSummaryOnPhone,
@@ -422,12 +437,6 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
     if (_watchSession() != session) return const [];
     final meals = await ref.read(plannedMealsForTodayStreamProvider.future);
     if (_watchSession() != session) return const [];
-    final canRequest =
-        ref.read(mealDecisionPreferencesProvider).method ==
-            MealDecisionMethod.caregiver &&
-        ref
-            .read(mealDecisionRemoteControllerProvider.notifier)
-            .backgroundEnabled;
     final active = meals
         .where((meal) => mealStatusBlocksAnotherMealActivation(meal.status))
         .firstOrNull;
@@ -456,6 +465,12 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
         : null;
     final acceptedById = Map.fromEntries(accepted);
     if (_watchSession() != session) return const [];
+    final method = ref.read(mealDecisionPreferencesProvider).method;
+    final canRequest =
+        method == MealDecisionMethod.caregiver &&
+        ref
+            .read(mealDecisionRemoteControllerProvider.notifier)
+            .backgroundEnabled;
     return [
       for (final meal in visible)
         {
@@ -491,6 +506,16 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
                     meal.id,
                     meal.plannedAt?.millisecondsSinceEpoch,
                   )),
+          if (method == MealDecisionMethod.app &&
+              meal.status == 'planned' &&
+              acceptedById[meal.id] == null &&
+              (prefs == null ||
+                  !usesManualMealChoice(
+                    prefs,
+                    meal.id,
+                    meal.plannedAt?.millisecondsSinceEpoch,
+                  )))
+            'canUseAdvisor': true,
         },
     ];
   }
@@ -988,6 +1013,130 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
     }
   }
 
+  void _clearChildWatchAdvisor() {
+    _watchAdvisorExpiry?.cancel();
+    _watchAdvisorExpiry = null;
+    _watchAdvisorOffer = null;
+    _watchAdvisorSubscription?.close();
+    _watchAdvisorSubscription = null;
+  }
+
+  Future<Map<String, Object?>?> _prepareChildWatchAdvisor(
+    MealDecisionWatchSession session,
+    int mealId,
+    String requestId,
+  ) async {
+    if (_watchAdvisorBusy || _watchSession() != session) return null;
+    _watchAdvisorBusy = true;
+    _clearChildWatchAdvisor();
+    try {
+      final prefs = await ref.read(sharedPrefsProvider.future);
+      bool sameSessionAndMethod() =>
+          _watchSession() == session &&
+          ref.read(mealDecisionPreferencesProvider).method ==
+              MealDecisionMethod.app;
+      if (!sameSessionAndMethod()) return null;
+      final db = ref.read(databaseProvider);
+      final meal = await db.mealDao.getMealById(mealId);
+      if (meal == null || meal.status != 'planned' || meal.purpose != 'meal') {
+        return null;
+      }
+      bool manual() => usesManualMealChoice(prefs, mealId, meal.plannedAt);
+      if (manual()) return null;
+      final original = await db.ingredientDao.totalsForMeal(mealId);
+      if (original == null || !sameSessionAndMethod()) return null;
+      Future<bool> sameNutrition() async {
+        final current = await db.ingredientDao.totalsForMeal(mealId);
+        return current?.netCarbsGrams == original.netCarbsGrams &&
+            current?.fatGrams == original.fatGrams &&
+            current?.proteinGrams == original.proteinGrams &&
+            current?.fiberGrams == original.fiberGrams;
+      }
+
+      Future<bool> inputsMatch() async =>
+          sameSessionAndMethod() &&
+          (await db.mealDao.getMealById(mealId)) == meal &&
+          !manual() &&
+          await sameNutrition() &&
+          await readAcceptedCaregiverMeal(db, session.uid, mealId) == null &&
+          sameSessionAndMethod();
+      if (!await inputsMatch()) return null;
+
+      final provider = mealDialogControllerProvider(
+        mealId,
+        MealDialogStep.confirm,
+      );
+      _watchAdvisorSubscription = ref.listenManual(provider, (_, _) {});
+      final controller = ref.read(provider.notifier);
+      await controller.prepareWatchAdvice(original);
+      if (!await inputsMatch()) return null;
+      final advice = ref.read(provider).advice;
+      final minutes = advice.wait?.recommendedMinutes;
+      final decision = switch (advice.decision) {
+        MealDecision.eatNowBolusLater => MealDecisionAnswer.eatThenInsulin,
+        MealDecision.bolusAndEatNow => MealDecisionAnswer.insulinAndEat,
+        MealDecision.bolusWaitThenEat
+            when minutes != null && minutes >= 1 && minutes <= 180 =>
+          MealDecisionAnswer.insulinThenWait,
+        _ => null,
+      };
+      if (advice.source != 'mealAdvisor' || decision == null) return null;
+
+      final expires = clock.now().add(const Duration(minutes: 2));
+      _watchAdvisorExpiry = Timer(
+        const Duration(minutes: 2),
+        _clearChildWatchAdvisor,
+      );
+      _watchAdvisorOffer = (
+        session: session,
+        mealId: mealId,
+        requestId: requestId,
+        accept: () => controller.confirmWatchAdvice(
+          reviewedAdvice: advice,
+          validateMeal: inputsMatch,
+          isCancelled: () =>
+              !sameSessionAndMethod() ||
+              manual() ||
+              !clock.now().isBefore(expires),
+        ),
+      );
+      return {
+        'type': decision.name,
+        if (decision == MealDecisionAnswer.insulinThenWait) 'minutes': minutes,
+      };
+    } catch (_) {
+      return null;
+    } finally {
+      _watchAdvisorBusy = false;
+      if (_watchAdvisorOffer == null) _clearChildWatchAdvisor();
+    }
+  }
+
+  Future<bool> _acceptChildWatchAdvisor(
+    MealDecisionWatchSession session,
+    int mealId,
+    String requestId,
+  ) async {
+    final offer = _watchAdvisorOffer;
+    if (_watchAdvisorBusy ||
+        offer == null ||
+        offer.session != session ||
+        offer.mealId != mealId ||
+        offer.requestId != requestId) {
+      return false;
+    }
+    _watchAdvisorBusy = true;
+    _watchAdvisorExpiry?.cancel();
+    try {
+      return await offer.accept();
+    } catch (_) {
+      return false;
+    } finally {
+      _watchAdvisorBusy = false;
+      _clearChildWatchAdvisor();
+    }
+  }
+
   bool _watchOwnsClaim(
     MealDecisionWatchSession session,
     MealDecisionRemoteRequest request,
@@ -1393,11 +1542,6 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
           }
         } else if (mode == ApplicationDeviceMode.patient &&
             request.ownerUid == uid) {
-          if (ref.read(mealDecisionPreferencesProvider).method !=
-              MealDecisionMethod.caregiver) {
-            await store.remove(intent);
-            continue;
-          }
           if (MealDecisionPresentationRegistry.childMeals.contains(
             request.mealId,
           )) {
@@ -1561,6 +1705,7 @@ class MealDecisionRuntimeState extends ConsumerState<MealDecisionRuntime>
   @override
   void dispose() {
     _watchChannel.setMethodCallHandler(null);
+    _clearChildWatchAdvisor();
     receiptRetry?.cancel();
     unawaited(intentSubscription?.cancel());
     unawaited(presentationSubscription?.cancel());

@@ -297,7 +297,7 @@ void main() {
 
     await tester.tap(find.text('Zjem'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Anuluj'));
+    await tester.tap(find.widgetWithIcon(IconButton, Icons.close));
     await tester.pumpAndSettle();
 
     expect(notifications.cancelAllCalled, isFalse);

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/nutrition/confidence_level.dart';
 import '../../../../common/widgets/confidence_slider.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
@@ -124,12 +125,13 @@ class MealSummaryExtraItemsSection extends ConsumerWidget {
   ) async {
     ref.read(addMealIngredientStageProvider.notifier).editIngredient(item);
 
-    final mealIngredient = await showModalBottomSheet<MealIngredientsDraft>(
-      context: context,
-      useRootNavigator: false,
-      isScrollControlled: true,
-      builder: (_) => const AddMealIngredient(),
-    );
+    final mealIngredient =
+        await showResponsiveBottomSheet<MealIngredientsDraft>(
+          context: context,
+          useRootNavigator: false,
+          isScrollControlled: true,
+          builder: (_) => const AddMealIngredient(),
+        );
 
     if (mealIngredient != null) {
       final resolvedMealIngredient =

@@ -36,6 +36,69 @@ import '../../../foreground/utils/fake_notifications_controller.dart';
 import '../../../helpers/device_status_factory.dart';
 
 void main() {
+  test('watch reviews the phone advice before starting the meal', () async {
+    await withMealHistoryFixture((fixture) async {
+      final nutrition = await fixture.container.read(
+        mealMacronutrientsSummaryProvider(1).future,
+      );
+      await fixture.controller.prepareWatchAdvice(nutrition!);
+      final advice = fixture.state.advice;
+      expect(advice.source, 'mealAdvisor');
+      expect(advice.decision, isNotNull);
+      expect((await fixture.db.mealDao.getMealById(1))!.status, 'planned');
+      expect(
+        await fixture.db.select(fixture.db.mealAdvisorResult).get(),
+        isEmpty,
+      );
+
+      Future<bool> accept({required bool unchanged}) =>
+          fixture.controller.confirmWatchAdvice(
+            reviewedAdvice: advice,
+            validateMeal: () async => unchanged,
+            isCancelled: () => false,
+          );
+      expect(await accept(unchanged: false), isFalse);
+      expect((await fixture.db.mealDao.getMealById(1))!.status, 'planned');
+      expect(await accept(unchanged: true), isTrue);
+      expect(
+        (await fixture.db.mealDao.getMealById(1))!.status,
+        'waiting-for-bolus',
+      );
+      expect(
+        await fixture.db.select(fixture.db.mealAdvisorResult).get(),
+        hasLength(1),
+      );
+    });
+  });
+
+  test('replacing a watch choice while validating prevents the save', () async {
+    await withMealHistoryFixture((fixture) async {
+      final nutrition = await fixture.container.read(
+        mealMacronutrientsSummaryProvider(1).future,
+      );
+      await fixture.controller.prepareWatchAdvice(nutrition!);
+      final validating = Completer<void>();
+      final validation = Completer<bool>();
+      final save = fixture.controller.confirmWatchAdvice(
+        reviewedAdvice: fixture.state.advice,
+        validateMeal: () {
+          validating.complete();
+          return validation.future;
+        },
+        isCancelled: () => false,
+      );
+      await validating.future;
+      fixture.controller.chooseSkip();
+      validation.complete(true);
+      expect(await save, isFalse);
+      expect((await fixture.db.mealDao.getMealById(1))!.status, 'planned');
+      expect(
+        await fixture.db.select(fixture.db.mealAdvisorResult).get(),
+        isEmpty,
+      );
+    });
+  });
+
   test(
     'empty UI reads both histories and accepts without a UI status',
     () async {

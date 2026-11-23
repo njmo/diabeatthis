@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../features/meal_advisor/domain/models/meal_advice.dart';
 
 import '../../remote/meal_decision_resolution.dart';
 import 'child_meal_decision_sheet.dart';
@@ -27,18 +28,21 @@ class MealDecisionStepHostState extends ConsumerState<MealDecisionStepHost> {
   Completer<MealDecisionResolution?>? pending;
   int? mealId;
   String? mealName;
+  MealAdvice? reviewedAdvice;
 
   Future<MealDecisionResolution?> present(
     BuildContext context,
     int id,
-    String name,
-  ) async {
+    String name, {
+    MealAdvice? reviewedAdvice,
+  }) async {
     if (!MealDecisionPresentationRegistry.childMeals.add(id)) return null;
     final request = Completer<MealDecisionResolution?>();
     setState(() {
       pending = request;
       mealId = id;
       mealName = name;
+      this.reviewedAdvice = reviewedAdvice;
     });
     try {
       return await request.future;
@@ -67,6 +71,7 @@ class MealDecisionStepHostState extends ConsumerState<MealDecisionStepHost> {
             mealId: mealId!,
             mealName: mealName!,
             initialRequestId: widget.initialRequestId,
+            reviewedAdvice: reviewedAdvice,
             onResolved: (resolution) {
               if (!request.isCompleted) request.complete(resolution);
             },

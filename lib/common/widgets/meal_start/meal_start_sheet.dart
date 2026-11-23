@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 
 import '../../theme/app_design_tokens.dart';
 import '../keyboard_aware_bottom_sheet.dart';
+import '../responsive_bottom_sheet.dart';
 import 'meal_start_header.dart';
 
 class MealStartSheet extends HookWidget {
@@ -30,6 +31,7 @@ class MealStartSheet extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
+    const padding = EdgeInsets.fromLTRB(16, 12, 16, 10);
     final bodyKey = useMemoized(GlobalKey.new);
     final retainedBody = KeyedSubtree(key: bodyKey, child: body);
     final header = MealStartHeader(
@@ -58,7 +60,7 @@ class MealStartSheet extends HookWidget {
           child: !scrollAll
               ? KeyboardAwareBottomSheet(
                   maxHeightFactor: maxHeightFactor,
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                  padding: padding,
                   header: header,
                   body: retainedBody,
                   actions: actions,
@@ -75,7 +77,8 @@ class MealStartSheet extends HookWidget {
                                 .clamp(160, double.infinity),
                       ),
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                        padding:
+                            padding * ResponsiveSheet.spacingFactor(context),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,

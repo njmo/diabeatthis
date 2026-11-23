@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:clock/clock.dart';
+import 'package:diabeatthis/common/auth/google_authentication_providers.dart';
 import 'package:diabeatthis/common/meal/manual_meal_decision.dart';
 import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
@@ -67,6 +68,7 @@ class AssistedAdvisorFixture {
   AssistedAdvisorFixture({required bool assisted, bool cache = true}) {
     container = ProviderContainer(
       overrides: [
+        googleAccountProvider.overrideWith((ref) => Stream.value(null)),
         sharedPrefsProvider.overrideWith((ref) async {
           SharedPreferences.setMockInitialValues({});
           return SharedPreferences.getInstance();

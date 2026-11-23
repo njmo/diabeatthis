@@ -11,6 +11,7 @@ import '../../../family_sync/family_planning_session_provider.dart';
 import '../../../l10n/language.dart';
 import '../../../routing/owned_route_registry.dart';
 import '../../../widgets/meal_start/meal_start_sheet.dart';
+import '../../../widgets/responsive_bottom_sheet.dart';
 import '../../meal_decision_answer.dart';
 import '../../meal_decision_preferences_provider.dart';
 import '../../meal_decision_timing.dart';
@@ -75,7 +76,7 @@ Future<void> showCaregiverMealDecisionRequest(
             .read(mealDecisionRemoteControllerProvider.notifier)
             .execute('claim', {'requestId': requestId});
       } else {
-        final accepted = await showModalBottomSheet<String>(
+        final accepted = await showResponsiveBottomSheet<String>(
           context: context,
           useRootNavigator: true,
           useSafeArea: true,
@@ -90,7 +91,7 @@ Future<void> showCaregiverMealDecisionRequest(
       }
     }
     if (!context.mounted) return;
-    final closed = showModalBottomSheet<void>(
+    final closed = showResponsiveBottomSheet<void>(
       context: context,
       useRootNavigator: true,
       useSafeArea: true,

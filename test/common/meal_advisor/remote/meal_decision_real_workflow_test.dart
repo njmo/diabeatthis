@@ -1,17 +1,26 @@
+import 'package:diabeatthis/common/auth/google_account.dart';
 import 'package:diabeatthis/common/auth/google_authentication_providers.dart';
+import 'package:diabeatthis/common/family/family_pairing_member.dart';
+import 'package:diabeatthis/common/family/family_providers.dart';
+import 'package:diabeatthis/common/family/family_status.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/meal/manual_meal_decision.dart';
 import 'package:diabeatthis/common/meal_advisor/meal_decision_preferences.dart';
 import 'package:diabeatthis/common/meal_advisor/meal_decision_preferences_provider.dart';
 import 'package:diabeatthis/common/meal_advisor/presentation/remote/child_meal_decision_sheet.dart';
 import 'package:diabeatthis/common/meal_advisor/remote/meal_decision_resolution.dart';
+import 'package:diabeatthis/common/widgets/manual_meal_decision_dialog.dart';
 import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
 import 'package:diabeatthis/core/domain/model/meal.dart';
+import 'package:diabeatthis/core/drift/database_impl.dart' show DatabaseImpl;
+import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/dashboard/data/meal_dialog_controller.dart';
 import 'package:diabeatthis/features/dashboard/data/meal_dialog_state.dart';
+import 'package:diabeatthis/features/dashboard/data/utils/meal_advisor.dart';
 import 'package:diabeatthis/features/dashboard/presentation/utils/show_meal_status_dialog.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/meal_status_dialog.dart';
 import 'package:diabeatthis/features/meals/data/providers/meal_activation_guard_provider.dart';
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,6 +39,104 @@ class MealDecisionWorkflowTestController extends MealSheetTestController {
 }
 
 void main() {
+  for (final fromManual in [false, true]) {
+    testWidgets(
+      'ask caregiver from the app or manual decision: manual=$fromManual',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final db = DatabaseImpl(NativeDatabase.memory());
+        addTearDown(db.close);
+      await tester.runAsync(() => db.customSelect('SELECT 1').get());
+        final controller = MealDecisionWorkflowTestController();
+        final requests = <(int, MealAdvice?)>[];
+        final container = ProviderContainer(
+          overrides: [
+            databaseProvider.overrideWithValue(db),
+            sharedPrefsProvider.overrideWith((_) async => prefs),
+            googleAccountProvider.overrideWith(
+              (_) => Stream.value(
+                const GoogleAccount(uid: 'child', displayName: 'Child'),
+              ),
+            ),
+            secureFamilyStatusProvider('child').overrideWith(
+              (_) => Stream.value(
+                const FamilyStatus(
+                  members: [
+                    FamilyPairingMember(
+                      id: 'parent',
+                      displayName: 'Parent',
+                      role: FamilyMemberRole.managingCaregiver,
+                      invitationId: 'invite',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            mealDecisionPreferencesProvider.overrideWithValue(
+              const MealDecisionPreferences(),
+            ),
+            childMealDecisionRequestPresenterProvider.overrideWithValue((
+              _,
+              id,
+              _, {
+              reviewedAdvice,
+            }) async {
+              requests.add((id, reviewedAdvice));
+              return null;
+            }),
+            mealDialogControllerProvider(
+              1,
+              MealDialogStep.choose,
+            ).overrideWith(() => controller),
+            mealBlockingActivationProvider(1).overrideWith((_) async => null),
+          ],
+        );
+        addTearDown(container.dispose);
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              locale: const Locale('en'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const Scaffold(
+                body: MealStatusDialog(
+                  meal: Meal(id: 1, name: 'Lunch', status: 'planned'),
+                  startImmediately: true,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final lang = tester.element(find.byType(MealStatusDialog)).lang;
+        if (fromManual) {
+          await tester.tap(find.text(lang.mealStartChangeDecision));
+          await tester.pumpAndSettle();
+        }
+        final ask = find.text(lang.mealDecisionDemoAsk);
+        await tester.runAsync(() async {
+          await tester.tap(
+            fromManual
+                ? find.descendant(
+                    of: find.byType(ManualMealDecisionDialog),
+                    matching: ask,
+                  )
+                : ask,
+          );
+          await tester.pumpAndSettle();
+        });
+        await tester.pumpAndSettle();
+        expect(requests.single.$1, 1);
+        expect(requests.single.$2?.decision, isNotNull);
+        expect(controller.saves, 0);
+        expect(controller.choices, 1);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+
   for (final immediately in [false, true]) {
     testWidgets(
       'caregiver method can continue with the configured app fallback: immediate=$immediately',
@@ -41,9 +148,10 @@ void main() {
           overrides: [
             sharedPrefsProvider.overrideWith((ref) async => prefs),
             childMealDecisionRequestPresenterProvider.overrideWithValue(
-              (context, mealId, name) async => const MealDecisionResolution(
-                fallback: MealDecisionTimeoutFallback.app,
-              ),
+              (context, mealId, name, {reviewedAdvice}) async =>
+                  const MealDecisionResolution(
+                    fallback: MealDecisionTimeoutFallback.app,
+                  ),
             ),
             googleAccountProvider.overrideWith((ref) => Stream.value(null)),
             mealDecisionPreferencesProvider.overrideWithValue(

@@ -31,10 +31,10 @@ class MealStartSummary extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
         MealStartPlan(advice: advice),
         const Padding(
-          padding: EdgeInsets.symmetric(vertical: 16),
+          padding: EdgeInsets.symmetric(vertical: 10),
           child: Divider(height: 1),
         ),
         Text(
@@ -43,7 +43,7 @@ class MealStartSummary extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
         MealStartNutrition(
           carbsGrams: carbsGrams,
           extendedCarbsGrams: extendedCarbsGrams,

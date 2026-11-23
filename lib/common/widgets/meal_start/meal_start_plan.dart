@@ -37,18 +37,18 @@ class MealStartPlan extends StatelessWidget {
         Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: colors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: colors.primary, size: 30),
+              child: Icon(icon, color: colors.primary, size: 22),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 title,
-                style: theme.textTheme.titleLarge?.copyWith(
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -58,7 +58,7 @@ class MealStartPlan extends StatelessWidget {
         if (decision == MealDecision.bolusAndEatNow ||
             (decision == MealDecision.bolusWaitThenEat && advice.wait != null))
           Padding(
-            padding: const EdgeInsets.only(top: 14),
+            padding: const EdgeInsets.only(top: 8),
             child: MealStartWaitLabel(
               waitMinutes: decision == MealDecision.bolusWaitThenEat
                   ? advice.wait!.recommendedMinutes

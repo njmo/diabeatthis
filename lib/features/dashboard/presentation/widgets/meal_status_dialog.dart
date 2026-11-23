@@ -5,6 +5,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/auth/google_authentication_providers.dart';
+import '../../../../common/family/family_pairing_member.dart';
+import '../../../../common/family/family_providers.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/meal/manual_meal_decision.dart';
 import '../../../../common/meal_advisor/manual_meal_choice.dart';
@@ -44,9 +46,11 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
   const MealStatusDialog({
     required this.meal,
     this.startImmediately = false,
+    this.resumeCaregiverRequest = false,
     super.key,
   });
   final bool startImmediately;
+  final bool resumeCaregiverRequest;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,9 +61,8 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
     );
 
     final preferences = ref.watch(mealDecisionPreferencesProvider);
-    final caregiverRequest = ref
-        .watch(mealDecisionRemoteControllerProvider)
-        .byId(s.advice.caregiverRequestId ?? '');
+    final inbox = ref.watch(mealDecisionRemoteControllerProvider);
+    final caregiverRequest = inbox.byId(s.advice.caregiverRequestId ?? '');
     final fallbackRequest = useState<MealDecisionRemoteRequest?>(null);
     final prefsReady = ref.watch(sharedPrefsProvider).hasValue;
     final allowManual =
@@ -71,6 +74,23 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
     final scheduledBolus = useState<DateTime?>(null);
     final reviewedCaregiverRequest = useState<MealDecisionRemoteRequest?>(null);
     final fallbackMethod = useState<MealDecisionTimeoutFallback?>(null);
+    final accountUid = ref.watch(googleAccountProvider).asData?.value?.uid;
+    final canAskCaregiver =
+        accountUid != null &&
+        (ref
+                .watch(secureFamilyStatusProvider(accountUid))
+                .asData
+                ?.value
+                .members
+                .any(
+                  (member) => member.role == FamilyMemberRole.managingCaregiver,
+                ) ??
+            false) &&
+        (inbox.accountUid != accountUid || inbox.caregiverAvailable != false) &&
+        s.advice.source != 'caregiver' &&
+        fallbackRequest.value == null;
+    late final Future<void> Function({required bool explicit}) requestCaregiver;
+
     Future<void> chooseManual() async {
       await ref.read(sharedPrefsProvider.future);
       if (!context.mounted ||
@@ -84,9 +104,16 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
         return;
       }
       if (s.isPreparingAdvice) c.cancelAdvicePreparation();
+      var askCaregiver = false;
       final manual = await showDialog<ManualMealDecision>(
         context: context,
-        builder: (_) => ManualMealDecisionDialog(
+        builder: (dialog) => ManualMealDecisionDialog(
+          onAskCaregiver: canAskCaregiver
+              ? () {
+                  askCaregiver = true;
+                  Navigator.of(dialog).pop();
+                }
+              : null,
           showAllDecisions: true,
           preservesMealValues: s.advice.decision != null,
           initialValue: ManualMealDecision(
@@ -95,6 +122,11 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
           ),
         ),
       );
+      if (!context.mounted) return;
+      if (askCaregiver) {
+        await requestCaregiver(explicit: true);
+        return;
+      }
       if (manual != null && context.mounted) await c.chooseEat(manual: manual);
     }
 
@@ -123,6 +155,11 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
         }
         return;
       }
+      await requestCaregiver(explicit: false);
+    }
+
+    requestCaregiver = ({required bool explicit}) async {
+      if (resolvingCaregiver.value || saving.value) return;
       resolvingCaregiver.value = true;
       try {
         final blockingMeal = await ref.refresh(
@@ -150,11 +187,16 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
             return;
           }
         }
-        final resolution = await ref.read(
-          childMealDecisionRequestPresenterProvider,
-        )(context, meal.id, meal.name);
+        final resolution =
+            await ref.read(childMealDecisionRequestPresenterProvider)(
+              context,
+              meal.id,
+              meal.name,
+              reviewedAdvice: explicit ? s.advice : null,
+            );
         if (!context.mounted || resolution == null) return;
         if (resolution.rejected) {
+          if (explicit) return;
           fallbackMethod.value = MealDecisionTimeoutFallback.manual;
           await chooseManual();
           return;
@@ -209,6 +251,8 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
           reviewedCaregiverRequest.value = null;
           c.setCaregiverRequest(null);
           scheduledBolus.value = accepted.bolusDueAt;
+        } else if (explicit && s.advice.decision != null) {
+          return;
         } else if (resolution.fallback == MealDecisionTimeoutFallback.manual &&
             ref.read(mealDecisionPreferencesProvider).allowManualDecision &&
             resolution.request?.data['allowManualDecision'] != false) {
@@ -218,7 +262,7 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
         }
       } catch (_) {
         if (context.mounted) {
-          c.back();
+          if (!explicit) c.back();
           ScaffoldMessenger.maybeOf(context)?.showSnackBar(
             SnackBar(content: Text(context.lang.mealDecisionRemoteFailed)),
           );
@@ -226,12 +270,17 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
       } finally {
         if (context.mounted) resolvingCaregiver.value = false;
       }
-    }
+    };
 
     useEffect(() {
       if (startImmediately && getStep() == MealDialogStep.choose) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted) chooseEat();
+          if (!context.mounted) return;
+          if (resumeCaregiverRequest) {
+            requestCaregiver(explicit: false);
+          } else {
+            chooseEat();
+          }
         });
       }
       return null;
@@ -438,13 +487,13 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
                   ? ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      minimumSize: const Size.fromHeight(AppSizes.buttonHeight),
+                      minimumSize: const Size.fromHeight(44),
                       shape: const RoundedRectangleBorder(
                         borderRadius: AppRadius.buttonBorderRadius,
                       ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
-                        vertical: 14,
+                        vertical: 10,
                       ),
                     )
                   : null,
@@ -613,11 +662,15 @@ class MealStatusDialog extends HookConsumerWidget with Logging {
               : confirming && !resolvingCaregiver.value
               ? MealStartActions(
                   confirmAction: actions().last,
-                  cancelAction: actions().first,
+                  cancelAction: s.skipMeal ? actions().first : null,
                   showDecisionChange: canEdit,
                   hasAdvice: s.advice.decision != null,
                   opensAaps: opensAaps,
                   onChangeDecision: saving.value ? null : chooseManual,
+                  onAskCaregiver:
+                      canAskCaregiver && !s.skipMeal && !saving.value
+                      ? () => requestCaregiver(explicit: true)
+                      : null,
                 )
               : const SizedBox.shrink(),
         ),

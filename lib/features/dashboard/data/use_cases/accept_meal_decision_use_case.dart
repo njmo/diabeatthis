@@ -15,6 +15,7 @@ class AcceptMealDecisionUseCase {
     int mealId,
     MealAdvice advice, {
     bool alreadySaved = false,
+    bool Function()? isCancelled,
   }) async {
     final decision = advice.decision;
     if (decision == null) {
@@ -35,6 +36,9 @@ class AcceptMealDecisionUseCase {
       await ref
           .read(mealSnapshotControllerProvider)
           .createPlannedSnapshot(mealId);
+      if (isCancelled?.call() == true) {
+        throw StateError('Meal decision acceptance was cancelled');
+      }
       await db.mealDao.tryUpdateMealStatus(mealId, decision.acceptedStatus);
     });
   }

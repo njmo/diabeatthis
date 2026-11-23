@@ -24,6 +24,7 @@ class MealDecisionRemoteInbox {
     this.retryableReadFailure = false,
     this.accountUid,
     this.authoritative = false,
+    this.caregiverAvailable,
   });
   final List<MealDecisionRemoteRequest> requests;
   final bool loading, failed;
@@ -32,6 +33,7 @@ class MealDecisionRemoteInbox {
 
   /// True only after a successful server fetch for [accountUid].
   final bool authoritative;
+  final bool? caregiverAvailable;
 
   bool canResolveNotificationFor(String? uid) =>
       uid != null && accountUid == uid && authoritative && !loading && !failed;
@@ -205,6 +207,12 @@ class MealDecisionRemoteController extends Notifier<MealDecisionRemoteInbox> {
             state = MealDecisionRemoteInbox(
               accountUid: uid,
               authoritative: true,
+              caregiverAvailable: switch (response['caregivers']) {
+                final List roster => roster.whereType<Map>().any(
+                  (caregiver) => caregiver['enabled'] == true,
+                ),
+                _ => null,
+              },
               requests: [
                 for (final r in rows)
                   MealDecisionRemoteRequest(

@@ -11,34 +11,47 @@ class MealStartActions extends StatelessWidget {
     this.hasAdvice = false,
     this.opensAaps = false,
     this.onChangeDecision,
+    this.onAskCaregiver,
   });
 
   final Widget confirmAction;
-  final Widget cancelAction;
+  final Widget? cancelAction;
   final bool showDecisionChange;
   final bool hasAdvice;
   final bool opensAaps;
   final VoidCallback? onChangeDecision;
+  final VoidCallback? onAskCaregiver;
 
   @override
   Widget build(BuildContext context) => Column(
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      if (showDecisionChange) ...[
-        Tooltip(
-          message: context.lang.uiChooseADecisionManually,
-          child: OutlinedButton.icon(
-            onPressed: onChangeDecision,
-            icon: const Icon(Icons.edit_outlined),
-            label: Text(
-              hasAdvice
-                  ? context.lang.mealStartChangeDecision
-                  : context.lang.uiChooseADecisionManually,
-            ),
-          ),
+      if (onAskCaregiver != null || showDecisionChange) ...[
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 4,
+          children: [
+            if (onAskCaregiver != null)
+              TextButton(
+                onPressed: onAskCaregiver,
+                child: Text(context.lang.mealDecisionDemoAsk),
+              ),
+            if (showDecisionChange)
+              Tooltip(
+                message: context.lang.uiChooseADecisionManually,
+                child: TextButton(
+                  onPressed: onChangeDecision,
+                  child: Text(
+                    hasAdvice
+                        ? context.lang.mealStartChangeDecision
+                        : context.lang.uiChooseADecisionManually,
+                  ),
+                ),
+              ),
+          ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
       ],
       confirmAction,
       if (opensAaps) ...[
@@ -49,8 +62,7 @@ class MealStartActions extends StatelessWidget {
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
-      cancelAction,
+      if (cancelAction != null) cancelAction!,
     ],
   );
 }
-

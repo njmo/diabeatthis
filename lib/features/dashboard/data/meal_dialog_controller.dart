@@ -86,12 +86,16 @@ class MealDialogController extends _$MealDialogController with Logging {
   Future<void> chooseEat({ManualMealDecision? manual}) =>
       _chooseEat(manual: manual);
 
+  Future<void> prepareWatchAdvice(MealMacroSummary nutrition) =>
+      _chooseEat(watchNutrition: nutrition);
+
   Future<void> chooseCaregiverAdvice(MealAdvice advice) =>
       _chooseEat(caregiverAdvice: advice);
 
   Future<void> _chooseEat({
     ManualMealDecision? manual,
     MealAdvice? caregiverAdvice,
+    MealMacroSummary? watchNutrition,
   }) async {
     if (manual == null && state.isPreparingAdvice) return;
     final request = ++_adviceRequest;
@@ -111,7 +115,12 @@ class MealDialogController extends _$MealDialogController with Logging {
           throw StateError('Manual meal decisions are disabled');
         }
       }
-      await _prepareChoice(request, manual, caregiverAdvice);
+      await _prepareChoice(
+        request,
+        manual,
+        caregiverAdvice,
+        watchNutrition: watchNutrition,
+      );
     } catch (error, stack) {
       logE(
         'Meal advice preparation failed: ${error.runtimeType}',
@@ -136,8 +145,9 @@ class MealDialogController extends _$MealDialogController with Logging {
   Future<void> _prepareChoice(
     int request,
     ManualMealDecision? manual,
-    MealAdvice? caregiverAdvice,
-  ) async {
+    MealAdvice? caregiverAdvice, {
+    required MealMacroSummary? watchNutrition,
+  }) async {
     final blockingMeal = await ref.read(
       mealBlockingActivationProvider(mealId).future,
     );
@@ -155,7 +165,8 @@ class MealDialogController extends _$MealDialogController with Logging {
         manual != null && state.advice.decision != null;
     final mealStatus = preservePreparedAdvice
         ? null
-        : await ref.read(mealMacronutrientsSummaryProvider(mealId).future);
+        : watchNutrition ??
+              await ref.read(mealMacronutrientsSummaryProvider(mealId).future);
 
     if (!ref.mounted || request != _adviceRequest) return;
     if (!preservePreparedAdvice && mealStatus == null) {
@@ -311,7 +322,7 @@ class MealDialogController extends _$MealDialogController with Logging {
         advice = MealAdvice.empty();
       }
     }
-    if (advice.decision != null) {
+    if (advice.decision != null && watchNutrition == null) {
       await schedulePendingAdviceReminder();
       if (!ref.mounted || request != _adviceRequest) return;
     }
@@ -329,7 +340,27 @@ class MealDialogController extends _$MealDialogController with Logging {
   }
 
   /// Returns false if the choice changed while its inputs were being checked.
-  Future<bool> confirmAdvice() async {
+  Future<bool> confirmAdvice() => _confirmAdvice();
+
+  Future<bool> confirmWatchAdvice({
+    required MealAdvice reviewedAdvice,
+    required Future<bool> Function() validateMeal,
+    required bool Function() isCancelled,
+  }) {
+    final request = _adviceRequest;
+    bool cancelled() =>
+        !ref.mounted ||
+        request != _adviceRequest ||
+        !identical(state.advice, reviewedAdvice) ||
+        isCancelled();
+    if (cancelled()) return Future.value(false);
+    return _confirmAdvice(validateMeal: validateMeal, isCancelled: cancelled);
+  }
+
+  Future<bool> _confirmAdvice({
+    Future<bool> Function()? validateMeal,
+    bool Function()? isCancelled,
+  }) async {
     if (state.isPreparingAdvice) return false;
     final request = _adviceRequest;
     final advice = state.advice;
@@ -427,7 +458,9 @@ class MealDialogController extends _$MealDialogController with Logging {
     final uid = ref.read(googleAccountProvider).asData?.value?.uid;
     final db = ref.read(databaseProvider);
     if (fallback != null) await ref.read(applicationDeviceModeProvider.future);
-    await db.transaction(() async {
+    final accepted = await db.transaction(() async {
+      if (validateMeal != null && !await validateMeal()) return false;
+      if (isCancelled?.call() == true) return false;
       if (fallback != null) {
         final identity = await db
             .customSelect(
@@ -446,7 +479,12 @@ class MealDialogController extends _$MealDialogController with Logging {
           throw StateError('Fallback account or source changed');
         }
       }
-      await AcceptMealDecisionUseCase(ref).call(mealId, advice);
+      await AcceptMealDecisionUseCase(
+        ref,
+      ).call(mealId, advice, isCancelled: isCancelled);
+      if (isCancelled?.call() == true) {
+        throw StateError('Meal decision acceptance was cancelled');
+      }
       if (fallback != null &&
           fallback.ownerUid == uid &&
           advice.source != 'caregiver') {
@@ -458,9 +496,10 @@ class MealDialogController extends _$MealDialogController with Logging {
           acceptanceToken: _fallbackAcceptanceToken,
         );
       }
+      return true;
     });
-    if (fallback != null) await reconcileMealDecisionReceipts(ref);
-    return true;
+    if (accepted && fallback != null) await reconcileMealDecisionReceipts(ref);
+    return accepted;
   }
 
   /// End this attempt immediately; late context/history results cannot change the choice.

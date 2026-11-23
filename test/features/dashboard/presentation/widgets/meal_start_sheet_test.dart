@@ -90,7 +90,8 @@ void main() {
     final results = <MealStatusDialogResult?>[];
     await openMealSheet(tester, controller: controller, onResult: results.add);
 
-    await tester.tap(find.text('Anuluj'));
+    expect(find.text('Anuluj'), findsNothing);
+    await tester.tap(find.byIcon(Icons.close));
     await tester.pumpAndSettle();
 
     expect(results, [null]);
@@ -243,10 +244,10 @@ void main() {
           find.text('Podaję bolusa i czekam').hitTestable(),
           findsOneWidget,
         );
-        await tester.ensureVisible(find.text('Anuluj'));
+        await tester.ensureVisible(find.byIcon(Icons.close));
         await tester.pumpAndSettle();
-        expect(find.text('Anuluj').hitTestable(), findsOneWidget);
-        await tester.tap(find.text('Anuluj'));
+        expect(find.byIcon(Icons.close).hitTestable(), findsOneWidget);
+        await tester.tap(find.byIcon(Icons.close));
         await tester.pumpAndSettle();
         expect(results, [null]);
         expect(tester.takeException(), isNull);
@@ -277,7 +278,7 @@ void main() {
       );
       expect(
         tester
-            .widget<TextButton>(find.widgetWithText(TextButton, 'Anuluj'))
+            .widget<IconButton>(find.widgetWithIcon(IconButton, Icons.close))
             .onPressed,
         isNull,
       );

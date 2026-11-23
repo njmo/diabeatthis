@@ -30,16 +30,18 @@ class MealStartNutrition extends StatelessWidget {
       children: [
         ResponsiveMetricList(
           maxColumns: 2,
-          spacing: 12,
-          runSpacing: 12,
+          spacing: 8,
+          runSpacing: 8,
           children: [
             NutritionSummaryMetric(
+              compact: true,
               label: context.lang.mealCarbsLabel,
               value: context.lang.mealStartGrams(carbsGrams.ceilMacro()),
               icon: Icons.grass_rounded,
               color: colors.primary,
             ),
             NutritionSummaryMetric(
+              compact: true,
               label: context.lang.mealStartEcarbsLabel,
               value: context.lang.mealStartGrams(
                 extendedCarbsGrams.ceilMacro(),

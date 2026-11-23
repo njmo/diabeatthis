@@ -9,10 +9,12 @@ class ManualMealDecisionDialog extends HookWidget {
   final ManualMealDecision initialValue;
   final bool preservesMealValues;
   final bool showAllDecisions;
+  final VoidCallback? onAskCaregiver;
   const ManualMealDecisionDialog({
     super.key,
     this.preservesMealValues = false,
     this.showAllDecisions = false,
+    this.onAskCaregiver,
     this.initialValue = const ManualMealDecision(),
   });
 
@@ -49,6 +51,11 @@ class ManualMealDecisionDialog extends HookWidget {
         ),
       ),
       actions: [
+        if (onAskCaregiver != null)
+          TextButton(
+            onPressed: onAskCaregiver,
+            child: Text(context.lang.mealDecisionDemoAsk),
+          ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(context.lang.settingsCancel),

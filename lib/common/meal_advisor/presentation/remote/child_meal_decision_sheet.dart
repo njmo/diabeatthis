@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:drift/drift.dart' show Variable;
+import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -10,9 +11,12 @@ import '../../../../core/drift/family_sync/family_mirror_outbox.dart';
 import '../../../../core/drift/mappers/meal_drift_mapper.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../../features/dashboard/data/providers/device_status_ui_provider.dart';
+import '../../../../features/meal_advisor/domain/models/meal_advice.dart';
 import '../../../auth/google_authentication_providers.dart';
+import '../../../family_sync/request_family_mirror_sync.dart';
 import '../../../l10n/language.dart';
 import '../../../widgets/meal_start/meal_start_sheet.dart';
+import '../../../widgets/responsive_bottom_sheet.dart';
 import '../../meal_decision_answer.dart';
 import '../../meal_decision_preferences.dart';
 import '../../meal_decision_preferences_provider.dart';
@@ -30,23 +34,35 @@ import 'meal_decision_presentation_registry.dart';
 
 final childMealDecisionRequestPresenterProvider =
     Provider<
-      Future<MealDecisionResolution?> Function(BuildContext, int, String)
+      Future<MealDecisionResolution?> Function(
+        BuildContext,
+        int,
+        String, {
+        MealAdvice? reviewedAdvice,
+      })
     >((ref) => presentChildMealDecisionRequest);
 
 Future<MealDecisionResolution?> presentChildMealDecisionRequest(
   BuildContext context,
   int mealId,
-  String mealName,
-) => showChildMealDecisionRequest(context, mealId: mealId, mealName: mealName);
+  String mealName, {
+  MealAdvice? reviewedAdvice,
+}) => showChildMealDecisionRequest(
+  context,
+  mealId: mealId,
+  mealName: mealName,
+  reviewedAdvice: reviewedAdvice,
+);
 
 Future<MealDecisionResolution?> showChildMealDecisionRequest(
   BuildContext context, {
   required int mealId,
   required String mealName,
+  MealAdvice? reviewedAdvice,
 }) async {
   if (!MealDecisionPresentationRegistry.childMeals.add(mealId)) return null;
   try {
-    return await showModalBottomSheet<MealDecisionResolution>(
+    return await showResponsiveBottomSheet<MealDecisionResolution>(
       context: context,
       useRootNavigator: true,
       useSafeArea: true,
@@ -54,8 +70,11 @@ Future<MealDecisionResolution?> showChildMealDecisionRequest(
       isDismissible: false,
       enableDrag: false,
       backgroundColor: Colors.transparent,
-      builder: (_) =>
-          ChildMealDecisionSheet(mealId: mealId, mealName: mealName),
+      builder: (_) => ChildMealDecisionSheet(
+        mealId: mealId,
+        mealName: mealName,
+        reviewedAdvice: reviewedAdvice,
+      ),
     );
   } finally {
     MealDecisionPresentationRegistry.childMeals.remove(mealId);
@@ -69,11 +88,13 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
     required this.mealName,
     this.onResolved,
     this.initialRequestId,
+    this.reviewedAdvice,
   });
   final int mealId;
   final String mealName;
   final String? initialRequestId;
-  final ValueChanged<MealDecisionResolution>? onResolved;
+  final MealAdvice? reviewedAdvice;
+  final ValueChanged<MealDecisionResolution?>? onResolved;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -81,6 +102,7 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
     final preferences = ref.watch(mealDecisionPreferencesProvider);
     final requestId = useState<String?>(initialRequestId);
     final failed = useState(false);
+    final noCaregiver = useState(false);
     final busy = useState(false);
     final now = useState(DateTime.now());
     final provisionalDeadline = useMemoized(
@@ -102,6 +124,10 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
     void close() {
       if (closed.value) return;
       closed.value = true;
+      if (reviewedAdvice != null && onResolved != null) {
+        onResolved!(null);
+        return;
+      }
       final route = ModalRoute.of(context);
       if (route != null && route.isActive) {
         Navigator.of(context).removeRoute(route);
@@ -121,6 +147,7 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
       if (!context.mounted || closed.value) return;
       busy.value = true;
       failed.value = false;
+      noCaregiver.value = false;
       try {
         final controller = ref.read(
           mealDecisionRemoteControllerProvider.notifier,
@@ -161,18 +188,33 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
           }
           return;
         }
+        if (reviewedAdvice != null && refreshed.caregiverAvailable == false) {
+          noCaregiver.value = true;
+          return;
+        }
         final uid = ref.read(googleAccountProvider).asData?.value?.uid;
         if (uid == null) throw StateError('Google authentication required');
-        final source = await FamilyMirrorOutbox(
-          ref.read(databaseProvider),
-        ).sourceForOwner(uid);
-        final storedMeal = await ref
-            .read(databaseProvider)
-            .mealDao
-            .getMealById(mealId);
+        final db = ref.read(databaseProvider);
+        final outbox = FamilyMirrorOutbox(db);
+        final source = await outbox.sourceForOwner(uid);
+        final storedMeal = await db.mealDao.getMealById(mealId);
         if (!context.mounted || closed.value) return;
         if (storedMeal == null || storedMeal.status != 'planned') {
           throw StateError('Meal is no longer planned');
+        }
+        if (reviewedAdvice != null &&
+            await outbox.mealNeedsPublishing(mealId)) {
+          await requestFamilyMirrorSync(db);
+          final wait = Stopwatch()..start();
+          while (context.mounted &&
+              !closed.value &&
+              await outbox.mealNeedsPublishing(mealId)) {
+            if (wait.elapsed >= const Duration(seconds: 3)) {
+              throw StateError('Meal publication still pending');
+            }
+            await Future<void>.delayed(const Duration(milliseconds: 250));
+          }
+          if (!context.mounted || closed.value) return;
         }
         final draftId = requestId.value;
         final draftExpired =
@@ -185,10 +227,28 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
               (_) => random.nextInt(16).toRadixString(16),
             ).join();
         if (context.mounted) requestId.value = id;
-        final suggestion = await ref.read(captureMealAdvisorSuggestionProvider)(
+        final reviewed = reviewedAdvice;
+        final captured = await ref.read(captureMealAdvisorSuggestionProvider)(
           storedMeal.toDomain(),
           ref.read(deviceStatusUiProvider),
         );
+        final reviewedSuggestion =
+            reviewed != null && reviewed.source != 'manual'
+            ? mealAdvisorSuggestionPayload(reviewed)
+            : null;
+        // Include a reviewed proposal only if current readings still support it.
+        final suggestion =
+            reviewedSuggestion == null ||
+                mapEquals(reviewedSuggestion, captured)
+            ? captured
+            : null;
+        if (!context.mounted || closed.value) return;
+        if (reviewed != null &&
+            ((await db.mealDao.getMealById(mealId)) != storedMeal ||
+                await outbox.mealNeedsPublishing(mealId) ||
+                await outbox.sourceForOwner(uid) != source)) {
+          throw StateError('Meal changed before sending the request');
+        }
         if (!context.mounted || closed.value) return;
         final created = await controller.execute(
           'create',
@@ -286,7 +346,9 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
     return PopScope(
       canPop: false,
       child: MealStartSheet(
-        title: answer == null
+        title: noCaregiver.value
+            ? context.lang.mealDecisionNoCaregiverAvailable
+            : answer == null
             ? request != null
                   ? context.lang.mealDecisionRequestSent
                   : failed.value
@@ -336,7 +398,7 @@ class ChildMealDecisionSheet extends HookConsumerWidget {
               TextButton(
                 onPressed: busy.value
                     ? null
-                    : knownId == null
+                    : request == null
                     ? send
                     : retryRead,
                 child: Text(context.lang.commonRetry),

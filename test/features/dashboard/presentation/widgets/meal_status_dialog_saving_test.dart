@@ -50,7 +50,7 @@ void main() {
       expect(controller.saves, 1);
       expect(
         tester
-            .widget<TextButton>(find.widgetWithText(TextButton, 'Anuluj'))
+            .widget<IconButton>(find.widgetWithIcon(IconButton, Icons.close))
             .onPressed,
         isNull,
       );
@@ -77,7 +77,7 @@ void main() {
           tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
           isNotNull,
         );
-        await tester.tap(find.text('Anuluj'));
+        await tester.tap(find.byIcon(Icons.close));
         await tester.pumpAndSettle();
         expect(result, isNull);
       } else {

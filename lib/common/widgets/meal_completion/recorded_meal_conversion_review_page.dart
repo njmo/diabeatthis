@@ -89,6 +89,8 @@ class RecordedMealConversionReviewPage extends HookConsumerWidget {
       canPop: !saving.value,
       child: Scaffold(
         appBar: AppBar(
+          toolbarHeight: 52,
+          titleTextStyle: theme.textTheme.titleMedium,
           title: Text(lang.mealConversionReviewTitle),
           leading: IconButton(
             tooltip: lang.commonCloseTooltip,
@@ -102,36 +104,40 @@ class RecordedMealConversionReviewPage extends HookConsumerWidget {
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(lang.mealConversionReviewExplanation),
-                      const SizedBox(height: 8),
+                      Text(
+                        lang.mealConversionReviewExplanation,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 4),
                       Text(
                         lang.mealConversionScopeNote,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
                       for (var i = 0; i < requests.length; i++)
                         Card(
-                          margin: const EdgeInsets.only(bottom: 12),
+                          margin: const EdgeInsets.only(bottom: 8),
                           child: Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(10),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
                                   requests[i].ingredientName,
-                                  style: theme.textTheme.titleMedium,
+                                  style: theme.textTheme.titleSmall,
                                 ),
                                 Text(
                                   '${amountFormat.format(requests[i].amount)} × '
                                   '${requests[i].portionName}',
+                                  style: theme.textTheme.bodySmall,
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 8),
                                 TextFormField(
                                   controller: controllers[i],
                                   enabled: !saving.value,
@@ -143,6 +149,11 @@ class RecordedMealConversionReviewPage extends HookConsumerWidget {
                                       ? TextInputAction.done
                                       : TextInputAction.next,
                                   decoration: InputDecoration(
+                                    isDense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
                                     labelText:
                                         lang.mealConversionGramsPerPortion,
                                     suffixText: 'g',
@@ -176,7 +187,7 @@ class RecordedMealConversionReviewPage extends HookConsumerWidget {
               SafeArea(
                 top: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -190,7 +201,7 @@ class RecordedMealConversionReviewPage extends HookConsumerWidget {
                       ],
                       FilledButton(
                         style: FilledButton.styleFrom(
-                          minimumSize: const Size.fromHeight(52),
+                          minimumSize: const Size.fromHeight(44),
                         ),
                         onPressed: saving.value ? null : save,
                         child: saving.value

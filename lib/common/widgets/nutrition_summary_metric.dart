@@ -9,6 +9,7 @@ class NutritionSummaryMetric extends StatelessWidget {
     required this.icon,
     required this.color,
     this.detail,
+    this.compact = false,
   });
 
   final String label;
@@ -16,12 +17,13 @@ class NutritionSummaryMetric extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String? detail;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(compact ? 8 : 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.045),
         borderRadius: BorderRadius.circular(14),
@@ -31,7 +33,9 @@ class NutritionSummaryMetric extends StatelessWidget {
         children: [
           ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: MediaQuery.textScalerOf(context).scale(32),
+              minHeight: MediaQuery.textScalerOf(
+                context,
+              ).scale(compact ? 18 : 32),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,13 +53,17 @@ class NutritionSummaryMetric extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: compact ? 3 : 6),
           Text(
             value,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.5,
-            ),
+            style:
+                (compact
+                        ? theme.textTheme.titleMedium
+                        : theme.textTheme.titleLarge)
+                    ?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.5,
+                    ),
           ),
           if (detail != null) ...[
             const SizedBox(height: 4),

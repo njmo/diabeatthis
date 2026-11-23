@@ -22,6 +22,6 @@ bool mealDecisionFamilyPaired(
 bool mealDecisionEnabled(
   ApplicationDeviceMode mode,
   MealDecisionPreferences preferences,
-) => mode == ApplicationDeviceMode.patient
-    ? preferences.method == MealDecisionMethod.caregiver
-    : preferences.caregiverResponsesEnabled;
+) =>
+    mode == ApplicationDeviceMode.patient ||
+    preferences.caregiverResponsesEnabled;

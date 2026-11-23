@@ -13,13 +13,13 @@ FamilyPairingMember member(FamilyMemberRole role) => FamilyPairingMember(
 );
 
 void main() {
-  test('feature activity follows the setting for each device role', () {
+  test('child can ask on demand while caregivers choose to participate', () {
     expect(
       mealDecisionEnabled(
         ApplicationDeviceMode.patient,
         const MealDecisionPreferences(),
       ),
-      isFalse,
+      isTrue,
     );
     expect(
       mealDecisionEnabled(
