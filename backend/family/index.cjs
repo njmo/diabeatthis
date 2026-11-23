@@ -58,7 +58,7 @@ for (const [name, operation] of Object.entries({
   getFamilyStatus: 'status', disconnectFamilyMember: 'disconnect', finalizeFamilySetup: 'finalize',
 })) {
   exports[name] = onCall({secrets: [pairingHmacKey], region: 'europe-west1', enforceAppCheck: true, maxInstances: 4, concurrency: 20, timeoutSeconds: 20,
-    ...(['fetchFamilyMirrorView', 'fetchFamilyMealHeaders', 'completeFamilyMealHeaderExport'].includes(name) ? {invoker: 'public'} : {}),
+    ...(['fetchFamilyMirrorView', 'fetchFamilyMealHeaders', 'completeFamilyMealHeaderExport', 'fetchFamilyMealProgress'].includes(name) ? {invoker: 'public'} : {}),
   }, async request => {
     try {
       const uid = requireGoogle(request);
