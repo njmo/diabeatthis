@@ -4,6 +4,8 @@ import 'package:diabeatthis/common/meal/meal_bolus_coverage.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/services/local_mirror_writer.dart';
+import 'package:diabeatthis/core/data_sources/nightscout/helpers/treatments_factory.dart';
+import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/core/domain/model/manual_bolus.dart';
 import 'package:diabeatthis/core/domain/model/treat.dart';
 import 'package:diabeatthis/core/domain/model/treatment_base.dart';
@@ -17,6 +19,7 @@ import 'package:diabeatthis/foreground/providers/calculator_submissions_provider
 import 'package:diabeatthis/foreground/providers/meal_bolus_delivery_history_provider.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/meal_add_on_bolus_waiter.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/wait_for_meal_bolus_delivery.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_context.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -119,6 +122,114 @@ void main() {
       isNotNull,
     );
   }
+
+  test(
+    'a zero-dose calculator recovers its matching same-time 6 g from disk',
+    () async {
+      final timestamp = wizardAt.toUtc().toIso8601String();
+      final records = TreatmentFactory().parseTreatments([
+        {
+          'eventType': 'Bolus Wizard',
+          'created_at': timestamp,
+          'glucose': 100,
+          'insulin': null,
+          'carbs': null,
+          'bolusCalculatorResult':
+              '{"totalInsulin":0,"carbs":6,"wereCarbsUsed":false}',
+        },
+        {
+          'eventType': 'Carb Correction',
+          'created_at': timestamp,
+          'carbs': 6,
+          'insulin': null,
+        },
+      ]);
+      final wizard = records.whereType<BolusWizard>().single;
+      await writer.mirrorTreatments(records, TreatmentsSource.aaps);
+      final cache = container.read(calculatorSubmissionsProvider.notifier);
+      cache.record(wizard);
+      expect(
+        cache.records.whereType<BolusWizard>().single.carbohydrateRecord,
+        isNull,
+      );
+
+      await withClock(Clock.fixed(wizardAt), () async {
+        BolusWizard? completed;
+        final waiting =
+            const WaitForMealBolusDelivery()(
+                  harness.runtimeContext,
+                  MealMonitorContext(
+                    activeMeal: (await db.mealDao.getMealById(1))!.toDomain(),
+                  ),
+                  wizard,
+                )
+                .then<void>((result) {
+                  completed = result.wizard;
+                })
+                .catchError((Object error) {
+                  if (error is! TaskCancelledException) throw error;
+                });
+        try {
+          await pumpEventQueue(times: 200);
+          expect(completed?.carbohydrateRecord?.carbs, 6);
+          cache.record(wizard);
+          expect(
+            container.read(calculatorSubmissionsProvider).single.isComplete,
+            isTrue,
+          );
+          cache.record(
+            records.whereType<Treat>().single.copyWith(isValid: false),
+          );
+          expect(
+            container.read(calculatorSubmissionsProvider).single.isComplete,
+            isFalse,
+          );
+          expect(await db.select(db.manualBolus).get(), isEmpty);
+        } finally {
+          harness.cancel();
+          await waiting;
+        }
+      });
+    },
+  );
+
+  test('a live removal prevents reusing a stale stored component', () async {
+    final wizard = testBolusWizard(createdAt: wizardAt, carbs: 12, insulin: 0);
+    final confirmed = wizard.copyWith(carbohydrateRecord: component());
+    await writer.mirrorTreatments([wizard, component()], TreatmentsSource.aaps);
+    final cache = container.read(calculatorSubmissionsProvider.notifier);
+    cache.record(confirmed);
+    cache.record(wizard);
+
+    await withClock(Clock.fixed(wizardAt), () async {
+      var completed = false;
+      final waiting =
+          const WaitForMealBolusDelivery()(
+                harness.runtimeContext,
+                MealMonitorContext(
+                  activeMeal: (await db.mealDao.getMealById(1))!.toDomain(),
+                ),
+                wizard,
+              )
+              .then<void>((_) {
+                completed = true;
+              })
+              .catchError((Object error) {
+                if (error is! TaskCancelledException) throw error;
+              });
+      try {
+        await pumpEventQueue(times: 200);
+        expect(completed, isFalse);
+        expect(
+          cache.records.whereType<BolusWizard>().single.carbohydrateRecord,
+          isNull,
+        );
+      } finally {
+        harness.cancel();
+        await waiting;
+      }
+    });
+  });
 
   for (final carbsFirst in [false, true]) {
     test(

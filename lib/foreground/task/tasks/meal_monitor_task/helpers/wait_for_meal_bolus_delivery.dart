@@ -208,7 +208,10 @@ class WaitForMealBolusDelivery {
         );
         context.throwIfStopped(runtime);
       }
-      if (submission.isComplete) {
+      if (submission.isComplete &&
+          (submission.delivery != null ||
+              !submissions.wasCarbohydrateComponentRemoved(wizard) ||
+              wizard.carbohydrateRecord != null)) {
         return submission;
       }
     }
@@ -229,19 +232,43 @@ class WaitForMealBolusDelivery {
               record.createdAt?.millisecondsSinceEpoch;
       var cached = submissions.records.where(sameRecord).firstOrNull;
       if (record is BolusWizard &&
-          record.hasUnresolvedDelivery &&
           cached is BolusWizard &&
-          !cached.hasUnresolvedDelivery &&
           _sameIdentity(record, cached)) {
-        // This persisted blocker is monotonic. Enrich only that flag without
-        // replacing a newer live calculator or carbohydrate correction.
-        for (final changed in submissions.record(
-          cached.copyWith(hasUnresolvedDelivery: true),
-        )) {
-          runtime.emitEvent(CalculatorSubmissionChangedEvent(changed));
+        final component = record.carbohydrateRecord;
+        final recoverComponent =
+            record.isValid &&
+            cached.isValid &&
+            !submissions.wasCarbohydrateComponentRemoved(cached) &&
+            (beforeRead == null ||
+                cached == beforeRead.where(sameRecord).firstOrNull) &&
+            record.calculatorResult?.totalInsulin == 0 &&
+            cached.calculatorResult?.totalInsulin == 0 &&
+            record.carbs == cached.carbs &&
+            cached.carbohydrateRecord == null &&
+            component != null &&
+            component.isValid &&
+            !submissions.records.whereType<Treat>().any(
+              (entry) => entry.createdAt.isAtSameMomentAs(component.createdAt),
+            );
+        final recoverBlocker =
+            record.hasUnresolvedDelivery && !cached.hasUnresolvedDelivery;
+        if (recoverBlocker) {
+          for (final changed in submissions.record(
+            cached.copyWith(hasUnresolvedDelivery: true),
+          )) {
+            runtime.emitEvent(CalculatorSubmissionChangedEvent(changed));
+          }
         }
-        cached = submissions.records.where(sameRecord).firstOrNull;
-        added = true;
+        if (recoverComponent) {
+          // Keep the recorded carbs independent of subsequent raw wizard events.
+          for (final changed in submissions.record(component)) {
+            runtime.emitEvent(CalculatorSubmissionChangedEvent(changed));
+          }
+        }
+        if (recoverComponent || recoverBlocker) {
+          cached = submissions.records.where(sameRecord).firstOrNull;
+          added = true;
+        }
       }
       // Local rows do not replace live state. A source refresh may replace the
       // snapshot it started with, but never a correction or invalidation that
@@ -250,6 +277,11 @@ class WaitForMealBolusDelivery {
           (!cached.isValid ||
               beforeRead == null ||
               cached != beforeRead.where(sameRecord).firstOrNull)) {
+        continue;
+      }
+      if (record is BolusWizard &&
+          record.carbohydrateRecord != null &&
+          submissions.wasCarbohydrateComponentRemoved(record)) {
         continue;
       }
       for (final changed in submissions.record(record)) {

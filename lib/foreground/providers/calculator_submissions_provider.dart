@@ -15,6 +15,7 @@ final calculatorSubmissionsProvider =
 
 class CalculatorSubmissions extends Notifier<List<CalculatorSubmission>> {
   final Map<(Type, int), Treatment> _records = {};
+  final Set<int> _removedCarbohydrateComponents = {};
   static const retention = Duration(hours: 24);
 
   @override
@@ -24,6 +25,11 @@ class CalculatorSubmissions extends Notifier<List<CalculatorSubmission>> {
     ..._records.values.where((record) => record is! BolusWizard),
     ...state.map((submission) => submission.wizard),
   ]);
+
+  bool wasCarbohydrateComponentRemoved(BolusWizard wizard) =>
+      _removedCarbohydrateComponents.contains(
+        wizard.createdAt.millisecondsSinceEpoch,
+      );
 
   List<CalculatorSubmission> record(Treatment treatment) {
     final type = switch (treatment) {
@@ -53,6 +59,11 @@ class CalculatorSubmissions extends Notifier<List<CalculatorSubmission>> {
       if (previous is BolusWizard) {
         final merged = mergeCalculatorSubmissionWizard(previous, treatment);
         if (merged == null) return const [];
+        if (merged.carbohydrateRecord != null) {
+          _removedCarbohydrateComponents.remove(key.$2);
+        } else if (previous.carbohydrateRecord != null) {
+          _removedCarbohydrateComponents.add(key.$2);
+        }
         accepted = merged;
       }
     }
@@ -62,6 +73,7 @@ class CalculatorSubmissions extends Notifier<List<CalculatorSubmission>> {
         .reduce((a, b) => a > b ? a : b);
     final earliest = latest - retention.inMilliseconds;
     _records.removeWhere((key, _) => key.$2 < earliest);
+    _removedCarbohydrateComponents.removeWhere((time) => time < earliest);
     final submissions =
         _records.values
             .whereType<BolusWizard>()

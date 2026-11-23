@@ -1,0 +1,5 @@
+{
+  "platforms": ["android"],
+  "pl-PL": "Monitor posiłku poprawnie zalicza zapisane węglowodany, gdy kalkulator AAPS wyliczył 0 j. insuliny.",
+  "en-US": "The meal monitor now counts recorded carbohydrates when the AAPS calculator returns a zero insulin dose."
+}
