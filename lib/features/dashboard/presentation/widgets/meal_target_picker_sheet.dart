@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../core/domain/model/temporary_target.dart';
 import '../controllers/dashboard_status_controller.dart';
 
@@ -10,7 +11,7 @@ Future<int?> showMealTargetPickerSheet(
   BuildContext context,
   TemporaryTarget target, {
   int? selectedMealId,
-}) => showModalBottomSheet<int>(
+}) => showResponsiveBottomSheet<int>(
   context: context,
   isScrollControlled: true,
   builder: (_) =>

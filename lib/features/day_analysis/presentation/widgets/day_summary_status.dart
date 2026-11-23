@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../data/providers/day_summary_provider.dart';
 import '../../domain/use_cases/accept_day_summary_use_case.dart';
 import 'day_summary_sheet.dart';
@@ -67,7 +68,7 @@ class DaySummaryStatus extends ConsumerWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            onPressed: () => showModalBottomSheet<void>(
+            onPressed: () => showResponsiveBottomSheet<void>(
               context: context,
               isScrollControlled: true,
               useSafeArea: true,

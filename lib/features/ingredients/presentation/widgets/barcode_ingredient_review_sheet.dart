@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../meals/data/providers/ingredient_flow_form_providers.dart';
 import '../../data/drafts/ingredient_draft.dart';
 import '../../data/providers/ingredient_provider.dart';
@@ -16,7 +17,7 @@ Future<IngredientDraft?> showBarcodeIngredientReviewSheet(
   BuildContext context, {
   required IngredientDraft draft,
   required bool needsReview,
-}) => showModalBottomSheet<IngredientDraft>(
+}) => showResponsiveBottomSheet<IngredientDraft>(
   context: context,
   isScrollControlled: true,
   builder: (_) => ProviderScope(

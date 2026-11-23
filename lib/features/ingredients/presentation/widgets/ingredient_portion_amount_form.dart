@@ -5,13 +5,14 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/friendly_amount_selector.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/providers/ingredient_provider.dart';
 
 Future<double?> showIngredientPortionAmountSheet({
   required BuildContext context,
 }) {
-  return showModalBottomSheet<double>(
+  return showResponsiveBottomSheet<double>(
     context: context,
     useRootNavigator: false,
     isScrollControlled: true,

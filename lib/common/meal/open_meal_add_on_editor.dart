@@ -6,6 +6,7 @@ import '../../features/meal_summary/presentation/controllers/meal_summary_contro
 import '../../features/meal_summary/presentation/screens/meal_add_on_editor.dart';
 import '../../features/meals/data/providers/meal_database_provider.dart';
 import '../../features/meals/data/providers/meal_ingredients_list_provider.dart';
+import '../widgets/responsive_bottom_sheet.dart';
 
 Future<void> openMealAddOnEditor({
   required BuildContext context,
@@ -16,7 +17,7 @@ Future<void> openMealAddOnEditor({
   ref.invalidate(getMealByIdProvider(meal.id));
   ref.invalidate(getMealIngredientsDraftForMealProvider(meal.id));
   ref.invalidate(mealSummaryControllerProvider(meal.id));
-  await showModalBottomSheet<void>(
+  await showResponsiveBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

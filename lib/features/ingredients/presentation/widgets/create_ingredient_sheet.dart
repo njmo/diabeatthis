@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../meals/data/providers/add_ingredients_provider.dart';
 import '../../data/providers/ingredient_provider.dart';
 import 'ingredient_form.dart';
@@ -17,7 +18,7 @@ Future<void> showCreateIngredientSheet(
   ref.invalidate(ingredientDraftProvider);
   ref.invalidate(ingredientFormKeyProvider);
   try {
-    await showModalBottomSheet<void>(
+    await showResponsiveBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (_) => const CreateIngredientSheet(),

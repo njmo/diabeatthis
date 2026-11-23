@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/responsive_bottom_sheet.dart';
+
 import 'application_language.dart';
 import 'language.dart';
 
@@ -12,7 +14,7 @@ class ApplicationLanguagePicker extends StatelessWidget {
   static Future<ApplicationLanguage?> show(
     BuildContext context, {
     required ApplicationLanguage selected,
-  }) => showModalBottomSheet<ApplicationLanguage>(
+  }) => showResponsiveBottomSheet<ApplicationLanguage>(
     context: context,
     useSafeArea: true,
     showDragHandle: true,

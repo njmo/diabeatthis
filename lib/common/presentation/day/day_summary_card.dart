@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/language.dart';
 import '../../widgets/data_warning_indicator.dart';
+import '../../widgets/responsive_bottom_sheet.dart';
 
 class DaySummaryCard extends StatelessWidget {
   final String title;
@@ -35,7 +36,7 @@ class DaySummaryCard extends StatelessWidget {
                 IconButton(
                   tooltip: context.lang.dayReviewDetails,
                   icon: const Icon(Icons.info_outline, size: 20),
-                  onPressed: () => showModalBottomSheet<void>(
+                  onPressed: () => showResponsiveBottomSheet<void>(
                     context: context,
                     showDragHandle: true,
                     useSafeArea: true,

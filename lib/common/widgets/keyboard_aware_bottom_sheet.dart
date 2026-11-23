@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'responsive_bottom_sheet.dart';
 import 'sheet_surface.dart';
 
 class KeyboardAwareBottomSheet extends StatelessWidget {
@@ -21,12 +22,13 @@ class KeyboardAwareBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
+    final insets = padding * ResponsiveSheet.spacingFactor(context);
     final maxSheetHeight = mediaQuery.size.height * maxHeightFactor;
     final maxContentHeight =
         maxSheetHeight -
         mediaQuery.viewInsets.bottom -
         mediaQuery.padding.top -
-        padding.vertical;
+        insets.vertical;
     final maxHeight = maxContentHeight < 160 ? 160.0 : maxContentHeight;
 
     return AnimatedPadding(
@@ -37,7 +39,7 @@ class KeyboardAwareBottomSheet extends StatelessWidget {
         child: SafeArea(
           top: true,
           child: Padding(
-            padding: padding,
+            padding: insets,
             child: ConstrainedBox(
               constraints: BoxConstraints(maxHeight: maxHeight),
               child: Column(

@@ -10,6 +10,7 @@ import '../../../../common/planning/meal_form_actions.dart';
 import '../../../../common/routing/form_route_guard.dart';
 import '../../../../common/widgets/form_action_bar.dart';
 import '../../../../common/widgets/form_step_header.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../common/widgets/sheet_content_height_request.dart';
 import '../../../../common/widgets/sheet_content_section_reporter.dart';
 import '../../../../common/widgets/sheet_height_request.dart';
@@ -344,7 +345,7 @@ class AddMealPage extends HookConsumerWidget {
   ) {
     final guard = formRouteGuardOf(context);
     final container = ProviderScope.containerOf(context);
-    return showModalBottomSheet<CopiedMealType>(
+    return showResponsiveBottomSheet<CopiedMealType>(
       useRootNavigator: false,
       isScrollControlled: true,
       context: context,

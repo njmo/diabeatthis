@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../widgets/ingredient_barcode_scanner_sheet.dart';
 
 final ingredientBarcodeScannerProvider = Provider<IngredientBarcodeScanner>(
@@ -11,7 +12,7 @@ class IngredientBarcodeScanner {
   const IngredientBarcodeScanner();
 
   Future<String?> scan(BuildContext context) {
-    return showModalBottomSheet<String>(
+    return showResponsiveBottomSheet<String>(
       context: context,
       useRootNavigator: false,
       isScrollControlled: true,

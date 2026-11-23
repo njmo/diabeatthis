@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import 'meal_ai_sheet.dart';
 
 class MealAiButton extends StatelessWidget {
@@ -11,7 +12,7 @@ class MealAiButton extends StatelessWidget {
   Widget build(BuildContext context) => IconButton(
     tooltip: context.lang.mealAiTitle,
     icon: const Icon(Icons.auto_awesome),
-    onPressed: () => showModalBottomSheet<void>(
+    onPressed: () => showResponsiveBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,

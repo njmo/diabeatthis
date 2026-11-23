@@ -16,6 +16,7 @@ import '../ingredient_catalog/ingredient_identity.dart';
 import '../ingredient_catalog/ingredient_search_item.dart';
 import '../l10n/language.dart';
 import '../routing/form_route_guard.dart';
+import '../widgets/responsive_bottom_sheet.dart';
 import 'meal_form_actions.dart';
 import 'meal_ingredient_amount_sheet.dart';
 import 'planning_repository_provider.dart';
@@ -158,7 +159,7 @@ class CaregiverMealFormActions extends MealFormActions {
       }
     }
     final guard = formRouteGuardOf(context);
-    final result = await showModalBottomSheet<MealIngredientsDraft>(
+    final result = await showResponsiveBottomSheet<MealIngredientsDraft>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/meal_advisor/presentation/remote/meal_decision_step_host.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../data/meal_dialog_state.dart';
 import '../widgets/meal_status_dialog.dart';
@@ -15,9 +16,10 @@ Future<MealStatusDialogResult?> showMealStatusDialog({
   final dialog = MealStatusDialog(
     meal: meal,
     startImmediately: startImmediately,
+    resumeCaregiverRequest: initialCaregiverRequestId != null,
   );
   if (dialog.getStep() == MealDialogStep.choose) {
-    return showModalBottomSheet<MealStatusDialogResult>(
+    return showResponsiveBottomSheet<MealStatusDialogResult>(
       context: context,
       useRootNavigator: true,
       useSafeArea: true,

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'keyboard_aware_sheet_frame.dart';
+import 'responsive_bottom_sheet.dart';
 
 Future<void> showDetailSheet({
   required BuildContext context,
   required String title,
   required WidgetBuilder builder,
-}) => showModalBottomSheet<void>(
+}) => showResponsiveBottomSheet<void>(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,

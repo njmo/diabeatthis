@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../l10n/language.dart';
+import '../../widgets/responsive_bottom_sheet.dart';
 import '../ingredient_search_item.dart';
 import 'ingredient_catalog_results.dart';
 
@@ -16,7 +17,7 @@ Future<IngredientSearchItem?> showIngredientCatalogPicker(
   String? ingredientName,
   bool searchOnly = false,
   Future<void> Function(BuildContext)? onScanBarcode,
-}) => showModalBottomSheet<IngredientSearchItem>(
+}) => showResponsiveBottomSheet<IngredientSearchItem>(
   context: context,
   isScrollControlled: true,
   builder: (context) => IngredientCatalogPicker(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../core/domain/model/bolus_wizard.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../meals/common/models/meal_wizard_relation_type.dart';
@@ -99,7 +100,7 @@ class DayMealReviewSection extends ConsumerWidget {
     BolusWizard wizard,
   ) async {
     final choice =
-        await showModalBottomSheet<
+        await showResponsiveBottomSheet<
           ({int mealId, MealWizardRelationType type, bool requiresCompletion})
         >(
           context: context,

@@ -7,6 +7,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/date_time_picker.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../core/data_sources/stress_events/stress_event_repository.dart';
 import '../../../../core/domain/model/stress_event.dart';
 import '../../../../core/domain/model/stress_level.dart';
@@ -15,7 +16,7 @@ import 'manual_event_time_field.dart';
 import 'stress_event_fields.dart';
 
 Future<void> showManualEventSheet(BuildContext context) async {
-  final saved = await showModalBottomSheet<bool>(
+  final saved = await showResponsiveBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     builder: (_) => const ManualEventSheet(),

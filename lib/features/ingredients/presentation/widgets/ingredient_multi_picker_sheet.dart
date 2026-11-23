@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../data/models/ingredient_filter_item.dart';
 import '../../data/models/ingredient_filter_limits.dart';
 import '../../data/providers/ingredient_filter_controller.dart';
@@ -15,7 +16,7 @@ import 'selected_ingredient_chips.dart';
 Future<List<IngredientFilterItem>?> showIngredientMultiPickerSheet({
   required BuildContext context,
 }) {
-  return showModalBottomSheet<List<IngredientFilterItem>>(
+  return showResponsiveBottomSheet<List<IngredientFilterItem>>(
     context: context,
     isScrollControlled: true,
     clipBehavior: Clip.antiAlias,

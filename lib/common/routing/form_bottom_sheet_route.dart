@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 
 import '../widgets/keyboard_aware_sheet_frame.dart';
+import '../widgets/responsive_bottom_sheet.dart';
 
 /// Presents a routed form as a sheet while preserving typed navigation results.
 Route<T> formBottomSheetRoute<T>(
@@ -45,7 +46,7 @@ Route<T> createFormBottomSheetRoute<T>(
     clipBehavior: Clip.antiAlias,
     builder: (_) => KeyboardAwareSheetFrame(
       initialContentHeight: initialContentHeight,
-      child: child,
+      child: ResponsiveSheet(child: child),
     ),
   );
 }

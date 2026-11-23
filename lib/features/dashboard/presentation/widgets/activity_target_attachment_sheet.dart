@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../activity/common/widgets/activity_start_time_field.dart';
 import '../../../activity/data/drafts/activity_log_draft.dart';
 import '../../../activity/data/mappers/activity_draft_mapper.dart';
@@ -19,7 +20,7 @@ Future<ActivityLogDraft?> showActivityTargetAttachmentSheet(
     context,
     listen: false,
   ).read(activityDraftProvider.notifier).reset();
-  return showModalBottomSheet<ActivityLogDraft>(
+  return showResponsiveBottomSheet<ActivityLogDraft>(
     context: context,
     isScrollControlled: true,
     builder: (_) => const ActivityTargetAttachmentSheet(),

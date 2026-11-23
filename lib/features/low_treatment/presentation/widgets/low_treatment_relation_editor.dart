@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/models/timeline_relation.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../common/widgets/timeline_relation_picker.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../data/repositories/low_treatment_relation_repository.dart';
@@ -58,7 +59,7 @@ class LowTreatmentRelationEditor extends HookConsumerWidget {
     }
 
     Future<void> choose(TimelineRelationKind kind) async {
-      final selected = await showModalBottomSheet<TimelineRelation>(
+      final selected = await showResponsiveBottomSheet<TimelineRelation>(
         context: context,
         isScrollControlled: true,
         builder: (_) => TimelineRelationPicker(

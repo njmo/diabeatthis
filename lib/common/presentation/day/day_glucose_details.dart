@@ -4,6 +4,7 @@ import '../../../features/day_analysis/presentation/widgets/day_glucose_ranges.d
 import '../../history/glucose_period_summary.dart';
 import '../../l10n/language.dart';
 import '../../widgets/data_warning_indicator.dart';
+import '../../widgets/responsive_bottom_sheet.dart';
 import 'day_stat_formatter.dart';
 
 /// Exact measured coverage and durations, independent of the chart's styling.
@@ -49,7 +50,7 @@ class DayGlucoseDetails extends StatelessWidget {
             IconButton(
               tooltip: lang.dayReviewDetails,
               icon: const Icon(Icons.info_outline, size: 20),
-              onPressed: () => showModalBottomSheet<void>(
+              onPressed: () => showResponsiveBottomSheet<void>(
                 context: context,
                 showDragHandle: true,
                 useSafeArea: true,

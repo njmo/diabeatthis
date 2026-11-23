@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/language.dart';
 import '../../routing/form_route_guard.dart';
+import '../../widgets/responsive_bottom_sheet.dart';
 
 class ActivityUpcomingSessionsButton extends StatelessWidget {
   const ActivityUpcomingSessionsButton({
@@ -17,7 +18,7 @@ class ActivityUpcomingSessionsButton extends StatelessWidget {
     label: Text(context.lang.dashboardUpcomingTitle),
     onPressed: () {
       final guard = routeGuard ?? formRouteGuardOf(context);
-      showModalBottomSheet<void>(
+      showResponsiveBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         showDragHandle: true,

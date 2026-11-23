@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../core/domain/model/treat.dart';
 import '../../../low_treatment/domain/models/low_treatment_review_list.dart';
 import '../../../low_treatment/domain/models/recorded_low_treatment.dart';
@@ -177,7 +178,7 @@ class DayLowTreatmentReviewSection extends ConsumerWidget {
     Treat event,
     List<RecordedLowTreatment> lows,
   ) async {
-    final id = await showModalBottomSheet<int>(
+    final id = await showResponsiveBottomSheet<int>(
       context: context,
       isScrollControlled: true,
       builder: (_) => DayLowTreatmentPicker(entries: lows),

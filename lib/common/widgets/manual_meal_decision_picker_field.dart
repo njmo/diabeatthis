@@ -4,6 +4,7 @@ import '../l10n/language.dart';
 import '../meal/manual_meal_decision.dart';
 import '../meal/meal_decision.dart';
 import 'manual_meal_decision_picker_sheet.dart';
+import 'responsive_bottom_sheet.dart';
 
 class ManualMealDecisionPickerField extends StatelessWidget {
   final MealDecision value;
@@ -21,7 +22,7 @@ class ManualMealDecisionPickerField extends StatelessWidget {
     child: InkWell(
       onTap: () async {
         FocusScope.of(context).unfocus();
-        final decision = await showModalBottomSheet<MealDecision>(
+        final decision = await showResponsiveBottomSheet<MealDecision>(
           context: context,
           useRootNavigator: true,
           isScrollControlled: true,

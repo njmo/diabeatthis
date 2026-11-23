@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/platform/aaps_launcher.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
 import '../../../meals/presentation/widgets/add_meal_ingredient.dart';
 import '../../data/models/low_treatment_sheet_state.dart';
@@ -22,7 +23,7 @@ Future<LowTreatmentContext?> showLowTreatmentSheet(
   DateTime? historicalAt,
 }) async {
   final container = ProviderScope.containerOf(context, listen: false);
-  final saved = await showModalBottomSheet<LowTreatmentContext>(
+  final saved = await showResponsiveBottomSheet<LowTreatmentContext>(
     context: context,
     useRootNavigator: false,
     isScrollControlled: true,

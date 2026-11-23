@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import 'day_ai_sheet.dart';
 
 class DayAiButton extends StatelessWidget {
@@ -11,7 +12,7 @@ class DayAiButton extends StatelessWidget {
   Widget build(BuildContext context) => IconButton.filledTonal(
     tooltip: context.lang.dayAiTitle,
     icon: const Icon(Icons.auto_awesome),
-    onPressed: () => showModalBottomSheet<void>(
+    onPressed: () => showResponsiveBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

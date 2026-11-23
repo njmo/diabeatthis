@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/editable_thumbnail.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import 'ingredient_icon.dart';
 import 'ingredient_icon_picker.dart';
 
@@ -28,7 +29,7 @@ class IngredientIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Future<void> choose() async {
-      final path = await showModalBottomSheet<String>(
+      final path = await showResponsiveBottomSheet<String>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,

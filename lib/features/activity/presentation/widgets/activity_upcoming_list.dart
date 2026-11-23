@@ -7,6 +7,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/planning/is_upcoming_activity_occurrence.dart';
 import '../../../../common/presentation/widgets/activity_upcoming_sessions_view.dart';
 import '../../../../common/widgets/date_time_picker.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../../dashboard/presentation/widgets/dashboard_activity_sheet.dart';
@@ -51,7 +52,7 @@ class ActivityUpcomingListState extends ConsumerState<ActivityUpcomingList> {
       getActivityByIdProvider(row.activityId).future,
     );
     if (!mounted || activity == null) return;
-    final action = await showModalBottomSheet<DashboardActivityAction>(
+    final action = await showResponsiveBottomSheet<DashboardActivityAction>(
       context: context,
       isScrollControlled: true,
       builder: (_) => DashboardActivitySheet(

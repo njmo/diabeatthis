@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../../common/l10n/language.dart';
 import '../../../../../common/setup/domain/setup_feature.dart';
+import '../../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../setup_labels.dart';
 import 'setup_configuration_field_chip.dart';
 import 'setup_feature_option_info.dart';
@@ -22,7 +23,7 @@ class SetupFeatureHelpSheet extends StatelessWidget {
     BuildContext context,
     SetupFeature feature, {
     SetupDeviceMode mode = SetupDeviceMode.patient,
-  }) => showModalBottomSheet<void>(
+  }) => showResponsiveBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

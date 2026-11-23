@@ -7,6 +7,7 @@ import '../../../../common/planning/activity_catalog_repository.dart';
 import '../../../../common/planning/activity_schedule_values.dart';
 import '../../../../common/routing/form_route_guard.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../core/domain/model/activity.dart';
 import '../../data/drafts/activity_draft.dart';
 import '../../data/drafts/activity_schedule_draft.dart';
@@ -58,7 +59,7 @@ Future<T?> showActivityDefinitionEditor<T>(
     notifier.overrideDraft(initialDraft);
   }
   try {
-    return await showModalBottomSheet<T>(
+    return await showResponsiveBottomSheet<T>(
       context: context,
       isScrollControlled: true,
       builder: (_) => guard(

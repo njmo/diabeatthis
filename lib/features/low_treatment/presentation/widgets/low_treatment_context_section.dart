@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/models/timeline_relation.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../common/widgets/section_surface.dart';
 import '../../../../core/drift/providers/database_provider.dart';
 import '../../data/repositories/low_treatment_relation_repository.dart';
@@ -36,7 +37,7 @@ class LowTreatmentContextSection extends HookConsumerWidget {
     final linked = relation.data;
     final container = ProviderScope.containerOf(context);
     void edit() {
-      showModalBottomSheet<void>(
+      showResponsiveBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         builder: (_) => UncontrolledProviderScope(

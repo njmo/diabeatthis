@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../features/meal_summary/presentation/screens/meal_completion_view.dart';
 import '../../features/meal_summary/presentation/widgets/meal_completion_entry.dart';
+import '../widgets/responsive_bottom_sheet.dart';
 
 /// The common completion entry keeps the everyday choice on the current screen.
 Future<void> openMealCompletion(
@@ -14,7 +15,7 @@ Future<void> openMealCompletion(
 }) async {
   final navigator = router?.navigatorKey.currentState ?? Navigator.of(context);
   final presentationContext = router?.navigatorKey.currentContext ?? context;
-  final editAt = await showModalBottomSheet<DateTime>(
+  final editAt = await showResponsiveBottomSheet<DateTime>(
     context: presentationContext,
     isScrollControlled: true,
     useSafeArea: true,

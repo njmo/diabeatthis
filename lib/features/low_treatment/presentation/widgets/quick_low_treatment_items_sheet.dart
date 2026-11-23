@@ -5,6 +5,7 @@ import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
 import '../../../../common/widgets/message_dialog.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../ingredients/presentation/widgets/ingredient_icon_button.dart';
 import '../../../meals/data/drafts/meal_draft.dart';
@@ -18,7 +19,7 @@ import '../controllers/quick_low_treatment_items_controller.dart';
 import '../formatters/quick_low_treatment_item_formatter.dart';
 
 Future<void> showQuickLowTreatmentItemsSheet({required BuildContext context}) {
-  return showModalBottomSheet<void>(
+  return showResponsiveBottomSheet<void>(
     context: context,
     useRootNavigator: false,
     isScrollControlled: true,

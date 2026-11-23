@@ -8,6 +8,7 @@ import '../../../../common/planning/activity_schedule_values.dart';
 import '../../../../common/routing/form_route_guard.dart';
 import '../../../../common/widgets/duration_minutes_field.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../core/domain/model/activity.dart';
 import '../../../../core/drift/database_impl.dart' show ActivityScheduleData;
 import '../../data/drafts/activity_schedule_draft.dart';
@@ -24,7 +25,7 @@ Future<void> showActivityScheduleSheet(
     context,
     listen: false,
   ).read(activityCatalogRepositoryProvider).beginEdit();
-  return showModalBottomSheet<void>(
+  return showResponsiveBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     builder: (_) => formRouteGuardOf(context)(

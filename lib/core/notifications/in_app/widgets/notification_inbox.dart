@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../common/theme/app_design_tokens.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../domain/events/family_chat_notification.dart';
 import '../../domain/models/notification_action_type.dart';
 import '../../domain/models/notification_event_actions.dart';
@@ -46,7 +47,7 @@ class NotificationInboxButton extends ConsumerWidget {
 
 Future<void> showNotificationInbox(BuildContext context) {
   final theme = Theme.of(context);
-  return showModalBottomSheet<void>(
+  return showResponsiveBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/routing/form_route_guard.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../data/drafts/activity_draft.dart';
 import '../../data/mappers/activity_draft_mapper.dart';
 import '../../data/providers/activity_provider.dart';
@@ -21,7 +22,7 @@ Future<ActivityDraft?> showActivityPickerSheet(
     context,
     listen: false,
   ).read(activityDraftProvider.notifier).reset();
-  return showModalBottomSheet<ActivityDraft>(
+  return showResponsiveBottomSheet<ActivityDraft>(
     context: context,
     isScrollControlled: true,
     builder: (_) => guard(

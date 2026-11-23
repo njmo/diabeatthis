@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../common/l10n/language.dart';
 import '../../../../common/widgets/bottom_sheet_step_header.dart';
 import '../../../../common/widgets/keyboard_aware_bottom_sheet.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../ingredients/data/providers/ingredient_photo_scan_capture_provider.dart';
 import '../../../ingredients/data/providers/ingredient_portion_suggestions_provider.dart';
 import '../../../ingredients/data/providers/ingredient_provider.dart';
@@ -47,7 +48,7 @@ Future<MealIngredientsDraft?> showAddMealIngredientSheet({
         .editIngredientInline(initialDraft);
   }
 
-  return showModalBottomSheet<MealIngredientsDraft>(
+  return showResponsiveBottomSheet<MealIngredientsDraft>(
     context: context,
     useRootNavigator: false,
     isScrollControlled: true,
