@@ -74,6 +74,53 @@ class FamilyMirrorOutbox {
     return rows.isNotEmpty;
   }
 
+  Future<bool> get hasUnpublishedMealHeaders async {
+    final rows = await db
+        .customSelect(
+          "SELECT 1 FROM family_sync_outbox WHERE kind='meals' AND revision>acknowledged_revision LIMIT 1",
+        )
+        .get();
+    return rows.isNotEmpty;
+  }
+
+  Future<String?> get publishableMealHeaderCompletion async {
+    final row = await db
+        .customSelect(
+          '''
+      SELECT pending.source_id
+      FROM family_sync_header_completion AS pending
+      JOIN family_sync_identity AS identity ON identity.source_id=pending.source_id
+      WHERE identity.singleton=1 AND pending.completed=0 AND pending.retry_after<=? AND NOT EXISTS (
+        SELECT 1 FROM family_sync_outbox
+        WHERE kind='meals' AND revision>acknowledged_revision
+      )
+      ''',
+          variables: [Variable(DateTime.now().millisecondsSinceEpoch)],
+        )
+        .getSingleOrNull();
+    return row?.read<String>('source_id');
+  }
+
+  Future<void> scheduleMealHeaderCompletion(
+    String source,
+  ) => db.customStatement(
+    'INSERT INTO family_sync_header_completion(source_id) VALUES(?) ON CONFLICT(source_id) DO UPDATE SET completed=0,retry_after=0',
+    [source],
+  );
+
+  Future<void> clearMealHeaderCompletion(String source) => db.customStatement(
+    'INSERT INTO family_sync_header_completion(source_id,completed) VALUES(?,1) ON CONFLICT(source_id) DO UPDATE SET completed=1',
+    [source],
+  );
+
+  Future<void> deferMealHeaderCompletion(String source) => db.customStatement(
+    'UPDATE family_sync_header_completion SET retry_after=? WHERE source_id=? AND completed=0',
+    [
+      DateTime.now().add(const Duration(hours: 24)).millisecondsSinceEpoch,
+      source,
+    ],
+  );
+
   /// A batch and its journal gate must share the same SQLite snapshot.
   Future<List<FamilyMirrorRecord>> publishable({
     int limit = 25,
@@ -88,15 +135,28 @@ class FamilyMirrorOutbox {
     return pending(
       limit: limit,
       includeQuickLowTreatment: includeQuickLowTreatment,
+      prioritizeMealHeaders: true,
     );
   });
   Future<List<FamilyMirrorRecord>> pending({
     int limit = 25,
     bool includeQuickLowTreatment = true,
+    bool prioritizeMealHeaders = false,
   }) async {
+    final ordering = prioritizeMealHeaders
+        ? r'''
+          CASE WHEN kind = 'workflowLocks' THEN 0 WHEN kind = 'meals' THEN 1 ELSE 2 END,
+          CASE WHEN kind = 'meals' THEN COALESCE(
+            json_extract(payload, '$.planned_at'),
+            unixepoch(json_extract(payload, '$.planned_day')) * 1000,
+            json_extract(payload, '$.created_at')
+          ) END DESC,
+          kind, entity_id
+          '''
+        : 'kind, entity_id';
     final rows = await db
         .customSelect(
-          "SELECT * FROM family_sync_outbox WHERE revision>acknowledged_revision AND failed_revision<>revision AND (? OR kind<>'quickLowTreatmentItems') ORDER BY kind,entity_id LIMIT ?",
+          "SELECT * FROM family_sync_outbox WHERE revision>acknowledged_revision AND failed_revision<>revision AND (? OR kind<>'quickLowTreatmentItems') ORDER BY $ordering LIMIT ?",
           variables: [Variable(includeQuickLowTreatment), Variable(limit)],
         )
         .get();

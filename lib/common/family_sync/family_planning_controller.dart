@@ -29,11 +29,164 @@ class FamilyPlanningController extends ChangeNotifier {
     this.currentUid,
     this.submissions, {
     this.view,
+    this.mealHistory = false,
   });
   final AuthenticatedCallableTransport transport;
   final FamilyPlanSubmissionStore submissions;
   final String? Function() currentUid;
   final Map<String, Object?> Function()? view;
+  final bool mealHistory;
+  bool _historyEndpointMissing = false;
+  bool get pagedMealHistory => mealHistory && !_historyEndpointMissing;
+  String _historyQuery = '';
+  String? _historyCategory;
+  String? _historyNext;
+  int? _historyRevision;
+  bool historyLoadingMore = false;
+  bool historyMoreFailed = false;
+  bool historyReady = false;
+  bool get historyHasMore => _historyNext != null;
+  Future<Map<String, dynamic>?>? _historyPrefetch;
+  Future<void>? _historyPlansLoading;
+  bool _historyPlansAgain = false;
+  Timer? _historyFilterDelay;
+
+  void setMealHistoryFilter(String query, String? category) {
+    if (!pagedMealHistory) return;
+    final normalized = query.trim();
+    if (_historyQuery == normalized && _historyCategory == category) return;
+    _historyQuery = normalized;
+    _historyCategory = category;
+    generation++;
+    rows.clear();
+    _resetMealHistory();
+    _historyFilterDelay?.cancel();
+    _historyFilterDelay = Timer(const Duration(milliseconds: 250), () {
+      _historyFilterDelay = null;
+      if (!disposed) unawaited(refresh());
+    });
+  }
+
+  void _resetMealHistory() {
+    _historyNext = null;
+    _historyPrefetch = null;
+    historyLoadingMore = false;
+    historyMoreFailed = false;
+    historyReady = false;
+  }
+
+  bool _isCurrentHistory(String account, int version) =>
+      !disposed && currentUid() == account && generation == version;
+
+  Future<Map<String, dynamic>?> _readMealHeaderPage(
+    String account,
+    int version,
+    String? after, {
+    int scanPages = 40,
+  }) async {
+    final query = _historyQuery;
+    final category = _historyCategory;
+    for (var scanned = 0; scanned < scanPages; scanned++) {
+      if (!_isCurrentHistory(account, version)) return null;
+      final response = await transport.call('fetchFamilyMealHeaders', {
+        'query': query,
+        'category': category,
+        'cursor': after,
+      }, expectedUid: account);
+      if (!_isCurrentHistory(account, version)) return null;
+      final items = response['records'] as List;
+      final last = after;
+      after = response['nextCursor'] as String?;
+      if (items.isNotEmpty || after == null || scanned + 1 == scanPages) {
+        return response;
+      }
+      if (after == last && response['initialHeadersComplete'] != false) {
+        throw const FormatException('Invalid history cursor');
+      }
+    }
+    return null;
+  }
+
+  void _applyMealHeaderPage(Map<String, dynamic> page, {required bool append}) {
+    if (!append) {
+      rows.clear();
+      if (owner != page['ownerUid'] || source != page['sourceId']) plans = [];
+      owner = page['ownerUid'] as String?;
+      source = page['sourceId'] as String?;
+    }
+    for (final raw in page['records'] as List) {
+      final row = Map<String, dynamic>.from(raw as Map);
+      rows['meals/${row['id']}'] = row;
+    }
+    cursor = page['sequence'] as int;
+    _historyRevision = page['mealHeadersRevision'] as int?;
+    _historyNext = page['nextCursor'] as String?;
+    historyReady = page['initialHeadersComplete'] == true;
+  }
+
+  void _prefetchMealHeaders(String account, int version) {
+    final after = _historyNext;
+    if (after == null || !_isCurrentHistory(account, version)) return;
+    // A failed speculative read is retried only once the user reaches it.
+    _historyPrefetch = _readMealHeaderPage(
+      account,
+      version,
+      after,
+      scanPages: 1,
+    ).catchError((Object _) => null);
+  }
+
+  Future<void> loadMoreMealHeaders() async {
+    final account = uid;
+    final after = _historyNext;
+    if (!pagedMealHistory ||
+        account == null ||
+        after == null ||
+        busy ||
+        historyLoadingMore ||
+        failed) {
+      return;
+    }
+    final version = generation;
+    final prefetch = _historyPrefetch;
+    _historyPrefetch = null;
+    historyLoadingMore = true;
+    historyMoreFailed = false;
+    notifyListeners();
+    try {
+      var page = await prefetch;
+      if (!_isCurrentHistory(account, version) || _historyNext != after) return;
+      page ??= await _readMealHeaderPage(account, version, after);
+      if (page == null || !_isCurrentHistory(account, version)) return;
+      if (page['ownerUid'] != owner || page['sourceId'] != source) {
+        markUnavailable();
+        unawaited(refresh());
+        return;
+      }
+      _applyMealHeaderPage(page, append: true);
+      _prefetchMealHeaders(account, version);
+    } on CallableFailure catch (error) {
+      if (!_isCurrentHistory(account, version)) return;
+      if (error.rejectionCode == 'failed-precondition') {
+        unawaited(refresh());
+      } else if (const {
+        'permission-denied',
+        'unauthenticated',
+      }.contains(error.rejectionCode ?? error.code)) {
+        markUnavailable();
+      } else {
+        historyMoreFailed = true;
+      }
+    } catch (_) {
+      if (_isCurrentHistory(account, version)) historyMoreFailed = true;
+    } finally {
+      if (_isCurrentHistory(account, version)) {
+        historyLoadingMore = false;
+        notifyListeners();
+      }
+    }
+  }
+
   late final _submitPlan = SubmitFamilyPlanUseCase(
     transport,
     submissions,
@@ -189,11 +342,110 @@ class FamilyPlanningController extends ChangeNotifier {
       source != null &&
       signal?['ownerUid'] == owner &&
       signal?['sourceId'] == source &&
-      signal?['sequence'] is int &&
-      (signal!['sequence'] as int) <= cursor;
+      (pagedMealHistory &&
+              historyReady &&
+              _historyRevision != null &&
+              signal?['mealHeadersRevision'] == _historyRevision ||
+          signal?['sequence'] is int && (signal!['sequence'] as int) <= cursor);
+
+  Future<void> _refreshMealHeaders(String account, int version) async {
+    final page = await _readMealHeaderPage(account, version, null);
+    if (page == null) return;
+    _applyMealHeaderPage(page, append: false);
+    complete = source != null;
+    busy = false;
+    failed = false;
+    notifyListeners();
+    _prefetchMealHeaders(account, version);
+    if (source == null) {
+      plans = [];
+      return;
+    }
+    await _refreshHistoryPlans(account, version);
+  }
+
+  Future<void> refreshPlanSignal() async {
+    if (!pagedMealHistory) {
+      await refresh();
+      return;
+    }
+    if (!complete || uid == null) {
+      if (_refreshing == null) await refresh();
+      return;
+    }
+    if (_refreshing != null && busy) return;
+    final version = generation;
+    await _refreshHistoryPlans(uid!, version);
+    if (!disposed && generation == version) notifyListeners();
+  }
+
+  Future<void> _refreshHistoryPlans(String account, int version) {
+    final running = _historyPlansLoading;
+    if (running != null) {
+      _historyPlansAgain = true;
+      return running;
+    }
+    final completion = Completer<void>();
+    _historyPlansLoading = completion.future;
+    Future<void> drain() async {
+      try {
+        var requestedVersion = version;
+        do {
+          _historyPlansAgain = false;
+          if (_isCurrentHistory(account, requestedVersion) && complete) {
+            await _fetchHistoryPlans(account, requestedVersion);
+          }
+          requestedVersion = generation;
+        } while (_historyPlansAgain && !disposed && currentUid() == account);
+      } finally {
+        _historyPlansLoading = null;
+      }
+    }
+
+    unawaited(
+      drain().then(
+        (_) => completion.complete(),
+        onError: completion.completeError,
+      ),
+    );
+    return completion.future;
+  }
+
+  Future<void> _fetchHistoryPlans(String account, int version) async {
+    try {
+      final response = await transport.call(
+        'fetchFamilyPlans',
+        {},
+        expectedUid: account,
+      );
+      if (!_isCurrentHistory(account, version)) return;
+      if (response['ownerUid'] != owner || response['sourceId'] != source) {
+        markUnavailable();
+        return;
+      }
+      plans = [
+        for (final row in response['plans'] as List)
+          Map<String, dynamic>.from(row as Map),
+      ];
+    } on CallableFailure catch (error) {
+      if (_isCurrentHistory(account, version) &&
+          const {
+            'permission-denied',
+            'unauthenticated',
+          }.contains(error.rejectionCode ?? error.code)) {
+        markUnavailable();
+      }
+    }
+  }
 
   Future<void> refreshMirrorForSignal(Map<String, dynamic>? signal) async {
     if (disposed || hasMirrorSequence(signal)) return;
+    if (pagedMealHistory &&
+        owner != null &&
+        signal?['ownerUid'] is String &&
+        (signal?['ownerUid'] != owner || signal?['sourceId'] != source)) {
+      markUnavailable();
+    }
     await _refreshing;
     if (disposed || hasMirrorSequence(signal)) return;
     await refreshAndWait(mirrorOnly: true);
@@ -212,6 +464,10 @@ class FamilyPlanningController extends ChangeNotifier {
     }
     if (uid != account) clear();
     uid = account;
+    if (pagedMealHistory) {
+      generation++;
+      _resetMealHistory();
+    }
     final previousOwner = owner;
     final previousSource = source;
     final hadCompleteMirror = complete;
@@ -220,9 +476,20 @@ class FamilyPlanningController extends ChangeNotifier {
     notifyListeners();
     final clock = timing == null ? null : (Stopwatch()..start());
     try {
+      if (pagedMealHistory) {
+        try {
+          await _refreshMealHeaders(account, version);
+          return;
+        } on CallableFailure catch (error) {
+          if (error.code != 'endpoint-not-deployed') rethrow;
+          if (!_isCurrentHistory(account, version)) return;
+          _historyEndpointMissing = true;
+        }
+      }
       complete = false;
-      final scopedView = view?.call();
-      final mealView = scopedView?['view'] == 'meal';
+      final scopedView = mealHistory ? null : view?.call();
+      final progressView = scopedView?['view'] == 'mealProgress';
+      final mealView = scopedView?['view'] == 'meal' || progressView;
       final pending = mirrorOnly || mealView
           ? null
           : await submissions.pending(account);
@@ -232,7 +499,19 @@ class FamilyPlanningController extends ChangeNotifier {
       var pages = 0;
       Map<String, dynamic>? scopedResponse;
       final retryScopedViewAfter = _retryScopedViewAfter;
-      if (scopedView != null &&
+      if (progressView && scopedView != null) {
+        try {
+          scopedResponse = await transport.call('fetchFamilyMealProgress', {
+            'mealId': scopedView['mealId'],
+          }, expectedUid: account);
+        } on CallableFailure catch (error) {
+          if (error.code != 'endpoint-not-deployed') rethrow;
+          scopedResponse = await transport.call('fetchFamilyMirrorView', {
+            ...scopedView,
+            'view': 'meal',
+          }, expectedUid: account);
+        }
+      } else if (scopedView != null &&
           (retryScopedViewAfter == null ||
               DateTime.now().isAfter(retryScopedViewAfter))) {
         try {
@@ -339,9 +618,11 @@ class FamilyPlanningController extends ChangeNotifier {
 
   void clear() {
     generation++;
+    _resetMealHistory();
     rows.clear();
     plans = [];
     cursor = 0;
+    _historyRevision = null;
     owner = null;
     source = null;
     complete = false;
@@ -363,7 +644,8 @@ class FamilyPlanningController extends ChangeNotifier {
     required String expectedUid,
   }) async {
     if (disposed) throw StateError('Family controller is closed');
-    if (currentUid() != expectedUid ||
+    if (pagedMealHistory ||
+        currentUid() != expectedUid ||
         uid != expectedUid ||
         source != expectedSource ||
         !complete ||
@@ -406,6 +688,7 @@ class FamilyPlanningController extends ChangeNotifier {
   @override
   void dispose() {
     disposed = true;
+    _historyFilterDelay?.cancel();
     disposal.add(null);
     unawaited(disposal.close());
     super.dispose();

@@ -14,6 +14,21 @@ Future<void> addSyncTestIngredient(DatabaseImpl db) => db.customStatement(
   "INSERT INTO ingredient(name,carbs_per_100g,fat_per_100g,fiber_per_100g,protein_per_100g,nutrition_confidence) VALUES('Bread',40,2,3,8,1)",
 );
 void main() {
+  test('publishes recent meal headers before unrelated ingredients', () async {
+    final db = DatabaseImpl(NativeDatabase.memory());
+    addTearDown(db.close);
+    await addSyncTestIngredient(db);
+    await db.customStatement(
+      "INSERT INTO meal (id, name, status, planned_at) VALUES "
+      "(1, 'Older', 'planned', 1000), (2, 'Newer', 'planned', 2000)",
+    );
+    final batch = await FamilyMirrorOutbox(db).publishable(limit: 2);
+    expect(batch.map((record) => (record.kind, record.id)), [
+      ('meals', '2'),
+      ('meals', '1'),
+    ]);
+  });
+
   test(
     'mirrors an idempotent surplus flag and keeps it after meal progress',
     () async {

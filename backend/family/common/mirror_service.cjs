@@ -49,6 +49,45 @@ function validateRecord(record) {
   if (Buffer.byteLength(JSON.stringify(record.payload)) > 65536) fail('invalid-argument');
 }
 function source(value) { if (typeof value !== 'string' || !/^[a-f0-9]{32}$/.test(value)) fail('invalid-argument'); return value; }
+const mealHeaderFields = ['id', 'name', 'status', 'category', 'purpose', 'planned_at', 'planned_day', 'created_at'];
+const mealCategories = new Set(['breakfast', 'secondBreakfast', 'lunch', 'snack', 'afternoonSnack', 'dinner']);
+const mealHeaderPageSize = 10;
+const mealHeaderScanLimit = 64;
+
+function mealHeader(record) {
+  if (!record || record.deleted || !Number.isSafeInteger(record.payload?.id) ||
+      String(record.payload.id) !== record.id) return null;
+  const payload = Object.fromEntries(mealHeaderFields.map(key => [key, record.payload[key] ?? null]));
+  const day = typeof payload.planned_day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(payload.planned_day)
+    ? Date.parse(payload.planned_day) : NaN;
+  const plannedDay = Number.isFinite(day) && new Date(day).toISOString().slice(0, 10) === payload.planned_day
+    ? day : null;
+  const time = [payload.planned_at, plannedDay, payload.created_at].find(Number.isSafeInteger) ?? 0;
+  // A fixed-width composite gives Firestore a single ordered field with a numeric ID tiebreaker.
+  const shiftedTime = (BigInt(time) + BigInt(Number.MAX_SAFE_INTEGER)).toString().padStart(17, '0');
+  const sortKey = `${shiftedTime}:${record.id.padStart(16, '0')}`;
+  return {sortKey, category: payload.category, record: {kind: 'meals', id: record.id, payload}};
+}
+
+function writeMealHeader(tx, mirror, record, header = mealHeader(record)) {
+  const ref = mirror.collection('mealHeaders').doc(record.id);
+  if (header) tx.set(ref, header);
+  else tx.delete(ref);
+}
+
+function readMealHeaderCursor(value) {
+  if (value === null) return null;
+  let cursor;
+  if (typeof value === 'string' && /^[\w-]{1,256}$/.test(value)) {
+    try { cursor = JSON.parse(Buffer.from(value, 'base64url').toString('utf8')); } catch (_) { /* invalid cursor */ }
+  }
+  if (!Array.isArray(cursor) || cursor.length !== 3 ||
+      typeof cursor[0] !== 'string' || !/^[a-f0-9]{64}$/.test(cursor[0]) ||
+      !Number.isSafeInteger(cursor[1]) || cursor[1] < 0 ||
+      (cursor[2] !== null && (typeof cursor[2] !== 'string' || !/^\d{17}:\d{16}$/.test(cursor[2])))) fail('invalid-argument');
+  return cursor;
+}
+
 function createMirrorService({store}) {
   const root = uid => store.doc(`userMirrors/${uid}`);
   async function rate(uid, action, limit) {
@@ -70,11 +109,13 @@ function createMirrorService({store}) {
       const existing = (await tx.get(root(uid))).data();
       if (existing && existing.sourceId !== data.sourceId) fail('failed-precondition');
       if (!existing) {
-        tx.set(root(uid), {sourceId: data.sourceId, sequence: 0, activityCommandsVersion: data.activityCommandsVersion ?? 0});
-        for(const memberUid of context.family.memberUids) tx.set(store.doc(`familyMirrorSignals/${memberUid}`),{ownerUid:uid,sourceId:data.sourceId,sequence:0});
+        tx.set(root(uid), {sourceId: data.sourceId, sequence: 0, activityCommandsVersion: data.activityCommandsVersion ?? 0,
+          mealHeadersBackfillAfter: null, mealHeadersRevision: 0});
+        for(const memberUid of context.family.memberUids) tx.set(store.doc(`familyMirrorSignals/${memberUid}`),{ownerUid:uid,sourceId:data.sourceId,sequence:0,mealHeadersRevision:0});
       }
       if (existing) tx.update(root(uid), {activityCommandsVersion: data.activityCommandsVersion ?? 0});
-      return {sourceId: data.sourceId, quickLowTreatmentItems: true};
+      return {sourceId: data.sourceId, quickLowTreatmentItems: true,
+        mealHeadersExportComplete: existing?.mealHeadersExportComplete === true};
     });
   }
   async function publish(uid, data) {
@@ -90,6 +131,7 @@ function createMirrorService({store}) {
       const refs = data.records.map(r => root(uid).collection('entities').doc(`${r.kind}_${r.id}`));
       const previous = await Promise.all(refs.map(ref => tx.get(ref)));
       let sequence = state.sequence;
+      let mealHeadersChanged = false;
       for (let index = 0; index < data.records.length; index++) {
         const record = data.records[index], old = previous[index].data();
         const digest = hash(JSON.stringify(record));
@@ -98,12 +140,40 @@ function createMirrorService({store}) {
         const prefixes = record.kind === 'ingredients' && !record.deleted
           ? {ingredientSearchPrefixes: ingredientSearchPrefixes(record.payload)} : {};
         tx.set(refs[index], {...record, ...prefixes, digest, sequence: ++sequence});
+        if (record.kind === 'meals') {
+          const header = mealHeader(record);
+          const changed = JSON.stringify(header) !== JSON.stringify(mealHeader(old));
+          if (changed || state.mealHeadersBackfillAfter !== null) writeMealHeader(tx, root(uid), record, header);
+          mealHeadersChanged ||= changed;
+        }
       }
       if (sequence !== state.sequence) {
-        tx.update(root(uid), {sequence});
-        for (const memberUid of context.family.memberUids) tx.set(store.doc(`familyMirrorSignals/${memberUid}`), {ownerUid: uid, sourceId: data.sourceId, sequence});
+        const mealHeadersRevision = (state.mealHeadersRevision ?? 0) + (mealHeadersChanged ? 1 : 0);
+        tx.update(root(uid), {sequence, mealHeadersRevision});
+        for (const memberUid of context.family.memberUids) tx.set(store.doc(`familyMirrorSignals/${memberUid}`), {ownerUid: uid, sourceId: data.sourceId, sequence, mealHeadersRevision});
       }
       return {sourceId: data.sourceId, acknowledged: data.records.map(r => ({kind: r.kind, id: r.id, revision: r.revision})), sequence};
+    });
+  }
+  async function completeMealHeaderExport(uid, data) {
+    exact(data, ['sourceId']);
+    const sourceId = source(data.sourceId);
+    await rate(uid, 'meal-headers-complete', 20);
+    return store.runTransaction(async tx => {
+      const {family} = await familyContext(store, tx, uid, true);
+      const mirror = root(uid);
+      const state = (await tx.get(mirror)).data();
+      if (state?.sourceId !== sourceId) fail('failed-precondition');
+      const sequence = state.sequence;
+      let mealHeadersRevision = state.mealHeadersRevision ?? 0;
+      if (state.mealHeadersExportComplete !== true) {
+        mealHeadersRevision++;
+        tx.update(mirror, {mealHeadersExportComplete: true, mealHeadersRevision});
+        for (const memberUid of family.memberUids) {
+          tx.set(store.doc(`familyMirrorSignals/${memberUid}`), {ownerUid: uid, sourceId, sequence, mealHeadersRevision});
+        }
+      }
+      return {sourceId, sequence, mealHeadersRevision};
     });
   }
   async function fetch(uid, data) {
@@ -117,6 +187,82 @@ function createMirrorService({store}) {
       const rows = await tx.get(root(family.childUid).collection('entities').where('sequence', '>', data.after).orderBy('sequence').limit(50));
       const records = rows.docs.map(doc => { const {digest, ingredientSearchPrefixes, ...record} = doc.data(); return record; });
       return {ownerUid: family.childUid, sourceId: state.sourceId, records, cursor: records.at(-1)?.sequence ?? data.after, hasMore: records.length === 50};
+    });
+  }
+  async function fetchMealHeaders(uid, data) {
+    exact(data, ['query', 'category', 'cursor']);
+    if (typeof data.query !== 'string' || data.query.length > 120 ||
+        (data.category !== null && !mealCategories.has(data.category))) fail('invalid-argument');
+    const cursor = readMealHeaderCursor(data.cursor);
+    const query = data.query.trim().toLowerCase();
+    await rate(uid, 'meal-headers', 120);
+    return store.runTransaction(async tx => {
+      const {account, family} = await familyContext(store, tx, uid);
+      const ownerUid = family.childUid;
+      const mirror = root(ownerUid);
+      const state = (await tx.get(mirror)).data();
+      const sourceId = state?.sourceId ?? null;
+      const sequence = state?.sequence ?? 0;
+      const records = [];
+      const mealHeadersRevision = state?.mealHeadersRevision ?? 0;
+      const initialHeadersComplete = state?.mealHeadersBackfillAfter === null && state.mealHeadersExportComplete === true;
+      const page = {ownerUid, sourceId, sequence, mealHeadersRevision, records, nextCursor: null, initialHeadersComplete};
+      const binding = hash(JSON.stringify([uid, account.familyId, ownerUid, sourceId, query, data.category]));
+      const encodeCursor = key => Buffer.from(JSON.stringify([binding, mealHeadersRevision, key])).toString('base64url');
+      if (cursor && (cursor[0] !== binding || (cursor[2] !== null && cursor[1] !== mealHeadersRevision))) {
+        fail('failed-precondition');
+      }
+      if (!state) return page;
+
+      // Backfill legacy mirrors in bounded transactions. Publish uses the same root and entity
+      // transactions, so a concurrent update or deletion cannot be overwritten by this scan.
+      if (state.mealHeadersBackfillAfter !== null) {
+        let legacy = mirror.collection('entities').where('kind', '==', 'meals')
+          .orderBy('__name__').select('id', 'deleted', ...mealHeaderFields.map(key => `payload.${key}`))
+          .limit(mealHeaderScanLimit);
+        if (state.mealHeadersBackfillAfter) legacy = legacy.startAfter(state.mealHeadersBackfillAfter);
+        const {docs} = await tx.get(legacy);
+        for (const doc of docs) writeMealHeader(tx, mirror, doc.data());
+        const after = docs.length === mealHeaderScanLimit ? docs.at(-1).id : null;
+        tx.update(mirror, {mealHeadersBackfillAfter: after});
+        return {...page, nextCursor: encodeCursor(null)};
+      }
+
+      let headers = mirror.collection('mealHeaders');
+      if (data.category !== null) headers = headers.where('category', '==', data.category);
+      headers = headers.orderBy('sortKey', 'desc');
+      if (cursor?.[2] != null) headers = headers.startAfter(cursor[2]);
+      const limit = query ? mealHeaderScanLimit : mealHeaderPageSize;
+      const {docs} = await tx.get(headers.limit(limit + 1));
+      for (let i = 0; i < Math.min(limit, docs.length); i++) {
+        const {sortKey, record} = docs[i].data();
+        if (String(record.payload.name ?? '').toLowerCase().includes(query)) records.push(record);
+        if (records.length === mealHeaderPageSize || i + 1 === limit) {
+          if (docs.length > i + 1) page.nextCursor = encodeCursor(sortKey);
+          break;
+        }
+      }
+      return page;
+    });
+  }
+  async function fetchMealProgress(uid, data) {
+    exact(data, ['mealId']);
+    if (!Number.isSafeInteger(data.mealId) || data.mealId < 1) fail('invalid-argument');
+    await rate(uid, 'meal-progress', 120);
+    return store.runTransaction(async tx => {
+      const {family} = await familyContext(store, tx, uid);
+      const ownerUid = family.childUid;
+      const mirror = root(ownerUid);
+      const state = (await tx.get(mirror)).data();
+      if (!state) return {ownerUid, sourceId: null, sequence: 0, records: []};
+      const entries = await tx.get(mirror.collection('entities')
+        .where('kind', '==', 'mealHistory')
+        .where('payload.meal_id', '==', data.mealId)
+        .select('kind', 'id', 'deleted', 'payload.meal_id', 'payload.status', 'payload.created_at')
+        .limit(201));
+      if (entries.docs.length > 200) fail('resource-exhausted');
+      const records = entries.docs.map(doc => doc.data()).filter(record => !record.deleted);
+      return {ownerUid, sourceId: state.sourceId, sequence: state.sequence, records};
     });
   }
   async function fetchView(uid, data) {
@@ -402,6 +548,6 @@ function createMirrorService({store}) {
       return {ownerUid, gramsPerPiece: weights.size === 1 ? [...weights][0] : null};
     });
   }
-  return {register, publish, fetch, fetchView, searchIngredients};
+  return {register, publish, completeMealHeaderExport, fetch, fetchView, fetchMealHeaders, fetchMealProgress, searchIngredients};
 }
 module.exports = {createMirrorService, familyContext, validateRecord};

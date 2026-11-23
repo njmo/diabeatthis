@@ -59,6 +59,9 @@ class AuthenticatedCallableTransport {
     'publishFamilyMirror',
     'fetchFamilyMirror',
     'fetchFamilyMirrorView',
+    'fetchFamilyMealHeaders',
+    'completeFamilyMealHeaderExport',
+    'fetchFamilyMealProgress',
     'searchFamilyMirrorIngredients',
     'createFamilyInvite',
     'requestFamilyJoin',
@@ -85,6 +88,7 @@ class AuthenticatedCallableTransport {
           'mealDecision',
           'fetchFamilyMirror',
           'fetchFamilyMirrorView',
+          'fetchFamilyMealHeaders',
           'fetchFamilyPlans',
         }.contains(function);
     final timing = trace ? (Stopwatch()..start()) : null;
@@ -132,7 +136,11 @@ class AuthenticatedCallableTransport {
       if (account.uid != currentUid()) {
         throw const CallableFailure('unauthenticated');
       }
-      if (function == 'fetchFamilyMirrorView' &&
+      if (const {
+            'fetchFamilyMirrorView',
+            'fetchFamilyMealHeaders',
+            'fetchFamilyMealProgress',
+          }.contains(function) &&
           response.statusCode == 404 &&
           !(response.headers['content-type'] ?? '').contains(
             'application/json',

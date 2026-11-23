@@ -560,6 +560,8 @@ test('status refresh sees old receipt changes without revealing foreign IDs', as
   assert.equal(result.messages.length, 1);
   assert.ok(result.messages[0].receipts.child.readAt);
   assert.deepEqual(result.missing, [foreign.id, 'unknown']);
+  assert.deepEqual(result.notificationConfig, await service.getConfig('mom', {}));
+  assert.equal(result.notificationConfig.historyGeneration, result.messages[0].historyGeneration);
   assert.equal((await service.fetch('mom', {targetUid: 'child', after: first.sequence})).messages.length, 0);
   await assert.rejects(service.states('mom', {ids: Array(51).fill('id')}), denied);
 });

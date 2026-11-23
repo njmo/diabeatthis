@@ -43,7 +43,7 @@ exports.revokeFamilyChatNotifications = onCall({region: 'europe-west1', enforceA
     throw new HttpsError('unavailable', 'Device registration is temporarily unavailable');
   }
 });
-const service = {mealDecision: decisions.execute, registerMealDecisionNotifications: notifications.register, claimPlan:plans.claim,submitPlan:plans.submit,fetchPlans:plans.fetch,acknowledgePlan:plans.acknowledge,...createFamilyService({store: getFirestore(), auth}), registerMirror: mirror.register, publishMirror: mirror.publish, fetchMirror: mirror.fetch, fetchMirrorView: mirror.fetchView, searchMirrorIngredients: mirror.searchIngredients};
+const service = {mealDecision: decisions.execute, registerMealDecisionNotifications: notifications.register, claimPlan:plans.claim,submitPlan:plans.submit,fetchPlans:plans.fetch,acknowledgePlan:plans.acknowledge,...createFamilyService({store: getFirestore(), auth}), registerMirror: mirror.register, publishMirror: mirror.publish, fetchMirror: mirror.fetch, fetchMirrorView: mirror.fetchView, fetchMealHeaders: mirror.fetchMealHeaders, completeMealHeaderExport: mirror.completeMealHeaderExport, fetchMealProgress: mirror.fetchMealProgress, searchMirrorIngredients: mirror.searchIngredients};
 for (const [name, operation] of Object.entries({
   registerFamilyChatNotifications: 'chatNotifications',
   claimFamilyChatTreatment: 'chatTreatmentClaim', completeFamilyChatTreatment: 'chatTreatmentComplete',
@@ -52,12 +52,13 @@ for (const [name, operation] of Object.entries({
   mealDecision: 'mealDecision', registerMealDecisionNotifications: 'registerMealDecisionNotifications',
   claimFamilyPlan:'claimPlan', submitFamilyPlan:'submitPlan', fetchFamilyPlans:'fetchPlans', acknowledgeFamilyPlan:'acknowledgePlan',
   registerFamilyMirror: 'registerMirror', publishFamilyMirror: 'publishMirror', fetchFamilyMirror: 'fetchMirror', fetchFamilyMirrorView: 'fetchMirrorView',
-  searchFamilyMirrorIngredients: 'searchMirrorIngredients',
+  fetchFamilyMealHeaders: 'fetchMealHeaders', completeFamilyMealHeaderExport: 'completeMealHeaderExport', searchFamilyMirrorIngredients: 'searchMirrorIngredients',
+  fetchFamilyMealProgress: 'fetchMealProgress',
   createFamilyInvite: 'createInvite', requestFamilyJoin: 'requestJoin', requestFamilyJoinByCode: 'requestJoinByCode', decideFamilyJoin: 'decide',
   getFamilyStatus: 'status', disconnectFamilyMember: 'disconnect', finalizeFamilySetup: 'finalize',
 })) {
   exports[name] = onCall({secrets: [pairingHmacKey], region: 'europe-west1', enforceAppCheck: true, maxInstances: 4, concurrency: 20, timeoutSeconds: 20,
-    ...(name === 'fetchFamilyMirrorView' ? {invoker: 'public'} : {}),
+    ...(['fetchFamilyMirrorView', 'fetchFamilyMealHeaders', 'completeFamilyMealHeaderExport'].includes(name) ? {invoker: 'public'} : {}),
   }, async request => {
     try {
       const uid = requireGoogle(request);

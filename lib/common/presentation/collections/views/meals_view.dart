@@ -18,6 +18,7 @@ class MealListContent extends StatelessWidget {
   final bool isLoadingMore;
   final bool hasMore;
   final bool hasError;
+  final bool allowManualLoadMore;
   final VoidCallback onLoadMore;
   final VoidCallback onRetry;
   final ValueChanged<domain.Meal> onMealTap;
@@ -33,6 +34,7 @@ class MealListContent extends StatelessWidget {
     required this.isLoadingMore,
     required this.hasMore,
     required this.hasError,
+    this.allowManualLoadMore = false,
     required this.onLoadMore,
     required this.onRetry,
     required this.onMealTap,
@@ -45,6 +47,7 @@ class MealListContent extends StatelessWidget {
     this.header = const [],
     this.statusLabelFor,
     this.retryFor,
+    this.allowManualLoadMore = false,
   }) : meals = controller.state.items,
        isInitialLoading = controller.state.loading,
        isLoadingMore = controller.state.loadingMore,
@@ -71,7 +74,7 @@ class MealListContent extends StatelessWidget {
       );
     }
 
-    if (header.isEmpty && meals.isEmpty) {
+    if (header.isEmpty && meals.isEmpty && !hasMore) {
       return Center(child: Text(context.lang.mealEmptyList));
     }
 
@@ -129,7 +132,7 @@ class MealListContent extends StatelessWidget {
   }
 
   Widget _buildTail(BuildContext context) {
-    if (isLoadingMore) {
+    if (isLoadingMore || isInitialLoading && meals.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(16),
         child: Center(child: CircularProgressIndicator()),
@@ -150,6 +153,12 @@ class MealListContent extends StatelessWidget {
       return const SizedBox(height: 8);
     }
 
-    return const SizedBox(height: 24);
+    if (!allowManualLoadMore) return const SizedBox(height: 24);
+    return Center(
+      child: TextButton(
+        onPressed: onLoadMore,
+        child: Text(context.lang.catalogLoadMore),
+      ),
+    );
   }
 }

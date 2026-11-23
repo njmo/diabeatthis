@@ -14,6 +14,146 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test('a prefetched page cannot cross a child mirror source change', () async {
+    final db = DatabaseImpl(NativeDatabase.memory());
+    addTearDown(db.close);
+    final oldPage = Completer<http.Response>();
+    var source = 'old';
+    http.Response reply(String source, {String? cursor, int meal = 1}) =>
+        http.Response(
+          jsonEncode({
+            'result': {
+              'ownerUid': 'child',
+              'sourceId': source,
+              'sequence': 1,
+              'mealHeadersRevision': 1,
+              'initialHeadersComplete': true,
+              'nextCursor': cursor,
+              'records': [
+                {'kind': 'meals', 'id': '$meal'},
+              ],
+              'plans': [],
+            },
+          }),
+          200,
+        );
+    final transport = AuthenticatedCallableTransport(
+      client: MockClient((request) async {
+        final data = (jsonDecode(request.body) as Map)['data'] as Map;
+        if (data['cursor'] == 'old-next') return oldPage.future;
+        return source == 'old'
+            ? reply(source, cursor: 'old-next')
+            : reply(source, meal: 3);
+      }),
+      projectId: 'test',
+      currentUid: () => 'parent',
+      identity: () async => const CallableIdentity('parent', 'token', 'app'),
+    );
+    final history = FamilyPlanningController(
+      transport,
+      () => 'parent',
+      FamilyPlanSubmissionStore(db),
+      mealHistory: true,
+    );
+    addTearDown(history.dispose);
+    await history.refreshAndWait();
+    final append = history.loadMoreMealHeaders();
+    source = 'new';
+    await history.refreshMirrorForSignal({
+      'ownerUid': 'child',
+      'sourceId': source,
+      'sequence': 1,
+    });
+    oldPage.complete(reply('old', meal: 2));
+    await append;
+    expect(history.source, 'new');
+    expect(history.rows.keys, ['meals/3']);
+  });
+
+  test(
+    'meal history follows migration, prefetches one page and never loads full mirror',
+    () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      final operations = <String>[];
+      final calls = <Object?>[];
+      var migrationPages = 0;
+      final transport = AuthenticatedCallableTransport(
+        client: MockClient((request) async {
+          final operation = request.url.pathSegments.last;
+          final data = (jsonDecode(request.body) as Map)['data'] as Map;
+          operations.add(operation);
+          final plans = operation == 'fetchFamilyPlans';
+          final after = data['cursor'];
+          if (!plans) calls.add(after);
+          final migrating = !plans && migrationPages++ < 2;
+          final id = after == 'next' ? '2' : '1';
+          return http.Response(
+            jsonEncode({
+              'result': {
+                'ownerUid': 'child',
+                'sourceId': 'source',
+                if (plans)
+                  'plans': []
+                else ...{
+                  'sequence': 7,
+                  'mealHeadersRevision': 3,
+                  'initialHeadersComplete': !migrating,
+                  'nextCursor': migrating
+                      ? 'migration'
+                      : after == 'next'
+                      ? null
+                      : 'next',
+                  'records': [
+                    if (!migrating)
+                      {
+                        'kind': 'meals',
+                        'id': id,
+                        'payload': {'id': int.parse(id)},
+                      },
+                  ],
+                },
+              },
+            }),
+            200,
+          );
+        }),
+        projectId: 'test',
+        currentUid: () => 'parent',
+        identity: () async => const CallableIdentity('parent', 'token', 'app'),
+      );
+      final history = FamilyPlanningController(
+        transport,
+        () => 'parent',
+        FamilyPlanSubmissionStore(db),
+        mealHistory: true,
+        view: () => {'view': 'history'},
+      );
+      addTearDown(history.dispose);
+      await history.refreshAndWait();
+      expect(history.rows.keys, ['meals/1']);
+      expect(history.historyReady, isTrue);
+      expect(history.historyHasMore, isTrue);
+      expect(
+        history.hasMirrorSequence({
+          'ownerUid': 'child',
+          'sourceId': 'source',
+          'sequence': 14,
+          'mealHeadersRevision': 3,
+        }),
+        isTrue,
+      );
+      await history.loadMoreMealHeaders();
+      expect(history.rows.keys, ['meals/1', 'meals/2']);
+      expect(history.historyHasMore, isFalse);
+      expect(calls, [null, 'migration', 'migration', 'next']);
+      expect(
+        operations,
+        everyElement(anyOf('fetchFamilyMealHeaders', 'fetchFamilyPlans')),
+      );
+    },
+  );
+
   test(
     'a pending submission clears after its planning session is disposed',
     () async {

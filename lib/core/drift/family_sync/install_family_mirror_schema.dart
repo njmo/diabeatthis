@@ -48,6 +48,12 @@ Future<void> installFamilyMirrorSchema(DatabaseImpl db) async {
     'INSERT OR IGNORE INTO family_sync_runtime(singleton) VALUES(1)',
   );
   await db.customStatement(
+    'CREATE TABLE IF NOT EXISTS family_sync_header_completion (source_id TEXT PRIMARY KEY, completed INTEGER NOT NULL DEFAULT 0, retry_after INTEGER NOT NULL DEFAULT 0)',
+  );
+  await db.customStatement(
+    'INSERT OR IGNORE INTO family_sync_header_completion(source_id) SELECT source_id FROM family_sync_identity WHERE owner_uid IS NOT NULL',
+  );
+  await db.customStatement(
     '''CREATE TABLE IF NOT EXISTS family_plan_journal (
     operation_id TEXT PRIMARY KEY, claim_token TEXT NOT NULL, owner_uid TEXT NOT NULL, source_id TEXT NOT NULL,
     outcome TEXT NOT NULL, reason TEXT, result_id INTEGER,

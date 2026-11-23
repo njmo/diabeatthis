@@ -1,6 +1,10 @@
 {
   "indexes": [
     {
+      "collectionGroup": "mealHeaders", "queryScope": "COLLECTION",
+      "fields": [{"fieldPath": "category", "order": "ASCENDING"}, {"fieldPath": "sortKey", "order": "DESCENDING"}]
+    },
+    {
       "collectionGroup": "chatMessageIndex", "queryScope": "COLLECTION",
       "fields": [
         {"fieldPath": "conversationId", "order": "ASCENDING"},
@@ -91,6 +95,7 @@
     }
   ],
   "fieldOverrides": [
+    {"collectionGroup": "mealHeaders", "fieldPath": "record", "indexes": []},
     {"collectionGroup": "chatOperationReceipts", "fieldPath": "deleteAfter", "ttl": true, "indexes": []},
     {"collectionGroup": "familyChatNotificationJobs", "fieldPath": "deleteAfter", "ttl": true, "indexes": []},
     {"collectionGroup": "familyRateLimits", "fieldPath": "deleteAfter", "ttl": true, "indexes": []}

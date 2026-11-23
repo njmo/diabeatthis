@@ -8,6 +8,7 @@ import '../../ingredient_catalog/local_ingredient_search_repository.dart';
 import '../../ingredient_catalog/unified_ingredient_search_use_case.dart';
 import '../../ingredient_catalog/widgets/ingredient_catalog_picker.dart';
 import '../../routing/form_route_guard.dart';
+import '../../widgets/responsive_bottom_sheet.dart';
 import '../family_ingredient_search_repository.dart';
 
 Future<IngredientSearchItem?> showFamilyIngredientPicker(
@@ -30,7 +31,7 @@ Future<IngredientSearchItem?> showFamilyIngredientSearchPicker(
   Duration queryDebounce = Duration.zero,
 }) {
   final guard = routeGuard ?? formRouteGuardOf(context);
-  return showModalBottomSheet<IngredientSearchItem>(
+  return showResponsiveBottomSheet<IngredientSearchItem>(
     context: context,
     isScrollControlled: true,
     builder: (_) => guard(

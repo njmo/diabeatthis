@@ -27,10 +27,13 @@ import '../../presentation/dashboard/dashboard_card_padding.dart';
 import '../../presentation/dashboard/dashboard_spacing.dart';
 import '../../routing/form_bottom_sheet_route.dart';
 import '../../widgets/meal_progress/meal_progress_section_heading.dart';
+import '../../widgets/responsive_bottom_sheet.dart';
+import '../child_ingredient_search_repository.dart';
 import '../family_access_scope.dart';
 import '../family_planning_controller.dart';
 import '../family_planning_session_provider.dart';
 import '../family_planning_view.dart';
+import '../photo/family_photo_ingredient_reader.dart';
 import 'family_active_meal_card.dart';
 import 'family_activity_log_card.dart';
 import 'family_activity_plan_form.dart';
@@ -135,7 +138,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                   if (collection == 'familyMirrorSignals') {
                     unawaited(observed.refreshMirrorForSignal(event.data()));
                   } else {
-                    unawaited(observed.refresh());
+                    unawaited(observed.refreshPlanSignal());
                   }
                 }
               },
@@ -170,23 +173,36 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     super.dispose();
   }
 
-  Future<void> planFromPhoto({FamilyPlanningController? planning}) async {
-    if (planning == null && this.controller.view != null) {
-      await withFullPlanning((full) => planFromPhoto(planning: full));
-      return;
-    }
-    final controller = planning ?? this.controller;
-    if (!controller.complete || !FamilyAccessScope(controller).isCurrent) {
+  Future<void> planFromPhoto() async {
+    final controller = _controller;
+    final scope = controller == null ? null : FamilyAccessScope(controller);
+    if (controller == null ||
+        !controller.complete ||
+        scope == null ||
+        !scope.isCurrent) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.lang.familyPlanWaitingForChild)),
       );
       return;
     }
-    final scope = FamilyAccessScope(controller);
     final uid = scope.uid!, source = scope.source!;
-    final rows = controller.rows.values.toList();
+    final ingredients = FamilyPhotoIngredientReader(
+      ChildIngredientSearchRepository(
+        transport: controller.transport,
+        caregiverUid: uid,
+        childUid: scope.owner!,
+        isCurrent: () => scope.isCurrent,
+      ),
+      source,
+    );
     final repository = FirebasePlanningRepository(
       submit: (type, target, values) async {
+        scope.requireCurrent();
+        final selectedIds = (values['ingredients'] as List)
+            .map((item) => (item as Map)['ingredientId'])
+            .whereType<int>()
+            .toSet();
+        final rows = await ingredients.baseRows(selectedIds);
         scope.requireCurrent();
         await controller.submit(
           type: type,
@@ -200,7 +216,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
     );
     final photo = ProviderScope(
       overrides: [planningRepositoryProvider.overrideWithValue(repository)],
-      child: FamilyMealPhotoPage(rows: rows),
+      child: FamilyMealPhotoPage(ingredients: ingredients),
     );
     await showFormBottomSheet<void>(
       context,
@@ -301,7 +317,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
       );
       return;
     }
-    await showModalBottomSheet<void>(
+    await showResponsiveBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -729,16 +745,18 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
   @override
   Widget build(BuildContext context) {
     final uid = ref.watch(googleAccountProvider).asData?.value?.uid;
-    final next = ref.watch(
-      familyPlanningSessionProvider((
-        uid: uid,
-        home:
-            widget.view == FamilyPlanningView.home ||
-            widget.view == FamilyPlanningView.day,
-        mealId: null,
-        context: false,
-      )),
-    );
+    final next = widget.view == FamilyPlanningView.meals
+        ? ref.watch(familyMealHistorySessionProvider(uid))
+        : ref.watch(
+            familyPlanningSessionProvider((
+              uid: uid,
+              home:
+                  widget.view == FamilyPlanningView.home ||
+                  widget.view == FamilyPlanningView.day,
+              mealId: null,
+              context: false,
+            )),
+          );
     if (!identical(_controller, next)) {
       _controller?.removeListener(changed);
       _controller = next..addListener(changed);
@@ -814,11 +832,13 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
                       !controller.failed
                   ? Center(child: Text(context.lang.familyPlanWaitingForChild))
                   : FamilyCollectionsBody(
-                      key: ValueKey((
-                        controller.uid,
-                        controller.owner,
-                        controller.source,
-                      )),
+                      key: controller.pagedMealHistory
+                          ? ObjectKey(controller)
+                          : ValueKey((
+                              controller.uid,
+                              controller.owner,
+                              controller.source,
+                            )),
                       family: controller,
                       view: widget.view,
                       enabled: enabled,
@@ -1038,7 +1058,14 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
             if (showActivities &&
                 (occurrences.isNotEmpty || historyLogs.isNotEmpty)) ...[
               if (!homeLayout) const SizedBox(height: 16),
-              if (widget.view != FamilyPlanningView.home)
+              if (homeLayout && occurrences.isNotEmpty)
+                DashboardCardPadding(
+                  enabled: true,
+                  child: MealProgressSectionHeading(
+                    title: context.lang.familySyncActivityOccurrences,
+                  ),
+                )
+              else if (widget.view != FamilyPlanningView.home)
                 Text(
                   context.lang.familySyncActivityOccurrences,
                   style: Theme.of(context).textTheme.titleLarge,

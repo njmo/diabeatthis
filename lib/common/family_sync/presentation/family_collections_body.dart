@@ -89,7 +89,9 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
           widget.edit(
             'updateMeal',
             targetId: id,
-            initial: widget.mealValues(payload),
+            initial: family.pagedMealHistory
+                ? null
+                : widget.mealValues(payload),
           );
         }
       },
@@ -184,7 +186,10 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
             child: SearchTextField(
               controller: search,
               hintText: context.lang.mealSearchHint,
-              onChanged: (v) => setState(() => query = v),
+              onChanged: (v) => setState(() {
+                query = v;
+                family.setMealHistoryFilter(query, category?.name);
+              }),
             ),
           ),
           Padding(
@@ -192,11 +197,22 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
             child: MealCategoryField(
               value: category,
               filter: true,
-              onChanged: (v) => setState(() => category = v),
+              onChanged: (v) => setState(() {
+                category = v;
+                family.setMealHistoryFilter(query, category?.name);
+              }),
             ),
           ),
+          if (family.pagedMealHistory &&
+              !family.historyReady &&
+              rows.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(context.lang.familySyncDownloading),
+            ),
           Expanded(
             child: MealListContent.controlled(
+              allowManualLoadMore: family.pagedMealHistory,
               statusLabelFor: (context, meal) => familyPlanRecordLabel(
                 context,
                 family.plans,
@@ -232,11 +248,23 @@ class FamilyCollectionsBodyState extends State<FamilyCollectionsBody> {
               ],
               controller: CaregiverMealsController(
                 rows: rows,
-                query: query,
-                category: category,
-                loading: loading,
-                failed: family.failed,
-                onRetry: family.refresh,
+                preserveOrder: family.pagedMealHistory,
+                query: family.pagedMealHistory ? '' : query,
+                category: family.pagedMealHistory ? null : category,
+                loading:
+                    !family.failed &&
+                    (loading ||
+                        family.pagedMealHistory &&
+                            !family.historyReady &&
+                            !family.historyHasMore &&
+                            rows.isEmpty),
+                loadingMore: family.historyLoadingMore,
+                hasMore: family.historyHasMore,
+                failed: family.failed || family.historyMoreFailed,
+                onRetry: family.historyMoreFailed
+                    ? family.loadMoreMealHeaders
+                    : family.refresh,
+                onLoadMore: family.loadMoreMealHeaders,
                 open: (item) => openMeal(item.id),
               ),
             ),

@@ -6,6 +6,7 @@ import '../../../features/meals/data/drafts/meal_draft.dart';
 import '../../../features/portions/data/drafts/portion_draft.dart';
 import '../../l10n/language.dart';
 import '../../widgets/amount_entry_dialog.dart';
+import '../../widgets/responsive_bottom_sheet.dart';
 
 Future<List<Map<String, Object?>>?> showFamilyQuickTreatmentEditor(
   BuildContext context, {
@@ -18,7 +19,7 @@ Future<List<Map<String, Object?>>?> showFamilyQuickTreatmentEditor(
         Map<String, Object?>.from(row['payload'] as Map),
   ]..sort((a, b) => (a['sort_order'] as int).compareTo(b['sort_order'] as int));
   var picking = false;
-  return showModalBottomSheet<List<Map<String, Object?>>>(
+  return showResponsiveBottomSheet<List<Map<String, Object?>>>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

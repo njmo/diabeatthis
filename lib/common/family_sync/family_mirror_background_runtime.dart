@@ -73,7 +73,10 @@ class FamilyMirrorBackgroundRuntime {
           .getSingle();
       if (settings.read<int>('enabled') != 1 || disposed) return;
       final queue = FamilyMirrorOutbox(db);
-      if ((await queue.pending(limit: 1)).isEmpty) return;
+      if ((await queue.pending(limit: 1)).isEmpty &&
+          await queue.publishableMealHeaderCompletion == null) {
+        return;
+      }
       await db.customStatement(
         'UPDATE family_sync_runtime SET requested=0,active_until=? WHERE singleton=1',
         [DateTime.now().add(const Duration(minutes: 2)).millisecondsSinceEpoch],

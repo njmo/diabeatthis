@@ -18,15 +18,14 @@ import '../../l10n/language.dart';
 import '../../meal/meal_category.dart';
 import '../../planning/planning_repository_provider.dart';
 import '../../routing/form_route_guard.dart';
-import '../family_ingredient_search_repository.dart';
 import '../photo/family_photo_ingredient_reader.dart';
 import '../photo/family_photo_plan_saver.dart';
 import 'show_family_ingredient_picker.dart';
 
 /// Shares recognition/review with the child, replacing persistence with a proposal.
 class FamilyMealPhotoPage extends HookConsumerWidget {
-  const FamilyMealPhotoPage({super.key, required this.rows});
-  final List<Map<String, dynamic>> rows;
+  const FamilyMealPhotoPage({super.key, required this.ingredients});
+  final FamilyPhotoIngredientReader ingredients;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final category = useState<MealCategory?>(null);
@@ -36,13 +35,13 @@ class FamilyMealPhotoPage extends HookConsumerWidget {
     final candidates = useMemoized(
       () => CatalogMealPhotoCandidateRepository(
         searchUseCase: UnifiedIngredientSearchUseCase(
-          local: FamilyIngredientSearchRepository(rows),
+          local: ingredients,
           catalog: catalog,
         ),
         catalog: catalog,
-        local: FamilyPhotoIngredientReader(rows),
+        local: ingredients,
       ),
-      [catalog, rows],
+      [catalog, ingredients],
     );
     final controller = useMemoized(
       () => MealPhotoController(
@@ -133,10 +132,11 @@ class FamilyMealPhotoPage extends HookConsumerWidget {
             controller.generate(input, languageCode: language),
       ),
       pickProduct: (context) async {
-        final selected = await showFamilyIngredientPicker(
+        final selected = await showFamilyIngredientSearchPicker(
           context,
-          rows: rows,
+          local: ingredients,
           catalog: catalog,
+          queryDebounce: const Duration(milliseconds: 250),
         );
         return selected == null
             ? null

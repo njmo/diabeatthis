@@ -41,14 +41,20 @@ function createChatService({store, now = Date.now, signingKey = () => process.en
     const family = await read(tx, doc(root(fid)));
     if (!family || !Array.isArray(family.memberUids) || family.memberUids.length > 6 || !family.memberUids.includes(uid)) fail('permission-denied');
     const members = {}, preferences = {};
-    for (const memberUid of family.memberUids) {
+    const roster = await Promise.all(family.memberUids.map(async memberUid => {
       identifier(memberUid);
-      const member = await read(tx, doc(`${root(fid)}/members/${memberUid}`));
-      const binding = await read(tx, doc(`familyAccounts/${memberUid}`));
+      const [member, binding, preference] = await Promise.all([
+        read(tx, doc(`${root(fid)}/members/${memberUid}`)),
+        memberUid === uid ? account : read(tx, doc(`familyAccounts/${memberUid}`)),
+        read(tx, preferenceRef(memberUid)),
+      ]);
       if (!member || binding?.familyId !== fid || binding.role !== member.role ||
         (member.role === 'child' ? family.childUid !== memberUid : member.role !== 'managingCaregiver' || !family.managerUids?.includes(memberUid))) fail('permission-denied');
+      return {memberUid, member, preference};
+    }));
+    for (const {memberUid, member, preference} of roster) {
       members[memberUid] = {...member, epoch: epoch(member)};
-      preferences[memberUid] = {enabled: true, revision: 0, offGeneration: 0, ...await read(tx, preferenceRef(memberUid))};
+      preferences[memberUid] = {enabled: true, revision: 0, offGeneration: 0, ...preference};
     }
     if (members[uid]?.role !== account.role) fail('permission-denied');
     const savedPolicy = await read(tx, configRef(fid));
@@ -108,16 +114,16 @@ function createChatService({store, now = Date.now, signingKey = () => process.en
       data.version !== state.preferences[uid].revision || data.policyVersion !== state.policy.revision || data.until <= now()};
   }
   const unknownOutcome = () => { throw new FamilyError('failed-precondition', undefined, {reason: 'chat-send-outcome-unknown'}); };
-  async function getConfig(uid, data) {
-    exact(data, []); await rate(uid, 'config', 60);
-    return store.runTransaction(async tx => {
-      const state = await scope(tx, uid, false);
-      return {familyId: state.fid, uid, epoch: state.members[uid].epoch,
+  function publicConfig(state, uid, serverTime) {
+    return {familyId: state.fid, uid, epoch: state.members[uid].epoch,
         historyGeneration: historyGeneration(state, uid),
-        account: state.preferences[uid], policy: state.policy, policyConfigured: state.policyConfigured, serverTime: now(),
+        account: state.preferences[uid], policy: state.policy, policyConfigured: state.policyConfigured, serverTime,
         canManage: state.members[uid].role === 'managingCaregiver' || state.family.managerUids.length === 0 && state.family.childUid === uid,
         members: Object.entries(state.members).map(([id, member]) => ({uid: id, displayName: member.displayName ?? '', photoUrl: member.photoUrl ?? null, role: member.role, epoch: member.epoch, enabled: state.preferences[id].enabled}))};
-    });
+  }
+  async function getConfig(uid, data) {
+    exact(data, []); await rate(uid, 'config', 60);
+    return store.runTransaction(async tx => publicConfig(await scope(tx, uid, false), uid, now()));
   }
   async function configure(uid, data) {
     exact(data, ['accountEnabled', 'retention', 'expectedRevision', 'initializeIfAbsent']);
@@ -409,8 +415,10 @@ function createChatService({store, now = Date.now, signingKey = () => process.en
       const state = await scope(tx, uid);
       const values = await Promise.all(data.ids.map(id => read(tx, messages(state.fid).doc(id))));
       const found = values.filter(message => message && visible(message, state, uid));
+      const serverTime = now();
       return {messages: found.map(message => publicMessage(message, state.policy, uid)),
-        missing: data.ids.filter(id => !found.some(message => message.id === id)), serverTime: now()};
+        missing: data.ids.filter(id => !found.some(message => message.id === id)), serverTime,
+        notificationConfig: publicConfig(state, uid, serverTime)};
     });
   }
   async function acknowledgeBatch(uid, data) {

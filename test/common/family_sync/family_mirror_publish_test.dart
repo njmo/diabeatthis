@@ -4,12 +4,68 @@ import 'package:diabeatthis/common/backend/authenticated_callable_transport.dart
 import 'package:diabeatthis/common/family_sync/publish_family_mirror_use_case.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/family_sync/family_mirror_outbox.dart';
+import 'package:diabeatthis/core/drift/family_sync/install_family_mirror_schema.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test(
+    'an upgraded empty mirror retries header completion without republishing',
+    () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      final queue = FamilyMirrorOutbox(db);
+      final source = await queue.bindOwner('child');
+      await installFamilyMirrorSchema(db);
+      expect(await queue.publishableMealHeaderCompletion, source);
+      final calls = <String>[];
+      var rejectCompletion = true;
+      final transport = AuthenticatedCallableTransport(
+        client: MockClient((request) async {
+          final operation = request.url.pathSegments.last;
+          calls.add(operation);
+          if (operation == 'completeFamilyMealHeaderExport' &&
+              rejectCompletion) {
+            return http.Response('{"error":{"status":"UNAVAILABLE"}}', 503);
+          }
+          return http.Response(
+            jsonEncode({
+              'result': {
+                'sourceId': source,
+                if (operation == 'registerFamilyMirror')
+                  'mealHeadersExportComplete': false,
+              },
+            }),
+            200,
+          );
+        }),
+        projectId: 'test',
+        currentUid: () => 'child',
+        identity: () async => const CallableIdentity('child', 'token', 'app'),
+      );
+      final publish = PublishFamilyMirrorUseCase(
+        outbox: queue,
+        transport: transport,
+        currentUid: () => 'child',
+      );
+      await expectLater(publish(), throwsA(isA<CallableFailure>()));
+      expect(await queue.publishableMealHeaderCompletion, source);
+      rejectCompletion = false;
+      expect(await publish(), 0);
+      await installFamilyMirrorSchema(db);
+      expect(await queue.publishableMealHeaderCompletion, isNull);
+      expect(await publish(), 0);
+      expect(calls, [
+        'registerFamilyMirror',
+        'completeFamilyMealHeaderExport',
+        'registerFamilyMirror',
+        'completeFamilyMealHeaderExport',
+      ]);
+    },
+  );
+
   test(
     'server failure does not mark data synced or bind the database to an unauthorized account',
     () async {

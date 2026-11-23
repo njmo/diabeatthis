@@ -28,12 +28,50 @@ class PublishFamilyMirrorUseCase {
         );
   }
 
+  Future<void> _completeMealHeaders(String uid, String source) async {
+    if (currentUid() != uid ||
+        await outbox.sourceForOwner(uid) != source ||
+        !await permitted()) {
+      return;
+    }
+    final receipt = await transport.call(
+      'completeFamilyMealHeaderExport',
+      {'sourceId': source},
+      expectedUid: uid,
+      allowRequest: () async =>
+          await permitted() && !await outbox.hasUnpublishedMealHeaders,
+    );
+    if (receipt['sourceId'] != source || currentUid() != uid) {
+      throw const CallableFailure('invalid-response');
+    }
+    await outbox.clearMealHeaderCompletion(source);
+  }
+
   Future<int> call() async {
     final uid = currentUid();
     if (uid == null) throw const CallableFailure('unauthenticated');
     if (!await permitted()) return 0;
-    // No callable, rate-limit write or identity loading for an empty queue.
-    if ((await outbox.pending(limit: 1)).isEmpty) return 0;
+    if ((await outbox.pending(limit: 1)).isEmpty) {
+      final completion = await outbox.publishableMealHeaderCompletion;
+      if (completion != null &&
+          await outbox.sourceForOwner(uid) == completion) {
+        final registration = await registerFamilyMirror(
+          transport: transport,
+          source: completion,
+          uid: uid,
+          permitted: permitted,
+        );
+        switch (registration['mealHeadersExportComplete']) {
+          case false:
+            await _completeMealHeaders(uid, completion);
+          case true:
+            await outbox.clearMealHeaderCompletion(completion);
+          default:
+            await outbox.deferMealHeaderCompletion(completion);
+        }
+      }
+      return 0;
+    }
     // A newly allocated record must be locked to its pending caregiver plan
     // before any independent mirror worker can make it visible to others.
     final unbound = await outbox.db
@@ -51,6 +89,11 @@ class PublishFamilyMirrorUseCase {
     );
     if (currentUid() != uid) throw const CallableFailure('unauthenticated');
     await outbox.bindOwner(uid);
+    if (registration['mealHeadersExportComplete'] == false) {
+      await outbox.scheduleMealHeaderCompletion(source);
+    } else if (registration['mealHeadersExportComplete'] == true) {
+      await outbox.clearMealHeaderCompletion(source);
+    }
     var count = 0;
     for (var batch = 0; batch < 10; batch++) {
       if (currentUid() != uid) throw const CallableFailure('unauthenticated');
@@ -112,6 +155,9 @@ class PublishFamilyMirrorUseCase {
       }
       await outbox.acknowledge(uid, source, records);
       count += records.length;
+    }
+    if (await outbox.publishableMealHeaderCompletion == source) {
+      await _completeMealHeaders(uid, source);
     }
     return count;
   }
