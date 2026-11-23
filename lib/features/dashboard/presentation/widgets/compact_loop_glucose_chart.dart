@@ -13,6 +13,9 @@ import '../../../../core/domain/model/glucose.dart';
 import '../../data/providers/blood_sugar_readings_list_provider.dart';
 import '../../data/providers/time_now_provider.dart';
 
+const _historyWindow = Duration(hours: 2);
+const _forecastWindow = Duration(minutes: 90);
+
 const _aapsColors = {
   'IOB': Color(0xFF3B82F6),
   'COB': Color(0xFFF59E0B),
@@ -21,16 +24,16 @@ const _aapsColors = {
 };
 
 /// Actual CGM history over a fixed two-hour window ending at the current clock.
-/// No interpolation across missing samples or fabricated future predictions.
+/// Missing samples are marked separately from measured history and forecasts.
 class CompactLoopGlucoseChart extends ConsumerWidget {
   const CompactLoopGlucoseChart({
     super.key,
-    this.height = 120,
+    this.plotHeight = 90,
     this.isDark = false,
     this.readings,
     this.aapsPredictionsJson,
   });
-  final double height;
+  final double plotHeight;
   final bool isDark;
   final List<Glucose>? readings;
   final String? aapsPredictionsJson;
@@ -68,106 +71,76 @@ class CompactLoopGlucoseChart extends ConsumerWidget {
           ordered,
           maxReadings: 241,
           windowEnd: now,
-          window: const Duration(hours: 2),
+          window: _historyWindow,
         );
-        return SizedBox(
-          height: height,
-          child: Column(
-            children: [
-              Expanded(
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CustomPaint(
-                      key: ValueKey(
-                        stale ? 'glucose-chart-stale' : 'glucose-chart-current',
-                      ),
-                      painter: DashboardGlucoseChartPainter(
-                        timeline: timeline,
-                        now: now,
-                        isDark: dark,
-                        stale: stale,
-                        prediction: prediction,
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: plotHeight,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CustomPaint(
+                    key: ValueKey(
+                      stale ? 'glucose-chart-stale' : 'glucose-chart-current',
+                    ),
+                    painter: DashboardGlucoseChartPainter(
+                      timeline: timeline,
+                      now: now,
+                      isDark: dark,
+                      stale: stale,
+                      prediction: prediction,
+                    ),
+                  ),
+                  if (timeline.values.isEmpty)
+                    Center(
+                      child: Text(
+                        rows.isEmpty
+                            ? context.lang.dashboardWaitingForHistory
+                            : context.lang.beforeMealStale,
+                        style: TextStyle(fontSize: 12, color: muted),
                       ),
                     ),
-                    if (timeline.values.isEmpty)
-                      Center(
-                        child: Text(
-                          rows.isEmpty
-                              ? context.lang.dashboardWaitingForHistory
-                              : context.lang.beforeMealStale,
-                          style: TextStyle(fontSize: 12, color: muted),
+                ],
+              ),
+            ),
+            if (prediction != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Wrap(
+                  key: const ValueKey('aaps-prediction-legend'),
+                  spacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      Localizations.localeOf(context).languageCode == 'pl'
+                          ? 'Prognoza AAPS'
+                          : 'AAPS prediction',
+                      style: TextStyle(fontSize: 10, color: muted),
+                    ),
+                    for (final name in prediction.series.keys)
+                      Text(
+                        '━ $name',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: _aapsColors[name],
                         ),
                       ),
+                    const AapsPredictionHelp(),
                   ],
                 ),
               ),
-              if (prediction != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 3),
-                  child: Wrap(
-                    key: const ValueKey('aaps-prediction-legend'),
-                    spacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(
-                        Localizations.localeOf(context).languageCode == 'pl'
-                            ? 'Prognoza AAPS'
-                            : 'AAPS prediction',
-                        style: TextStyle(fontSize: 10, color: muted),
-                      ),
-                      for (final name in prediction.series.keys)
-                        Text(
-                          '━ $name',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: _aapsColors[name],
-                          ),
-                        ),
-                      const AapsPredictionHelp(),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  for (final label in [
-                    '−2h',
-                    '−1h',
-                    context.lang.dashboardActivityStartNow,
-                    if (prediction != null) '+1h',
-                    if (prediction != null) '+2h',
-                  ])
-                    if (label == context.lang.dashboardActivityStartNow)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF00A3FF).withValues(alpha: .15),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          label,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Color(0xFF00A3FF),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      )
-                    else
-                      Text(label, style: TextStyle(fontSize: 10, color: muted)),
-                ],
-              ),
-            ],
-          ),
+            const SizedBox(height: 2),
+            _GlucoseTimelineLabels(
+              hasForecast: prediction != null,
+              color: muted,
+            ),
+          ],
         );
       },
       loading: () => SizedBox(
-        height: height,
+        height: plotHeight,
         child: const Center(
           child: SizedBox(
             width: 20,
@@ -177,11 +150,58 @@ class CompactLoopGlucoseChart extends ConsumerWidget {
         ),
       ),
       error: (_, __) => SizedBox(
-        height: height,
+        height: plotHeight,
         child: Center(child: Text(context.lang.dashboardWaitingForHistory)),
       ),
     );
   }
+}
+
+class _GlucoseTimelineLabels extends StatelessWidget {
+  const _GlucoseTimelineLabels({
+    required this.hasForecast,
+    required this.color,
+  });
+
+  final bool hasForecast;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final nowFraction = hasForecast
+        ? _historyWindow.inMinutes /
+              (_historyWindow + _forecastWindow).inMinutes
+        : 1.0;
+    return Stack(
+      children: [
+        Align(alignment: Alignment.centerLeft, child: _label('−2h')),
+        Align(alignment: Alignment(nowFraction - 1, 0), child: _label('−1h')),
+        Align(
+          alignment: Alignment(2 * nowFraction - 1, 0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFF00A3FF).withValues(alpha: .15),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Text(
+              context.lang.dashboardActivityStartNow,
+              style: const TextStyle(
+                fontSize: 10,
+                color: Color(0xFF00A3FF),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+        if (hasForecast)
+          Align(alignment: Alignment.centerRight, child: _label('+1h 30m')),
+      ],
+    );
+  }
+
+  Widget _label(String text) =>
+      Text(text, style: TextStyle(fontSize: 10, color: color));
 }
 
 /// Uses the standard anchored Material popup, including outside-tap dismissal.
@@ -307,14 +327,18 @@ class DashboardGlucoseChartPainter extends CustomPainter {
         for (var index = 0; index < values.length; index++) {
           final time = forecast.calculatedAt.add(Duration(minutes: index * 5));
           if (!time.isBefore(now.subtract(const Duration(minutes: 5))) &&
-              !time.isAfter(now.add(const Duration(hours: 2)))) {
+              !time.isAfter(now.add(_forecastWindow))) {
             forecastValues.add(values[index]);
           }
         }
       }
     }
     final allValues = [...rows.map((r) => r.sgv.toDouble()), ...forecastValues];
-    final historyWidth = forecast == null ? size.width : size.width / 2;
+    final historyWidth = forecast == null
+        ? size.width
+        : size.width *
+              _historyWindow.inMinutes /
+              (_historyWindow + _forecastWindow).inMinutes;
     final minimum = math
         .min(70, allValues.isEmpty ? 70 : allValues.reduce(math.min) - 10)
         .toDouble();
@@ -360,7 +384,7 @@ class DashboardGlucoseChartPainter extends CustomPainter {
           return Offset(
             historyWidth +
                 time.difference(now).inMilliseconds /
-                    const Duration(hours: 2).inMilliseconds *
+                    _forecastWindow.inMilliseconds *
                     (size.width - historyWidth),
             y(entry.value[index].round()),
           );
@@ -382,6 +406,17 @@ class DashboardGlucoseChartPainter extends CustomPainter {
         }
         canvas.restore();
       }
+    }
+    final gapPaint = Paint()
+      ..color = (isDark ? Colors.white : Colors.black).withValues(alpha: .45)
+      ..strokeWidth = 1.3;
+    for (var i = 1; i < timeline.segments.length; i++) {
+      drawDashedChartLine(
+        canvas,
+        point(timeline.segments[i - 1].last),
+        point(timeline.segments[i].first),
+        gapPaint,
+      );
     }
     for (final segment in timeline.segments) {
       if (segment.length > 1) {
@@ -422,31 +457,17 @@ class DashboardGlucoseChartPainter extends CustomPainter {
             ..strokeCap = StrokeCap.round,
         );
       }
-      for (final reading in segment) {
-        canvas.drawCircle(
-          point(reading),
-          2.3,
-          Paint()..color = colorFor(reading.sgv),
+      if (segment.length == 1) {
+        final reading = segment.single;
+        final position = point(reading);
+        canvas.drawLine(
+          position.translate(-2, 0),
+          position.translate(2, 0),
+          Paint()
+            ..color = colorFor(reading.sgv)
+            ..strokeWidth = 2,
         );
       }
-    }
-    if (rows.isNotEmpty) {
-      final latest = rows.last;
-      canvas.drawCircle(
-        point(latest),
-        6,
-        Paint()..color = colorFor(latest.sgv).withValues(alpha: .2),
-      );
-      canvas.drawCircle(
-        point(latest),
-        3.5,
-        Paint()..color = colorFor(latest.sgv),
-      );
-      canvas.drawCircle(
-        point(latest),
-        1.5,
-        Paint()..color = isDark ? const Color(0xFF1E293B) : Colors.white,
-      );
     }
     canvas.restore();
     for (final value in [70, 180]) {

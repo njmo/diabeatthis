@@ -371,7 +371,7 @@ class DashboardGlucoseReading extends ConsumerWidget {
         const SizedBox(height: 10),
         // DÓŁ: Karta Wykresu (Glukoza)
         Container(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+          padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
           decoration: BoxDecoration(
             color: cardBg,
             borderRadius: BorderRadius.circular(18),
@@ -432,12 +432,12 @@ class DashboardGlucoseReading extends ConsumerWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 4),
               // Wykres z predykcją w stylu Loop
               CompactLoopGlucoseChart(
                 aapsPredictionsJson: aapsPredictionsJson,
                 readings: readings,
-                height: 120,
+                plotHeight: MediaQuery.sizeOf(context).height * 0.16,
                 isDark: isDark,
               ),
             ],

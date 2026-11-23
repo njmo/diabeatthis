@@ -9,6 +9,7 @@ import '../../../../common/meal/meal_category.dart';
 import '../../../../common/theme/app_design_tokens.dart';
 import '../../../../common/widgets/anchored_fab_menu.dart';
 import '../../../../common/widgets/fab_action_option.dart';
+import '../../../../common/widgets/responsive_bottom_sheet.dart';
 import '../../../../core/domain/model/meal.dart';
 import '../../../../core/logger/logger.dart';
 import '../../../activity/data/providers/activity_provider.dart';
@@ -104,7 +105,7 @@ class DashboardFAB extends HookConsumerWidget with Logging {
                     }
                     ref.read(mealDraftProvider.notifier).reset();
                     final mealIngredient =
-                        await showModalBottomSheet<MealIngredientsDraft>(
+                        await showResponsiveBottomSheet<MealIngredientsDraft>(
                           context: context,
                           useRootNavigator: false,
                           isScrollControlled: true,
@@ -165,7 +166,9 @@ class DashboardFAB extends HookConsumerWidget with Logging {
                   onTap: () async {
                     open.value = false;
                     final action =
-                        await showModalBottomSheet<DashboardActivityAction>(
+                        await showResponsiveBottomSheet<
+                          DashboardActivityAction
+                        >(
                           context: context,
                           useRootNavigator: false,
                           isScrollControlled: true,

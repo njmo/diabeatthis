@@ -55,8 +55,8 @@ void main() {
       );
       expect(find.text('━ IOB'), findsOneWidget);
       expect(find.text('━ COB'), findsNothing);
-      expect(find.text('+1h'), findsOneWidget);
-      expect(find.text('+2h'), findsOneWidget);
+      expect(find.text('+1h 30m'), findsOneWidget);
+      expect(find.text('+2h'), findsNothing);
       clockNow = now.add(const Duration(seconds: 1));
       await tester.pump(const Duration(seconds: 1));
       await tester.pump();
@@ -64,7 +64,7 @@ void main() {
         find.byKey(const ValueKey('aaps-prediction-legend')),
         findsNothing,
       );
-      expect(find.text('+1h'), findsNothing);
+      expect(find.text('+1h 30m'), findsNothing);
       expect(find.text('+2h'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
