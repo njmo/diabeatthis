@@ -1,0 +1,5 @@
+{
+  "platforms": ["android", "ios"],
+  "pl-PL": "Szybsze wczytywanie historii posiłków, zdjęć i rozmów rodzinnych. Poprawiono też utrzymywanie synchronizacji na iPhonie.",
+  "en-US": "Faster loading for meal history, photos, and family chat. Improved sync reliability on iPhone."
+}
