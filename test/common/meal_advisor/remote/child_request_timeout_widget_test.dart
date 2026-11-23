@@ -34,7 +34,7 @@ void main() {
           'mealName': 'Lunch',
           'createdAt': DateTime.now().millisecondsSinceEpoch,
           'deadline': DateTime.now()
-              .add(const Duration(seconds: 2))
+              .add(const Duration(minutes: 5))
               .millisecondsSinceEpoch,
           'status': 'waiting',
           'allowManualDecision': captured,
