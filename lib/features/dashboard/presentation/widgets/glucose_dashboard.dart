@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../common/devices/cgm_sensor_type.dart';
 import '../../../../common/devices/insulin_pump_type.dart';
 import '../../../../common/presentation/dashboard/glucose_freshness.dart';
+import '../../../../core/domain/model/device_status.dart';
 import '../../../../core/domain/model/glucose.dart';
 import '../../data/providers/time_now_provider.dart';
 import '../../data/utils/nightscout_utils.dart';
@@ -18,6 +19,7 @@ class GlucoseDashboard extends ConsumerWidget {
     this.pumpType,
     this.showDeviceCards = true,
     this.aapsPredictionsJson,
+    this.loopStatus,
   });
 
   final List<Glucose>? readings;
@@ -26,6 +28,7 @@ class GlucoseDashboard extends ConsumerWidget {
   final InsulinPumpType? pumpType;
   final bool showDeviceCards;
   final String? aapsPredictionsJson;
+  final DeviceStatus? loopStatus;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -50,6 +53,7 @@ class GlucoseDashboard extends ConsumerWidget {
         pumpType: pumpType,
         showDeviceCards: showDeviceCards,
         aapsPredictionsJson: aapsPredictionsJson,
+        loopStatus: loopStatus,
       ),
     );
   }

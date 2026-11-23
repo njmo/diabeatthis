@@ -1,0 +1,5 @@
+{
+  "platforms": ["android", "ios"],
+  "pl-PL": "IOB i COB na ekranie startowym obok glikemii. Zaplanowane aktywności opiekuna są dostępne w widoku aktywności.",
+  "en-US": "IOB and COB now appear next to glucose on the home screen. Caregivers can find planned activities in the activities view."
+}

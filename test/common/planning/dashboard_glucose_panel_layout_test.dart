@@ -1,5 +1,7 @@
+import 'package:diabeatthis/common/devices/presentation/pump_silhouette_icon.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
 import 'package:diabeatthis/common/presentation/dashboard/family_sync_ribbon.dart';
+import 'package:diabeatthis/common/presentation/dashboard/glucose_freshness_provider.dart';
 import 'package:diabeatthis/common/presentation/dashboard/nightscout_panel_view.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/features/dashboard/presentation/widgets/compact_loop_glucose_chart.dart';
@@ -11,7 +13,67 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../helpers/device_status_factory.dart';
+
 void main() {
+  for (final width in [320.0, 360.0]) {
+    testWidgets('loop metrics sit after glucose at width $width', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [dashboardWallClockProvider.overrideWithValue(() => now)],
+          child: MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SizedBox(
+                width: width,
+                child: DashboardGlucoseReading(
+                  value: 123,
+                  readingAt: now,
+                  readings: const [],
+                  color: Colors.green,
+                  trendIcon: Icons.trending_up,
+                  change: '+5',
+                  loopStatus: testDeviceStatus(
+                    date: now,
+                    iob: 0,
+                    cob: 10,
+                    tick: '+5',
+                    bg: 123,
+                  ).copyWith(hasCob: false),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final glucose = tester.getRect(
+        find.byKey(const ValueKey('glucose-current')),
+      );
+      final metrics = tester.getRect(
+        find.byKey(const ValueKey('dashboard-loop-metrics')),
+      );
+      final pump = tester.getRect(find.byType(PumpSilhouetteIcon));
+      expect(metrics.left, greaterThan(glucose.right));
+      expect(metrics.top, glucose.top);
+      if (width == 360) {
+        expect(pump.left, greaterThan(metrics.right));
+      } else {
+        expect(pump.top, greaterThan(metrics.bottom));
+      }
+      expect(find.text('0 U'), findsOneWidget);
+      expect(find.text('—'), findsWidgets);
+      expect(find.text('10 g'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
   testWidgets('sync status is inside chart header below the glucose value', (
     tester,
   ) async {
@@ -72,7 +134,9 @@ void main() {
     expect(find.text('Glukoza & Predykcja Loop'), findsNothing);
     expect(
       tester.getTopLeft(find.byType(LowTreatmentSuggestionCard)).dy,
-      greaterThanOrEqualTo(tester.getBottomLeft(find.byType(CompactLoopGlucoseChart)).dy),
+      greaterThanOrEqualTo(
+        tester.getBottomLeft(find.byType(CompactLoopGlucoseChart)).dy,
+      ),
     );
     expect(tester.takeException(), isNull);
   });

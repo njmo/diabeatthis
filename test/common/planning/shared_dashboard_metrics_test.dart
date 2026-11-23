@@ -1,5 +1,4 @@
 import 'package:diabeatthis/common/l10n/language.dart';
-import 'package:diabeatthis/common/widgets/nutrition_metric_tile.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/core/drift/providers/database_provider.dart';
 import 'package:diabeatthis/features/caregiver/data/caregiver_nightscout_snapshot.dart';
@@ -22,7 +21,7 @@ void main() {
   for (final dark in [false, true]) {
     for (final hasGlucose in [false, true]) {
       testWidgets(
-        'shared caregiver dashboard keeps CGM source without IOB/COB: dark=$dark glucose=$hasGlucose',
+        'shared caregiver dashboard keeps its CGM source and shows IOB/COB: dark=$dark glucose=$hasGlucose',
         (tester) async {
           final now = DateTime.now();
           final device = testDeviceStatus(
@@ -81,8 +80,10 @@ void main() {
             find.byType(DashboardGlucoseReading),
           );
           expect(reading.value, hasGlucose ? 123 : null);
-          // IOB and COB are not part of the dashboard for any role.
-          expect(find.byType(NutritionMetricTile), findsNothing);
+          expect(find.text('IOB'), findsOneWidget);
+          expect(find.text('1 U'), findsOneWidget);
+          expect(find.text('COB'), findsOneWidget);
+          expect(find.text('2 g'), findsOneWidget);
           expect(tester.takeException(), isNull);
         },
       );
