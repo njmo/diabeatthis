@@ -104,6 +104,19 @@ void main() {
             'duration_minutes': null,
           },
         },
+        'activityOccurrences/2': {
+          'kind': 'activityOccurrences',
+          'id': '2',
+          'payload': {
+            'id': 2,
+            'activity_id': 1,
+            'status': 'planned',
+            'started_at': start
+                .add(const Duration(hours: 1))
+                .millisecondsSinceEpoch,
+            'duration_minutes': 30,
+          },
+        },
       });
       page.changed();
       await tester.pumpAndSettle();
@@ -124,6 +137,7 @@ void main() {
       expect(progress, findsOneWidget);
       expect(range, findsOneWidget);
       expect(find.byType(FamilyPlannedActivityCard), findsNothing);
+      expect(find.text(lang.familySyncActivityOccurrences), findsNothing);
       expect(find.text(lang.dashboardPlannedActivityTitle), findsOneWidget);
       expect(
         tester

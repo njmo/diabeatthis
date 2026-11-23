@@ -410,7 +410,6 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
   ].contains(widget.view);
   bool get showActivities => [
     FamilyPlanningView.all,
-    FamilyPlanningView.home,
     FamilyPlanningView.activities,
   ].contains(widget.view);
   bool get showRequests => [
@@ -593,7 +592,8 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
           : widget.view == FamilyPlanningView.activities
           ? !(plan['type'] as String).endsWith('Meal')
           : widget.view != FamilyPlanningView.home ||
-                plan['status'] != 'applied');
+                ((plan['type'] as String).endsWith('Meal') &&
+                    plan['status'] != 'applied'));
   bool get enabled =>
       controller.complete &&
       !controller.failed &&
@@ -1057,19 +1057,11 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
             ],
             if (showActivities &&
                 (occurrences.isNotEmpty || historyLogs.isNotEmpty)) ...[
-              if (!homeLayout) const SizedBox(height: 16),
-              if (homeLayout && occurrences.isNotEmpty)
-                DashboardCardPadding(
-                  enabled: true,
-                  child: MealProgressSectionHeading(
-                    title: context.lang.familySyncActivityOccurrences,
-                  ),
-                )
-              else if (widget.view != FamilyPlanningView.home)
-                Text(
-                  context.lang.familySyncActivityOccurrences,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+              const SizedBox(height: 16),
+              Text(
+                context.lang.familySyncActivityOccurrences,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               for (final row in occurrences)
                 DashboardCardPadding(
                   enabled: homeLayout,
