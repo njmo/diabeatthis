@@ -17,61 +17,73 @@ import '../../helpers/device_status_factory.dart';
 
 void main() {
   for (final width in [320.0, 360.0]) {
-    testWidgets('loop metrics sit after glucose at width $width', (
-      tester,
-    ) async {
-      final now = DateTime.now();
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [dashboardWallClockProvider.overrideWithValue(() => now)],
-          child: MaterialApp(
-            locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: SizedBox(
-                width: width,
-                child: DashboardGlucoseReading(
-                  value: 123,
-                  readingAt: now,
-                  readings: const [],
-                  color: Colors.green,
-                  trendIcon: Icons.trending_up,
-                  change: '+5',
-                  loopStatus: testDeviceStatus(
-                    date: now,
-                    iob: 0,
-                    cob: 10,
-                    tick: '+5',
-                    bg: 123,
-                  ).copyWith(hasCob: false),
+    testWidgets(
+      'loop metrics sit beside sync status above the chart at width $width',
+      (tester) async {
+        final now = DateTime.now();
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              dashboardWallClockProvider.overrideWithValue(() => now),
+            ],
+            child: MaterialApp(
+              locale: const Locale('en'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: SizedBox(
+                  width: width,
+                  child: NightscoutPanelView(
+                    lastUpdate: '1 min',
+                    syncRibbon: const FamilySyncRibbon(
+                      compact: true,
+                      busy: false,
+                      failed: false,
+                      ready: true,
+                    ),
+                    readings: DashboardGlucoseReading(
+                      value: 123,
+                      readingAt: now,
+                      readings: const [],
+                      color: Colors.green,
+                      trendIcon: Icons.trending_up,
+                      change: '+5',
+                      loopStatus: testDeviceStatus(
+                        date: now,
+                        iob: 0,
+                        cob: 10,
+                        tick: '+5',
+                        bg: 123,
+                      ).copyWith(hasCob: false),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      final glucose = tester.getRect(
-        find.byKey(const ValueKey('glucose-current')),
-      );
-      final metrics = tester.getRect(
-        find.byKey(const ValueKey('dashboard-loop-metrics')),
-      );
-      final pump = tester.getRect(find.byType(PumpSilhouetteIcon));
-      expect(metrics.left, greaterThan(glucose.right));
-      expect(metrics.top, glucose.top);
-      if (width == 360) {
-        expect(pump.left, greaterThan(metrics.right));
-      } else {
-        expect(pump.top, greaterThan(metrics.bottom));
-      }
-      expect(find.text('0 U'), findsOneWidget);
-      expect(find.text('—'), findsWidgets);
-      expect(find.text('10 g'), findsNothing);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
+        );
+        await tester.pumpAndSettle();
+        final glucose = tester.getRect(
+          find.byKey(const ValueKey('glucose-current')),
+        );
+        final metrics = tester.getRect(
+          find.byKey(const ValueKey('dashboard-loop-metrics')),
+        );
+        final pump = tester.getRect(find.byType(PumpSilhouetteIcon));
+        final sync = tester.getRect(find.byType(FamilySyncRibbon));
+        final chart = tester.getRect(find.byType(CompactLoopGlucoseChart));
+        expect(pump.left, greaterThan(glucose.right));
+        expect(pump.bottom, lessThan(glucose.bottom));
+        expect(metrics.left, greaterThan(sync.right));
+        expect(metrics.top, greaterThan(glucose.bottom));
+        expect(metrics.bottom, lessThan(chart.top));
+        expect(find.text('IOB 0 U'), findsOneWidget);
+        expect(find.text('COB —'), findsOneWidget);
+        expect(find.text('COB 10 g'), findsNothing);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
   }
 
   testWidgets('sync status is inside chart header below the glucose value', (

@@ -105,9 +105,8 @@ void main() {
         () => scenario(tester, (harness, transport) async {
           await send(tester, harness, reading());
           expect(find.byType(DeviceStatusDashboard), findsOneWidget);
-          expect(find.text('IOB'), findsOneWidget);
-          expect(find.text('1,25 j.'), findsOneWidget);
-          expect(find.text('8,5 g'), findsOneWidget);
+          expect(find.text('IOB 1,25 j.'), findsOneWidget);
+          expect(find.text('COB 8,5 g'), findsOneWidget);
           expect(
             harness.foregroundContainer.read(deviceStatusValueProvider)?.iob,
             1.25,

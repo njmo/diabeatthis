@@ -80,10 +80,8 @@ void main() {
             find.byType(DashboardGlucoseReading),
           );
           expect(reading.value, hasGlucose ? 123 : null);
-          expect(find.text('IOB'), findsOneWidget);
-          expect(find.text('1 U'), findsOneWidget);
-          expect(find.text('COB'), findsOneWidget);
-          expect(find.text('2 g'), findsOneWidget);
+          expect(find.text('IOB 1 U'), findsOneWidget);
+          expect(find.text('COB 2 g'), findsOneWidget);
           expect(tester.takeException(), isNull);
         },
       );
