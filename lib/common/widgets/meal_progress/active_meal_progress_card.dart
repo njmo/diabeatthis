@@ -22,6 +22,9 @@ class ActiveMealProgressCard extends StatelessWidget {
     this.addFoodLabel,
     this.progressAction,
     this.treatmentSurplus = false,
+    this.bolusWarnings = const [],
+    this.waitingForBolus = false,
+    this.waitingForBolusConfirmation = false,
   });
 
   final String name;
@@ -40,6 +43,9 @@ class ActiveMealProgressCard extends StatelessWidget {
   final String? addFoodLabel;
   final Widget? progressAction;
   final bool treatmentSurplus;
+  final List<String> bolusWarnings;
+  final bool waitingForBolus;
+  final bool waitingForBolusConfirmation;
 
   @override
   Widget build(BuildContext context) {
@@ -168,9 +174,22 @@ class ActiveMealProgressCard extends StatelessWidget {
             const SizedBox(height: 10),
             // Paski kroków (steps)
             steps,
+            if (waitingForBolus) ...[
+              const SizedBox(height: 8),
+              Text(
+                waitingForBolusConfirmation
+                    ? context.lang.mealWaitingForDeliveryConfirmation
+                    : context.lang.uiWaitingForABolus,
+                style: TextStyle(fontSize: 12, color: mutedColor),
+              ),
+            ],
             if (treatmentSurplus) ...[
               const SizedBox(height: 8),
               const MealTreatmentSurplusWarning(),
+            ],
+            for (final message in bolusWarnings) ...[
+              const SizedBox(height: 8),
+              MealTreatmentSurplusWarning(message: message),
             ],
             if (progressAction != null) ...[
               const SizedBox(height: 8),

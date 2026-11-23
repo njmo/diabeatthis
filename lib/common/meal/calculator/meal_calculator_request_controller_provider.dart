@@ -10,6 +10,8 @@ import '../../../core/logger/logger.dart';
 import '../../../core/notifications/domain/models/notification_event_type.dart';
 import '../../../core/notifications/domain/models/notification_key.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
+import '../../../foreground/providers/task_event_router_provider.dart';
+import '../../events/data/task/task_state_synchronization_payload.dart';
 import '../../notifications/scoped_notification_cancellation.dart';
 import '../meal_treatment_surplus.dart';
 import 'meal_calculator_request_controller.dart';
@@ -51,6 +53,12 @@ final mealCalculatorRequestControllerProvider =
         readAcceptedWizards: (id, since, carbs) async =>
             stateUseCase()?.readAcceptedWizards(id, since, carbs),
         closeWindow: const CalculatorHandoff().dismiss,
+        onEntriesChanged: () {
+          if (!ref.mounted) return;
+          ref
+              .read(taskEventRouterProvider)
+              .send(const TaskStateSynchronizationPayload.mealWaitChanged());
+        },
         onComplete: (id) async {
           if (!ref.mounted) return;
           await ref

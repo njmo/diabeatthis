@@ -3329,6 +3329,8 @@
   "mealProgressEating": "Jedzenie",
   "mealProgressWaitRemaining": "Do końca oczekiwania",
   "mealWaitPendingExtendedCarbs": "Czekamy na eCarbs",
+  "mealBolusBelowCalculator": "Podano {delivered} j. z {recommended} j. wyliczonych przez kalkulator",
+  "@mealBolusBelowCalculator": {"placeholders": {"delivered": {"type": "String"}, "recommended": {"type": "String"}}},
   "mealTreatmentSurplus": "Podano więcej niż oczekiwano",
   "mealProgressWaitElapsed": "Czas oczekiwania minął",
   "mealProgressInterrupt": "Przerwij obsługę posiłku",

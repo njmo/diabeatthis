@@ -35,7 +35,9 @@ class MealCalculatorRequest {
       event.mealId == mealId && contextRequestedAt == addOnRequestedAt;
 
   HandoffProgress get progress => HandoffProgress({
-    MealHandoffInstruction.bolusAction: tracker.bolusConfirmed,
+    // The PiP row acknowledges the calculator entry as soon as it matches.
+    MealHandoffInstruction.bolusAction:
+        tracker.carbsEntered || tracker.bolusConfirmed,
     if (event.extendedCarbs > 0)
       MealHandoffInstruction.extendedCarbsAction:
           tracker.extendedCarbsConfirmed,

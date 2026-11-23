@@ -45,7 +45,26 @@ void main() {
     );
   });
 
-  test('both delivery orders produce one submission with actual insulin', () {
+  test('an earlier delivery timestamp cannot confirm the calculator', () {
+    final earlier = delivery.copyWith(
+      createdAt: wizard.createdAt.subtract(const Duration(milliseconds: 250)),
+      insulin: wizard.insulin,
+    );
+    cache.record(wizard);
+    cache.record(earlier);
+    expect(
+      container.read(calculatorSubmissionsProvider).single.deliveredInsulin,
+      isNull,
+    );
+
+    cache.record(delivery);
+    expect(
+      container.read(calculatorSubmissionsProvider).single.delivery,
+      delivery,
+    );
+  });
+
+  test('both arrival orders produce one submission with actual insulin', () {
     for (final input in <List<Treatment>>[
       [wizard, delivery],
       [delivery, wizard],
@@ -64,6 +83,37 @@ void main() {
       local.dispose();
     }
   });
+
+  test('next bolus at 50 seconds confirms the recorded smaller dose', () {
+    final delayed = delivery.copyWith(
+      createdAt: wizard.createdAt.add(const Duration(seconds: 50)),
+    );
+    cache.record(wizard);
+    cache.record(delayed);
+    expect(
+      container.read(calculatorSubmissionsProvider).single.delivery,
+      delayed,
+    );
+  });
+
+  test(
+    'an intervening calculator prevents a late bolus from confirming the earlier one',
+    () {
+      final next = wizard.copyWith(
+        nightscoutObjectId: 'next',
+        createdAt: wizard.createdAt.add(const Duration(seconds: 48)),
+      );
+      final delayed = delivery.copyWith(
+        createdAt: wizard.createdAt.add(const Duration(seconds: 50)),
+      );
+      cache.record(wizard);
+      cache.record(next);
+      cache.record(delayed);
+      final submissions = container.read(calculatorSubmissionsProvider);
+      expect(submissions.first.delivery, isNull);
+      expect(submissions.last.delivery, delayed);
+    },
+  );
 
   test('replayed records do not emit redundant submission changes', () {
     cache.record(wizard);

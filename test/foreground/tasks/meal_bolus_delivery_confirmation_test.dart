@@ -179,7 +179,7 @@ void main() {
           expect(updates, isEmpty);
           final delivery = ManualBolus(
             externalId: 'actual-delivery',
-            createdAt: start.add(const Duration(milliseconds: 830)),
+            createdAt: start.add(const Duration(seconds: 50)),
             insulin: 3,
           );
           harness.dispatchEvent(TreatmentAvailableEvent<ManualBolus>(delivery));

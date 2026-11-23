@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:clock/clock.dart';
+import 'package:flutter/foundation.dart' show setEquals;
 
 import '../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
 import '../meal_add_on_bolus_context.dart';
+import 'meal_calculator_entries_provider.dart';
 import 'meal_calculator_request.dart';
 import 'meal_calculator_request_store.dart';
 
@@ -18,6 +20,7 @@ class MealCalculatorRequestController {
     this.isMealRelevant,
     this.closeWindow,
     this.onComplete,
+    this.onEntriesChanged,
     this.onTreatmentSurplus,
     this.readAcceptedWizards,
     this.readExtendedReceipts,
@@ -34,6 +37,8 @@ class MealCalculatorRequestController {
   final Future<bool> Function(int)? isMealRelevant;
   final Future<void> Function(String)? closeWindow;
   final Future<void> Function(int)? onComplete;
+  final void Function()? onEntriesChanged;
+  Set<int> _savedEntries = const {};
   final Future<void> Function(int)? onTreatmentSurplus;
   final Future<List<int>?> Function(int, DateTime, int)? readAcceptedWizards;
   final Future<List<Map<String, dynamic>>> Function(DateTime, DateTime)?
@@ -333,10 +338,15 @@ class MealCalculatorRequestController {
     }
   }
 
-  Future<void> _save() {
-    if (_disposed) return Future.value();
-    return store.write(
+  Future<void> _save() async {
+    if (_disposed) return;
+    await store.write(
       _requests.values.map((request) => request.toJson()).toList(),
     );
+    final entries = recordedMealCalculatorEntries(_requests.values);
+    if (!_disposed && !setEquals(entries, _savedEntries)) {
+      _savedEntries = entries;
+      onEntriesChanged?.call();
+    }
   }
 }

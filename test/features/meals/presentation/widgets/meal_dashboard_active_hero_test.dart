@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:diabeatthis/common/l10n/language.dart';
+import 'package:diabeatthis/common/meal/calculator/meal_calculator_entries_provider.dart';
 import 'package:diabeatthis/common/meal/meal_progress_plan.dart';
 import 'package:diabeatthis/common/widgets/meal_progress/active_meal_progress_card.dart';
 import 'package:diabeatthis/common/widgets/meal_progress/meal_interruption_dialog.dart';
@@ -37,12 +40,17 @@ void main() {
     WidgetTester tester, {
     required List<Meal> meals,
     Meal? blockingMeal,
+    Future<Set<int>>? calculatorEntries,
   }) async {
     final active = blockingMeal ?? firstMealBlockingActivation(meals);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           parentModeProvider.overrideWithValue(false),
+          if (calculatorEntries != null)
+            mealCalculatorEntriesProvider.overrideWith(
+              (ref) => calculatorEntries,
+            ),
           timeNowProvider.overrideWithValue(AsyncData(now)),
           anyMealBlockingActivationProvider.overrideWith(
             (ref) => Stream.value(blockingMeal),
@@ -74,6 +82,57 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets(
+    'recorded calculator replaces its launch action with manual confirmation',
+    (tester) async {
+      final calculatorEntries = Completer<Set<int>>();
+      await showMeals(
+        tester,
+        meals: [
+          Meal(
+            id: 7,
+            name: 'Dinner',
+            status: 'waiting-for-bolus',
+            plannedAt: now,
+          ),
+        ],
+        calculatorEntries: calculatorEntries.future,
+      );
+      expect(
+        find.widgetWithText(FilledButton, lang.mealProgressOpenCalculator),
+        findsOneWidget,
+      );
+      expect(find.text(lang.mealWaitingForDeliveryConfirmation), findsNothing);
+
+      calculatorEntries.complete({7});
+      await tester.pumpAndSettle();
+      expect(find.text(lang.mealProgressOpenCalculator), findsNothing);
+      expect(
+        find.text(lang.mealWaitingForDeliveryConfirmation),
+        findsOneWidget,
+      );
+      final confirmation = find.widgetWithText(
+        FilledButton,
+        lang.mealProgressContinueWithoutBolusLinkTitle,
+      );
+      expect(confirmation, findsOneWidget);
+      await tester.ensureVisible(confirmation);
+      await tester.tap(confirmation);
+      await tester.pumpAndSettle();
+      expect(
+        find.text(lang.mealProgressContinueWithoutBolusLinkBody),
+        findsOneWidget,
+      );
+      await tester.tap(find.text(lang.commonCancel));
+      await tester.pumpAndSettle();
+      expect(confirmation, findsOneWidget);
+      expect(
+        find.text(lang.mealWaitingForDeliveryConfirmation),
+        findsOneWidget,
+      );
+    },
+  );
 
   ListTile mealTile(WidgetTester tester, String name) =>
       tester.widget<ListTile>(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../common/events/data/task/task_in_app_notification_payload.dart';
 import '../../../common/events/data/task/task_state_synchronization_payload.dart';
+import '../../../common/meal/calculator/meal_calculator_entries_provider.dart';
 import '../../../common/meal/open_meal_completion.dart';
 import '../../../common/meal/pending_meal_completion_recovery.dart';
 import '../../../common/meal/pending_meal_completion_requests.dart';
@@ -114,7 +115,10 @@ class TaskEventHandler with Logging {
         payload.when(
           carbsRequestChanged: () =>
               _ref.invalidate(lowTreatmentSuggestionVisibilityProvider),
-          mealWaitChanged: () => _ref.invalidate(mealWaitStatusProvider),
+          mealWaitChanged: () {
+            _ref.invalidate(mealWaitStatusProvider);
+            _ref.invalidate(mealCalculatorEntriesProvider);
+          },
           alive: (data) {
             _ref.read(foregroundTaskStateProvider.notifier).setAlive(data);
           },
@@ -130,6 +134,7 @@ class TaskEventHandler with Logging {
   }
 
   void retryPendingUiActions() {
+    _ref.invalidate(mealCalculatorEntriesProvider);
     _ref.invalidate(mealWaitStatusProvider);
     _ref.invalidate(lowTreatmentSuggestionVisibilityProvider);
     _lowTreatmentLauncher.retryPending();
