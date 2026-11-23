@@ -186,6 +186,7 @@ class CompleteMealUseCase {
         hasRecordedBolus: coverage.hasRecordedBolus,
         awaitingBolus:
             meal.status == 'eating-then-bolus' ||
+            coverage.hasAcceptedCalculator ||
             (addOn?.awaitingBolus ?? false),
       );
       final alreadyEnded = mealStatusReadyToSummarize(meal.status);

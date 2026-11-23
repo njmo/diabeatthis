@@ -42,6 +42,7 @@ class LocalMirrorWriter with Logging {
     final accepted = <Treatment>[];
     final rejectedWizards = <BolusWizard>{};
     final invalidatedDeliveries = <ManualBolus>[];
+    final pendingBoluses = <ManualBolus>[];
     for (final treatment in batch) {
       switch (treatment) {
         case BgCheck():
@@ -83,19 +84,7 @@ class LocalMirrorWriter with Logging {
             await _dao.deleteCorrectionBolusByCreatedAt(treatment.createdAt);
           }
         case ManualBolus():
-          if (treatment.isValid) {
-            await _dao.upsertManualBolus(treatment.toCompanion(source));
-          } else {
-            invalidatedDeliveries.addAll([
-              treatment,
-              for (final stored in await _dao.getManualBolusesBetween(
-                treatment.createdAt,
-                treatment.createdAt,
-              ))
-                stored.toDomain(),
-            ]);
-            await _dao.deleteManualBolusByCreatedAt(treatment.createdAt);
-          }
+          pendingBoluses.add(treatment);
         case Treat():
           // Decide after calculator and delivery records have been persisted.
           accepted.add(treatment);
@@ -110,6 +99,27 @@ class LocalMirrorWriter with Logging {
           continue;
       }
       accepted.add(treatment);
+    }
+    for (final bolus in pendingBoluses) {
+      if (bolus.isValid) {
+        await _dao.upsertManualBolus(bolus.toCompanion(source));
+      } else {
+        invalidatedDeliveries.addAll([
+          bolus,
+          for (final stored in await _dao.getManualBolusesBetween(
+            bolus.createdAt,
+            bolus.createdAt,
+          ))
+            stored.toDomain(),
+        ]);
+        await _dao.deleteManualBolusByCreatedAt(bolus.createdAt);
+      }
+      Log.diagnostic(
+        'AapsTreatmentTrace',
+        'mirror type=ManualBolus at=${bolus.createdAt.millisecondsSinceEpoch} '
+            'source=${source.storageValue} '
+            'decision=${bolus.isValid ? 'upsertStandalone' : 'deleteInvalid'}',
+      );
     }
     final invalidatedWizards = <int, BolusWizard>{};
     for (final delivery in invalidatedDeliveries) {
@@ -154,6 +164,13 @@ class LocalMirrorWriter with Logging {
           rejectedComponents.add(component);
         }
       }
+    }
+    for (final component in rejectedComponents) {
+      Log.diagnostic(
+        'AapsTreatmentTrace',
+        'mirror type=Treat at=${component.createdAt.millisecondsSinceEpoch} '
+            'source=${source.storageValue} decision=skipWizardIdentityConflict',
+      );
     }
     accepted.removeWhere(rejectedComponents.contains);
     final reconciledBatch = batch

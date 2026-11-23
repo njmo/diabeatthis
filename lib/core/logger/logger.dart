@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:developer' as dev;
 import 'dart:io';
 
+import 'package:calculator_handoff/calculator_handoff.dart';
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 enum LogLevel { debug, info, warning, error }
@@ -47,9 +50,13 @@ class LogRuntimeConfig {
   static int maxEntries = 500;
   static bool isUnitTestEnv = false;
 
-  static void configure({required bool enableBuffer, int? capacity, bool? isUnitTest}) {
+  static void configure({
+    required bool enableBuffer,
+    int? capacity,
+    bool? isUnitTest,
+  }) {
     bufferEnabled = enableBuffer;
-    if(isUnitTest != null) isUnitTestEnv = isUnitTest;
+    if (isUnitTest != null) isUnitTestEnv = isUnitTest;
     if (capacity != null) {
       maxEntries = capacity;
       LogBuffer.instance.resize(capacity);
@@ -92,6 +99,10 @@ class Log {
     _log(LogLevel.info, tag, msg);
   }
 
+  static void diagnostic(String tag, String msg) {
+    _log(LogLevel.info, tag, msg, logcat: true);
+  }
+
   static void w(String tag, String msg) {
     _log(LogLevel.warning, tag, msg);
   }
@@ -105,12 +116,23 @@ class Log {
     _log(LogLevel.error, tag, msg, error: error, stackTrace: stackTrace);
   }
 
+  static Future<void> _saveDiagnostic(String line) async {
+    try {
+      await const CalculatorHandoff().appendAapsDiagnostic(line);
+    } on MissingPluginException {
+      // An engine without the Android plugin can still use Logcat.
+    } on PlatformException catch (error) {
+      debugPrint('Could not save Android diagnostic: ${error.code}');
+    }
+  }
+
   static void _log(
     LogLevel level,
     String tag,
     String message, {
     Object? error,
     StackTrace? stackTrace,
+    bool logcat = false,
   }) {
     final entry = LogEntry(
       time: clock.now(),
@@ -121,12 +143,21 @@ class Log {
       stackTrace: stackTrace?.toString(),
     );
 
+    // Diagnostics explicitly routed to Logcat are visible in release builds.
+    if (logcat) {
+      final line = entry.toLine();
+      debugPrint(line);
+      if (Platform.isAndroid && !LogRuntimeConfig.isUnitTestEnv) {
+        unawaited(_saveDiagnostic(line));
+      }
+    }
+
     // 1. Debug logging do DevTools / logcat
     assert(() {
+      if (logcat) return true;
       if (kDebugMode) {
         print(entry.toLine());
-      }
-      else {
+      } else {
         dev.log(
           entry.toLine(),
           name: tag,
@@ -176,6 +207,16 @@ mixin Logging {
 }
 
 class LogFileWriter {
+  static Future<File?> exportAapsDiagnostics() async {
+    if (!Platform.isAndroid) return null;
+    try {
+      final path = await const CalculatorHandoff().exportAapsDiagnostics();
+      return path == null ? null : File(path);
+    } on MissingPluginException {
+      return null;
+    }
+  }
+
   static Future<File> writeLogs(List<LogEntry> logs, String fileName) async {
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}/$fileName');

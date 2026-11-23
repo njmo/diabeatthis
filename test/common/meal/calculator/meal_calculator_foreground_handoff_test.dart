@@ -206,14 +206,22 @@ void main() {
         'insulin': null,
       }, DateTime.utc(2026, 11, 23, 18, 49, 50, 502));
 
-      expect(
-        harness.emittedEvents
-            .whereType<TreatmentAvailableEvent<Treat>>()
-            .single
-            .data
-            .carbs,
-        31,
-      );
+      final standaloneCarbs = harness.emittedEvents
+          .whereType<TreatmentAvailableEvent<Treat>>();
+      if (scenario.wizard) {
+        expect(standaloneCarbs, isEmpty);
+        expect(
+          container
+              .read(calculatorSubmissionsProvider)
+              .single
+              .wizard
+              .carbohydrateRecord
+              ?.carbs,
+          31,
+        );
+      } else {
+        expect(standaloneCarbs.single.data.carbs, 31);
+      }
       if (scenario.late) {
         expect(rows.last, [true]);
         await receiveDelivery(1.5, DateTime.utc(2026, 11, 23, 18, 49, 51));

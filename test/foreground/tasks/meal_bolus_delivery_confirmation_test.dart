@@ -113,22 +113,98 @@ void main() {
     container.dispose();
   });
 
+  test('wizard advances the meal before the late recorded bolus appears', () {
+    fakeAsync((async) {
+      final start = DateTime.utc(2026, 1, 1, 12);
+      withClock(Clock(() => start.add(async.elapsed)), () {
+        final wizard = testBolusWizard(
+          createdAt: start,
+          carbs: 48,
+          insulin: 44.7,
+        );
+        final meal = Meal(
+          id: 91,
+          name: 'Meal',
+          status: 'waiting-for-bolus',
+          carbs: 48,
+        );
+        final updates = <String>[];
+        final container = ProviderContainer(
+          overrides: [
+            mealWizardRecorderProvider.overrideWithValue((_, _, _) async {}),
+            mealBolusDeliveryHistoryProvider.overrideWithValue((_) async => []),
+            notificationsControllerForegroundProvider.overrideWithValue(
+              FakeNotificationsController(),
+            ),
+            getMealAdviceProvider(meal).overrideWithValue(
+              AsyncData(
+                MealAdvice.full(MealDecision.eatNowBolusLater, null, start),
+              ),
+            ),
+            updateMealProvider.overrideWith((ref, args) async {
+              updates.add(args.$2);
+            }),
+          ],
+        );
+        container.read(latestBolusWizardProvider.notifier).update(wizard);
+        final harness = FakeRuntimeHarness(container: container);
+        MealMonitorStateExecutor? next;
+        WaitForBolusExecutor()
+            .execute(
+              harness.runtimeContext,
+              MealMonitorContext(activeMeal: meal),
+            )
+            .then((value) {
+              next = value;
+            });
+        async.flushMicrotasks();
+        expect(updates, ['eaten-bolused']);
+        expect(next, isA<FinalizeMealExecutor>());
+        expect(
+          harness.emittedEvents
+              .whereType<MealMonitoringStatusChanged>()
+              .last
+              .status
+              .phase,
+          MealMonitoringPhase.waitingForBolus,
+        );
+
+        async.elapse(const Duration(minutes: 2));
+        harness.dispatchTick(clock.now());
+        async.flushMicrotasks();
+        expect(updates, ['eaten-bolused']);
+        final delivery = ManualBolus(
+          externalId: 'actual-delivery',
+          createdAt: start.add(const Duration(seconds: 50)),
+          insulin: 3,
+        );
+        harness.dispatchEvent(TreatmentAvailableEvent<ManualBolus>(delivery));
+        async.flushMicrotasks();
+        expect(updates, ['eaten-bolused']);
+        expect(next, isA<FinalizeMealExecutor>());
+        harness.cancel();
+        async.flushMicrotasks();
+        container.dispose();
+      });
+    });
+  });
+
   test(
-    'wizard alone remains pending until actual delivery arrives minutes later',
+    'insulin records cannot advance a meal without an eligible calculator',
     () {
       fakeAsync((async) {
         final start = DateTime.utc(2026, 1, 1, 12);
-        withClock(Clock(() => start.add(async.elapsed)), () {
+        withClock(Clock.fixed(start), () {
           final wizard = testBolusWizard(
             createdAt: start,
-            carbs: 48,
-            insulin: 44.7,
-          );
+            carbs: 13,
+            insulin: 24.2,
+          ).copyWith(isValid: false);
           final meal = Meal(
-            id: 91,
+            id: 92,
             name: 'Meal',
             status: 'waiting-for-bolus',
-            carbs: 48,
+            carbs: 13,
           );
           final updates = <String>[];
           final container = ProviderContainer(
@@ -152,119 +228,45 @@ void main() {
           );
           container.read(latestBolusWizardProvider.notifier).update(wizard);
           final harness = FakeRuntimeHarness(container: container);
-          MealMonitorStateExecutor? next;
+          var cancelled = false;
           WaitForBolusExecutor()
               .execute(
                 harness.runtimeContext,
                 MealMonitorContext(activeMeal: meal),
               )
-              .then((value) {
-                next = value;
+              .catchError((Object error) {
+                if (error is! TaskCancelledException) throw error;
+                cancelled = true;
+                return FinalizeMealExecutor();
               });
           async.flushMicrotasks();
+          for (final delivery in [
+            ManualBolus(externalId: 'zero', createdAt: start, insulin: 0),
+            ManualBolus(
+              externalId: 'invalid',
+              createdAt: start,
+              insulin: 3,
+              isValid: false,
+            ),
+            ManualBolus(
+              externalId: 'unrelated',
+              createdAt: start.add(const Duration(minutes: 1)),
+              insulin: 3,
+            ),
+          ]) {
+            harness.dispatchEvent(
+              TreatmentAvailableEvent<ManualBolus>(delivery),
+            );
+            async.flushMicrotasks();
+          }
           expect(updates, isEmpty);
-          expect(next, isNull);
-          expect(
-            harness.emittedEvents
-                .whereType<MealMonitoringStatusChanged>()
-                .last
-                .status
-                .phase,
-            MealMonitoringPhase.waitingForDeliveryConfirmation,
-          );
-
-          async.elapse(const Duration(minutes: 2));
-          harness.dispatchTick(clock.now());
-          async.flushMicrotasks();
-          expect(updates, isEmpty);
-          final delivery = ManualBolus(
-            externalId: 'actual-delivery',
-            createdAt: start.add(const Duration(seconds: 50)),
-            insulin: 3,
-          );
-          harness.dispatchEvent(TreatmentAvailableEvent<ManualBolus>(delivery));
-          async.flushMicrotasks();
-          expect(updates, ['eaten-bolused']);
-          expect(next, isA<FinalizeMealExecutor>());
           harness.cancel();
           async.flushMicrotasks();
+          expect(cancelled, isTrue);
+          expect(updates, isEmpty);
           container.dispose();
         });
       });
     },
   );
-
-  test('unconfirmed or invalid delivery cannot finalize a cancelled wait', () {
-    fakeAsync((async) {
-      final start = DateTime.utc(2026, 1, 1, 12);
-      withClock(Clock.fixed(start), () {
-        final wizard = testBolusWizard(
-          createdAt: start,
-          carbs: 13,
-          insulin: 24.2,
-        );
-        final meal = Meal(
-          id: 92,
-          name: 'Meal',
-          status: 'waiting-for-bolus',
-          carbs: 13,
-        );
-        final updates = <String>[];
-        final container = ProviderContainer(
-          overrides: [
-            mealWizardRecorderProvider.overrideWithValue((_, _, _) async {}),
-            mealBolusDeliveryHistoryProvider.overrideWithValue((_) async => []),
-            notificationsControllerForegroundProvider.overrideWithValue(
-              FakeNotificationsController(),
-            ),
-            getMealAdviceProvider(meal).overrideWithValue(
-              AsyncData(
-                MealAdvice.full(MealDecision.eatNowBolusLater, null, start),
-              ),
-            ),
-            updateMealProvider.overrideWith((ref, args) async {
-              updates.add(args.$2);
-            }),
-          ],
-        );
-        container.read(latestBolusWizardProvider.notifier).update(wizard);
-        final harness = FakeRuntimeHarness(container: container);
-        var cancelled = false;
-        WaitForBolusExecutor()
-            .execute(
-              harness.runtimeContext,
-              MealMonitorContext(activeMeal: meal),
-            )
-            .catchError((Object error) {
-              if (error is! TaskCancelledException) throw error;
-              cancelled = true;
-              return FinalizeMealExecutor();
-            });
-        async.flushMicrotasks();
-        for (final delivery in [
-          ManualBolus(externalId: 'zero', createdAt: start, insulin: 0),
-          ManualBolus(
-            externalId: 'invalid',
-            createdAt: start,
-            insulin: 3,
-            isValid: false,
-          ),
-          ManualBolus(
-            externalId: 'unrelated',
-            createdAt: start.add(const Duration(minutes: 1)),
-            insulin: 3,
-          ),
-        ]) {
-          harness.dispatchEvent(TreatmentAvailableEvent<ManualBolus>(delivery));
-          async.flushMicrotasks();
-        }
-        expect(updates, isEmpty);
-        harness.cancel();
-        async.flushMicrotasks();
-        expect(cancelled, isTrue);
-        expect(updates, isEmpty);
-        container.dispose();
-      });
-    });
-  });
 }

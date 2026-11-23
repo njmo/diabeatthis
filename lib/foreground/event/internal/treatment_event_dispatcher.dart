@@ -30,58 +30,123 @@ class TreatmentEventDispatcher with Logging {
     required ProviderContainer container,
     required ForegroundEventEmitter emitEvent,
     required Treatment treatment,
+  }) => dispatchBatch(
+    container: container,
+    emitEvent: emitEvent,
+    treatments: [treatment],
+  );
+
+  void dispatchBatch({
+    required ProviderContainer container,
+    required ForegroundEventEmitter emitEvent,
+    required Iterable<Treatment> treatments,
   }) {
-    logI(
-      "${treatment.runtimeType} treatment available at "
-      "${treatment.createdAt?.toIso8601String()}",
-    );
-
-    final changes = container
-        .read(calculatorSubmissionsProvider.notifier)
-        .record(treatment);
+    final batch = treatments.toList();
+    if (batch.isEmpty) return;
+    final before = {
+      for (final submission in container.read(calculatorSubmissionsProvider))
+        submission.key.millisecondsSinceEpoch: submission,
+    };
+    final cache = container.read(calculatorSubmissionsProvider.notifier);
+    for (final treatment in batch) {
+      cache.record(treatment);
+    }
+    final current = container.read(calculatorSubmissionsProvider);
+    final changes = current
+        .where((entry) => before[entry.key.millisecondsSinceEpoch] != entry)
+        .toList();
     for (final submission in changes) {
-      emitEvent(CalculatorSubmissionChangedEvent(submission));
-    }
-    if (changes.isNotEmpty || treatment is ExtendedCarb || treatment is Treat) {
-      unawaited(
-        container
-            .read(mealCalculatorRequestControllerProvider)
-            .observe(
-              CalculatorEvidenceSnapshot(
-                container.read(calculatorSubmissionsProvider),
-                treatment is ExtendedCarb ? treatment : null,
-                carbCorrection: treatment is Treat ? treatment : null,
-              ).toJson(),
-            ),
+      Log.diagnostic(
+        'AapsTreatmentTrace',
+        'calculator at=${submission.key.millisecondsSinceEpoch} '
+            'valid=${submission.isValid} '
+            'originalDeliveryEvidenceComplete=${submission.isComplete} '
+            'carbsAt=${submission.wizard.carbohydrateRecord?.createdAt.millisecondsSinceEpoch} '
+            'insulinAt=${submission.delivery?.createdAt.millisecondsSinceEpoch}',
       );
+      emitEvent(CalculatorSubmissionChangedEvent(submission));
+      if (!submission.isValid) continue;
+      final previous = before[submission.key.millisecondsSinceEpoch];
+      final latest = container.read(latestBolusWizardProvider);
+      final wizard = submission.wizard;
+      final firstEntry = previous?.isValid != true;
+      if ((firstEntry &&
+              (latest == null ||
+                  !wizard.createdAt.isBefore(latest.createdAt))) ||
+          latest?.createdAt.isAtSameMomentAs(wizard.createdAt) == true) {
+        container.read(latestBolusWizardProvider.notifier).update(wizard);
+      }
+      if (firstEntry) {
+        emitEvent(TreatmentAvailableEvent<BolusWizard>(wizard));
+      }
     }
-    // Invalidations still update the normalized submission, but are not new
-    // treatment availability events and cannot advance a meal workflow.
-    if (!treatment.isValid) return;
 
-    switch (treatment) {
-      case BolusWizard():
-        container.read(latestBolusWizardProvider.notifier).update(treatment);
-        emitEvent(TreatmentAvailableEvent<BolusWizard>(treatment));
-        break;
-      case CorrectionBolus():
-        emitEvent(TreatmentAvailableEvent<CorrectionBolus>(treatment));
-        break;
-      case Treat():
-        emitEvent(TreatmentAvailableEvent<Treat>(treatment));
-        break;
-      case ExtendedCarb():
-        emitEvent(TreatmentAvailableEvent<ExtendedCarb>(treatment));
-        break;
-      case ManualBolus():
-        emitEvent(TreatmentAvailableEvent<ManualBolus>(treatment));
-        break;
-      case TemporaryTarget():
-        emitEvent(TreatmentAvailableEvent<TemporaryTarget>(treatment));
-        _syncTemporaryTarget(container, treatment);
-        break;
-      default:
-        logI("Unknown treatment");
+    final carbTimes = {
+      for (final entry in current)
+        if (entry.wizard.carbohydrateRecord case final carbs?)
+          carbs.createdAt.millisecondsSinceEpoch,
+    };
+    final bolusTimes = {
+      for (final entry in current)
+        if (entry.delivery case final delivery?)
+          delivery.createdAt.millisecondsSinceEpoch,
+    };
+    final corrections = <Treatment>[];
+    for (final treatment in batch) {
+      final isComponent = switch (treatment) {
+        Treat() => carbTimes.contains(
+          treatment.createdAt.millisecondsSinceEpoch,
+        ),
+        ManualBolus() => bolusTimes.contains(
+          treatment.createdAt.millisecondsSinceEpoch,
+        ),
+        _ => false,
+      };
+      Log.diagnostic(
+        'AapsTreatmentTrace',
+        'classified type=${treatment.runtimeType} '
+            'at=${treatment.createdAt?.millisecondsSinceEpoch} '
+            'valid=${treatment.isValid} calculatorComponent=$isComponent',
+      );
+      if (isComponent) continue;
+      if (treatment is ExtendedCarb || treatment is Treat) {
+        corrections.add(treatment);
+      }
+      if (!treatment.isValid) continue;
+      switch (treatment) {
+        case CorrectionBolus():
+          emitEvent(TreatmentAvailableEvent<CorrectionBolus>(treatment));
+        case Treat():
+          emitEvent(TreatmentAvailableEvent<Treat>(treatment));
+        case ExtendedCarb():
+          emitEvent(TreatmentAvailableEvent<ExtendedCarb>(treatment));
+        case ManualBolus():
+          emitEvent(TreatmentAvailableEvent<ManualBolus>(treatment));
+        case TemporaryTarget():
+          emitEvent(TreatmentAvailableEvent<TemporaryTarget>(treatment));
+          _syncTemporaryTarget(container, treatment);
+        default:
+          break;
+      }
+    }
+    if (changes.isEmpty && corrections.isEmpty) return;
+    final controller = container.read(mealCalculatorRequestControllerProvider);
+    if (corrections.isEmpty) {
+      unawaited(
+        controller.observe(CalculatorEvidenceSnapshot(current, null).toJson()),
+      );
+      return;
+    }
+    for (final treatment in corrections) {
+      unawaited(
+        controller.observe(
+          CalculatorEvidenceSnapshot(
+            current,
+            treatment is ExtendedCarb ? treatment : null,
+            carbCorrection: treatment is Treat ? treatment : null,
+          ).toJson(),
+        ),
+      );
     }
   }
 

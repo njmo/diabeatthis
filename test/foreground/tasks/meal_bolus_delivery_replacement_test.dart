@@ -26,7 +26,7 @@ import 'meal_monitor_test.dart' show testBolusWizard;
 
 void main() {
   test(
-    'initial meal accepts the later delivered submission after a zero calculator',
+    'initial meal accepts the later positive calculator before its insulin record',
     () {
       fakeAsync((async) {
         final start = DateTime.utc(2026, 11, 2, 14, 55, 35, 306);
@@ -96,7 +96,7 @@ void main() {
             TreatmentAvailableEvent<BolusWizard>(replacement),
           );
           async.flushMicrotasks();
-          expect(updates, isEmpty);
+          expect(updates, ['eaten-bolused']);
           harness.dispatchEvent(TreatmentAvailableEvent<ManualBolus>(delivery));
           async.flushMicrotasks();
           final pendingZero = container

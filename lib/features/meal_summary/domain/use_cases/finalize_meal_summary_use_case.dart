@@ -134,7 +134,8 @@ class FinalizeMealSummaryUseCase with Logging {
         requiresBolus = mealCompletionRequiresDelivery(
           remainingCarbs: remainingCarbs,
           hasRecordedBolus: coverage.hasRecordedBolus,
-          awaitingBolus: addOn?.awaitingBolus ?? false,
+          awaitingBolus:
+              coverage.hasAcceptedCalculator || (addOn?.awaitingBolus ?? false),
         );
         if (requiresBolus) {
           final history = await (db.select(

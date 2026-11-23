@@ -24,7 +24,6 @@ class ActiveMealProgressCard extends StatelessWidget {
     this.treatmentSurplus = false,
     this.bolusWarnings = const [],
     this.waitingForBolus = false,
-    this.waitingForBolusConfirmation = false,
   });
 
   final String name;
@@ -45,7 +44,6 @@ class ActiveMealProgressCard extends StatelessWidget {
   final bool treatmentSurplus;
   final List<String> bolusWarnings;
   final bool waitingForBolus;
-  final bool waitingForBolusConfirmation;
 
   @override
   Widget build(BuildContext context) {
@@ -177,9 +175,7 @@ class ActiveMealProgressCard extends StatelessWidget {
             if (waitingForBolus) ...[
               const SizedBox(height: 8),
               Text(
-                waitingForBolusConfirmation
-                    ? context.lang.mealWaitingForDeliveryConfirmation
-                    : context.lang.uiWaitingForABolus,
+                lang.uiWaitingForABolus,
                 style: TextStyle(fontSize: 12, color: mutedColor),
               ),
             ],

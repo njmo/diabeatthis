@@ -7,6 +7,7 @@ on:
       - "!v*.*.*-*"
       - "v*.*.*-android"
       - "v*.*.*-android-phone"
+      - "v*.*.*-android-testing"
       - "v*.*.*-android-wear"
       - "v*.*.*-android-both"
       - "v*.*.*-android-all"
@@ -70,8 +71,9 @@ jobs:
           build_wear=false
           publish_wear=false
           github_release=false
+          github_only_testing=false
           if [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF_TYPE" == tag ]]; then
-            if [[ ! "$GITHUB_REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-all|-android(-phone|-wear|-both|-all)?)?$ ]]; then
+            if [[ ! "$GITHUB_REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-all|-android(-phone|-wear|-both|-all|-testing)?)?$ ]]; then
               echo "::error::Invalid Android release tag"
               exit 1
             fi
@@ -79,6 +81,10 @@ jobs:
             track=alpha
             case "${BASH_REMATCH[2]}" in
               -android-phone) ;;
+              -android-testing)
+                github_release=true
+                github_only_testing=true
+                ;;
               -android-wear) build_phone=false; build_wear=true; publish_wear=true ;;
               -all|-android|-android-both|-android-all)
                 build_wear=true
@@ -117,10 +123,11 @@ jobs:
             echo "BUILD_WEAR=$build_wear"
             echo "RELEASE_WEAR_TO_CLOSED_TEST=$publish_wear"
             echo "CREATE_GITHUB_RELEASE=$github_release"
+            echo "GITHUB_ONLY_TESTING_RELEASE=$github_only_testing"
           } >> "$GITHUB_ENV"
 
       - name: Verify Google Play credentials
-        if: ${{ env.BUILD_PHONE == 'true' || env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' }}
+        if: ${{ (env.BUILD_PHONE == 'true' && env.GITHUB_ONLY_TESTING_RELEASE != 'true') || env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' }}
         run: |
           if [[ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]]; then
             echo "::error::Set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON before running an Android release"
@@ -168,7 +175,7 @@ jobs:
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/android/app/release.jks"
 
       - name: Build signed app bundle
-        if: ${{ env.BUILD_PHONE == 'true' }}
+        if: ${{ env.BUILD_PHONE == 'true' && env.GITHUB_ONLY_TESTING_RELEASE != 'true' }}
         env:
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -205,12 +212,14 @@ jobs:
         run: |
           mkdir -p build/release-assets
           basename="diabeatthis-android-${RELEASE_VERSION}-b${RELEASE_BUILD_NUMBER}"
-          cp build/app/outputs/bundle/release/app-release.aab "build/release-assets/$basename.aab"
+          if [[ "$GITHUB_ONLY_TESTING_RELEASE" != true ]]; then
+            cp build/app/outputs/bundle/release/app-release.aab "build/release-assets/$basename.aab"
+          fi
           cp build/app/outputs/flutter-apk/app-release.apk "build/release-assets/$basename.apk"
           echo "ANDROID_RELEASE_BASENAME=$basename" >> "$GITHUB_ENV"
 
       - name: Upload app bundle artifact
-        if: ${{ env.BUILD_PHONE == 'true' }}
+        if: ${{ env.BUILD_PHONE == 'true' && env.GITHUB_ONLY_TESTING_RELEASE != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ANDROID_RELEASE_BASENAME }}-aab
@@ -276,7 +285,7 @@ jobs:
         run: python3 .github/scripts/mobile_release_notes.py android "$RELEASE_VERSION" "$RUNNER_TEMP/android-release-notes"
 
       - name: Upload to Google Play
-        if: ${{ env.BUILD_PHONE == 'true' }}
+        if: ${{ env.BUILD_PHONE == 'true' && env.GITHUB_ONLY_TESTING_RELEASE != 'true' }}
         uses: r0adkll/upload-google-play@v1.1.5
         with:
           serviceAccountJsonPlainText: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -310,9 +319,13 @@ jobs:
             printf '\n\n## Android — what’s new\n'
             cat "$RUNNER_TEMP/android-release-notes/whatsnew-en-US"
             printf '\n\n## Packages\n\n'
-            echo 'Android and Wear OS APKs and bundles signed by the GitHub release keystore.'
-            echo 'The two APKs can be installed together. For a phone build installed from Google Play, use a Wear OS APK signed by Play App Signing.'
-            printf '\nGoogle Play phone track: %s.\n' "$GOOGLE_PLAY_TRACK"
+            if [[ "$GITHUB_ONLY_TESTING_RELEASE" == true ]]; then
+              echo 'Testing APK for Android phones. Available only on GitHub.'
+            else
+              echo 'Android and Wear OS APKs and bundles signed by the GitHub release keystore.'
+              echo 'The two APKs can be installed together. For a phone build installed from Google Play, use a Wear OS APK signed by Play App Signing.'
+              printf '\nGoogle Play phone track: %s.\n' "$GOOGLE_PLAY_TRACK"
+            fi
           } > "$RUNNER_TEMP/github-release.md"
 
       - name: Create GitHub Release
@@ -320,7 +333,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body_path: ${{ runner.temp }}/github-release.md
+          prerelease: ${{ env.GITHUB_ONLY_TESTING_RELEASE == 'true' }}
           fail_on_unmatched_files: true
-          files: |
-            build/release-assets/*.aab
-            build/release-assets/*.apk
+          files: build/release-assets/*

@@ -30,11 +30,14 @@ class ExternalEventHandler with Logging {
       LocalTreatmentsEvent.fromRawPayloads(records),
       _runtimeContext,
     ),
-    onError: (error, stackTrace) => logE(
-      'Buffered native treatments handling failed',
-      error: error,
-      stackTrace: stackTrace,
-    ),
+    onError: (error, stackTrace) {
+      Log.diagnostic('AapsTreatmentTrace', 'batchFailed=${error.runtimeType}');
+      logE(
+        'Buffered native treatments handling failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    },
   );
   final AppEventHandler _appEventHandler;
   final NativeReceiverEventHandler _nativeReceiverEventHandler;
@@ -88,6 +91,11 @@ class ExternalEventHandler with Logging {
     }
     final rawTreatments = nativeTreatmentPayloads(event);
     if (rawTreatments != null) {
+      Log.diagnostic(
+        'AapsTreatmentTrace',
+        'broadcast=${event['aapsTreatmentTrace']} '
+            'flutterReceived=${rawTreatments.length}',
+      );
       _treatmentBuffer.add(rawTreatments);
       return;
     }

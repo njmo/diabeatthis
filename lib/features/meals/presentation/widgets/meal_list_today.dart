@@ -73,7 +73,7 @@ class MealListToday extends ConsumerWidget {
         activeMeals.any((meal) => meal.status == 'waiting-for-bolus')
         ? ref.watch(mealCalculatorEntriesProvider).value
         : null;
-    bool waitingForBolusConfirmation(domain.Meal meal) =>
+    bool calculatorEntryRecorded(domain.Meal meal) =>
         meal.status == 'waiting-for-bolus' &&
         calculatorEntries?.contains(meal.id) == true;
     final insulinFormat = NumberFormat.decimalPattern(lang.localeName)
@@ -212,16 +212,16 @@ class MealListToday extends ConsumerWidget {
               treatmentSurplus: treatmentSurpluses?.contains(meal.id) == true,
               bolusWarnings: bolusWarnings[meal.id]!,
               waitingForBolus:
+                  !calculatorEntryRecorded(meal) &&
                   progressPlans[meal.id]?.currentStage ==
-                  MealProgressStage.bolus,
-              waitingForBolusConfirmation: waitingForBolusConfirmation(meal),
+                      MealProgressStage.bolus,
               progressAction: meal.status == 'eating-extra'
                   ? ActiveMealAddOnBolusAction(mealId: meal.id)
                   : null,
               actionLabel: meal.status == 'bolused-waiting'
                   ? lang.mealStatusStartEating
                   : meal.status == 'waiting-for-bolus'
-                  ? waitingForBolusConfirmation(meal)
+                  ? calculatorEntryRecorded(meal)
                         ? lang.mealProgressContinueWithoutBolusLinkTitle
                         : lang.mealProgressOpenCalculator
                   : lang.mealStatusAte,
@@ -239,7 +239,7 @@ class MealListToday extends ConsumerWidget {
                           meal.status == 'eating-extra') {
                         openMealCompletion(context, mealId: meal.id);
                       } else if (meal.status == 'waiting-for-bolus') {
-                        if (waitingForBolusConfirmation(meal)) {
+                        if (calculatorEntryRecorded(meal)) {
                           await confirmManualContinuation(meal.id);
                           return;
                         }

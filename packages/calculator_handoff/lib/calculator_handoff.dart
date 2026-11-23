@@ -7,6 +7,12 @@ class CalculatorHandoff {
     'pl.diabeatthis.app/calculator_handoff',
   );
 
+  Future<void> appendAapsDiagnostic(String line) =>
+      _channel.invokeMethod<void>('appendAapsDiagnostic', {'line': line});
+
+  Future<String?> exportAapsDiagnostics() =>
+      _channel.invokeMethod<String>('exportAapsDiagnostics');
+
   Future<void> dismiss(String sessionId) async {
     try {
       await _channel.invokeMethod<void>('dismiss', {'sessionId': sessionId});

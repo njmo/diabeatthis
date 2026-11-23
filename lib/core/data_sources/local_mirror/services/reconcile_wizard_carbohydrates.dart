@@ -3,6 +3,7 @@ import '../../../domain/model/bolus_wizard.dart';
 import '../../../domain/model/treat.dart';
 import '../../../domain/model/treatment_base.dart';
 import '../../../drift/dao/local_mirror_dao.dart';
+import '../../../logger/logger.dart';
 import '../../config/data_source_config.dart';
 import '../history/local_treatments_history_repository.dart';
 import '../mappers/bolus_wizard_drift_mapper.dart';
@@ -78,19 +79,25 @@ class ReconcileWizardCarbohydrates {
     for (final carbs in carbsByTime.values) {
       if (!affected(carbs.createdAt)) continue;
       final owner = grouping.carbohydrateWizards[carbs];
+      final component = components[carbs.createdAt.millisecondsSinceEpoch]!;
+      final String decision;
       if (carbs.isValid && owner != null) {
-        await dao.attachWizardCarbohydrateComponent(
-          owner.createdAt,
-          components[carbs.createdAt.millisecondsSinceEpoch]!,
-        );
+        decision = 'attachToWizard';
+        await dao.attachWizardCarbohydrateComponent(owner.createdAt, component);
         await dao.deleteTreatByCreatedAt(carbs.createdAt);
       } else if (carbs.isValid) {
-        await dao.upsertTreat(
-          components[carbs.createdAt.millisecondsSinceEpoch]!.toCompanion(),
-        );
+        decision = 'upsertStandalone';
+        await dao.upsertTreat(component.toCompanion());
       } else {
+        decision = 'deleteInvalid';
         await dao.deleteTreatByCreatedAt(carbs.createdAt);
       }
+      Log.diagnostic(
+        'AapsTreatmentTrace',
+        'mirror type=Treat at=${carbs.createdAt.millisecondsSinceEpoch} '
+            'source=${component.source} '
+            'decision=$decision wizardAt=${owner?.createdAt.millisecondsSinceEpoch}',
+      );
     }
     final previousComponents = {
       for (final wizard in wizards)

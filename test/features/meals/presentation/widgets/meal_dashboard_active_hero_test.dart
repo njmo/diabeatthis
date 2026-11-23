@@ -103,15 +103,12 @@ void main() {
         find.widgetWithText(FilledButton, lang.mealProgressOpenCalculator),
         findsOneWidget,
       );
-      expect(find.text(lang.mealWaitingForDeliveryConfirmation), findsNothing);
+      expect(find.text(lang.uiWaitingForABolus), findsOneWidget);
 
       calculatorEntries.complete({7});
       await tester.pumpAndSettle();
       expect(find.text(lang.mealProgressOpenCalculator), findsNothing);
-      expect(
-        find.text(lang.mealWaitingForDeliveryConfirmation),
-        findsOneWidget,
-      );
+      expect(find.text(lang.uiWaitingForABolus), findsNothing);
       final confirmation = find.widgetWithText(
         FilledButton,
         lang.mealProgressContinueWithoutBolusLinkTitle,
@@ -127,10 +124,7 @@ void main() {
       await tester.tap(find.text(lang.commonCancel));
       await tester.pumpAndSettle();
       expect(confirmation, findsOneWidget);
-      expect(
-        find.text(lang.mealWaitingForDeliveryConfirmation),
-        findsOneWidget,
-      );
+      expect(find.text(lang.uiWaitingForABolus), findsNothing);
     },
   );
 

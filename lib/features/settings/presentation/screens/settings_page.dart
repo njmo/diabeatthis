@@ -249,8 +249,16 @@ class SettingsPage extends HookConsumerWidget with Logging {
                                   Log.bufferedLogs,
                                   fileName,
                                 );
+                                final aapsTrace =
+                                    await LogFileWriter.exportAapsDiagnostics();
                                 await SharePlus.instance.share(
-                                  ShareParams(files: [XFile(file.path)]),
+                                  ShareParams(
+                                    files: [
+                                      XFile(file.path),
+                                      if (aapsTrace != null)
+                                        XFile(aapsTrace.path),
+                                    ],
+                                  ),
                                 );
                               },
                               icon: const Icon(Icons.ios_share_outlined),
