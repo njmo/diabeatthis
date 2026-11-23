@@ -101,21 +101,36 @@ function createMirrorService({store}) {
     });
   }
   async function register(uid, data) {
-    exact(data, Object.hasOwn(data,'activityCommandsVersion') ? ['sourceId','activityCommandsVersion'] : ['sourceId']);
+    exact(data, ['sourceId', 'activityCommandsVersion', 'mealHeadersExportVersion']);
     validateProtocol(data);
+    const supportsHeaderExport = Object.hasOwn(data, 'mealHeadersExportVersion');
+    if (supportsHeaderExport && data.mealHeadersExportVersion !== 1) fail('invalid-argument');
     source(data.sourceId); await rate(uid, 'register', 20);
     return store.runTransaction(async tx => {
       const context=await familyContext(store, tx, uid, true);
       const existing = (await tx.get(root(uid))).data();
       if (existing && existing.sourceId !== data.sourceId) fail('failed-precondition');
+      const exportComplete = existing?.mealHeadersExportComplete === true;
+      // Only clients that advertise this capability can confirm their initial export.
+      const exportPending = supportsHeaderExport && !exportComplete;
+      const pendingChanged = exportPending !== (existing?.mealHeadersExportPending === true);
+      const revision = (existing?.mealHeadersRevision ?? 0) + (pendingChanged ? 1 : 0);
+      const state = {activityCommandsVersion: data.activityCommandsVersion ?? 0};
       if (!existing) {
-        tx.set(root(uid), {sourceId: data.sourceId, sequence: 0, activityCommandsVersion: data.activityCommandsVersion ?? 0,
-          mealHeadersBackfillAfter: null, mealHeadersRevision: 0});
-        for(const memberUid of context.family.memberUids) tx.set(store.doc(`familyMirrorSignals/${memberUid}`),{ownerUid:uid,sourceId:data.sourceId,sequence:0,mealHeadersRevision:0});
+        tx.set(root(uid), {sourceId: data.sourceId, sequence: 0, ...state,
+          mealHeadersBackfillAfter: null, mealHeadersRevision: revision, mealHeadersExportPending: exportPending});
+      } else {
+        tx.update(root(uid), pendingChanged
+          ? {...state, mealHeadersRevision: revision, mealHeadersExportPending: exportPending} : state);
       }
-      if (existing) tx.update(root(uid), {activityCommandsVersion: data.activityCommandsVersion ?? 0});
+      if (!existing || pendingChanged) {
+        for (const memberUid of context.family.memberUids) {
+          tx.set(store.doc(`familyMirrorSignals/${memberUid}`), {ownerUid: uid, sourceId: data.sourceId,
+            sequence: existing?.sequence ?? 0, mealHeadersRevision: revision});
+        }
+      }
       return {sourceId: data.sourceId, quickLowTreatmentItems: true,
-        mealHeadersExportComplete: existing?.mealHeadersExportComplete === true};
+        ...(supportsHeaderExport ? {mealHeadersExportComplete: exportComplete} : {})};
     });
   }
   async function publish(uid, data) {
@@ -168,7 +183,7 @@ function createMirrorService({store}) {
       let mealHeadersRevision = state.mealHeadersRevision ?? 0;
       if (state.mealHeadersExportComplete !== true) {
         mealHeadersRevision++;
-        tx.update(mirror, {mealHeadersExportComplete: true, mealHeadersRevision});
+        tx.update(mirror, {mealHeadersExportComplete: true, mealHeadersExportPending: false, mealHeadersRevision});
         for (const memberUid of family.memberUids) {
           tx.set(store.doc(`familyMirrorSignals/${memberUid}`), {ownerUid: uid, sourceId, sequence, mealHeadersRevision});
         }
@@ -205,7 +220,7 @@ function createMirrorService({store}) {
       const sequence = state?.sequence ?? 0;
       const records = [];
       const mealHeadersRevision = state?.mealHeadersRevision ?? 0;
-      const initialHeadersComplete = state?.mealHeadersBackfillAfter === null && state.mealHeadersExportComplete === true;
+      const initialHeadersComplete = state?.mealHeadersBackfillAfter === null && state.mealHeadersExportPending !== true;
       const page = {ownerUid, sourceId, sequence, mealHeadersRevision, records, nextCursor: null, initialHeadersComplete};
       const binding = hash(JSON.stringify([uid, account.familyId, ownerUid, sourceId, query, data.category]));
       const encodeCursor = key => Buffer.from(JSON.stringify([binding, mealHeadersRevision, key])).toString('base64url');

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:diabeatthis/common/backend/authenticated_callable_transport.dart';
 import 'package:diabeatthis/common/family_sync/publish_family_mirror_use_case.dart';
+import 'package:diabeatthis/common/family_sync/register_family_mirror.dart';
 import 'package:diabeatthis/core/drift/database_impl.dart';
 import 'package:diabeatthis/core/drift/family_sync/family_mirror_outbox.dart';
 import 'package:diabeatthis/core/drift/family_sync/install_family_mirror_schema.dart';
@@ -11,6 +12,48 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test(
+    'mirror registration falls back to the installed server contract',
+    () async {
+      final calls = <Map<String, dynamic>>[];
+      final transport = AuthenticatedCallableTransport(
+        client: MockClient((request) async {
+          final data =
+              (jsonDecode(request.body) as Map<String, dynamic>)['data']
+                  as Map<String, dynamic>;
+          calls.add(data);
+          if (data.containsKey('mealHeadersExportVersion')) {
+            return http.Response(
+              '{"error":{"status":"INVALID_ARGUMENT"}}',
+              400,
+            );
+          }
+          return http.Response('{"result":{"sourceId":"legacy"}}', 200);
+        }),
+        projectId: 'test',
+        currentUid: () => 'child',
+        identity: () async => const CallableIdentity('child', 'token', 'app'),
+      );
+
+      final response = await registerFamilyMirror(
+        transport: transport,
+        source: 'legacy',
+        uid: 'child',
+        permitted: () async => true,
+      );
+
+      expect(response, {'sourceId': 'legacy'});
+      expect(calls, [
+        {
+          'sourceId': 'legacy',
+          'activityCommandsVersion': 6,
+          'mealHeadersExportVersion': 1,
+        },
+        {'sourceId': 'legacy', 'activityCommandsVersion': 6},
+      ]);
+    },
+  );
+
   test(
     'an upgraded empty mirror retries header completion without republishing',
     () async {

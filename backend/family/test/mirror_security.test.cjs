@@ -21,10 +21,11 @@ const meal = (id, payload = {}, revision = 1) => ({
   },
 });
 const mealHeaderRequest = {query: '', category: null, cursor: null};
+const headerExportRegistration = {sourceId, mealHeadersExportVersion: 1};
 
 test('child can confirm an empty initial meal header export exactly once', async () => {
   const {mirror, store} = await fixture();
-  assert.equal((await mirror.register('child', {sourceId})).mealHeadersExportComplete, false);
+  assert.equal((await mirror.register('child', headerExportRegistration)).mealHeadersExportComplete, false);
   const initial = await mirror.fetchMealHeaders('parent', mealHeaderRequest);
   assert.equal(initial.initialHeadersComplete, false);
   assert.deepEqual(initial.records, []);
@@ -32,14 +33,35 @@ test('child can confirm an empty initial meal header export exactly once', async
   await assert.rejects(mirror.completeMealHeaderExport('parent', {sourceId}), {code: 'permission-denied'});
   await assert.rejects(mirror.completeMealHeaderExport('child', {sourceId: 'b'.repeat(32)}), {code: 'failed-precondition'});
   const completed = await mirror.completeMealHeaderExport('child', {sourceId});
-  assert.deepEqual(completed, {sourceId, sequence: 0, mealHeadersRevision: 1});
+  assert.deepEqual(completed, {sourceId, sequence: 0, mealHeadersRevision: 2});
   assert.deepEqual(await mirror.completeMealHeaderExport('child', {sourceId}), completed);
-  assert.equal((await mirror.register('child', {sourceId})).mealHeadersExportComplete, true);
-  assert.equal(store.values.get('familyMirrorSignals/parent').mealHeadersRevision, 1);
+  assert.equal((await mirror.register('child', headerExportRegistration)).mealHeadersExportComplete, true);
+  assert.equal(store.values.get('familyMirrorSignals/parent').mealHeadersRevision, 2);
   const ready = await mirror.fetchMealHeaders('parent', mealHeaderRequest);
   assert.equal(ready.initialHeadersComplete, true);
   assert.deepEqual(ready.records, []);
   assert.equal(ready.nextCursor, null);
+});
+
+test('legacy child registration and publication still support old and new caregiver reads', async () => {
+  const {mirror, store} = await fixture();
+  const legacyRegistration = {sourceId, activityCommandsVersion: 6};
+  const legacyResponse = {sourceId, quickLowTreatmentItems: true};
+  assert.deepEqual(await mirror.register('child', legacyRegistration), legacyResponse);
+  delete store.values.get('userMirrors/child').mealHeadersBackfillAfter;
+  const oldRecords = [meal(1), portion(1)];
+  await mirror.publish('child', {sourceId, records: oldRecords});
+  const oldPage = await mirror.fetch('parent', {after: 0});
+  assert.deepEqual(oldPage.records, oldRecords.map((record, i) => ({...record, sequence: i + 1})));
+  const scan = await mirror.fetchMealHeaders('parent', mealHeaderRequest);
+  assert.equal(scan.initialHeadersComplete, false);
+  const page = await mirror.fetchMealHeaders('parent', {...mealHeaderRequest, cursor: scan.nextCursor});
+  assert.equal(page.initialHeadersComplete, true);
+  assert.deepEqual(page.records.map(record => record.id), ['1']);
+  assert.equal((await mirror.register('child', headerExportRegistration)).mealHeadersExportComplete, false);
+  assert.equal((await mirror.fetchMealHeaders('parent', mealHeaderRequest)).initialHeadersComplete, false);
+  assert.deepEqual(await mirror.register('child', legacyRegistration), legacyResponse);
+  assert.equal((await mirror.fetchMealHeaders('parent', mealHeaderRequest)).initialHeadersComplete, true);
 });
 
 test('meal headers are bounded, minimized and ordered by effective date and numeric ID', async () => {
@@ -53,7 +75,7 @@ test('meal headers are bounded, minimized and ordered by effective date and nume
   assert.equal(first.sourceId, sourceId);
   assert.equal(first.sequence, 25);
   assert.equal(first.mealHeadersRevision, 1);
-  assert.equal(first.initialHeadersComplete, false);
+  assert.equal(first.initialHeadersComplete, true);
   assert.equal(first.records.length, 10);
   assert.deepEqual(first.records.slice(0, 4).map(record => record.id), ['1', '2', '23', '22']);
   assert.deepEqual(Object.keys(first.records[0].payload), [

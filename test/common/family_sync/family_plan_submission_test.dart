@@ -14,6 +14,54 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  test(
+    'meal history remains available before the new server endpoint is deployed',
+    () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      addTearDown(db.close);
+      final calls = <String>[];
+      final transport = AuthenticatedCallableTransport(
+        client: MockClient((request) async {
+          final operation = request.url.pathSegments.last;
+          calls.add(operation);
+          return switch (operation) {
+            'fetchFamilyMealHeaders' => http.Response('Not Found', 404),
+            'fetchFamilyMirror' => http.Response(
+              '{"result":{"ownerUid":"child","sourceId":"legacy","cursor":1,'
+              '"hasMore":false,"records":[{"kind":"meals","id":"1","sequence":1}]}}',
+              200,
+            ),
+            'fetchFamilyPlans' => http.Response(
+              '{"result":{"ownerUid":"child","sourceId":"legacy","plans":[]}}',
+              200,
+            ),
+            _ => throw StateError('Unexpected operation: $operation'),
+          };
+        }),
+        projectId: 'test',
+        currentUid: () => 'parent',
+        identity: () async => const CallableIdentity('parent', 'token', 'app'),
+      );
+      final history = FamilyPlanningController(
+        transport,
+        () => 'parent',
+        FamilyPlanSubmissionStore(db),
+        mealHistory: true,
+      );
+      addTearDown(history.dispose);
+      await history.refreshAndWait();
+
+      expect(history.failed, isFalse);
+      expect(history.pagedMealHistory, isFalse);
+      expect(history.rows.keys, ['meals/1']);
+      expect(calls, [
+        'fetchFamilyMealHeaders',
+        'fetchFamilyMirror',
+        'fetchFamilyPlans',
+      ]);
+    },
+  );
+
   test('a prefetched page cannot cross a child mirror source change', () async {
     final db = DatabaseImpl(NativeDatabase.memory());
     addTearDown(db.close);
