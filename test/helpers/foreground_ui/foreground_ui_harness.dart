@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:diabeatthis/common/auth/google_authentication_providers.dart';
 import 'package:diabeatthis/common/monitoring/activity_monitoring_status.dart';
 import 'package:diabeatthis/common/monitoring/meal_monitoring_status.dart';
 import 'package:diabeatthis/core/data/provider/shared_prefs_provider.dart';
@@ -110,6 +111,7 @@ class ForegroundUiHarness {
         notificationController ?? PendingNotificationsController();
     final uiContainer = ProviderContainer(
       overrides: [
+        googleAccountProvider.overrideWith((ref) => Stream.value(null)),
         databaseProvider.overrideWithValue(uiDb),
         sharedPrefsProvider.overrideWith((ref) async => preferences),
         notificationsControllerUiProvider.overrideWithValue(notifications),

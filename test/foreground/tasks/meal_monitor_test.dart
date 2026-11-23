@@ -49,8 +49,8 @@ import 'package:diabeatthis/features/meals/data/providers/meal_wizard_recorder_p
 import 'package:diabeatthis/foreground/event/external/notification/notification_response_event.dart';
 import 'package:diabeatthis/foreground/event/external/notification/notification_response_event_handler.dart';
 import 'package:diabeatthis/foreground/event/internal/data_available_event.dart';
-import 'package:diabeatthis/foreground/event/internal/meal_status_changed_event.dart';
 import 'package:diabeatthis/foreground/event/internal/meal_bolus_continued_manually.dart';
+import 'package:diabeatthis/foreground/event/internal/meal_status_changed_event.dart';
 import 'package:diabeatthis/foreground/event/internal/monitoring_status_changed.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/providers/device_status_value_provider.dart';
