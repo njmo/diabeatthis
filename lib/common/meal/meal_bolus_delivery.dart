@@ -3,17 +3,20 @@ import '../../core/domain/model/manual_bolus.dart';
 import '../../core/domain/model/treatment_base.dart';
 import '../history/bolus_wizard_grouping.dart';
 
+const mealBolusDeliveryWindow = Duration(minutes: 2);
+
 bool mealBolusDeliveryFollowsWizard(
   domain.BolusWizard wizard,
   ManualBolus delivery,
 ) {
   final elapsed = delivery.createdAt.difference(wizard.createdAt);
-  final precisionOverlap =
-      elapsed >= -BolusWizardGrouping.deliveryClockTolerance &&
-      (delivery.insulin - wizard.insulin).abs() <= 0.001;
   return wizard.isValid &&
-      (!elapsed.isNegative || precisionOverlap) &&
-      elapsed <= BolusWizardGrouping.carbSubmissionWindow;
+      !elapsed.isNegative &&
+      elapsed <= mealBolusDeliveryWindow &&
+      (elapsed <= BolusWizardGrouping.carbSubmissionWindow ||
+          (wizard.insulin.isFinite &&
+              wizard.insulin > 0 &&
+              delivery.insulin <= wizard.insulin + 0.001));
 }
 
 /// Even invalidated or ambiguous positive records rule out a carbs-only
@@ -63,21 +66,50 @@ ManualBolus? findMealBolusDelivery(
           wizard.localId != current.localId)) {
     return null;
   }
-  final candidates = deliveries.values
+  final after =
+      deliveries.values
+          .where(
+            (delivery) =>
+                delivery.insulin.isFinite &&
+                delivery.insulin > 0 &&
+                !delivery.createdAt.isBefore(current.createdAt),
+          )
+          .toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+  final nearby = after
       .where(
         (delivery) =>
             delivery.isValid &&
-            delivery.insulin.isFinite &&
-            delivery.insulin > 0 &&
-            mealBolusDeliveryFollowsWizard(current, delivery),
+            delivery.createdAt.difference(current.createdAt) <=
+                BolusWizardGrouping.carbSubmissionWindow,
       )
       .toList();
-  if (candidates.length != 1) return null;
-  final delivery = candidates.single;
-  if (calculators.values
-          .where((item) => mealBolusDeliveryFollowsWizard(item, delivery))
-          .length !=
-      1) {
+  if (nearby.length > 1) return null;
+  final delivery = nearby.singleOrNull ?? after.firstOrNull;
+  if (delivery == null ||
+      !delivery.isValid ||
+      !mealBolusDeliveryFollowsWizard(current, delivery)) {
+    return null;
+  }
+  final delayed =
+      delivery.createdAt.difference(current.createdAt) >
+      BolusWizardGrouping.carbSubmissionWindow;
+  if (delayed) {
+    if (current.hasUnresolvedDelivery ||
+        calculators.values.any(
+          (other) =>
+              other.createdAt.isAfter(current.createdAt) &&
+              !other.createdAt.isAfter(delivery.createdAt),
+        )) {
+      return null;
+    }
+  } else if (calculators.values.any(
+    (other) =>
+        !other.createdAt.isAtSameMomentAs(current.createdAt) &&
+        delivery.createdAt.difference(other.createdAt) <=
+            BolusWizardGrouping.carbSubmissionWindow &&
+        mealBolusDeliveryFollowsWizard(other, delivery),
+  )) {
     return null;
   }
   return delivery;

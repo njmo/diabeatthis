@@ -84,16 +84,20 @@ Future<CalculatorSubmission> readMealCalculatorSubmission(
       BolusWizardGrouping.carbSubmissionWindow +
       BolusWizardGrouping.deliveryClockTolerance;
   final start = wizard.createdAt.subtract(margin);
-  final end = wizard.createdAt.add(margin);
+  final carbEnd = wizard.createdAt.add(margin);
+  final deliveryEnd = wizard.createdAt.add(mealBolusDeliveryWindow);
   final calculators = await db.localMirrorDao.getBolusWizardsBetween(
     start,
-    end,
+    deliveryEnd,
   );
   final deliveries = await db.localMirrorDao.getManualBolusesBetween(
     start,
-    end,
+    deliveryEnd,
   );
-  final carbohydrates = await db.localMirrorDao.getTreatsBetween(start, end);
+  final carbohydrates = await db.localMirrorDao.getTreatsBetween(
+    start,
+    carbEnd,
+  );
   return resolveMealCalculatorSubmission(wizard, [
     ...calculators.map((row) => row.toDomain()),
     ...deliveries.map((row) => row.toDomain()),

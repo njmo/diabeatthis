@@ -111,7 +111,7 @@ void main() {
   );
 
   test(
-    'PiP keeps eCarbs checked while an earlier wizard waits for delivery',
+    'PiP checks an earlier wizard once included in the request window',
     () async {
       final windows = <List<bool>>[];
       final earlierWizard = opened.subtract(const Duration(seconds: 2));
@@ -144,7 +144,9 @@ void main() {
         'complete': delivered,
       };
       // The wizard arrives before PiP opens, but delivery arrives afterwards.
-      await controller.observe({'submissions': [wizard(delivered: false)]});
+      await controller.observe({
+        'submissions': [wizard(delivered: false)],
+      });
       await controller.register(event, sessionId: 'pip-early');
       expect(windows.last, [false, true, true]);
 
@@ -153,14 +155,16 @@ void main() {
         openedAt: earlierWizard,
         refreshRequirements: true,
       );
-      expect(windows.last, [false, true, true]);
-      await controller.observe({'submissions': [wizard(delivered: true)]});
+      expect(windows.last, [true, true, true]);
+      await controller.observe({
+        'submissions': [wizard(delivered: true)],
+      });
       expect(windows.last, [true, true, true]);
     },
   );
 
   test(
-    'the card and PiP observe the same accepted bolus and extended confirmation',
+    'PiP acknowledges the calculator while the meal still awaits its bolus',
     () async {
       var context = pending();
       final windows = <List<bool>>[];
@@ -183,7 +187,8 @@ void main() {
         () => controller.register(event, sessionId: 'pip-1'),
       );
       await controller.observe(evidence());
-      expect(windows.last, [false, false, false]);
+      expect(windows.last, [true, false, false]);
+      expect(context.awaitingBolus, isTrue);
       context = context.copyWith(
         awaitingBolus: false,
         bolusConfirmed: true,
@@ -238,7 +243,7 @@ void main() {
   );
 
   test(
-    'foreground restart restores evidence and an invalidation unchecks the item',
+    'foreground restart restores checks and invalidations clear only their own rows',
     () async {
       var context = pending();
       final store = MemoryMealCalculatorRequestStore();
@@ -265,8 +270,19 @@ void main() {
       first.dispose();
       final restored = create();
       await restored.refresh();
-      expect(windows.last, [false, true, true]);
+      expect(windows.last, [true, true, true]);
       await restored.observe(evidence(extended: true, valid: false));
+      expect(windows.last, [true, false, false]);
+      await restored.observe({
+        'submissions': [
+          {
+            'at': wizardAt.millisecondsSinceEpoch,
+            'carbs': event.carbs,
+            'valid': false,
+            'complete': false,
+          },
+        ],
+      });
       expect(windows.last, [false, false, false]);
       expect(context.extendedCarbsConfirmed, isFalse);
     },

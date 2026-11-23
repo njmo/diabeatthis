@@ -22,6 +22,10 @@ class CalculatorEvidenceSnapshot {
           'carbs': submission.carbs,
           'valid': submission.isValid,
           'complete': submission.isComplete,
+          if (submission.recommendedInsulin.isFinite)
+            'recommendedInsulin': submission.recommendedInsulin,
+          if (submission.deliveredInsulin case final actual?)
+            'deliveredInsulin': actual,
         },
     ],
     if (carbCorrection case final carb?)

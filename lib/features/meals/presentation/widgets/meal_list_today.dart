@@ -1,9 +1,12 @@
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../app/providers/app_event_router_provider.dart';
 import '../../../../common/l10n/language.dart';
+import '../../../../common/meal/calculator/meal_calculator_entries_provider.dart';
+import '../../../../common/meal/meal_bolus_shortfall.dart';
 import '../../../../common/meal/meal_display_name.dart';
 import '../../../../common/meal/meal_progress_plan.dart';
 import '../../../../common/meal/meal_treatment_surplus.dart';
@@ -66,6 +69,27 @@ class MealListToday extends ConsumerWidget {
     final treatmentSurpluses = activeMeals.isEmpty
         ? null
         : ref.watch(mealTreatmentSurplusesProvider).value;
+    final calculatorEntries =
+        activeMeals.any((meal) => meal.status == 'waiting-for-bolus')
+        ? ref.watch(mealCalculatorEntriesProvider).value
+        : null;
+    bool waitingForBolusConfirmation(domain.Meal meal) =>
+        meal.status == 'waiting-for-bolus' &&
+        calculatorEntries?.contains(meal.id) == true;
+    final insulinFormat = NumberFormat.decimalPattern(lang.localeName)
+      ..maximumFractionDigits = 3;
+    final bolusWarnings = {
+      for (final meal in activeMeals)
+        meal.id: [
+          for (final dose
+              in ref.watch(mealBolusShortfallsProvider(meal.id)).value ??
+                  const <MealBolusShortfall>[])
+            lang.mealBolusBelowCalculator(
+              insulinFormat.format(dose.delivered),
+              insulinFormat.format(dose.recommended),
+            ),
+        ],
+    };
     final addOnProgress = {
       for (final meal in activeMeals)
         meal.id: ref
@@ -186,13 +210,20 @@ class MealListToday extends ConsumerWidget {
               schedule: mealScheduleLabel(context, meal.plannedAt, now),
               steps: MealProgressSteps(plan: progressPlans[meal.id]!),
               treatmentSurplus: treatmentSurpluses?.contains(meal.id) == true,
+              bolusWarnings: bolusWarnings[meal.id]!,
+              waitingForBolus:
+                  progressPlans[meal.id]?.currentStage ==
+                  MealProgressStage.bolus,
+              waitingForBolusConfirmation: waitingForBolusConfirmation(meal),
               progressAction: meal.status == 'eating-extra'
                   ? ActiveMealAddOnBolusAction(mealId: meal.id)
                   : null,
               actionLabel: meal.status == 'bolused-waiting'
                   ? lang.mealStatusStartEating
                   : meal.status == 'waiting-for-bolus'
-                  ? lang.mealProgressOpenCalculator
+                  ? waitingForBolusConfirmation(meal)
+                        ? lang.mealProgressContinueWithoutBolusLinkTitle
+                        : lang.mealProgressOpenCalculator
                   : lang.mealStatusAte,
               onActionLongPress:
                   meal.status == 'waiting-for-bolus' &&
@@ -208,6 +239,10 @@ class MealListToday extends ConsumerWidget {
                           meal.status == 'eating-extra') {
                         openMealCompletion(context, mealId: meal.id);
                       } else if (meal.status == 'waiting-for-bolus') {
+                        if (waitingForBolusConfirmation(meal)) {
+                          await confirmManualContinuation(meal.id);
+                          return;
+                        }
                         try {
                           await openAapsAfterBolusStatusUpdateIfNeeded(
                             context: context,

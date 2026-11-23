@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../l10n/language.dart';
 
 class MealTreatmentSurplusWarning extends StatelessWidget {
-  const MealTreatmentSurplusWarning({super.key});
+  const MealTreatmentSurplusWarning({super.key, this.message});
+
+  final String? message;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +27,7 @@ class MealTreatmentSurplusWarning extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                context.lang.mealTreatmentSurplus,
+                message ?? context.lang.mealTreatmentSurplus,
                 style: TextStyle(color: colors.onTertiaryContainer),
               ),
             ),

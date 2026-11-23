@@ -112,14 +112,11 @@ class LocalMirrorWriter with Logging {
       accepted.add(treatment);
     }
     final invalidatedWizards = <int, BolusWizard>{};
-    final deliveryMargin =
-        BolusWizardGrouping.carbSubmissionWindow +
-        BolusWizardGrouping.deliveryClockTolerance;
     for (final delivery in invalidatedDeliveries) {
       if (!delivery.insulin.isFinite || delivery.insulin <= 0) continue;
       final calculators = await _dao.getBolusWizardsBetween(
-        delivery.createdAt.subtract(deliveryMargin),
-        delivery.createdAt.add(deliveryMargin),
+        delivery.createdAt.subtract(mealBolusDeliveryWindow),
+        delivery.createdAt,
       );
       for (final calculator in calculators) {
         if (!mealBolusDeliveryFollowsWizard(calculator.toDomain(), delivery)) {

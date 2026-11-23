@@ -2889,6 +2889,8 @@
   "mealProgressEating": "Eating",
   "mealProgressWaitRemaining": "Waiting time remaining",
   "mealWaitPendingExtendedCarbs": "Waiting for eCarbs",
+  "mealBolusBelowCalculator": "Delivered {delivered} U of {recommended} U calculated",
+  "@mealBolusBelowCalculator": {"placeholders": {"delivered": {"type": "String"}, "recommended": {"type": "String"}}},
   "mealTreatmentSurplus": "More entered than expected",
   "mealProgressWaitElapsed": "Waiting time has elapsed",
   "mealProgressInterrupt": "Interrupt meal tracking",
