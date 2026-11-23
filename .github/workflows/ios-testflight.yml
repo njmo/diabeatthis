@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*.*.*-ios"
+      - "v*.*.*-all"
   workflow_dispatch:
     inputs:
       release_version:
@@ -67,8 +68,8 @@ jobs:
             exit 1
           fi
           if [[ "$GITHUB_EVENT_NAME" == push ]]; then
-            if [[ ! "$GITHUB_REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-ios$ ]]; then
-              echo "::error::Use an iOS release tag such as v1.0.1-ios"
+            if [[ ! "$GITHUB_REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)-(ios|all)$ ]]; then
+              echo "::error::Use a release tag such as v1.0.1-ios or v1.0.1-all"
               exit 1
             fi
             RELEASE_VERSION="${BASH_REMATCH[1]}"

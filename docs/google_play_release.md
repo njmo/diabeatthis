@@ -1,6 +1,6 @@
 # Google Play release from GitHub Actions
 
-The Android release workflow builds a signed app bundle and APK, uploads both as GitHub Actions artifacts, creates a GitHub Release for version tags, and can upload the app bundle to Google Play.
+The Android release workflow builds signed APKs and app bundles and uploads them as GitHub Actions artifacts. The release tag selects which platforms go to Google Play and whether to create a GitHub Release.
 
 ## Android build toolchain
 
@@ -16,19 +16,31 @@ The plugin upgrades also require the updated iOS configuration: Flutter 3.47 use
 
 ## Trigger
 
-Push a semantic version tag:
+Choose one tag for the version:
 
-```bash
-git tag v1.0.2
-git push github v1.0.2
-```
+| Tag example | Google Play | GitHub Release |
+| --- | --- | --- |
+| `v1.0.15-android-phone` | Phone Alpha | No |
+| `v1.0.15-android-wear` | Wear OS closed test | No |
+| `v1.0.15-android-both` or `v1.0.15-android-all` | Phone Alpha and Wear OS closed test | Signed packages and Android release notes |
+| `v1.0.15-all` | Phone Alpha and Wear OS closed test, plus iOS and Apple Watch in TestFlight | Signed Android and Wear OS packages and Android release notes |
 
-The workflow also supports manual runs from GitHub Actions with a selected Google Play track.
+The `-all` tag starts both workflows from the same commit. They publish independently.
 
-Tagged GitHub releases attach `app-release.apk` for phones and
-`wear-release.apk` for Wear OS, alongside both bundles. For a manual
-Wear Installer 2 installation, select **Custom APK** and choose
-`wear-release.apk`. The phone and watch need matching signing certificates.
+For example, run `git tag v1.0.15-android-both` and then
+`git push origin v1.0.15-android-both`. The earlier `vX.Y.Z-android` tag
+still publishes both targets. Bare `vX.Y.Z` tags keep their existing
+behavior, with a phone Internal upload and Wear OS packages on GitHub.
+
+Manual runs from GitHub Actions use the selected scope, version and Google
+Play track, including when the selected ref is a tag.
+
+GitHub Actions artifacts and tagged release assets use versioned filenames.
+The phone APK is named `diabeatthis-android-VERSION-bBUILD.apk` and the
+watch APK is named `diabeatthis-wearos-VERSION-bBUILD.apk`. The AABs use
+the same names with an `.aab` extension. For a manual Wear Installer 2
+installation, select **Custom APK** and choose the Wear OS APK.
+The phone and watch need matching signing certificates.
 If the phone app came from Google Play, download the corresponding
 Play-signed Wear OS APK from Play Console instead.
 
@@ -45,6 +57,8 @@ The phone and Wear OS uploads include notes added since the previous lower
 Create the platform marker on the exact
 build commit once the release is available to testers. Keep past note files
 in Git. When there is no marker, the renderer includes all applicable notes.
+Combined GitHub releases include the rendered Polish and English Android
+release notes in their description.
 
 Preview a committed version locally:
 
@@ -71,7 +85,7 @@ python3 .github/scripts/mobile_release_notes.py wear 1.0.11 /tmp/diabeatthis-wea
 7. Add the service account JSON as `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` in GitHub repository secrets.
 8. Use the `internal` track first, then move to closed testing when the app is ready.
 
-If `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` is missing, the workflow still builds the app bundle and APK, then creates a GitHub Release, but it skips the Google Play upload.
+Runs configured to upload to Google Play require `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON`.
 
 ## Firebase App Check setup
 

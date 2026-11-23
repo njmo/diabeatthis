@@ -127,6 +127,8 @@ repozytorium i czatem.
    ```
 
    Tag `v1.0.1-ios` uruchamia wysyłkę TestFlight z wersją `1.0.1`.
+   Wspólny tag `v1.0.1-all` uruchamia też niezależne wydanie Androida i Wear OS
+   z tego samego commita.
    GitHub Actions nadaje numer buildu automatycznie. Do kolejnego wydania
    użyj nowego taga, np. `v1.0.2-ios`. Tagi z końcówką `-ios` są
    wykluczone z workflow Androida. Po scaleniu workflow do `develop` wciąż

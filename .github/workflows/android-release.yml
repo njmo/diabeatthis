@@ -6,6 +6,11 @@ on:
       - "v*.*.*"
       - "!v*.*.*-*"
       - "v*.*.*-android"
+      - "v*.*.*-android-phone"
+      - "v*.*.*-android-wear"
+      - "v*.*.*-android-both"
+      - "v*.*.*-android-all"
+      - "v*.*.*-all"
   workflow_dispatch:
     inputs:
       release_version:
@@ -48,20 +53,74 @@ jobs:
       contents: write
 
     env:
-      GOOGLE_PLAY_TRACK: ${{ inputs.track || (endsWith(github.ref_name, '-android') && 'alpha') || 'internal' }}
-      RELEASE_WEAR_TO_CLOSED_TEST: ${{ (github.ref_type == 'tag' && endsWith(github.ref_name, '-android')) || (inputs.release_wear && (inputs.wear_only || inputs.track == 'alpha')) }}
       GOOGLE_PLAY_RELEASE_STATUS: ${{ github.event.inputs.release_status || 'completed' }}
       GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
 
     steps:
-      - name: Verify requested Wear OS track
-        if: ${{ inputs.release_wear && !inputs.wear_only && inputs.track != 'alpha' }}
+      - name: Resolve release scope and version
+        env:
+          MANUAL_RELEASE_VERSION: ${{ inputs.release_version }}
+          MANUAL_TRACK: ${{ inputs.track }}
+          MANUAL_WEAR_ONLY: ${{ inputs.wear_only }}
+          MANUAL_RELEASE_WEAR: ${{ inputs.release_wear }}
         run: |
-          echo "::error::diabeatthis-wearos is a closed test paired with the phone alpha track."
-          exit 1
+          version="$MANUAL_RELEASE_VERSION"
+          track="${MANUAL_TRACK:-internal}"
+          build_phone=true
+          build_wear=false
+          publish_wear=false
+          github_release=false
+          if [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF_TYPE" == tag ]]; then
+            if [[ ! "$GITHUB_REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-all|-android(-phone|-wear|-both|-all)?)?$ ]]; then
+              echo "::error::Invalid Android release tag"
+              exit 1
+            fi
+            version="${BASH_REMATCH[1]}"
+            track=alpha
+            case "${BASH_REMATCH[2]}" in
+              -android-phone) ;;
+              -android-wear) build_phone=false; build_wear=true; publish_wear=true ;;
+              -all|-android|-android-both|-android-all)
+                build_wear=true
+                publish_wear=true
+                github_release=true
+                ;;
+              "")
+                track=internal
+                build_wear=true
+                github_release=true
+                ;;
+            esac
+          else
+            if [[ "$MANUAL_WEAR_ONLY" == true ]]; then
+              build_phone=false
+              build_wear=true
+            fi
+            if [[ "$MANUAL_RELEASE_WEAR" == true ]]; then
+              if [[ "$build_phone" == true && "$track" != alpha ]]; then
+                echo "::error::diabeatthis-wearos is a closed test paired with the phone alpha track."
+                exit 1
+              fi
+              build_wear=true
+              publish_wear=true
+            fi
+          fi
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Expected an Android version in X.Y.Z format"
+            exit 1
+          fi
+          {
+            echo "RELEASE_VERSION=$version"
+            echo "RELEASE_BUILD_NUMBER=$GITHUB_RUN_NUMBER"
+            echo "GOOGLE_PLAY_TRACK=$track"
+            echo "BUILD_PHONE=$build_phone"
+            echo "BUILD_WEAR=$build_wear"
+            echo "RELEASE_WEAR_TO_CLOSED_TEST=$publish_wear"
+            echo "CREATE_GITHUB_RELEASE=$github_release"
+          } >> "$GITHUB_ENV"
 
       - name: Verify Google Play credentials
-        if: ${{ !inputs.wear_only || env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' }}
+        if: ${{ env.BUILD_PHONE == 'true' || env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' }}
         run: |
           if [[ -z "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]]; then
             echo "::error::Set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON before running an Android release"
@@ -90,15 +149,15 @@ jobs:
         run: flutter pub get --enforce-lockfile
 
       - name: Generate code
-        if: ${{ !inputs.wear_only }}
+        if: ${{ env.BUILD_PHONE == 'true' }}
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Analyze
-        if: ${{ !inputs.wear_only }}
+        if: ${{ env.BUILD_PHONE == 'true' }}
         run: flutter analyze lib test
 
       - name: Test
-        if: ${{ !inputs.wear_only }}
+        if: ${{ env.BUILD_PHONE == 'true' }}
         run: flutter test
 
       - name: Restore release keystore
@@ -108,29 +167,8 @@ jobs:
           test -n "$ANDROID_KEYSTORE_BASE64"
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/android/app/release.jks"
 
-      - name: Read release version
-        env:
-          MANUAL_RELEASE_VERSION: ${{ inputs.release_version }}
-        run: |
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            if [ "$GOOGLE_PLAY_TRACK" = "production" ]; then
-              echo "::error::Tagged builds require a Google Play testing track"
-              exit 1
-            fi
-            version="${GITHUB_REF_NAME#v}"
-            version="${version%-android}"
-          else
-            version="$MANUAL_RELEASE_VERSION"
-          fi
-          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Expected an Android version in X.Y.Z format"
-            exit 1
-          fi
-          echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
-          echo "RELEASE_BUILD_NUMBER=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
-
       - name: Build signed app bundle
-        if: ${{ !inputs.wear_only }}
+        if: ${{ env.BUILD_PHONE == 'true' }}
         env:
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -139,7 +177,7 @@ jobs:
         run: flutter build appbundle --release --build-name "$RELEASE_VERSION" --build-number "$RELEASE_BUILD_NUMBER"
 
       - name: Build signed APK
-        if: ${{ !inputs.wear_only }}
+        if: ${{ env.BUILD_PHONE == 'true' }}
         env:
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -148,7 +186,7 @@ jobs:
         run: flutter build apk --release --build-name "$RELEASE_VERSION" --build-number "$RELEASE_BUILD_NUMBER"
 
       - name: Verify notification icon and Wear capability in signed APK
-        if: ${{ !inputs.wear_only }}
+        if: ${{ env.BUILD_PHONE == 'true' }}
         run: |
           aapt2="$(find "$ANDROID_HOME/build-tools" -type f -name aapt2 | sort -V | tail -1)"
           test -x "$aapt2"
@@ -162,15 +200,25 @@ jobs:
             exit 1
           fi
 
+      - name: Name Android release files
+        if: ${{ env.BUILD_PHONE == 'true' }}
+        run: |
+          mkdir -p build/release-assets
+          basename="diabeatthis-android-${RELEASE_VERSION}-b${RELEASE_BUILD_NUMBER}"
+          cp build/app/outputs/bundle/release/app-release.aab "build/release-assets/$basename.aab"
+          cp build/app/outputs/flutter-apk/app-release.apk "build/release-assets/$basename.apk"
+          echo "ANDROID_RELEASE_BASENAME=$basename" >> "$GITHUB_ENV"
+
       - name: Upload app bundle artifact
-        if: ${{ !inputs.wear_only }}
+        if: ${{ env.BUILD_PHONE == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: diabeatthis-aab
-          path: build/app/outputs/bundle/release/app-release.aab
+          name: ${{ env.ANDROID_RELEASE_BASENAME }}-aab
+          path: build/release-assets/${{ env.ANDROID_RELEASE_BASENAME }}.aab
+          if-no-files-found: error
 
       - name: Build signed Wear OS bundle and APK
-        if: ${{ github.ref_type == 'tag' || env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' || inputs.wear_only }}
+        if: ${{ env.BUILD_WEAR == 'true' }}
         env:
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/release.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -189,35 +237,46 @@ jobs:
           test -s ../build/wear/outputs/bundle/release/wear-release.aab
           test -s ../build/wear/outputs/apk/release/wear-release.apk
 
+      - name: Name Wear OS release files
+        if: ${{ env.BUILD_WEAR == 'true' }}
+        run: |
+          mkdir -p build/release-assets
+          wear_version_code=$((1000000 + RELEASE_BUILD_NUMBER))
+          basename="diabeatthis-wearos-${RELEASE_VERSION}-b${wear_version_code}"
+          cp build/wear/outputs/bundle/release/wear-release.aab "build/release-assets/$basename.aab"
+          cp build/wear/outputs/apk/release/wear-release.apk "build/release-assets/$basename.apk"
+          echo "WEAR_RELEASE_BASENAME=$basename" >> "$GITHUB_ENV"
+
       - name: Upload Wear OS app bundle artifact
-        if: ${{ github.ref_type == 'tag' || env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' || inputs.wear_only }}
+        if: ${{ env.BUILD_WEAR == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: diabeatthis-wear-aab
-          path: build/wear/outputs/bundle/release/wear-release.aab
+          name: ${{ env.WEAR_RELEASE_BASENAME }}-aab
+          path: build/release-assets/${{ env.WEAR_RELEASE_BASENAME }}.aab
           if-no-files-found: error
 
       - name: Upload Wear OS APK artifact
-        if: ${{ github.ref_type == 'tag' || env.RELEASE_WEAR_TO_CLOSED_TEST == 'true' || inputs.wear_only }}
+        if: ${{ env.BUILD_WEAR == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: diabeatthis-wear-apk
-          path: build/wear/outputs/apk/release/wear-release.apk
+          name: ${{ env.WEAR_RELEASE_BASENAME }}-apk
+          path: build/release-assets/${{ env.WEAR_RELEASE_BASENAME }}.apk
           if-no-files-found: error
 
       - name: Upload APK artifact
-        if: ${{ !inputs.wear_only }}
+        if: ${{ env.BUILD_PHONE == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: diabeatthis-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: ${{ env.ANDROID_RELEASE_BASENAME }}-apk
+          path: build/release-assets/${{ env.ANDROID_RELEASE_BASENAME }}.apk
+          if-no-files-found: error
 
       - name: Generate Android release notes
-        if: ${{ !inputs.wear_only }}
+        if: ${{ env.BUILD_PHONE == 'true' }}
         run: python3 .github/scripts/mobile_release_notes.py android "$RELEASE_VERSION" "$RUNNER_TEMP/android-release-notes"
 
       - name: Upload to Google Play
-        if: ${{ !inputs.wear_only }}
+        if: ${{ env.BUILD_PHONE == 'true' }}
         uses: r0adkll/upload-google-play@v1.1.5
         with:
           serviceAccountJsonPlainText: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -242,19 +301,26 @@ jobs:
           status: ${{ env.GOOGLE_PLAY_RELEASE_STATUS }}
           whatsNewDirectory: ${{ runner.temp }}/wear-release-notes
 
+      - name: Prepare GitHub Release description
+        if: ${{ env.CREATE_GITHUB_RELEASE == 'true' }}
+        run: |
+          {
+            echo '## Android — co nowego'
+            cat "$RUNNER_TEMP/android-release-notes/whatsnew-pl-PL"
+            printf '\n\n## Android — what’s new\n'
+            cat "$RUNNER_TEMP/android-release-notes/whatsnew-en-US"
+            printf '\n\n## Packages\n\n'
+            echo 'Android and Wear OS APKs and bundles signed by the GitHub release keystore.'
+            echo 'The two APKs can be installed together. For a phone build installed from Google Play, use a Wear OS APK signed by Play App Signing.'
+            printf '\nGoogle Play phone track: %s.\n' "$GOOGLE_PLAY_TRACK"
+          } > "$RUNNER_TEMP/github-release.md"
+
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{ env.CREATE_GITHUB_RELEASE == 'true' }}
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
-          body: |
-            Android and Wear OS app bundles and APKs signed by the GitHub release keystore.
-
-            The two APKs can be installed together. For a phone build installed from Google Play, download a Wear OS APK with the matching Play App Signing certificate.
-
-            Google Play track: ${{ env.GOOGLE_PLAY_TRACK }}.
+          body_path: ${{ runner.temp }}/github-release.md
+          fail_on_unmatched_files: true
           files: |
-            build/app/outputs/bundle/release/app-release.aab
-            build/app/outputs/flutter-apk/app-release.apk
-            build/wear/outputs/bundle/release/wear-release.aab
-            build/wear/outputs/apk/release/wear-release.apk
+            build/release-assets/*.aab
+            build/release-assets/*.apk
