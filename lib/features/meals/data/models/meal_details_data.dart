@@ -1,3 +1,4 @@
+import '../../../../common/meal/manual_meal_decision.dart';
 import '../../../../common/meal/meal_completion_decision.dart';
 import '../../../../common/nutrition/meal_nutrition_totals.dart';
 import '../../../../core/domain/model/low_treatment_context.dart';
@@ -373,7 +374,7 @@ class MealRecordData {
 }
 
 class MealAdvisorDecisionData {
-  bool get isManual => result == 'manual';
+  bool get isManual => isManualMealResult(result);
   final String result;
   final int initialWaitTime;
   final int finalWaitTime;

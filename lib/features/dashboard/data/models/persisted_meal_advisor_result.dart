@@ -1,6 +1,8 @@
+import '../../../../common/meal/manual_meal_decision.dart';
+
 class PersistedMealAdvisorResult {
   String get source =>
-      decisionSource ?? (result == 'manual' ? 'manual' : 'mealAdvisor');
+      decisionSource ?? (isManualMealResult(result) ? 'manual' : 'mealAdvisor');
   final String? decisionSource;
   final String? caregiverId;
   final String? caregiverRequestId;

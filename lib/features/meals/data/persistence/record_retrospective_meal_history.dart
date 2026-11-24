@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../../common/meal/manual_meal_decision.dart';
 import '../../../../core/drift/database_impl.dart';
 import '../../../../core/logger/logger.dart';
 import '../models/retrospective_meal_timing.dart';
@@ -35,7 +36,7 @@ Future<void> recordRetrospectiveMealHistory(
       mealId: mealId,
       finalWaitTime: timing.choice.waitMinutes,
       waitTimeIgnored:
-          previous.result != 'manual' &&
+          !isManualMealResult(previous.result) &&
           timing.choice.waitMinutes < previous.initialWaitTime,
     );
   }
