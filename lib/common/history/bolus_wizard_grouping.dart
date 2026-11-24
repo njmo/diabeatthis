@@ -11,6 +11,7 @@ class BolusWizardGrouping {
   static const deliveryClockTolerance = Duration(seconds: 1);
 
   final Set<Treatment> relatedRecords;
+  final Map<BolusWizard, ManualBolus> wizardBoluses = {};
 
   /// Preserves the calculator provenance of each recognized carbohydrate record.
   final Map<Treat, BolusWizard> carbohydrateWizards;
@@ -81,7 +82,12 @@ class BolusWizardGrouping {
         }
       }
       if (next is ManualBolus && !ambiguous.contains(next)) {
-        _match(next, wizard.insulin, next.insulin);
+        final canGroupReducedDose =
+            hasLeadingCarbs &&
+            next.createdAt.difference(wizard.createdAt) <=
+                carbSubmissionWindow &&
+            !_hasCompetingComponents(records, index + 2, wizard);
+        _matchBolus(wizard, next, allowReducedDose: canGroupReducedDose);
       }
       if (!hasLeadingCarbs && previous is ManualBolus && index >= 2) {
         final carbs = records[index - 2];
@@ -101,7 +107,7 @@ class BolusWizardGrouping {
           hasLeadingCarbs = _match(carbs, wizard.carbs, carbs.carbs.toDouble());
           if (hasLeadingCarbs) {
             carbohydrateWizards.putIfAbsent(carbs, () => wizard);
-            _match(previous, wizard.insulin, previous.insulin);
+            _matchBolus(wizard, previous);
           }
         }
       }
@@ -155,7 +161,15 @@ class BolusWizardGrouping {
     if (_match(carbs, wizard.carbs, carbs.carbs.toDouble())) {
       carbohydrateWizards.putIfAbsent(carbs, () => wizard);
       // The recorded delivery may differ from the calculator recommendation.
-      _match(insulin, wizard.insulin, insulin.insulin);
+      _matchBolus(
+        wizard,
+        insulin,
+        allowReducedDose: !_hasCompetingComponents(
+          records,
+          wizardIndex + 3,
+          wizard,
+        ),
+      );
     }
   }
 
@@ -167,8 +181,41 @@ class BolusWizardGrouping {
     _ => 3,
   };
 
+  bool _hasCompetingComponents(
+    List<Treatment> records,
+    int start,
+    BolusWizard wizard,
+  ) => records
+      .skip(start)
+      .takeWhile(
+        (record) =>
+            record.createdAt!.difference(wizard.createdAt) <=
+            carbSubmissionWindow,
+      )
+      .any(
+        (record) =>
+            record is ManualBolus || record is BolusWizard || record is Treat,
+      );
+
+  void _matchBolus(
+    BolusWizard wizard,
+    ManualBolus bolus, {
+    bool allowReducedDose = false,
+  }) {
+    final expected = wizard.insulin;
+    if (_match(bolus, expected, bolus.insulin) ||
+        (allowReducedDose &&
+            bolus.isValid &&
+            bolus.insulin.isFinite &&
+            bolus.insulin > 0 &&
+            expected.isFinite &&
+            bolus.insulin < expected)) {
+      relatedRecords.add(bolus);
+      wizardBoluses[wizard] = bolus;
+    }
+  }
+
   bool _match(Treatment record, double expectedAmount, double recordedAmount) {
-    // Keep differing amounts visible rather than replacing them with calculator values.
     if (record.isValid &&
         expectedAmount.isFinite &&
         expectedAmount > 0 &&

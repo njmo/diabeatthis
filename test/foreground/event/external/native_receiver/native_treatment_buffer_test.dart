@@ -270,6 +270,115 @@ void main() {
     });
   }
 
+  test(
+    'DASH PiP accepts scheduled eCarbs before the wizard and late carbs',
+    () {
+      fakeAsync((async) {
+        final opened = DateTime.parse('2026-11-24T18:52:43.270Z');
+        final rows = <List<bool>>[];
+        final controller = MealCalculatorRequestController(
+          store: MemoryMealCalculatorRequestStore(),
+          now: () => opened.add(async.elapsed),
+          readContext: (_) async => null,
+          projectExtendedConfirmation: (_, _, _, _) async {},
+          publishWindow: (_, state) async => rows.add(state),
+          onError: (error, _) => fail('$error'),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            mealCalculatorRequestControllerProvider.overrideWithValue(
+              controller,
+            ),
+            dataSourceConfigProvider.overrideWithValue(
+              const AsyncData(
+                DataSourceConfig(
+                  bgSource: BgSource.aaps,
+                  treatmentsSource: TreatmentsSource.aaps,
+                  pumpStatusSource: PumpStatusSource.aaps,
+                  historySource: HistorySource.local,
+                  mirrorToLocal: false,
+                ),
+              ),
+            ),
+          ],
+        );
+        final harness = FakeRuntimeHarness(container: container);
+        final handler = ExternalEventHandler(harness.runtimeContext);
+
+        handler.handle(
+          CalculatorRequestCommand(
+            event: const AapsBolusSuggestionNotificationEvent(
+              mealId: 7,
+              carbs: 31,
+              extendedCarbs: 21,
+              extendedCarbsDelayMinutes: 45,
+              extendedCarbsDurationMinutes: 120,
+            ),
+            sessionId: 'dash-ecarbs',
+            openedAt: opened,
+          ).toExternalAppEventJson(),
+        );
+        async.flushMicrotasks();
+        expect(rows.last, [false, false, false]);
+
+        void receive(String receivedAt, Map<String, Object> record) {
+          final elapsed = DateTime.parse(receivedAt).difference(opened);
+          async.elapse(elapsed - async.elapsed);
+          handler.handle(broadcast(record));
+        }
+
+        // The trace includes the scheduled start, but omits the duration.
+        const extended = {
+          'eventType': 'Meal Bolus',
+          'created_at': '2026-11-24T19:37:50.000Z',
+          'carbs': 21,
+          'duration': 7200000,
+        };
+        receive('2026-11-24T18:52:57.398Z', extended);
+        async.elapse(const Duration(seconds: 2));
+        expect(rows.last, [false, true, true]);
+
+        receive('2026-11-24T18:53:07.536Z', extended);
+        const wizard = {
+          'eventType': 'Bolus Wizard',
+          'created_at': '2026-11-24T18:53:09.653Z',
+          'glucose': 120,
+          'bolusCalculatorResult': {'carbs': 31, 'totalInsulin': 1.85},
+        };
+        receive('2026-11-24T18:53:09.706Z', wizard);
+        receive('2026-11-24T18:53:10.103Z', wizard);
+        async.elapse(const Duration(seconds: 2));
+        expect(rows.last, [true, true, true]);
+
+        receive('2026-11-24T18:53:12.199Z', {
+          'eventType': 'Meal Bolus',
+          'created_at': '2026-11-24T18:53:12.066Z',
+          'insulin': 1.85,
+        });
+        receive('2026-11-24T18:53:22.367Z', extended);
+        receive('2026-11-24T18:54:30.279Z', {
+          'eventType': 'Meal Bolus',
+          'created_at': '2026-11-24T18:53:08.533Z',
+          'carbs': 31,
+        });
+        async.elapse(const Duration(seconds: 2));
+
+        expect(rows.last, [true, true, true]);
+        final submission = container.read(calculatorSubmissionsProvider).single;
+        expect(submission.wizard.carbohydrateRecord?.carbs, 31);
+        expect(submission.deliveredInsulin, 1.85);
+        expect(
+          harness.emittedEvents
+              .whereType<TreatmentAvailableEvent<ManualBolus>>(),
+          isEmpty,
+        );
+        controller.dispose();
+        harness.dispose();
+        async.flushMicrotasks();
+      });
+    },
+  );
+
   test('orderly shutdown flushes an incomplete calculator before teardown', () {
     fakeAsync((async) {
       final container = ProviderContainer(

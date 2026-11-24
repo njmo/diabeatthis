@@ -45,6 +45,18 @@ Map<String, dynamic>? familyChatNotificationPayload(String? raw) {
   }
 }
 
+Future<bool?> revalidateFamilyTreatmentRetry(
+  FamilyChatNotificationEvent event,
+) async {
+  bool? allowed;
+  await _withWorker((worker, _, _) async {
+    allowed = await worker.canRetryTreatment(
+      Map<String, dynamic>.from(event.payload),
+    );
+  });
+  return allowed;
+}
+
 Future<void> _initialize() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (Firebase.apps.isEmpty) {

@@ -95,6 +95,22 @@ void main() {
     );
   });
 
+  test('groups a reduced dose with an unambiguous calculator and carbs', () {
+    final reduced = insulin.copyWith(insulin: 1.2);
+    final grouping = BolusWizardGrouping([reduced, wizard, carbs]);
+    expect(grouping.relatedRecords, {carbs, reduced});
+    expect(grouping.wizardBoluses[wizard], reduced);
+
+    final other = insulin.copyWith(
+      externalId: 'unrelated',
+      createdAt: insulin.createdAt.add(const Duration(seconds: 1)),
+    );
+    expect(
+      BolusWizardGrouping([carbs, wizard, reduced, other]).relatedRecords,
+      {carbs},
+    );
+  });
+
   test('does not group insulin before or carbs after the calculator', () {
     expect(
       BolusWizardGrouping([

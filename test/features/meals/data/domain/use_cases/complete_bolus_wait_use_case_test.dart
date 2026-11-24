@@ -26,6 +26,45 @@ void main() {
     await db.close();
   });
 
+  test(
+    'start confirmation after an immediate plan writes eating only once',
+    () async {
+      final waitStartedAt = DateTime(2026, 5, 12, 12);
+      final acceptedAt = waitStartedAt.add(const Duration(minutes: 2));
+      await _seedBolusWaitMeal(db, waitStartedAt: waitStartedAt);
+      await db.customStatement(
+        "UPDATE meal_advisor_result SET result='bolused-eating', initial_wait_time=0, final_wait_time=0 WHERE meal_id=1",
+      );
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+      addTearDown(container.dispose);
+      final meal = domain.Meal(
+        id: 1,
+        name: 'Obiad',
+        status: 'bolused-waiting',
+        updatedAt: waitStartedAt,
+      );
+      expect((await db.mealDao.getMealById(1))?.status, 'bolused-waiting');
+      await withClock(Clock.fixed(acceptedAt), () async {
+        final confirm = container.read(completeBolusWaitUseCaseProvider);
+        await confirm.call(meal);
+        await confirm.call(meal);
+      });
+
+      expect((await db.mealDao.getMealById(1))?.status, 'bolused-eating');
+      final starts = await db
+          .customSelect(
+            "SELECT created_at FROM meal_status_history WHERE meal_id=1 AND status='bolused-eating'",
+          )
+          .get();
+      expect(
+        starts.single.read<int>('created_at'),
+        acceptedAt.millisecondsSinceEpoch,
+      );
+    },
+  );
+
   test('stores actual wait from bolused waiting history', () async {
     final waitStartedAt = DateTime(2026, 5, 12, 12);
     final now = waitStartedAt.add(const Duration(minutes: 34));

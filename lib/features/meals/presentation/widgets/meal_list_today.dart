@@ -20,6 +20,7 @@ import '../../../../common/widgets/meal_progress/meal_progress_section_heading.d
 import '../../../../common/widgets/meal_progress/meal_progress_steps.dart';
 import '../../../../common/widgets/meal_progress/show_meal_interruption_dialog.dart';
 import '../../../../core/data/provider/parent_controller_provider.dart';
+import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/domain/model/meal.dart' as domain;
 import '../../../../core/domain/model/meal_status_flow.dart';
 import '../../../../core/drift/providers/database_provider.dart';
@@ -89,6 +90,23 @@ class MealListToday extends ConsumerWidget {
               insulinFormat.format(dose.recommended),
             ),
         ],
+    };
+    final aapsBolusLabels = {
+      for (final meal in activeMeals)
+        meal.id: [
+          for (final record
+              in ref.watch(mealBolusRecordsProvider(meal.id)).value ??
+                  const <MealBolusRecord>[])
+            if (record.source == TreatmentsSource.aaps)
+              if (record.recorded case final amount?)
+                if (!record.recommended.isFinite ||
+                    amount >= record.recommended - 0.001)
+                  lang.mealAapsBolusRecorded(insulinFormat.format(amount))
+                else
+                  null
+              else
+                lang.mealAapsCalculatorUsed,
+        ].nonNulls.toList(),
     };
     final addOnProgress = {
       for (final meal in activeMeals)
@@ -211,6 +229,7 @@ class MealListToday extends ConsumerWidget {
               steps: MealProgressSteps(plan: progressPlans[meal.id]!),
               treatmentSurplus: treatmentSurpluses?.contains(meal.id) == true,
               bolusWarnings: bolusWarnings[meal.id]!,
+              bolusRecordLabels: aapsBolusLabels[meal.id]!,
               waitingForBolus:
                   !calculatorEntryRecorded(meal) &&
                   progressPlans[meal.id]?.currentStage ==

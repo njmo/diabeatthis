@@ -288,6 +288,44 @@ void main() {
     expect(api.message['receipts']['child']['deliveredAt'], 1000);
   });
 
+  test(
+    'low-treatment retry requires a current unanswered server request and authorization',
+    () async {
+      final db = FamilyChatDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      final api = _Api();
+      final config = {
+        ...await api.call('getFamilyChatConfig', {}),
+        'historyGeneration': 0,
+        'account': {'enabled': true, 'offGeneration': 1},
+        'policy': {'enabled': true, 'offGeneration': 2},
+      };
+      api.notificationConfig = config;
+      api.message['kind'] = 'lowTreatment';
+      api.message['treatment'] = {'validUntil': 9000};
+      final presenter = _Presenter();
+      await db.activateChat('child', scope, 'one');
+      final worker = FamilyChatBackground(
+        db: db,
+        api: api,
+        currentUid: () => 'child',
+        presenter: presenter,
+      );
+      expect(await worker.receive(data), isTrue);
+      final payload = presenter.shown.single.payload;
+      expect(await worker.canRetryTreatment(payload), isTrue);
+
+      config['account'] = {'enabled': true, 'offGeneration': 2};
+      expect(await worker.canRetryTreatment(payload), isFalse);
+      config['account'] = {'enabled': true, 'offGeneration': 1};
+      api.message['treatmentResult'] = {'status': 'confirmed'};
+      expect(await worker.canRetryTreatment(payload), isFalse);
+      api.message.remove('treatmentResult');
+      api.message['treatment'] = {'validUntil': 1000};
+      expect(await worker.canRetryTreatment(payload), isFalse);
+    },
+  );
+
   test('read questions can retry until a reply or access withdrawal', () async {
     final previousPlatform = SharedPreferencesAsyncPlatform.instance;
     SharedPreferencesAsyncPlatform.instance =

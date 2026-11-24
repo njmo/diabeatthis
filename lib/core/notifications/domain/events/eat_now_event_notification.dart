@@ -4,10 +4,15 @@ import '../models/notification_event_type.dart';
 import '../models/notification_key.dart';
 
 class EatNowNotificationEvent implements NotificationEvent {
-  EatNowNotificationEvent({required this.mealId, required this.minutes});
+  EatNowNotificationEvent({
+    required this.mealId,
+    required this.minutes,
+    this.confirmImmediately = false,
+  });
 
   final int mealId;
   final int minutes;
+  final bool confirmImmediately;
 
   @override
   NotificationEventType get type => NotificationEventType.eatNow;
@@ -19,10 +24,14 @@ class EatNowNotificationEvent implements NotificationEvent {
   NotificationKey get key => NotificationKey(type: type, entityId: mealId);
 
   @override
-  String get title => lang.notificationEatNowTitle;
+  String get title => confirmImmediately
+      ? lang.notificationConfirmEatingTitle
+      : lang.notificationEatNowTitle;
 
   @override
-  String get body => lang.notificationEatNowBody(minutes);
+  String get body => confirmImmediately
+      ? lang.notificationConfirmEatingBody
+      : lang.notificationEatNowBody(minutes);
 
   @override
   Map<String, Object?> toPayload() => {
@@ -31,12 +40,17 @@ class EatNowNotificationEvent implements NotificationEvent {
   };
 
   @override
-  Map<String, Object?> toJson() => {'mealId': mealId, 'minutes': minutes};
+  Map<String, Object?> toJson() => {
+    'mealId': mealId,
+    'minutes': minutes,
+    if (confirmImmediately) 'confirmImmediately': true,
+  };
 
   factory EatNowNotificationEvent.fromPayload(Map<String, dynamic> json) {
     return EatNowNotificationEvent(
       mealId: json['mealId'] as int,
       minutes: json['minutes'] as int,
+      confirmImmediately: json['confirmImmediately'] == true,
     );
   }
 }

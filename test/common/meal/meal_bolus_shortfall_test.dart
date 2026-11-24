@@ -41,6 +41,19 @@ void main() {
       relationType: 'initial',
     );
 
+    final recordsProvider = mealBolusRecordsProvider(mealId);
+    final recorded = Completer<MealBolusRecord>();
+    final recordsSubscription = container.listen(recordsProvider, (_, next) {
+      final record = next.value?.singleOrNull;
+      if (record?.recorded == 2 && !recorded.isCompleted) {
+        recorded.complete(record!);
+      }
+    });
+    addTearDown(recordsSubscription.close);
+    expect(await container.read(recordsProvider.future), [
+      (source: TreatmentsSource.aaps, recorded: null, recommended: 2.0),
+    ]);
+
     final provider = mealBolusShortfallsProvider(mealId);
     final warning = Completer<List<MealBolusShortfall>>();
     final subscription = container.listen(provider, (_, next) {
@@ -50,14 +63,17 @@ void main() {
       }
     });
     addTearDown(subscription.close);
-    expect(await container.read(provider.future), isEmpty);
+    expect(container.read(provider).requireValue, isEmpty);
 
-    final delivery = deliveredMealBolus(opened).copyWith(
-      createdAt: opened.add(const Duration(seconds: 50)),
-      insulin: 1.5,
-    );
+    final delivery = deliveredMealBolus(
+      opened,
+    ).copyWith(createdAt: opened.add(const Duration(seconds: 50)), insulin: 2);
     await db.localMirrorDao.upsertManualBolus(
       delivery.toCompanion(TreatmentsSource.aaps),
+    );
+    expect((await recorded.future).recorded, 2);
+    await db.localMirrorDao.upsertManualBolus(
+      delivery.copyWith(insulin: 1.5).toCompanion(TreatmentsSource.aaps),
     );
     expect(await warning.future, [(delivered: 1.5, recommended: 2.0)]);
   });

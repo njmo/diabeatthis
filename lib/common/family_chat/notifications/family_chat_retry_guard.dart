@@ -1,4 +1,5 @@
 import '../../../core/notifications/domain/events/family_chat_notification.dart';
+import '../../../core/notifications/domain/models/notification_retry_policy.dart';
 import '../../../core/notifications/inbox/notification_inbox_entry.dart';
 import '../data/family_chat_database.dart';
 
@@ -29,9 +30,17 @@ Future<void> withAuthorizedFamilyChatRetry({
       return;
     }
     final message = await db.message(scope, messageId);
+    final treatment = isActionableFamilyTreatment(event);
     if (message == null ||
         message['_notificationSuppressed'] == true ||
-        (event.replyChoices.isEmpty &&
+        (treatment &&
+            (message['kind'] != 'lowTreatment' ||
+                message['treatmentResult'] != null ||
+                await db.hasAuthoredReply(scope, uid, messageId) ||
+                await db.metadata('notificationReply:$scope:$messageId') !=
+                    null)) ||
+        (!treatment &&
+            event.replyChoices.isEmpty &&
             (message['receipts']?[uid]?['readAt'] != null ||
                 await db.locallyRead(scope, messageId))) ||
         (message['kind'] == 'question' &&

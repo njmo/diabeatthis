@@ -38,10 +38,13 @@ class NotificationsControllerImpl implements NotificationsController {
 
   final NotificationInboxStore _inbox;
   static const maxRetries = 2;
+  static const _maxTreatmentRetries = 3;
   final Future<bool> Function() retriesEnabled;
   final Future<void> Function(NotificationEvent)? showSystemRetry;
   final Future<void> Function(NotificationEvent, int, int)? showInAppRetry;
-  final Future<bool> Function(NotificationEvent)? retryStillRelevant;
+
+  /// Null means relevance could not be verified and should be checked again.
+  final Future<bool?> Function(NotificationEvent)? retryStillRelevant;
   final Future<void> Function(
     NotificationInboxEntry,
     FamilyChatNotificationEvent,
@@ -72,7 +75,8 @@ class NotificationsControllerImpl implements NotificationsController {
   }
 
   Future<bool> _shouldPresentInApp(NotificationEvent event) async {
-    if (!NotificationDefinitionCatalogImpl().byType(event.type).presentInApp) {
+    if (isActionableFamilyTreatment(event) ||
+        !NotificationDefinitionCatalogImpl().byType(event.type).presentInApp) {
       return false;
     }
     if (_ref.read(appLifecycleProvider) != AppLifecycleState.resumed) {
@@ -116,7 +120,9 @@ class NotificationsControllerImpl implements NotificationsController {
           createdAt: now,
           inApp: inApp,
           retryAt: await _firstRetryAt(event, now),
-          retriesRemaining: maxRetries,
+          retriesRemaining: isActionableFamilyTreatment(event)
+              ? _maxTreatmentRetries
+              : maxRetries,
         ),
       );
       // Without a durable copy a dismissed banner would be gone for good.
@@ -166,7 +172,9 @@ class NotificationsControllerImpl implements NotificationsController {
         id: notificationIdentity(event).id,
         createdAt: due,
         retryAt: await _firstRetryAt(event, due),
-        retriesRemaining: maxRetries,
+        retriesRemaining: isActionableFamilyTreatment(event)
+            ? _maxTreatmentRetries
+            : maxRetries,
       ),
     );
     // Lets the UI arm its refresh for when the entry becomes due.
@@ -177,7 +185,9 @@ class NotificationsControllerImpl implements NotificationsController {
     if (notificationRetryPolicy(event) == NotificationRetryPolicy.none) {
       return null;
     }
-    return await _retriesEnabled() ? due.add(notificationRetryDelay) : null;
+    return await _retriesEnabled()
+        ? due.add(notificationRetryDelayFor(event))
+        : null;
   }
 
   Future<bool> _retriesEnabled() async {
@@ -202,15 +212,21 @@ class NotificationsControllerImpl implements NotificationsController {
             entry.data,
           );
           final policy = notificationRetryPolicy(event);
-          if (!await _retriesEnabled() ||
-              policy == NotificationRetryPolicy.none ||
-              (policy == NotificationRetryPolicy.untilRead && entry.read) ||
-              (retryStillRelevant != null &&
-                  !await retryStillRelevant!(event))) {
+          final eligible =
+              await _retriesEnabled() &&
+              policy != NotificationRetryPolicy.none &&
+              !(policy == NotificationRetryPolicy.untilRead && entry.read);
+          final check = retryStillRelevant;
+          final relevant = eligible && check != null
+              ? await check(event)
+              : eligible;
+          if (relevant != true) {
             await _inbox.advanceRetry(
               entry,
-              nextDue: now,
-              remaining: 0,
+              nextDue: relevant == null
+                  ? clock.now().add(notificationRetryDelayFor(event))
+                  : now,
+              remaining: relevant == null ? entry.retriesRemaining : 0,
               inApp: entry.inApp,
               resetRead: false,
             );
@@ -296,7 +312,7 @@ class NotificationsControllerImpl implements NotificationsController {
     // OS identity after the lease expires instead of silently losing a try.
     await _inbox.advanceRetry(
       current,
-      nextDue: clock.now().add(notificationRetryDelay),
+      nextDue: clock.now().add(notificationRetryDelayFor(event)),
       remaining: entry.retriesRemaining - 1,
       inApp: inApp,
       resetRead: false,

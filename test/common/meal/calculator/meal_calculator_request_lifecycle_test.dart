@@ -18,6 +18,42 @@ void main() {
   };
 
   test(
+    'manual continue dismisses only the matching request and stays closed',
+    () async {
+      final store = MemoryMealCalculatorRequestStore();
+      final closed = <String>[];
+      final cleared = <int>[];
+      final rows = <(String, List<bool>)>[];
+      final controller = MealCalculatorRequestController(
+        store: store,
+        now: () => opened,
+        readContext: (_) async => null,
+        projectExtendedConfirmation: (_, _, _, _) async {},
+        publishWindow: (session, completed) async =>
+            rows.add((session, completed)),
+        closeWindow: (session) async => closed.add(session),
+        onComplete: (mealId) async => cleared.add(mealId),
+        onError: (error, _) => fail('$error'),
+      );
+      await controller.register(event, sessionId: 'manual');
+      await controller.register(
+        const AapsBolusSuggestionNotificationEvent(mealId: 8, carbs: 60),
+        sessionId: 'other',
+      );
+      await controller.dismissAfterManualContinuation(7);
+      await controller.dismissAfterManualContinuation(7);
+      await controller.observe(evidence);
+
+      expect(closed, ['manual']);
+      expect(cleared, [7]);
+      expect(rows.where((row) => row.$1 == 'manual').map((row) => row.$2), [
+        [false],
+      ]);
+      expect(store.requests.single['sessionId'], 'other');
+    },
+  );
+
+  test(
     'cancelling the meal dismisses the window without checking unfinished actions',
     () async {
       var relevant = true;

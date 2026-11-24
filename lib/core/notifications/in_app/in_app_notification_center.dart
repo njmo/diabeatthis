@@ -181,7 +181,7 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
           retryClaim: retryClaim,
         );
         if (posted && recorded != null && retryClaim != null) {
-          await _completeRetry(recorded, inApp: false);
+          await _completeRetry(recorded, event, inApp: false);
         }
       } catch (error, stackTrace) {
         logE(
@@ -205,17 +205,18 @@ class InAppNotificationCenter extends Notifier<InAppNotificationState>
       ),
     );
     if (recorded != null && retryClaim != null) {
-      await _completeRetry(recorded, inApp: true);
+      await _completeRetry(recorded, event, inApp: true);
     }
     if (ref.mounted) await refresh();
   }
 
   Future<void> _completeRetry(
-    NotificationInboxEntry entry, {
+    NotificationInboxEntry entry,
+    NotificationEvent event, {
     required bool inApp,
   }) => _store.advanceRetry(
     entry,
-    nextDue: clock.now().add(notificationRetryDelay),
+    nextDue: clock.now().add(notificationRetryDelayFor(event)),
     remaining: entry.retriesRemaining - 1,
     inApp: inApp,
     resetRead: false,

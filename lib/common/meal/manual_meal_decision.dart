@@ -25,8 +25,8 @@ MealDecision manualMealDecisionFromHistory(
   if (statuses.contains('eating-then-bolus')) {
     return MealDecision.eatNowBolusLater;
   }
-  if (statuses.contains('bolused-waiting') ||
-      statuses.contains('waited-eating')) {
+  if (statuses.contains('waited-eating') ||
+      (selectedWaitMinutes > 0 && statuses.contains('bolused-waiting'))) {
     return MealDecision.bolusWaitThenEat;
   }
   if (statuses.contains('bolused-eating')) {

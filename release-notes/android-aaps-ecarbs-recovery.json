@@ -1,0 +1,5 @@
+{
+  "platforms": ["android"],
+  "pl-PL": "Naprawiono migrację lokalnej bazy, która mogła zatrzymać zapis kalkulatora AAPS i monitor posiłku. PiP rozpoznaje wpis kalkulatora i zaplanowane eCarbs niezależnie. Poprawiono przejścia monitora posiłku i ponawianie próśb o dosłodzenie.",
+  "en-US": "Fixed a local database migration that could block AAPS calculator records and meal monitoring. PiP recognizes the calculator entry and scheduled eCarbs independently. Improved meal monitoring transitions and low-treatment request retries."
+}

@@ -19,6 +19,7 @@ void main() {
   final inApp = FakeNotificationsController();
   late DateTime now;
   late bool enabled, chatAuthorized;
+  bool? chatRelevant;
   late ProviderContainer container;
   late NotificationsControllerImpl controller;
 
@@ -31,6 +32,7 @@ void main() {
     now = DateTime(2026, 11, 19, 12);
     enabled = true;
     chatAuthorized = true;
+    chatRelevant = true;
     final provider = Provider(
       (ref) => NotificationsControllerImpl(
         ref,
@@ -38,6 +40,8 @@ void main() {
         localController: local,
         inbox: NotificationInboxStore(),
         retriesEnabled: () async => enabled,
+        retryStillRelevant: (event) async =>
+            event is FamilyChatNotificationEvent ? chatRelevant : true,
         withAuthorizedChatRetry: (_, _, deliver) async {
           if (chatAuthorized) await deliver();
         },
@@ -59,12 +63,23 @@ void main() {
     int id = 42,
     List<String> replies = const [],
     int? timeoutAfter,
+    bool lowTreatment = false,
   }) => FamilyChatNotificationEvent(
     id: id,
     tag: 'family:$id',
     title: 'Family',
     body: 'Are you ready?',
-    payload: const {'type': 'familyChat'},
+    payload: {
+      'type': 'familyChat',
+      if (lowTreatment)
+        'authorization': const {
+          'epoch': 'epoch',
+          'accountOffGeneration': 0,
+          'familyOffGeneration': 0,
+        },
+    },
+    lowTreatment: lowTreatment,
+    allowConsumption: lowTreatment,
     replyChoices: replies,
     timeoutAfter: timeoutAfter,
     message: (
@@ -77,6 +92,71 @@ void main() {
       sentAt: now,
     ),
   );
+
+  test(
+    'a low-treatment request re-alerts Android three times at one-minute intervals',
+    () async {
+      await withClock(Clock(() => now), () async {
+        final request = parentMessage(lowTreatment: true, timeoutAfter: 300000);
+        await controller.show(request);
+        expect(inApp.shownEvents, isEmpty);
+        expect(local.shownEvents, hasLength(1));
+        await NotificationInboxStore().markRead([request.id]);
+        now = now.add(const Duration(seconds: 59));
+        await advance(0);
+        expect(local.shownEvents, hasLength(1));
+        now = now.add(const Duration(seconds: 1));
+        await advance(0);
+        expect(local.shownEvents, hasLength(2));
+        await advance(1);
+        expect(local.shownEvents, hasLength(3));
+        await advance(1);
+        expect(local.shownEvents, hasLength(4));
+        await advance(1);
+        expect(local.shownEvents, hasLength(4));
+        expect(local.shownEvents.map(notificationIdentity).toSet(), {
+          notificationIdentity(request),
+        });
+      });
+    },
+  );
+
+  test(
+    'a failed treatment verification defers rather than consumes a retry',
+    () async {
+      await withClock(Clock(() => now), () async {
+        final request = parentMessage(lowTreatment: true, timeoutAfter: 300000);
+        await controller.show(request);
+        chatRelevant = null;
+        await advance(1);
+        expect(local.shownEvents, hasLength(1));
+        final entry = await NotificationInboxStore().get(request.id);
+        expect(entry?.retriesRemaining, 3);
+        expect(entry?.retryAt, now.add(const Duration(minutes: 1)));
+
+        chatRelevant = true;
+        await advance(0);
+        expect(local.shownEvents, hasLength(1));
+        await advance(1);
+        expect(local.shownEvents, hasLength(2));
+        expect(
+          (await NotificationInboxStore().get(request.id))?.retriesRemaining,
+          2,
+        );
+      });
+    },
+  );
+
+  test('answering a low-treatment request stops the next alert', () async {
+    await withClock(Clock(() => now), () async {
+      final request = parentMessage(lowTreatment: true, timeoutAfter: 300000);
+      await controller.show(request);
+      await advance(1);
+      await answer(request.id);
+      await advance(1);
+      expect(local.shownEvents, hasLength(2));
+    });
+  });
 
   test('native chat retries request a new Android alert', () {
     final chat = parentMessage();
