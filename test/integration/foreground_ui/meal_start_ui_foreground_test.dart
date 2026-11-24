@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:diabeatthis/common/l10n/application_language.dart';
 import 'package:diabeatthis/common/l10n/language.dart';
+import 'package:diabeatthis/common/meal/manual_meal_decision.dart';
 import 'package:diabeatthis/common/monitoring/meal_monitoring_phase.dart';
 import 'package:diabeatthis/common/platform/aaps_launcher.dart';
 import 'package:diabeatthis/common/widgets/manual_meal_decision_dialog.dart';
@@ -31,6 +32,7 @@ void main() {
       wait: false,
       action: 'Start eating',
       initialWait: 0,
+      savedResult: 'manual',
     ),
     (
       name: 'insulin and wait',
@@ -40,6 +42,7 @@ void main() {
       wait: true,
       action: 'Deliver bolus and wait',
       initialWait: 12,
+      savedResult: 'manual',
     ),
     (
       name: 'insulin and food now',
@@ -49,6 +52,7 @@ void main() {
       wait: false,
       action: 'Deliver bolus',
       initialWait: 0,
+      savedResult: manualBolusAndEatResult,
     ),
   ]) {
     testWidgets(
@@ -121,7 +125,7 @@ void main() {
             () =>
                 harness.uiDb.mealAdvisorResultDao.getMealAdvisorResult(mealId),
           );
-          expect(advice?.result, 'manual');
+          expect(advice?.result, scenario.savedResult);
           expect(advice?.initialWaitTime, scenario.initialWait);
         } finally {
           await tester.pumpWidget(const SizedBox.shrink());

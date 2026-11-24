@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../common/meal/manual_meal_decision.dart';
 import '../../../../../common/meal/meal_decision.dart';
 import '../../../../../core/domain/model/meal.dart' as domain;
 import '../../../../../core/drift/providers/database_provider.dart';
@@ -36,7 +37,7 @@ class CompleteBolusWaitUseCase {
         );
         final waitTimeIgnored =
             decision != null &&
-            decision.result != 'manual' &&
+            !isManualMealResult(decision.result) &&
             finalWaitMinutes < decision.initialWaitTime;
 
         await db.mealAdvisorResultDao.updateAdvisorResultWaitOutcome(

@@ -1,3 +1,4 @@
+import 'package:diabeatthis/common/meal/manual_meal_decision.dart';
 import 'package:diabeatthis/features/dashboard/data/models/persisted_meal_advisor_result.dart';
 import 'package:diabeatthis/features/dashboard/data/repositories/meal_advisor_result_store.dart';
 import 'package:diabeatthis/features/dashboard/data/use_cases/meal_advisor_result_use_case.dart';
@@ -19,7 +20,12 @@ void main() {
         9,
         MealAdvice(entry.value, null, source: 'manual'),
       );
-      expect(store.savedResult!.result, 'manual');
+      expect(
+        store.savedResult!.result,
+        entry.value == MealDecision.bolusAndEatNow
+            ? manualBolusAndEatResult
+            : 'manual',
+      );
       expect((await useCase.loadMealAdvice(9))!.decision, entry.value);
     });
     test('existing ${entry.key} remains an advisor result', () async {
@@ -30,6 +36,23 @@ void main() {
       expect((await useCase.loadMealAdvice(9))!.source, 'mealAdvisor');
     });
   }
+
+  test(
+    'manual eat-now survives a restart while awaiting confirmation',
+    () async {
+      final store = FakeMealAdvisorResultStore()
+        ..statuses = ['bolused-waiting'];
+      final useCase = MealAdvisorResultUseCase(store);
+      await useCase.saveMealAdvice(
+        9,
+        MealAdvice(MealDecision.bolusAndEatNow, null, source: 'manual'),
+      );
+
+      final advice = await useCase.loadMealAdvice(9);
+      expect(advice?.decision, MealDecision.bolusAndEatNow);
+      expect(advice?.source, 'manual');
+    },
+  );
 
   test('manual decision and selected wait survive persistence', () async {
     final store = FakeMealAdvisorResultStore();

@@ -16,10 +16,11 @@ class MealAdvisorResultUseCase {
     if (result == null) return null;
 
     return MealAdvice.full(
-      result.result == 'manual'
+      isManualMealResult(result.result)
           ? manualMealDecisionFromHistory(
               await store.getMealStatusHistory(mealId),
               selectedWaitMinutes: result.initialWaitTime,
+              savedResult: result.result,
             )
           : _decisionFromStatus(result.result),
       result.waitTimeIgnored
@@ -58,7 +59,9 @@ class MealAdvisorResultUseCase {
         version: advice.source == 'manual'
             ? null
             : MealAdvisor.algorithmVersion,
-        result: advice.source == 'manual' ? 'manual' : decision.status,
+        result: advice.source == 'manual'
+            ? _manualResult(decision)
+            : decision.status,
         finalWaitTime: waitTime,
         initialWaitTime: waitTime,
         waitTimeIgnored: advice.source == 'manual'
@@ -116,6 +119,11 @@ class MealAdvisorResultUseCase {
       durationMinutes: durationMinutes,
     );
   }
+
+  String _manualResult(MealDecision decision) =>
+      decision == MealDecision.bolusAndEatNow
+      ? manualBolusAndEatResult
+      : 'manual';
 
   MealDecision _decisionFromStatus(String status) {
     return switch (status) {

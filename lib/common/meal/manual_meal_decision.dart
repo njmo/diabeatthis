@@ -1,6 +1,11 @@
 import '../l10n/language.dart';
 import 'meal_decision.dart';
 
+const manualBolusAndEatResult = 'manual-bolused-eating';
+
+bool isManualMealResult(String result) =>
+    result == 'manual' || result == manualBolusAndEatResult;
+
 class ManualMealDecision {
   final MealDecision decision;
   final int waitMinutes;
@@ -21,12 +26,16 @@ String mealDecisionLabel(MealDecision decision) => switch (decision) {
 MealDecision manualMealDecisionFromHistory(
   Iterable<String> statuses, {
   int selectedWaitMinutes = 0,
+  String? savedResult,
 }) {
   if (statuses.contains('eating-then-bolus')) {
     return MealDecision.eatNowBolusLater;
   }
+  if (savedResult == manualBolusAndEatResult) {
+    return MealDecision.bolusAndEatNow;
+  }
   if (statuses.contains('waited-eating') ||
-      (selectedWaitMinutes > 0 && statuses.contains('bolused-waiting'))) {
+      statuses.contains('bolused-waiting')) {
     return MealDecision.bolusWaitThenEat;
   }
   if (statuses.contains('bolused-eating')) {

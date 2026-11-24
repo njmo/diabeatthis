@@ -19,6 +19,7 @@ class ManualMealDecisionSection extends StatelessWidget {
     final choice = manualMealDecisionFromHistory(
       details.statusHistory.map((event) => event.status),
       selectedWaitMinutes: decision.initialWaitTime,
+      savedResult: decision.result,
     );
     final actualWait = details.recordedWait?.inMinutes;
     return MealSectionTile(

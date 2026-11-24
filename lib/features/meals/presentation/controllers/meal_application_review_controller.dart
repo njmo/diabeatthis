@@ -43,5 +43,6 @@ class MealApplicationReviewController {
       manualMealDecisionFromHistory(
         details.statusHistory.map((entry) => entry.status),
         selectedWaitMinutes: details.advisorDecision?.initialWaitTime ?? 0,
+        savedResult: details.advisorDecision?.result,
       );
 }
