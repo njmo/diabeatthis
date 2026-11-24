@@ -214,6 +214,23 @@ void main() {
           ('15:13:19.382', ['carbs']),
         ],
       ),
+      (
+        name: '19:52 scheduled eCarbs repeated before and after the wizard',
+        wizardAt: '18:53:09.653',
+        insulinAt: '18:53:12.066',
+        carbsAt: '18:53:08.533',
+        carbs: 31,
+        initial: 1.85,
+        expected: 1.85,
+        batches: [
+          ('18:52:58.431', ['extended']),
+          ('18:53:08.746', ['extended', 'extended']),
+          ('18:53:11.135', ['wizard', 'wizard']),
+          ('18:53:13.199', ['insulin']),
+          ('18:53:23.529', ['extendedWithId']),
+          ('18:54:31.279', ['carbs']),
+        ],
+      ),
     ]) {
       test('replays AAPS mirror batches from ${replay.name}', () async {
         final db = DatabaseImpl(NativeDatabase.memory());
@@ -259,13 +276,25 @@ void main() {
           'created_at': at(replay.carbsAt).toIso8601String(),
           'carbs': replay.carbs,
         };
+        final extended = {
+          'eventType': 'Meal Bolus',
+          'created_at': at('19:37:50.000').toIso8601String(),
+          'carbs': 21,
+          'duration': const Duration(hours: 2).inMilliseconds,
+        };
         final payloads = {
+          'extended': extended,
+          'extendedWithId': {...extended, '_id': 'test-ns-ecarbs'},
           'wizard': wizard,
           'insulin': insulin,
           'correction': {...insulin, 'insulin': replay.expected},
           'carbs': carbs,
         };
+        var hasWizard = false;
+        var hasExtended = false;
         for (final (receivedAt, records) in replay.batches) {
+          hasWizard |= records.contains('wizard');
+          hasExtended |= records.contains('extended');
           await withClock(
             Clock.fixed(at(receivedAt)),
             () => handler.handle(
@@ -275,7 +304,13 @@ void main() {
               harness.runtimeContext,
             ),
           );
-          expect(await db.select(db.bolusWizard).get(), hasLength(1));
+          expect(
+            await db.select(db.bolusWizard).get(),
+            hasLength(hasWizard ? 1 : 0),
+          );
+          final extendedRows = await db.select(db.extendedCarb).get();
+          expect(extendedRows, hasLength(hasExtended ? 1 : 0));
+          if (hasExtended) expect(extendedRows.single.carbs, 21);
           expect(
             await db.select(db.manualBolus).get(),
             hasLength(lessThanOrEqualTo(1)),
