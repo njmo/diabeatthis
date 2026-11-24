@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:drift/drift.dart';
 
-import '../../core/data_sources/config/data_source_config.dart';
 import '../../core/data_sources/local_mirror/mappers/bolus_wizard_drift_mapper.dart';
 import '../../core/domain/model/bolus_wizard.dart' as domain;
 import '../../core/drift/database_impl.dart';
+import 'calculator_submission_policy.dart';
 import 'meal_add_on_bolus_context.dart';
 import 'meal_bolus_evidence.dart';
 import 'meal_calculator_submission.dart';
@@ -65,17 +65,12 @@ Future<MealBolusCoverage> readMealBolusCoverage(
       wizard.toDomain(),
     );
     final initial = link.relationType == 'initial';
-    final acceptedAapsEntry =
-        wizard.source == TreatmentsSource.aaps.storageValue &&
-        submission.isValid &&
-        !submission.hasUnresolvedDelivery &&
-        !submission.wizard.hasUnresolvedDelivery &&
-        submission.recommendedInsulin.isFinite &&
-        submission.recommendedInsulin > 0;
-    if (!submission.isComplete && !acceptedAapsEntry) continue;
+    final acceptedEntry = const CalculatorSubmissionPolicy()
+        .acceptsCalculatorEntry(submission);
+    if (!submission.isComplete && !acceptedEntry) continue;
     hasInitial |= initial;
     hasWizard |= submission.isComplete;
-    hasAcceptedCalculator |= acceptedAapsEntry;
+    hasAcceptedCalculator |= acceptedEntry;
     final amount = wizard.carbs;
     if (amount != null && amount.isFinite && amount > 0) linkedCarbs += amount;
   }

@@ -23,6 +23,7 @@ class ActiveMealProgressCard extends StatelessWidget {
     this.progressAction,
     this.treatmentSurplus = false,
     this.bolusWarnings = const [],
+    this.bolusRecordLabels = const [],
     this.waitingForBolus = false,
   });
 
@@ -43,6 +44,7 @@ class ActiveMealProgressCard extends StatelessWidget {
   final Widget? progressAction;
   final bool treatmentSurplus;
   final List<String> bolusWarnings;
+  final List<String> bolusRecordLabels;
   final bool waitingForBolus;
 
   @override
@@ -182,6 +184,10 @@ class ActiveMealProgressCard extends StatelessWidget {
             if (treatmentSurplus) ...[
               const SizedBox(height: 8),
               const MealTreatmentSurplusWarning(),
+            ],
+            for (final label in bolusRecordLabels) ...[
+              const SizedBox(height: 8),
+              Text(label, style: TextStyle(fontSize: 12, color: mutedColor)),
             ],
             for (final message in bolusWarnings) ...[
               const SizedBox(height: 8),

@@ -16,7 +16,7 @@ import 'package:diabeatthis/foreground/event/internal/meal_event.dart';
 import 'package:diabeatthis/foreground/event/internal/meal_status_changed_event.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
 import 'package:diabeatthis/foreground/task/base/collector_context.dart';
-import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/detect_finished_eating_executor.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/bolus_then_wait_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/monitor_until_meal.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/new_meal_check_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/wait_for_bolus_executor.dart';
@@ -293,8 +293,8 @@ void main() {
               }),
             );
             async.flushMicrotasks();
-            expect(updates, [(84, 'bolused-eating')]);
-            expect(task.state, isA<DetectFinishedEatingExecutor>());
+            expect(updates, [(84, 'bolused-waiting')]);
+            expect(task.state, isA<BolusThenWaitExecutor>());
             expect(nextMealReads, 0);
 
             unawaited(collector.dispose());

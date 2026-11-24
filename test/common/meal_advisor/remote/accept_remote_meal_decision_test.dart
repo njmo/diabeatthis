@@ -21,6 +21,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../foreground/tasks/meal_monitor_test.dart' show testBolusWizard;
+
 const source = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const requestId = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
 const acceptanceToken = 'cccccccccccccccccccccccccccccccc';
@@ -147,6 +149,52 @@ void main() {
       expect(value.respondingCaregiverName, 'Alex');
       expect(value.advice?.caregiverId, 'caregiver');
       expect(value.advice?.caregiverRequestId, value.id);
+    },
+  );
+
+  test(
+    'a matching wizard activates a previously accepted caregiver plan once',
+    () async {
+      final f = await fixture();
+      addTearDown(() async {
+        f.container.dispose();
+        await f.db.close();
+      });
+      await f.db.customStatement('UPDATE family_sync_identity SET enabled=1');
+      await f.db.customStatement('UPDATE meal SET planned_at=? WHERE id=1', [
+        DateTime.now().millisecondsSinceEpoch,
+      ]);
+      await f.db.customStatement(
+        "INSERT INTO ingredient(id,name,carbs_per_100g,fat_per_100g,fiber_per_100g,protein_per_100g,nutrition_confidence,is_reference) VALUES(1,'Lunch',17,0,0,0,1,1)",
+      );
+      await f.db.customStatement(
+        'INSERT INTO meal_ingredients(meal_id,ingredient_id,amount,quantity_confidence) VALUES(1,1,1,1)',
+      );
+      final version = await f.db
+          .customSelect(
+            "SELECT revision FROM family_sync_outbox WHERE kind='meals' AND entity_id='1'",
+          )
+          .getSingle();
+      await f.container.read(acceptRemoteMealDecisionProvider)(
+        request(
+          answer: 'insulinAndEat',
+          revision: version.read<int>('revision'),
+        ),
+      );
+      final start = f.container.read(startAcceptedMealFromCalculatorProvider);
+      final at = DateTime.now();
+      await start(testBolusWizard(createdAt: at, carbs: 20, insulin: 1.75));
+      expect((await f.db.mealDao.getMealById(1))?.status, 'planned');
+      final matching = testBolusWizard(createdAt: at, carbs: 17, insulin: 1.75);
+      await start(matching);
+      await start(matching);
+      expect((await f.db.mealDao.getMealById(1))?.status, 'waiting-for-bolus');
+      final waitingTransitions = await f.db
+          .customSelect(
+            "SELECT * FROM meal_status_history WHERE meal_id=1 AND status='waiting-for-bolus'",
+          )
+          .get();
+      expect(waitingTransitions, hasLength(1));
     },
   );
 

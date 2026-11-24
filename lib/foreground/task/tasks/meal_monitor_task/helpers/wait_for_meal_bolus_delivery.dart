@@ -1,5 +1,6 @@
 import 'package:clock/clock.dart';
 
+import '../../../../../common/meal/calculator_submission_policy.dart';
 import '../../../../../common/meal/meal_bolus_coverage.dart';
 import '../../../../../common/meal/meal_bolus_submission_candidates.dart';
 import '../../../../../common/meal/meal_calculator_submission.dart';
@@ -98,6 +99,9 @@ class WaitForMealBolusDelivery {
               final source = wizard.remoteSource == null
                   ? TreatmentsSource.aaps
                   : TreatmentsSource.cloud;
+              final policy = runtime.container.read(
+                calculatorSubmissionPolicyProvider,
+              );
               // Persist this meal's accepted evidence even when bulk mirroring
               // is disabled, just as the workflow persists its calculator link.
               await db.transaction(() async {
@@ -126,12 +130,14 @@ class WaitForMealBolusDelivery {
                 }
                 requireCurrent();
                 _recordHistory(runtime, submissions, [canonical]);
-                if (!canonical.isValid ||
-                    ((requireRecordedBolus || canonical.insulin <= 0) &&
-                        !CalculatorSubmission(
-                          wizard: canonical,
-                          delivery: confirmedDelivery,
-                        ).isComplete)) {
+                final savedSubmission = CalculatorSubmission(
+                  wizard: canonical,
+                  delivery: confirmedDelivery,
+                  hasUnresolvedDelivery: submission.hasUnresolvedDelivery,
+                );
+                if (!savedSubmission.isComplete &&
+                    (requireRecordedBolus ||
+                        !policy.acceptsCalculatorEntry(savedSubmission))) {
                   throw const MealBolusDeliveryChanged();
                 }
                 requireCurrent();
@@ -214,14 +220,9 @@ class WaitForMealBolusDelivery {
           (submission.delivery != null ||
               !submissions.wasCarbohydrateComponentRemoved(wizard) ||
               wizard.carbohydrateRecord != null);
+      final policy = runtime.container.read(calculatorSubmissionPolicyProvider);
       final wizardGatePasses =
-          !requireRecordedBolus &&
-          wizard.remoteSource == null &&
-          submission.isValid &&
-          !submission.hasUnresolvedDelivery &&
-          !submission.wizard.hasUnresolvedDelivery &&
-          submission.recommendedInsulin.isFinite &&
-          submission.recommendedInsulin > 0;
+          !requireRecordedBolus && policy.acceptsCalculatorEntry(submission);
       final willAdvance = originalGatePasses || wizardGatePasses;
       Log.diagnostic(
         'AapsTreatmentTrace',

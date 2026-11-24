@@ -1,15 +1,30 @@
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/core/data_sources/cloud/cloud_treatment_source_repository.dart';
+import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/repositories/mirroring_treatment_source_repository.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/services/local_mirror_writer.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/helpers/treatments_factory.dart';
 import 'package:diabeatthis/core/data_sources/nightscout/repository/nightscout_repository.dart';
 import 'package:diabeatthis/core/domain/model/bg_check.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
 import 'package:diabeatthis/core/domain/model/manual_bolus.dart';
+import 'package:diabeatthis/core/domain/model/meal.dart';
 import 'package:diabeatthis/core/domain/model/temporary_target.dart';
 import 'package:diabeatthis/core/domain/model/treat.dart';
 import 'package:diabeatthis/core/domain/model/treatment_base.dart';
+import 'package:diabeatthis/core/drift/database_impl.dart' show DatabaseImpl;
+import 'package:diabeatthis/core/drift/providers/database_provider.dart';
+import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
+import 'package:diabeatthis/foreground/event/internal/treatment_event_dispatcher.dart';
+import 'package:diabeatthis/foreground/providers/calculator_submissions_provider.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/helpers/wait_for_meal_bolus_delivery.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/meal_monitor_context.dart';
+import 'package:drift/native.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../foreground/utils/fake_runtime_harness.dart';
 
 void main() {
   final start = DateTime(2026, 11, 2, 12);
@@ -28,6 +43,108 @@ void main() {
 
   Future<List<Treatment>> poll() =>
       withClock(Clock(() => now), source.pollTreatments);
+
+  test(
+    'calculator advances from the first snapshot and the next adds its insulin',
+    () async {
+      final db = DatabaseImpl(NativeDatabase.memory());
+      final container = ProviderContainer(
+        overrides: [databaseProvider.overrideWithValue(db)],
+      );
+      final harness = FakeRuntimeHarness(container: container);
+      addTearDown(() async {
+        await harness.dispose();
+        await db.close();
+      });
+      final repository = MirroringTreatmentSourceRepository(
+        delegate: source,
+        mirrorWriter: LocalMirrorWriter(db.localMirrorDao),
+        source: TreatmentsSource.cloud,
+      );
+      final dispatcher = TreatmentEventDispatcher();
+      Future<List<Treatment>> pollAndDispatch() async {
+        final result = await withClock(
+          Clock(() => now),
+          repository.pollTreatments,
+        );
+        dispatcher.dispatchBatch(
+          container: container,
+          emitEvent: harness.runtimeContext.emitEvent,
+          treatments: result.reversed,
+        );
+        return result;
+      }
+
+      final carbAt = start.add(const Duration(seconds: 10));
+      final wizardAt = carbAt.add(const Duration(seconds: 1));
+      final insulinAt = wizardAt.add(const Duration(seconds: 2));
+      final carbs = {
+        '_id': 'carbs',
+        'eventType': 'Meal Bolus',
+        'created_at': carbAt.toIso8601String(),
+        'carbs': 17,
+      };
+      final wizard = {
+        '_id': 'wizard',
+        'eventType': 'Bolus Wizard',
+        'created_at': wizardAt.toIso8601String(),
+        'glucose': 120,
+        'bolusCalculatorResult': {'carbs': 17, 'totalInsulin': 1.75},
+      };
+      final insulin = {
+        '_id': 'insulin',
+        'eventType': 'Meal Bolus',
+        'created_at': insulinAt.toIso8601String(),
+        'insulin': 1.2,
+      };
+      List<Treatment> readSnapshot(List<Map<String, Object>> records) =>
+          TreatmentFactory().parseTreatments(
+            records,
+            remoteSource: 'nightscout',
+          );
+
+      remote.treatments = readSnapshot([wizard, carbs]);
+      now = start.add(const Duration(minutes: 1));
+      expect(await pollAndDispatch(), hasLength(2));
+      final entry = harness.emittedEvents
+          .whereType<TreatmentAvailableEvent<BolusWizard>>()
+          .single
+          .data;
+      expect(entry.carbohydrateRecord?.carbs, 17);
+      final accepted = await const WaitForMealBolusDelivery()(
+        harness.runtimeContext,
+        MealMonitorContext(
+          activeMeal: Meal(id: 91, name: 'Meal', status: 'waiting-for-bolus'),
+        ),
+        entry,
+        requireRecordedBolus: false,
+      );
+      expect(accepted.recommendedInsulin, 1.75);
+      expect(accepted.deliveredInsulin, isNull);
+
+      remote.treatments = readSnapshot([insulin, wizard, carbs]);
+      now = start.add(const Duration(minutes: 2));
+      expect(await pollAndDispatch(), [isA<ManualBolus>()]);
+      final submission = container.read(calculatorSubmissionsProvider).single;
+      expect(submission.key.isAtSameMomentAs(wizardAt), isTrue);
+      expect(submission.deliveredInsulin, 1.2);
+      expect(await db.select(db.bolusWizard).get(), hasLength(1));
+      expect(await db.select(db.treat).get(), isEmpty);
+      expect((await db.select(db.manualBolus).get()).single.insulin, 1.2);
+      expect(
+        harness.emittedEvents.whereType<TreatmentAvailableEvent<BolusWizard>>(),
+        hasLength(1),
+      );
+      expect(
+        harness.emittedEvents.whereType<TreatmentAvailableEvent<ManualBolus>>(),
+        isEmpty,
+      );
+      expect(
+        harness.emittedEvents.whereType<TreatmentAvailableEvent<Treat>>(),
+        isEmpty,
+      );
+    },
+  );
 
   test(
     'finds late-uploaded delivery and carbs less than one second after a calculator',

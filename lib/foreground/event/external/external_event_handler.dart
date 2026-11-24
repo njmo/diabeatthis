@@ -50,6 +50,16 @@ class ExternalEventHandler with Logging {
 
   Future<void> flushPendingTreatments() => _treatmentBuffer.flush();
 
+  Future<void> _continueMealManually(int mealId) async {
+    try {
+      await _runtimeContext.container
+          .read(mealCalculatorRequestControllerProvider)
+          .dismissAfterManualContinuation(mealId);
+    } finally {
+      _runtimeContext.emitEvent(MealBolusContinuedManually(mealId));
+    }
+  }
+
   void handle(Map<String, dynamic> event) {
     if (handleAdditionalEvent?.call(event, _runtimeContext) ?? false) return;
     if (event['external_event'] == 'app_event' &&
@@ -79,7 +89,7 @@ class ExternalEventHandler with Logging {
         appEvent['app_event'] == MealBolusContinuedManually.command) {
       final data = appEvent['data'];
       if (data case {'mealId': final int mealId}) {
-        _runtimeContext.emitEvent(MealBolusContinuedManually(mealId));
+        unawaited(_continueMealManually(mealId));
       }
       return;
     }

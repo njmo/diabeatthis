@@ -3725,8 +3725,12 @@ void main() {
 
           expect(completed, isTrue);
           expect(calls, hasLength(1));
-          expect(calls.single.$2, 'bolused-eating');
-          expect(nextExecutor, isA<DetectFinishedEatingExecutor>());
+          expect(calls.single.$2, 'bolused-waiting');
+          expect(nextExecutor, isA<BolusThenWaitExecutor>());
+          expect(
+            (nextExecutor as BolusThenWaitExecutor).confirmImmediately,
+            isTrue,
+          );
           expect(notifications.shownEvents, isEmpty);
         });
       });
@@ -3798,8 +3802,12 @@ void main() {
 
           expect(completed, isTrue);
           expect(calls, hasLength(1));
-          expect(calls.single.$2, 'bolused-eating');
-          expect(nextExecutor, isA<DetectFinishedEatingExecutor>());
+          expect(calls.single.$2, 'bolused-waiting');
+          expect(nextExecutor, isA<BolusThenWaitExecutor>());
+          expect(
+            (nextExecutor as BolusThenWaitExecutor).confirmImmediately,
+            isTrue,
+          );
           expect(notifications.shownEvents, isEmpty);
         });
       });

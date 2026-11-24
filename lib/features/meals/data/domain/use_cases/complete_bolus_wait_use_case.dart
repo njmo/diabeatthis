@@ -3,8 +3,10 @@ import 'dart:math';
 import 'package:clock/clock.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../../common/meal/meal_decision.dart';
 import '../../../../../core/domain/model/meal.dart' as domain;
 import '../../../../../core/drift/providers/database_provider.dart';
+import '../../../../dashboard/data/providers/meal_advisor_result_provider.dart';
 import '../../providers/meal_status_history_provider.dart';
 
 part 'complete_bolus_wait_use_case.g.dart';
@@ -21,7 +23,9 @@ class CompleteBolusWaitUseCase {
 
   Future<void> call(domain.Meal meal) async {
     final db = ref.read(databaseProvider);
-    final finalWaitMinutes = await _finalWaitMinutes(meal);
+    final advice = await ref.read(getMealAdviceProvider(meal).future);
+    final immediate = advice?.decision == MealDecision.bolusAndEatNow;
+    final finalWaitMinutes = immediate ? null : await _finalWaitMinutes(meal);
 
     await db.transaction(() async {
       final current = await db.mealDao.getMealById(meal.id);
@@ -42,7 +46,11 @@ class CompleteBolusWaitUseCase {
         );
       }
 
-      await db.mealDao.tryUpdateMealStatus(meal.id, 'waited-eating');
+      await db.mealDao.tryUpdateMealStatus(
+        meal.id,
+        immediate ? 'bolused-eating' : 'waited-eating',
+        occurredAt: clock.now(),
+      );
     });
   }
 

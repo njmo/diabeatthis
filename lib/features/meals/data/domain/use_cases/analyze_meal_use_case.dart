@@ -248,7 +248,14 @@ class AnalyzeMealUseCase {
           .where(
             (treatment) => treatment.isValid && treatment.createdAt != null,
           )
-          .map(_treatmentEvent),
+          .map(
+            (treatment) => _treatmentEvent(
+              treatment,
+              recordedBolus: treatment is BolusWizard
+                  ? wizardGrouping.wizardBoluses[treatment]
+                  : null,
+            ),
+          ),
       ...activities.map((activity) {
         return MealTimelineEventData(
           timestamp: activity.startedAt,
@@ -352,7 +359,10 @@ class AnalyzeMealUseCase {
     );
   }
 
-  MealTimelineEventData _treatmentEvent(Treatment treatment) {
+  MealTimelineEventData _treatmentEvent(
+    Treatment treatment, {
+    ManualBolus? recordedBolus,
+  }) {
     final createdAt = treatment.createdAt ?? clock.now();
     if (treatment is BgCheck) {
       return MealTimelineEventData(
@@ -375,7 +385,11 @@ class AnalyzeMealUseCase {
         timestamp: createdAt,
         type: MealTimelineEventType.bolusWizard,
         label: lang.uiBolusWizard,
-        value: treatment.getParts(),
+        value:
+            recordedBolus != null &&
+                (recordedBolus.insulin - treatment.insulin).abs() > 0.001
+            ? '${treatment.getParts()} → ${recordedBolus.insulin.toStringAsFixed(2)}U'
+            : treatment.getParts(),
       );
     }
     if (treatment is ManualBolus) {

@@ -26,7 +26,6 @@ import '../helpers/meal_completion_requirements.dart';
 import '../helpers/record_meal_wizard_link.dart';
 import '../meal_monitor_context.dart';
 import 'bolus_then_wait_executor.dart';
-import 'detect_finished_eating_executor.dart';
 import 'finalize_meal_executor.dart';
 import 'meal_monitor_state_executor.dart';
 import 'new_meal_check_executor.dart';
@@ -293,7 +292,7 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
     }
     final nextStatus = decision == MealDecision.eatNowBolusLater
         ? 'eaten-bolused'
-        : decision.status;
+        : 'bolused-waiting';
     var confirmed = const <BolusWizard>[];
     while (true) {
       if (pendingCalculator != null) {
@@ -365,13 +364,12 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
       return FinalizeMealExecutor();
     }
 
-    if (decision == MealDecision.bolusWaitThenEat) {
-      return BolusThenWaitExecutor(
-        recommendedMinutes: advice?.wait?.recommendedMinutes,
-        isManual: advice?.source == 'manual',
-      );
-    }
-
-    return DetectFinishedEatingExecutor(shouldBolus: false);
+    final immediate = decision == MealDecision.bolusAndEatNow;
+    return BolusThenWaitExecutor(
+      recommendedMinutes: immediate ? 0 : advice?.wait?.recommendedMinutes,
+      isManual: advice?.source == 'manual',
+      confirmImmediately: immediate,
+      alreadyWaiting: true,
+    );
   }
 }

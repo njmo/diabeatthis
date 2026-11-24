@@ -2007,9 +2007,11 @@ class FamilyChatSession extends ChangeNotifier {
         final answers = message['answers'];
         final queued = await _write(currentScope, () async {
           final keepNotification =
-              message['kind'] == 'question' &&
-              answers is List &&
-              answers.isNotEmpty &&
+              ((message['kind'] == 'question' &&
+                      answers is List &&
+                      answers.isNotEmpty) ||
+                  (message['kind'] == 'lowTreatment' &&
+                      message['treatmentResult'] == null)) &&
               await db.hasPendingNotificationRetry(
                 currentScope,
                 message['id'] as String,

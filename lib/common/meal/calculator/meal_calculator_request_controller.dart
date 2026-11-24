@@ -181,6 +181,21 @@ class MealCalculatorRequestController {
     if (hadRequests) await _save();
   });
 
+  Future<void> dismissAfterManualContinuation(int mealId) => _enqueue(() async {
+    final key = 'meal:$mealId';
+    final request = _requests[key];
+    if (request?.matchesMealStage(mealId, null) != true) return;
+    _requests.remove(key);
+    try {
+      if (request?.sessionId case final session?) {
+        await closeWindow?.call(session);
+      }
+    } finally {
+      await _save();
+    }
+    await onComplete?.call(mealId);
+  });
+
   Future<bool> hasPendingScheduledExtendedCarbs(int mealId) async {
     var pending = false;
     await _enqueue(() async {

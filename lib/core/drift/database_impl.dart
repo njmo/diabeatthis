@@ -79,7 +79,7 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
       );
 
   @override
-  int get schemaVersion => 53;
+  int get schemaVersion => 54;
 
   final DatabaseOpenTracker _openTracker;
   final bool _includeStandardPortions;
@@ -431,6 +431,17 @@ class DatabaseImpl extends _$DatabaseImpl implements Database {
         });
       } else if (from < 53 && !hasTreatmentSurplus) {
         await m.addColumn(meal, meal.treatmentSurplus);
+      }
+      if (from < 54) {
+        // Some installations already have the column from a fresh schema.
+        final columns = await customSelect(
+          'PRAGMA table_info(bolus_wizard)',
+        ).get();
+        if (!columns.any(
+          (row) => row.read<String>('name') == 'carbohydrate_component',
+        )) {
+          await m.addColumn(bolusWizard, bolusWizard.carbohydrateComponent);
+        }
       }
     },
     beforeOpen: (details) async {

@@ -1,7 +1,10 @@
+import 'package:clock/clock.dart';
 import 'package:diabeatthis/common/events/data/task/task_data_synchronization_payload.dart';
 import 'package:diabeatthis/common/events/task_event_payload.dart';
+import 'package:diabeatthis/common/history/insulin_bolus_summary.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config.dart';
 import 'package:diabeatthis/core/data_sources/config/data_source_config_provider.dart';
+import 'package:diabeatthis/core/data_sources/local_mirror/history/local_treatments_history_repository.dart';
 import 'package:diabeatthis/core/data_sources/local_mirror/models/wizard_carbohydrate_component.dart';
 import 'package:diabeatthis/core/domain/model/bolus_wizard.dart' as domain;
 import 'package:diabeatthis/core/domain/model/manual_bolus.dart' as domain;
@@ -14,6 +17,7 @@ import 'package:diabeatthis/foreground/event/external/local_treatments/local_tre
 import 'package:diabeatthis/foreground/event/internal/calculator_submission_changed_event.dart';
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/event/router/task_event_router.dart';
+import 'package:diabeatthis/foreground/providers/calculator_submissions_provider.dart';
 import 'package:diabeatthis/foreground/providers/task_event_router_provider.dart';
 import 'package:diabeatthis/foreground/synchronization/synchronization_cache_controller.dart';
 import 'package:drift/drift.dart' show Value;
@@ -173,6 +177,150 @@ void main() {
       },
     );
 
+    for (final replay in [
+      (
+        name: '08:49 interrupted',
+        wizardAt: '07:49:13.648',
+        insulinAt: '07:49:15.338',
+        carbsAt: '07:49:12.990',
+        carbs: 17,
+        initial: 1.75,
+        expected: 1.2,
+        batches: [
+          ('07:49:15.297', ['wizard', 'wizard']),
+          ('07:49:23.696', ['wizard', 'wizard', 'insulin']),
+          ('07:49:26.757', ['insulin', 'insulin']),
+          ('07:49:36.886', ['insulin']),
+          ('07:50:06.453', ['correction', 'carbs']),
+          ('07:50:17.230', ['correction', 'carbs', 'carbs']),
+          ('07:50:27.422', ['carbs']),
+        ],
+      ),
+      (
+        name: '16:12 unchanged',
+        wizardAt: '15:12:06.459',
+        insulinAt: '15:12:09.307',
+        carbsAt: '15:12:05.668',
+        carbs: 16,
+        initial: 1.15,
+        expected: 1.15,
+        batches: [
+          ('15:12:07.945', ['wizard', 'wizard']),
+          ('15:12:16.526', ['wizard', 'wizard', 'insulin']),
+          ('15:12:20.743', ['insulin', 'insulin']),
+          ('15:12:30.814', ['insulin']),
+          ('15:13:00.348', ['carbs']),
+          ('15:13:13.986', ['carbs']),
+          ('15:13:19.382', ['carbs']),
+        ],
+      ),
+    ]) {
+      test('replays AAPS mirror batches from ${replay.name}', () async {
+        final db = DatabaseImpl(NativeDatabase.memory());
+        final container = ProviderContainer(
+          overrides: [
+            databaseProvider.overrideWithValue(db),
+            dataSourceConfigProvider.overrideWithValue(
+              const AsyncData(
+                DataSourceConfig(
+                  bgSource: BgSource.aaps,
+                  treatmentsSource: TreatmentsSource.aaps,
+                  pumpStatusSource: PumpStatusSource.aaps,
+                  historySource: HistorySource.local,
+                  mirrorToLocal: true,
+                ),
+              ),
+            ),
+          ],
+        );
+        final harness = FakeRuntimeHarness(container: container);
+        addTearDown(() async {
+          await harness.dispose();
+          await db.close();
+        });
+        final handler = LocalTreatmentsHandler();
+        DateTime at(String time) => DateTime.parse('2026-11-24T${time}Z');
+        final wizard = {
+          'eventType': 'Bolus Wizard',
+          'created_at': at(replay.wizardAt).toIso8601String(),
+          'glucose': 120,
+          'bolusCalculatorResult': {
+            'carbs': replay.carbs,
+            'totalInsulin': replay.initial,
+          },
+        };
+        final insulin = {
+          'eventType': 'Meal Bolus',
+          'created_at': at(replay.insulinAt).toIso8601String(),
+          'insulin': replay.initial,
+        };
+        final carbs = {
+          'eventType': 'Meal Bolus',
+          'created_at': at(replay.carbsAt).toIso8601String(),
+          'carbs': replay.carbs,
+        };
+        final payloads = {
+          'wizard': wizard,
+          'insulin': insulin,
+          'correction': {...insulin, 'insulin': replay.expected},
+          'carbs': carbs,
+        };
+        for (final (receivedAt, records) in replay.batches) {
+          await withClock(
+            Clock.fixed(at(receivedAt)),
+            () => handler.handle(
+              LocalTreatmentsEvent.fromJson({
+                'data': [for (final name in records) payloads[name]!],
+              }),
+              harness.runtimeContext,
+            ),
+          );
+          expect(await db.select(db.bolusWizard).get(), hasLength(1));
+          expect(
+            await db.select(db.manualBolus).get(),
+            hasLength(lessThanOrEqualTo(1)),
+          );
+          expect(await db.select(db.treat).get(), isEmpty);
+        }
+
+        final cached = container.read(calculatorSubmissionsProvider).single;
+        expect(cached.deliveredInsulin, replay.expected);
+        expect(cached.wizard.carbohydrateRecord?.carbs, replay.carbs);
+        expect(
+          (await db.select(db.manualBolus).get()).single.insulin,
+          replay.expected,
+        );
+        final start = at(replay.carbsAt).subtract(const Duration(seconds: 1));
+        final end = start.add(const Duration(minutes: 5));
+        final history = await LocalTreatmentsHistoryRepository(
+          db.localMirrorDao,
+        ).fetchTreatmentsBetween(start, end);
+        final summary = InsulinBolusSummary.fromTreatments(
+          treatments: history,
+          start: start,
+          end: end,
+        );
+        expect(summary.wizardCount, 1);
+        expect(summary.wizardUnits, replay.expected);
+        expect(summary.manualCount, 0);
+        expect(
+          harness.emittedEvents
+              .whereType<TreatmentAvailableEvent<domain.BolusWizard>>(),
+          hasLength(1),
+        );
+        expect(
+          harness.emittedEvents
+              .whereType<TreatmentAvailableEvent<domain.ManualBolus>>(),
+          isEmpty,
+        );
+        expect(
+          harness.emittedEvents
+              .whereType<TreatmentAvailableEvent<domain.Treat>>(),
+          isEmpty,
+        );
+      });
+    }
+
     for (final order in ['same batch', 'wizard first', 'insulin first']) {
       test(
         'retains matched insulin and revisions in the mirror ($order)',
@@ -211,7 +359,7 @@ void main() {
           final insulin = {
             ..._manualBolusPayload(isValid: true, insulin: 2.95),
             'created_at': insulinAt.toIso8601String(),
-          };
+          }..remove('_id');
           final wizard = _bolusWizardPayload();
           if (order == 'same batch') {
             await receive([insulin, _treatPayload(), wizard]);
@@ -222,7 +370,9 @@ void main() {
             await receive([insulin]);
             await receive([wizard, _treatPayload()]);
           }
-          expect((await db.select(db.manualBolus).get()).single.insulin, 2.95);
+          final firstBolus = (await db.select(db.manualBolus).get()).single;
+          expect(firstBolus.insulin, 2.95);
+          expect(firstBolus.externalId, isNull);
           expect(await db.select(db.treat).get(), isEmpty);
           expect(await db.select(db.bolusWizard).get(), hasLength(1));
           expect(
@@ -232,9 +382,12 @@ void main() {
           );
 
           await receive([
-            {...insulin, 'insulin': 1.5},
+            {...insulin, '_id': 'manual-1'},
+            {...insulin, '_id': 'manual-1', 'insulin': 1.5},
           ]);
-          expect((await db.select(db.manualBolus).get()).single.insulin, 1.5);
+          final corrected = (await db.select(db.manualBolus).get()).single;
+          expect(corrected.insulin, 1.5);
+          expect(corrected.externalId, 'manual-1');
 
           await receive([
             {

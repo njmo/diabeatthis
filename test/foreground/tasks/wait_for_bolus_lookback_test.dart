@@ -9,7 +9,7 @@ import 'package:diabeatthis/features/meals/data/providers/meal_database_provider
 import 'package:diabeatthis/foreground/event/internal/treatment_available_event.dart';
 import 'package:diabeatthis/foreground/providers/latest_bolus_wizard_provider.dart';
 import 'package:diabeatthis/foreground/runtime/task_cancelled_exception.dart';
-import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/detect_finished_eating_executor.dart';
+import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/bolus_then_wait_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/finalize_meal_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/meal_monitor_state_executor.dart';
 import 'package:diabeatthis/foreground/task/tasks/meal_monitor_task/executors/wait_for_bolus_executor.dart';
@@ -98,7 +98,7 @@ void main() {
                 async.flushMicrotasks();
                 final expectedStatus = decision == MealDecision.eatNowBolusLater
                     ? 'eaten-bolused'
-                    : 'bolused-eating';
+                    : 'bolused-waiting';
                 if (age <= const Duration(minutes: 5)) {
                   expect(updates, [(84, expectedStatus)]);
                   expect(notifications.shownEvents, isEmpty);
@@ -119,7 +119,7 @@ void main() {
                   next,
                   decision == MealDecision.eatNowBolusLater
                       ? isA<FinalizeMealExecutor>()
-                      : isA<DetectFinishedEatingExecutor>(),
+                      : isA<BolusThenWaitExecutor>(),
                 );
                 harness.cancel();
                 async.flushMicrotasks();

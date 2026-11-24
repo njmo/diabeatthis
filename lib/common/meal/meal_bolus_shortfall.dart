@@ -1,14 +1,21 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/data_sources/config/data_source_config.dart';
 import '../../core/data_sources/local_mirror/mappers/bolus_wizard_drift_mapper.dart';
 import '../../core/drift/providers/database_provider.dart';
 import 'meal_calculator_submission.dart';
 
 typedef MealBolusShortfall = ({double delivered, double recommended});
 
-final mealBolusShortfallsProvider = StreamProvider.autoDispose
-    .family<List<MealBolusShortfall>, int>((ref, mealId) {
+typedef MealBolusRecord = ({
+  TreatmentsSource source,
+  double? recorded,
+  double recommended,
+});
+
+final mealBolusRecordsProvider = StreamProvider.autoDispose
+    .family<List<MealBolusRecord>, int>((ref, mealId) {
       final db = ref.watch(databaseProvider);
       return db
           .customSelect(
@@ -20,7 +27,7 @@ final mealBolusShortfallsProvider = StreamProvider.autoDispose
           .watch()
           .asyncMap(
             (_) => db.transaction(() async {
-              final shortfalls = <MealBolusShortfall>[];
+              final records = <MealBolusRecord>[];
               for (final link in await db.mealWizardLinkDao.forMeal(mealId)) {
                 if (link.relationType == 'correction') continue;
                 final wizard =
@@ -37,18 +44,29 @@ final mealBolusShortfallsProvider = StreamProvider.autoDispose
                   db,
                   wizard.toDomain(),
                 );
-                final delivered = submission.deliveredInsulin;
-                final recommended = submission.recommendedInsulin;
-                if (delivered != null &&
-                    recommended.isFinite &&
-                    delivered < recommended - 0.001) {
-                  shortfalls.add((
-                    delivered: delivered,
-                    recommended: recommended,
-                  ));
-                }
+                if (!submission.isValid) continue;
+                records.add((
+                  source: TreatmentsSource.fromStorage(wizard.source),
+                  recorded: submission.deliveredInsulin,
+                  recommended: submission.recommendedInsulin,
+                ));
               }
-              return shortfalls;
+              return records;
             }),
+          );
+    });
+
+final mealBolusShortfallsProvider = Provider.autoDispose
+    .family<AsyncValue<List<MealBolusShortfall>>, int>((ref, mealId) {
+      return ref
+          .watch(mealBolusRecordsProvider(mealId))
+          .whenData(
+            (records) => [
+              for (final record in records)
+                if (record.recorded case final amount?)
+                  if (record.recommended.isFinite &&
+                      amount < record.recommended - 0.001)
+                    (delivered: amount, recommended: record.recommended),
+            ],
           );
     });

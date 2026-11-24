@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart' show Variable;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../common/family_chat/data/family_chat_database_provider.dart';
+import '../../../common/family_chat/notifications/family_chat_push.dart';
 import '../../../common/family_chat/notifications/family_chat_retry_guard.dart';
 import '../../../common/meal/calculator/calculator_instruction_event.dart';
 import '../../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
@@ -16,8 +18,10 @@ import '../base/notifications_controller.dart';
 import '../controllers/foreground_task_notification_controller.dart';
 import '../controllers/in_app_notifications_controller.dart';
 import '../controllers/notifications_controller_impl.dart';
+import '../domain/events/family_chat_notification.dart';
 import '../domain/events/finished_eating_event_notification.dart';
 import '../domain/models/notification_event.dart';
+import '../domain/models/notification_retry_policy.dart';
 import '../in_app/in_app_notification_center.dart';
 import 'local_notifications_controller_provider.dart';
 
@@ -47,6 +51,35 @@ NotificationsController notificationsControllerForeground(Ref ref) {
     showSystemRetry: local.showRetry,
     showInAppRetry: inApp.showRetry,
     retryStillRelevant: (event) async {
+      if (event is FamilyChatNotificationEvent &&
+          isActionableFamilyTreatment(event)) {
+        if (Firebase.apps.isEmpty) return false;
+        final uid = FirebaseAuth.instance.currentUser?.uid;
+        final familyId = event.payload['familyId'];
+        final messageId = event.payload['messageId'];
+        if (uid == null ||
+            event.payload['uid'] != uid ||
+            familyId is! String ||
+            messageId is! String) {
+          return false;
+        }
+        final relevant = await revalidateFamilyTreatmentRetry(event);
+        if (relevant != true) return relevant;
+        final confirmed = await ref
+            .read(databaseProvider)
+            .customSelect(
+              'SELECT 1 FROM family_treatment_journal '
+              'WHERE owner_uid=? AND family_id=? AND message_id=? '
+              'AND (confirmed_at IS NOT NULL OR meal_id IS NOT NULL) LIMIT 1',
+              variables: [
+                Variable(uid),
+                Variable(familyId),
+                Variable(messageId),
+              ],
+            )
+            .getSingleOrNull();
+        return confirmed == null;
+      }
       if (event is! FinishedEatingNotificationEvent) return true;
       final meal = await ref
           .read(databaseProvider)

@@ -25,7 +25,9 @@ void main() {
           fixture.insulin,
           fixture.carbs,
         ])) {
-          expect(BolusWizardGrouping(input).relatedRecords, {fixture.carbs});
+          final grouping = BolusWizardGrouping(input);
+          expect(grouping.relatedRecords, {fixture.carbs, fixture.insulin});
+          expect(grouping.wizardBoluses[fixture.wizard]?.insulin, 3);
           expect(input.whereType<ManualBolus>().single.insulin, 3);
         }
       },

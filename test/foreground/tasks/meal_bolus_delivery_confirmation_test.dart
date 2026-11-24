@@ -31,6 +31,43 @@ import 'meal_monitor_test.dart' show testBolusWizard;
 
 void main() {
   test(
+    'Nightscout advances a main meal from the calculator entry alone',
+    () async {
+      final start = DateTime.utc(2026, 1, 1, 12);
+      final wizard = testBolusWizard(
+        createdAt: start,
+        carbs: 17,
+        insulin: 1.75,
+      ).copyWith(remoteSource: 'nightscout');
+      var historyReads = 0;
+      final container = ProviderContainer(
+        overrides: [
+          mealBolusDeliveryHistoryProvider.overrideWithValue((_) async {
+            historyReads++;
+            return [];
+          }),
+        ],
+      );
+      final harness = FakeRuntimeHarness(container: container);
+      addTearDown(() {
+        harness.cancel();
+        container.dispose();
+      });
+      final accepted = await const WaitForMealBolusDelivery()(
+        harness.runtimeContext,
+        MealMonitorContext(
+          activeMeal: Meal(id: 91, name: 'Meal', status: 'waiting-for-bolus'),
+        ),
+        wizard,
+        requireRecordedBolus: false,
+      );
+      expect(historyReads, 0);
+      expect(accepted.recommendedInsulin, 1.75);
+      expect(accepted.deliveredInsulin, isNull);
+    },
+  );
+
+  test(
     'accepted live delivery survives a cleared cache without bulk mirroring',
     () async {
       final db = DatabaseImpl(NativeDatabase.memory());

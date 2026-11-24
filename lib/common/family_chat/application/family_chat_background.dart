@@ -71,10 +71,13 @@ class FamilyChatPushView {
     'historyGeneration': message['historyGeneration'] ?? 0,
     'target': target,
     if (message['kind'] == 'lowTreatment' &&
-        familyTreatmentAuthorizationFromConfig(config) != null)
+        familyTreatmentAuthorizationFromConfig(config) != null) ...{
+      'familyId': config['familyId'],
+      'epoch': config['epoch'],
       'authorization': familyTreatmentAuthorizationJson(
         familyTreatmentAuthorizationFromConfig(config)!,
       ),
+    },
   };
 }
 
@@ -226,6 +229,28 @@ class FamilyChatBackground {
       elapsedMilliseconds: () => watch.elapsedMilliseconds,
     );
     return view.remainingLifetime == 0 ? null : view;
+  }
+
+  Future<bool> canRetryTreatment(Map<String, dynamic> payload) async {
+    if (!rolloutEnabled) return false;
+    final authority = parseFamilyTreatmentAuthorization(
+      payload['authorization'],
+    );
+    if (authority == null) return false;
+    final view = await _validated({
+      for (final key in ['type', 'uid', 'familyId', 'epoch', 'messageId'])
+        key: payload[key],
+    }, requiredGuard: payload);
+    if (view == null ||
+        view.message['kind'] != 'lowTreatment' ||
+        familyTreatmentAuthorizationFromConfig(view.config) != authority) {
+      return false;
+    }
+    final members = view.config['members'] as List;
+    final isChild = members.whereType<Map>().any(
+      (member) => member['uid'] == payload['uid'] && member['role'] == 'child',
+    );
+    return isChild && (view.remainingLifetime ?? 0) > 0;
   }
 
   Future<bool> receive(Map<String, dynamic> data) async {

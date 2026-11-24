@@ -7,6 +7,7 @@ import '../../../app/providers/app_lifecycle_state_provider.dart';
 import '../../../common/events/data/task/task_data_synchronization_payload.dart';
 import '../../../common/meal/calculator/calculator_evidence_snapshot.dart';
 import '../../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
+import '../../../common/meal_advisor/remote/start_accepted_caregiver_meal.dart';
 import '../../../core/domain/model/bolus_wizard.dart';
 import '../../../core/domain/model/correction_bolus.dart';
 import '../../../core/domain/model/extended_carb.dart';
@@ -14,6 +15,7 @@ import '../../../core/domain/model/manual_bolus.dart';
 import '../../../core/domain/model/temporary_target.dart';
 import '../../../core/domain/model/treat.dart';
 import '../../../core/domain/model/treatment_base.dart';
+import '../../../core/drift/providers/database_provider.dart';
 import '../../../core/logger/logger.dart';
 import '../../providers/calculator_submissions_provider.dart';
 import '../../providers/latest_bolus_wizard_provider.dart';
@@ -78,6 +80,17 @@ class TreatmentEventDispatcher with Logging {
       }
       if (firstEntry) {
         emitEvent(TreatmentAvailableEvent<BolusWizard>(wizard));
+        if (container.exists(databaseProvider)) {
+          unawaited(
+            container
+                .read(startAcceptedMealFromCalculatorProvider)(wizard)
+                .catchError(
+                  (Object error) => logW(
+                    'Could not activate accepted meal from calculator: ${error.runtimeType}',
+                  ),
+                ),
+          );
+        }
       }
     }
 

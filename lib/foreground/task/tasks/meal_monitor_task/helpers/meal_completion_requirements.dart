@@ -1,5 +1,6 @@
 import '../../../../../common/meal/calculator/meal_calculator_request_controller.dart';
 import '../../../../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
+import '../../../../../common/meal/calculator_submission_policy.dart';
 import '../../../../../common/meal/meal_bolus_coverage.dart';
 import '../../../../../common/meal/meal_calculator_submission.dart';
 import '../../../../../common/meal/meal_treatment_surplus.dart';
@@ -125,13 +126,8 @@ Future<List<BolusWizard>> _currentUnassignedDeliveries(
       records.single.toDomain(),
       liveTreatments: live.records,
     );
-    if (submission.isValid &&
-        (submission.isComplete ||
-            (submission.wizard.remoteSource == null &&
-                !submission.hasUnresolvedDelivery &&
-                !submission.wizard.hasUnresolvedDelivery &&
-                submission.recommendedInsulin.isFinite &&
-                submission.recommendedInsulin > 0))) {
+    final policy = runtime.container.read(calculatorSubmissionPolicyProvider);
+    if (submission.isComplete || policy.acceptsCalculatorEntry(submission)) {
       current.add(submission.wizard.copyWith(localId: records.single.localId));
     }
   }

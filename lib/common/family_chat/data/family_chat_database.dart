@@ -503,8 +503,11 @@ class FamilyChatDatabase extends GeneratedDatabase {
         final rows = await customSelect(
           r'''
       SELECT reads.id,
-        json_extract(message.payload,'$.kind')='question'
-          AND json_array_length(message.payload,'$.answers')>0 AS question
+        (json_extract(message.payload,'$.kind')='question'
+          AND json_array_length(message.payload,'$.answers')>0)
+        OR (json_extract(message.payload,'$.kind')='lowTreatment'
+          AND json_extract(message.payload,'$.treatmentResult') IS NULL)
+          AS needs_answer
       FROM chat_local_reads AS reads
       JOIN chat_notifications AS notice ON
         notice.scope=reads.scope AND notice.tag=(? || reads.id)
@@ -522,7 +525,7 @@ class FamilyChatDatabase extends GeneratedDatabase {
         ).get();
         for (final row in rows) {
           final id = row.read<String>('id');
-          if (row.readNullable<bool>('question') == true &&
+          if (row.readNullable<bool>('needs_answer') == true &&
               await hasPendingNotificationRetry(scope, id)) {
             continue;
           }
@@ -811,9 +814,11 @@ class FamilyChatDatabase extends GeneratedDatabase {
     final answers = value['answers'];
     final keepNotification =
         ownRead != null &&
-        value['kind'] == 'question' &&
-        answers is List &&
-        answers.isNotEmpty &&
+        ((value['kind'] == 'question' &&
+                answers is List &&
+                answers.isNotEmpty) ||
+            (value['kind'] == 'lowTreatment' &&
+                value['treatmentResult'] == null)) &&
         await hasPendingNotificationRetry(scope, id);
     if (account != null &&
             value['senderUid'] != account &&
