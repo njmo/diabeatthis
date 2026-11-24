@@ -228,6 +228,7 @@ void main() {
           ('18:53:11.135', ['wizard', 'wizard']),
           ('18:53:13.199', ['insulin']),
           ('18:53:23.529', ['extendedWithId']),
+          ('18:53:24.000', ['extended']),
           ('18:54:31.279', ['carbs']),
         ],
       ),
@@ -292,9 +293,11 @@ void main() {
         };
         var hasWizard = false;
         var hasExtended = false;
+        String? extendedId;
         for (final (receivedAt, records) in replay.batches) {
           hasWizard |= records.contains('wizard');
           hasExtended |= records.contains('extended');
+          if (records.contains('extendedWithId')) extendedId = 'test-ns-ecarbs';
           await withClock(
             Clock.fixed(at(receivedAt)),
             () => handler.handle(
@@ -310,7 +313,14 @@ void main() {
           );
           final extendedRows = await db.select(db.extendedCarb).get();
           expect(extendedRows, hasLength(hasExtended ? 1 : 0));
-          if (hasExtended) expect(extendedRows.single.carbs, 21);
+          if (hasExtended) {
+            final row = extendedRows.single;
+            expect(row.externalId, extendedId);
+            expect(row.carbs, 21);
+            expect(row.durationMinutes, 120);
+            expect(row.createdAt, at('19:37:50.000').millisecondsSinceEpoch);
+            expect(row.source, TreatmentsSource.aaps.storageValue);
+          }
           expect(
             await db.select(db.manualBolus).get(),
             hasLength(lessThanOrEqualTo(1)),
@@ -318,6 +328,17 @@ void main() {
           expect(await db.select(db.treat).get(), isEmpty);
         }
 
+        final storedWizard = (await db.select(db.bolusWizard).get()).single;
+        final storedCarbs = WizardCarbohydrateComponent.fromJson(
+          storedWizard.carbohydrateComponent!,
+        );
+        expect(
+          storedWizard.createdAt,
+          at(replay.wizardAt).millisecondsSinceEpoch,
+        );
+        expect(storedCarbs.carbs, replay.carbs);
+        expect(storedCarbs.createdAt.toUtc(), at(replay.carbsAt));
+        expect(storedCarbs.source, TreatmentsSource.aaps.storageValue);
         final cached = container.read(calculatorSubmissionsProvider).single;
         expect(cached.deliveredInsulin, replay.expected);
         expect(cached.wizard.carbohydrateRecord?.carbs, replay.carbs);
