@@ -28,7 +28,11 @@ Map<String, Object?> watchMealProgress(
   final stage = progress.currentStage;
   return {
     'stage': stage.name,
-    if (progress.canFinishEating) 'canFinishEating': true,
+    if (progress.canFinishEating && status != 'bolused-waiting')
+      'canFinishEating': true,
+    // Starting to eat follows the status, not the wait clock: an eat-now meal
+    // asks for this confirmation without a waiting stage or deadline.
+    'canStartEating': status == 'bolused-waiting' && !waitingForExtendedCarbs,
     'index': progress.currentIndex,
     'count': progress.stages.length,
     'completed': [

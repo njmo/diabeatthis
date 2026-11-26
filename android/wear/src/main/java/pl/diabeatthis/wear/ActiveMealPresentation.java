@@ -78,6 +78,13 @@ record ActiveMealPresentation(String title, String status, JSONObject progress, 
         return progress == null ? 0 : progress.optInt("index");
     }
 
+    /** Older phones only enabled Start eating through the wait deadline. */
+    boolean canStartEating() {
+        if (progress == null) return false;
+        if (progress.has("canStartEating")) return progress.optBoolean("canStartEating");
+        return waitUntil() > 0 && !waitsForExtendedCarbs();
+    }
+
     long waitUntil() {
         return progress == null || !"waiting".equals(progress.optString("stage"))
             ? 0 : progress.optLong("waitUntilMs");

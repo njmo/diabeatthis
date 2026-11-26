@@ -137,6 +137,7 @@ void main() {
         ),
         {
           'stage': 'waiting',
+          'canStartEating': true,
           'index': 1,
           'count': 3,
           'completed': [0],

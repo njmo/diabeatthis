@@ -633,7 +633,7 @@ public class MealDecisionWatchActivity extends Activity
         if (!active.status().isEmpty()) {
             childBandLabel(content, active.status(), MUTED, ActiveMealPresentation.STATUS_SIZE);
         }
-        boolean startAfterWait = deadline > 0 && !active.waitsForExtendedCarbs();
+        boolean startAfterWait = active.canStartEating();
         if (child && (active.canFinishEating() || active.readyToStart() || startAfterWait)) {
             footer.setVisibility(View.VISIBLE);
             var eaten = compactButton(footer,

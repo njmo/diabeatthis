@@ -129,6 +129,37 @@ void main() {
     },
   );
 
+  test('eat-now confirmation offers Start eating without a wait clock', () {
+    final confirm = watchMealProgress(
+      'bolused-waiting',
+      decision: immediate,
+      history: const ['waiting-for-bolus', 'bolused-waiting'],
+    );
+    expect((confirm['stage'], confirm['count']), ('eating', 2));
+    expect(confirm.containsKey('waitUntilMs'), isFalse);
+    expect(confirm['canStartEating'], isTrue);
+    expect(confirm['canFinishEating'], isNot(true));
+
+    final ecarbs = watchMealProgress(
+      'bolused-waiting',
+      decision: immediate,
+      waitingForExtendedCarbs: true,
+    );
+    expect(ecarbs['canStartEating'], isFalse);
+
+    final timed = watchMealProgress(
+      'bolused-waiting',
+      decision: waitFirst,
+      waitStartedAt: now,
+      waitMinutes: 15,
+    );
+    expect(timed['canStartEating'], isTrue);
+
+    final eating = watchMealProgress('bolused-eating', decision: immediate);
+    expect(eating['canStartEating'], isFalse);
+    expect(eating['canFinishEating'], isTrue);
+  });
+
   test('countdown exposes the real deadline and does not finish eating', () {
     final waiting = watchMealProgress(
       'bolused-waiting',

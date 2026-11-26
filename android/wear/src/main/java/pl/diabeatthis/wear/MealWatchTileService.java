@@ -210,7 +210,7 @@ public final class MealWatchTileService extends TileService {
                 activeMeal = ActiveMealPresentation.from(labels, active, "child".equals(overview.optString("mode")));
                 heading = labels.getString(activeMeal.heading());
                 if ("child".equals(overview.optString("mode")) &&
-                        (activeMeal.readyToStart() || (activeMeal.waitUntil() > 0 && !activeMeal.waitsForExtendedCarbs()))) startMealId = active.optLong("mealId");
+                        (activeMeal.readyToStart() || activeMeal.canStartEating())) startMealId = active.optLong("mealId");
                 name = activeMeal.title();
                 state = activeMeal.status();
                 progress = activeMeal.progress();
