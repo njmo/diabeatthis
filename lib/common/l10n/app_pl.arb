@@ -3332,6 +3332,7 @@
   "mealProgressWaitRemaining": "Do końca oczekiwania",
   "mealWaitPendingExtendedCarbs": "Czekamy na eCarbs",
   "mealAapsCalculatorUsed": "Kalkulator AAPS użyty",
+  "mealBolusCancelledInAaps": "Bolus anulowany w AAPS",
   "mealAapsBolusRecorded": "Bolus zapisany w AAPS: {amount} j.",
   "@mealAapsBolusRecorded": {"placeholders": {"amount": {"type": "String"}}},
   "mealBolusBelowCalculator": "Zarejestrowano {delivered} j. z {recommended} j. wyliczonych przez kalkulator",

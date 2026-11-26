@@ -2892,6 +2892,7 @@
   "mealProgressWaitRemaining": "Waiting time remaining",
   "mealWaitPendingExtendedCarbs": "Waiting for eCarbs",
   "mealAapsCalculatorUsed": "AAPS calculator used",
+  "mealBolusCancelledInAaps": "Bolus cancelled in AAPS",
   "mealAapsBolusRecorded": "Bolus recorded in AAPS: {amount} U",
   "@mealAapsBolusRecorded": {"placeholders": {"amount": {"type": "String"}}},
   "mealBolusBelowCalculator": "Recorded {delivered} U of {recommended} U calculated",

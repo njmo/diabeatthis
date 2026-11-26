@@ -97,7 +97,9 @@ class MealListToday extends ConsumerWidget {
           for (final record
               in ref.watch(mealBolusRecordsProvider(meal.id)).value ??
                   const <MealBolusRecord>[])
-            if (record.source == TreatmentsSource.aaps)
+            if (record.cancelled)
+              lang.mealBolusCancelledInAaps
+            else if (record.source == TreatmentsSource.aaps)
               if (record.recorded case final amount?)
                 if (!record.recommended.isFinite ||
                     amount >= record.recommended - 0.001)

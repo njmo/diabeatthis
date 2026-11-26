@@ -122,16 +122,40 @@ class LocalMirrorWriter with Logging {
         delivery.createdAt.subtract(mealBolusDeliveryWindow),
         delivery.createdAt,
       );
-      for (final calculator in calculators) {
-        if (!mealBolusDeliveryFollowsWizard(calculator.toDomain(), delivery)) {
-          continue;
-        }
-        final marked = await _dao.markWizardDeliveryUnresolved(
-          DateTime.fromMillisecondsSinceEpoch(calculator.createdAt),
-        );
-        if (marked != null) {
-          invalidatedWizards[marked.createdAt] = marked.toDomain();
-        }
+      // A later calculator takes over the delivery, so only the latest one
+      // before it can be the calculator this cancelled bolus belonged to.
+      final preceding =
+          calculators
+              .where(
+                (calculator) =>
+                    calculator.createdAt <=
+                    delivery.createdAt.millisecondsSinceEpoch,
+              )
+              .toList()
+            ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      final owner = preceding.lastOrNull;
+      if (owner == null ||
+          !mealBolusDeliveryFollowsWizard(owner.toDomain(), delivery)) {
+        continue;
+      }
+      // A calculator that kept its own delivery did not lose this bolus.
+      final ownerAt = DateTime.fromMillisecondsSinceEpoch(owner.createdAt);
+      final windowEnd = ownerAt.add(mealBolusDeliveryWindow);
+      final remaining = await _dao.getManualBolusesBetween(ownerAt, windowEnd);
+      // Later calculators in the window keep their own boluses.
+      final nearby = await _dao.getBolusWizardsBetween(ownerAt, windowEnd);
+      if (findMealBolusDelivery(owner.toDomain(), [
+            for (final calculator in nearby) calculator.toDomain(),
+            for (final bolus in remaining) bolus.toDomain(),
+          ]) !=
+          null) {
+        continue;
+      }
+      final marked = await _dao.markWizardDeliveryUnresolved(
+        DateTime.fromMillisecondsSinceEpoch(owner.createdAt),
+      );
+      if (marked != null) {
+        invalidatedWizards[marked.createdAt] = marked.toDomain();
       }
     }
     final rejectedComponents = <Treat>{};

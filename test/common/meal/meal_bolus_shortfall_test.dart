@@ -51,7 +51,12 @@ void main() {
     });
     addTearDown(recordsSubscription.close);
     expect(await container.read(recordsProvider.future), [
-      (source: TreatmentsSource.aaps, recorded: null, recommended: 2.0),
+      (
+        source: TreatmentsSource.aaps,
+        recorded: null,
+        recommended: 2.0,
+        cancelled: false,
+      ),
     ]);
 
     final provider = mealBolusShortfallsProvider(mealId);
