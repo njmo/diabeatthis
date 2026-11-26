@@ -9,6 +9,7 @@ import '../../../core/notifications/domain/events/aaps_carbs_request_notificatio
 import '../../../core/notifications/domain/models/hash_notification_id_factory.dart';
 import '../../../core/notifications/domain/models/notification_event_type.dart';
 import '../../../core/notifications/domain/models/notification_key.dart';
+import '../../../core/notifications/providers/aaps_carbs_request_notification_preferences.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../features/low_treatment/data/providers/aaps_carbs_request_episode_store_provider.dart';
 import '../../../features/low_treatment/data/repositories/aaps_carbs_request_episode_store.dart';
@@ -146,7 +147,14 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
       episode = episode.start(id);
     }
     episode = await _applySnooze(context, episode, store);
-    if (episode.acknowledged || !_isDue(episode, now)) return episode;
+    if (episode.acknowledged) return episode;
+    if (!await _notificationsEnabled(context)) {
+      // Muted on this phone: the suggestion stays in the app; only the phone
+      // notification is skipped, including one shown before muting.
+      if (episode.lastReminderAt != null) await _cancelNotification(context);
+      return episode;
+    }
+    if (!_isDue(episode, now)) return episode;
 
     episode = await _applyEvents(
       inbox,
@@ -285,6 +293,20 @@ class AapsCarbsRequestMonitorTask extends WorkflowTask with Logging {
     await _cancelNotification(context);
     await store.markReminded(snooze.at);
     return episode.reminded(snooze.at);
+  }
+
+  Future<bool> _notificationsEnabled(RuntimeContext context) async {
+    try {
+      return await context.container.read(
+        aapsCarbsRequestNotificationsEnabledReaderProvider,
+      )();
+    } catch (error) {
+      // An unreadable setting must not silence a carbs request.
+      context.log(
+        'AAPS carbs notification setting unavailable: ${error.runtimeType}',
+      );
+      return true;
+    }
   }
 
   bool _isDue(AapsCarbsRequestEpisode episode, DateTime now) {

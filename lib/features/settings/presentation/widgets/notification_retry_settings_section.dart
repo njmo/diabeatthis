@@ -4,11 +4,18 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../common/l10n/language.dart';
 import '../../../../core/notifications/providers/notification_retry_preferences.dart';
+import 'aaps_carbs_request_notification_setting.dart';
 import 'notification_retry_switch.dart';
 import 'settings_section_card.dart';
 
 class NotificationRetrySettingsSection extends HookConsumerWidget {
-  const NotificationRetrySettingsSection({super.key});
+  const NotificationRetrySettingsSection({
+    super.key,
+    this.showAapsCarbsRequestSetting = false,
+  });
+
+  /// AAPS carbs requests are notified on the child's phone only.
+  final bool showAapsCarbsRequestSetting;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,6 +52,8 @@ class NotificationRetrySettingsSection extends HookConsumerWidget {
                   },
           ),
         ),
+        if (showAapsCarbsRequestSetting)
+          const AapsCarbsRequestNotificationSetting(),
       ],
     );
   }

@@ -145,7 +145,9 @@ class SettingsPage extends HookConsumerWidget with Logging {
                     ],
                     const ApplicationThemeSettingsSection(),
                     const SizedBox(height: 16),
-                    const NotificationRetrySettingsSection(),
+                    NotificationRetrySettingsSection(
+                      showAapsCarbsRequestSetting: !caregiver,
+                    ),
                     const SizedBox(height: 16),
                     SettingsSectionCard(
                       icon: Icons.language_outlined,

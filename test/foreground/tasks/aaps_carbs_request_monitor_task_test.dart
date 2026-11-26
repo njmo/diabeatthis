@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:diabeatthis/core/domain/model/glucose.dart';
+import 'package:diabeatthis/core/notifications/providers/aaps_carbs_request_notification_preferences.dart';
 import 'package:diabeatthis/core/notifications/providers/notifications_controller_provider.dart';
 import 'package:diabeatthis/features/low_treatment/data/providers/aaps_carbs_request_episode_store_provider.dart';
 import 'package:diabeatthis/features/low_treatment/data/repositories/aaps_carbs_request_episode_store.dart';
 import 'package:diabeatthis/features/low_treatment/domain/models/aaps_carbs_request_episode.dart';
 import 'package:diabeatthis/foreground/event/internal/aaps_carbs_request_acknowledged_event.dart';
+import 'package:diabeatthis/foreground/event/internal/aaps_carbs_request_notifications_changed.dart';
 import 'package:diabeatthis/foreground/event/internal/aaps_carbs_request_snoozed_event.dart';
 import 'package:diabeatthis/foreground/event/internal/data_available_event.dart';
 import 'package:diabeatthis/foreground/synchronization/synchronization_cache_controller.dart';
@@ -21,6 +23,62 @@ import '../utils/fake_runtime_harness.dart';
 
 void main() {
   final start = DateTime(2026, 9, 15, 12);
+
+  test('muted notifications keep tracking the request without showing it', () {
+    fakeAsync((async) {
+      withClock(Clock(() => start.add(async.elapsed)), () {
+        var enabled = false;
+        final fixture = _fixture(start, notificationsEnabled: () => enabled);
+        unawaited(
+          const AapsCarbsRequestMonitorTask()
+              .run(fixture.harness.runtimeContext)
+              .catchError((_) {}),
+        );
+        async.flushMicrotasks();
+
+        expect(fixture.notifications.shownEvents, isEmpty);
+        expect(fixture.store.value.id, isNotNull);
+        expect(fixture.store.value.acknowledged, isFalse);
+
+        enabled = true;
+        async.elapse(AapsCarbsRequestMonitorTask.reminderInterval);
+        fixture.harness.dispatchTick(clock.now());
+        async.flushMicrotasks();
+        expect(fixture.notifications.shownEvents, hasLength(1));
+        fixture.harness.cancel();
+      });
+    });
+  });
+
+  test('muting hides a shown notification right away', () {
+    fakeAsync((async) {
+      withClock(Clock(() => start.add(async.elapsed)), () {
+        var enabled = true;
+        final fixture = _fixture(start, notificationsEnabled: () => enabled);
+        unawaited(
+          const AapsCarbsRequestMonitorTask()
+              .run(fixture.harness.runtimeContext)
+              .catchError((_) {}),
+        );
+        async.flushMicrotasks();
+        expect(fixture.notifications.shownEvents, hasLength(1));
+        expect(fixture.notifications.cancelledIds, isEmpty);
+
+        async.elapse(const Duration(seconds: 30));
+        enabled = false;
+        fixture.harness.dispatchEvent(
+          const AapsCarbsRequestNotificationsChanged(),
+        );
+        async.flushMicrotasks();
+        expect(fixture.notifications.cancelledIds, isNotEmpty);
+
+        async.elapse(const Duration(minutes: 10));
+        expect(fixture.notifications.shownEvents, hasLength(1));
+        expect(fixture.store.value.acknowledged, isFalse);
+        fixture.harness.cancel();
+      });
+    });
+  });
 
   test('snoozes only the matching request for five minutes', () {
     fakeAsync((async) {
@@ -382,7 +440,7 @@ void main() {
   _MemoryStore store,
   SynchronizationCache cache,
 })
-_fixture(DateTime now) {
+_fixture(DateTime now, {bool Function()? notificationsEnabled}) {
   final notifications = FakeNotificationsController();
   final store = _MemoryStore();
   final container = ProviderContainer(
@@ -391,6 +449,9 @@ _fixture(DateTime now) {
         notifications,
       ),
       aapsCarbsRequestEpisodeStoreProvider.overrideWithValue(store),
+      aapsCarbsRequestNotificationsEnabledReaderProvider.overrideWithValue(
+        () async => notificationsEnabled?.call() ?? true,
+      ),
     ],
   );
   final cache = container.read(synchronizationCacheControllerProvider).cache;
