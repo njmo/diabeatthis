@@ -16,6 +16,7 @@ class FamilyActiveMealCard extends StatelessWidget {
     required this.payload,
     required this.now,
     this.decision,
+    this.decisionLoading = false,
     this.history = const [],
     this.decisionAction,
     this.onOpen,
@@ -25,6 +26,10 @@ class FamilyActiveMealCard extends StatelessWidget {
   final Map payload;
   final DateTime now;
   final MealDecision? decision;
+
+  /// The caregiver decision is still loading; guessing the stages from
+  /// history could briefly show a wait that was never chosen.
+  final bool decisionLoading;
   final Iterable<String> history;
   final Widget? decisionAction;
   final VoidCallback? onOpen;
@@ -168,7 +173,7 @@ class FamilyActiveMealCard extends StatelessWidget {
                 const SizedBox(height: 8),
               ],
               // Paski kroków (np. Bolus -> Jedzenie)
-              MealProgressSteps(plan: progress),
+              if (!decisionLoading) MealProgressSteps(plan: progress),
               if (decisionAction != null) ...[
                 const SizedBox(height: 8),
                 decisionAction!,

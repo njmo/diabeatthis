@@ -641,18 +641,26 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
 
   Widget _buildActiveMealCard(Map payload) {
     final mealId = payload['id'] as int;
-    final decision = ref.watch(
+    final (:decision, :loading) = ref.watch(
       mealDecisionRemoteControllerProvider.select((inbox) {
         final uid = controller.currentUid();
-        if (uid == null || inbox.accountUid != uid) return null;
+        // While the first fetch for this account runs, the accepted answer
+        // may simply not be known yet. An idle or failed inbox falls back.
+        final loading =
+            uid != null &&
+            inbox.loading &&
+            (inbox.accountUid != uid || !inbox.authoritative);
+        if (uid == null || inbox.accountUid != uid) {
+          return (decision: null, loading: loading);
+        }
         final request = inbox.latestForMeal(mealId);
         if (request == null ||
             request.ownerUid != controller.owner ||
             request.sourceId != controller.source ||
             request.status != 'accepted') {
-          return null;
+          return (decision: null, loading: loading);
         }
-        return request.answer?.decision;
+        return (decision: request.answer?.decision, loading: false);
       }),
     );
     final history = controller
@@ -668,6 +676,7 @@ class FamilyPlanningPageState extends ConsumerState<FamilyPlanningPage>
         payload: payload,
         now: DateTime.now(),
         decision: decision,
+        decisionLoading: loading,
         history: history,
         monitoring: controller.monitored('meals', mealId),
         decisionAction: MealDecisionRemoteMealAction(mealId: mealId),

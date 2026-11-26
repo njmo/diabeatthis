@@ -47,6 +47,33 @@ void main() {
     expect(find.byType(FilledButton), findsNothing);
   });
 
+  testWidgets('caregiver card waits for the decision before guessing stages', (
+    tester,
+  ) async {
+    Widget card({required bool loading}) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: FamilyActiveMealCard(
+          payload: const {'name': 'Lunch', 'status': 'bolused-waiting'},
+          now: DateTime(2026, 11, 19, 12),
+          decisionLoading: loading,
+          decision: loading ? null : MealDecision.bolusAndEatNow,
+          history: const ['waiting-for-bolus', 'bolused-waiting'],
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(card(loading: true));
+    expect(find.byType(MealProgressSteps), findsNothing);
+
+    await tester.pumpWidget(card(loading: false));
+    final plan = tester
+        .widget<MealProgressSteps>(find.byType(MealProgressSteps))
+        .plan;
+    expect(plan.stages, [MealProgressStage.bolus, MealProgressStage.eating]);
+  });
+
   for (final (original, stages, bolusIndex) in [
     (
       'eating-then-bolus',
