@@ -146,7 +146,7 @@ void main() {
 
   for (final status in ['eaten-extra', 'eaten-bolused']) {
     test(
-      '$status keeps newly uncovered 8g pending until actual delivery',
+      '$status keeps newly uncovered 8g pending until a calculator entry',
       () async {
         if (status == 'eaten-extra') {
           await db.mealDao.updateMealStatus(
@@ -222,10 +222,10 @@ void main() {
         await db.localMirrorDao.upsertBolusWizard(
           extraWizard.toCompanion(TreatmentsSource.aaps),
         );
-        final unconfirmed = (await reconcileMealAddOnBolusProgress(db, 1))!;
-        expect(unconfirmed.awaitingBolus, isTrue);
-        expect(unconfirmed.coveredCarbs, 30);
-        expect(await db.mealWizardLinkDao.forMeal(1), hasLength(1));
+        // A positive calculator covers the add-on before its insulin record.
+        final accepted = (await reconcileMealAddOnBolusProgress(db, 1))!;
+        expect(accepted.awaitingBolus, isFalse);
+        expect(accepted.coveredCarbs, 38);
 
         await db.localMirrorDao.upsertManualBolus(
           domain.ManualBolus(

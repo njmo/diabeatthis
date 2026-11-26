@@ -245,7 +245,32 @@ void main() {
       );
     },
   );
-  for (final removed in ['delivery', 'wizard']) {
+  test(
+    'a removed insulin record does not block a positive calculator',
+    () async {
+      final addon = testBolusWizard(
+        createdAt: requestedAt.add(const Duration(minutes: 1)),
+        carbs: 2,
+        insulin: 17.8,
+      );
+      await db.localMirrorDao.upsertBolusWizard(
+        addon.toCompanion(TreatmentsSource.aaps),
+      );
+      await db.localMirrorDao.upsertManualBolus(
+        actual(addon).toCompanion(TreatmentsSource.aaps),
+      );
+      await db.localMirrorDao.deleteManualBolusByCreatedAt(
+        actual(addon).createdAt,
+      );
+      expect(
+        await acceptMealAddOnBolus(db, 1, addon, requestedAt: requestedAt),
+        isNotNull,
+      );
+      expect((await readMealAddOnBolusContext(db, 1))!.coveredCarbs, 44);
+    },
+  );
+
+  for (final removed in ['wizard']) {
     test(
       'acceptance cannot resurrect an invalidated $removed after the gate',
       () async {

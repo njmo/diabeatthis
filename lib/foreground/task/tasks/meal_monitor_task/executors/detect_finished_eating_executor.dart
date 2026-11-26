@@ -260,6 +260,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
         runtimeContext,
         mealMonitorContext,
         calculatorResponse.data,
+        requireRecordedBolus: false,
       );
       mealMonitorContext.throwIfStopped(runtimeContext);
       await const RecordMealWizardLink()(
@@ -292,6 +293,7 @@ class DetectFinishedEatingExecutor extends MealMonitorStateExecutor
           runtimeContext,
           mealMonitorContext,
           wizard,
+          requireRecordedBolus: false,
         );
         mealMonitorContext.throwIfStopped(runtimeContext);
         await const RecordMealWizardLink()(

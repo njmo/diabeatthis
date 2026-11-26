@@ -14,7 +14,38 @@ import '../../features/meal_summary/domain/use_cases/complete_meal_use_case_test
 import 'meal_monitor_test.dart' show testBolusWizard;
 
 void main() {
-  for (final zero in [true, false]) {
+  test('a cancelled delivery keeps a positive calculator covered', () async {
+    final db = DatabaseImpl(NativeDatabase.memory());
+    addTearDown(db.close);
+    await seedCompletionMeal(db);
+    await db.customUpdate(
+      'UPDATE meal_ingredients SET amount = 60 WHERE id = 1',
+    );
+    final at = DateTime(2026, 11, 2, 17);
+    await db.mealDao.updateMealStatus(1, 'eating-then-bolus', occurredAt: at);
+    await reconcileMealAddOnBolusProgress(db, 1);
+    final wizard = testBolusWizard(
+      createdAt: at.add(const Duration(seconds: 1)),
+      carbs: 12,
+      insulin: 3,
+    );
+    final actual = ManualBolus(
+      externalId: 'actual',
+      createdAt: wizard.createdAt.add(const Duration(milliseconds: 830)),
+      insulin: 3,
+    );
+    final writer = LocalMirrorWriter(db.localMirrorDao);
+    await writer.mirrorTreatments([wizard, actual], TreatmentsSource.aaps);
+    expect((await reconcileMealAddOnBolusProgress(db, 1))!.coveredCarbs, 12);
+    await writer.mirrorTreatments([
+      actual.copyWith(isValid: false),
+    ], TreatmentsSource.aaps);
+    final kept = (await reconcileMealAddOnBolusProgress(db, 1))!;
+    expect(kept.coveredCarbs, 12);
+    expect(kept.awaitingBolus, isFalse);
+  });
+
+  for (final zero in [true]) {
     test(
       'accepted calculator loses coverage after ${zero ? 'carbs' : 'delivery'} revocation',
       () async {

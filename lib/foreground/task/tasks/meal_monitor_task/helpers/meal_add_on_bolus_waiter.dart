@@ -99,6 +99,7 @@ class MealAddOnBolusWaiter {
           runtime,
           mealContext,
           wizard,
+          requireRecordedBolus: false,
           acceptsWizard: accepts,
         );
         mealContext.throwIfStopped(runtime);

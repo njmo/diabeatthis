@@ -60,7 +60,7 @@ Future<bool> persistMealCompletionBolusRequest(
     requestedCarbs: remainingCarbs,
     requestedExtendedCarbs: extendedCarbsDelta,
     awaitingBolus: true,
-    bolusConfirmed: coverage.hasRecordedBolus,
+    bolusConfirmed: coverage.bolusConfirmed,
     acceptedWizardKeys: previousContext?.acceptedWizardKeys ?? const [],
   );
   await (db.update(db.meal)..where((row) => row.id.equals(mealId))).write(

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../core/data_sources/local_mirror/mappers/bolus_wizard_drift_mapper.dart';
 import '../../../core/drift/database_impl.dart';
+import '../calculator_submission_policy.dart';
 import '../meal_calculator_submission.dart';
 
 /// Meal/wizard links survive automatic summarization, unlike the add-on context.
@@ -32,7 +33,13 @@ Future<List<int>> readConfirmedMealCalculatorWizards(
       db,
       wizard.toDomain(),
     );
-    if (!submission.isComplete || !submission.carbs.isFinite) continue;
+    if ((!submission.isComplete &&
+            !const CalculatorSubmissionPolicy().acceptsCalculatorEntry(
+              submission,
+            )) ||
+        !submission.carbs.isFinite) {
+      continue;
+    }
     times.add(wizard.createdAt);
     carbs += submission.carbs;
   }

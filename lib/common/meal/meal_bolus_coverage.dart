@@ -22,6 +22,10 @@ class MealBolusCoverage {
   final bool hasRecordedBolus;
   final double statusBaselineCarbs;
   final bool hasAcceptedCalculator;
+
+  /// The meal workflow treats an accepted calculator entry as the bolus;
+  /// a recorded insulin amount is informational.
+  bool get bolusConfirmed => hasRecordedBolus || hasAcceptedCalculator;
 }
 
 /// Reads accepted calculator submissions with independent completion evidence,

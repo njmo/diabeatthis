@@ -358,9 +358,28 @@ void main() {
     },
   );
 
-  for (final insulin in <double?>[null, 3.15]) {
+  test(
+    'a positive recommendation covers confirmed carbs without delivery',
+    () async {
+      final wizard = testBolusWizard(
+        createdAt: wizardAt,
+        carbs: 12,
+        insulin: 3.15,
+      );
+      await writer.mirrorTreatments([
+        component(leading: true),
+        wizard,
+      ], TreatmentsSource.aaps);
+      final accepted = (await reconcileMealAddOnBolusProgress(db, 1))!;
+      expect(accepted.awaitingBolus, isFalse);
+      expect(accepted.coveredCarbs, 12);
+      expect(await db.mealWizardLinkDao.forMeal(1), hasLength(1));
+    },
+  );
+
+  for (final insulin in <double?>[null]) {
     test(
-      'confirmed carbs do not replace missing or positive insulin recommendation $insulin',
+      'confirmed carbs do not replace a missing insulin recommendation $insulin',
       () async {
         final base = testBolusWizard(
           createdAt: wizardAt,
@@ -390,7 +409,7 @@ void main() {
   }
 
   test(
-    'a zero recommendation corrected to positive still needs actual delivery',
+    'a zero recommendation corrected to positive keeps its recorded delivery',
     () async {
       final zero = testBolusWizard(createdAt: wizardAt, carbs: 12, insulin: 0);
       await writer.mirrorTreatments([
@@ -401,11 +420,6 @@ void main() {
         calculatorResult: zero.calculatorResult!.copyWith(totalInsulin: 3.15),
       );
       await writer.mirrorTreatments([corrected], TreatmentsSource.aaps);
-      expect(
-        (await reconcileMealAddOnBolusProgress(db, 1))!.awaitingBolus,
-        isTrue,
-      );
-      expect(await db.mealWizardLinkDao.forMeal(1), isEmpty);
       await writer.mirrorTreatments([
         ManualBolus(
           externalId: 'actual-positive-delivery',

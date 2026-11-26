@@ -8,6 +8,7 @@ import '../../core/domain/model/bolus_wizard.dart' as domain;
 import '../../core/drift/database_impl.dart';
 import '../../core/drift/helpers/validate_wizard_identity.dart';
 import '../nutrition/stable_macro_ceil.dart';
+import 'calculator_submission_policy.dart';
 import 'meal_add_on_bolus_context.dart';
 import 'meal_bolus_coverage.dart';
 import 'meal_calculator_submission.dart';
@@ -86,7 +87,11 @@ Future<MealAddOnBolusContext?> acceptMealAddOnBolus(
     storedWizard,
     wizard.toCompanion(TreatmentsSource.fromStorage(storedWizard.source)),
   );
-  if (!(await readMealCalculatorSubmission(db, canonical)).isComplete) {
+  // As for the main meal, AAPS decides the dose: the calculator entry is
+  // enough and a later insulin record only informs the meal card.
+  final submission = await readMealCalculatorSubmission(db, canonical);
+  if (!submission.isComplete &&
+      !const CalculatorSubmissionPolicy().acceptsCalculatorEntry(submission)) {
     return null;
   }
   if (canonical.carbs > current.requestedCarbs + 0.001) {
@@ -164,7 +169,7 @@ Future<MealAddOnBolusContext?> reconcileMealAddOnBolusProgress(
         requestedCarbs: remaining,
         requestedExtendedCarbs: 0,
         awaitingBolus: remaining > 0,
-        bolusConfirmed: coverage.hasRecordedBolus,
+        bolusConfirmed: coverage.bolusConfirmed,
       );
       await (db.update(db.meal)..where((row) => row.id.equals(mealId))).write(
         MealCompanion(addOnBolusContext: Value(context.encode())),
@@ -207,7 +212,7 @@ Future<MealAddOnBolusContext?> reconcileMealAddOnBolusProgress(
     coveredCarbs: coverage.carbs,
     requestedCarbs: remaining,
     awaitingBolus: remaining > 0,
-    bolusConfirmed: coverage.hasRecordedBolus,
+    bolusConfirmed: coverage.bolusConfirmed,
   );
   if (updated.encode() != pending.encode()) {
     await (db.update(db.meal)..where((row) => row.id.equals(mealId))).write(
