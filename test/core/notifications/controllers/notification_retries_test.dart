@@ -20,6 +20,7 @@ void main() {
   late DateTime now;
   late bool enabled, chatAuthorized;
   bool? chatRelevant;
+  var verificationTime = Duration.zero;
   late ProviderContainer container;
   late NotificationsControllerImpl controller;
 
@@ -33,6 +34,7 @@ void main() {
     enabled = true;
     chatAuthorized = true;
     chatRelevant = true;
+    verificationTime = Duration.zero;
     final provider = Provider(
       (ref) => NotificationsControllerImpl(
         ref,
@@ -40,8 +42,10 @@ void main() {
         localController: local,
         inbox: NotificationInboxStore(),
         retriesEnabled: () async => enabled,
-        retryStillRelevant: (event) async =>
-            event is FamilyChatNotificationEvent ? chatRelevant : true,
+        retryStillRelevant: (event) async {
+          now = now.add(verificationTime);
+          return event is FamilyChatNotificationEvent ? chatRelevant : true;
+        },
         withAuthorizedChatRetry: (_, _, deliver) async {
           if (chatAuthorized) await deliver();
         },
@@ -146,6 +150,45 @@ void main() {
       });
     },
   );
+
+  test(
+    'failed verifications never re-check a request after its deadline',
+    () async {
+      await withClock(Clock(() => now), () async {
+        final request = parentMessage(lowTreatment: true, timeoutAfter: 90000);
+        await controller.show(request);
+        chatRelevant = null;
+        await advance(1);
+        final deadline = DateTime(2026, 11, 19, 12, 1, 30);
+        expect(
+          (await NotificationInboxStore().get(request.id))?.retryAt,
+          deadline,
+        );
+
+        now = deadline;
+        await controller.processDueRetries();
+        final retired = await NotificationInboxStore().get(request.id);
+        expect(retired?.retriesRemaining, 0);
+        chatRelevant = true;
+        await advance(1);
+        expect(local.shownEvents, hasLength(1));
+      });
+    },
+  );
+
+  test('a request that expires during verification is not posted', () async {
+    await withClock(Clock(() => now), () async {
+      final request = parentMessage(lowTreatment: true, timeoutAfter: 65000);
+      await controller.show(request);
+      verificationTime = const Duration(seconds: 10);
+      await advance(1);
+      expect(local.shownEvents, hasLength(1));
+      expect(
+        (await NotificationInboxStore().get(request.id))?.retriesRemaining,
+        0,
+      );
+    });
+  });
 
   test('answering a low-treatment request stops the next alert', () async {
     await withClock(Clock(() => now), () async {

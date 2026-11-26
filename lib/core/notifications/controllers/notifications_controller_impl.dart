@@ -221,12 +221,24 @@ class NotificationsControllerImpl implements NotificationsController {
               ? await check(event)
               : eligible;
           if (relevant != true) {
+            // An unverifiable request (offline) is re-checked, but never
+            // after its own deadline: an expired action retires the retry.
+            final expiresAt = _expiresAt(entry);
+            final checkAgain = clock.now().add(
+              notificationRetryDelayFor(event),
+            );
+            final expired =
+                expiresAt != null && !clock.now().isBefore(expiresAt);
             await _inbox.advanceRetry(
               entry,
-              nextDue: relevant == null
-                  ? clock.now().add(notificationRetryDelayFor(event))
+              nextDue: relevant == null && !expired
+                  ? (expiresAt != null && expiresAt.isBefore(checkAgain)
+                        ? expiresAt
+                        : checkAgain)
                   : now,
-              remaining: relevant == null ? entry.retriesRemaining : 0,
+              remaining: relevant == null && !expired
+                  ? entry.retriesRemaining
+                  : 0,
               inApp: entry.inApp,
               resetRead: false,
             );
@@ -248,6 +260,11 @@ class NotificationsControllerImpl implements NotificationsController {
     } finally {
       _processingRetries = false;
     }
+  }
+
+  static DateTime? _expiresAt(NotificationInboxEntry entry) {
+    final value = entry.data['expiresAt'];
+    return value is int ? DateTime.fromMillisecondsSinceEpoch(value) : null;
   }
 
   Future<void> _retry(
@@ -284,6 +301,24 @@ class NotificationsControllerImpl implements NotificationsController {
         (policy == NotificationRetryPolicy.untilRead && current.read)) {
       return;
     }
+    // The relevance check can take a while; rebuild the event so its action
+    // lifetime is measured from now, and drop it once that has passed.
+    final fresh = NotificationEventFactory().fromPayload(
+      entry.type,
+      entry.data,
+    );
+    if (notificationRetryPolicy(fresh) != policy) {
+      await _inbox.advanceRetry(
+        current,
+        nextDue: clock.now(),
+        remaining: 0,
+        inApp: entry.inApp,
+        resetRead: false,
+        notify: false,
+      );
+      return;
+    }
+    event = fresh;
     try {
       if (inApp) {
         final deliver = showInAppRetry;
