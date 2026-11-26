@@ -15,6 +15,7 @@ import '../../app_mode/application_device_mode.dart';
 import '../../auth/google_authentication_providers.dart';
 import '../../family/family_providers.dart';
 import '../../meal/meal_activation_guard.dart';
+import '../finish_meal_decision.dart';
 import '../manual_meal_choice.dart';
 import '../meal_decision_answer.dart';
 import 'meal_decision_remote_controller.dart';
@@ -80,6 +81,7 @@ class AcceptRemoteMealDecision {
     if (!await saveManualMealChoice(prefs, request.mealId, meal!.plannedAt)) {
       throw StateError('Could not save the manual meal choice');
     }
+    await ref.read(finishMealDecisionProvider)(request.mealId);
   }
 
   Future<MealAdvice?> call(
@@ -274,6 +276,7 @@ class AcceptRemoteMealDecision {
       }
       rethrow;
     }
+    await ref.read(finishMealDecisionProvider)(request.mealId);
     // Durable receipt is replayed without blocking the child on an ACK connection.
     await reconcileMealDecisionReceipts(ref);
     return advice;

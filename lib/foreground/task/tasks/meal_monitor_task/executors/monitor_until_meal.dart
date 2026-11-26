@@ -9,6 +9,7 @@ import '../../../../../core/domain/model/device_status.dart';
 import '../../../../../core/domain/model/meal.dart';
 import '../../../../../core/domain/model/meal_macro_summary.dart';
 import '../../../../../core/domain/model/temporary_target.dart';
+import '../../../../../core/drift/providers/database_provider.dart';
 import '../../../../../core/notifications/domain/events/meal_advice_pending_notification.dart';
 import '../../../../../core/notifications/domain/events/meal_suggestion_notification.dart';
 import '../../../../../core/notifications/domain/events/temp_target_notification.dart';
@@ -651,6 +652,26 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 }
                 final decisionStatus = mealAdvice.decision!.acceptedStatus;
                 logI("User agreed meal, decision: $decisionStatus");
+                // An old offer may be answered after another decision was
+                // made (caregiver, manual): it must not change that meal.
+                if (await _decisionAlreadyMade(
+                  runtimeContext,
+                  mealMonitorContext.activeMeal!.id,
+                )) {
+                  logI("Ignoring a stale meal advisor answer");
+                  nextExecutor = NewMealCheckExecutor();
+                  return;
+                }
+                mealMonitorContext.throwIfStopped(runtimeContext);
+                // Saving the advice first fails on an existing decision
+                // before the meal status could change.
+                await runtimeContext.container.read(
+                  insertAdviceProvider(
+                    mealMonitorContext.activeMeal!,
+                    mealAdvice,
+                  ).future,
+                );
+                mealMonitorContext.throwIfStopped(runtimeContext);
                 await runtimeContext.container.read(
                   updateMealProvider(
                     mealMonitorContext.activeMeal!,
@@ -660,13 +681,6 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
                 mealMonitorContext.throwIfStopped(runtimeContext);
                 mealMonitorContext.activeMeal = mealMonitorContext.activeMeal!
                     .copyWith(status: decisionStatus, updatedAt: clock.now());
-                await runtimeContext.container.read(
-                  insertAdviceProvider(
-                    mealMonitorContext.activeMeal!,
-                    mealAdvice,
-                  ).future,
-                );
-                mealMonitorContext.throwIfStopped(runtimeContext);
               },
               skip: (_, _) async {
                 if (meal.status == 'planned') {
@@ -724,4 +738,14 @@ class MonitorUntilMeal extends MealMonitorStateExecutor {
       }
     }
   }
+}
+
+Future<bool> _decisionAlreadyMade(RuntimeContext runtime, int mealId) async {
+  if (!runtime.container.exists(databaseProvider)) return false;
+  final db = runtime.container.read(databaseProvider);
+  if (!db.hasOpened) return false;
+  final current = await db.mealDao.getMealById(mealId);
+  if (current == null) return false;
+  return current.status != 'planned' ||
+      await db.mealAdvisorResultDao.getMealAdvisorResult(mealId) != null;
 }

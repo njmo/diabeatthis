@@ -14,6 +14,7 @@ import '../../../../core/notifications/domain/models/notification_key.dart';
 import '../../../../core/notifications/providers/notifications_controller_provider.dart';
 import '../../../../features/meals/data/providers/meal_database_provider.dart';
 import '../../../event/internal/meal_bolus_continued_manually.dart';
+import '../../../event/internal/meal_decision_finished.dart';
 import '../../../event/internal/meal_event.dart';
 import '../../../event/internal/meal_status_changed_event.dart';
 import '../../../event/internal/monitoring_status_changed.dart';
@@ -40,6 +41,7 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
     (e) => e is NextMealEvent || e is PlannedMealsClearedEvent,
     (e) => e is MealStatusChangedEvent,
     (e) => e is MealDecisionMethodChanged,
+    (e) => e is MealDecisionFinished,
     (e) => e is MealBolusContinuedManually,
   ];
 
@@ -52,6 +54,12 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
     if (event is MealBolusContinuedManually) {
       return _state is WaitForBolusExecutor &&
           _activeMealExecutorContext.activeMeal?.id == event.mealId;
+    }
+    if (event is MealDecisionFinished) {
+      return _activeMealExecutorContext.activeMeal?.id == event.mealId &&
+          (_state is MonitorUntilMeal ||
+              (_state is MealMonitorStateIdle &&
+                  _activeMealExecutorContext.activeMeal?.status == 'planned'));
     }
     if (event is MealDecisionMethodChanged) {
       return _state is MonitorUntilMeal ||
@@ -166,7 +174,7 @@ class MealMonitorTask extends InterruptableWorkflowTask with Logging {
           }
         }
         break;
-      case MealDecisionMethodChanged():
+      case MealDecisionMethodChanged() || MealDecisionFinished():
         final mealId = _activeMealExecutorContext.activeMeal?.id;
         if (mealId != null) {
           try {

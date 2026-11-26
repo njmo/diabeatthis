@@ -5,6 +5,7 @@ import '../../../common/app_mode/application_device_mode.dart';
 import '../../../common/auth/google_authentication_providers.dart';
 import '../../../common/family/family_providers.dart';
 import '../../../common/meal/manual_meal_decision.dart';
+import '../../../common/meal_advisor/finish_meal_decision.dart';
 import '../../../common/meal_advisor/meal_decision_preferences_provider.dart';
 import '../../../common/meal_advisor/remote/accept_remote_meal_decision.dart';
 import '../../../common/meal_advisor/remote/meal_decision_remote_request.dart';
@@ -430,7 +431,7 @@ class MealDialogController extends _$MealDialogController with Logging {
                 mealId,
               ) !=
               null) {
-        return ref.read(startAcceptedCaregiverMealProvider)(
+        final started = await ref.read(startAcceptedCaregiverMealProvider)(
           uid,
           mealId,
           isCancelled: () =>
@@ -438,6 +439,8 @@ class MealDialogController extends _$MealDialogController with Logging {
               request != _adviceRequest ||
               !identical(state.advice, advice),
         );
+        if (started) await ref.read(finishMealDecisionProvider)(mealId);
+        return started;
       }
       final remoteRequest = _caregiverRequest;
       if (remoteRequest == null || remoteRequest.mealId != mealId) {
@@ -498,6 +501,7 @@ class MealDialogController extends _$MealDialogController with Logging {
       }
       return true;
     });
+    if (accepted) await ref.read(finishMealDecisionProvider)(mealId);
     if (accepted && fallback != null) await reconcileMealDecisionReceipts(ref);
     return accepted;
   }
