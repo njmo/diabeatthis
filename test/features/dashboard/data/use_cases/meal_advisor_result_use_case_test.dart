@@ -54,6 +54,21 @@ void main() {
     },
   );
 
+  test('legacy manual eat-now is not read as a wait after eating', () {
+    expect(
+      manualMealDecisionFromHistory([
+        'waiting-for-bolus',
+        'bolused-waiting',
+        'bolused-eating',
+      ]),
+      MealDecision.bolusAndEatNow,
+    );
+    expect(
+      manualMealDecisionFromHistory(['bolused-waiting', 'waited-eating']),
+      MealDecision.bolusWaitThenEat,
+    );
+  });
+
   test('manual decision and selected wait survive persistence', () async {
     final store = FakeMealAdvisorResultStore();
     final useCase = MealAdvisorResultUseCase(store);
