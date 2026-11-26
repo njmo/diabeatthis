@@ -34,12 +34,15 @@ MealDecision manualMealDecisionFromHistory(
   if (savedResult == manualBolusAndEatResult) {
     return MealDecision.bolusAndEatNow;
   }
-  if (statuses.contains('waited-eating') ||
-      statuses.contains('bolused-waiting')) {
+  if (statuses.contains('waited-eating')) {
     return MealDecision.bolusWaitThenEat;
   }
+  // An immediate meal also passes through the transient 'bolused-waiting'.
   if (statuses.contains('bolused-eating')) {
     return MealDecision.bolusAndEatNow;
+  }
+  if (statuses.contains('bolused-waiting')) {
+    return MealDecision.bolusWaitThenEat;
   }
   // Before insulin is recorded, the existing selected wait distinguishes the two pending flows.
   return selectedWaitMinutes > 0

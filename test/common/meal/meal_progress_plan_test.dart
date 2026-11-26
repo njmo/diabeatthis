@@ -42,6 +42,36 @@ void main() {
     expect(plan.currentIndex, 0);
   });
 
+  test('accepted eat-now decision ignores the transient wait status', () {
+    for (final status in ['bolused-waiting', 'bolused-eating', 'eaten']) {
+      final plan = mealProgressPlanForStatus(
+        status,
+        decision: MealDecision.bolusAndEatNow,
+        history: ['planned', 'waiting-for-bolus', 'bolused-waiting'],
+      );
+
+      expect(plan.stages, [
+        MealProgressStage.bolus,
+        MealProgressStage.eating,
+      ], reason: status);
+      expect(plan.currentIndex, 1, reason: status);
+    }
+  });
+
+  test('recorded immediate eating outweighs the transient wait status', () {
+    final plan = mealProgressPlanForStatus(
+      'eaten',
+      history: [
+        'waiting-for-bolus',
+        'bolused-waiting',
+        'bolused-eating',
+        'eaten',
+      ],
+    );
+
+    expect(plan.stages, [MealProgressStage.bolus, MealProgressStage.eating]);
+  });
+
   test('unknown waiting decision shows only known bolus stage', () {
     final plan = mealProgressPlanForStatus('waiting-for-bolus');
 

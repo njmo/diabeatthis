@@ -78,12 +78,22 @@ MealProgressPlan mealProgressPlanForStatus(
       originalFoodFirstBolus ||
       history.contains('eating-then-bolus') ||
       decision == MealDecision.eatNowBolusLater;
+  // Every bolus-first meal passes through the transient 'bolused-waiting'
+  // status, even without a wait. An immediate decision or its recorded start
+  // of eating must not be turned into a waiting phase by that status.
+  final eatsImmediately =
+      decision == MealDecision.bolusAndEatNow ||
+      (decision == null &&
+          (status == 'bolused-eating' ||
+              (history.contains('bolused-eating') &&
+                  !history.contains('waited-eating'))));
   final waited =
-      status == 'bolused-waiting' ||
-      status == 'waited-eating' ||
-      history.contains('bolused-waiting') ||
-      history.contains('waited-eating') ||
-      decision == MealDecision.bolusWaitThenEat;
+      !eatsImmediately &&
+      (status == 'bolused-waiting' ||
+          status == 'waited-eating' ||
+          history.contains('bolused-waiting') ||
+          history.contains('waited-eating') ||
+          decision == MealDecision.bolusWaitThenEat);
 
   if (ateBeforeBolus) {
     if (status == 'eating-extra') {
