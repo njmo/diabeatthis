@@ -114,12 +114,6 @@ class LocalMirrorWriter with Logging {
         ]);
         await _dao.deleteManualBolusByCreatedAt(bolus.createdAt);
       }
-      Log.diagnostic(
-        'AapsTreatmentTrace',
-        'mirror type=ManualBolus at=${bolus.createdAt.millisecondsSinceEpoch} '
-            'source=${source.storageValue} '
-            'decision=${bolus.isValid ? 'upsertStandalone' : 'deleteInvalid'}',
-      );
     }
     final invalidatedWizards = <int, BolusWizard>{};
     for (final delivery in invalidatedDeliveries) {
@@ -164,13 +158,6 @@ class LocalMirrorWriter with Logging {
           rejectedComponents.add(component);
         }
       }
-    }
-    for (final component in rejectedComponents) {
-      Log.diagnostic(
-        'AapsTreatmentTrace',
-        'mirror type=Treat at=${component.createdAt.millisecondsSinceEpoch} '
-            'source=${source.storageValue} decision=skipWizardIdentityConflict',
-      );
     }
     accepted.removeWhere(rejectedComponents.contains);
     final reconciledBatch = batch

@@ -1,7 +1,5 @@
 package pl.diabeatthis.calculator_handoff
 
-import android.os.Handler
-import android.os.Looper
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodChannel
 
@@ -9,22 +7,9 @@ class CalculatorHandoffPlugin : FlutterPlugin {
     private var channel: MethodChannel? = null
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        val context = binding.applicationContext
-        CalculatorWindowRegistry.diagnosticContext = context
         channel = MethodChannel(binding.binaryMessenger, "pl.diabeatthis.app/calculator_handoff").also {
             it.setMethodCallHandler { call, result ->
                 when (call.method) {
-                    "appendAapsDiagnostic" -> {
-                        call.argument<String>("line")?.let {
-                            AapsDiagnosticJournal.append(context, "diabeatthis", it)
-                        }
-                        result.success(null)
-                    }
-                    "exportAapsDiagnostics" -> {
-                        AapsDiagnosticJournal.export(context) { path ->
-                            Handler(Looper.getMainLooper()).post { result.success(path) }
-                        }
-                    }
                     "dismiss" -> {
                         CalculatorWindowRegistry.dismiss(call.argument<String>("sessionId"))
                         result.success(null)

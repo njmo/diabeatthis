@@ -58,14 +58,6 @@ class TreatmentEventDispatcher with Logging {
         .where((entry) => before[entry.key.millisecondsSinceEpoch] != entry)
         .toList();
     for (final submission in changes) {
-      Log.diagnostic(
-        'AapsTreatmentTrace',
-        'calculator at=${submission.key.millisecondsSinceEpoch} '
-            'valid=${submission.isValid} '
-            'originalDeliveryEvidenceComplete=${submission.isComplete} '
-            'carbsAt=${submission.wizard.carbohydrateRecord?.createdAt.millisecondsSinceEpoch} '
-            'insulinAt=${submission.delivery?.createdAt.millisecondsSinceEpoch}',
-      );
       emitEvent(CalculatorSubmissionChangedEvent(submission));
       if (!submission.isValid) continue;
       final previous = before[submission.key.millisecondsSinceEpoch];
@@ -115,12 +107,6 @@ class TreatmentEventDispatcher with Logging {
         ),
         _ => false,
       };
-      Log.diagnostic(
-        'AapsTreatmentTrace',
-        'classified type=${treatment.runtimeType} '
-            'at=${treatment.createdAt?.millisecondsSinceEpoch} '
-            'valid=${treatment.isValid} calculatorComponent=$isComponent',
-      );
       if (isComponent) continue;
       if (treatment is ExtendedCarb || treatment is Treat) {
         corrections.add(treatment);

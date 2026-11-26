@@ -13,7 +13,6 @@ import '../../../../../core/domain/model/manual_bolus.dart';
 import '../../../../../core/domain/model/treat.dart';
 import '../../../../../core/domain/model/treatment_base.dart';
 import '../../../../../core/drift/providers/database_provider.dart';
-import '../../../../../core/logger/logger.dart';
 import '../../../../event/internal/calculator_submission_changed_event.dart';
 import '../../../../providers/calculator_submissions_provider.dart';
 import '../../../../providers/meal_bolus_delivery_history_provider.dart';
@@ -224,13 +223,6 @@ class WaitForMealBolusDelivery {
       final wizardGatePasses =
           !requireRecordedBolus && policy.acceptsCalculatorEntry(submission);
       final willAdvance = originalGatePasses || wizardGatePasses;
-      Log.diagnostic(
-        'AapsTreatmentTrace',
-        'monitorGate wizardAt=${wizard.createdAt.millisecondsSinceEpoch} '
-            'original=${originalGatePasses ? 'advance' : 'wait'} '
-            'actual=${willAdvance ? 'advance' : 'wait'} '
-            'deliveryAt=${submission.delivery?.createdAt.millisecondsSinceEpoch}',
-      );
       if (willAdvance) return submission;
     }
     return null;

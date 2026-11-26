@@ -228,7 +228,6 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
       mealMonitorContext.throwIfStopped(runtimeContext);
     }
     if (calculatorResponse == null && !remindImmediately) {
-      Log.diagnostic('AapsTreatmentTrace', 'monitorWaitingForCalculator');
       logI("Waiting for calculator use before moving to next step");
       calculatorResponse = await runtimeContext
           .waitForEventWithTimeoutOrNull<TreatmentAvailableEvent<BolusWizard>>(
@@ -238,10 +237,6 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
     }
 
     if (calculatorResponse == null) {
-      Log.diagnostic(
-        'AapsTreatmentTrace',
-        'monitorCalculatorMissing reminder=true',
-      );
       logI("Calculator response missing, showing bolus reminder");
       suggestion ??= await _bolusReminderHelper.resolveMealBolusSuggestion(
         runtimeContext,
@@ -283,13 +278,6 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
 
     mealMonitorContext.throwIfStopped(runtimeContext);
     final pendingCalculator = calculatorResponse;
-    if (pendingCalculator != null) {
-      Log.diagnostic(
-        'AapsTreatmentTrace',
-        'monitorCalculator at='
-            '${pendingCalculator.data.createdAt.millisecondsSinceEpoch}',
-      );
-    }
     final nextStatus = decision == MealDecision.eatNowBolusLater
         ? 'eaten-bolused'
         : 'bolused-waiting';
@@ -319,7 +307,6 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
         nextStatus,
       );
       if (committed == false) {
-        Log.diagnostic('AapsTreatmentTrace', 'monitorCommitDeferred');
         if (runtimeContext.container.exists(databaseProvider)) {
           final current = await runtimeContext.container
               .read(databaseProvider)
@@ -348,10 +335,6 @@ class WaitForBolusExecutor extends MealMonitorStateExecutor with Logging {
           updateMealProvider(meal, nextStatus).future,
         );
       }
-      Log.diagnostic(
-        'AapsTreatmentTrace',
-        'monitorAdvanced status=$nextStatus calculators=${confirmed.length}',
-      );
       break;
     }
     for (final wizard in confirmed) {
