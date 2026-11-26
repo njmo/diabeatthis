@@ -19,6 +19,11 @@ void main() {
       'Insulina, czekanie, jedzenie',
     );
     expect(storedMealDecisionLabel('manual'), 'Decyzja ręczna');
+    expect(storedMealDecisionLabel('manual-bolused-eating'), 'Decyzja ręczna');
+    expect(
+      storedMealDecision('manual-bolused-eating'),
+      storedMealDecision('bolused-eating'),
+    );
     expect(storedMealDecision('unsupported'), isNull);
     expect(storedMealDecisionLabel(null), 'Nieznany wynik');
   });
