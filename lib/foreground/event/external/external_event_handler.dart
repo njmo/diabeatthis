@@ -53,6 +53,13 @@ class ExternalEventHandler with Logging {
       await _runtimeContext.container
           .read(mealCalculatorRequestControllerProvider)
           .dismissAfterManualContinuation(mealId);
+    } catch (error, stackTrace) {
+      // The meal continues even if the calculator request cannot be closed.
+      logE(
+        'Could not close the calculator request after manual continuation',
+        error: error,
+        stackTrace: stackTrace,
+      );
     } finally {
       _runtimeContext.emitEvent(MealBolusContinuedManually(mealId));
     }

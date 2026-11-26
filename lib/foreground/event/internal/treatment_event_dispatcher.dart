@@ -8,6 +8,7 @@ import '../../../common/events/data/task/task_data_synchronization_payload.dart'
 import '../../../common/meal/calculator/calculator_evidence_snapshot.dart';
 import '../../../common/meal/calculator/meal_calculator_request_controller_provider.dart';
 import '../../../common/meal_advisor/remote/start_accepted_caregiver_meal.dart';
+import '../../../common/treatments/calculator_submission.dart';
 import '../../../core/domain/model/bolus_wizard.dart';
 import '../../../core/domain/model/correction_bolus.dart';
 import '../../../core/domain/model/extended_carb.dart';
@@ -50,40 +51,22 @@ class TreatmentEventDispatcher with Logging {
         submission.key.millisecondsSinceEpoch: submission,
     };
     final cache = container.read(calculatorSubmissionsProvider.notifier);
+    // One malformed record must not stop the rest of the batch.
     for (final treatment in batch) {
-      cache.record(treatment);
+      _isolated(
+        'record ${treatment.runtimeType}',
+        () => cache.record(treatment),
+      );
     }
     final current = container.read(calculatorSubmissionsProvider);
     final changes = current
         .where((entry) => before[entry.key.millisecondsSinceEpoch] != entry)
         .toList();
     for (final submission in changes) {
-      emitEvent(CalculatorSubmissionChangedEvent(submission));
-      if (!submission.isValid) continue;
-      final previous = before[submission.key.millisecondsSinceEpoch];
-      final latest = container.read(latestBolusWizardProvider);
-      final wizard = submission.wizard;
-      final firstEntry = previous?.isValid != true;
-      if ((firstEntry &&
-              (latest == null ||
-                  !wizard.createdAt.isBefore(latest.createdAt))) ||
-          latest?.createdAt.isAtSameMomentAs(wizard.createdAt) == true) {
-        container.read(latestBolusWizardProvider.notifier).update(wizard);
-      }
-      if (firstEntry) {
-        emitEvent(TreatmentAvailableEvent<BolusWizard>(wizard));
-        if (container.exists(databaseProvider)) {
-          unawaited(
-            container
-                .read(startAcceptedMealFromCalculatorProvider)(wizard)
-                .catchError(
-                  (Object error) => logW(
-                    'Could not activate accepted meal from calculator: ${error.runtimeType}',
-                  ),
-                ),
-          );
-        }
-      }
+      _isolated(
+        'calculator submission',
+        () => _dispatchSubmission(container, emitEvent, submission, before),
+      );
     }
 
     final carbTimes = {
@@ -112,21 +95,23 @@ class TreatmentEventDispatcher with Logging {
         corrections.add(treatment);
       }
       if (!treatment.isValid) continue;
-      switch (treatment) {
-        case CorrectionBolus():
-          emitEvent(TreatmentAvailableEvent<CorrectionBolus>(treatment));
-        case Treat():
-          emitEvent(TreatmentAvailableEvent<Treat>(treatment));
-        case ExtendedCarb():
-          emitEvent(TreatmentAvailableEvent<ExtendedCarb>(treatment));
-        case ManualBolus():
-          emitEvent(TreatmentAvailableEvent<ManualBolus>(treatment));
-        case TemporaryTarget():
-          emitEvent(TreatmentAvailableEvent<TemporaryTarget>(treatment));
-          _syncTemporaryTarget(container, treatment);
-        default:
-          break;
-      }
+      _isolated('${treatment.runtimeType}', () {
+        switch (treatment) {
+          case CorrectionBolus():
+            emitEvent(TreatmentAvailableEvent<CorrectionBolus>(treatment));
+          case Treat():
+            emitEvent(TreatmentAvailableEvent<Treat>(treatment));
+          case ExtendedCarb():
+            emitEvent(TreatmentAvailableEvent<ExtendedCarb>(treatment));
+          case ManualBolus():
+            emitEvent(TreatmentAvailableEvent<ManualBolus>(treatment));
+          case TemporaryTarget():
+            emitEvent(TreatmentAvailableEvent<TemporaryTarget>(treatment));
+            _syncTemporaryTarget(container, treatment);
+          default:
+            break;
+        }
+      });
     }
     if (changes.isEmpty && corrections.isEmpty) return;
     final controller = container.read(mealCalculatorRequestControllerProvider);
@@ -146,6 +131,47 @@ class TreatmentEventDispatcher with Logging {
           ).toJson(),
         ),
       );
+    }
+  }
+
+  void _dispatchSubmission(
+    ProviderContainer container,
+    ForegroundEventEmitter emitEvent,
+    CalculatorSubmission submission,
+    Map<int, CalculatorSubmission> before,
+  ) {
+    emitEvent(CalculatorSubmissionChangedEvent(submission));
+    if (!submission.isValid) return;
+    final previous = before[submission.key.millisecondsSinceEpoch];
+    final latest = container.read(latestBolusWizardProvider);
+    final wizard = submission.wizard;
+    final firstEntry = previous?.isValid != true;
+    if ((firstEntry &&
+            (latest == null || !wizard.createdAt.isBefore(latest.createdAt))) ||
+        latest?.createdAt.isAtSameMomentAs(wizard.createdAt) == true) {
+      container.read(latestBolusWizardProvider.notifier).update(wizard);
+    }
+    if (firstEntry) {
+      emitEvent(TreatmentAvailableEvent<BolusWizard>(wizard));
+      if (container.exists(databaseProvider)) {
+        unawaited(
+          container
+              .read(startAcceptedMealFromCalculatorProvider)(wizard)
+              .catchError(
+                (Object error) => logW(
+                  'Could not activate accepted meal from calculator: ${error.runtimeType}',
+                ),
+              ),
+        );
+      }
+    }
+  }
+
+  void _isolated(String what, void Function() body) {
+    try {
+      body();
+    } catch (error, stackTrace) {
+      logE('Could not dispatch $what', error: error, stackTrace: stackTrace);
     }
   }
 
