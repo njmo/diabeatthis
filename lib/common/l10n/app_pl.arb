@@ -383,7 +383,7 @@
   "notificationConfirmEatingTitle": "Czy już jesz?",
   "notificationConfirmEatingBody": "Kalkulator rozpoznany. Potwierdź, kiedy zaczniesz jeść.",
   "notificationEatNowTitle": "Możesz już jeść",
-  "notificationEatNowBody": "Minęło {minutes} minut od podania insuliny.",
+  "notificationEatNowBody": "Minęło {minutes} minut oczekiwania.",
   "@notificationEatNowBody": {
     "placeholders": {
       "minutes": {
@@ -1065,8 +1065,8 @@
   "mealAddOnGuidanceAddedTitle": "Dokładka: +{carbs}g węglowodanów",
   "mealAddOnGuidanceAddedMessage": "Wpisz +{carbs}g w AAPS jako dodatkowe węglowodany. Posiłek zostaje w trakcie jedzenia.",
   "mealStatusPlanned": "Zaplanowany",
-  "mealStatusBolusedWaiting": "Bolus podany, oczekiwanie",
-  "mealStatusBolusedEating": "Bolus podany, jedzenie",
+  "mealStatusBolusedWaiting": "Czeka na rozpoczęcie jedzenia",
+  "mealStatusBolusedEating": "Jedzenie bez czekania",
   "mealStatusWaitedEating": "Po oczekiwaniu, jedzenie",
   "mealStatusEatingExtra": "W trakcie dokładki",
   "mealStatusEatingThenBolus": "Jedzenie, bolus po posiłku",
