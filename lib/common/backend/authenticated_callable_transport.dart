@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'family_sync_diagnostics.dart';
 
 class CallableIdentity {
   const CallableIdentity(this.uid, this.idToken, this.appCheckToken);
@@ -94,7 +95,15 @@ class AuthenticatedCallableTransport {
     final timing = trace ? (Stopwatch()..start()) : null;
     final operation = function == 'mealDecision' ? data['action'] : function;
     try {
-      final account = await identity().timeout(const Duration(seconds: 15));
+      final CallableIdentity account;
+      try {
+        account = await identity().timeout(const Duration(seconds: 15));
+      } catch (error) {
+        familySyncDiag(
+          '$function identity failed: ${familySyncDiagError(error)}',
+        );
+        rethrow;
+      }
       if (timing != null) {
         debugPrint(
           'MealDecisionTiming callable.$operation.identity ms=${timing.elapsedMilliseconds}',
@@ -105,6 +114,12 @@ class AuthenticatedCallableTransport {
           account.idToken.isEmpty ||
           account.appCheckToken.isEmpty ||
           projectId.isEmpty) {
+        familySyncDiag(
+          '$function identity rejected: uidMatches=${account.uid == initiatingUid} '
+          'current=${account.uid == currentUid()} '
+          'idToken=${account.idToken.isNotEmpty} '
+          'appCheck=${account.appCheckToken.isNotEmpty}',
+        );
         throw const CallableFailure('unauthenticated');
       }
       if (allowRequest != null && !await allowRequest()) {
@@ -146,6 +161,13 @@ class AuthenticatedCallableTransport {
             'application/json',
           )) {
         throw const CallableFailure('endpoint-not-deployed');
+      }
+      if (response.statusCode != 200) {
+        final raw = response.body;
+        familySyncDiag(
+          '$function http=${response.statusCode} '
+          'body=${raw.length > 300 ? raw.substring(0, 300) : raw}',
+        );
       }
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode != 200 || body['error'] != null) {
@@ -207,7 +229,8 @@ class AuthenticatedCallableTransport {
       return Map<String, dynamic>.from(body['result'] as Map);
     } on CallableFailure {
       rethrow;
-    } catch (_) {
+    } catch (error) {
+      familySyncDiag('$function failed: ${familySyncDiagError(error)}');
       throw const CallableFailure('unavailable');
     }
   }

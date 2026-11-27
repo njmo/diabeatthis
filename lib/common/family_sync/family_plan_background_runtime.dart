@@ -11,6 +11,7 @@ import '../../core/drift/family_sync/family_mirror_outbox.dart';
 import '../async/coalescing_async_action.dart';
 import '../auth/load_firebase_callable_identity.dart';
 import '../backend/authenticated_callable_transport.dart';
+import '../backend/family_sync_diagnostics.dart';
 import '../ingredient_catalog/firebase_ingredient_catalog_repository.dart';
 import '../ingredient_catalog/http_catalog_callable_transport.dart';
 import '../l10n/language.dart';
@@ -103,6 +104,7 @@ class FamilyPlanBackgroundRuntime {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       final bound = settings.readNullable<String>('owner_uid');
       if (uid == null) {
+        familySyncDiag('plans: no signed-in Firebase user');
         retryAfter = null;
         timer?.cancel();
         await disconnectSignals(bound);
@@ -110,6 +112,7 @@ class FamilyPlanBackgroundRuntime {
       }
       final queue = FamilyMirrorOutbox(db);
       if (bound != null && bound != uid) {
+        familySyncDiag('plans: signed-in user differs from bound owner');
         await disconnectSignals(bound);
         return;
       }
@@ -162,6 +165,7 @@ class FamilyPlanBackgroundRuntime {
           unawaited(tick());
         },
         onFailure: () {
+          familySyncDiag('plans: familyPlanSignals listener failed');
           unawaited(recordFamilyCloudConnection(db, uid, false));
           pending = true;
           scheduleRetry();
@@ -199,7 +203,11 @@ class FamilyPlanBackgroundRuntime {
       )();
       pending = pending || more;
       if (more) scheduleRetry();
-    } catch (_) {
+    } catch (error, stack) {
+      familySyncDiag('plans tick failed: ${familySyncDiagError(error)}');
+      familySyncDiag(
+        'plans stack: ${stack.toString().split('\n').take(6).join(' | ')}',
+      );
       if (attemptOwner != null && signals.uid == null) {
         await recordFamilyCloudConnection(db, attemptOwner, false);
       }

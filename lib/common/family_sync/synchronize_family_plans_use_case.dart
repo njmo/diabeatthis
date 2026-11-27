@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import '../../core/drift/database_impl.dart';
 import '../../core/drift/family_sync/family_mirror_outbox.dart';
 import '../backend/authenticated_callable_transport.dart';
+import '../backend/family_sync_diagnostics.dart';
 import '../ingredient_catalog/catalog_ingredient.dart';
 import '../ingredient_catalog/ingredient_catalog_repository.dart';
 import '../ingredient_catalog/ingredient_identity.dart';
@@ -60,6 +61,9 @@ class SynchronizeFamilyPlansUseCase {
         allowRequest: allowed,
       );
       if (!['pending', 'applied'].contains(result['status'])) {
+        familySyncDiag(
+          'plan ${row.read<String>('operation_id')} bind refused: status=${result['status']}',
+        );
         throw StateError('Plan result reservation failed');
       }
       await db.customStatement(

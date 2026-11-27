@@ -9,6 +9,7 @@ import '../../core/drift/family_sync/family_mirror_outbox.dart';
 import '../../core/firebase/initialize_family_firebase.dart';
 import '../auth/load_firebase_callable_identity.dart';
 import '../backend/authenticated_callable_transport.dart';
+import '../backend/family_sync_diagnostics.dart';
 import 'publish_family_mirror_use_case.dart';
 
 /// Optional networking never delays or authorizes local monitoring operations.
@@ -90,6 +91,7 @@ class FamilyMirrorBackgroundRuntime {
       await initialization;
       if (disposed) return;
       if (FirebaseAuth.instance.currentUser == null) {
+        familySyncDiag('mirror: no signed-in Firebase user');
         retryAfter = null;
         timer?.cancel();
         return;
@@ -134,7 +136,11 @@ class FamilyMirrorBackgroundRuntime {
           );
         }
       }
-    } catch (_) {
+    } catch (error, stack) {
+      familySyncDiag('mirror publish failed: ${familySyncDiagError(error)}');
+      familySyncDiag(
+        'mirror stack: ${stack.toString().split('\n').take(6).join(' | ')}',
+      );
       scheduleRetry();
       if (!disposed) {
         try {

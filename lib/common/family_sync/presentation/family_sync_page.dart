@@ -9,6 +9,7 @@ import '../../../core/drift/family_sync/family_mirror_outbox.dart';
 import '../../../core/drift/providers/database_provider.dart';
 import '../../app_mode/application_device_mode.dart';
 import '../../auth/google_authentication_providers.dart';
+import '../../backend/family_sync_diagnostics.dart';
 import '../../family/family_providers.dart';
 import '../../l10n/language.dart';
 import '../family_mirror_integration.dart';
@@ -147,6 +148,13 @@ class FamilySyncPageState extends ConsumerState<FamilySyncPage>
             FirebaseAuth.instance.currentUser?.uid != uid) {
           return;
         }
+        familySyncDiag(
+          'sync page: lastError=${settings.readNullable<String>('last_error')} '
+          'blocked=${[for (final row in rows)
+            if (row.read<int>('blocked') > 0) '${row.read<String>('kind')}:${row.read<int>('blocked')}']} '
+          'pending=${[for (final row in rows)
+            if (row.read<int>('pending') > 0) '${row.read<String>('kind')}:${row.read<int>('pending')}']}',
+        );
         reportedFailure =
             reportedFailure || rows.any((row) => row.read<int>('blocked') > 0);
         enabled = settings.read<int>('enabled') == 1;
@@ -213,7 +221,11 @@ class FamilySyncPageState extends ConsumerState<FamilySyncPage>
           failed = reportedFailure;
         });
       }
-    } catch (_) {
+    } catch (error, stack) {
+      familySyncDiag('sync page refresh failed: ${familySyncDiagError(error)}');
+      familySyncDiag(
+        'sync page stack: ${stack.toString().split('\n').take(6).join(' | ')}',
+      );
       if (mounted && currentRevision == revision) {
         setState(() {
           failed = true;

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../core/drift/family_sync/family_mirror_outbox.dart';
 import '../backend/authenticated_callable_transport.dart';
+import '../backend/family_sync_diagnostics.dart';
 import 'family_mirror_record.dart';
 import 'register_family_mirror.dart';
 
@@ -79,7 +80,12 @@ class PublishFamilyMirrorUseCase {
           "SELECT operation_id FROM family_plan_journal WHERE outcome='applied' AND acknowledged=0 AND result_bound=0 LIMIT 1",
         )
         .get();
-    if (unbound.isNotEmpty) return 0;
+    if (unbound.isNotEmpty) {
+      familySyncDiag(
+        'mirror held: unbound applied plan ${unbound.first.read<String>('operation_id')}',
+      );
+      return 0;
+    }
     final source = await outbox.sourceForOwner(uid);
     final registration = await registerFamilyMirror(
       transport: transport,
@@ -106,6 +112,9 @@ class PublishFamilyMirrorUseCase {
       final records = <FamilyMirrorRecord>[];
       for (final record in pending) {
         if (!valid(record)) {
+          familySyncDiag(
+            'mirror rejected locally: ${record.kind}/${record.id}',
+          );
           await outbox.reject(record);
           continue;
         }
