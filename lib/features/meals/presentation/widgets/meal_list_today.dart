@@ -35,6 +35,7 @@ import '../../data/domain/use_cases/continue_meal_without_bolus_link.dart';
 import '../../data/providers/meal_activation_guard_provider.dart';
 import '../../data/providers/meal_add_on_bolus_context_provider.dart';
 import '../../data/providers/meal_database_provider.dart';
+import '../utils/start_eating_without_extended_carbs.dart';
 import 'meal_details/meal_detail_formatters.dart';
 import 'meal_progress/active_meal_add_on_bolus_action.dart';
 import 'meal_progress/active_meal_steps.dart';
@@ -134,8 +135,7 @@ class MealListToday extends ConsumerWidget {
         : null;
     bool waitsForExtendedCarbs(domain.Meal meal) =>
         meal.status == 'bolused-waiting' &&
-        waitState?.mealId == meal.id &&
-        waitState?.waitingForExtendedCarbs == true;
+        mealWaitHeldByExtendedCarbs(waitState, meal.id, now);
     final summaryMeals = visibleMeals.where(
       (meal) => mealStatusReadyToSummarize(meal.status),
     );
@@ -246,15 +246,22 @@ class MealListToday extends ConsumerWidget {
                         ? lang.mealProgressContinueWithoutBolusLinkTitle
                         : lang.mealProgressOpenCalculator
                   : lang.mealStatusAte,
-              onActionLongPress:
-                  meal.status == 'waiting-for-bolus' &&
-                      !waitingForExtraBolus(meal) &&
-                      !waitsForExtendedCarbs(meal)
+              onActionLongPress: waitsForExtendedCarbs(meal)
+                  ? () => confirmStartEatingWithoutExtendedCarbs(
+                      context: context,
+                      ref: ref,
+                      mealId: meal.id,
+                    )
+                  : meal.status == 'waiting-for-bolus' &&
+                        !waitingForExtraBolus(meal)
                   ? () => confirmManualContinuation(meal.id)
                   : null,
-              onAction:
-                  waitingForExtraBolus(meal) || waitsForExtendedCarbs(meal)
+              onAction: waitingForExtraBolus(meal)
                   ? null
+                  : waitsForExtendedCarbs(meal)
+                  ? () => ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(lang.mealSkipExtendedCarbsHint)),
+                    )
                   : () async {
                       if (mealStatusesStartingEating.contains(meal.status) ||
                           meal.status == 'eating-extra') {

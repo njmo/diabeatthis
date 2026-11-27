@@ -142,11 +142,11 @@ void main() {
         expect(find.byType(Tab), findsOneWidget);
         expect(find.byType(MealPreviewActions), findsNothing);
       } else {
-        tester
-            .widget<SwipeableCards>(find.byType(SwipeableCards))
-            .controller
-            .animateTo(1);
-        await tester.pumpAndSettle();
+        // A meal that was never eaten has no overview tab to show.
+        expect(
+          tester.widget<SwipeableCards>(find.byType(SwipeableCards)).labels,
+          ['Porcja i makro', 'Działanie aplikacji'],
+        );
       }
       expect(find.text('Planowana porcja'), findsOneWidget);
       expect(find.byType(MealPortionCard), findsOneWidget);

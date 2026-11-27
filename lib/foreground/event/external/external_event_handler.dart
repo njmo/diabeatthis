@@ -11,6 +11,7 @@ import '../internal/aaps_carbs_request_notifications_changed.dart';
 import '../internal/aaps_carbs_request_snoozed_event.dart';
 import '../internal/meal_bolus_continued_manually.dart';
 import '../internal/meal_decision_finished.dart';
+import '../internal/meal_started_without_extended_carbs.dart';
 import 'app/app_event_handler.dart';
 import 'external_event.dart';
 import 'local_treatments/local_treatments_event.dart';
@@ -66,6 +67,27 @@ class ExternalEventHandler with Logging {
     }
   }
 
+  Future<void> _startEatingWithoutExtendedCarbs(int mealId) async {
+    final started = await _notificationResponseEventHandler.startEating(
+      mealId,
+      _runtimeContext,
+      ignorePendingExtendedCarbs: true,
+    );
+    if (!started) return;
+    try {
+      // The meal moved on, so the eCarbs card must not keep waiting for it.
+      await _runtimeContext.container
+          .read(mealCalculatorRequestControllerProvider)
+          .dismissAfterManualContinuation(mealId);
+    } catch (error, stackTrace) {
+      logE(
+        'Could not close the eCarbs request after eating started',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   void handle(Map<String, dynamic> event) {
     if (handleAdditionalEvent?.call(event, _runtimeContext) ?? false) return;
     if (event['external_event'] == 'app_event' &&
@@ -96,6 +118,14 @@ class ExternalEventHandler with Logging {
       final data = appEvent['data'];
       if (data case {'mealId': final int mealId}) {
         unawaited(_continueMealManually(mealId));
+      }
+      return;
+    }
+    if (event['external_event'] == 'app_event' &&
+        appEvent is Map &&
+        appEvent['app_event'] == MealStartedWithoutExtendedCarbs.command) {
+      if (appEvent['data'] case {'mealId': final int mealId}) {
+        unawaited(_startEatingWithoutExtendedCarbs(mealId));
       }
       return;
     }

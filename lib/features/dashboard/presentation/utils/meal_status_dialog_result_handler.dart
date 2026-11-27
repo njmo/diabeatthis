@@ -6,6 +6,7 @@ import '../../../../common/meal/meal_add_on_bolus_context.dart';
 import '../../../../common/meal/meal_extended_carbs.dart';
 import '../../../../common/meal/open_meal_add_on_editor.dart';
 import '../../../../common/meal/open_meal_completion.dart';
+import '../../../../common/monitoring/meal_wait_status.dart';
 import '../../../../common/notifications/meal_notification_cancellation.dart';
 import '../../../../common/nutrition/stable_macro_ceil.dart';
 import '../../../../common/platform/aaps_suggestion_prompt.dart';
@@ -19,6 +20,7 @@ import '../../../../core/notifications/providers/notifications_controller_provid
 import '../../../meal_advisor/data/providers/get_meal_activity_advice_use_case_provider.dart';
 import '../../../meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 import '../../../meals/data/providers/meal_database_provider.dart';
+import '../../../meals/presentation/utils/start_eating_without_extended_carbs.dart';
 import '../../data/providers/meal_advisor_result_provider.dart';
 import '../widgets/meal_status_dialog_result.dart';
 
@@ -44,6 +46,17 @@ Future<void> handleMealStatusDialogResult({
       if (!alreadySaved &&
           meal.status == 'bolused-waiting' &&
           status == 'waited-eating') {
+        final wait = await readMealWaitStatus();
+        if (wait?.mealId == meal.id && wait!.waitingForExtendedCarbs) {
+          if (context.mounted) {
+            await confirmStartEatingWithoutExtendedCarbs(
+              context: context,
+              ref: ref,
+              mealId: meal.id,
+            );
+          }
+          return;
+        }
         if (!await requestMealStartEating(meal.id) && context.mounted) {
           ScaffoldMessenger.of(
             context,

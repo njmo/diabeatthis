@@ -21,6 +21,7 @@ class MealCalculatorRequest {
   String? sessionId;
   final MealCalculatorEvidence tracker;
   bool instructionNotificationCleared = false;
+  bool extendedCarbsReminderShown = false;
   bool acceptedByMeal = false;
   List<int> acceptedWizardTimes = [];
 
@@ -61,6 +62,7 @@ class MealCalculatorRequest {
     'contextRequestedAt': contextRequestedAt?.millisecondsSinceEpoch,
     'evidence': tracker.evidence,
     'instructionNotificationCleared': instructionNotificationCleared,
+    'extendedCarbsReminderShown': extendedCarbsReminderShown,
     'acceptedByMeal': acceptedByMeal,
     'acceptedWizardTimes': acceptedWizardTimes,
   };
@@ -81,6 +83,8 @@ class MealCalculatorRequest {
     );
     request.instructionNotificationCleared =
         json['instructionNotificationCleared'] as bool? ?? false;
+    request.extendedCarbsReminderShown =
+        json['extendedCarbsReminderShown'] as bool? ?? false;
     request.acceptedByMeal = json['acceptedByMeal'] as bool? ?? false;
     request.acceptedWizardTimes =
         (json['acceptedWizardTimes'] as List?)?.cast<int>() ?? [];

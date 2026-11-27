@@ -9,6 +9,7 @@ enum NotificationEventType {
   mealSummaryReminder,
   aapsBolusSuggestion,
   aapsCarbsRequest,
+  extendedCarbsReminder,
   tempTargetDelivery,
   familyChat,
   plannedMealConfirmation,

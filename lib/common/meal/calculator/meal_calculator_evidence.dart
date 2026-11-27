@@ -1,6 +1,23 @@
 import '../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
 import '../../../features/meal_advisor/domain/utils/extended_carbs_schedule_settings.dart';
 
+/// eCarbs may start this much before the planned start.
+const extendedCarbsEarlyStartTolerance = Duration(minutes: 5);
+
+/// eCarbs entered after the reminder, without shifting the start, still
+/// belong to the meal for this long after the planned start.
+const extendedCarbsLateStartTolerance = Duration(minutes: 10);
+
+/// The child is reminded when eCarbs are still missing this long after the
+/// calculator handoff.
+const extendedCarbsReminderDelay = Duration(minutes: 5);
+
+bool extendedCarbsStartMatches(int actualAt, int expectedAt) {
+  final offset = actualAt - expectedAt;
+  return offset >= -extendedCarbsEarlyStartTolerance.inMilliseconds &&
+      offset <= extendedCarbsLateStartTolerance.inMilliseconds;
+}
+
 /// Conservative matching: ambiguous or unsupported evidence keeps the card open.
 class MealCalculatorEvidence {
   MealCalculatorEvidence({
@@ -63,6 +80,7 @@ class MealCalculatorEvidence {
       _extended[key] = row;
     }
     bolusConfirmed = event.carbs == 0;
+    expectedExtendedCarbsStartAt = null;
     carbsEntered = false;
     extendedCarbsConfirmed = event.extendedCarbs <= 0;
     extendedCarbsSurplus = false;
@@ -133,6 +151,7 @@ class MealCalculatorEvidence {
             (_mealWizardTimes.isEmpty ? [anchor] : _mealWizardTimes)
                 .map((at) => at + Duration(minutes: delay).inMilliseconds)
                 .toList();
+        expectedExtendedCarbsStartAt = expectedStarts.first;
         final scheduledRows = _extended.values
             .where(
               (row) =>
@@ -144,8 +163,7 @@ class MealCalculatorEvidence {
                       Duration(minutes: duration).inMilliseconds &&
                   expectedStarts.any(
                     (expected) =>
-                        ((row['at'] as int) - expected).abs() <=
-                        const Duration(minutes: 2).inMilliseconds,
+                        extendedCarbsStartMatches(row['at'] as int, expected),
                   ),
             )
             .toList();
@@ -166,6 +184,9 @@ class MealCalculatorEvidence {
   bool carbsEntered = false;
   bool extendedCarbsConfirmed = false;
   bool extendedCarbsSurplus = false;
+
+  /// When the planned eCarbs should start, once a schedule is known.
+  int? expectedExtendedCarbsStartAt;
 
   Map<String, dynamic> get evidence => {
     'submissions': _submissions,

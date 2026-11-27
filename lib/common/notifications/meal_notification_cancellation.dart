@@ -26,6 +26,7 @@ extension MealNotificationCancellation on NotificationsController {
       NotificationEventType.plannedMealConfirmation,
       NotificationEventType.plannedMealAdvice,
       NotificationEventType.mealSummaryReminder,
+      NotificationEventType.extendedCarbsReminder,
       if (includeBolusInstructions) NotificationEventType.aapsBolusSuggestion,
     ]) {
       await cancelNotification(NotificationKey(type: type, entityId: mealId));

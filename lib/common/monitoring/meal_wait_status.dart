@@ -12,6 +12,18 @@ typedef MealWaitStatus = ({
   bool waitingForExtendedCarbs,
 });
 
+/// The recommended wait is over and only the planned eCarbs hold the meal.
+/// Skipping eCarbs earlier would also cut the bolus wait short.
+bool mealWaitHeldByExtendedCarbs(
+  MealWaitStatus? wait,
+  int mealId,
+  DateTime now,
+) =>
+    wait != null &&
+    wait.mealId == mealId &&
+    wait.waitingForExtendedCarbs &&
+    !wait.deadline.isAfter(now);
+
 final mealWaitStatusProvider = FutureProvider<MealWaitStatus?>(
   (ref) => readMealWaitStatus(),
 );

@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:calculator_handoff/calculator_handoff.dart';
+import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/drift/providers/database_provider.dart';
 import '../../../core/logger/logger.dart';
+import '../../../core/notifications/domain/events/extended_carbs_reminder_notification.dart';
 import '../../../core/notifications/domain/models/notification_event_type.dart';
 import '../../../core/notifications/domain/models/notification_key.dart';
 import '../../../core/notifications/providers/notifications_controller_provider.dart';
@@ -61,12 +63,35 @@ final mealCalculatorRequestControllerProvider =
         },
         onComplete: (id) async {
           if (!ref.mounted) return;
+          final notifications = ref.read(
+            notificationsControllerForegroundProvider,
+          );
+          for (final type in [
+            NotificationEventType.aapsBolusSuggestion,
+            NotificationEventType.extendedCarbsReminder,
+          ]) {
+            await notifications.cancelNotification(
+              NotificationKey(type: type, entityId: id),
+            );
+          }
+        },
+        remindExtendedCarbs: (request, expectedStart) async {
+          final event = request.event;
+          final mealId = event.mealId;
+          final duration = event.extendedCarbsDurationMinutes;
+          if (!ref.mounted || mealId == null || duration == null) return;
+          final delay = expectedStart == null
+              ? event.extendedCarbsDelayMinutes ?? 0
+              : (expectedStart.difference(clock.now()).inSeconds / 60).round();
           await ref
               .read(notificationsControllerForegroundProvider)
-              .cancelNotification(
-                NotificationKey(
-                  type: NotificationEventType.aapsBolusSuggestion,
-                  entityId: id,
+              .show(
+                ExtendedCarbsReminderNotificationEvent(
+                  mealId: mealId,
+                  extendedCarbs: event.extendedCarbs,
+                  delayMinutes: delay < 0 ? 0 : delay,
+                  durationMinutes: duration,
+                  additional: event.extendedCarbsAreAdditional,
                 ),
               );
         },

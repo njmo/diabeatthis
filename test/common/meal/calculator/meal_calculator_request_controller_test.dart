@@ -78,6 +78,128 @@ void main() {
     expect(tracker.bolusConfirmed, isFalse);
   });
 
+  test(
+    'eCarbs starting five minutes early or ten minutes late match the meal',
+    () {
+      final expected = wizardAt.add(const Duration(minutes: 45));
+      bool confirmedAt(Duration offset) {
+        final tracker = MealCalculatorEvidence(event: event, openedAt: opened);
+        tracker.update({
+          'submissions': [
+            {
+              'at': wizardAt.millisecondsSinceEpoch,
+              'carbs': 30,
+              'valid': true,
+              'complete': true,
+            },
+          ],
+          'extendedCarb': {
+            'id': 'shifted',
+            'at': expected.add(offset).millisecondsSinceEpoch,
+            'carbs': 15,
+            'duration': const Duration(hours: 2).inMilliseconds,
+            'valid': true,
+          },
+        });
+        return tracker.extendedCarbsConfirmed;
+      }
+
+      expect(confirmedAt(const Duration(minutes: -5)), isTrue);
+      expect(confirmedAt(const Duration(minutes: 10)), isTrue);
+      expect(confirmedAt(const Duration(minutes: 10, seconds: 1)), isFalse);
+      expect(confirmedAt(const Duration(minutes: -6)), isFalse);
+    },
+  );
+
+  test('missing eCarbs are reminded once five minutes after handoff', () async {
+    var now = opened;
+    final reminders = <DateTime?>[];
+    final controller = MealCalculatorRequestController(
+      store: MemoryMealCalculatorRequestStore(),
+      publishWindow: (_, _) async {},
+      readContext: (_) async => null,
+      projectExtendedConfirmation: (_, _, _, _) async {},
+      onError: (error, stack) => Error.throwWithStackTrace(error, stack),
+      remindExtendedCarbs: (_, expectedStart) async =>
+          reminders.add(expectedStart),
+      now: () => now,
+    );
+    addTearDown(controller.dispose);
+    await controller.register(event, openedAt: opened);
+
+    now = opened.add(const Duration(minutes: 4, seconds: 59));
+    expect(await controller.hasPendingScheduledExtendedCarbs(7), isTrue);
+    expect(reminders, isEmpty);
+
+    now = opened.add(const Duration(minutes: 5));
+    expect(await controller.hasPendingScheduledExtendedCarbs(7), isTrue);
+    expect(reminders, [opened.add(const Duration(minutes: 45))]);
+
+    now = opened.add(const Duration(minutes: 9));
+    await controller.hasPendingScheduledExtendedCarbs(7);
+    expect(reminders, hasLength(1));
+  });
+
+  test('refreshing the request does not repeat the eCarbs reminder', () async {
+    var now = opened;
+    final reminders = <DateTime?>[];
+    final controller = MealCalculatorRequestController(
+      store: MemoryMealCalculatorRequestStore(),
+      publishWindow: (_, _) async {},
+      readContext: (_) async => null,
+      projectExtendedConfirmation: (_, _, _, _) async {},
+      onError: (error, stack) => Error.throwWithStackTrace(error, stack),
+      remindExtendedCarbs: (_, expectedStart) async =>
+          reminders.add(expectedStart),
+      now: () => now,
+    );
+    addTearDown(controller.dispose);
+    await controller.register(event, openedAt: opened);
+    now = opened.add(const Duration(minutes: 5));
+    await controller.hasPendingScheduledExtendedCarbs(7);
+
+    await controller.register(
+      event,
+      openedAt: opened,
+      refreshRequirements: true,
+    );
+    now = opened.add(const Duration(minutes: 7));
+    await controller.hasPendingScheduledExtendedCarbs(7);
+
+    expect(reminders, hasLength(1));
+  });
+
+  test('eCarbs entered on time are not reminded', () async {
+    var now = opened;
+    final reminders = <DateTime?>[];
+    final controller = MealCalculatorRequestController(
+      store: MemoryMealCalculatorRequestStore(),
+      publishWindow: (_, _) async {},
+      readContext: (_) async => null,
+      projectExtendedConfirmation: (_, _, _, _) async {},
+      onError: (error, stack) => Error.throwWithStackTrace(error, stack),
+      remindExtendedCarbs: (_, expectedStart) async =>
+          reminders.add(expectedStart),
+      now: () => now,
+    );
+    addTearDown(controller.dispose);
+    await controller.register(event, openedAt: opened);
+    await controller.observe({
+      'submissions': [],
+      'extendedCarb': {
+        'id': 'on-time',
+        'at': opened.add(const Duration(minutes: 45)).millisecondsSinceEpoch,
+        'carbs': 15,
+        'duration': const Duration(hours: 2).inMilliseconds,
+        'valid': true,
+      },
+    });
+
+    now = opened.add(const Duration(minutes: 6));
+    expect(await controller.hasPendingScheduledExtendedCarbs(7), isFalse);
+    expect(reminders, isEmpty);
+  });
+
   Map<String, dynamic> evidence({bool extended = false, bool valid = true}) => {
     'submissions': [
       {

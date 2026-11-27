@@ -45,6 +45,12 @@ class MealPageBody extends HookConsumerWidget {
         source.showAnalysis &&
         state.analysis?.hasFullGlucoseWindow == true &&
         details.meal.isEaten;
+    // Before eating the overview only held the actions button, which now
+    // lives above the tabs, so the empty tab is left out.
+    final showOverview =
+        complete ||
+        details.meal.isEaten ||
+        (!canUseLocalActions && state.analysis != null);
     final chart = MealChartsSection(
       key: chartKey,
       details: details,
@@ -63,10 +69,13 @@ class MealPageBody extends HookConsumerWidget {
           ? 2
           : complete && canUseLocalActions
           ? 6
-          : 3,
+          : showOverview
+          ? 3
+          : 2,
       keys: [
         details.meal.id,
         complete,
+        showOverview,
         source.showAnalysis,
         canUseLocalActions,
       ],
@@ -105,7 +114,6 @@ class MealPageBody extends HookConsumerWidget {
     final overview = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (canUseLocalActions) MealPreviewActions(meal: details.meal),
         if (complete || (!canUseLocalActions && state.analysis != null)) ...[
           MealOutcomeSection(
             analysis: state.analysis!,
@@ -123,12 +131,21 @@ class MealPageBody extends HookConsumerWidget {
       ],
     );
     return SwipeableCards(
-      key: ValueKey((details.meal.id, complete)),
+      key: ValueKey((details.meal.id, complete, showOverview)),
       controller: controller,
       showPageControls: false,
-      header: MealPreviewHeader(
-        state: state,
-        canUseLocalActions: canUseLocalActions,
+      header: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          MealPreviewHeader(
+            state: state,
+            canUseLocalActions: canUseLocalActions,
+          ),
+          if (canUseLocalActions) ...[
+            const SizedBox(height: 12),
+            MealPreviewActions(meal: details.meal),
+          ],
+        ],
       ),
       labels: complete && canUseLocalActions
           ? [
@@ -140,16 +157,17 @@ class MealPageBody extends HookConsumerWidget {
               lang.mealApplicationContextTitle,
             ]
           : [
-              complete
-                  ? lang.mealGlucoseChapter
-                  : details.meal.isEaten
-                  ? lang.mealCardObservation
-                  : lang.mealCardMealTab,
+              if (showOverview)
+                complete
+                    ? lang.mealGlucoseChapter
+                    : details.meal.isEaten
+                    ? lang.mealCardObservation
+                    : lang.mealCardMealTab,
               lang.mealPortionCardTitle,
               lang.mealApplicationContextTitle,
             ],
       children: [
-        overview,
+        if (showOverview) overview,
         if (complete && canUseLocalActions)
           MealBeforeCard(
             data: MealStartContextData(

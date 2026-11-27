@@ -5,6 +5,7 @@ import 'aaps_carbs_request_notification.dart';
 import 'activity_finished_notification.dart';
 import 'activity_schedule_notification.dart';
 import 'eat_now_event_notification.dart';
+import 'extended_carbs_reminder_notification.dart';
 import 'family_chat_notification.dart';
 import 'finished_eating_event_notification.dart';
 import 'meal_advice_pending_notification.dart';
@@ -51,6 +52,8 @@ class NotificationEventFactory {
         return AapsBolusSuggestionNotificationEvent.fromPayload(data);
       case NotificationEventType.aapsCarbsRequest:
         return AapsCarbsRequestNotificationEvent.fromPayload(data);
+      case NotificationEventType.extendedCarbsReminder:
+        return ExtendedCarbsReminderNotificationEvent.fromPayload(data);
     }
   }
 }

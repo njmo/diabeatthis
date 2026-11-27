@@ -7,6 +7,7 @@ import 'event/aaps_carbs_request_notification_definition.dart';
 import 'event/activity_finished_notification_definition.dart';
 import 'event/activity_schedule_notification_definition.dart';
 import 'event/eat_now_notification_definition.dart';
+import 'event/extended_carbs_reminder_notification_definition.dart';
 import 'event/family_chat_notification_definition.dart';
 import 'event/finished_eating_notification_definition.dart';
 import 'event/meal_advice_pending_notification_definition.dart';
@@ -36,6 +37,7 @@ class NotificationDefinitionCatalogImpl
     mealSummaryReminderNotificationDefinition,
     aapsBolusSuggestionNotificationDefinition,
     aapsCarbsRequestNotificationDefinition,
+    extendedCarbsReminderNotificationDefinition,
     familyChatNotificationDefinition,
   ];
 

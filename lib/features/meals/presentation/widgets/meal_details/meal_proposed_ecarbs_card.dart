@@ -9,10 +9,19 @@ import '../../../common/widgets/duration_schedule_bar.dart';
 import '../../../data/models/meal_details_data.dart';
 import '../../../domain/models/meal_ecarbs_proposal.dart';
 import '../../controllers/meal_application_review_controller.dart';
+import '../../models/meal_progress_now.dart';
+import 'meal_detail_formatters.dart';
 
 class MealProposedEcarbsCard extends StatelessWidget {
-  const MealProposedEcarbsCard({super.key, required this.details});
+  const MealProposedEcarbsCard({
+    super.key,
+    required this.details,
+    this.progress,
+  });
   final MealDetailsData details;
+
+  /// What AAPS holds for the plan while the meal is in progress.
+  final MealExtendedCarbsProgress? progress;
 
   @override
   Widget build(BuildContext context) {
@@ -73,8 +82,46 @@ class MealProposedEcarbsCard extends StatelessWidget {
                         '${lang.mealAdvisorReleaseStartLabel}: ${proposal.delayMinutes} min; ${lang.mealAdvisorReleaseDurationLabel}: ${proposal.durationMinutes} min',
                   ),
                 ],
+                if (progress case final progress?) ...[
+                  const SizedBox(height: 12),
+                  _AapsStatus(progress: progress),
+                ],
               ],
             ),
+    );
+  }
+}
+
+class _AapsStatus extends StatelessWidget {
+  const _AapsStatus({required this.progress});
+
+  final MealExtendedCarbsProgress progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = context.lang;
+    final scheme = Theme.of(context).colorScheme;
+    final entered = progress.entered;
+    final from = progress.earliestStart;
+    final to = progress.latestStart;
+    final text = entered != null
+        ? lang.mealEcarbsAapsEntered(mealTime(entered.createdAt))
+        : from != null && to != null
+        ? lang.mealEcarbsAapsMissing(mealTime(from), mealTime(to))
+        : null;
+    if (text == null) return const SizedBox.shrink();
+    return Row(
+      children: [
+        Icon(
+          entered != null ? Icons.check_circle_rounded : Icons.cancel_rounded,
+          size: 20,
+          color: entered != null ? scheme.primary : scheme.error,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
+        ),
+      ],
     );
   }
 }

@@ -1,12 +1,15 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../common/l10n/language.dart';
+import '../../../../common/monitoring/meal_wait_status.dart';
 import '../../../../core/data_sources/config/data_source_config.dart';
 import '../../../../core/data_sources/providers/effective_history_source_provider.dart';
 import '../../../../core/data_sources/stress_events/stress_event_repository.dart';
 import '../../data/domain/use_cases/analyze_meal_use_case.dart';
 import '../../data/domain/use_cases/load_low_treatments_for_meal_use_case.dart';
 import '../../data/domain/use_cases/load_meal_details_use_case.dart';
+import '../../data/domain/use_cases/load_meal_progress_history_use_case.dart';
+import '../../data/models/meal_progress_history.dart';
 import '../../data/providers/meal_before_context_provider.dart';
 import '../../data/providers/similar_meal_glucose_provider.dart';
 import '../../data/providers/similar_meals_provider.dart';
@@ -30,6 +33,20 @@ class MealDetailsControllerNotifier extends _$MealDetailsControllerNotifier {
     );
     final details = baseDetails.copyWith(lowTreatments: lowTreatments);
 
+    MealProgressHistory? progressHistory;
+    if (LoadMealProgressHistoryUseCase.appliesTo(details)) {
+      // The service republishes the wait state when calculator or eCarbs
+      // entries change, so the in-progress cards follow new treatments.
+      ref.watch(mealWaitStatusProvider);
+    }
+    try {
+      progressHistory = await ref
+          .read(loadMealProgressHistoryUseCaseProvider)
+          .call(details);
+    } catch (_) {
+      // The rest of the preview stays usable without the in-progress history.
+    }
+
     var usesLocalHistory = false;
     final analysisUseCase = ref.read(analyzeMealUseCaseProvider);
     try {
@@ -40,11 +57,13 @@ class MealDetailsControllerNotifier extends _$MealDetailsControllerNotifier {
       return MealPageState(
         details: details,
         analysis: analysis,
+        progressHistory: progressHistory,
         usesLocalHistory: usesLocalHistory,
       );
     } catch (error) {
       return MealPageState(
         details: details,
+        progressHistory: progressHistory,
         analysisError: error.toString(),
         usesLocalHistory: usesLocalHistory,
       );

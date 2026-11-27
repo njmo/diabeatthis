@@ -43,7 +43,7 @@ class NotificationResponseEventHandler with Logging {
       activityScheduleResponse: (data) =>
           unawaited(_handleActivitySchedule(data, context)),
       eatNowResponse: (data) => data.maybeWhen(
-        eating: (_) => unawaited(_startEating(data, context)),
+        eating: (mealId) => unawaited(startEating(mealId, context)),
         orElse: () => context.emitEvent(data),
       ),
       tempTargetResponse: (TempTargetResponseEvent data) =>
@@ -77,34 +77,53 @@ class NotificationResponseEventHandler with Logging {
     );
   }
 
-  Future<void> _startEating(
-    EatNowResponseEvent event,
-    RuntimeContext context,
-  ) async {
+  /// Moves a waiting meal to eating. Returns whether the meal started.
+  ///
+  /// Planned eCarbs hold the start until AAPS has them, unless the child
+  /// explicitly chose to eat without them.
+  Future<bool> startEating(
+    int mealId,
+    RuntimeContext context, {
+    bool ignorePendingExtendedCarbs = false,
+  }) async {
     try {
       final db = context.container.read(databaseProvider);
-      final meal = await db.mealDao.getMealById(event.mealId);
-      if (meal == null || meal.status != 'bolused-waiting') return;
-      if (await mealHasPendingExtendedCarbs(context, event.mealId)) return;
+      final meal = await db.mealDao.getMealById(mealId);
+      if (meal == null || meal.status != 'bolused-waiting') return false;
+      if (!ignorePendingExtendedCarbs &&
+          await mealHasPendingExtendedCarbs(context, mealId)) {
+        return false;
+      }
       context.throwIfCancelled();
       await context.container
           .read(completeBolusWaitUseCaseProvider)
           .call(meal.toDomain());
-      await context.container
-          .read(notificationsControllerForegroundProvider)
-          .cancelNotification(
-            NotificationKey(
-              type: NotificationEventType.eatNow,
-              entityId: event.mealId,
-            ),
-          );
     } catch (error, stackTrace) {
       logE(
         'Could not record the actual meal wait',
         error: error,
         stackTrace: stackTrace,
       );
+      return false;
     }
+    try {
+      await context.container
+          .read(notificationsControllerForegroundProvider)
+          .cancelNotification(
+            NotificationKey(
+              type: NotificationEventType.eatNow,
+              entityId: mealId,
+            ),
+          );
+    } catch (error, stackTrace) {
+      // The meal already started; a stale notification must not undo that.
+      logE(
+        'Could not clear the eat now notification',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+    return true;
   }
 
   Future<void> handleFinishedEatingResponse(

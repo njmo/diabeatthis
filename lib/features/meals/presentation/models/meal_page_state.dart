@@ -1,9 +1,13 @@
 import '../../data/models/meal_analysis_data.dart';
 import '../../data/models/meal_details_data.dart';
+import '../../data/models/meal_progress_history.dart';
 
 class MealPageState {
   final MealDetailsData details;
   final MealAnalysisData? analysis;
+
+  /// Treatment history of a meal that is still in progress.
+  final MealProgressHistory? progressHistory;
   final String? analysisError;
   final DateTime? selectedTimestamp;
   final bool isDownloadingHistory;
@@ -15,6 +19,7 @@ class MealPageState {
   const MealPageState({
     required this.details,
     this.analysis,
+    this.progressHistory,
     this.analysisError,
     this.selectedTimestamp,
     this.isDownloadingHistory = false,
@@ -44,6 +49,7 @@ class MealPageState {
       hasFetchedCloudHistory: hasFetchedCloudHistory,
       isDownloadingHistory: isDownloadingHistory ?? this.isDownloadingHistory,
       analysis: analysis ?? this.analysis,
+      progressHistory: progressHistory,
       analysisError: analysisError ?? this.analysisError,
       selectedTimestamp: clearSelectedTimestamp
           ? null

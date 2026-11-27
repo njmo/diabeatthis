@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show setEquals;
 import '../../../core/notifications/domain/events/aaps_bolus_suggestion_notification.dart';
 import '../meal_add_on_bolus_context.dart';
 import 'meal_calculator_entries_provider.dart';
+import 'meal_calculator_evidence.dart';
 import 'meal_calculator_request.dart';
 import 'meal_calculator_request_store.dart';
 
@@ -24,6 +25,7 @@ class MealCalculatorRequestController {
     this.onTreatmentSurplus,
     this.readAcceptedWizards,
     this.readExtendedReceipts,
+    this.remindExtendedCarbs,
     DateTime Function()? now,
   }) : _now = now ?? clock.now;
 
@@ -43,6 +45,14 @@ class MealCalculatorRequestController {
   final Future<List<int>?> Function(int, DateTime, int)? readAcceptedWizards;
   final Future<List<Map<String, dynamic>>> Function(DateTime, DateTime)?
   readExtendedReceipts;
+
+  /// Shows one reminder when planned eCarbs are still missing a while after
+  /// the calculator handoff. The expected start is null without a schedule.
+  final Future<void> Function(
+    MealCalculatorRequest request,
+    DateTime? expectedStart,
+  )?
+  remindExtendedCarbs;
   final Map<int, int> _firstObservedAt = {};
   final Map<String, MealCalculatorRequest> _requests = {};
   Map<String, dynamic>? _latest;
@@ -144,6 +154,9 @@ class MealCalculatorRequestController {
           ? existing.tracker.evidence
           : null,
     );
+    // One reminder per meal request, also across requirement refreshes.
+    request.extendedCarbsReminderShown =
+        sameMealRequest && existing.extendedCarbsReminderShown;
     _requests[key] = request;
     while (_requests.length > 20) {
       _requests.remove(_requests.keys.first);
@@ -206,6 +219,24 @@ class MealCalculatorRequestController {
       pending =
           _requests.containsKey('meal:$mealId') &&
           request.hasPendingScheduledExtendedCarbs;
+      if (pending &&
+          !request.extendedCarbsReminderShown &&
+          remindExtendedCarbs != null &&
+          !_now().isBefore(request.openedAt.add(extendedCarbsReminderDelay))) {
+        // Marked first so a failing notification cannot repeat every poll.
+        request.extendedCarbsReminderShown = true;
+        final expected = request.tracker.expectedExtendedCarbsStartAt;
+        try {
+          await remindExtendedCarbs!(
+            request,
+            expected == null
+                ? null
+                : DateTime.fromMillisecondsSinceEpoch(expected),
+          );
+        } catch (error, stack) {
+          onError(error, stack);
+        }
+      }
       await _save();
     });
     return pending;
@@ -309,8 +340,8 @@ class MealCalculatorRequestController {
         anchor,
       ).add(Duration(minutes: request.event.extendedCarbsDelayMinutes!));
       final receipts = await readExtendedReceipts!(
-        expected.subtract(const Duration(minutes: 2)),
-        expected.add(const Duration(minutes: 2)),
+        expected.subtract(extendedCarbsEarlyStartTolerance),
+        expected.add(extendedCarbsLateStartTolerance),
       );
       evidence['extendedCarbs'] = [
         ...receipts,
